@@ -1,0 +1,657 @@
+site_name: Cloud Native Data Den
+theme:
+  name: material
+  features:
+    #- navigation.tabs
+    - navigation.indexes
+nav:
+- Cloud Native Data Den: README.md
+- Whats Cloud Native?: whats-cloud-native.md
+- What is DevOps?: what-is-devops.md
+- Devops SRE Platform Engg:
+  - Overview: devops-sre-platform-engg/README.md
+  - Platform Engineering: devops-sre-platform-engg/platform-engineering.md
+  - SRE: devops-sre-platform-engg/sre.md
+- Containers:
+  - Overview: docker/README.md
+  - Basics: docker/basics.md
+  - Container Patterns: docker/container-patterns.md
+  - Internals: docker/internals.md
+  - Cgroups:
+    - Overview: docker/cgroups/README.md
+    - cgroup v1 vs v2: docker/cgroups/cgroup-v1-vs-v2.md
+  - Containerd: docker/containerd.md
+  - Docker: docker/docker.md
+  - Image Optimization: docker/image-optimization.md
+  - Multi Arch images: docker/multi-arch-images.md
+  - Docker Compose: docker/docker-compose.md
+  - Production Grade: docker/production-grade.md
+  - OCI: docker/oci.md
+  - Security:
+    - Overview: docker/security/README.md
+    - Putting constraints: docker/security/putting-constraints.md
+    - Kata Containers: docker/security/kata-containers.md
+  - Scratch Image: docker/scratch-image.md
+  - Podman: docker/podman.md
+  - Rootless Containers: docker/rootless-containers.md
+  - Distroless: docker/distroless.md
+  - Multi stage built images: docker/multi-stage-built-images.md
+  - Container Registry: docker/container-registry.md
+- CI CD:
+  - Overview: ci-cd/README.md
+  - Continuos integration: ci-cd/continuos-integration.md
+  - Git:
+    - Overview: ci-cd/git/README.md
+    - Configuration:
+      - Overview: ci-cd/git/configuration/README.md
+      - gitattributes: ci-cd/git/configuration/gitattributes.md
+    - gitignore: ci-cd/git/gitignore.md
+    - GitFlow vs GithubFlow: ci-cd/git/gitflow-vs-githubflow.md
+    - cherry picking: ci-cd/git/cherry-picking.md
+    - Rebase: ci-cd/git/rebase.md
+    - Merge vs Fast forward vs Rebase: ci-cd/git/merge-vs-fast-forward-vs-rebase.md
+  - Gitlab: ci-cd/gitlab.md
+  - Github Actions:
+    - Overview: ci-cd/github-actions/README.md
+    - Workflows: ci-cd/github-actions/workflows.md
+    - Events: ci-cd/github-actions/events.md
+    - Jobs: ci-cd/github-actions/jobs.md
+    - Actions: ci-cd/github-actions/actions.md
+  - Jenkins: ci-cd/jenkins.md
+  - deployment strategies: ci-cd/deployment-strategies.md
+- DevSecOps:
+  - Overview: devsecops/README.md
+  - Tools: devsecops/tools.md
+  - API security: devsecops/api-security.md
+  - Security Scanning: devsecops/security-scanning.md
+  - Preventing supply chain attacks: devsecops/preventing-supply-chain-attacks.md
+  - PGP/ASC: devsecops/pgp-asc.md
+  - SBOM: devsecops/sbom.md
+- ☸️ Kubernetes:
+  - Concepts:
+    - Overview: kubernetes/concepts/README.md
+    - Start Here: kubernetes/concepts/start-here.md
+    - Kubernetes Objects: kubernetes/concepts/kubernetes-objects.md
+    - Workloads:
+      - Overview: kubernetes/concepts/workloads/README.md
+      - Pods:
+        - Overview: kubernetes/concepts/workloads/pods/README.md
+        - Static pods: kubernetes/concepts/workloads/pods/static-pods.md
+      - Deployments: kubernetes/concepts/workloads/deployments.md
+      - Statefulsets: kubernetes/concepts/workloads/statefulsets.md
+    - Components:
+      - Overview: kubernetes/concepts/components/README.md
+      - Connectivity: kubernetes/concepts/components/connectivity.md
+    - Namespaces: kubernetes/concepts/namespaces.md
+    - Certificates: kubernetes/concepts/certificates.md
+    - Ways to Run Clusters:
+      - Overview: kubernetes/concepts/ways-to-run-clusters/README.md
+      - Local Cluster:
+        - Overview: kubernetes/concepts/ways-to-run-clusters/local-cluster/README.md
+        - Kind: kubernetes/concepts/ways-to-run-clusters/local-cluster/kind.md
+    - Advanced:
+      - Overview: kubernetes/concepts/advanced/README.md
+      - Finalizers: kubernetes/concepts/advanced/finalizers.md
+      - IPVS: kubernetes/concepts/advanced/ipvs.md
+      - Pause Container: kubernetes/concepts/advanced/pause-container.md
+      - Aggregation Layer: kubernetes/concepts/advanced/aggregation-layer.md
+      - Garbage Collection: kubernetes/concepts/advanced/garbage-collection.md
+    - need for Swapoff: kubernetes/concepts/need-for-swapoff.md
+    - Local deployment: kubernetes/concepts/local-deployment.md
+    - Best  Practices:
+      - Overview: kubernetes/concepts/best-practices/README.md
+      - Security: kubernetes/concepts/best-practices/security.md
+      - Deployment options: kubernetes/concepts/best-practices/deployment-options.md
+    - Deep dives:
+      - Overview: kubernetes/concepts/deep-dives/README.md
+      - what happens when: kubernetes/concepts/deep-dives/what-happens-when.md
+      - Networking: kubernetes/concepts/deep-dives/networking.md
+    - Downward API: kubernetes/concepts/downward-api.md
+    - Operators: kubernetes/concepts/operators.md
+    - Service Accounts: kubernetes/concepts/service-accounts.md
+    - RBAC: kubernetes/concepts/rbac.md
+    - High Availability: kubernetes/concepts/high-availability.md
+    - Security: kubernetes/concepts/security.md
+    - Logging: kubernetes/concepts/logging.md
+    - Storage: kubernetes/concepts/storage.md
+    - Garbage Collection: kubernetes/concepts/garbage-collection.md
+    - Restart Policy: kubernetes/concepts/restart-policy.md
+    - Resource Quota: kubernetes/concepts/resource-quota.md
+    - Scaling: kubernetes/concepts/scaling.md
+    - Setting up cluster: kubernetes/concepts/setting-up-cluster.md
+    - Service Mesh: kubernetes/concepts/service-mesh.md
+    - Services:
+      - Overview: kubernetes/concepts/services/README.md
+      - Endpoint Slices: kubernetes/concepts/services/endpoint-slices.md
+    - Authentication/Authorization: kubernetes/concepts/authentication-authorization.md
+    - Custom Controllers: kubernetes/concepts/custom-controllers.md
+    - Operators: kubernetes/concepts/operators-1.md
+    - Troubleshooting: kubernetes/concepts/troubleshooting.md
+    - Config maps: kubernetes/concepts/config-maps.md
+    - Secrets: kubernetes/concepts/secrets.md
+  - Guides:
+    - Overview: kubernetes/guides/README.md
+    - Tools: kubernetes/guides/tools.md
+    - private image registry: kubernetes/guides/private-image-registry.md
+    - Best Practices: kubernetes/guides/best-practices.md
+    - Cost Management: kubernetes/guides/cost-management.md
+    - Authentication:
+      - Overview: kubernetes/guides/authentication/README.md
+      - OIDC with Keycloak: kubernetes/guides/authentication/oidc-with-keycloak.md
+    - Backup Restore: kubernetes/guides/backup-restore.md
+    - Databases:
+      - Overview: kubernetes/guides/databases/README.md
+      - CloudNativePG: kubernetes/guides/databases/cloudnativepg.md
+    - Kubectl: kubernetes/guides/kubectl.md
+    - Cluster API: kubernetes/guides/cluster-api.md
+    - API management: kubernetes/guides/api-management.md
+    - Troubleshooting:
+      - Overview: kubernetes/guides/troubleshooting/README.md
+      - networking: kubernetes/guides/troubleshooting/networking.md
+      - Crashloop Backoff: kubernetes/guides/troubleshooting/crashloop-backoff.md
+    - Auditing:
+      - Overview: kubernetes/guides/auditing/README.md
+      - Checkov: kubernetes/guides/auditing/checkov.md
+    - Chaos Engineering: kubernetes/guides/chaos-engineering.md
+    - Templating/patching:
+      - Overview: kubernetes/guides/templating-patching/README.md
+      - Kustomize: kubernetes/guides/templating-patching/kustomize.md
+      - Helm:
+        - Overview: kubernetes/guides/templating-patching/helm/README.md
+        - Helmfile: kubernetes/guides/templating-patching/helm/helmfile.md
+    - Cluster uprades: kubernetes/guides/cluster-uprades.md
+    - High Availability: kubernetes/guides/high-availability.md
+    - Multiple tools: kubernetes/guides/multiple-tools.md
+    - Secrets Management:
+      - Overview: kubernetes/guides/secrets-management/README.md
+      - Sealed Secrets: kubernetes/guides/secrets-management/sealed-secrets.md
+    - Auto Scaling: kubernetes/guides/auto-scaling.md
+    - Pipeline/Workflows:
+      - Overview: kubernetes/guides/pipeline-workflows/README.md
+      - Argo Workflows: kubernetes/guides/pipeline-workflows/argo-workflows.md
+      - Tekton Pipelines: kubernetes/guides/pipeline-workflows/tekton-pipelines.md
+      - Jenkins: kubernetes/guides/pipeline-workflows/jenkins.md
+    - Progressive Delivery:
+      - Overview: kubernetes/guides/progressive-delivery/README.md
+      - Argo Rollouts: kubernetes/guides/progressive-delivery/argo-rollouts.md
+    - Ingress:
+      - Overview: kubernetes/guides/ingress/README.md
+      - Traefik: kubernetes/guides/ingress/traefik.md
+    - Secret Management: kubernetes/guides/secret-management.md
+    - Gitops:
+      - Overview: kubernetes/guides/gitops/README.md
+      - Basics: kubernetes/guides/gitops/basics.md
+      - Argo CD:
+        - Overview: kubernetes/guides/gitops/argo-cd/README.md
+        - Best Practices: kubernetes/guides/gitops/argo-cd/best-practices.md
+        - Image Updater: kubernetes/guides/gitops/argo-cd/image-updater.md
+        - Go SDK: kubernetes/guides/gitops/argo-cd/go-sdk.md
+    - Service Mesh:
+      - Overview: kubernetes/guides/service-mesh/README.md
+      - Istio: kubernetes/guides/service-mesh/istio.md
+      - Linkerd: kubernetes/guides/service-mesh/linkerd.md
+    - Container Builds:
+      - Overview: kubernetes/guides/container-builds/README.md
+      - Kaniko: kubernetes/guides/container-builds/kaniko.md
+      - Bazel: kubernetes/guides/container-builds/bazel.md
+    - Logging:
+      - Overview: kubernetes/guides/logging/README.md
+      - Fluentbit: kubernetes/guides/logging/fluentbit.md
+    - Stateful Workloads: kubernetes/guides/stateful-workloads.md
+    - Image Signing: kubernetes/guides/image-signing.md
+    - Federation: kubernetes/guides/federation.md
+    - "Client-go": kubernetes/guides/client-go.md
+    - Policy Engine:
+      - Overview: kubernetes/guides/policy-engine/README.md
+      - Kyverno: kubernetes/guides/policy-engine/kyverno.md
+    - Zero CVE images: kubernetes/guides/zero-cve-images.md
+    - Security Scanning: kubernetes/guides/security-scanning.md
+    - Context Switching: kubernetes/guides/context-switching.md
+    - Scaling: kubernetes/guides/scaling.md
+    - Convertors: kubernetes/guides/convertors.md
+    - "Multi-Cluster": kubernetes/guides/multi-cluster.md
+    - "Multi-Tenancy": kubernetes/guides/multi-tenancy.md
+    - Validation:
+      - Overview: kubernetes/guides/validation/README.md
+      - Datree: kubernetes/guides/validation/datree.md
+    - Miscellaneous: kubernetes/guides/miscellaneous.md
+  - Troubleshooting: kubernetes/troubleshooting.md
+  - The hard way: kubernetes/the-hard-way.md
+  - updates along the versions: kubernetes/updates-along-the-versions.md
+  - "client-go": kubernetes/client-go.md
+  - EKS:
+    - Overview: kubernetes/eks/README.md
+    - Workshops: kubernetes/eks/workshops.md
+    - Fargate vs EC2: kubernetes/eks/fargate-vs-ec2.md
+    - Cluster upgrade: kubernetes/eks/cluster-upgrade.md
+  - Certifications:
+    - Overview: kubernetes/certifications/README.md
+    - CKAD:
+      - Overview: kubernetes/certifications/ckad/README.md
+      - Application Design and Build: kubernetes/certifications/ckad/application-design-and-build.md
+      - Application Deployment: kubernetes/certifications/ckad/application-deployment.md
+      - Application Observability and Maintenance: kubernetes/certifications/ckad/application-observability-and-maintenance.md
+      - Application Environment, Configuration and Security: kubernetes/certifications/ckad/application-environment-configuration-and-security.md
+      - Services and Networking: kubernetes/certifications/ckad/services-and-networking.md
+    - CKA:
+      - Overview: kubernetes/certifications/cka/README.md
+      - Lab videos: kubernetes/certifications/cka/lab-videos.md
+- ⛅ AWS:
+  - Cloud Architect Areas: aws/cloud-architect-areas.md
+  - Concepts:
+    - Overview: aws/concepts/README.md
+    - Cost Management: aws/concepts/cost-management.md
+    - Magic ips/ 169.254: aws/concepts/magic-ips-169.254.md
+    - Migration:
+      - Overview: aws/concepts/migration/README.md
+      - Migration Evaluator: aws/concepts/migration/migration-evaluator.md
+    - IAM:
+      - Overview: aws/concepts/iam/README.md
+      - External ID and Confused deputy problem: aws/concepts/iam/external-id-and-confused-deputy-problem.md
+      - Various types of roles: aws/concepts/iam/various-types-of-roles.md
+    - EBS:
+      - Overview: aws/concepts/ebs/README.md
+      - Amazon Data Lifecycle Manager: aws/concepts/ebs/amazon-data-lifecycle-manager.md
+    - Api Gateway:
+      - Overview: aws/concepts/api-gateway/README.md
+      - Usage Plan: aws/concepts/api-gateway/usage-plan.md
+    - Systems Manager:
+      - Overview: aws/concepts/systems-manager/README.md
+      - Patch Manager: aws/concepts/systems-manager/patch-manager.md
+    - S3: aws/concepts/s3.md
+    - ECS: aws/concepts/ecs.md
+    - Messaging/Streaming Services:
+      - Overview: aws/concepts/messaging-streaming-services/README.md
+      - Kinesis: aws/concepts/messaging-streaming-services/kinesis.md
+    - Organizations:
+      - Overview: aws/concepts/organizations/README.md
+      - Delegated Admin: aws/concepts/organizations/delegated-admin.md
+    - IAM: aws/concepts/iam-1.md
+    - Service Discovery: aws/concepts/service-discovery.md
+    - VPC Lattice: aws/concepts/vpc-lattice.md
+    - App Mesh vs VPC Lattice: aws/concepts/app-mesh-vs-vpc-lattice.md
+  - Guides:
+    - Overview: aws/guides/README.md
+    - Cost Saving: aws/guides/cost-saving.md
+    - Lambda: aws/guides/lambda.md
+    - 🧑‍🏫 Perspective Guidance: aws/guides/perspective-guidance.md
+    - RDS:
+      - Overview: aws/guides/rds/README.md
+      - SSL Connectivity: aws/guides/rds/ssl-connectivity.md
+    - Ec2:
+      - Overview: aws/guides/ec2/README.md
+      - Spot pool: aws/guides/ec2/spot-pool.md
+    - ECS to EKS: aws/guides/ecs-to-eks.md
+    - Chatops: aws/guides/chatops.md
+  - Blogs: aws/blogs.md
+- AI:
+  - AI, ML, Genai whats the difference?: ai/ai-ml-genai-whats-the-difference.md
+  - Inner Workings:
+    - Overview: ai/inner-workings/README.md
+    - How chatgpt came up: ai/inner-workings/how-chatgpt-came-up.md
+    - Whats a T in GPT?: ai/inner-workings/whats-a-t-in-gpt.md
+    - Supervised vs Unsupervised Learning: ai/inner-workings/supervised-vs-unsupervised-learning.md
+    - Fine tuning: ai/inner-workings/fine-tuning.md
+    - Reinforcement Learning with Human Feedback: ai/inner-workings/reinforcement-learning-with-human-feedback.md
+    - Overfitting vs underfitting: ai/inner-workings/overfitting-vs-underfitting.md
+    - Embeddings: ai/inner-workings/embeddings.md
+    - Phases in data science process: ai/inner-workings/phases-in-data-science-process.md
+  - Future with AI: ai/future-with-ai.md
+  - MCP: ai/mcp.md
+  - Prompt Engineering:
+    - Overview: ai/prompt-engineering.md
+    - Tips: ai/prompt-engineering/tips.md
+    - Prompt Engineering Patterns: ai/prompt-engineering/prompt-engineering-patterns.md
+  - AWS:
+    - Overview: ai/aws/README.md
+    - Services: ai/aws/services.md
+    - Bedrock: ai/aws/bedrock.md
+    - Sagemaker:
+      - Overview: ai/aws/sagemaker/README.md
+      - Inference methods: ai/aws/sagemaker/inference-methods.md
+  - Run Locally:
+    - Overview: ai/run-locally/README.md
+    - Ollama: ai/run-locally/ollama.md
+  - Tricks: ai/tricks.md
+  - Jobs: ai/jobs.md
+  - RAG: ai/rag.md
+  - MLops: ai/mlops.md
+  - Prompt Injection: ai/prompt-injection.md
+  - Is SAAS dead?: ai/is-saas-dead.md
+- 🐧 Linux:
+  - Linux:
+    - Overview: linux/linux/README.md
+    - Complete guides: linux/linux/complete-guides.md
+    - Bash Scripting: linux/linux/bash-scripting.md
+    - ">/dev/null 2>&1": linux/linux/greater-than-dev-null-2-greater-than-and-1.md
+    - SSH:
+      - Overview: linux/linux/ssh/README.md
+      - complete flow of a ssh connection: linux/linux/ssh/complete-flow-of-a-ssh-connection.md
+      - Agent Forwarding: linux/linux/ssh/agent-forwarding.md
+    - Boot process: linux/linux/boot-process.md
+    - Hypervisors: linux/linux/hypervisors.md
+    - Emulator vs Virtualization: linux/linux/emulator-vs-virtualization.md
+    - Logging:
+      - Overview: linux/linux/logging/README.md
+      - syslog: linux/linux/logging/syslog.md
+    - Sockets: linux/linux/sockets.md
+    - Spool directory: linux/linux/spool-directory.md
+    - tty vs pty: linux/linux/tty-vs-pty.md
+    - Index: linux/linux/syllabus.md
+    - Redirection Commands: linux/linux/redirection-commands.md
+    - Nologin user: linux/linux/nologin-user.md
+    - Fundamentals: linux/linux/fundamentals.md
+    - RAID: linux/linux/raid.md
+    - Hardening:
+      - Overview: linux/linux/hardening/README.md
+      - AppArmor: linux/linux/hardening/apparmor.md
+      - PAM: linux/linux/hardening/pam.md
+    - ulimit: linux/linux/ulimit.md
+    - Text Manipulation: linux/linux/text-manipulation.md
+    - File system: linux/linux/file-system.md
+    - hardlink vs softlink: linux/linux/hardlink-vs-softlink.md
+    - Tmux: linux/linux/tmux.md
+    - Editors:
+      - Overview: linux/linux/editors/README.md
+      - Vim: linux/linux/editors/vim.md
+    - File Transfer:
+      - Overview: linux/linux/file-transfer/README.md
+      - SFTP: linux/linux/file-transfer/sftp.md
+    - Networking:
+      - Overview: linux/linux/networking/README.md
+      - netplan: linux/linux/networking/netplan.md
+      - ports: linux/linux/networking/ports.md
+      - DHCP: linux/linux/networking/dhcp.md
+    - Compression:
+      - Overview: linux/linux/compression/README.md
+      - tar: linux/linux/compression/tar.md
+  - Configuration Management Tools:
+    - Overview: linux/configuration-management-tools/README.md
+    - salt: linux/configuration-management-tools/salt.md
+    - Ansible: linux/configuration-management-tools/ansible.md
+  - Tools:
+    - Overview: linux/tools/README.md
+    - Commandline: linux/tools/commandline.md
+    - File Based:
+      - Overview: linux/tools/file-based/README.md
+      - Rsync: linux/tools/file-based/rsync.md
+    - Package Manager:
+      - Overview: linux/tools/package-manager/README.md
+      - dpkg: linux/tools/package-manager/dpkg.md
+      - Yum: linux/tools/package-manager/yum.md
+    - Vim: linux/tools/vim.md
+    - Page: linux/tools/page.md
+    - cpulimit: linux/tools/cpulimit.md
+    - sha256sum: linux/tools/sha256sum.md
+- Azure:
+  - Concept map: azure/concept-map.md
+  - Azure for AWS: azure/azure-for-aws.md
+  - Resource Group: azure/resource-group.md
+  - Identity:
+    - Overview: azure/identity/README.md
+    - EntraID: azure/identity/entraid.md
+  - quota limits: azure/quota-limits.md
+  - Security Groups: azure/security-groups.md
+  - Network routing: azure/network-routing.md
+- 🌨️ GCP:
+  - Identity: gcp/identity.md
+- 💡 Solution Architecture concepts:
+  - Software Engineering Concepts:
+    - Overview: solution-architecture-concepts/software-engineering-concepts/README.md
+    - Basics: solution-architecture-concepts/software-engineering-concepts/basics.md
+    - GHz?: solution-architecture-concepts/software-engineering-concepts/ghz.md
+    - Cores?: solution-architecture-concepts/software-engineering-concepts/cores.md
+    - Base64 encoding: solution-architecture-concepts/software-engineering-concepts/base64-encoding.md
+    - Multi Tenancy: solution-architecture-concepts/software-engineering-concepts/multi-tenancy.md
+    - API error codes: solution-architecture-concepts/software-engineering-concepts/api-error-codes.md
+    - Forward Proxy: solution-architecture-concepts/software-engineering-concepts/forward-proxy.md
+    - HTTPS: solution-architecture-concepts/software-engineering-concepts/https.md
+    - DNS:
+      - Overview: solution-architecture-concepts/software-engineering-concepts/dns/README.md
+      - bind9: solution-architecture-concepts/software-engineering-concepts/dns/bind9.md
+      - dnsmasq: solution-architecture-concepts/software-engineering-concepts/dns/dnsmasq.md
+      - Mail related records: solution-architecture-concepts/software-engineering-concepts/dns/mail-related-records.md
+    - Protocols: solution-architecture-concepts/software-engineering-concepts/protocols.md
+    - Cache: solution-architecture-concepts/software-engineering-concepts/cache.md
+    - ways of connecting: solution-architecture-concepts/software-engineering-concepts/ways-of-connecting.md
+    - Reverse Proxy: solution-architecture-concepts/software-engineering-concepts/reverse-proxy.md
+  - Non functional requirements:
+    - Overview: solution-architecture-concepts/non-functional-requirements/README.md
+    - Reliability vs Availability: solution-architecture-concepts/non-functional-requirements/reliability-vs-availability.md
+    - Back of the Envelope Calculations: solution-architecture-concepts/non-functional-requirements/back-of-the-envelope-calculations.md
+    - Scaling: solution-architecture-concepts/non-functional-requirements/scaling.md
+  - Networking:
+    - Overview: solution-architecture-concepts/networking/README.md
+    - Routing: solution-architecture-concepts/networking/routing.md
+    - dns over https: solution-architecture-concepts/networking/dns-over-https.md
+    - OSI model: solution-architecture-concepts/networking/osi-model.md
+    - TCPIP: solution-architecture-concepts/networking/tcpip.md
+    - Nat: solution-architecture-concepts/networking/nat.md
+  - Stateful vs Stateless: solution-architecture-concepts/stateful-vs-stateless.md
+  - CDN: solution-architecture-concepts/cdn.md
+  - Security: solution-architecture-concepts/security.md
+  - System Design:
+    - Overview: solution-architecture-concepts/system-design/README.md
+    - system design interviews: solution-architecture-concepts/system-design/system-design-interviews.md
+  - Basics: solution-architecture-concepts/basics.md
+  - Event Driven Architecture:
+    - Overview: solution-architecture-concepts/event-driven-architecture/README.md
+    - RabbitMQ: solution-architecture-concepts/event-driven-architecture/rabbitmq.md
+    - Kafka:
+      - Overview: solution-architecture-concepts/event-driven-architecture/kafka/README.md
+      - Kraft vs Zookeeper: solution-architecture-concepts/event-driven-architecture/kafka/kraft-vs-zookeeper.md
+  - Software Planning: solution-architecture-concepts/software-planning.md
+  - High Cohesion Loose Coupling: solution-architecture-concepts/high-cohesion-loose-coupling.md
+  - Databases:
+    - Overview: solution-architecture-concepts/databases/README.md
+    - Postgres:
+      - Overview: solution-architecture-concepts/databases/postgres/README.md
+      - psql: solution-architecture-concepts/databases/postgres/psql.md
+    - MongoDB:
+      - Overview: solution-architecture-concepts/databases/mongodb/README.md
+      - BSON: solution-architecture-concepts/databases/mongodb/bson.md
+    - Foreign Keys and Constraints: solution-architecture-concepts/databases/foreign-keys-and-constraints.md
+    - Indexing: solution-architecture-concepts/databases/indexing.md
+    - Database Schema Design: solution-architecture-concepts/databases/database-schema-design.md
+    - OPM or not to ORM: solution-architecture-concepts/databases/opm-or-not-to-orm.md
+    - Normalization: solution-architecture-concepts/databases/normalization.md
+  - Cheatsheets: solution-architecture-concepts/cheatsheets.md
+  - Concurrency: solution-architecture-concepts/concurrency.md
+  - CAP theorem: solution-architecture-concepts/cap-theorem.md
+  - Protocols:
+    - Overview: solution-architecture-concepts/protocols/README.md
+    - Server Sent Events: solution-architecture-concepts/protocols/server-sent-events.md
+    - WebRTC: solution-architecture-concepts/protocols/webrtc.md
+    - HTTP:
+      - Overview: solution-architecture-concepts/protocols/http/README.md
+      - wellknown: solution-architecture-concepts/protocols/http/wellknown.md
+    - Websocket: solution-architecture-concepts/protocols/websocket.md
+  - OpenSSL:
+    - Overview: solution-architecture-concepts/openssl/README.md
+    - PKI: solution-architecture-concepts/openssl/pki.md
+    - Signing and Verifying: solution-architecture-concepts/openssl/signing-and-verifying.md
+    - Keystore: solution-architecture-concepts/openssl/keystore.md
+  - Thinking like an Architect: solution-architecture-concepts/thinking-like-an-architect.md
+  - Architecture:
+    - Overview: solution-architecture-concepts/architecture/README.md
+    - Architecture Patterns: solution-architecture-concepts/architecture/architecture-patterns.md
+  - Availability: solution-architecture-concepts/availability.md
+  - Authentication:
+    - Overview: solution-architecture-concepts/authentication/README.md
+    - JWT:
+      - Overview: solution-architecture-concepts/authentication/jwt/README.md
+      - Bearer: solution-architecture-concepts/authentication/jwt/bearer.md
+      - Session vs jwt: solution-architecture-concepts/authentication/jwt/session-vs-jwt.md
+    - Oauth2: solution-architecture-concepts/authentication/oauth2.md
+    - SAML: solution-architecture-concepts/authentication/saml.md
+    - OIDC: solution-architecture-concepts/authentication/oidc.md
+  - Performance:
+    - Overview: solution-architecture-concepts/performance/README.md
+    - Rate Limiting: solution-architecture-concepts/performance/rate-limiting.md
+  - Load Balancing: solution-architecture-concepts/load-balancing.md
+  - Resilience: solution-architecture-concepts/resilience.md
+  - Idempotency: solution-architecture-concepts/idempotency.md
+  - 12 factor app: solution-architecture-concepts/12-factor-app.md
+  - VScode:
+    - Overview: solution-architecture-concepts/vscode/README.md
+    - BreakPoints: solution-architecture-concepts/vscode/breakpoints.md
+  - Memory Leaks: solution-architecture-concepts/memory-leaks.md
+  - Shift Left: solution-architecture-concepts/shift-left.md
+  - Cluster Management:
+    - Overview: solution-architecture-concepts/cluster-management/README.md
+    - Gossip Protocol: solution-architecture-concepts/cluster-management/gossip-protocol.md
+    - RAFT: solution-architecture-concepts/cluster-management/raft.md
+  - Caching: solution-architecture-concepts/caching.md
+  - Solutions Architecture: solution-architecture-concepts/solutions-architecture.md
+  - Performance testing: solution-architecture-concepts/performance-testing.md
+  - Percentile: solution-architecture-concepts/percentile.md
+  - TOTP: solution-architecture-concepts/totp.md
+  - Hashing: solution-architecture-concepts/hashing.md
+  - base64 Encoding: solution-architecture-concepts/base64-encoding.md
+  - BSON: solution-architecture-concepts/bson.md
+  - Cheat Sheets:
+    - Overview: cheat-sheets/README.md
+    - Combined Cheatsheets: cheat-sheets/combined-cheatsheets.md
+    - Python: cheat-sheets/python.md
+    - Linux: cheat-sheets/linux.md
+    - Regex: cheat-sheets/regex.md
+  - Programming Concepts:
+    - Overview: programming-concepts/README.md
+    - Stack/Heap and Stack Overflow: programming-concepts/stack-heap-and-stack-overflow.md
+  - Languages:
+    - Overview: languages/README.md
+    - Golang:
+      - Overview: languages/golang/README.md
+      - For Beginners: languages/golang/for-beginners.md
+      - Deep Dive: languages/golang/deep-dive.md
+      - Crash Course: languages/golang/crash-course.md
+      - Best Practices: languages/golang/best-practices.md
+      - Type Assertion: languages/golang/type-assertion.md
+      - Sql packages: languages/golang/sql-packages.md
+      - JSON: languages/golang/json.md
+      - Generics: languages/golang/generics.md
+      - Validators: languages/golang/validators.md
+      - Interfaces: languages/golang/interfaces.md
+      - Reflect: languages/golang/reflect.md
+      - Closures: languages/golang/closures.md
+      - Context: languages/golang/context.md
+      - Methods: languages/golang/methods.md
+      - Channels: languages/golang/channels.md
+      - Graceful Shutdown: languages/golang/graceful-shutdown.md
+      - Playlists: languages/golang/playlists.md
+      - Concurrency:
+        - Overview: languages/golang/concurrency/README.md
+        - Sync: languages/golang/concurrency/sync.md
+      - Memory Leaks: languages/golang/memory-leaks.md
+      - Basics: languages/golang/basics.md
+    - Python:
+      - Overview: languages/python/README.md
+      - VirtualEnvs: languages/python/virtualenvs.md
+      - Logging: languages/python/logging.md
+      - Decorators: languages/python/decorators.md
+    - Bash: languages/bash.md
+  - API design: api-design.md
+- Guides:
+  - 🫙 Databases:
+    - Overview: guides/databases/README.md
+    - Views: guides/databases/views.md
+    - Foreign data wrapper: guides/databases/foreign-data-wrapper.md
+    - Transactions: guides/databases/transactions.md
+    - Constraints: guides/databases/constraints.md
+    - Columnar Databases: guides/databases/columnar-databases.md
+    - Stored Procedures: guides/databases/stored-procedures.md
+    - Normalization: guides/databases/normalization.md
+  - Regex: guides/regex.md
+  - Messaging:
+    - Overview: guides/messaging/README.md
+    - Kafka: guides/messaging/kafka.md
+  - Observability:
+    - Overview: guides/observability/README.md
+    - Prometheus:
+      - Overview: guides/observability/prometheus/README.md
+      - Intrumenting: guides/observability/prometheus/intrumenting.md
+      - PromQL: guides/observability/prometheus/promql.md
+    - Open Telemetry:
+      - Overview: guides/observability/open-telemetry/README.md
+      - Node metrics: guides/observability/open-telemetry/node-metrics.md
+    - Opentelemetry vs Prometheus: guides/observability/opentelemetry-vs-prometheus.md
+    - Grafana:
+      - Overview: guides/observability/grafana/README.md
+      - LGTM stack: guides/observability/grafana/lgtm-stack.md
+    - EBPF: guides/observability/ebpf.md
+    - Tracing: guides/observability/tracing.md
+    - Observability: guides/observability/observability.md
+  - GenAI/LLMS:
+    - Overview: guides/genai-llms/README.md
+    - Is AI going to take our jobs?: guides/genai-llms/is-ai-going-to-take-our-jobs.md
+  - Coding Practices:
+    - Overview: guides/coding-practices/README.md
+    - MonoRepos: guides/coding-practices/monorepos.md
+  - Opentofu: guides/opentofu.md
+  - Infra as Code: guides/infra-as-code.md
+  - Hashicorp:
+    - Overview: guides/hashicorp/README.md
+    - Packer: guides/hashicorp/packer.md
+    - Terraform: guides/hashicorp/terraform.md
+    - Boundary: guides/hashicorp/boundary.md
+    - Vault: guides/hashicorp/vault.md
+  - Open Tofu: guides/open-tofu.md
+  - Micro Services: guides/micro-services.md
+  - Platform Engineering:
+    - Overview: guides/platform-engineering/README.md
+    - Crossplane: guides/platform-engineering/crossplane.md
+    - Internal Developer Platforms: guides/platform-engineering/internal-developer-platforms.md
+  - Performance Engineering: guides/performance-engineering.md
+  - GraphQL: guides/graphql.md
+  - Grpc: guides/grpc.md
+  - Deadlock: guides/deadlock.md
+  - Troubleshooting: guides/troubleshooting.md
+  - Security:
+    - Overview: guides/security/README.md
+    - IDS: guides/security/ids.md
+    - Supply Chain Security: guides/security/supply-chain-security.md
+    - Zero Trust: guides/security/zero-trust.md
+    - Assume Breach Principle: guides/security/assume-breach-principle.md
+  - Networking:
+    - Overview: guides/networking/README.md
+    - Packet flow: guides/networking/packet-flow.md
+    - Ipv6: guides/networking/ipv6.md
+    - TCP: guides/networking/tcp.md
+    - TLS: guides/networking/tls.md
+  - Nginx: guides/nginx.md
+  - Event Driven Architecture: guides/event-driven-architecture.md
+  - ChatGpt: guides/chatgpt.md
+  - WASM:
+    - Overview: guides/wasm/README.md
+    - Docker + WASM: guides/wasm/docker-+-wasm.md
+    - Kubernetes + WASM: guides/wasm/kubernetes-+-wasm.md
+  - Testing:
+    - Overview: guides/testing/README.md
+    - Unit Testing:
+      - Overview: guides/testing/unit-testing/README.md
+      - "Test Doubles: Mocks,Stubs,Fakes": guides/testing/unit-testing/test-doubles-mocks-stubs-fakes.md
+- 💯 REDDIT:
+  - Subreddits: reddit/subreddits.md
+- Group 1:
+  - Blogs: group-1/blogs.md
+- Github Pages:
+  - Interview Questions: github-pages/untitled.md
+  - Repos: github-pages/repos.md
+  - Guides: github-pages/guides.md
+  - "awesome-repos": github-pages/awesome.md
+- 🎤 PODCASTS:
+  - Tech guidance: podcasts/tech-guidance.md
+- Motivation:
+  - Motivation:
+    - Overview: motivation/motivation/README.md
+    - Focus: motivation/motivation/focus.md
+    - Mindset: motivation/motivation/mindset.md
+    - Discipline: motivation/motivation/discipline.md
+    - Goal Setting: motivation/motivation/goal-setting.md
+  - Work tips:
+    - Overview: motivation/work-tips/README.md
+    - untools: motivation/work-tips/untools.md
+    - Time management: motivation/work-tips/time-management.md
+  - Observability: motivation/observability.md
+  - Management: motivation/management.md
+
