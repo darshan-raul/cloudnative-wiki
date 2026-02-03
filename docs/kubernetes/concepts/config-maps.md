@@ -1,6 +1,6 @@
 # Config maps
 
-{% embed url="https://kubernetes.io/docs/concepts/configuration/configmap/" %}
+"https://kubernetes.io/docs/concepts/configuration/configmap/"
 
 There are four different ways that you can use a ConfigMap to configure a container inside a Pod:
 
@@ -26,4 +26,4 @@ There are four different ways that you can use a ConfigMap to configure a contai
 
 &#x20;you can add an `immutable` field to a ConfigMap definition to create an [immutable ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/#configmap-immutable).
 
-{% embed url="https://kubernetes.io/docs/concepts/configuration/configmap/#configmap-immutable" %}
+"https://kubernetes.io/docs/concepts/configuration/configmap/#configmap-immutable"

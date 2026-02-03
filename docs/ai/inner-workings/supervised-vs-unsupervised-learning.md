@@ -19,4 +19,4 @@ You can apply semi-supervised learning when it’s difficult to obtain labels fo
 
 
 
-{% embed url="https://aws.amazon.com/compare/the-difference-between-machine-learning-supervised-and-unsupervised/" %}
+"https://aws.amazon.com/compare/the-difference-between-machine-learning-supervised-and-unsupervised/"

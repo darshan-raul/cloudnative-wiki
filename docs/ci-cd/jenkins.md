@@ -39,6 +39,6 @@ A [LTS (Long-Term Support) release](https://www.jenkins.io/download/lts/) is cho
 
 ## references:
 
-{% embed url="https://www.jenkins.io/doc/" %}
+"https://www.jenkins.io/doc/"
 
-{% embed url="https://www.jenkins.io/doc/book/using/best-practices/" %}
+"https://www.jenkins.io/doc/book/using/best-practices/"

@@ -82,5 +82,5 @@ Here's a step-by-step guide to using the Downward API to expose pod metadata as 
 
 By following these steps, you can effectively utilize the Kubernetes Downward API to make pod and container metadata available to your applications, enhancing their configurability and awareness of their execution context.
 
-{% embed url="https://medium.com/@mkdev/what-is-kubernetes-downward-api-and-why-you-might-need-it-0b49a9ceaaca" %}
+"https://medium.com/@mkdev/what-is-kubernetes-downward-api-and-why-you-might-need-it-0b49a9ceaaca"
 

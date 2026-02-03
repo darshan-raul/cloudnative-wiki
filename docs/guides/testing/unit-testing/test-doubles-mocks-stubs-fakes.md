@@ -1,6 +1,6 @@
 # Test Doubles: Mocks,Stubs,Fakes
 
-{% embed url="https://www.youtube.com/watch?v=4AxXWjBSIdY" %}
+"https://www.youtube.com/watch?v=4AxXWjBSIdY"
 
 <figure><img src="../../../.gitbook/assets/image (253).png" alt=""><figcaption></figcaption></figure>
 

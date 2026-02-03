@@ -1,3 +1,3 @@
 # Python
 
-{% embed url="https://www.pythoncheatsheet.org" %}
+"https://www.pythoncheatsheet.org"

@@ -4,4 +4,4 @@ This page contains all the architecture's AWS has seen their customer's follow a
 
 A wide varierty of usecases are covered from networking, devops to data science, event based connectivity
 
-{% embed url="https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/welcome.html" %}
+"https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/welcome.html"

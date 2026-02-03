@@ -1,3 +1,3 @@
 # dpkg
 
-{% embed url="https://ostechnix.com/dpkg-command-usage/" %}
+"https://ostechnix.com/dpkg-command-usage/"

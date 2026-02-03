@@ -4,7 +4,7 @@
 
 #### aws-shell:
 
-{% embed url="https://github.com/awslabs/aws-shell" %}
+"https://github.com/awslabs/aws-shell"
 
 
 
@@ -12,11 +12,11 @@
 
 ### GUI:
 
-{% embed url="https://github.com/PySimpleGUI/PySimpleGUI" %}
+"https://github.com/PySimpleGUI/PySimpleGUI"
 
 ### LOAD TESTING:
 
-{% embed url="https://www.promptworks.com/blog/load-testing-with-locust" %}
+"https://www.promptworks.com/blog/load-testing-with-locust"
 
 
 

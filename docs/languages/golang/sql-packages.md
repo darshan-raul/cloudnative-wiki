@@ -1,7 +1,7 @@
 # Sql packages
 
-{% embed url="http://go-database-sql.org/overview.html" %}
+"http://go-database-sql.org/overview.html"
 go-sql-tutorial
-{% endembed %}
+{% endembed
 
-{% embed url="https://jmoiron.github.io/sqlx/" %}
+"https://jmoiron.github.io/sqlx/"

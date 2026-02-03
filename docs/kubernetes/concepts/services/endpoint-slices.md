@@ -1,3 +1,3 @@
 # Endpoint Slices
 
-{% embed url="https://www.youtube.com/watch?v=P3BTXrIQhKQ" %}
+"https://www.youtube.com/watch?v=P3BTXrIQhKQ"

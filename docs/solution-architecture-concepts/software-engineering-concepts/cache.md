@@ -8,4 +8,4 @@
 
 </div>
 
-{% embed url="https://twitter.com/sahnlam/status/1712319453160157461" %}
+"https://twitter.com/sahnlam/status/1712319453160157461"

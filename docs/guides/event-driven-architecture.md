@@ -1,3 +1,3 @@
 # Event Driven Architecture
 
-{% embed url="https://eda-visuals.boyney.io/" %}
+"https://eda-visuals.boyney.io/"

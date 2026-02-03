@@ -27,4 +27,4 @@ Parity in RAID (Redundant Array of Independent Disks) systems is used for error 
 
 In summary, parity in RAID systems plays a crucial role in ensuring data integrity, enabling error detection and correction, and providing fault tolerance, all while optimizing storage efficiency compared to simple mirroring techniques.
 
-{% embed url="https://www.prepressure.com/library/technology/raid" %}
+"https://www.prepressure.com/library/technology/raid"

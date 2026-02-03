@@ -1,8 +1,8 @@
 # DNS
 
-{% embed url="https://www.youtube.com/watch?v=g_gKI2HCElk" %}
+"https://www.youtube.com/watch?v=g_gKI2HCElk"
 
-{% embed url="https://devconnected.com/how-to-flush-dns-cache-on-linux/" %}
+"https://devconnected.com/how-to-flush-dns-cache-on-linux/"
 
 DNS zones and related concepts are fundamental to understanding how the Domain Name System (DNS) works. Here’s an in-depth look at these topics:
 

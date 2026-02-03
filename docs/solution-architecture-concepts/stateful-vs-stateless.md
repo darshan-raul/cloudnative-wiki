@@ -49,11 +49,11 @@ A **stateful application** retains information (state) about a client's session 
 
 ## Gotcha
 
-{% code overflow="wrap" %}
+{% code overflow="wrap"
 ```
 in case of a chat app, if i keep all its 'state' store outside of the application say a seperate sql db, a seperate redis db, will it still qaulify as a stateful application because its storing the state for individual requests or does it now become a stateless app?
 ```
-{% endcode %}
+{% endcode
 
 This is a great question and touches on a subtle but important distinction between **where state is stored** versus **whether an application is stateful or stateless**.
 

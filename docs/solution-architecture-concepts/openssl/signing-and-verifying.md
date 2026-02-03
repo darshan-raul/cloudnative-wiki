@@ -1,6 +1,6 @@
 # Signing and Verifying
 
-{% embed url="https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/" %}
+"https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/"
 
 **Steps to Create a Signature**
 

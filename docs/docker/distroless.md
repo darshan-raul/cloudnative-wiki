@@ -1,3 +1,3 @@
 # Distroless
 
-{% embed url="https://github.com/GoogleContainerTools/distroless" %}
+"https://github.com/GoogleContainerTools/distroless"

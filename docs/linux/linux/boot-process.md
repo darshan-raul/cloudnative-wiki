@@ -1,6 +1,6 @@
 # Boot process
 
-{% embed url="https://charmanderander.gitbooks.io/deep-dive/content/" %}
+"https://charmanderander.gitbooks.io/deep-dive/content/"
 
 <div data-full-width="true">
 

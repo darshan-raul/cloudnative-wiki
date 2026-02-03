@@ -1,3 +1,3 @@
 # Client-go
 
-{% embed url="https://github.com/iximiuz/client-go-examples" %}
+"https://github.com/iximiuz/client-go-examples"

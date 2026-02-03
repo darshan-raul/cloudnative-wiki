@@ -1,3 +1,3 @@
 # BSON
 
-{% embed url="https://www.mongodb.com/resources/basics/json-and-bson" %}
+"https://www.mongodb.com/resources/basics/json-and-bson"

@@ -43,4 +43,4 @@ Using embeddings in RAG provides several benefits:
 2. Better contextual understanding: Embeddings help the model to understand the context in which the retrieved information is relevant, leading to more coherent and accurate generated text.
 3. Increased efficiency: Embeddings can be computed efficiently using techniques like matrix multiplication, making it possible to process large amounts of data quickly.
 
-{% embed url="https://aws.amazon.com/what-is/embeddings-in-machine-learning/" %}
+"https://aws.amazon.com/what-is/embeddings-in-machine-learning/"

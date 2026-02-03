@@ -2,7 +2,7 @@ site_name: Cloud Native Data Den
 theme:
   name: material
   features:
-    #- navigation.tabs
+    - navigation.tabs
     - navigation.indexes
 nav:
 - Cloud Native Data Den: README.md
@@ -238,6 +238,36 @@ nav:
       - Lab videos: kubernetes/certifications/cka/lab-videos.md
 - ⛅ AWS:
   - Cloud Architect Areas: aws/cloud-architect-areas.md
+  - Solutions Architect Professional:
+    - Overview: aws/solutions-architect-professional/index.md
+    - Domain 1 - Design Solutions for Organizational Complexity:
+      - Overview: aws/solutions-architect-professional/domain-1/index.md
+      - Network Connectivity: aws/solutions-architect-professional/domain-1/1.1-network-connectivity.md
+      - Prescribe Security Controls: aws/solutions-architect-professional/domain-1/1.2-prescribe-security-controls.md
+      - Reliable and Resilient Architectures: aws/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures.md
+      - Multi-Account AWS Environment: aws/solutions-architect-professional/domain-1/1.4-multi-account-aws-environment.md
+      - Cost Optimization & Visibility: aws/solutions-architect-professional/domain-1/1.5-cost-optimization-and-visibility.md
+    - Domain 2 - Design for New Solutions:
+      - Overview: aws/solutions-architect-professional/domain-2/index.md
+      - Deployment Strategy: aws/solutions-architect-professional/domain-2/2.1-deployment-strategy.md
+      - Business Continuity: aws/solutions-architect-professional/domain-2/2.2-business-continuity.md
+      - Security Controls: aws/solutions-architect-professional/domain-2/2.3-security-controls.md
+      - Reliability Requirements: aws/solutions-architect-professional/domain-2/2.4-reliability-requirements.md
+      - Performance Objectives: aws/solutions-architect-professional/domain-2/2.5-performance-objectives.md
+      - Cost Optimization Strategy: aws/solutions-architect-professional/domain-2/2.6-cost-optimization-strategy.md
+    - Domain 3 - Continuous Improvement for Existing Solutions:
+      - Overview: aws/solutions-architect-professional/domain-3/index.md
+      - Operational Excellence: aws/solutions-architect-professional/domain-3/3.1-operational-excellence.md
+      - Security Improvement: aws/solutions-architect-professional/domain-3/3.2-security-improvement.md
+      - Performance Improvement: aws/solutions-architect-professional/domain-3/3.3-performance-improvement.md
+      - Reliability Improvement: aws/solutions-architect-professional/domain-3/3.4-reliability-improvement.md
+      - Cost Optimization Opportunities: aws/solutions-architect-professional/domain-3/3.5-cost-optimization-opportunities.md
+    - Domain 4 - Accelerate Workload Migration and Modernization:
+      - Overview: aws/solutions-architect-professional/domain-4/index.md
+      - Migration Assessment: aws/solutions-architect-professional/domain-4/4.1-migration-assessment.md
+      - Migration Approach: aws/solutions-architect-professional/domain-4/4.2-migration-approach.md
+      - New Architecture for Migrated Workloads: aws/solutions-architect-professional/domain-4/4.3-new-architecture-for-migrated-workloads.md
+      - Modernization and Enhancements: aws/solutions-architect-professional/domain-4/4.4-modernization-and-enhancements.md
   - Concepts:
     - Overview: aws/concepts/README.md
     - Cost Management: aws/concepts/cost-management.md

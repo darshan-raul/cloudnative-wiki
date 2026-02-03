@@ -1,3 +1,3 @@
 # Checkov
 
-{% embed url="https://blog.frankel.ch/learning-auditing-kubernetes-manifests/" %}
+"https://blog.frankel.ch/learning-auditing-kubernetes-manifests/"

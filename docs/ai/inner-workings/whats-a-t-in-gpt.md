@@ -97,6 +97,6 @@ flowchart TD
 
 ## Paper which started Transformers
 
-{% embed url="https://en.wikipedia.org/wiki/Attention_Is_All_You_Need" %}
+"https://en.wikipedia.org/wiki/Attention_Is_All_You_Need"
 
-{% embed url="https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)" %}
+"https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)"

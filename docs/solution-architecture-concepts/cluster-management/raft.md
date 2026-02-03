@@ -32,6 +32,6 @@ The key benefits of using Raft in these systems are:
 
 Overall, Raft provides a robust and practical consensus algorithm that has become a standard building block for modern distributed applications.
 
-{% embed url="https://youtu.be/IujMVjKvWP4?si=8NsUEGrspi5ZshRe" %}
+"https://youtu.be/IujMVjKvWP4?si=8NsUEGrspi5ZshRe"
 
-{% embed url="https://youtu.be/P9Ydif5_qvE?si=L_cx04PwHx1IiHjO" %}
+"https://youtu.be/P9Ydif5_qvE?si=L_cx04PwHx1IiHjO"

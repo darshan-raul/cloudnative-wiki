@@ -23,6 +23,6 @@ WebSockets provide a two-way communication channel between a web client (browser
 
 
 
-{% embed url="https://youtu.be/d3RJ9o7pXG4?si=ybs__UG3iqR7Ss_8" %}
+"https://youtu.be/d3RJ9o7pXG4?si=ybs__UG3iqR7Ss_8"
 
-{% embed url="https://youtu.be/vXJsJ52vwAA?si=CD8WPkFXILylE2L0" %}
+"https://youtu.be/vXJsJ52vwAA?si=CD8WPkFXILylE2L0"

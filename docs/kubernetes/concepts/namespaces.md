@@ -1,6 +1,6 @@
 # Namespaces
 
-{% embed url="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/" %}
+"https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"
 
 * provide a mechanism for isolating groups of resources within a single cluster.
 * Names of resources need to be unique within a namespace, but not across namespaces.

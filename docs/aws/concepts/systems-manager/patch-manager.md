@@ -1,6 +1,6 @@
 # Patch Manager
 
-{% embed url="https://www.youtube.com/watch?v=PhIiVsCEBu8" %}
+"https://www.youtube.com/watch?v=PhIiVsCEBu8"
 
 > you are a aws expert. i have a fleet of 1000+ servers accross multiple aws accounts and some in azure. these are linux \[most of them] - ubuntu \[20,22,24 lts] and amazon linux plus a few windows servers 2016,2022. I want a automated and centralized way to patch them every week. some sensitive servers should not be patched without review. some jump and log servers can be patched and restarted automatically. I should get a report on which packages were updated were done on which server. explain the basic concepts of aws patch manager and give a clear explanation of baselines before you give me a very detailed solution based on my problem statement
 

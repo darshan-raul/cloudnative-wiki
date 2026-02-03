@@ -1,3 +1,3 @@
 # Lambda
 
-{% embed url="https://www.youtube.com/watch?v=JZb6usZkdXc" %}
+"https://www.youtube.com/watch?v=JZb6usZkdXc"

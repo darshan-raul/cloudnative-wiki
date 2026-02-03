@@ -139,8 +139,8 @@ In this example:
 * `exp` and `iat` are the expiration and issued-at times, respectively.
 * `name`, `admin`, and `email` are custom claims that provide additional information about the user.
 
-{% embed url="https://x.com/alexxubyte/status/1680955830504660995?s=20" %}
+"https://x.com/alexxubyte/status/1680955830504660995?s=20"
 
 <figure><img src="../../../.gitbook/assets/image (232).png" alt=""><figcaption></figcaption></figure>
 
-{% embed url="https://x.com/AmigosCode/status/1714315937589993881?s=20" %}
+"https://x.com/AmigosCode/status/1714315937589993881?s=20"

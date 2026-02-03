@@ -12,20 +12,20 @@ Whether it is infrastructure provisioning, code pipelines, monitoring, or contai
 
 Platform Engineering is not just‌ necessary tooling but a combination of tools, workflows, and processes.
 
-{% embed url="https://podcasts.google.com/feed/aHR0cHM6Ly9jaGFuZ2Vsb2cuY29tL3NoaXBpdC9mZWVk/episode/Y2hhbmdlbG9nLmNvbS8xNC8xOTUy?sa=X&ved=0CAIQx8UHahcKEwjwu7Sm-tD8AhUAAAAAHQAAAAAQLA" %}
+"https://podcasts.google.com/feed/aHR0cHM6Ly9jaGFuZ2Vsb2cuY29tL3NoaXBpdC9mZWVk/episode/Y2hhbmdlbG9nLmNvbS8xNC8xOTUy?sa=X&ved=0CAIQx8UHahcKEwjwu7Sm-tD8AhUAAAAAHQAAAAAQLA"
 
-{% embed url="https://youtu.be/j5M16qooAvo" %}
+"https://youtu.be/j5M16qooAvo"
 
-{% embed url="https://medium.com/@rphilogene/the-10-platform-engineering-tools-to-use-in-2022-c2cbf2561f77" %}
+"https://medium.com/@rphilogene/the-10-platform-engineering-tools-to-use-in-2022-c2cbf2561f77"
 
-{% embed url="https://hemantjain.medium.com/how-platform-engineering-differ-from-devops-and-sre-723c63716d96" %}
+"https://hemantjain.medium.com/how-platform-engineering-differ-from-devops-and-sre-723c63716d96"
 
-{% embed url="https://medium.com/@mbianchidev/2023-devops-is-terrible-ec88162c86d7" %}
+"https://medium.com/@mbianchidev/2023-devops-is-terrible-ec88162c86d7"
 
-{% embed url="https://thenewstack.io/devops-is-dead-embrace-platform-engineering/" %}
+"https://thenewstack.io/devops-is-dead-embrace-platform-engineering/"
 
-{% embed url="https://www.youtube.com/watch?v=0txypCU9DEU&list=WL&index=69&t=1974s" %}
+"https://www.youtube.com/watch?v=0txypCU9DEU&list=WL&index=69&t=1974s"
 
-{% embed url="https://www.youtube.com/watch?v=9_v77YiSGEY&list=WL&index=158" %}
+"https://www.youtube.com/watch?v=9_v77YiSGEY&list=WL&index=158"
 
 <figure><img src="../../.gitbook/assets/image (37).png" alt=""><figcaption></figcaption></figure>

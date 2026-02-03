@@ -9,7 +9,7 @@ A cloud native application is designed to run on a cloud native infrastructure p
 
 On a lighter note :smile:
 
-{% embed url="https://x.com/memenetes/status/1844691094182699452" %}
+"https://x.com/memenetes/status/1844691094182699452"
 
 <figure><img src=".gitbook/assets/image (230).png" alt=""><figcaption></figcaption></figure>
 
@@ -23,7 +23,7 @@ On a lighter note :smile:
 
 ## more reading
 
-{% embed url="https://www.alibabacloud.com/blog/seven-principles-of-cloud-native-architecture_598431" fullWidth="true" %}
+"https://www.alibabacloud.com/blog/seven-principles-of-cloud-native-architecture_598431" fullWidth="true"
 
 ### More Reading
 

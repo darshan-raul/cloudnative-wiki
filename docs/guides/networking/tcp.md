@@ -1,6 +1,6 @@
 # TCP
 
-{% embed url="https://www.youtube.com/watch?v=JWUsO1vmPcE" %}
+"https://www.youtube.com/watch?v=JWUsO1vmPcE"
 
 **TCP (Transmission Control Protocol)**
 

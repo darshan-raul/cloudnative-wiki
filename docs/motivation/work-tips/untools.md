@@ -1,3 +1,3 @@
 # untools
 
-{% embed url="https://untools.co" %}
+"https://untools.co"

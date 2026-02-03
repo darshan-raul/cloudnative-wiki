@@ -1,6 +1,6 @@
 # complete flow of a ssh connection
 
-{% embed url="https://www.digitalocean.com/community/tutorials/understanding-the-ssh-encryption-and-connection-process" %}
+"https://www.digitalocean.com/community/tutorials/understanding-the-ssh-encryption-and-connection-process"
 
 
 

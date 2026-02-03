@@ -1,3 +1,3 @@
 # Sealed Secrets
 
-{% embed url="https://youtu.be/wN1zJASjQDA?si=AqcGRFzReWqiOmGq" %}
+"https://youtu.be/wN1zJASjQDA?si=AqcGRFzReWqiOmGq"

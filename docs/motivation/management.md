@@ -1,3 +1,3 @@
 # Management
 
-{% embed url="https://themanagershandbook.com/" %}
+"https://themanagershandbook.com/"

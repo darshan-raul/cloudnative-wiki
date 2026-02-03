@@ -25,10 +25,10 @@ Prompt Engineering <mark style="color:purple;">leverages the principle of “pri
 3. Input data: The input you want a response for.
 4. Output indicator: The output type or format.
 
-{% embed url="https://www.youtube.com/watch?v=T9aRN5JkmL8" %}
+"https://www.youtube.com/watch?v=T9aRN5JkmL8"
 
 
 
 A very good guide :arrow\_double\_down:
 
-{% embed url="https://catalog.us-east-1.prod.workshops.aws/workshops/0644c9e9-5b82-45f2-8835-3b5aa30b1848/en-US" %}
+"https://catalog.us-east-1.prod.workshops.aws/workshops/0644c9e9-5b82-45f2-8835-3b5aa30b1848/en-US"

@@ -1,7 +1,7 @@
 # Load Balancing
 
-{% embed url="https://samwho.dev/load-balancing/" %}
+"https://samwho.dev/load-balancing/"
 complete visualization of how load balancers work
-{% endembed %}
+{% endembed
 
 <figure><img src="../.gitbook/assets/image (229).png" alt=""><figcaption></figcaption></figure>

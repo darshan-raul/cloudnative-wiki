@@ -39,4 +39,4 @@ Below are some of the concepts that are specific to Argo CD.
 
 
 
-{% embed url="https://www.youtube.com/watch?v=fQ9846hRiFo" %}
+"https://www.youtube.com/watch?v=fQ9846hRiFo"

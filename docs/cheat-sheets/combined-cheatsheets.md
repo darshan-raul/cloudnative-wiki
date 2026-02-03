@@ -1,3 +1,3 @@
 # Combined Cheatsheets
 
-{% embed url="https://devhints.io" %}
+"https://devhints.io"

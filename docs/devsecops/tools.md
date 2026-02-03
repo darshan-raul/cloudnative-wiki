@@ -1,3 +1,3 @@
 # Tools
 
-{% embed url="https://offsec.tools/" %}
+"https://offsec.tools/"

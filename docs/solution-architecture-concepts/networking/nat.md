@@ -2,7 +2,7 @@
 
 References:&#x20;
 
-{% embed url="https://www.routeralley.com/guides/nat.pdf" %}
+"https://www.routeralley.com/guides/nat.pdf"
 
 SNAT (Source Network Address Translation) and DNAT (Destination Network Address Translation) are two types of NAT used to modify IP addresses in network packets as they pass through a router or firewall. Here’s a detailed explanation of each and their differences:
 

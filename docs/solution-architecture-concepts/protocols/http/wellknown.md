@@ -1,3 +1,3 @@
 # wellknown
 
-{% embed url="https://www.keycdn.com/support/well-known" %}
+"https://www.keycdn.com/support/well-known"

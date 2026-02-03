@@ -10,32 +10,32 @@ SRE is all about applying a software engineering mindset to system administratio
 
 
 
-{% embed url="https://docs.google.com/presentation/d/1qcQ6alG_qUg3qWf733ZsDnTggwzqe4PZICrFXZ1zQZs/edit#slide=id.g75945b48fe_0_117" %}
+"https://docs.google.com/presentation/d/1qcQ6alG_qUg3qWf733ZsDnTggwzqe4PZICrFXZ1zQZs/edit#slide=id.g75945b48fe_0_117"
 
-{% embed url="https://youtu.be/GnvXfFcfEPg?si=g7jeyaYk0pn5iYBo" %}
+"https://youtu.be/GnvXfFcfEPg?si=g7jeyaYk0pn5iYBo"
 
-{% embed url="https://static.googleusercontent.com/media/sre.google/en/static/pdf/art-of-slos-handbook-a4.pdf" %}
+"https://static.googleusercontent.com/media/sre.google/en/static/pdf/art-of-slos-handbook-a4.pdf"
 sre book
-{% endembed %}
+{% endembed
 
 
 
-{% embed url="https://www.youtube.com/playlist?list=PLIivdWyY5sqJrKl7D2u-gmis8h9K66qoj" %}
+"https://www.youtube.com/playlist?list=PLIivdWyY5sqJrKl7D2u-gmis8h9K66qoj"
 
-{% embed url="https://sre.google/resources/practices-and-processes/twenty-years-of-sre-lessons-learned/" %}
+"https://sre.google/resources/practices-and-processes/twenty-years-of-sre-lessons-learned/"
 
 <div data-full-width="true"><figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure></div>
 
-{% embed url="https://www.businessprocessincubator.com/content/keep-lights-on-the-sre-way/" %}
+"https://www.businessprocessincubator.com/content/keep-lights-on-the-sre-way/"
 
-{% embed url="https://www.bytebase.com/blog/dev-sre-ops-devops-difference/" %}
+"https://www.bytebase.com/blog/dev-sre-ops-devops-difference/"
 
-{% embed url="https://github.com/dastergon/awesome-sre" %}
+"https://github.com/dastergon/awesome-sre"
 
-{% embed url="https://www.youtube.com/playlist?list=PL6VBQyIvTlRg3t_sl0dIcmh_X2qLmpHh4" %}
+"https://www.youtube.com/playlist?list=PL6VBQyIvTlRg3t_sl0dIcmh_X2qLmpHh4"
 SRE playlist
-{% endembed %}
+{% endembed
 
-{% embed url="https://www.youtube.com/playlist?list=PLIivdWyY5sqISlOXDGGK-SeUCvsxtB1c0" %}
+"https://www.youtube.com/playlist?list=PLIivdWyY5sqISlOXDGGK-SeUCvsxtB1c0"
 
-{% embed url="https://www.youtube.com/watch?v=RfnjNskapNg" %}
+"https://www.youtube.com/watch?v=RfnjNskapNg"

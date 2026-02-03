@@ -1,6 +1,6 @@
 # context
 
-{% embed url="https://www.youtube.com/watch?v=Q0BdETrs1Ok&t=127s" %}
+"https://www.youtube.com/watch?v=Q0BdETrs1Ok&t=127s"
 
 The `context` package in Go is used for passing request-scoped values, cancellation signals, and deadlines across API boundaries to all the goroutines involved in handling a particular request. It provides a way to manage and cancel long-running operations, propagate values across API boundaries, and handle timeouts. Here's a detailed explanation of the `context` package and some practical scenarios where you can use it.
 

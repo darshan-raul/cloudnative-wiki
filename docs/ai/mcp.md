@@ -1,10 +1,10 @@
 # MCP
 
-{% embed url="https://www.youtube.com/watch?v=5B__zNXrFmg" %}
+"https://www.youtube.com/watch?v=5B__zNXrFmg"
 
 
 
-{% embed url="https://www.youtube.com/watch?v=DosHnyq78xY" %}
+"https://www.youtube.com/watch?v=DosHnyq78xY"
 
 **Model Context Protocol (MCP): Complete Overview**
 

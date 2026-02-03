@@ -1,6 +1,6 @@
 # updates along the versions
 
-{% embed url="https://www.youtube.com/playlist?list=PL2We04F3Y_42ay3zqo1XHXWpG1RMdDpBM" %}
+"https://www.youtube.com/playlist?list=PL2We04F3Y_42ay3zqo1XHXWpG1RMdDpBM"
 
 **Kubernetes v1.19 (Released: August 2020)**
 

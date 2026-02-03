@@ -10,11 +10,11 @@ DevSecOps should not be considered a separate concept from DevOps, but rather a 
 
 ## Video:
 
-{% embed url="https://www.youtube.com/watch?v=KbmmYOhL4Jg" %}
+"https://www.youtube.com/watch?v=KbmmYOhL4Jg"
 A very comprehensive video which covers every aspect of devsecops
-{% endembed %}
+{% endembed
 
-{% embed url="https://youtu.be/mZoOnWjv_QM?si=Hit5ZrQn7SF3IY7J" %}
+"https://youtu.be/mZoOnWjv_QM?si=Hit5ZrQn7SF3IY7J"
 
 DevSecOps introduces security activities early in the SDLC, rather than waiting until the product is released. Security issues can be identified and resolved during the application development process, with development teams performing security tasks independently.
 
@@ -58,12 +58,12 @@ This approach helps prevent security vulnerabilities from reaching production, w
 ```
 ```
 
-{% embed url="https://www.youtube.com/watch?v=1SL_sxsEB5o" %}
+"https://www.youtube.com/watch?v=1SL_sxsEB5o"
 
 <figure><img src="../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
 
-{% embed url="https://www.resourcely.io/post/death-of-devsecops-part-1-the-rise-of-cloud-and-devops" %}
+"https://www.resourcely.io/post/death-of-devsecops-part-1-the-rise-of-cloud-and-devops"
 
-{% embed url="https://www.resourcely.io/post/death-of-devsecops-part-2" %}
+"https://www.resourcely.io/post/death-of-devsecops-part-2"
 
-{% embed url="https://www.resourcely.io/post/death-of-devsecops-part-3" %}
+"https://www.resourcely.io/post/death-of-devsecops-part-3"

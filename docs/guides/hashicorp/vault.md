@@ -1,3 +1,3 @@
 # Vault
 
-{% embed url="https://www.youtube.com/watch?v=MRQjCvsel-U" %}
+"https://www.youtube.com/watch?v=MRQjCvsel-U"

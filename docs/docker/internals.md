@@ -1,16 +1,16 @@
 # Internals
 
-{% embed url="https://youtu.be/x1npPrzyKfs" %}
+"https://youtu.be/x1npPrzyKfs"
 
-{% embed url="https://youtu.be/sK5i-N34im8?si=xBgQHS0wfPEOT2y-" %}
+"https://youtu.be/sK5i-N34im8?si=xBgQHS0wfPEOT2y-"
 
-{% embed url="https://youtu.be/_TsSmSu57Zo" %}
+"https://youtu.be/_TsSmSu57Zo"
 
-{% embed url="https://youtu.be/8fi7uSYlOdc" %}
+"https://youtu.be/8fi7uSYlOdc"
 
-{% embed url="https://www.youtube.com/live/9ivFrXgB2Zg?si=dY5P8VssJO2nvGLV" %}
+"https://www.youtube.com/live/9ivFrXgB2Zg?si=dY5P8VssJO2nvGLV"
 
-{% embed url="https://docker-saigon.github.io/post/Docker-Internals/" %}
+"https://docker-saigon.github.io/post/Docker-Internals/"
 
 ```
 // Some code

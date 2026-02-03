@@ -1,8 +1,8 @@
 # Reflect
 
-{% embed url="https://www.youtube.com/watch?v=ZGZU37A2p2E" %}
+"https://www.youtube.com/watch?v=ZGZU37A2p2E"
 
-{% embed url="https://youtu.be/VDa-4gGntsU?si=URdGtOMpEdDZc6MB" %}
+"https://youtu.be/VDa-4gGntsU?si=URdGtOMpEdDZc6MB"
 
 The `reflect` package in Go provides functionality for inspecting and manipulating objects at runtime. This allows for dynamic type introspection, akin to reflection in other programming languages such as Java or C#. Here's a comprehensive overview of the `reflect` package:
 

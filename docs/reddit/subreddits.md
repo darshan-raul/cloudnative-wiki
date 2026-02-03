@@ -1,39 +1,39 @@
 # Subreddits
 
-{% tabs %}
-{% tab title="Cloud" %}
-{% embed url="https://www.reddit.com/r/aws/" %}
+{% tabs
+{% tab title="Cloud"
+"https://www.reddit.com/r/aws/"
 aws&#x20;
-{% endembed %}
+{% endembed
 
-{% embed url="https://www.reddit.com/r/googlecloud/" %}
+"https://www.reddit.com/r/googlecloud/"
 gcp
-{% endembed %}
+{% endembed
 
-{% embed url="https://www.reddit.com/r/AZURE/" %}
-{% endtab %}
+"https://www.reddit.com/r/AZURE/"
+{% endtab
 
-{% tab title="devops" %}
-{% embed url="https://www.reddit.com/r/devops/" %}
-{% endtab %}
+{% tab title="devops"
+"https://www.reddit.com/r/devops/"
+{% endtab
 
-{% tab title="k8s" %}
-{% embed url="https://www.reddit.com/r/kubernetes/" %}
-{% endtab %}
+{% tab title="k8s"
+"https://www.reddit.com/r/kubernetes/"
+{% endtab
 
-{% tab title="coding" %}
-{% embed url="https://www.reddit.com/r/golang/" %}
+{% tab title="coding"
+"https://www.reddit.com/r/golang/"
 
-{% embed url="https://www.reddit.com/r/programming/" %}
+"https://www.reddit.com/r/programming/"
 
-{% embed url="https://www.reddit.com/r/Python/" %}
-{% endtab %}
+"https://www.reddit.com/r/Python/"
+{% endtab
 
-{% tab title="Fun" %}
-{% embed url="https://www.reddit.com/r/ProgrammerHumor/" %}
-{% endtab %}
+{% tab title="Fun"
+"https://www.reddit.com/r/ProgrammerHumor/"
+{% endtab
 
-{% tab title="jobs" %}
+{% tab title="jobs"
 
-{% endtab %}
-{% endtabs %}
+{% endtab
+{% endtabs
