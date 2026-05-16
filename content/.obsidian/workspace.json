@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "32f0a3979937b7d8",
+        "id": "2f9d751c4f013978",
         "type": "tabs",
         "children": [
           {
-            "id": "e0ce25fa1b366aa6",
+            "id": "41560f8698a99135",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "AI/run-locally/ollama-best-practices.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "ollama-best-practices"
+              "title": "New tab"
             }
           }
         ]
@@ -183,15 +179,34 @@
       "bases:Create new base": false
     }
   },
-  "active": "e0ce25fa1b366aa6",
+  "active": "fe6a17a35e3658b9",
   "lastOpenFiles": [
+    "Kubernetes/guides/envoy-gateway.md",
+    "Kubernetes/guides/private-image-registry.md",
+    "Kubernetes/guides/kubectl.md",
+    "Kubernetes/guides/miscellaneous.md",
+    "Kubernetes/guides/tools/k9s.md",
+    "Kubernetes/guides/tools",
+    "Kubernetes/certifications/cka/lab-videos.md",
+    "Kubernetes/certifications/cka/README.md",
+    "Kubernetes/certifications/ckad/application-observability-and-maintenance.md",
+    "Kubernetes/certifications/ckad/application-environment-configuration-and-security.md",
+    "Kubernetes/certifications/ckad/application-design-and-build.md",
+    "Kubernetes/certifications/ckad/application-deployment.md",
+    "Kubernetes/certifications/README.md",
+    "Kubernetes/eks/fargate-vs-ec2.md",
+    "Kubernetes/eks/cluster-upgrade.md",
+    "Kubernetes/eks/workshops.md",
+    "Kubernetes/eks/README.md",
+    "Kubernetes/client-go.md",
+    "Kubernetes/updates-along-the-versions.md",
+    "Kubernetes/the-hard-way.md",
+    "Kubernetes/troubleshooting.md",
+    "AI/run-locally/ollama-best-practices.md",
     "AWS/concepts/vpc-lattice.md",
     "AWS/concepts/iam-1.md",
     "AI/aws/services.md",
     "AI/aws/README.md",
-    "AWS/guides.md",
-    "AWS.md",
-    "AWS/concepts.md",
-    "index.md"
+    "AWS/guides.md"
   ]
 }

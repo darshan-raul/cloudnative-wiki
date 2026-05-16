@@ -1,0 +1,8 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "obsidian-vault-research": {
+      "path": ".opencode/skills/obsidian-vault-research/SKILL.md"
+    }
+  }
+}
