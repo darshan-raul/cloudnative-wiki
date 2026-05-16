@@ -1,19 +1,19 @@
 {
   "main": {
-    "id": "e826784af44d8e3b",
+    "id": "9bff0a71d56e23e7",
     "type": "split",
     "children": [
       {
-        "id": "475425efbff6a50f",
+        "id": "32f0a3979937b7d8",
         "type": "tabs",
         "children": [
           {
-            "id": "73b002cec4d3d443",
+            "id": "e0ce25fa1b366aa6",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "ai/run-locally/ollama-best-practices.md",
+                "file": "AI/run-locally/ollama-best-practices.md",
                 "mode": "source",
                 "source": false
               },
@@ -27,15 +27,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "1ed70760e476bf64",
+    "id": "5fe001dbb1c7c7c7",
     "type": "split",
     "children": [
       {
-        "id": "274601dfbc4813ff",
+        "id": "214b65933964b8fc",
         "type": "tabs",
         "children": [
           {
-            "id": "225c4b9f920c6865",
+            "id": "fe6a17a35e3658b9",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -48,7 +48,7 @@
             }
           },
           {
-            "id": "fb7e6eb78ffe14cb",
+            "id": "ce4b7731771bd499",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -65,7 +65,7 @@
             }
           },
           {
-            "id": "ee4ceb865d810e5f",
+            "id": "2fa1424d8ec75e9f",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -81,20 +81,20 @@
     "width": 300
   },
   "right": {
-    "id": "28c5bfde84d2091a",
+    "id": "d793b9b56634464f",
     "type": "split",
     "children": [
       {
-        "id": "a5d401070cd94219",
+        "id": "4a1840b9c85ce694",
         "type": "tabs",
         "children": [
           {
-            "id": "78e1973125e1a104",
+            "id": "d6014748686588a0",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "index.md",
+                "file": "AI/run-locally/ollama-best-practices.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,25 +104,25 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for index"
+              "title": "Backlinks for ollama-best-practices"
             }
           },
           {
-            "id": "47b1f37fc9129bfa",
+            "id": "a09dc703f0a1f2b3",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "index.md",
+                "file": "AI/run-locally/ollama-best-practices.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from index"
+              "title": "Outgoing links from ollama-best-practices"
             }
           },
           {
-            "id": "acbff0d1059a0957",
+            "id": "14b53dcfc5ca083b",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -137,7 +137,7 @@
             }
           },
           {
-            "id": "feb5aae6dc59e7fb",
+            "id": "6a018628f4f3db20",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -151,18 +151,18 @@
             }
           },
           {
-            "id": "90ff5e5bca61f283",
+            "id": "71c4ea2fb5e2ae27",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "index.md",
+                "file": "AI/run-locally/ollama-best-practices.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of index"
+              "title": "Outline of ollama-best-practices"
             }
           }
         ]
@@ -183,32 +183,15 @@
       "bases:Create new base": false
     }
   },
-  "active": "73b002cec4d3d443",
+  "active": "e0ce25fa1b366aa6",
   "lastOpenFiles": [
-    "ai/run-locally/ollama.md",
-    "ai/run-locally/test.md",
-    "ai/run-locally/ollama-best-practices.md",
-    "ollama-best-practices 1.md",
-    "ollama-best-practices.md",
-    "ai/ai-ml-genai-whats-the-difference.md",
-    "ai/future-with-ai.md",
-    "ai/is-saas-dead.md",
-    "ai/jobs.md",
-    "ai/rag.md",
-    "ai/tricks.md",
-    "ai/prompt-injection.md",
-    "ai/prompt-engineering/tips.md",
-    "ai/run-locally/README.md",
-    "Cloud-Native/kubernetes/k8s-networking-deep-dive.md",
-    "index.md",
-    "Cloud-Native/whats-cloud-native.md",
-    "Resources/system design.md",
-    "Infrastructure/github-pages/untitled.md",
-    "Infrastructure/github-pages/repos.md",
-    "Infrastructure/github-pages/guides.md",
-    "Infrastructure/github-pages/awesome.md",
-    "Resources/documentation/untitled/ecs/ecs-fargate.md",
-    "Resources/guides/cors.md",
-    "DevOps/devsecops/README.md"
+    "AWS/concepts/vpc-lattice.md",
+    "AWS/concepts/iam-1.md",
+    "AI/aws/services.md",
+    "AI/aws/README.md",
+    "AWS/guides.md",
+    "AWS.md",
+    "AWS/concepts.md",
+    "index.md"
   ]
 }

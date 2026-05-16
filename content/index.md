@@ -1,44 +1,31 @@
-
 # Darshan's CloudNative Wiki
 
-Welcome to the CloudNative Wiki! This is the central hub for all my notes, spanning across architecture, cloud infrastructure, containerization, and personal growth. 
+Welcome to my knowledge graph! This wiki covers cloud-native engineering, from infrastructure to AI.
 
-Feel free to explore the topics below, or use the search map to navigate!
-	
-## Topics
+## Core Topics
 
-- ☁️ **[[Cloud]]**: AWS, Azure, and GCP notes
-- 🐋 **[[Cloud-Native]]**: Kubernetes, Docker, and Cloud-Native paradigms
-- ⚙️ **[[DevOps]]**: CI/CD, DevSecOps, and Platform Engineering
-- 🏛️ **[[Architecture-and-Engineering|Architecture & Engineering]]**: Solution architecture, programming concepts, and APIs
-- 🐧 **[[Infrastructure]]**: Linux and platform hosting
-- 📚 **[[Resources]]**: Cheat sheets, documentation, and guides
-- 🌐 **[[Media-Community|Media & Community]]**: Articles, podcasts, and community notes
-- 🎯 **[[Personal]]**: Motivation and mastery planning
+- ☁️ **[[AWS]]** - Amazon Web Services (EC2, ECS, EKS, Lambda, VPC, IAM)
+- ☸️ **[[Kubernetes]]** - Container orchestration, EKS, GitOps
+- 🐧 **[[Linux]]** - System administration, networking, tools
+- 🤖 **[[AI]]** - LLMs, ML, GenAI, Prompt Engineering, RAG
 
-```
-Pipelines hum a steady song,
-Deployments dance where they belong.
-With Docker's might, containers rise,
-Microservices swarm Kubernetes skies.
+## Supporting Topics
 
-Ansible spells in YAML,
-To shape the servers, one and all.
-Through Terraform, worlds take flight,
-Infrastructure born in streams of light.
+- 🚀 **[[DevOps]]** - CI/CD, GitHub Actions, DevSecOps, Platform Engineering
+- 🔐 **[[Security]]** - Zero Trust, Supply Chain, IAM
+- 📊 **[[Observability]]** - Prometheus, Grafana, OpenTelemetry
+- 🏛️ **[[Architecture]]** - System design, APIs, authentication
 
-Through Git, the code so deftly flows,
-Branches merge where knowledge grows.
-While Jenkins builds with watchful eye,
-Tests whisper secrets, low and high.
+## Cloud Providers
 
-Prometheus gleans the metrics bright,
-Grafana paints with colored light.
-If chaos breaks the fragile peace,
-With Kubernetes, systems find release.
+- **[[AWS]]** - Amazon Web Services
+- **[[Azure]]** - Microsoft Azure
+- **[[GCP]]** - Google Cloud Platform
 
-So let the keyboard click and sing,
-DevOps heroes take their wing.
-From code to cloud, a tale unfurled,
-We change the rhythm of the world!
-```
+## Resources
+
+- **[[Resources]]** - Cheat sheets, documentation, guides
+
+---
+
+*The knowledge graph is interconnected - use `[[wiki-links]]` to navigate between topics!*
