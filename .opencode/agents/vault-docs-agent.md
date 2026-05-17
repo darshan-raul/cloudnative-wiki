@@ -3,10 +3,13 @@ name: vault-docs-agent
 description: Researches any topic and creates documentation in the Obsidian vault. Use when user asks to add documentation for a tool, create docs based on web research, or update vault content. Handles all subjects - k8s, devops, security, cloud, linux, etc.
 model: minimax/Minimax-M2.7
 mode: subagent
+temperature: 0.1
 permission:
   read: allow
   edit: allow
   bash: deny
+  question: allow
+  todowrite: allow
   webfetch: allow
   websearch: allow
 ---

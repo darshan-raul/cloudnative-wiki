@@ -17,4 +17,4 @@ Monitoring, logging, tracing, and alerting.
 
 - [[Kubernetes]] - K8s monitoring
 - [[DevOps]] - SRE practices
-- [[Networking]] - Network observability
+- [[Kubernetes/concepts/networking/networking]] - Network observability

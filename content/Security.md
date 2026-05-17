@@ -15,5 +15,5 @@ Security best practices, patterns, and tooling.
 ## Related
 
 - [[DevOps]] - DevSecOps integrating security into pipelines
-- [[Networking]] - Network security, TLS
+- [[Kubernetes/concepts/networking/networking]] - Network security, TLS
 - [[Kubernetes]] - K8s security (RBAC, network policies)

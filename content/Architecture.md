@@ -24,6 +24,6 @@ Software architecture, system design, and engineering concepts.
 
 ## Related
 
-- [[Networking]] - Protocols and networking
+- [[Kubernetes/concepts/networking/networking]] - Protocols and networking
 - [[databases]] - Data architecture
 - [[Kubernetes]] - Cloud-native architecture

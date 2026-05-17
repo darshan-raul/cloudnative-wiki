@@ -19,5 +19,5 @@ Linux system administration and tooling.
 
 - [[Kubernetes]] - K8s nodes run Linux
 - [[DevOps]] - CI/CD on Linux servers
-- [[Networking]] - Linux networking (iptables, netfilter)
+- [[Kubernetes/concepts/networking/networking]] - Linux networking (iptables, netfilter)
 - [[AWS]] - EC2 instances are Linux servers
