@@ -1,0 +1,327 @@
+# Wazuh Custom Rules — Linux Security Detection
+# Rule IDs: 100300-100499
+# MITRE ATT&CK coverage for Linux endpoints
+
+<group name="linux-security">
+  <!-- ======================================================== -->
+  <!-- SSH / AUTHENTICATION (100300-100349)                   -->
+  <!-- ======================================================== -->
+
+  <!-- SSH: Root login attempted -->
+  <rule id="100300" level="6">
+    <if_sid>sshd</if_sid>
+    <match>ROOT</match>
+    <regex>user (root) from (\S+)</regex>
+    <description>SSH root login attempted</description>
+    <group>authentication,ssh,root,linux</group>
+  </rule>
+
+  <!-- SSH: Failed login from external IP (threshold) -->
+  <rule id="100301" level="6">
+    <if_sid>sshd</if_sid>
+    <field name="action">failure</field>
+    <same_field srcip>10</same_field>
+    <time_frame>10m</time_frame>
+    <description>10+ failed SSH login attempts from same IP — possible brute force</description>
+    <group>authentication,ssh,brute_force,linux</group>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+
+  <!-- SSH: Successful login from external IP (no internal) -->
+  <rule id="100302" level="7">
+    <if_sid>sshd</if_sid>
+    <field name="action>success</field>
+    <description>SSH login successful from external IP</description>
+    <group>authentication,ssh,linux</group>
+    <mitre>
+      <id>T1021.004</id>
+    </mitre>
+  </rule>
+
+  <!-- SSH: Login from unexpected country (custom geo database) -->
+  <rule id="100303" level="8">
+    <if_sid>sshd</if_sid>
+    <field name="action>success</field>
+    <description>SSH login from unexpected geographic location — verify with user</description>
+    <group>authentication,ssh,linux,anomaly</group>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- PRIVILEGE ESCALATION (100310-100329)                   -->
+  <!-- ======================================================== -->
+
+  <!-- Sudo: Failed attempt for invalid user -->
+  <rule id="100310" level="5">
+    <if_sid>sudo</if_sid>
+    <match>authentication failure</match>
+    <regex>user NOT in sudoers</regex>
+    <description>sudo attempt for non-existent user — possible lateral movement</description>
+    <group>privilege_escalation,sudo,linux</group>
+    <mitre>
+      <id>T1548.003</id>
+    </mitre>
+  </rule>
+
+  <!-- Sudo: User added to sudo group -->
+  <rule id="100311" level="8">
+    <if_sid>sudo</if_sid>
+    <match>add to group sudo</match>
+    <description>User added to sudo group — possible privilege escalation</description>
+    <group>privilege_escalation,sudo,linux,persistence</group>
+    <mitre>
+      <id>T1548.003</id>
+    </mitre>
+  </rule>
+
+  <!-- Sudo: Sudoers file modified -->
+  <rule id="100312" level="10">
+    <if_sid>syslog</if_sid>
+    <program_name>sudo</program_name>
+    <match>/etc/sudoers</match>
+    <description>Sudoers file modified — critical privilege escalation risk</description>
+    <group>privilege_escalation,config_change,linux,critical</group>
+    <mitre>
+      <id>T1548.003</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: su binary executed -->
+  <rule id="100313" level="5">
+    <if_sid>syslog</if_sid>
+    <program_name>su</program_name>
+    <match>SU</match>
+    <description>su command executed — privilege escalation attempt</description>
+    <group>privilege_escalation,linux</group>
+    <mitre>
+      <id>T1548</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: SUID binary executed from unusual location -->
+  <rule id="100314" level="7">
+    <if_sid>syslog</if_sid>
+    <regex>(COMMAND|cmd)=.*(bash|sh|-i)</regex>
+    <description>Interactive shell spawned from unusual location — possible implant</description>
+    <group>privilege_escalation,execution,linux</group>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- PERSISTENCE (100320-100339)                             -->
+  <!-- ======================================================== -->
+
+  <!-- Cron: New cron job created -->
+  <rule id="100320" level="5">
+    <if_sid>syslog</if_sid>
+    <program_name>cron</program_name>
+    <match>(CRON|anacron)\s+job</match>
+    <description>New cron job created</description>
+    <group>persistence,cron,linux</group>
+    <mitre>
+      <id>T1053</id>
+    </mitre>
+  </rule>
+
+  <!-- Cron: Cron job executing unusual command -->
+  <rule id="100321" level="7">
+    <if_sid>syslog</if_sid>
+    <program_name>cron</program_name>
+    <regex>(wget|curl|nc|bash|python|perl).*http</regex>
+    <description>Cron job executing network download — possible malware delivery</description>
+    <group>persistence,cron,linux,execution</group>
+    <mitre>
+      <id>T1053</id>
+    </mitre>
+  </rule>
+
+  <!-- Init: New service created (systemd) -->
+  <rule id="100322" level="7">
+    <if_sid>syslog</if_sid>
+    <program_name>systemd</program_name>
+    <match>Created symlink.*systemd</match>
+    <description>New systemd service created — possible persistence mechanism</description>
+    <group>persistence,systemd,linux</group>
+    <mitre>
+      <id>T1543.003</id>
+    </mitre>
+  </rule>
+
+  <!-- SSH: New SSH key added to authorized_keys -->
+  <rule id="100323" level="8">
+    <if_sid>syslog</if_sid>
+    <program_name>sshd</program_name>
+    <match>Accepted</match>
+    <regex>publickey</regex>
+    <description>SSH public key authentication successful — verify authorized key</description>
+    <group>persistence,ssh,linux</group>
+    <mitre>
+      <id>T1098</id>
+    </mitre>
+  </rule>
+
+  <!-- RC.d: New init script created -->
+  <rule id="100324" level="7">
+    <if_sid>syslog</if_sid>
+    <program_name>run-parts</program_name>
+    <match>/etc/rc.*</match>
+    <description>Init script created in rc.d directory — possible persistence</description>
+    <group>persistence,linux</group>
+    <mitre>
+      <id>T1053</id>
+    </mitre>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- DEFENSE EVASION (100340-100359)                         -->
+  <!-- ======================================================== -->
+
+  <!-- Linux: Auth log truncated or deleted -->
+  <rule id="100340" level="10">
+    <if_sid>syslog</if_sid>
+    <program_name>kernel</program_name>
+    <match>truncat</match>
+    <regex>(auth|secure| messages)</regex>
+    <description>Log file truncated or deleted — possible attacker log clearing</description>
+    <group>defense_evasion,log_tampering,linux,critical</group>
+    <mitre>
+      <id>T1070.002</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: Auditd disabled or rules cleared -->
+  <rule id="100341" level="10">
+    <if_sid>syslog</if_sid>
+    <program_name>auditd</program_name>
+    <match>audit.rules|config changed</match>
+    <description>Auditd configuration changed — possible defense evasion</description>
+    <group>defense_evasion,audit,linux,critical</group>
+    <mitre>
+      <id>T1070</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: History file cleared -->
+  <rule id="100342" level="7">
+    <if_sid>syslog</if_sid>
+    <regex>history -c|history -w|\.bash_history</regex>
+    <description>Bash history cleared or written — possible cover-up</description>
+    <group>defense_evasion,linux</group>
+    <mitre>
+      <id>T1070.002</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: Timestomping (touch command on sensitive file) -->
+  <rule id="100343" level="8">
+    <if_sid>syslog</if_sid>
+    <regex>touch.*(/etc/passwd|/etc/shadow|/etc/sudoers)</regex>
+    <description>Timestamps modified on critical system file</description>
+    <group>defense_evasion,timestomping,linux</group>
+    <mitre>
+      <id>T1070.006</id>
+    </mitre>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- EXECUTION (100360-100379)                               -->
+  <!-- ======================================================== -->
+
+  <!-- Linux: Interactive Python/PHP/Perl shell spawned -->
+  <rule id="100360" level="7">
+    <if_sid>syslog</if_sid>
+    <regex>(python|php|perl).*-i</regex>
+    <description>Interactive shell spawned via scripting language — possible reverse shell</description>
+    <group>execution,linux,reverse_shell</group>
+    <mitre>
+      <id>T1059.006</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: base64-encoded command detected in process args -->
+  <rule id="100361" level="8">
+    <if_sid>syslog</if_sid>
+    <regex>(bash|sh).*-c.*base64</regex>
+    <description>base64-encoded command detected — possible obfuscated execution</description>
+    <group>execution,obfuscation,linux,critical</group>
+    <mitre>
+      <id>T1027</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: wget/curl downloading and executing from internet -->
+  <rule id="100362" level="8">
+    <if_sid>syslog</if_sid>
+    <regex>(wget|curl).*(\.sh|\.pl|\.py|\.exe)</regex>
+    <description>Script downloaded from internet and executed — possible malware</description>
+    <group>execution,linux,malware,critical</group>
+    <mitre>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: Netcat listener started (reverse shell indicator) -->
+  <rule id="100363" level="8">
+    <if_sid>syslog</if_sid>
+    <regex>nc.*(-l|-e|--listen)|ncat.*listen</regex>
+    <description>Netcat listener started — possible backdoor</description>
+    <group>execution,linux,backdoor,critical</group>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: LD_PRELOAD used to inject shared library -->
+  <rule id="100364" level="9">
+    <if_sid>syslog</if_sid>
+    <match>LD_PRELOAD</match>
+    <description>LD_PRELOAD environment variable set — possible library injection</description>
+    <group>execution,linux,privilege_escalation</group>
+    <mitre>
+      <id>T1574.006</id>
+    </mitre>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- EXFILTRATION / C2 (100380-100399)                       -->
+  <!-- ======================================================== -->
+
+  <!-- Linux: Unusual outbound connection (non-standard port) -->
+  <rule id="100380" level="6">
+    <if_sid>syslog</if_sid>
+    <program_name>systemd</program_name>
+    <regex>Started.*(nc|netcat|ncat).*internet</regex>
+    <description>Network tool started — possible data exfiltration</description>
+    <group>exfiltration,c2,linux</group>
+    <mitre>
+      <id>T1041</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: Large file transfer to external host -->
+  <rule id="100381" level="7">
+    <if_sid>syslog</if_sid>
+    <regex>(curl|wget).*(\.tar\.gz|\.zip).*http</regex>
+    <description>Archive file downloaded — possible data exfiltration staging</description>
+    <group>exfiltration,linux</group>
+    <mitre>
+      <id>T1047</id>
+    </mitre>
+  </rule>
+
+  <!-- Linux: SSH tunnel created (port forwarding) -->
+  <rule id="100382" level="7">
+    <if_sid>sshd</if_sid>
+    <match>Forwarding</match>
+    <regex>(-L |-R )</regex>
+    <description>SSH tunnel created — possible exfiltration or C2 channel</description>
+    <group>lateral_movement,c2,linux</group>
+    <mitre>
+      <id>T1572</id>
+    </mitre>
+  </rule>
+
+</group>

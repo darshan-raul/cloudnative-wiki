@@ -1,3 +1,10 @@
+---
+title: AI
+tags: [ai, ml, llm, genai, rag, prompt-engineering]
+date: 2025-05-24
+description: Artificial Intelligence, Machine Learning, and Generative AI - LLMs, RAG, prompt engineering, local AI, and AWS AI services
+---
+
 # AI 🤖
 
 Artificial Intelligence, Machine Learning, and Generative AI.

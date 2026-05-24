@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr"><head><title>ollama-best-practices</title><meta charset="utf-8"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted Grotesk:wght@400;700&amp;family=Source Sans Pro:ital,wght@0,400;0,600;1,400;1,600&amp;family=IBM Plex Mono:wght@400;600&amp;display=swap"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="cloudnative wiki"/><meta property="og:title" content="ollama-best-practices"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="ollama-best-practices"/><meta name="twitter:description" content="Ollama Best Practices Guide Optimizing Local LLM Inference for Code Generation (2025) Table of Contents Hardware Recommendations GPU Options and Comparison Model Memory Requirements Code Generation Models Quantization Guide Ollama Configuration Benchmarking and Evaluation Efficiency Tips Quick Refer..."/><meta property="og:description" content="Ollama Best Practices Guide Optimizing Local LLM Inference for Code Generation (2025) Table of Contents Hardware Recommendations GPU Options and Comparison Model Memory Requirements Code Generation Models Quantization Guide Ollama Configuration Benchmarking and Evaluation Efficiency Tips Quick Refer..."/><meta property="og:image:alt" content="Ollama Best Practices Guide Optimizing Local LLM Inference for Code Generation (2025) Table of Contents Hardware Recommendations GPU Options and Comparison Model Memory Requirements Code Generation Models Quantization Guide Ollama Configuration Benchmarking and Evaluation Efficiency Tips Quick Refer..."/><meta property="twitter:domain" content="quartz.jzhao.xyz"/><meta property="og:url" content="https://quartz.jzhao.xyz/AI/run-locally/ollama-best-practices"/><meta property="twitter:url" content="https://quartz.jzhao.xyz/AI/run-locally/ollama-best-practices"/><link rel="icon" href="../../static/icon.png"/><meta name="description" content="Ollama Best Practices Guide Optimizing Local LLM Inference for Code Generation (2025) Table of Contents Hardware Recommendations GPU Options and Comparison Model Memory Requirements Code Generation Models Quantization Guide Ollama Configuration Benchmarking and Evaluation Efficiency Tips Quick Refer..."/><meta name="generator" content="Quartz"/><link href="../../index.css" rel="stylesheet" type="text/css" data-persist="true"/><style>.expand-button {
+  position: absolute;
+  display: flex;
+  float: right;
+  padding: 0.4rem;
+  margin: 0.3rem;
+  right: 0;
+  color: var(--gray);
+  border-color: var(--dark);
+  background-color: var(--light);
+  border: 1px solid;
+  border-radius: 5px;
+  opacity: 0;
+  transition: 0.2s;
+}
+.expand-button > svg {
+  fill: var(--light);
+  filter: contrast(0.3);
+}
+.expand-button:hover {
+  cursor: pointer;
+  border-color: var(--secondary);
+}
+.expand-button:focus {
+  outline: 0;
+}
+
+pre:hover > .expand-button {
+  opacity: 1;
+  transition: 0.2s;
+}
+
+#mermaid-container {
+  position: fixed;
+  contain: layout;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: none;
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+}
+#mermaid-container.active {
+  display: inline-block;
+}
+#mermaid-container > #mermaid-space {
+  border: 1px solid var(--lightgray);
+  background-color: var(--light);
+  border-radius: 5px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 80vh;
+  width: 80vw;
+  overflow: hidden;
+}
+#mermaid-container > #mermaid-space > .mermaid-content {
+  position: relative;
+  transform-origin: 0 0;
+  transition: transform 0.1s ease;
+  overflow: visible;
+  min-height: 200px;
+  min-width: 200px;
+}
+#mermaid-container > #mermaid-space > .mermaid-content pre {
+  margin: 0;
+  border: none;
+}
+#mermaid-container > #mermaid-space > .mermaid-content svg {
+  max-width: none;
+  height: auto;
+}
+#mermaid-container > #mermaid-space > .mermaid-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: var(--light);
+  border: 1px solid var(--lightgray);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--lightgray);
+  background: var(--light);
+  color: var(--dark);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: var(--bodyFont);
+  transition: all 0.2s ease;
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button:hover {
+  background: var(--lightgray);
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button:active {
+  transform: translateY(1px);
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button:nth-child(2) {
+  width: auto;
+  padding: 0 12px;
+  font-size: 14px;
+}
+/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VSb290IjoiL2hvbWUvZGFyc2hhbi9wcm9qZWN0cy9jbG91ZG5hdGl2ZS13aWtpL3F1YXJ0ei9jb21wb25lbnRzL3N0eWxlcyIsInNvdXJjZXMiOlsibWVybWFpZC5pbmxpbmUuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTs7QUFHRjtFQUNFO0VBQ0E7O0FBR0Y7RUFDRTs7O0FBS0Y7RUFDRTtFQUNBOzs7QUFJSjtFQUNFO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7O0FBRUE7RUFDRTs7QUFHRjtFQUNFO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTs7QUFHRjtFQUNFO0VBQ0E7O0FBSUo7RUFDRTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTs7QUFFQTtFQUNFOztBQUdGO0VBQ0U7O0FBSUY7RUFDRTtFQUNBO0VBQ0EiLCJzb3VyY2VzQ29udGVudCI6WyIuZXhwYW5kLWJ1dHRvbiB7XG4gIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgZGlzcGxheTogZmxleDtcbiAgZmxvYXQ6IHJpZ2h0O1xuICBwYWRkaW5nOiAwLjRyZW07XG4gIG1hcmdpbjogMC4zcmVtO1xuICByaWdodDogMDsgLy8gTk9URTogcmlnaHQgd2lsbCBiZSBzZXQgaW4gbWVybWFpZC5pbmxpbmUudHNcbiAgY29sb3I6IHZhcigtLWdyYXkpO1xuICBib3JkZXItY29sb3I6IHZhcigtLWRhcmspO1xuICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1saWdodCk7XG4gIGJvcmRlcjogMXB4IHNvbGlkO1xuICBib3JkZXItcmFkaXVzOiA1cHg7XG4gIG9wYWNpdHk6IDA7XG4gIHRyYW5zaXRpb246IDAuMnM7XG5cbiAgJiA+IHN2ZyB7XG4gICAgZmlsbDogdmFyKC0tbGlnaHQpO1xuICAgIGZpbHRlcjogY29udHJhc3QoMC4zKTtcbiAgfVxuXG4gICY6aG92ZXIge1xuICAgIGN1cnNvcjogcG9pbnRlcjtcbiAgICBib3JkZXItY29sb3I6IHZhcigtLXNlY29uZGFyeSk7XG4gIH1cblxuICAmOmZvY3VzIHtcbiAgICBvdXRsaW5lOiAwO1xuICB9XG59XG5cbnByZSB7XG4gICY6aG92ZXIgPiAuZXhwYW5kLWJ1dHRvbiB7XG4gICAgb3BhY2l0eTogMTtcbiAgICB0cmFuc2l0aW9uOiAwLjJzO1xuICB9XG59XG5cbiNtZXJtYWlkLWNvbnRhaW5lciB7XG4gIHBvc2l0aW9uOiBmaXhlZDtcbiAgY29udGFpbjogbGF5b3V0O1xuICB6LWluZGV4OiA5OTk7XG4gIGxlZnQ6IDA7XG4gIHRvcDogMDtcbiAgd2lkdGg6IDEwMHZ3O1xuICBoZWlnaHQ6IDEwMHZoO1xuICBvdmVyZmxvdzogaGlkZGVuO1xuICBkaXNwbGF5OiBub25lO1xuICBiYWNrZHJvcC1maWx0ZXI6IGJsdXIoNHB4KTtcbiAgYmFja2dyb3VuZDogcmdiYSgwLCAwLCAwLCAwLjUpO1xuXG4gICYuYWN0aXZlIHtcbiAgICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7XG4gIH1cblxuICAmID4gI21lcm1haWQtc3BhY2Uge1xuICAgIGJvcmRlcjogMXB4IHNvbGlkIHZhcigtLWxpZ2h0Z3JheSk7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tbGlnaHQpO1xuICAgIGJvcmRlci1yYWRpdXM6IDVweDtcbiAgICBwb3NpdGlvbjogZml4ZWQ7XG4gICAgdG9wOiA1MCU7XG4gICAgbGVmdDogNTAlO1xuICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlKC01MCUsIC01MCUpO1xuICAgIGhlaWdodDogODB2aDtcbiAgICB3aWR0aDogODB2dztcbiAgICBvdmVyZmxvdzogaGlkZGVuO1xuXG4gICAgJiA+IC5tZXJtYWlkLWNvbnRlbnQge1xuICAgICAgcG9zaXRpb246IHJlbGF0aXZlO1xuICAgICAgdHJhbnNmb3JtLW9yaWdpbjogMCAwO1xuICAgICAgdHJhbnNpdGlvbjogdHJhbnNmb3JtIDAuMXMgZWFzZTtcbiAgICAgIG92ZXJmbG93OiB2aXNpYmxlO1xuICAgICAgbWluLWhlaWdodDogMjAwcHg7XG4gICAgICBtaW4td2lkdGg6IDIwMHB4O1xuXG4gICAgICBwcmUge1xuICAgICAgICBtYXJnaW46IDA7XG4gICAgICAgIGJvcmRlcjogbm9uZTtcbiAgICAgIH1cblxuICAgICAgc3ZnIHtcbiAgICAgICAgbWF4LXdpZHRoOiBub25lO1xuICAgICAgICBoZWlnaHQ6IGF1dG87XG4gICAgICB9XG4gICAgfVxuXG4gICAgJiA+IC5tZXJtYWlkLWNvbnRyb2xzIHtcbiAgICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgICAgIGJvdHRvbTogMjBweDtcbiAgICAgIHJpZ2h0OiAyMHB4O1xuICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgIGdhcDogOHB4O1xuICAgICAgcGFkZGluZzogOHB4O1xuICAgICAgYmFja2dyb3VuZDogdmFyKC0tbGlnaHQpO1xuICAgICAgYm9yZGVyOiAxcHggc29saWQgdmFyKC0tbGlnaHRncmF5KTtcbiAgICAgIGJvcmRlci1yYWRpdXM6IDZweDtcbiAgICAgIGJveC1zaGFkb3c6IDAgMnB4IDRweCByZ2JhKDAsIDAsIDAsIDAuMSk7XG4gICAgICB6LWluZGV4OiAyO1xuXG4gICAgICAubWVybWFpZC1jb250cm9sLWJ1dHRvbiB7XG4gICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICAgIGp1c3RpZnktY29udGVudDogY2VudGVyO1xuICAgICAgICB3aWR0aDogMzJweDtcbiAgICAgICAgaGVpZ2h0OiAzMnB4O1xuICAgICAgICBwYWRkaW5nOiAwO1xuICAgICAgICBib3JkZXI6IDFweCBzb2xpZCB2YXIoLS1saWdodGdyYXkpO1xuICAgICAgICBiYWNrZ3JvdW5kOiB2YXIoLS1saWdodCk7XG4gICAgICAgIGNvbG9yOiB2YXIoLS1kYXJrKTtcbiAgICAgICAgYm9yZGVyLXJhZGl1czogNHB4O1xuICAgICAgICBjdXJzb3I6IHBvaW50ZXI7XG4gICAgICAgIGZvbnQtc2l6ZTogMTZweDtcbiAgICAgICAgZm9udC1mYW1pbHk6IHZhcigtLWJvZHlGb250KTtcbiAgICAgICAgdHJhbnNpdGlvbjogYWxsIDAuMnMgZWFzZTtcblxuICAgICAgICAmOmhvdmVyIHtcbiAgICAgICAgICBiYWNrZ3JvdW5kOiB2YXIoLS1saWdodGdyYXkpO1xuICAgICAgICB9XG5cbiAgICAgICAgJjphY3RpdmUge1xuICAgICAgICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgxcHgpO1xuICAgICAgICB9XG5cbiAgICAgICAgLy8gU3R5bGUgdGhlIHJlc2V0IGJ1dHRvbiBkaWZmZXJlbnRseVxuICAgICAgICAmOm50aC1jaGlsZCgyKSB7XG4gICAgICAgICAgd2lkdGg6IGF1dG87XG4gICAgICAgICAgcGFkZGluZzogMCAxMnB4O1xuICAgICAgICAgIGZvbnQtc2l6ZTogMTRweDtcbiAgICAgICAgfVxuICAgICAgfVxuICAgIH1cbiAgfVxufVxuIl19 */</style><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../../prescript.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const fetchData = fetch("../../static/contentIndex.json").then(data => data.json())</script><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="https://quartz.jzhao.xyz/index.xml"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta property="og:image" content="https://quartz.jzhao.xyz/AI/run-locally/ollama-best-practices-og-image.webp"/><meta property="og:image:url" content="https://quartz.jzhao.xyz/AI/run-locally/ollama-best-practices-og-image.webp"/><meta name="twitter:image" content="https://quartz.jzhao.xyz/AI/run-locally/ollama-best-practices-og-image.webp"/><meta property="og:image:type" content="image/.webp"/></head><body data-slug="AI/run-locally/ollama-best-practices"><div id="quartz-root" class="page"><div id="quartz-body"><div class="left sidebar"><h2 class="page-title"><a href="../..">cloudnative wiki</a></h2><div class="spacer mobile-only"></div><div class="flex-component" style="flex-direction: row; flex-wrap: nowrap; gap: 1rem;"><div style="flex-grow: 1; flex-shrink: 1; flex-basis: auto; order: 0; align-self: center; justify-self: center;"><div class="search"><button class="search-button"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>Search</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="Search for something" placeholder="Search for something"/><div class="search-layout" data-preview="true"></div></div></div></div></div><div style="flex-grow: 0; flex-shrink: 1; flex-basis: auto; order: 0; align-self: center; justify-self: center;"><button class="darkmode"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="Dark mode"><title>Dark mode</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="Light mode"><title>Light mode</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></div><div style="flex-grow: 0; flex-shrink: 1; flex-basis: auto; order: 0; align-self: center; justify-self: center;"><button class="readermode"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="readerIcon" fill="currentColor" stroke="currentColor" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round" width="64px" height="64px" viewBox="0 0 24 24" aria-label="Reader mode"><title>Reader mode</title><g transform="translate(-1.8, -1.8) scale(1.15, 1.2)"><path d="M8.9891247,2.5 C10.1384702,2.5 11.2209868,2.96705384 12.0049645,3.76669482 C12.7883914,2.96705384 13.8709081,2.5 15.0202536,2.5 L18.7549359,2.5 C19.1691495,2.5 19.5049359,2.83578644 19.5049359,3.25 L19.5046891,4.004 L21.2546891,4.00457396 C21.6343849,4.00457396 21.9481801,4.28672784 21.9978425,4.6528034 L22.0046891,4.75457396 L22.0046891,20.25 C22.0046891,20.6296958 21.7225353,20.943491 21.3564597,20.9931534 L21.2546891,21 L2.75468914,21 C2.37499337,21 2.06119817,20.7178461 2.01153575,20.3517706 L2.00468914,20.25 L2.00468914,4.75457396 C2.00468914,4.37487819 2.28684302,4.061083 2.65291858,4.01142057 L2.75468914,4.00457396 L4.50368914,4.004 L4.50444233,3.25 C4.50444233,2.87030423 4.78659621,2.55650904 5.15267177,2.50684662 L5.25444233,2.5 L8.9891247,2.5 Z M4.50368914,5.504 L3.50468914,5.504 L3.50468914,19.5 L10.9478955,19.4998273 C10.4513189,18.9207296 9.73864328,18.5588115 8.96709342,18.5065584 L8.77307039,18.5 L5.25444233,18.5 C4.87474657,18.5 4.56095137,18.2178461 4.51128895,17.8517706 L4.50444233,17.75 L4.50368914,5.504 Z M19.5049359,17.75 C19.5049359,18.1642136 19.1691495,18.5 18.7549359,18.5 L15.2363079,18.5 C14.3910149,18.5 13.5994408,18.8724714 13.0614828,19.4998273 L20.5046891,19.5 L20.5046891,5.504 L19.5046891,5.504 L19.5049359,17.75 Z M18.0059359,3.999 L15.0202536,4 L14.8259077,4.00692283 C13.9889509,4.06666544 13.2254227,4.50975805 12.7549359,5.212 L12.7549359,17.777 L12.7782651,17.7601316 C13.4923805,17.2719483 14.3447024,17 15.2363079,17 L18.0059359,16.999 L18.0056891,4.798 L18.0033792,4.75457396 L18.0056891,4.71 L18.0059359,3.999 Z M8.9891247,4 L6.00368914,3.999 L6.00599909,4.75457396 L6.00599909,4.75457396 L6.00368914,4.783 L6.00368914,16.999 L8.77307039,17 C9.57551536,17 10.3461406,17.2202781 11.0128313,17.6202194 L11.2536891,17.776 L11.2536891,5.211 C10.8200889,4.56369974 10.1361548,4.13636104 9.37521067,4.02745763 L9.18347055,4.00692283 L8.9891247,4 Z"></path></g></svg></button></div></div><div class="explorer" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a,b)=>!a.isFolder&amp;&amp;!b.isFolder||a.isFolder&amp;&amp;b.isFolder?a.displayName.localeCompare(b.displayName,void 0,{numeric:!0,sensitivity:\&quot;base\&quot;}):!a.isFolder&amp;&amp;b.isFolder?1:-1&quot;,&quot;filterFn&quot;:&quot;node=>node.slugSegment!==\&quot;tags\&quot;&quot;,&quot;mapFn&quot;:&quot;node=>node&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-81"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Explorer</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-81" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#"></a></li></template><template id="template-folder"><li><div class="folder-container"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content"></ul></div></li></template></div></div><div class="center"><div class="page-header"><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../AI/">AI</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../../AI/run-locally/">run locally</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>ollama best practices</a></div></nav><h1 class="article-title">ollama-best-practices</h1><p show-comma="true" class="content-meta"><time datetime="2026-05-16T05:39:27.000Z">May 16, 2026</time><span>7 min read</span></p></div></div><article class="popover-hint"><h1 id="ollama-best-practices-guide">Ollama Best Practices Guide<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#ollama-best-practices-guide" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<h2 id="optimizing-local-llm-inference-for-code-generation-2025">Optimizing Local LLM Inference for Code Generation (2025)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#optimizing-local-llm-inference-for-code-generation-2025" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<hr/>
+<h2 id="table-of-contents">Table of Contents<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#table-of-contents" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<ol>
+<li><a href="#1-hardware-recommendations" class="internal alias">Hardware Recommendations</a></li>
+<li><a href="#2-gpu-options-and-comparison" class="internal alias">GPU Options and Comparison</a></li>
+<li><a href="#3-model-memory-requirements" class="internal alias">Model Memory Requirements</a></li>
+<li><a href="#4-code-generation-models" class="internal alias">Code Generation Models</a></li>
+<li><a href="#5-quantization-guide" class="internal alias">Quantization Guide</a></li>
+<li><a href="#6-ollama-configuration" class="internal alias">Ollama Configuration</a></li>
+<li><a href="#7-benchmarking-and-evaluation" class="internal alias">Benchmarking and Evaluation</a></li>
+<li><a href="#8-efficiency-tips" class="internal alias">Efficiency Tips</a></li>
+<li><a href="#9-quick-reference" class="internal alias">Quick Reference</a></li>
+</ol>
+<hr/>
+<h2 id="1-hardware-recommendations">1. Hardware Recommendations<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#1-hardware-recommendations" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="your-setup">Your Setup<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#your-setup" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><strong>Servers</strong>: 64GB DDR4, 128GB DDR4 (no GPU yet)</li>
+<li><strong>Primary Use Case</strong>: Code Generation</li>
+</ul>
+<h3 id="gpu-recommendations-by-budget">GPU Recommendations by Budget<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gpu-recommendations-by-budget" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Budget</th><th>GPU</th><th>VRAM</th><th>7B t/s</th><th>70B t/s</th><th>Notes</th></tr></thead><tbody><tr><td>Budget ($2-3K)</td><td>RTX 4090</td><td>24GB</td><td>60-80</td><td>5-8*</td><td>Good for &lt;34B</td></tr><tr><td>Mid ($10-20K)</td><td>2x A100 80GB</td><td>160GB</td><td>160-200</td><td>25-35</td><td>Best value for 70B+</td></tr><tr><td>High ($30K+)</td><td>H200</td><td>141GB</td><td>120-150</td><td>25-35</td><td>Optimal long context</td></tr></tbody></table></div>
+<p>*70B on single RTX 4090 requires heavy quantization + CPU RAM</p>
+<h3 id="for-code-generation---key-gpu-features">For Code Generation - Key GPU Features<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#for-code-generation---key-gpu-features" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ol>
+<li><strong>High VRAM Capacity</strong> - Long contexts (16K-128K tokens) consume significant VRAM</li>
+<li><strong>Memory Bandwidth</strong> - Continuous generation speed</li>
+<li><strong>Transformer Engine</strong> - Long context attention acceleration</li>
+<li><strong>PCIe/NVLink Bandwidth</strong> - Multi-GPU tensor parallel</li>
+</ol>
+<h3 id="server-compatibility-checklist">Server Compatibility Checklist<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#server-compatibility-checklist" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" disabled/> Power Supply: High-end GPUs need 1000W+ PSUs</li>
+<li class="task-list-item"><input type="checkbox" disabled/> Physical Space: Full-height, double-width cards</li>
+<li class="task-list-item"><input type="checkbox" disabled/> Cooling: Proper airflow for multi-GPU</li>
+<li class="task-list-item"><input type="checkbox" disabled/> PCIe Slots: x16 slots available</li>
+<li class="task-list-item"><input type="checkbox" disabled/> RAM for VRAM offloading: 64GB+ system RAM helps</li>
+</ul>
+<h3 id="pcie-requirements">PCIe Requirements<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#pcie-requirements" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Scenario</th><th>PCIe Recommendation</th></tr></thead><tbody><tr><td>Single RTX 4090</td><td>Gen 4 x16 (minimum)</td></tr><tr><td>Single A100/H100</td><td>Gen 5 x16</td></tr><tr><td>Multi-GPU tensor parallel</td><td>Gen 5 x16, high-switch</td></tr></tbody></table></div>
+<hr/>
+<h2 id="2-gpu-options-and-comparison">2. GPU Options and Comparison<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#2-gpu-options-and-comparison" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="nvidia-consumer-gpus">NVIDIA Consumer GPUs<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#nvidia-consumer-gpus" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>GPU</th><th>VRAM</th><th>Bandwidth</th><th>TDP</th><th>Price (est.)</th><th>FP16 TFLOPS</th></tr></thead><tbody><tr><td>RTX 4090</td><td>24GB GDDR6X</td><td>1,008 GB/s</td><td>450W</td><td>$1,800-2,200</td><td>330</td></tr><tr><td>RTX 4090D</td><td>24GB GDDR6X</td><td>1,008 GB/s</td><td>450W</td><td>$1,500-2,000</td><td>310</td></tr></tbody></table></div>
+<h3 id="nvidia-data-center-gpus">NVIDIA Data Center GPUs<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#nvidia-data-center-gpus" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>GPU</th><th>VRAM</th><th>Bandwidth</th><th>TDP</th><th>Price (est.)</th><th>FP16 TFLOPS</th></tr></thead><tbody><tr><td>A100 80GB</td><td>80GB HBM2e</td><td>2 TB/s</td><td>350W</td><td>$8,000-12,000</td><td>312</td></tr><tr><td>H100</td><td>80GB HBM3</td><td>3.35 TB/s</td><td>350W</td><td>$25,000-40,000</td><td>495</td></tr><tr><td>H200</td><td>141GB HBM3e</td><td>4.8 TB/s</td><td>1000W</td><td>$30,000-45,000</td><td>990</td></tr><tr><td>H20</td><td>80GB</td><td>~2 TB/s</td><td>350W</td><td>$10,000-15,000</td><td>-</td></tr></tbody></table></div>
+<h3 id="amd-gpus-rocm">AMD GPUs (ROCm)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#amd-gpus-rocm" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>GPU</th><th>VRAM</th><th>Bandwidth</th><th>TDP</th><th>Price (est.)</th><th>FP16 TFLOPS</th></tr></thead><tbody><tr><td>RX 7900 XTX</td><td>24GB</td><td>600 GB/s</td><td>355W</td><td>$900-1,000</td><td>-</td></tr><tr><td>MI300X</td><td>192GB HBM3</td><td>5.3 TB/s</td><td>750W</td><td>$10,000-15,000</td><td>1,307</td></tr></tbody></table></div>
+<h3 id="multi-gpu-configurations-for-70b-models">Multi-GPU Configurations for 70B+ Models<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#multi-gpu-configurations-for-70b-models" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Configuration</th><th>Total VRAM</th><th>Feasible for 70B</th></tr></thead><tbody><tr><td>2x RTX 4090</td><td>48GB</td><td>Q4_K_M only</td></tr><tr><td>4x RTX 4090</td><td>96GB</td><td>Q4 + good perf</td></tr><tr><td>2x A100 80GB</td><td>160GB</td><td>Full FP16 or Q8</td></tr><tr><td>1x H100 80GB</td><td>80GB</td><td>Q8 minimum</td></tr></tbody></table></div>
+<h3 id="ollama-gpu-compatibility">Ollama GPU Compatibility<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#ollama-gpu-compatibility" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>GPU</th><th>Ollama Support</th><th>Notes</th></tr></thead><tbody><tr><td>NVIDIA RTX/GTX</td><td>Excellent</td><td>Full CUDA support</td></tr><tr><td>NVIDIA A100/H100</td><td>Excellent</td><td>Data center cards fully supported</td></tr><tr><td>AMD RX series</td><td>Good</td><td>ROCm support improving</td></tr><tr><td>AMD MI300X</td><td>Limited</td><td>ROCm required, some model issues</td></tr></tbody></table></div>
+<hr/>
+<h2 id="3-model-memory-requirements">3. Model Memory Requirements<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#3-model-memory-requirements" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="memory-formula">Memory Formula<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#memory-formula" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ul>
+<li><strong>FP32</strong>: 4 bytes per parameter</li>
+<li><strong>FP16</strong>: 2 bytes per parameter</li>
+<li><strong>INT8</strong>: 1 byte per parameter</li>
+<li><strong>INT4</strong>: 0.5 bytes per parameter</li>
+</ul>
+<h3 id="vram-requirements-by-model-size">VRAM Requirements by Model Size<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#vram-requirements-by-model-size" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Model</th><th>FP16</th><th>INT8</th><th>Q4_K_M</th><th>Q4_K_S</th></tr></thead><tbody><tr><td>1B</td><td>2GB</td><td>1GB</td><td>0.5GB</td><td>0.4GB</td></tr><tr><td>3B</td><td>6GB</td><td>3GB</td><td>1.5GB</td><td>1.2GB</td></tr><tr><td>7B</td><td>14GB</td><td>7GB</td><td>4GB</td><td>3.5GB</td></tr><tr><td>8B</td><td>16GB</td><td>8GB</td><td>5GB</td><td>4GB</td></tr><tr><td>13B</td><td>26GB</td><td>13GB</td><td>7GB</td><td>6GB</td></tr><tr><td>14B</td><td>28GB</td><td>14GB</td><td>8GB</td><td>7GB</td></tr><tr><td>32B</td><td>64GB</td><td>32GB</td><td>18GB</td><td>16GB</td></tr><tr><td>34B</td><td>68GB</td><td>34GB</td><td>20GB</td><td>18GB</td></tr><tr><td>70B</td><td>140GB</td><td>70GB</td><td>40GB</td><td>36GB</td></tr><tr><td>236B MoE</td><td>472GB</td><td>236GB</td><td>120GB</td><td>100GB</td></tr></tbody></table></div>
+<h3 id="kv-cache-memory">KV Cache Memory<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#kv-cache-memory" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Context</th><th>Q4_K_M Model (70B)</th></tr></thead><tbody><tr><td>4K</td><td>~1GB</td></tr><tr><td>32K</td><td>~8GB</td></tr><tr><td>64K</td><td>~16GB</td></tr><tr><td>128K</td><td>~32GB</td></tr></tbody></table></div>
+<p><strong>Tip</strong>: Enable <code>OLLAMA_KV_CACHE_TYPE=q8_0</code> to reduce KV cache by ~50%</p>
+<hr/>
+<h2 id="4-code-generation-models">4. Code Generation Models<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#4-code-generation-models" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="top-models-for-code-generation-2025">Top Models for Code Generation (2025)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#top-models-for-code-generation-2025" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Model</th><th>Sizes</th><th>Best For</th><th>Max Context</th><th>Ollama</th></tr></thead><tbody><tr><td><strong>Qwen2.5-Coder</strong></td><td>0.5B-32B</td><td>Best overall balance</td><td>128K</td><td>Yes</td></tr><tr><td><strong>DeepSeek-Coder-V2</strong></td><td>16B/236B MoE</td><td>SOTA code capability</td><td>128K</td><td>Yes</td></tr><tr><td><strong>Codestral</strong></td><td>22B</td><td>Code completion</td><td>32K</td><td>Yes</td></tr><tr><td><strong>CodeLlama</strong></td><td>7B-70B</td><td>Multi-language support</td><td>100K</td><td>Yes</td></tr><tr><td><strong>Devstral</strong></td><td>24B</td><td>Coding agents</td><td>32K+</td><td>Yes</td></tr><tr><td><strong>StarCoder2</strong></td><td>3B-15B</td><td>Fill-in-middle</td><td>16K</td><td>Yes</td></tr><tr><td><strong>Granite-Code</strong></td><td>3B-34B</td><td>Enterprise</td><td>128K</td><td>Yes</td></tr></tbody></table></div>
+<h3 id="benchmark-scores-humaneval-pass1">Benchmark Scores (HumanEval Pass@1)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#benchmark-scores-humaneval-pass1" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Model</th><th>Score</th><th>Notes</th></tr></thead><tbody><tr><td>DeepSeek-Coder-V2 236B</td><td>~90%</td><td>SOTA</td></tr><tr><td>Qwen2.5-Coder 32B</td><td>~85%</td><td>Best value</td></tr><tr><td>Codestral 22B</td><td>~73%</td><td>Good all-around</td></tr><tr><td>CodeLlama 70B</td><td>~67%</td><td>Proven, multi-language</td></tr><tr><td>StarCoder2 15B</td><td>~70%</td><td>Fill-in-middle</td></tr><tr><td>Granite-Code 34B</td><td>~72%</td><td>Enterprise</td></tr><tr><td>Qwen2.5-Coder 7B</td><td>~75%</td><td>Small model champion</td></tr></tbody></table></div>
+<h3 id="model-selection-by-vram">Model Selection by VRAM<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#model-selection-by-vram" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>VRAM</th><th>Recommended Models</th></tr></thead><tbody><tr><td>6-8GB</td><td>qwen2.5-coder:3b, stable-code:3b, starcoder2:3b</td></tr><tr><td>10-16GB</td><td>qwen2.5-coder:7b, codellama:13b, granite-code:8b</td></tr><tr><td>20-32GB</td><td>qwen2.5-coder:14b, codellama:34b, deepseek-coder-v2:16b</td></tr><tr><td>40GB+</td><td>qwen2.5-coder:32b, codellama:70b, devstral:24b</td></tr><tr><td>80GB+</td><td>deepseek-coder-v2:236b, codellama:70b-Q8</td></tr></tbody></table></div>
+<h3 id="quick-ollama-commands">Quick Ollama Commands<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#quick-ollama-commands" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Best all-around (14B)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> run</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> qwen2.5-coder:14b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Best for large projects (128K context)</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> run</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> qwen2.5-coder:32b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Best for coding agents</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> run</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> devstral:24b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Best multi-language</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> run</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> codellama:70b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Best small model</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> run</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> qwen2.5-coder:7b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># DeepSeek for SOTA code</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> run</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> deepseek-coder-v2:16b</span></span></code></pre></figure>
+<hr/>
+<h2 id="5-quantization-guide">5. Quantization Guide<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#5-quantization-guide" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="quantization-types">Quantization Types<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#quantization-types" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Type</th><th>Size vs FP16</th><th>Quality Impact</th><th>Use Case</th></tr></thead><tbody><tr><td><strong>Q4_K_S</strong></td><td>~60%</td><td>Small loss</td><td>Maximum memory savings</td></tr><tr><td><strong>Q4_K_M</strong></td><td>~60%</td><td>Minimal loss (recommended)</td><td>Best balance</td></tr><tr><td><strong>Q5_K_S</strong></td><td>~55%</td><td>Very small loss</td><td>Better quality</td></tr><tr><td><strong>Q5_K_M</strong></td><td>~50%</td><td>Very small loss</td><td>When quality > size</td></tr><tr><td><strong>Q8_0</strong></td><td>~30%</td><td>Near FP16</td><td>When quality is critical</td></tr><tr><td><strong>FP16</strong></td><td>100%</td><td>Full precision</td><td>Training, fine-tuning</td></tr></tbody></table></div>
+<h3 id="for-code-generation---quantization-recommendations">For Code Generation - Quantization Recommendations<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#for-code-generation---quantization-recommendations" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Model Size</th><th>Recommended</th><th>Alternative</th></tr></thead><tbody><tr><td>7B</td><td>Q4_K_M</td><td>Q5_K_M if VRAM allows</td></tr><tr><td>13B</td><td>Q4_K_M</td><td>Q8_0 for max quality</td></tr><tr><td>34B</td><td>Q4_K_M</td><td>Q5_K_M for quality</td></tr><tr><td>70B</td><td>Q4_K_M</td><td>Q8_0 if 80GB+ VRAM</td></tr></tbody></table></div>
+<h3 id="creating-quantized-models">Creating Quantized Models<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#creating-quantized-models" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Pull base model</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> pull</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> codellama:13b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Create quantized version</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">curl</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> http://localhost:11434/api/create</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> -d</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> '{</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;model&quot;: &quot;codellama:13b-q4_K_M&quot;,</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;from&quot;: &quot;codellama:13b&quot;,</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;quantize&quot;: &quot;q4_K_M&quot;</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">}'</span></span></code></pre></figure>
+<h3 id="quantization-impact-on-quality">Quantization Impact on Quality<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#quantization-impact-on-quality" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Quantization</th><th>HumanEval Drop</th><th>Acceptable?</th></tr></thead><tbody><tr><td>Q8_0</td><td>&lt;1%</td><td>Yes</td></tr><tr><td>Q4_K_M</td><td>2-5%</td><td>Yes (recommended)</td></tr><tr><td>Q4_K_S</td><td>5-8%</td><td>Acceptable for memory constrained</td></tr><tr><td>Q4_0</td><td>8-12%</td><td>Use only if necessary</td></tr></tbody></table></div>
+<hr/>
+<h2 id="6-ollama-configuration">6. Ollama Configuration<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#6-ollama-configuration" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="environment-variables">Environment Variables<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#environment-variables" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Variable</th><th>Default</th><th>Code Generation Recommendation</th></tr></thead><tbody><tr><td><code>OLLAMA_FLASH_ATTENTION</code></td><td>0</td><td><code>1</code> - Enable</td></tr><tr><td><code>OLLAMA_KV_CACHE_TYPE</code></td><td>f16</td><td><code>q8_0</code> - ~50% memory reduction</td></tr><tr><td><code>OLLAMA_CONTEXT_LENGTH</code></td><td>varies</td><td><code>64000</code> or <code>128000</code> for code</td></tr><tr><td><code>OLLAMA_NUM_PARALLEL</code></td><td>1</td><td><code>1-2</code> (higher = more VRAM)</td></tr><tr><td><code>OLLAMA_MAX_LOADED_MODELS</code></td><td>3</td><td>Based on VRAM capacity</td></tr><tr><td><code>OLLAMA_KEEP_ALIVE</code></td><td>5m</td><td><code>24h</code> for frequently used</td></tr><tr><td><code>OLLAMA_MAX_QUEUE</code></td><td>512</td><td>Default usually fine</td></tr></tbody></table></div>
+<h3 id="recommended-configurations">Recommended Configurations<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#recommended-configurations" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<h4 id="high-vram-system-32gb">High-VRAM System (32GB+)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#high-vram-system-32gb" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_FLASH_ATTENTION</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">1</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;"> \</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KV_CACHE_TYPE=q8_0 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_CONTEXT_LENGTH=128000 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_NUM_PARALLEL=2 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_MAX_LOADED_MODELS=2 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KEEP_ALIVE=24h </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">ollama </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">serve</span></span></code></pre></figure>
+<h4 id="moderate-vram-16-24gb">Moderate VRAM (16-24GB)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#moderate-vram-16-24gb" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_FLASH_ATTENTION</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">1</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;"> \</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KV_CACHE_TYPE=q8_0 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_CONTEXT_LENGTH=64000 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_NUM_PARALLEL=1 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_MAX_LOADED_MODELS=1 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KEEP_ALIVE=12h </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">ollama </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">serve</span></span></code></pre></figure>
+<h4 id="limited-vram-8-16gb">Limited VRAM (8-16GB)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#limited-vram-8-16gb" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h4>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_FLASH_ATTENTION</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">1</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;"> \</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KV_CACHE_TYPE=q4_0 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_CONTEXT_LENGTH=4096 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_NUM_PARALLEL=1 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_MAX_LOADED_MODELS=1 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KEEP_ALIVE=2h </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">ollama </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">serve</span></span></code></pre></figure>
+<h3 id="context-length-by-vram">Context Length by VRAM<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#context-length-by-vram" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>VRAM</th><th>Recommended Context</th><th>Use Case</th></tr></thead><tbody><tr><td>&lt;24GB</td><td>4K-16K</td><td>Simple completions</td></tr><tr><td>24-48GB</td><td>32K-64K</td><td>Single large files</td></tr><tr><td>48GB+</td><td>128K+</td><td>Full project context</td></tr></tbody></table></div>
+<h3 id="keep-alive-settings">Keep Alive Settings<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#keep-alive-settings" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Keep model loaded for 24 hours</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KEEP_ALIVE</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">24h</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Keep permanently loaded</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KEEP_ALIVE</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">-1</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Per-request override</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">curl</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> http://localhost:11434/api/generate</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> -d</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> '{</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;model&quot;: &quot;codellama&quot;,</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;keep_alive&quot;: -1</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">}'</span></span></code></pre></figure>
+<h3 id="multi-model-serving">Multi-Model Serving<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#multi-model-serving" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Limit to specific GPUs</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">CUDA_VISIBLE_DEVICES</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">0,1</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Max concurrent models based on VRAM</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_MAX_LOADED_MODELS</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">2</span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;">  # Two 24GB models on 48GB VRAM</span></span></code></pre></figure>
+<h3 id="cpu-offloading-limited-vram">CPU Offloading (Limited VRAM)<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#cpu-offloading-limited-vram" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Force CPU mode with AVX2</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_LLM_LIBRARY</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">cpu_avx2</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Check what's loaded where</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> ps</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># 100% GPU = fully on GPU (best)</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># 48%/52% CPU/GPU = partial offloading</span></span></code></pre></figure>
+<hr/>
+<h2 id="7-benchmarking-and-evaluation">7. Benchmarking and Evaluation<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#7-benchmarking-and-evaluation" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="key-benchmarks-for-code-generation">Key Benchmarks for Code Generation<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#key-benchmarks-for-code-generation" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Benchmark</th><th>Description</th><th>Strong Score</th></tr></thead><tbody><tr><td><strong>HumanEval</strong></td><td>Pass@1 code generation (164 problems)</td><td>>60%</td></tr><tr><td><strong>MBPP</strong></td><td>Python programming problems (974 tasks)</td><td>>70%</td></tr><tr><td><strong>MultiPL-E</strong></td><td>HumanEval in 18+ languages</td><td>>50%</td></tr></tbody></table></div>
+<h3 id="lm-evaluation-harness-setup">lm-evaluation-harness Setup<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#lm-evaluation-harness-setup" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Install</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">pip</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> install</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> &quot;lm_eval[api,hf]&quot;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Run against Ollama server</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">lm_eval</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> --model</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> local-completions</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --model_args</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> model=codellama:13b,base_url=http://localhost:11434/v1/completions</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --tasks</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> humaneval,mbpp</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --batch_size</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> 16</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --output_path</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> ./results/</span></span></code></pre></figure>
+<h3 id="tokens-per-second-measurement">Tokens Per Second Measurement<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#tokens-per-second-measurement" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Simple timing</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">time</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> curl -s http://localhost:11434/api/generate -d </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">'{</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;model&quot;: &quot;codellama:13b&quot;,</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;prompt&quot;: &quot;Write a quicksort implementation&quot;,</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">  &quot;stream&quot;: false</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">}'</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;"> |</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;"> jq</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> '{eval_count, eval_duration}'</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Calculate: tokens_per_sec = eval_count / (eval_duration * 1e-9)</span></span></code></pre></figure>
+<h3 id="expected-tokenssec-by-hardware">Expected Tokens/sec by Hardware<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#expected-tokenssec-by-hardware" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Model Size</th><th>Quantization</th><th>CPU (64GB RAM)</th><th>RTX 4090</th><th>A100 80GB</th></tr></thead><tbody><tr><td>7B</td><td>Q4_K_M</td><td>15-25 t/s</td><td>80-150 t/s</td><td>80-100 t/s</td></tr><tr><td>13B</td><td>Q4_K_M</td><td>10-18 t/s</td><td>50-100 t/s</td><td>50-70 t/s</td></tr><tr><td>34B</td><td>Q4_K_M</td><td>5-10 t/s</td><td>30-60 t/s</td><td>25-35 t/s</td></tr><tr><td>70B</td><td>Q4_K_M</td><td>2-5 t/s</td><td>15-35 t/s</td><td>12-18 t/s</td></tr></tbody></table></div>
+<h3 id="quick-model-comparison-script">Quick Model Comparison Script<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#quick-model-comparison-script" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="python" data-theme="github-light github-dark"><code data-language="python" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">import</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> requests</span></span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">import</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> json</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">MODELS</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;"> =</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> [</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;qwen2.5-coder:7b&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;codellama:13b&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;deepseek-coder-v2:16b&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">]</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">PROMPT</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;"> =</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> &quot;Write a function to check if a string is a palindrome&quot;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">def</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;"> benchmark_model</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(model):</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    resp </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> requests.post(</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">        &quot;http://localhost:11434/api/generate&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">,</span></span>
+<span data-line><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70;">        json</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">{</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;model&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: model, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;prompt&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">PROMPT</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;stream&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">False</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">}</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    ).json()</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    tokens </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> resp.get(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;eval_count&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    duration_ns </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> resp.get(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;eval_duration&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">)</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    tokens_per_sec </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> tokens </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">/</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> (duration_ns </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">*</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> 1e-9</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">) </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">if</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> duration_ns </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">else</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> 0</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">    return</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> {</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">        &quot;model&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: model,</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">        &quot;tokens_per_sec&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">round</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(tokens_per_sec, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">2</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">),</span></span>
+<span data-line><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">        &quot;response_length&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">len</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(resp.get(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;response&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">, </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">))</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    }</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">for</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> model </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">in</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> MODELS</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">:</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">    result </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> benchmark_model(model)</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    print</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">(</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">f</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">{</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">result[</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">'model'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">]</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">}</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">: </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">{</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">result[</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">'tokens_per_sec'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">]</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">}</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> tokens/sec&quot;</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">)</span></span></code></pre></figure>
+<h3 id="quantization-quality-testing">Quantization Quality Testing<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#quantization-quality-testing" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;">#!/bin/bash</span></span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># test_quantization.sh - Compare base vs quantized</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">BASE_MODEL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;codellama:13b-fp16&quot;</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">QUANTIZED_MODEL</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">&quot;codellama:13b-q4_K_M&quot;</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">lm_eval</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> --model</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> local-completions</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --model_args</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> model=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">$BASE_MODEL</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">,base_url=http://localhost:11434/v1/completions</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --tasks</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> humaneval</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --output_path</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> ./results/base/</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">lm_eval</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> --model</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> local-completions</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --model_args</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> model=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">$QUANTIZED_MODEL</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">,base_url=http://localhost:11434/v1/completions</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --tasks</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> humaneval</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> \</span></span>
+<span data-line><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">    --output_path</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> ./results/quantized/</span></span></code></pre></figure>
+<h3 id="acceptable-quantization-impact">Acceptable Quantization Impact<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#acceptable-quantization-impact" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Aspect</th><th>Acceptable Delta</th></tr></thead><tbody><tr><td>Code Correctness (HumanEval)</td><td>&lt;5% absolute drop</td></tr><tr><td>Perplexity</td><td>&lt;10% increase</td></tr><tr><td>Speed</td><td>>2x improvement for Q4</td></tr><tr><td>Memory</td><td>>50% reduction</td></tr></tbody></table></div>
+<hr/>
+<h2 id="8-efficiency-tips">8. Efficiency Tips<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#8-efficiency-tips" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="top-10-optimizations">Top 10 Optimizations<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#top-10-optimizations" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<ol>
+<li>
+<p><strong>Enable Flash Attention</strong> - <code>OLLAMA_FLASH_ATTENTION=1</code></p>
+<ul>
+<li>Reduces memory usage significantly at long contexts</li>
+</ul>
+</li>
+<li>
+<p><strong>Quantize KV Cache</strong> - <code>OLLAMA_KV_CACHE_TYPE=q8_0</code></p>
+<ul>
+<li>~50% memory reduction with minimal quality impact</li>
+</ul>
+</li>
+<li>
+<p><strong>Set Appropriate Context Length</strong> - Don’t over-provision</p>
+<ul>
+<li>4K for simple completions, 64K+ for full project context</li>
+</ul>
+</li>
+<li>
+<p><strong>Keep Models Loaded</strong> - <code>OLLAMA_KEEP_ALIVE=24h</code> or <code>-1</code></p>
+<ul>
+<li>Avoids reload latency for frequently used models</li>
+</ul>
+</li>
+<li>
+<p><strong>Use Q4_K_M Quantization</strong> - Best size/quality balance</p>
+<ul>
+<li>Works well for code generation with minimal quality loss</li>
+</ul>
+</li>
+<li>
+<p><strong>Match Model to Hardware</strong> - Don’t try to run 70B on 24GB VRAM</p>
+<ul>
+<li>70B requires quantization + CPU offload or multi-GPU</li>
+</ul>
+</li>
+<li>
+<p><strong>Limit Parallel Requests</strong> - <code>OLLAMA_NUM_PARALLEL=1-2</code></p>
+<ul>
+<li>Higher = more VRAM usage, only increase if beneficial</li>
+</ul>
+</li>
+<li>
+<p><strong>Use Appropriate Batch Sizes</strong> - For benchmarking, 8-16 is typical</p>
+<ul>
+<li>Larger batches = more memory, adjust for your VRAM</li>
+</ul>
+</li>
+<li>
+<p><strong>Monitor with <code>ollama ps</code></strong> - Check GPU vs CPU usage</p>
+<ul>
+<li>100% GPU = best performance for code generation</li>
+</ul>
+</li>
+<li>
+<p><strong>Consider Multi-GPU for 70B+</strong> - Split across GPUs if available</p>
+<ul>
+<li>Ollama automatically spreads models across GPUs</li>
+</ul>
+</li>
+</ol>
+<h3 id="for-your-64gb128gb-servers">For Your 64GB/128GB Servers<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#for-your-64gb128gb-servers" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<p><strong>Recommended Starting Configuration:</strong></p>
+<ul>
+<li>Start with RTX 4090 (24GB VRAM)</li>
+<li>Run 7B-14B models at full performance</li>
+<li>Run 34B with quantization</li>
+<li>Run 70B with heavy quantization + CPU RAM (slower but workable)</li>
+</ul>
+<p><strong>Upgrade Path:</strong></p>
+<ol>
+<li>Add second RTX 4090 for 70B Q4_K_M</li>
+<li>Or move to 2x A100 80GB for FP16/Q8 on 70B</li>
+<li>Or H200 for best long-context performance</li>
+</ol>
+<h3 id="gpu-selection-for-code-generation">GPU Selection for Code Generation<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#gpu-selection-for-code-generation" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Priority</th><th>Feature</th><th>Why</th></tr></thead><tbody><tr><td>1</td><td>High VRAM</td><td>Long contexts, large models</td></tr><tr><td>2</td><td>Memory Bandwidth</td><td>Generation speed</td></tr><tr><td>3</td><td>Transformer Engine</td><td>Attention acceleration</td></tr><tr><td>4</td><td>PCIe/NVLink</td><td>Multi-GPU scaling</td></tr><tr><td>5</td><td>INT8/FP8 Support</td><td>Faster inference</td></tr></tbody></table></div>
+<hr/>
+<h2 id="9-quick-reference">9. Quick Reference<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#9-quick-reference" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<h3 id="ollama-api-endpoints">Ollama API Endpoints<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#ollama-api-endpoints" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Generate completion</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">POST</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> /api/generate</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Chat completion</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">POST</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> /api/chat</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># List models</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">GET</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> /api/tags</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Create quantized model</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">POST</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> /api/create</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Show model info</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">POST</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> /api/show</span></span></code></pre></figure>
+<h3 id="model-vram-quick-reference">Model VRAM Quick Reference<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#model-vram-quick-reference" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Model</th><th>Q4_K_M VRAM</th><th>Q8_0 VRAM</th><th>FP16 VRAM</th></tr></thead><tbody><tr><td>7B</td><td>4-5GB</td><td>7GB</td><td>14GB</td></tr><tr><td>13B</td><td>7-8GB</td><td>13GB</td><td>26GB</td></tr><tr><td>32B</td><td>18-20GB</td><td>32GB</td><td>64GB</td></tr><tr><td>70B</td><td>40GB</td><td>70GB</td><td>140GB</td></tr></tbody></table></div>
+<h3 id="essential-commands">Essential Commands<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#essential-commands" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Start Ollama</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> serve</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Run a model</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> run</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> qwen2.5-coder:14b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># List running models</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> ps</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Pull a model</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">ollama</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> pull</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> codellama:13b</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Check GPU</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">nvidia-smi</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> -L</span></span>
+<span data-line> </span>
+<span data-line><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D;"># Benchmark speed</span></span>
+<span data-line><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">curl</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> http://localhost:11434/api/generate</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> -d</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> '{&quot;model&quot;: &quot;qwen2.5-coder:7b&quot;, &quot;prompt&quot;: &quot;Hello&quot;, &quot;stream&quot;: false}'</span></span></code></pre></figure>
+<h3 id="performance-tiers">Performance Tiers<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#performance-tiers" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="table-container"><table><thead><tr><th>Use Case</th><th>Model</th><th>VRAM</th><th>Expected t/s</th></tr></thead><tbody><tr><td>Budget 7B</td><td>qwen2.5-coder:7b</td><td>6GB</td><td>60-100</td></tr><tr><td>Mid 13B</td><td>codellama:13b</td><td>10GB</td><td>40-70</td></tr><tr><td>Mid+ 14B</td><td>qwen2.5-coder:14b</td><td>16GB</td><td>35-60</td></tr><tr><td>High 32B</td><td>qwen2.5-coder:32b</td><td>24GB</td><td>20-40</td></tr><tr><td>Enthusiast 70B</td><td>codellama:70b</td><td>48GB</td><td>15-30</td></tr></tbody></table></div>
+<hr/>
+<h2 id="summary-recommended-starting-point">Summary: Recommended Starting Point<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#summary-recommended-starting-point" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h2>
+<p>For your 64GB/128GB DDR4 servers with code generation focus:</p>
+<p><strong>Step 1</strong>: Buy RTX 4090 (~$2,000) to establish workflow</p>
+<p><strong>Step 2</strong>: Start with <code>ollama run qwen2.5-coder:14b</code></p>
+<p><strong>Step 3</strong>: Benchmark with <code>lm_eval --tasks humaneval,mbpp</code></p>
+<p><strong>Step 4</strong>: Upgrade to multi-GPU or H200/A100 when needed for 70B+</p>
+<p><strong>Optimal Config for Code Generation</strong>:</p>
+<figure data-rehype-pretty-code-figure><pre tabindex="0" data-language="bash" data-theme="github-light github-dark"><code data-language="bash" data-theme="github-light github-dark" style="display:grid;"><span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_FLASH_ATTENTION</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583;">=</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">1</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;"> \</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KV_CACHE_TYPE=q8_0 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_CONTEXT_LENGTH=128000 </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">OLLAMA_KEEP_ALIVE=24h </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;">\</span></span>
+<span data-line><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;">ollama </span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;">serve</span></span></code></pre></figure>
+<hr/>
+<p><em>Document compiled: May 2025</em>
+<em>Last updated: Add date as needed</em></p></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>Graph View</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.1,&quot;repelForce&quot;:0.5,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.6,&quot;opacityScale&quot;:1,&quot;showTags&quot;:true,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.9,&quot;repelForce&quot;:0.5,&quot;centerForce&quot;:0.2,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.6,&quot;opacityScale&quot;:1,&quot;showTags&quot;:true,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div><div class="toc desktop-only"><button type="button" class="toc-header" aria-controls="toc-8" aria-expanded="true"><h3>Table of Contents</h3><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><ul id="list-1" class="toc-content overflow"><li class="depth-0"><a href="#ollama-best-practices-guide" data-for="ollama-best-practices-guide">Ollama Best Practices Guide</a></li><li class="depth-1"><a href="#optimizing-local-llm-inference-for-code-generation-2025" data-for="optimizing-local-llm-inference-for-code-generation-2025">Optimizing Local LLM Inference for Code Generation (2025)</a></li><li class="depth-1"><a href="#table-of-contents" data-for="table-of-contents">Table of Contents</a></li><li class="depth-1"><a href="#1-hardware-recommendations" data-for="1-hardware-recommendations">1. Hardware Recommendations</a></li><li class="depth-2"><a href="#your-setup" data-for="your-setup">Your Setup</a></li><li class="depth-2"><a href="#gpu-recommendations-by-budget" data-for="gpu-recommendations-by-budget">GPU Recommendations by Budget</a></li><li class="depth-2"><a href="#for-code-generation---key-gpu-features" data-for="for-code-generation---key-gpu-features">For Code Generation - Key GPU Features</a></li><li class="depth-2"><a href="#server-compatibility-checklist" data-for="server-compatibility-checklist">Server Compatibility Checklist</a></li><li class="depth-2"><a href="#pcie-requirements" data-for="pcie-requirements">PCIe Requirements</a></li><li class="depth-1"><a href="#2-gpu-options-and-comparison" data-for="2-gpu-options-and-comparison">2. GPU Options and Comparison</a></li><li class="depth-2"><a href="#nvidia-consumer-gpus" data-for="nvidia-consumer-gpus">NVIDIA Consumer GPUs</a></li><li class="depth-2"><a href="#nvidia-data-center-gpus" data-for="nvidia-data-center-gpus">NVIDIA Data Center GPUs</a></li><li class="depth-2"><a href="#amd-gpus-rocm" data-for="amd-gpus-rocm">AMD GPUs (ROCm)</a></li><li class="depth-2"><a href="#multi-gpu-configurations-for-70b-models" data-for="multi-gpu-configurations-for-70b-models">Multi-GPU Configurations for 70B+ Models</a></li><li class="depth-2"><a href="#ollama-gpu-compatibility" data-for="ollama-gpu-compatibility">Ollama GPU Compatibility</a></li><li class="depth-1"><a href="#3-model-memory-requirements" data-for="3-model-memory-requirements">3. Model Memory Requirements</a></li><li class="depth-2"><a href="#memory-formula" data-for="memory-formula">Memory Formula</a></li><li class="depth-2"><a href="#vram-requirements-by-model-size" data-for="vram-requirements-by-model-size">VRAM Requirements by Model Size</a></li><li class="depth-2"><a href="#kv-cache-memory" data-for="kv-cache-memory">KV Cache Memory</a></li><li class="depth-1"><a href="#4-code-generation-models" data-for="4-code-generation-models">4. Code Generation Models</a></li><li class="depth-2"><a href="#top-models-for-code-generation-2025" data-for="top-models-for-code-generation-2025">Top Models for Code Generation (2025)</a></li><li class="depth-2"><a href="#benchmark-scores-humaneval-pass1" data-for="benchmark-scores-humaneval-pass1">Benchmark Scores (HumanEval Pass@1)</a></li><li class="depth-2"><a href="#model-selection-by-vram" data-for="model-selection-by-vram">Model Selection by VRAM</a></li><li class="depth-2"><a href="#quick-ollama-commands" data-for="quick-ollama-commands">Quick Ollama Commands</a></li><li class="depth-1"><a href="#5-quantization-guide" data-for="5-quantization-guide">5. Quantization Guide</a></li><li class="depth-2"><a href="#quantization-types" data-for="quantization-types">Quantization Types</a></li><li class="depth-2"><a href="#for-code-generation---quantization-recommendations" data-for="for-code-generation---quantization-recommendations">For Code Generation - Quantization Recommendations</a></li><li class="depth-2"><a href="#creating-quantized-models" data-for="creating-quantized-models">Creating Quantized Models</a></li><li class="depth-2"><a href="#quantization-impact-on-quality" data-for="quantization-impact-on-quality">Quantization Impact on Quality</a></li><li class="depth-1"><a href="#6-ollama-configuration" data-for="6-ollama-configuration">6. Ollama Configuration</a></li><li class="depth-2"><a href="#environment-variables" data-for="environment-variables">Environment Variables</a></li><li class="depth-2"><a href="#recommended-configurations" data-for="recommended-configurations">Recommended Configurations</a></li><li class="depth-2"><a href="#context-length-by-vram" data-for="context-length-by-vram">Context Length by VRAM</a></li><li class="depth-2"><a href="#keep-alive-settings" data-for="keep-alive-settings">Keep Alive Settings</a></li><li class="depth-2"><a href="#multi-model-serving" data-for="multi-model-serving">Multi-Model Serving</a></li><li class="depth-2"><a href="#cpu-offloading-limited-vram" data-for="cpu-offloading-limited-vram">CPU Offloading (Limited VRAM)</a></li><li class="depth-1"><a href="#7-benchmarking-and-evaluation" data-for="7-benchmarking-and-evaluation">7. Benchmarking and Evaluation</a></li><li class="depth-2"><a href="#key-benchmarks-for-code-generation" data-for="key-benchmarks-for-code-generation">Key Benchmarks for Code Generation</a></li><li class="depth-2"><a href="#lm-evaluation-harness-setup" data-for="lm-evaluation-harness-setup">lm-evaluation-harness Setup</a></li><li class="depth-2"><a href="#tokens-per-second-measurement" data-for="tokens-per-second-measurement">Tokens Per Second Measurement</a></li><li class="depth-2"><a href="#expected-tokenssec-by-hardware" data-for="expected-tokenssec-by-hardware">Expected Tokens/sec by Hardware</a></li><li class="depth-2"><a href="#quick-model-comparison-script" data-for="quick-model-comparison-script">Quick Model Comparison Script</a></li><li class="depth-2"><a href="#quantization-quality-testing" data-for="quantization-quality-testing">Quantization Quality Testing</a></li><li class="depth-2"><a href="#acceptable-quantization-impact" data-for="acceptable-quantization-impact">Acceptable Quantization Impact</a></li><li class="depth-1"><a href="#8-efficiency-tips" data-for="8-efficiency-tips">8. Efficiency Tips</a></li><li class="depth-2"><a href="#top-10-optimizations" data-for="top-10-optimizations">Top 10 Optimizations</a></li><li class="depth-2"><a href="#for-your-64gb128gb-servers" data-for="for-your-64gb128gb-servers">For Your 64GB/128GB Servers</a></li><li class="depth-2"><a href="#gpu-selection-for-code-generation" data-for="gpu-selection-for-code-generation">GPU Selection for Code Generation</a></li><li class="depth-1"><a href="#9-quick-reference" data-for="9-quick-reference">9. Quick Reference</a></li><li class="depth-2"><a href="#ollama-api-endpoints" data-for="ollama-api-endpoints">Ollama API Endpoints</a></li><li class="depth-2"><a href="#model-vram-quick-reference" data-for="model-vram-quick-reference">Model VRAM Quick Reference</a></li><li class="depth-2"><a href="#essential-commands" data-for="essential-commands">Essential Commands</a></li><li class="depth-2"><a href="#performance-tiers" data-for="performance-tiers">Performance Tiers</a></li><li class="depth-1"><a href="#summary-recommended-starting-point" data-for="summary-recommended-starting-point">Summary: Recommended Starting Point</a></li><li class="overflow-end"></li></ul></div></div><footer class><p>Created with <a href="https://quartz.jzhao.xyz/">Quartz v4.5.2</a> © 2026</p><ul><li><a href="https://github.com/jackyzha0/quartz">GitHub</a></li><li><a href="https://discord.gg/cRFFHYye7t">Discord Community</a></li></ul></footer></div></div></body><script type="application/javascript" data-persist="true">function n(){let t=this.parentElement;t.classList.toggle("is-collapsed");let e=t.getElementsByClassName("callout-content")[0];if(!e)return;let l=t.classList.contains("is-collapsed");e.style.gridTemplateRows=l?"0fr":"1fr"}function c(){let t=document.getElementsByClassName("callout is-collapsible");for(let e of t){let l=e.getElementsByClassName("callout-title")[0],s=e.getElementsByClassName("callout-content")[0];if(!l||!s)continue;l.addEventListener("click",n),window.addCleanup(()=>l.removeEventListener("click",n));let o=e.classList.contains("is-collapsed");s.style.gridTemplateRows=o?"0fr":"1fr"}}document.addEventListener("nav",c);
+</script><script type="module" data-persist="true">function E(a,e){if(!a)return;function t(o){o.target===this&&(o.preventDefault(),o.stopPropagation(),e())}function n(o){o.key.startsWith("Esc")&&(o.preventDefault(),e())}a?.addEventListener("click",t),window.addCleanup(()=>a?.removeEventListener("click",t)),document.addEventListener("keydown",n),window.addCleanup(()=>document.removeEventListener("keydown",n))}function f(a){for(;a.firstChild;)a.removeChild(a.firstChild)}var m=class{constructor(e,t){this.container=e;this.content=t;this.setupEventListeners(),this.setupNavigationControls(),this.resetTransform()}isDragging=!1;startPan={x:0,y:0};currentPan={x:0,y:0};scale=1;MIN_SCALE=.5;MAX_SCALE=3;cleanups=[];setupEventListeners(){let e=this.onMouseDown.bind(this),t=this.onMouseMove.bind(this),n=this.onMouseUp.bind(this),o=this.onTouchStart.bind(this),r=this.onTouchMove.bind(this),i=this.onTouchEnd.bind(this),s=this.resetTransform.bind(this);this.container.addEventListener("mousedown",e),document.addEventListener("mousemove",t),document.addEventListener("mouseup",n),this.container.addEventListener("touchstart",o,{passive:!1}),document.addEventListener("touchmove",r,{passive:!1}),document.addEventListener("touchend",i),window.addEventListener("resize",s),this.cleanups.push(()=>this.container.removeEventListener("mousedown",e),()=>document.removeEventListener("mousemove",t),()=>document.removeEventListener("mouseup",n),()=>this.container.removeEventListener("touchstart",o),()=>document.removeEventListener("touchmove",r),()=>document.removeEventListener("touchend",i),()=>window.removeEventListener("resize",s))}cleanup(){for(let e of this.cleanups)e()}setupNavigationControls(){let e=document.createElement("div");e.className="mermaid-controls";let t=this.createButton("+",()=>this.zoom(.1)),n=this.createButton("-",()=>this.zoom(-.1)),o=this.createButton("Reset",()=>this.resetTransform());e.appendChild(n),e.appendChild(o),e.appendChild(t),this.container.appendChild(e)}createButton(e,t){let n=document.createElement("button");return n.textContent=e,n.className="mermaid-control-button",n.addEventListener("click",t),window.addCleanup(()=>n.removeEventListener("click",t)),n}onMouseDown(e){e.button===0&&(this.isDragging=!0,this.startPan={x:e.clientX-this.currentPan.x,y:e.clientY-this.currentPan.y},this.container.style.cursor="grabbing")}onMouseMove(e){this.isDragging&&(e.preventDefault(),this.currentPan={x:e.clientX-this.startPan.x,y:e.clientY-this.startPan.y},this.updateTransform())}onMouseUp(){this.isDragging=!1,this.container.style.cursor="grab"}onTouchStart(e){if(e.touches.length!==1)return;this.isDragging=!0;let t=e.touches[0];this.startPan={x:t.clientX-this.currentPan.x,y:t.clientY-this.currentPan.y}}onTouchMove(e){if(!this.isDragging||e.touches.length!==1)return;e.preventDefault();let t=e.touches[0];this.currentPan={x:t.clientX-this.startPan.x,y:t.clientY-this.startPan.y},this.updateTransform()}onTouchEnd(){this.isDragging=!1}zoom(e){let t=Math.min(Math.max(this.scale+e,this.MIN_SCALE),this.MAX_SCALE),n=this.content.getBoundingClientRect(),o=n.width/2,r=n.height/2,i=t-this.scale;this.currentPan.x-=o*i,this.currentPan.y-=r*i,this.scale=t,this.updateTransform()}updateTransform(){this.content.style.transform=`translate(${this.currentPan.x}px, ${this.currentPan.y}px) scale(${this.scale})`}resetTransform(){let t=this.content.querySelector("svg").getBoundingClientRect(),n=t.width/this.scale,o=t.height/this.scale;this.scale=1,this.currentPan={x:(this.container.clientWidth-n)/2,y:(this.container.clientHeight-o)/2},this.updateTransform()}},T=["--secondary","--tertiary","--gray","--light","--lightgray","--highlight","--dark","--darkgray","--codeFont"],y;document.addEventListener("nav",async()=>{let e=document.querySelector(".center").querySelectorAll("code.mermaid");if(e.length===0)return;y||=await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.0/mermaid.esm.min.mjs");let t=y.default,n=new WeakMap;for(let r of e)n.set(r,r.innerText);async function o(){for(let s of e){s.removeAttribute("data-processed");let c=n.get(s);c&&(s.innerHTML=c)}let r=T.reduce((s,c)=>(s[c]=window.getComputedStyle(document.documentElement).getPropertyValue(c),s),{}),i=document.documentElement.getAttribute("saved-theme")==="dark";t.initialize({startOnLoad:!1,securityLevel:"loose",theme:i?"dark":"base",themeVariables:{fontFamily:r["--codeFont"],primaryColor:r["--light"],primaryTextColor:r["--darkgray"],primaryBorderColor:r["--tertiary"],lineColor:r["--darkgray"],secondaryColor:r["--secondary"],tertiaryColor:r["--tertiary"],clusterBkg:r["--light"],edgeLabelBackground:r["--highlight"]}}),await t.run({nodes:e})}await o(),document.addEventListener("themechange",o),window.addCleanup(()=>document.removeEventListener("themechange",o));for(let r=0;r<e.length;r++){let v=function(){let g=l.querySelector("#mermaid-space"),h=l.querySelector(".mermaid-content");if(!h)return;f(h);let w=i.querySelector("svg").cloneNode(!0);h.appendChild(w),l.classList.add("active"),g.style.cursor="grab",u=new m(g,h)},M=function(){l.classList.remove("active"),u?.cleanup(),u=null},i=e[r],s=i.parentElement,c=s.querySelector(".clipboard-button"),d=s.querySelector(".expand-button"),p=window.getComputedStyle(c),L=c.offsetWidth+parseFloat(p.marginLeft||"0")+parseFloat(p.marginRight||"0");d.style.right=`calc(${L}px + 0.3rem)`,s.prepend(d);let l=s.querySelector("#mermaid-container");if(!l)return;let u=null;d.addEventListener("click",v),E(l,M),window.addCleanup(()=>{u?.cleanup(),d.removeEventListener("click",v)})}});
+</script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../../postscript.js" type="module" data-persist="true"></script></html>

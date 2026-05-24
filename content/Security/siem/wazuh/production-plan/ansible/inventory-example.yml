@@ -1,0 +1,47 @@
+# Ansible Inventory Example — Wazuh Agent Deployment (INI format)
+# One file per org, or combine with --limit or group by OS.
+#
+# Usage:
+#   ansible-playbook linux-agent.yml -i inventory/org-alpha-linux.ini --extra-vars "org_name=org-alpha"
+#   ansible-playbook linux-agent.yml -i inventory/org-alpha-linux.ini --extra-vars "org_name=org-alpha" --check
+#
+# Windows agents are managed via SSM State Manager (windows-agent-ssm.json).
+# Target by tag, e.g.:
+#   aws ssm send-command --document-name WazuhWindowsAgent \
+#     --targets Key=tag:Name,Values=org-alpha-windows \
+#     --parameters '{"WAZUH_ORG_NAME":["org-alpha"]}' --region us-east-1
+
+# ============================================================
+# ORG-ALPHA — LINUX
+# ============================================================
+[org-alpha-linux]
+app-server-01 ansible_host=10.1.1.10 ansible_user=ec2-user
+app-server-02 ansible_host=10.1.1.11 ansible_user=ubuntu
+db-server-01  ansible_host=10.1.1.20 ansible_user=ec2-user
+
+[org-alpha-linux:vars]
+org_name=org-alpha
+wazuh_version=4.12.0
+secondary_groups=[]
+
+# ============================================================
+# ORG-BETA — LINUX
+# ============================================================
+[org-beta-linux]
+web-server-01 ansible_host=10.2.1.10 ansible_user=ec2-user
+
+[org-beta-linux:vars]
+org_name=org-beta
+wazuh_version=4.12.0
+secondary_groups=[]
+
+# ============================================================
+# GLOBAL DEFAULTS (all hosts)
+# ============================================================
+[all:vars]
+wazuh_manager=wazuh-agent-nlb.internal
+wazuh_manager_api=wazuh-manager-api.internal
+wazuh_manager_port=1514
+wazuh_api_user=wazuh-wui
+# wazuh_api_password  — set via --extra-vars "wazuh_api_password=<secret>" or ANSIBLE_VAULT
+# wazuh_enrollment_password — set same way, or leave empty for cert-based enrollment

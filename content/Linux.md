@@ -1,3 +1,10 @@
+---
+title: Linux
+tags: [linux, system-admin, networking, tools]
+date: 2025-05-24
+description: Linux system administration and tooling - SSH, networking, package managers, hardening, editors, and configuration management
+---
+
 # Linux 🐧
 
 Linux system administration and tooling.

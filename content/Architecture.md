@@ -1,3 +1,10 @@
+---
+title: Architecture
+tags: [architecture, system-design, software-engineering, protocols]
+date: 2025-05-24
+description: Software architecture, system design, engineering concepts, protocols, and programming languages
+---
+
 # Architecture 🏛️
 
 Software architecture, system design, and engineering concepts.

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr"><head><title>updates-along-the-versions</title><meta charset="utf-8"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com"/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted Grotesk:wght@400;700&amp;family=Source Sans Pro:ital,wght@0,400;0,600;1,400;1,600&amp;family=IBM Plex Mono:wght@400;600&amp;display=swap"/><link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin="anonymous"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="og:site_name" content="cloudnative wiki"/><meta property="og:title" content="updates-along-the-versions"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="updates-along-the-versions"/><meta name="twitter:description" content="updates along the versions “www.youtube.com/playlist” Kubernetes v1.19 (Released: August 2020) Compared to v1.18: Extended Support: Starting with v1.19, the official support window was extended to one year."/><meta property="og:description" content="updates along the versions “www.youtube.com/playlist” Kubernetes v1.19 (Released: August 2020) Compared to v1.18: Extended Support: Starting with v1.19, the official support window was extended to one year."/><meta property="og:image:alt" content="updates along the versions “www.youtube.com/playlist” Kubernetes v1.19 (Released: August 2020) Compared to v1.18: Extended Support: Starting with v1.19, the official support window was extended to one year."/><meta property="twitter:domain" content="quartz.jzhao.xyz"/><meta property="og:url" content="https://quartz.jzhao.xyz/Kubernetes/updates-along-the-versions"/><meta property="twitter:url" content="https://quartz.jzhao.xyz/Kubernetes/updates-along-the-versions"/><link rel="icon" href="../static/icon.png"/><meta name="description" content="updates along the versions “www.youtube.com/playlist” Kubernetes v1.19 (Released: August 2020) Compared to v1.18: Extended Support: Starting with v1.19, the official support window was extended to one year."/><meta name="generator" content="Quartz"/><link href="../index.css" rel="stylesheet" type="text/css" data-persist="true"/><style>.expand-button {
+  position: absolute;
+  display: flex;
+  float: right;
+  padding: 0.4rem;
+  margin: 0.3rem;
+  right: 0;
+  color: var(--gray);
+  border-color: var(--dark);
+  background-color: var(--light);
+  border: 1px solid;
+  border-radius: 5px;
+  opacity: 0;
+  transition: 0.2s;
+}
+.expand-button > svg {
+  fill: var(--light);
+  filter: contrast(0.3);
+}
+.expand-button:hover {
+  cursor: pointer;
+  border-color: var(--secondary);
+}
+.expand-button:focus {
+  outline: 0;
+}
+
+pre:hover > .expand-button {
+  opacity: 1;
+  transition: 0.2s;
+}
+
+#mermaid-container {
+  position: fixed;
+  contain: layout;
+  z-index: 999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: none;
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+}
+#mermaid-container.active {
+  display: inline-block;
+}
+#mermaid-container > #mermaid-space {
+  border: 1px solid var(--lightgray);
+  background-color: var(--light);
+  border-radius: 5px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 80vh;
+  width: 80vw;
+  overflow: hidden;
+}
+#mermaid-container > #mermaid-space > .mermaid-content {
+  position: relative;
+  transform-origin: 0 0;
+  transition: transform 0.1s ease;
+  overflow: visible;
+  min-height: 200px;
+  min-width: 200px;
+}
+#mermaid-container > #mermaid-space > .mermaid-content pre {
+  margin: 0;
+  border: none;
+}
+#mermaid-container > #mermaid-space > .mermaid-content svg {
+  max-width: none;
+  height: auto;
+}
+#mermaid-container > #mermaid-space > .mermaid-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: var(--light);
+  border: 1px solid var(--lightgray);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--lightgray);
+  background: var(--light);
+  color: var(--dark);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: var(--bodyFont);
+  transition: all 0.2s ease;
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button:hover {
+  background: var(--lightgray);
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button:active {
+  transform: translateY(1px);
+}
+#mermaid-container > #mermaid-space > .mermaid-controls .mermaid-control-button:nth-child(2) {
+  width: auto;
+  padding: 0 12px;
+  font-size: 14px;
+}
+/*# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VSb290IjoiL2hvbWUvZGFyc2hhbi9wcm9qZWN0cy9jbG91ZG5hdGl2ZS13aWtpL3F1YXJ0ei9jb21wb25lbnRzL3N0eWxlcyIsInNvdXJjZXMiOlsibWVybWFpZC5pbmxpbmUuc2NzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtFQUNFO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTs7QUFHRjtFQUNFO0VBQ0E7O0FBR0Y7RUFDRTs7O0FBS0Y7RUFDRTtFQUNBOzs7QUFJSjtFQUNFO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7O0FBRUE7RUFDRTs7QUFHRjtFQUNFO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTs7QUFHRjtFQUNFO0VBQ0E7O0FBSUo7RUFDRTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBOztBQUVBO0VBQ0U7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTtFQUNBO0VBQ0E7RUFDQTs7QUFFQTtFQUNFOztBQUdGO0VBQ0U7O0FBSUY7RUFDRTtFQUNBO0VBQ0EiLCJzb3VyY2VzQ29udGVudCI6WyIuZXhwYW5kLWJ1dHRvbiB7XG4gIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgZGlzcGxheTogZmxleDtcbiAgZmxvYXQ6IHJpZ2h0O1xuICBwYWRkaW5nOiAwLjRyZW07XG4gIG1hcmdpbjogMC4zcmVtO1xuICByaWdodDogMDsgLy8gTk9URTogcmlnaHQgd2lsbCBiZSBzZXQgaW4gbWVybWFpZC5pbmxpbmUudHNcbiAgY29sb3I6IHZhcigtLWdyYXkpO1xuICBib3JkZXItY29sb3I6IHZhcigtLWRhcmspO1xuICBiYWNrZ3JvdW5kLWNvbG9yOiB2YXIoLS1saWdodCk7XG4gIGJvcmRlcjogMXB4IHNvbGlkO1xuICBib3JkZXItcmFkaXVzOiA1cHg7XG4gIG9wYWNpdHk6IDA7XG4gIHRyYW5zaXRpb246IDAuMnM7XG5cbiAgJiA+IHN2ZyB7XG4gICAgZmlsbDogdmFyKC0tbGlnaHQpO1xuICAgIGZpbHRlcjogY29udHJhc3QoMC4zKTtcbiAgfVxuXG4gICY6aG92ZXIge1xuICAgIGN1cnNvcjogcG9pbnRlcjtcbiAgICBib3JkZXItY29sb3I6IHZhcigtLXNlY29uZGFyeSk7XG4gIH1cblxuICAmOmZvY3VzIHtcbiAgICBvdXRsaW5lOiAwO1xuICB9XG59XG5cbnByZSB7XG4gICY6aG92ZXIgPiAuZXhwYW5kLWJ1dHRvbiB7XG4gICAgb3BhY2l0eTogMTtcbiAgICB0cmFuc2l0aW9uOiAwLjJzO1xuICB9XG59XG5cbiNtZXJtYWlkLWNvbnRhaW5lciB7XG4gIHBvc2l0aW9uOiBmaXhlZDtcbiAgY29udGFpbjogbGF5b3V0O1xuICB6LWluZGV4OiA5OTk7XG4gIGxlZnQ6IDA7XG4gIHRvcDogMDtcbiAgd2lkdGg6IDEwMHZ3O1xuICBoZWlnaHQ6IDEwMHZoO1xuICBvdmVyZmxvdzogaGlkZGVuO1xuICBkaXNwbGF5OiBub25lO1xuICBiYWNrZHJvcC1maWx0ZXI6IGJsdXIoNHB4KTtcbiAgYmFja2dyb3VuZDogcmdiYSgwLCAwLCAwLCAwLjUpO1xuXG4gICYuYWN0aXZlIHtcbiAgICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7XG4gIH1cblxuICAmID4gI21lcm1haWQtc3BhY2Uge1xuICAgIGJvcmRlcjogMXB4IHNvbGlkIHZhcigtLWxpZ2h0Z3JheSk7XG4gICAgYmFja2dyb3VuZC1jb2xvcjogdmFyKC0tbGlnaHQpO1xuICAgIGJvcmRlci1yYWRpdXM6IDVweDtcbiAgICBwb3NpdGlvbjogZml4ZWQ7XG4gICAgdG9wOiA1MCU7XG4gICAgbGVmdDogNTAlO1xuICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlKC01MCUsIC01MCUpO1xuICAgIGhlaWdodDogODB2aDtcbiAgICB3aWR0aDogODB2dztcbiAgICBvdmVyZmxvdzogaGlkZGVuO1xuXG4gICAgJiA+IC5tZXJtYWlkLWNvbnRlbnQge1xuICAgICAgcG9zaXRpb246IHJlbGF0aXZlO1xuICAgICAgdHJhbnNmb3JtLW9yaWdpbjogMCAwO1xuICAgICAgdHJhbnNpdGlvbjogdHJhbnNmb3JtIDAuMXMgZWFzZTtcbiAgICAgIG92ZXJmbG93OiB2aXNpYmxlO1xuICAgICAgbWluLWhlaWdodDogMjAwcHg7XG4gICAgICBtaW4td2lkdGg6IDIwMHB4O1xuXG4gICAgICBwcmUge1xuICAgICAgICBtYXJnaW46IDA7XG4gICAgICAgIGJvcmRlcjogbm9uZTtcbiAgICAgIH1cblxuICAgICAgc3ZnIHtcbiAgICAgICAgbWF4LXdpZHRoOiBub25lO1xuICAgICAgICBoZWlnaHQ6IGF1dG87XG4gICAgICB9XG4gICAgfVxuXG4gICAgJiA+IC5tZXJtYWlkLWNvbnRyb2xzIHtcbiAgICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTtcbiAgICAgIGJvdHRvbTogMjBweDtcbiAgICAgIHJpZ2h0OiAyMHB4O1xuICAgICAgZGlzcGxheTogZmxleDtcbiAgICAgIGdhcDogOHB4O1xuICAgICAgcGFkZGluZzogOHB4O1xuICAgICAgYmFja2dyb3VuZDogdmFyKC0tbGlnaHQpO1xuICAgICAgYm9yZGVyOiAxcHggc29saWQgdmFyKC0tbGlnaHRncmF5KTtcbiAgICAgIGJvcmRlci1yYWRpdXM6IDZweDtcbiAgICAgIGJveC1zaGFkb3c6IDAgMnB4IDRweCByZ2JhKDAsIDAsIDAsIDAuMSk7XG4gICAgICB6LWluZGV4OiAyO1xuXG4gICAgICAubWVybWFpZC1jb250cm9sLWJ1dHRvbiB7XG4gICAgICAgIGRpc3BsYXk6IGZsZXg7XG4gICAgICAgIGFsaWduLWl0ZW1zOiBjZW50ZXI7XG4gICAgICAgIGp1c3RpZnktY29udGVudDogY2VudGVyO1xuICAgICAgICB3aWR0aDogMzJweDtcbiAgICAgICAgaGVpZ2h0OiAzMnB4O1xuICAgICAgICBwYWRkaW5nOiAwO1xuICAgICAgICBib3JkZXI6IDFweCBzb2xpZCB2YXIoLS1saWdodGdyYXkpO1xuICAgICAgICBiYWNrZ3JvdW5kOiB2YXIoLS1saWdodCk7XG4gICAgICAgIGNvbG9yOiB2YXIoLS1kYXJrKTtcbiAgICAgICAgYm9yZGVyLXJhZGl1czogNHB4O1xuICAgICAgICBjdXJzb3I6IHBvaW50ZXI7XG4gICAgICAgIGZvbnQtc2l6ZTogMTZweDtcbiAgICAgICAgZm9udC1mYW1pbHk6IHZhcigtLWJvZHlGb250KTtcbiAgICAgICAgdHJhbnNpdGlvbjogYWxsIDAuMnMgZWFzZTtcblxuICAgICAgICAmOmhvdmVyIHtcbiAgICAgICAgICBiYWNrZ3JvdW5kOiB2YXIoLS1saWdodGdyYXkpO1xuICAgICAgICB9XG5cbiAgICAgICAgJjphY3RpdmUge1xuICAgICAgICAgIHRyYW5zZm9ybTogdHJhbnNsYXRlWSgxcHgpO1xuICAgICAgICB9XG5cbiAgICAgICAgLy8gU3R5bGUgdGhlIHJlc2V0IGJ1dHRvbiBkaWZmZXJlbnRseVxuICAgICAgICAmOm50aC1jaGlsZCgyKSB7XG4gICAgICAgICAgd2lkdGg6IGF1dG87XG4gICAgICAgICAgcGFkZGluZzogMCAxMnB4O1xuICAgICAgICAgIGZvbnQtc2l6ZTogMTRweDtcbiAgICAgICAgfVxuICAgICAgfVxuICAgIH1cbiAgfVxufVxuIl19 */</style><link href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" rel="stylesheet" type="text/css" data-persist="true"/><script src="../prescript.js" type="application/javascript" data-persist="true"></script><script type="application/javascript" data-persist="true">const fetchData = fetch("../static/contentIndex.json").then(data => data.json())</script><link rel="alternate" type="application/rss+xml" title="RSS Feed" href="https://quartz.jzhao.xyz/index.xml"/><meta property="og:image:width" content="1200"/><meta property="og:image:height" content="630"/><meta property="og:image" content="https://quartz.jzhao.xyz/Kubernetes/updates-along-the-versions-og-image.webp"/><meta property="og:image:url" content="https://quartz.jzhao.xyz/Kubernetes/updates-along-the-versions-og-image.webp"/><meta name="twitter:image" content="https://quartz.jzhao.xyz/Kubernetes/updates-along-the-versions-og-image.webp"/><meta property="og:image:type" content="image/.webp"/></head><body data-slug="Kubernetes/updates-along-the-versions"><div id="quartz-root" class="page"><div id="quartz-body"><div class="left sidebar"><h2 class="page-title"><a href="..">cloudnative wiki</a></h2><div class="spacer mobile-only"></div><div class="flex-component" style="flex-direction: row; flex-wrap: nowrap; gap: 1rem;"><div style="flex-grow: 1; flex-shrink: 1; flex-basis: auto; order: 0; align-self: center; justify-self: center;"><div class="search"><button class="search-button"><svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19.9 19.7"><title>Search</title><g class="search-path" fill="none"><path stroke-linecap="square" d="M18.5 18.3l-5.4-5.4"></path><circle cx="8" cy="8" r="7"></circle></g></svg><p>Search</p></button><div class="search-container"><div class="search-space"><input autocomplete="off" class="search-bar" name="search" type="text" aria-label="Search for something" placeholder="Search for something"/><div class="search-layout" data-preview="true"></div></div></div></div></div><div style="flex-grow: 0; flex-shrink: 1; flex-basis: auto; order: 0; align-self: center; justify-self: center;"><button class="darkmode"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="dayIcon" x="0px" y="0px" viewBox="0 0 35 35" style="enable-background:new 0 0 35 35" xml:space="preserve" aria-label="Dark mode"><title>Dark mode</title><path d="M6,17.5C6,16.672,5.328,16,4.5,16h-3C0.672,16,0,16.672,0,17.5    S0.672,19,1.5,19h3C5.328,19,6,18.328,6,17.5z M7.5,26c-0.414,0-0.789,0.168-1.061,0.439l-2,2C4.168,28.711,4,29.086,4,29.5    C4,30.328,4.671,31,5.5,31c0.414,0,0.789-0.168,1.06-0.44l2-2C8.832,28.289,9,27.914,9,27.5C9,26.672,8.329,26,7.5,26z M17.5,6    C18.329,6,19,5.328,19,4.5v-3C19,0.672,18.329,0,17.5,0S16,0.672,16,1.5v3C16,5.328,16.671,6,17.5,6z M27.5,9    c0.414,0,0.789-0.168,1.06-0.439l2-2C30.832,6.289,31,5.914,31,5.5C31,4.672,30.329,4,29.5,4c-0.414,0-0.789,0.168-1.061,0.44    l-2,2C26.168,6.711,26,7.086,26,7.5C26,8.328,26.671,9,27.5,9z M6.439,8.561C6.711,8.832,7.086,9,7.5,9C8.328,9,9,8.328,9,7.5    c0-0.414-0.168-0.789-0.439-1.061l-2-2C6.289,4.168,5.914,4,5.5,4C4.672,4,4,4.672,4,5.5c0,0.414,0.168,0.789,0.439,1.06    L6.439,8.561z M33.5,16h-3c-0.828,0-1.5,0.672-1.5,1.5s0.672,1.5,1.5,1.5h3c0.828,0,1.5-0.672,1.5-1.5S34.328,16,33.5,16z     M28.561,26.439C28.289,26.168,27.914,26,27.5,26c-0.828,0-1.5,0.672-1.5,1.5c0,0.414,0.168,0.789,0.439,1.06l2,2    C28.711,30.832,29.086,31,29.5,31c0.828,0,1.5-0.672,1.5-1.5c0-0.414-0.168-0.789-0.439-1.061L28.561,26.439z M17.5,29    c-0.829,0-1.5,0.672-1.5,1.5v3c0,0.828,0.671,1.5,1.5,1.5s1.5-0.672,1.5-1.5v-3C19,29.672,18.329,29,17.5,29z M17.5,7    C11.71,7,7,11.71,7,17.5S11.71,28,17.5,28S28,23.29,28,17.5S23.29,7,17.5,7z M17.5,25c-4.136,0-7.5-3.364-7.5-7.5    c0-4.136,3.364-7.5,7.5-7.5c4.136,0,7.5,3.364,7.5,7.5C25,21.636,21.636,25,17.5,25z"></path></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="nightIcon" x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100" xml:space="preserve" aria-label="Light mode"><title>Light mode</title><path d="M96.76,66.458c-0.853-0.852-2.15-1.064-3.23-0.534c-6.063,2.991-12.858,4.571-19.655,4.571  C62.022,70.495,50.88,65.88,42.5,57.5C29.043,44.043,25.658,23.536,34.076,6.47c0.532-1.08,0.318-2.379-0.534-3.23  c-0.851-0.852-2.15-1.064-3.23-0.534c-4.918,2.427-9.375,5.619-13.246,9.491c-9.447,9.447-14.65,22.008-14.65,35.369  c0,13.36,5.203,25.921,14.65,35.368s22.008,14.65,35.368,14.65c13.361,0,25.921-5.203,35.369-14.65  c3.872-3.871,7.064-8.328,9.491-13.246C97.826,68.608,97.611,67.309,96.76,66.458z"></path></svg></button></div><div style="flex-grow: 0; flex-shrink: 1; flex-basis: auto; order: 0; align-self: center; justify-self: center;"><button class="readermode"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" class="readerIcon" fill="currentColor" stroke="currentColor" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round" width="64px" height="64px" viewBox="0 0 24 24" aria-label="Reader mode"><title>Reader mode</title><g transform="translate(-1.8, -1.8) scale(1.15, 1.2)"><path d="M8.9891247,2.5 C10.1384702,2.5 11.2209868,2.96705384 12.0049645,3.76669482 C12.7883914,2.96705384 13.8709081,2.5 15.0202536,2.5 L18.7549359,2.5 C19.1691495,2.5 19.5049359,2.83578644 19.5049359,3.25 L19.5046891,4.004 L21.2546891,4.00457396 C21.6343849,4.00457396 21.9481801,4.28672784 21.9978425,4.6528034 L22.0046891,4.75457396 L22.0046891,20.25 C22.0046891,20.6296958 21.7225353,20.943491 21.3564597,20.9931534 L21.2546891,21 L2.75468914,21 C2.37499337,21 2.06119817,20.7178461 2.01153575,20.3517706 L2.00468914,20.25 L2.00468914,4.75457396 C2.00468914,4.37487819 2.28684302,4.061083 2.65291858,4.01142057 L2.75468914,4.00457396 L4.50368914,4.004 L4.50444233,3.25 C4.50444233,2.87030423 4.78659621,2.55650904 5.15267177,2.50684662 L5.25444233,2.5 L8.9891247,2.5 Z M4.50368914,5.504 L3.50468914,5.504 L3.50468914,19.5 L10.9478955,19.4998273 C10.4513189,18.9207296 9.73864328,18.5588115 8.96709342,18.5065584 L8.77307039,18.5 L5.25444233,18.5 C4.87474657,18.5 4.56095137,18.2178461 4.51128895,17.8517706 L4.50444233,17.75 L4.50368914,5.504 Z M19.5049359,17.75 C19.5049359,18.1642136 19.1691495,18.5 18.7549359,18.5 L15.2363079,18.5 C14.3910149,18.5 13.5994408,18.8724714 13.0614828,19.4998273 L20.5046891,19.5 L20.5046891,5.504 L19.5046891,5.504 L19.5049359,17.75 Z M18.0059359,3.999 L15.0202536,4 L14.8259077,4.00692283 C13.9889509,4.06666544 13.2254227,4.50975805 12.7549359,5.212 L12.7549359,17.777 L12.7782651,17.7601316 C13.4923805,17.2719483 14.3447024,17 15.2363079,17 L18.0059359,16.999 L18.0056891,4.798 L18.0033792,4.75457396 L18.0056891,4.71 L18.0059359,3.999 Z M8.9891247,4 L6.00368914,3.999 L6.00599909,4.75457396 L6.00599909,4.75457396 L6.00368914,4.783 L6.00368914,16.999 L8.77307039,17 C9.57551536,17 10.3461406,17.2202781 11.0128313,17.6202194 L11.2536891,17.776 L11.2536891,5.211 C10.8200889,4.56369974 10.1361548,4.13636104 9.37521067,4.02745763 L9.18347055,4.00692283 L8.9891247,4 Z"></path></g></svg></button></div></div><div class="explorer" data-behavior="link" data-collapsed="collapsed" data-savestate="true" data-data-fns="{&quot;order&quot;:[&quot;filter&quot;,&quot;map&quot;,&quot;sort&quot;],&quot;sortFn&quot;:&quot;(a,b)=>!a.isFolder&amp;&amp;!b.isFolder||a.isFolder&amp;&amp;b.isFolder?a.displayName.localeCompare(b.displayName,void 0,{numeric:!0,sensitivity:\&quot;base\&quot;}):!a.isFolder&amp;&amp;b.isFolder?1:-1&quot;,&quot;filterFn&quot;:&quot;node=>node.slugSegment!==\&quot;tags\&quot;&quot;,&quot;mapFn&quot;:&quot;node=>node&quot;}"><button type="button" class="explorer-toggle mobile-explorer hide-until-loaded" data-mobile="true" aria-controls="explorer-812"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button><button type="button" class="title-button explorer-toggle desktop-explorer" data-mobile="false" aria-expanded="true"><h2>Explorer</h2><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="fold"><polyline points="6 9 12 15 18 9"></polyline></svg></button><div id="explorer-812" class="explorer-content" aria-expanded="false" role="group"><ul class="explorer-ul overflow" id="list-0"><li class="overflow-end"></li></ul></div><template id="template-file"><li><a href="#"></a></li></template><template id="template-folder"><li><div class="folder-container"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="5 8 14 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="folder-icon"><polyline points="6 9 12 15 18 9"></polyline></svg><div><button class="folder-button"><span class="folder-title"></span></button></div></div><div class="folder-outer"><ul class="content"></ul></div></li></template></div></div><div class="center"><div class="page-header"><div class="popover-hint"><nav class="breadcrumb-container" aria-label="breadcrumbs"><div class="breadcrumb-element"><a href="../">Home</a><p> ❯ </p></div><div class="breadcrumb-element"><a href="../Kubernetes/">Kubernetes</a><p> ❯ </p></div><div class="breadcrumb-element"><a href>updates along the versions</a></div></nav><h1 class="article-title">updates-along-the-versions</h1><p show-comma="true" class="content-meta"><time datetime="2026-05-16T05:39:27.000Z">May 16, 2026</time><span>11 min read</span></p></div></div><article class="popover-hint"><h1 id="updates-along-the-versions">updates along the versions<a role="anchor" aria-hidden="true" tabindex="-1" data-no-popover="true" href="#updates-along-the-versions" class="internal"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></a></h1>
+<p>“<a href="https://www.youtube.com/playlist?list=PL2We04F3Y_42ay3zqo1XHXWpG1RMdDpBM" class="external">https://www.youtube.com/playlist?list=PL2We04F3Y_42ay3zqo1XHXWpG1RMdDpBM<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a>”</p>
+<p><strong>Kubernetes v1.19 (Released: August 2020)</strong></p>
+<p><em>Compared to v1.18:</em></p>
+<ul>
+<li><strong>Extended Support:</strong> Starting with v1.19, the official support window was extended to one year.</li>
+<li><mark style="background-color:green;"><strong>EndpointSlice API (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA,</mark> providing a scalable and extensible alternative to Endpoints.</li>
+<li><strong>I</strong><mark style="background-color:green;"><strong>ngress API (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">The</mark> <mark style="background-color:green;"></mark><mark style="background-color:green;"><code>networking.k8s.io/v1</code></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Ingress API graduated to GA.</mark> The <code>IngressClass</code> resource was introduced as a replacement for the <code>kubernetes.io/ingress.class</code> annotation.</li>
+<li><strong>seccomp Support (Alpha):</strong> Added a <code>seccompProfile</code> field to Pod <code>securityContext</code> and container <code>securityContext</code> for configuring seccomp profiles.</li>
+<li><strong>Immutable Secrets and ConfigMaps (Beta):</strong> Allowed marking Secrets and ConfigMaps as immutable to prevent accidental updates.</li>
+<li><strong>Generic Ephemeral Volumes (Alpha):</strong> Introduced a way to provision ephemeral volumes using standard storage drivers that support PersistentVolumes.</li>
+<li><strong>CertificateSigningRequest API (Beta):</strong> Improvements made to the CSR API and approval process.</li>
+<li><strong>Kubelet CRI Support:</strong> Introduced support for Container Runtime Interface (CRI) v1.</li>
+<li><strong>Structured Logging:</strong> Continued effort towards structured logging across components.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.20 (Released: December 2020)</strong></p>
+<p><em>Compared to v1.19:</em></p>
+<ul>
+<li><strong>Volume Snapshot Operations (Stable):</strong> Graduated to GA, allowing standard operations for volume snapshots.</li>
+<li><strong>kubectl debug (Beta):</strong> The <code>kubectl debug</code> feature moved to Beta, improving debugging capabilities for pods and nodes.</li>
+<li><strong>API Priority and Fairness (Beta):</strong> Enabled by default, helping prevent API server overloading by classifying and prioritizing requests.</li>
+<li><strong>PID Limits (Stable):</strong> Graduated to GA, allowing limits on process IDs within pods to improve node stability.</li>
+<li><strong>Graceful Node Shutdown (Alpha):</strong> Introduced kubelet awareness of node shutdowns for graceful pod termination.</li>
+<li><strong>CronJob Controller v2 (Alpha):</strong> Introduced an optional, more performant CronJob controller implementation.</li>
+<li><strong>IPv4/IPv6 Dual-Stack Support (Beta):</strong> Re-implemented dual-stack support, enabling Services to operate in dual-stack mode.</li>
+<li><mark style="background-color:red;"><strong>Dockershim Deprecation:</strong></mark> <mark style="background-color:red;"></mark><mark style="background-color:red;">Announced the future removal of the built-in Docker runtime support (Dockershim) in favor of CRI-compliant runtimes</mark>.</li>
+<li><strong>Exec Probe Timeout Handling:</strong> Addressed inconsistencies where kubelet did not always respect exec probe timeouts.</li>
+<li><mark style="background-color:green;"><strong>RuntimeClass (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA.</mark></li>
+<li><strong>RootCAConfigMap:</strong> Introduced <code>RootCAConfigMap</code> for distributing cluster CA bundles to pods.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.21 (Released: April 2021)</strong></p>
+<p><em>Compared to v1.20:</em></p>
+<ul>
+<li><strong>CronJob (Stable):</strong> The CronJob API (<code>batch/v1</code>) graduated to GA<mark style="background-color:green;">.</mark></li>
+<li><mark style="background-color:green;"><strong>Immutable Secrets and ConfigMaps (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA.</mark></li>
+<li><strong>Graceful Node Shutdown (Beta):</strong> Moved to Beta, allowing configuration via Kubelet config.</li>
+<li><strong>PersistentVolume Health Monitor (Beta):</strong> Introduced monitoring for PV health from CSI drivers.</li>
+<li><mark style="background-color:green;"><strong>PodDisruptionBudget API (</strong></mark><mark style="background-color:green;"><strong><code>policy/v1</code></strong></mark><mark style="background-color:green;"><strong>) (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA</mark>. The <code>policy/v1beta1</code> version was deprecated. An empty selector (<code>{}</code>) now selects all pods in the namespace.</li>
+<li><strong>IPv6 Dual-Stack Support (Beta - Enabled by Default):</strong> Made significant progress towards stable, enabling by default.</li>
+<li><mark style="background-color:red;"><strong>PodSecurityPolicy Deprecation:</strong></mark> <mark style="background-color:red;"></mark><mark style="background-color:red;">PSP was officially deprecated and scheduled for removal in v1.25</mark>. Pod Security Admission was introduced as the intended replacement.</li>
+<li><strong>Topology Aware Hints (Alpha):</strong> Introduced as a successor to the deprecated <code>topologyKeys</code> field for topology-aware routing.</li>
+<li><strong>Indexed Job (Alpha):</strong> Added support for Jobs managing pods associated with completion indexes (e.g., for parallel processing).</li>
+<li><strong>Suspend Job (Alpha):</strong> Added the ability to suspend and resume Jobs.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.22 (Released: August 2021)</strong></p>
+<p><em>Compared to v1.21:</em></p>
+<ul>
+<li><strong>Major API Removals:</strong> <mark style="background-color:red;">Many deprecated beta APIs were removed, requiring migration to their stable</mark> <mark style="background-color:red;"></mark><mark style="background-color:red;"><code>v1</code></mark> <mark style="background-color:red;"></mark><mark style="background-color:red;">counterparts</mark>. This included:
+<ul>
+<li><code>admissionregistration.k8s.io/v1beta1</code> (Validating/MutatingWebhookConfiguration)</li>
+<li><code>apiextensions.k8s.io/v1beta1</code> (CustomResourceDefinition)</li>
+<li><code>apiregistration.k8s.io/v1beta1</code> (APIService)</li>
+<li><code>authentication.k8s.io/v1beta1</code> (TokenReview)</li>
+<li><code>authorization.k8s.io/v1beta1</code> (SubjectAccessReview <sup>1</sup> types)   <a href="https://github.com/kyverno/policies/issues/80" class="external">1. github.com<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a><a href="https://github.com/kyverno/policies/issues/80" class="external">github.com<svg aria-hidden="true" class="external-icon" style="max-width:0.8em;max-height:0.8em;" viewBox="0 0 512 512"><path d="M320 0H288V64h32 82.7L201.4 265.4 178.7 288 224 333.3l22.6-22.6L448 109.3V192v32h64V192 32 0H480 320zM32 32H0V64 480v32H32 456h32V480 352 320H424v32 96H64V96h96 32V32H160 32z"></path></svg></a></li>
+<li><code>certificates.k8s.io/v1beta1</code> (CertificateSigningRequest)</li>
+<li><code>coordination.k8s.io/v1beta1</code> (Lease)</li>
+<li><code>extensions/v1beta1</code> and <code>networking.k8s.io/v1beta1</code> (Ingress - <code>networking.k8s.io/v1</code> is stable)</li>
+<li>RBAC resources (<code>rbac.authorization.k8s.io/v1beta1</code>)</li>
+<li>Storage resources (<code>storage.k8s.io/v1beta1</code>)</li>
+</ul>
+</li>
+<li><mark style="background-color:green;"><strong>Server-Side Apply (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA</mark>, providing a declarative way to manage resource configurations.</li>
+<li><strong>Bound Service Account Tokens (Beta):</strong> Improved security for service account tokens by binding them to specific pods.</li>
+<li><strong>Windows Privileged Containers (Alpha):</strong> Introduced HostProcess containers for running privileged operations on Windows nodes.</li>
+<li><mark style="background-color:green;"><strong>Swap on Linux (Alpha):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Added preliminary support for allowing Kubernetes nodes to use swap memory.</mark></li>
+<li><strong>Default Seccomp Profiles (Alpha):</strong> Introduced the ability to apply a default seccomp profile (<code>RuntimeDefault</code>) cluster-wide.</li>
+<li><strong>Memory QoS with cgroups v2 (Alpha):</strong> Enabled memory quality-of-service features using Linux cgroup v2.</li>
+<li><strong>etcd Updated:</strong> Upgraded to etcd v3.5.0.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.23 (Released: December 2021)</strong></p>
+<p><em>Compared to v1.22:</em></p>
+<ul>
+<li><mark style="background-color:green;"><strong>IPv4/IPv6 Dual-Stack Networking (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA.</mark></li>
+<li><strong>HorizontalPodAutoscaler <code>v2</code> API (Stable):</strong> The <code>autoscaling/v2</code> API graduated to GA, replacing <code>v2beta2</code>.</li>
+<li><strong>Generic Ephemeral Volumes (Stable):</strong> Graduated to GA.</li>
+<li><strong>Skip Volume Ownership Change (Stable):</strong> The <code>fsGroupChangePolicy</code> field graduated to GA, allowing faster pod startup by skipping recursive permission changes.</li>
+<li><strong>Pod Security Admission (Beta - Enabled by Default):</strong> The replacement for PSP was enabled by default, providing built-in pod security standards (Privileged, Baseline, Restricted).</li>
+<li><strong>Ephemeral Containers (Beta - Enabled by Default):</strong> <code>kubectl debug</code> functionality using ephemeral containers was enabled by default.</li>
+<li><strong>CRD Validation Expression Language (Beta):</strong> Introduced CEL for defining custom validation rules directly within CRDs.</li>
+<li><strong>gRPC Probes (Alpha):</strong> Added support for gRPC health probes for pods.</li>
+<li><strong>Structured Logging (Beta):</strong> Made significant progress adopting structured logging across components.</li>
+<li><strong>Job Tracking without Pod Completion (Alpha):</strong> Added tracking based on Job controller status rather than just Pod status.</li>
+<li><strong>OpenAPI v3 Support (Beta):</strong> Improved support for publishing Kubernetes APIs via OpenAPI v3.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.24 (Released: May 2022)</strong></p>
+<p><em>Compared to v1.23:</em></p>
+<ul>
+<li><em><mark style="background-color:red;"><strong>Dockershim Removed: The most significant change. The built-in Docker Engine support via dockershim was completely removed. Clusters must now use other CRI-compliant runtimes like containerd or CRI-O.</strong></mark></em></li>
+<li><mark style="background-color:green;"><strong>New Image Registry:</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">The official container image registry moved from</mark> <mark style="background-color:green;"></mark><mark style="background-color:green;"><code>k8s.gcr.io</code></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">to</mark> <mark style="background-color:green;"></mark><mark style="background-color:green;"><code>registry.k8s.io</code></mark><mark style="background-color:green;">.</mark></li>
+<li><strong>Service Account Token Secrets:</strong> Automatic generation of secret-based service account tokens was disabled by default (<code>LegacyServiceAccountTokenNoAutoGeneration=true</code>). The TokenRequest API should be used instead.</li>
+<li><strong>Beta APIs Off by Default:</strong> New beta APIs are no longer enabled by default in clusters. They must be explicitly enabled. Existing beta APIs remained enabled.</li>
+<li><strong>Storage Capacity Tracking (Stable):</strong> Graduated to GA.</li>
+<li><strong>Volume Expansion for StatefulSets (Stable):</strong> Graduated to GA.</li>
+<li><strong>Non-Graceful Node Shutdown Handling (Beta):</strong> Moved to Beta.</li>
+<li><strong>Contextual Logging (Alpha):</strong> Introduced concept for logging with contextual information.</li>
+<li><strong>OpenAPI v3 (Stable):</strong> Kubernetes API publishing via OpenAPI v3 graduated to GA.</li>
+<li><strong>Network Policy Status (Alpha):</strong> Added a status subresource to NetworkPolicy.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.25 (Released: August 2022)</strong></p>
+<p><em>Compared to v1.24:</em></p>
+<ul>
+<li><mark style="background-color:red;"><strong>PodSecurityPolicy (PSP) Removed:</strong></mark> <mark style="background-color:red;"></mark><mark style="background-color:red;">The deprecated PSP API was completely removed. Users must migrate to Pod Security Admission (PSA) or third-party alternatives.</mark></li>
+<li><mark style="background-color:green;"><strong>Ephemeral Containers (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA.</mark></li>
+<li><mark style="background-color:green;"><strong>cgroups v2 Support (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Support for the Linux cgroup v2 API graduated to GA.</mark></li>
+<li><strong>Core CSI Migration (Stable):</strong> The framework for migrating in-tree volume plugins (like AWS EBS, GCE PD, Azure Disk) to out-of-tree CSI drivers graduated to GA. Specific driver migrations continued.</li>
+<li><strong>Windows HostProcess Containers (Beta):</strong> Moved to Beta.</li>
+<li><strong><code>SeccompDefault</code> (Beta):</strong> Enabling default seccomp profiles cluster-wide moved to Beta.</li>
+<li><strong><code>endPort</code> in NetworkPolicy (Stable):</strong> Support for specifying port ranges in Network Policies graduated to GA.</li>
+<li><strong>Local Ephemeral Storage Capacity Isolation (Stable):</strong> Graduated to GA.</li>
+<li><strong>KMS v2 API (Alpha):</strong> Introduced a new Key Management Service API (<code>v2alpha1</code>) for encryption at rest.</li>
+<li><strong>API Removals:</strong> Several deprecated beta APIs were removed, including <code>batch/v1beta1</code> (CronJob) and <code>policy/v1beta1</code> (PodDisruptionBudget, PodSecurityPolicy).</li>
+<li><strong>In-tree Plugin Deprecations/Removals:</strong> GlusterFS &amp; Portworx plugins deprecated; Flocker, Quobyte, StorageOS removed.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.26 (Released: December 2022)</strong></p>
+<p><em>Compared to v1.25:</em></p>
+<ul>
+<li><strong>Major API Removals:</strong> More deprecated beta APIs removed, including:
+<ul>
+<li><code>flowcontrol.apiserver.k8s.io/v1beta1</code> (API Priority and Fairness)</li>
+<li><code>autoscaling/v2beta2</code> (HorizontalPodAutoscaler)</li>
+</ul>
+</li>
+<li><strong>CRI <code>v1alpha2</code> Removed:</strong> Support for the older CRI <code>v1alpha2</code> runtime API was removed. Runtimes must implement CRI <code>v1</code> (e.g., containerd >= 1.6.0).</li>
+<li><strong>CPUManager Policy Options (Beta):</strong> New options for the CPU Manager graduated to Beta. CPU Manager itself graduated to Stable.</li>
+<li><strong>Aggregated Discovery (Alpha):</strong> Introduced a way to reduce API server discovery load for clients.</li>
+<li><strong>Dynamic Resource Allocation (Alpha):</strong> Introduced a new API for requesting specialized hardware resources (e.g., FPGAs, GPUs) beyond CPU/memory.</li>
+<li><strong>Delegating FSGroup to CSI Driver (Stable):</strong> Graduated to GA. Allows CSI drivers to handle <code>fsGroup</code> permissions.</li>
+<li><strong>Pod Scheduling Readiness (Alpha):</strong> Introduced <code>schedulingGates</code> to allow external controllers to influence when a pod is considered ready for scheduling.</li>
+<li><strong>Non-Graceful Node Shutdown Handling (Beta - Enabled by Default):</strong> Feature became enabled by default.</li>
+<li><strong>Cross-Namespace Volume Data Sources (Alpha):</strong> Allowed specifying PVC data sources from a different namespace.</li>
+<li><strong>Retroactive Default StorageClass Assignment (Beta):</strong> Allowed assigning a default StorageClass to existing unbound PVCs.</li>
+<li><strong>CEL for Admission Control (Beta):</strong> Using Common Expression Language (CEL) for admission control rules moved to Beta.</li>
+<li><strong>KMS v2 Improvements (Beta):</strong> Enhanced the v2 KMS API.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.27 (Released: April 2023)</strong></p>
+<p><em>Compared to v1.26:</em></p>
+<ul>
+<li><mark style="background-color:green;"><strong><code>SeccompDefault</code></strong></mark><mark style="background-color:green;"><strong> </strong></mark><mark style="background-color:green;"><strong>(Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA, allowing secure-by-default seccomp profiles.</mark></li>
+<li><strong>Mutable Scheduling Directives for Jobs (Alpha):</strong> Allowed updating scheduling directives (like <code>suspend</code>) for Jobs after creation.</li>
+<li><strong>ReadWriteOncePod PV Access Mode (Beta):</strong> A PV access mode restricting volume access to a single pod at a time moved to Beta.</li>
+<li><strong>Pod Scheduling Readiness (Beta):</strong> Moved to Beta.</li>
+<li><strong>Node Log Query (<code>kubectl node-logs</code>) (Alpha):</strong> Added a feature gate and <code>kubectl</code> plugin to query logs directly from nodes via the Kubelet API.</li>
+<li><strong>Fine-Grained Pod Topology Spread Policies (Beta):</strong> Features like <code>minDomains</code>, <code>nodeAffinityPolicy</code>, and <code>nodeTaintsPolicy</code> for Pod Topology Spread constraints moved to Beta.</li>
+<li><mark style="background-color:green;"><strong>In-Place Pod Vertical Scaling (Alpha):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Introduced an alpha feature gate allowing resizing of pod CPU/Memory requests and limits without restarting the pod.</mark></li>
+<li><strong>Volume Expansion Features (Stable):</strong> <code>ExpandCSIVolumes</code>, <code>ExpandInUsePersistentVolumes</code>, <code>ExpandPersistentVolumes</code> feature gates graduated to GA and were locked on.</li>
+<li><strong>Feature Gate Removals:</strong> Several feature gates were removed as their features graduated (e.g., <code>CSIMigration</code>, <code>CSIInlineVolume</code>, <code>EphemeralContainers</code>).</li>
+<li><strong>Kubelet Evented PLEG (Alpha):</strong> Introduced for potential performance improvements in pod lifecycle event generation.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.28 (Released: August 2023)</strong></p>
+<p><em>Compared to v1.27:</em></p>
+<ul>
+<li><strong>Sidecar Containers (Beta):</strong> Introduced native support for sidecar container patterns using restartable init containers.</li>
+<li><mark style="background-color:green;"><strong>Non-Graceful Node Shutdown Handling (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA.</mark></li>
+<li><strong>Recovery from Non-Graceful Shutdown (Alpha):</strong> Added capability for stateful workloads to recover faster after node shutdown.</li>
+<li><strong>CRD Validation Rules Language (Stable):</strong> Graduated to GA.</li>
+<li><strong>Admission Control with CEL (Stable):</strong> Graduated to GA.</li>
+<li><mark style="background-color:green;"><strong>KMS v2 Encryption Provider (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">The</mark> <mark style="background-color:green;"></mark><mark style="background-color:green;"><code>v2</code></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">KMS API graduated to GA.</mark></li>
+<li><strong>Job Mutable Scheduling Directives (Beta):</strong> Moved to Beta.</li>
+<li><strong>API awareness of load balancer behavior (Alpha):</strong> Added features for better integration between Services (LoadBalancer type) and cloud provider load balancers.</li>
+<li><strong>Expanded DNS Configuration (Alpha):</strong> Allowed more control over Pod DNS settings.</li>
+<li><strong><code>kubectl apply --prune</code> Alpha feature removal.</strong></li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.29 (Released: December 2023)</strong></p>
+<p><em>Compared to v1.28:</em></p>
+<ul>
+<li><mark style="background-color:green;"><strong>ReadWriteOncePod PV Access Mode (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA.</mark></li>
+<li><strong>Node Volume Expansion Secret Support (Stable):</strong> CSI drivers can now use secrets during node-side volume expansion; graduated to GA.</li>
+<li><strong>Init Containers Restart Policy (Beta):</strong> Init containers gained a <code>restartPolicy</code> field (default <code>Always</code>), allowing them to restart until completion, useful for sidecar patterns.</li>
+<li><strong>Ensure Secret Pulled Images (Beta):</strong> Kubelet can be configured to always pull images even if present locally when using imagePullSecrets.</li>
+<li><strong>Queueing Hint Functions for Pod Scheduling (Beta):</strong> Allows scheduler plugins to provide hints on when to retry scheduling unschedulable pods.</li>
+<li><strong>KMS v2 Improvements (Stable):</strong> Continued stabilization of KMS v2 features.</li>
+<li><strong>Reduction of Secret-based Service Account Tokens (Beta):</strong> Progressed towards removing auto-generated secret tokens.</li>
+<li><strong>Structured Authorization Configuration (Alpha):</strong> Introduced a structured config file for configuring authorization webhooks.</li>
+<li><strong>Pod User Namespaces Support (Alpha):</strong> Introduced support for running pods within isolated user namespaces for enhanced security.</li>
+<li><strong>Cluster Trust Bundles (Alpha):</strong> Provided a mechanism to distribute X.509 certificate bundles within the cluster.</li>
+<li><mark style="background-color:red;"><strong>Clean-up of Legacy Package Repositories:</strong></mark> <mark style="background-color:red;"></mark><mark style="background-color:red;">Moved away from Google-hosted package repositories (</mark><mark style="background-color:red;"><code>apt.kubernetes.io</code></mark><mark style="background-color:red;">,</mark> <mark style="background-color:red;"></mark><mark style="background-color:red;"><code>yum.kubernetes.io</code></mark><mark style="background-color:red;">).</mark></li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.30 (Released: April 2024)</strong></p>
+<p><em>Compared to v1.29:</em></p>
+<ul>
+<li><strong>Pod User Namespaces (Beta):</strong> Moved to Beta.</li>
+<li><mark style="background-color:green;"><strong>AppArmor Support (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Graduated to GA, allowing enforcement of AppArmor profiles.</mark></li>
+<li><strong>Node Log Query (Beta):</strong> Moved to Beta.</li>
+<li><strong>Structured Authorization Configuration (Beta):</strong> Moved to Beta.</li>
+<li><strong>Reduction of Secret-based Service Account Tokens (Stable):</strong> Graduated to GA; auto-generation is off by default and discouraged.</li>
+<li><strong>Bound Service Account Token Improvements (Beta):</strong> Enhanced security and functionality of projected service account tokens.</li>
+<li><strong>Prevent Unauthorized Volume Mode Conversion (Beta):</strong> Added checks to prevent malicious users from changing volume modes.</li>
+<li><strong>Volume Attributes Class (Alpha):</strong> Introduced a way to define storage classes based on volume attributes.</li>
+<li><strong>PodReadyToStartContainers Condition (Alpha):</strong> Added a Pod condition indicating readiness for container startup.</li>
+<li><strong>Contextual Logging (Stable):</strong> Graduated to GA.</li>
+<li><strong><code>kubectl delete -i</code> (interactive mode) (Beta):</strong> Moved to Beta.</li>
+<li><strong>Go Version:</strong> Updated to Go 1.22.</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.31 (Released: August 2024)</strong></p>
+<p><em>Compared to v1.30:</em></p>
+<ul>
+<li><mark style="background-color:green;"><strong>Containerd Shims (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Management of containerd shims graduated to GA, simplifying runtime plugin management.</mark></li>
+<li><strong>MaxUnavailable for StatefulSets (Beta):</strong> Introduced <code>maxUnavailable</code> for StatefulSet rolling updates, similar to Deployments.</li>
+<li><strong>Pod Lifecycle Sleep Action (Alpha):</strong> Added an alpha feature to inject sleep delays during container startup/shutdown for debugging or coordination.</li>
+<li><strong>MatchLabelKeys/MismatchLabelKeys for Pod Topology (Beta):</strong> Enhanced Pod Affinity/Anti-Affinity rules for more dynamic matching based on label keys.</li>
+<li><strong>Admission Control CEL Improvements:</strong> Added more functions, metrics, and testing capabilities for CEL-based admission control.</li>
+<li><strong>Structured Authentication Config (Stable):</strong> Graduated to GA.</li>
+<li><strong>Validating Admission Policy Type Checking (Alpha):</strong> Improved static analysis for admission policies.</li>
+<li><strong>Kubelet Tracing (Alpha):</strong> Added experimental tracing support to the kubelet.</li>
+<li><strong>API Server Self-Signed Cert Rotation (Alpha):</strong> Introduced automatic rotation for self-signed certificates used internally by the API server.</li>
+<li><strong>Go Version:</strong> Updated Go toolchain (likely 1.22.x patch).</li>
+</ul>
+<hr/>
+<p><strong>Kubernetes v1.32 (Released: December 2024)</strong></p>
+<p><em>Compared to v1.31:</em></p>
+<ul>
+<li><strong>API Server Tracing (Stable):</strong> Graduated to GA.</li>
+<li><mark style="background-color:green;"><strong>Sidecar Containers (Stable):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Native sidecar container support graduated to GA.</mark></li>
+<li><strong>Recursive Read-only (RRO) Mounts (Beta):</strong> Allows mounting volumes and their submounts recursively as read-only.</li>
+<li><mark style="background-color:green;"><strong>In-Place Pod Vertical Scaling (Beta):</strong></mark> <mark style="background-color:green;"></mark><mark style="background-color:green;">Moved to Beta, allowing CPU/Memory resizing without pod restart.</mark></li>
+<li><strong>Pod User Namespaces (Beta - Host Network Support):</strong> Added support for host network pods within user namespaces.</li>
+<li><strong>Kubelet Resource Metrics Endpoint (Stable):</strong> The <code>/metrics/resource</code> endpoint graduated to GA.</li>
+<li><strong>Prevent Unauthorized Volume Mode Conversion (Stable):</strong> Graduated to GA.</li>
+<li><strong>Validating Admission Policy Improvements:</strong> Continued stabilization and feature additions.</li>
+<li><strong>API Removals:</strong> <code>flowcontrol.apiserver.k8s.io/v1beta2</code> removed (use <code>v1beta3</code>). <code>autoscaling/v2beta2</code> HorizontalPodAutoscaler removed (use <code>v2</code>).</li>
+<li><strong>Go Version:</strong> Updated to Go 1.23.x.</li>
+</ul></article><hr/><div class="page-footer"></div></div><div class="right sidebar"><div class="graph"><h3>Graph View</h3><div class="graph-outer"><div class="graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:1,&quot;scale&quot;:1.1,&quot;repelForce&quot;:0.5,&quot;centerForce&quot;:0.3,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.6,&quot;opacityScale&quot;:1,&quot;showTags&quot;:true,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:false,&quot;enableRadial&quot;:false}"></div><button class="global-graph-icon" aria-label="Global Graph"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 55 55" fill="currentColor" xml:space="preserve"><path d="M49,0c-3.309,0-6,2.691-6,6c0,1.035,0.263,2.009,0.726,2.86l-9.829,9.829C32.542,17.634,30.846,17,29,17
+                s-3.542,0.634-4.898,1.688l-7.669-7.669C16.785,10.424,17,9.74,17,9c0-2.206-1.794-4-4-4S9,6.794,9,9s1.794,4,4,4
+                c0.74,0,1.424-0.215,2.019-0.567l7.669,7.669C21.634,21.458,21,23.154,21,25s0.634,3.542,1.688,4.897L10.024,42.562
+                C8.958,41.595,7.549,41,6,41c-3.309,0-6,2.691-6,6s2.691,6,6,6s6-2.691,6-6c0-1.035-0.263-2.009-0.726-2.86l12.829-12.829
+                c1.106,0.86,2.44,1.436,3.898,1.619v10.16c-2.833,0.478-5,2.942-5,5.91c0,3.309,2.691,6,6,6s6-2.691,6-6c0-2.967-2.167-5.431-5-5.91
+                v-10.16c1.458-0.183,2.792-0.759,3.898-1.619l7.669,7.669C41.215,39.576,41,40.26,41,41c0,2.206,1.794,4,4,4s4-1.794,4-4
+                s-1.794-4-4-4c-0.74,0-1.424,0.215-2.019,0.567l-7.669-7.669C36.366,28.542,37,26.846,37,25s-0.634-3.542-1.688-4.897l9.665-9.665
+                C46.042,11.405,47.451,12,49,12c3.309,0,6-2.691,6-6S52.309,0,49,0z M11,9c0-1.103,0.897-2,2-2s2,0.897,2,2s-0.897,2-2,2
+                S11,10.103,11,9z M6,51c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S8.206,51,6,51z M33,49c0,2.206-1.794,4-4,4s-4-1.794-4-4
+                s1.794-4,4-4S33,46.794,33,49z M29,31c-3.309,0-6-2.691-6-6s2.691-6,6-6s6,2.691,6,6S32.309,31,29,31z M47,41c0,1.103-0.897,2-2,2
+                s-2-0.897-2-2s0.897-2,2-2S47,39.897,47,41z M49,10c-2.206,0-4-1.794-4-4s1.794-4,4-4s4,1.794,4,4S51.206,10,49,10z"></path></svg></button></div><div class="global-graph-outer"><div class="global-graph-container" data-cfg="{&quot;drag&quot;:true,&quot;zoom&quot;:true,&quot;depth&quot;:-1,&quot;scale&quot;:0.9,&quot;repelForce&quot;:0.5,&quot;centerForce&quot;:0.2,&quot;linkDistance&quot;:30,&quot;fontSize&quot;:0.6,&quot;opacityScale&quot;:1,&quot;showTags&quot;:true,&quot;removeTags&quot;:[],&quot;focusOnHover&quot;:true,&quot;enableRadial&quot;:true}"></div></div></div></div><footer class><p>Created with <a href="https://quartz.jzhao.xyz/">Quartz v4.5.2</a> © 2026</p><ul><li><a href="https://github.com/jackyzha0/quartz">GitHub</a></li><li><a href="https://discord.gg/cRFFHYye7t">Discord Community</a></li></ul></footer></div></div></body><script type="application/javascript" data-persist="true">function n(){let t=this.parentElement;t.classList.toggle("is-collapsed");let e=t.getElementsByClassName("callout-content")[0];if(!e)return;let l=t.classList.contains("is-collapsed");e.style.gridTemplateRows=l?"0fr":"1fr"}function c(){let t=document.getElementsByClassName("callout is-collapsible");for(let e of t){let l=e.getElementsByClassName("callout-title")[0],s=e.getElementsByClassName("callout-content")[0];if(!l||!s)continue;l.addEventListener("click",n),window.addCleanup(()=>l.removeEventListener("click",n));let o=e.classList.contains("is-collapsed");s.style.gridTemplateRows=o?"0fr":"1fr"}}document.addEventListener("nav",c);
+</script><script type="module" data-persist="true">function E(a,e){if(!a)return;function t(o){o.target===this&&(o.preventDefault(),o.stopPropagation(),e())}function n(o){o.key.startsWith("Esc")&&(o.preventDefault(),e())}a?.addEventListener("click",t),window.addCleanup(()=>a?.removeEventListener("click",t)),document.addEventListener("keydown",n),window.addCleanup(()=>document.removeEventListener("keydown",n))}function f(a){for(;a.firstChild;)a.removeChild(a.firstChild)}var m=class{constructor(e,t){this.container=e;this.content=t;this.setupEventListeners(),this.setupNavigationControls(),this.resetTransform()}isDragging=!1;startPan={x:0,y:0};currentPan={x:0,y:0};scale=1;MIN_SCALE=.5;MAX_SCALE=3;cleanups=[];setupEventListeners(){let e=this.onMouseDown.bind(this),t=this.onMouseMove.bind(this),n=this.onMouseUp.bind(this),o=this.onTouchStart.bind(this),r=this.onTouchMove.bind(this),i=this.onTouchEnd.bind(this),s=this.resetTransform.bind(this);this.container.addEventListener("mousedown",e),document.addEventListener("mousemove",t),document.addEventListener("mouseup",n),this.container.addEventListener("touchstart",o,{passive:!1}),document.addEventListener("touchmove",r,{passive:!1}),document.addEventListener("touchend",i),window.addEventListener("resize",s),this.cleanups.push(()=>this.container.removeEventListener("mousedown",e),()=>document.removeEventListener("mousemove",t),()=>document.removeEventListener("mouseup",n),()=>this.container.removeEventListener("touchstart",o),()=>document.removeEventListener("touchmove",r),()=>document.removeEventListener("touchend",i),()=>window.removeEventListener("resize",s))}cleanup(){for(let e of this.cleanups)e()}setupNavigationControls(){let e=document.createElement("div");e.className="mermaid-controls";let t=this.createButton("+",()=>this.zoom(.1)),n=this.createButton("-",()=>this.zoom(-.1)),o=this.createButton("Reset",()=>this.resetTransform());e.appendChild(n),e.appendChild(o),e.appendChild(t),this.container.appendChild(e)}createButton(e,t){let n=document.createElement("button");return n.textContent=e,n.className="mermaid-control-button",n.addEventListener("click",t),window.addCleanup(()=>n.removeEventListener("click",t)),n}onMouseDown(e){e.button===0&&(this.isDragging=!0,this.startPan={x:e.clientX-this.currentPan.x,y:e.clientY-this.currentPan.y},this.container.style.cursor="grabbing")}onMouseMove(e){this.isDragging&&(e.preventDefault(),this.currentPan={x:e.clientX-this.startPan.x,y:e.clientY-this.startPan.y},this.updateTransform())}onMouseUp(){this.isDragging=!1,this.container.style.cursor="grab"}onTouchStart(e){if(e.touches.length!==1)return;this.isDragging=!0;let t=e.touches[0];this.startPan={x:t.clientX-this.currentPan.x,y:t.clientY-this.currentPan.y}}onTouchMove(e){if(!this.isDragging||e.touches.length!==1)return;e.preventDefault();let t=e.touches[0];this.currentPan={x:t.clientX-this.startPan.x,y:t.clientY-this.startPan.y},this.updateTransform()}onTouchEnd(){this.isDragging=!1}zoom(e){let t=Math.min(Math.max(this.scale+e,this.MIN_SCALE),this.MAX_SCALE),n=this.content.getBoundingClientRect(),o=n.width/2,r=n.height/2,i=t-this.scale;this.currentPan.x-=o*i,this.currentPan.y-=r*i,this.scale=t,this.updateTransform()}updateTransform(){this.content.style.transform=`translate(${this.currentPan.x}px, ${this.currentPan.y}px) scale(${this.scale})`}resetTransform(){let t=this.content.querySelector("svg").getBoundingClientRect(),n=t.width/this.scale,o=t.height/this.scale;this.scale=1,this.currentPan={x:(this.container.clientWidth-n)/2,y:(this.container.clientHeight-o)/2},this.updateTransform()}},T=["--secondary","--tertiary","--gray","--light","--lightgray","--highlight","--dark","--darkgray","--codeFont"],y;document.addEventListener("nav",async()=>{let e=document.querySelector(".center").querySelectorAll("code.mermaid");if(e.length===0)return;y||=await import("https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.0/mermaid.esm.min.mjs");let t=y.default,n=new WeakMap;for(let r of e)n.set(r,r.innerText);async function o(){for(let s of e){s.removeAttribute("data-processed");let c=n.get(s);c&&(s.innerHTML=c)}let r=T.reduce((s,c)=>(s[c]=window.getComputedStyle(document.documentElement).getPropertyValue(c),s),{}),i=document.documentElement.getAttribute("saved-theme")==="dark";t.initialize({startOnLoad:!1,securityLevel:"loose",theme:i?"dark":"base",themeVariables:{fontFamily:r["--codeFont"],primaryColor:r["--light"],primaryTextColor:r["--darkgray"],primaryBorderColor:r["--tertiary"],lineColor:r["--darkgray"],secondaryColor:r["--secondary"],tertiaryColor:r["--tertiary"],clusterBkg:r["--light"],edgeLabelBackground:r["--highlight"]}}),await t.run({nodes:e})}await o(),document.addEventListener("themechange",o),window.addCleanup(()=>document.removeEventListener("themechange",o));for(let r=0;r<e.length;r++){let v=function(){let g=l.querySelector("#mermaid-space"),h=l.querySelector(".mermaid-content");if(!h)return;f(h);let w=i.querySelector("svg").cloneNode(!0);h.appendChild(w),l.classList.add("active"),g.style.cursor="grab",u=new m(g,h)},M=function(){l.classList.remove("active"),u?.cleanup(),u=null},i=e[r],s=i.parentElement,c=s.querySelector(".clipboard-button"),d=s.querySelector(".expand-button"),p=window.getComputedStyle(c),L=c.offsetWidth+parseFloat(p.marginLeft||"0")+parseFloat(p.marginRight||"0");d.style.right=`calc(${L}px + 0.3rem)`,s.prepend(d);let l=s.querySelector("#mermaid-container");if(!l)return;let u=null;d.addEventListener("click",v),E(l,M),window.addCleanup(()=>{u?.cleanup(),d.removeEventListener("click",v)})}});
+</script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/copy-tex.min.js" type="application/javascript" data-persist="true"></script><script src="../postscript.js" type="module" data-persist="true"></script></html>

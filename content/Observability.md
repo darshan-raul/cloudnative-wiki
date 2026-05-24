@@ -1,3 +1,10 @@
+---
+title: Observability
+tags: [observability, monitoring, prometheus, grafana, tracing]
+date: 2025-05-24
+description: Observability - monitoring, logging, tracing, Prometheus, Grafana, and OpenTelemetry
+---
+
 # Observability 📊
 
 Monitoring, logging, tracing, and alerting.

@@ -1,3 +1,10 @@
+---
+title: DevOps
+tags: [devops, ci-cd, github-actions, platform-engineering, sre]
+date: 2025-05-24
+description: DevOps, CI/CD, GitHub Actions, Platform Engineering, and SRE practices
+---
+
 # DevOps 🚀
 
 CI/CD, DevSecOps, Platform Engineering, and SRE.

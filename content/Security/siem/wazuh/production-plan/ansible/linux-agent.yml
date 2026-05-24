@@ -1,0 +1,175 @@
+# Ansible Playbook: Deploy Wazuh Linux Agent
+# Usage:
+#   ansible-playbook -i inventory linux-agent.yml
+#   ansible-playbook -i inventory/linux-org-alpha.yml linux-agent.yml --extra-vars "org_name=org-alpha"
+#
+# Inventory structure (per-org inventory file):
+#   [org-alpha-linux]
+#   app-server-01 ansible_host=10.0.1.10
+#   app-server-02 ansible_host=10.0.1.11
+#
+# Requirements:
+#   - Ansible 2.9+
+#   - SSH access to all target servers with sudo
+#   - AWS SSM Session Manager plugin for remote (optional)
+#   - wazuh_version, wazuh_manager, org_name must be set via inventory or extra-vars
+
+- name: Deploy Wazuh Agent to Linux Servers
+  hosts: "{{ target_hosts }}"
+  become: true
+  vars:
+    wazuh_version: "4.12.0"
+    wazuh_manager: "wazuh-agent-nlb.internal"  # NLB DNS name (TCP 1514)
+    wazuh_manager_api: "wazuh-manager-api.internal"  # Wazuh API (HTTPS 55000)
+    wazuh_agent_os: "linux"
+    wazuh_manager_port: "1514"
+    wazuh_enrollment_password: ""  # Set via --extra-vars or vault
+
+  pre_tasks:
+    - name: Validate required variables
+      assert:
+        that:
+          - org_name is defined
+          - wazuh_version is defined
+        fail_msg: "org_name and wazuh_version must be provided via --extra-vars or inventory"
+      run_once: yes
+
+    - name: Set agent group names
+      set_fact:
+        primary_group: "org-{{ org_name }}-{{ wazuh_agent_os }}"
+        secondary_groups: "{{ secondary_groups | default([]) }}"
+      run_once: yes
+
+    - name: Display deployment info
+      debug:
+        msg: |
+          Deploying Wazuh Agent {{ wazuh_version }} to {{ inventory_hostname }}
+          Org: {{ org_name }}
+          Primary group: {{ primary_group }}
+          Additional groups: {{ secondary_groups | join(', ') }}
+          Manager: {{ wazuh_manager }}:{{ wazuh_manager_port }}
+      run_once: yes
+
+  tasks:
+    - name: Check if Wazuh agent is already installed
+      command: /var/ossec/bin/wazuh-control info
+      register: wazuh_check
+      failed_when: false
+      changed_when: false
+
+    - name: Add Wazuh YUM repository (RHEL/CentOS/Amazon Linux)
+      yum_repository:
+        name: wazuh
+        description: Wazuh Agent Repository
+        baseurl: https://packages.wazuh.com/4.x/yum/
+        gpgkey: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+        gpgcheck: yes
+        enabled: yes
+      when:
+        - wazuh_check.rc != 0
+        - ansible_os_family == "RedHat"
+
+    - name: Add Wazuh APT repository (Debian/Ubuntu)
+      apt_repository:
+        repo: "deb https://packages.wazuh.com/4.x/apt stable main"
+        state: present
+      when:
+        - wazuh_check.rc != 0
+        - ansible_os_family == "Debian"
+
+    - name: Install Wazuh agent
+      package:
+        name: "wazuh-agent-{{ wazuh_version }}"
+        state: present
+      when: wazuh_check.rc != 0
+
+    - name: Configure Wazuh manager address
+      lineinfile:
+        path: /var/ossec/etc/ossec.conf
+        regexp: '^(\s*)<address>'
+        line: '    <address>{{ wazuh_manager }}</address>'
+        backup: yes
+      notify: Restart Wazuh Agent
+
+    - name: Configure enrollment password (if set)
+      lineinfile:
+        path: /var/ossec/etc/ossec.conf
+        regexp: '^(\s*)<server_password>'
+        line: '    <server_password>{{ wazuh_enrollment_password }}</server_password>'
+        backup: yes
+      when: wazuh_enrollment_password | length > 0
+      notify: Restart Wazuh Agent
+
+    - name: Get existing agent groups from ossec.conf
+      shell: |
+        grep -oP '(?<=<group>)[^<]+' /var/ossec/etc/ossec.conf 2>/dev/null | sort -u
+      register: existing_groups
+      failed_when: false
+      changed_when: false
+      when: wazuh_check.rc == 0
+
+    - name: Build group string (primary + existing)
+      set_fact:
+        all_groups: "{{ primary_group }}{% if existing_groups.stdout_lines | length > 0 %},{{ existing_groups.stdout_lines | join(',') }}{% endif %}"
+      when: wazuh_check.rc == 0
+
+    - name: Build group string (primary only, fresh install)
+      set_fact:
+        all_groups: "{{ primary_group }}"
+      when: wazuh_check.rc != 0
+
+    - name: Configure agent groups (primary + secondary)
+      lineinfile:
+        path: /var/ossec/etc/ossec.conf
+        regexp: '^(\s*)<group>'
+        line: '    <group>{{ all_groups }}{% if secondary_groups | length > 0 %},{{ secondary_groups | join(",") }}{% endif %}</group>'
+        backup: yes
+      notify: Restart Wazuh Agent
+
+    - name: Ensure wazuh-agent service is enabled
+      systemd:
+        name: wazuh-agent
+        enabled: yes
+        masked: no
+
+    - name: Start Wazuh agent
+      service:
+        name: wazuh-agent
+        state: started
+
+    - name: Wait for agent to connect
+      pause:
+        seconds: 10
+
+    - name: Verify agent is enrolled
+      uri:
+        url: "https://{{ wazuh_manager_api }}:55000/agents?name={{ inventory_hostname }}"
+        method: GET
+        user: "{{ wazuh_api_user | default('wazuh-wui') }}"
+        password: "{{ wazuh_api_password }}"
+        validate_certs: no
+        force_basic_auth: yes
+      register: agent_status
+      failed_when: false
+      retries: 5
+      delay: 10
+      until: agent_status.json.data.affected_items | length > 0
+
+    - name: Display enrollment status
+      debug:
+        msg: "Agent {{ inventory_hostname }} enrolled successfully"
+      when: agent_status.json.data.affected_items | length > 0
+
+    - name: Display enrollment failure
+      debug:
+        msg: |
+          Agent {{ inventory_hostname }} may not have enrolled yet.
+          Check manager logs: /var/ossec/logs/ossec.log
+          Verify NLB connectivity from agent: telnet {{ wazuh_manager }} 1514
+      when: agent_status.json.data.affected_items | length == 0
+
+  handlers:
+    - name: Restart Wazuh Agent
+      service:
+        name: wazuh-agent
+        state: restarted

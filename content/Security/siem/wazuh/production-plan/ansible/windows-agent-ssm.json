@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "2.2",
+  "description": "Install and configure Wazuh agent on Windows EC2 instances via AWS Systems Manager",
+  "parameters": {
+    "WAZUH_MANAGER": {
+      "type": "String",
+      "description": "Wazuh manager NLB DNS name or IP (agents connect via TCP 1514)",
+      "default": "wazuh-agent-nlb.internal"
+    },
+    "WAZUH_ORG_NAME": {
+      "type": "String",
+      "description": "Org short name, e.g. 'org-alpha', 'org-beta'. Used to construct agent group: org-<name>-windows",
+      "default": "org-unknown"
+    },
+    "WAZUH_VERSION": {
+      "type": "String",
+      "description": "Wazuh agent version to install",
+      "default": "4.12.0"
+    },
+    "WAZUH_ENROLLMENT_PASSWORD": {
+      "type": "String",
+      "description": "Enrollment auth password (leave empty if manager uses certificate-only auth)",
+      "default": ""
+    }
+  },
+  "mainSteps": [
+    {
+      "action": "aws:runPowerShellScript",
+      "name": "DownloadWazuhAgent",
+      "inputs": {
+        "runCommand": [
+          "$ErrorActionPreference = 'Stop'",
+          "$ProgressPreference = 'SilentlyContinue'",
+          "",
+          "# Construct agent group name from org parameter",
+          "$orgName = '{{ WAZUH_ORG_NAME }}'",
+          "$agentGroup = \"org-$orgName-windows\"",
+          "Write-Host \"Agent group: $agentGroup\"",
+          "",
+          "# Download Wazuh agent MSI",
+          "$wazuhVersion = '{{ WAZUH_VERSION }}'",
+          "$wazuhUrl = \"https://packages.wazuh.com/4.x/windows/wazuh-agent-$wazuhVersion-1.msi\"",
+          "$wazuhInstaller = \"$env:TEMP\\wazuh-agent.msi\"",
+          "Write-Host \"Downloading Wazuh agent $wazuhVersion from $wazuhUrl\"",
+          "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12",
+          "Invoke-WebRequest -Uri $wazuhUrl -OutFile $wazuhInstaller -UseBasicParsing",
+          "Write-Host \"Download complete: $wazuhInstaller\""
+        ]
+      }
+    },
+    {
+      "action": "aws:runPowerShellScript",
+      "name": "InstallWazuhAgent",
+      "inputs": {
+        "runCommand": [
+          "$ErrorActionPreference = 'Stop'",
+          "$wazuhInstaller = \"$env:TEMP\\wazuh-agent.msi\"",
+          "$agentGroup = \"org-{{ WAZUH_ORG_NAME }}-windows\"",
+          "",
+          "# Build MSI install arguments",
+          "$msiArgs = @('/i', $wazuhInstaller, '/quiet', '/norestart')",
+          "$msiArgs += \"WAZUH_MANAGER={{ WAZUH_MANAGER }}\"",
+          "$msiArgs += 'WAZUH_MANAGER_PORT=1514'",
+          "$msiArgs += \"WAZUH_AGENT_GROUP=$agentGroup\"",
+          "$msiArgs += 'ENROLLMENT_DELAY=10'",
+          "",
+          "# Add enrollment password if set",
+          "$enrollPwd = '{{ WAZUH_ENROLLMENT_PASSWORD }}'",
+          "if ($enrollPwd -ne '') {",
+          "    $msiArgs += \"WAZUH_REGISTRATION_PASSWORD=$enrollPwd\"",
+          "}",
+          "",
+          "Write-Host \"Installing Wazuh agent with group: $agentGroup\"",
+          "Start-Process msiexec.exe -ArgumentList $msiArgs -Wait -NoNewWindow",
+          "Write-Host \"Installation complete\""
+        ]
+      }
+    },
+    {
+      "action": "aws:runPowerShellScript",
+      "name": "StartWazuhAgent",
+      "inputs": {
+        "runCommand": [
+          "# Start Wazuh agent service",
+          "Write-Host \"Starting Wazuh agent service...\"",
+          "Start-Service -Name Wazuh -ErrorAction SilentlyContinue",
+          "",
+          "# Enable service for auto-start",
+          "Set-Service -Name Wazuh -StartupType Automatic",
+          "",
+          "# Verify service is running",
+          "$service = Get-Service -Name Wazuh",
+          "if ($service.Status -eq 'Running') {",
+          "    Write-Host \"Wazuh agent is running\"",
+          "} else {",
+          "    Write-Host \"Wazuh agent failed to start. Status: $($service.Status)\"",
+          "    exit 1",
+          "}"
+        ]
+      }
+    },
+    {
+      "action": "aws:runPowerShellScript",
+      "name": "VerifyEnrollment",
+      "inputs": {
+        "runCommand": [
+          "# Verify agent can communicate with manager",
+          "Start-Sleep -Seconds 15",
+          "",
+          "# Check agent group assignment",
+          "$wazuhExe = \"${env:ProgramFiles}\\ossec-agent\\wazuh-agent.exe\"",
+          "if (Test-Path $wazuhExe) {",
+          "    $info = & $wazuhExe info 2>&1 | Out-String",
+          "    Write-Host \"Agent info:\"",
+          "    Write-Host $info",
+          "}",
+          "",
+          "# Check manager connectivity via TCP",
+          "$manager = '{{ WAZUH_MANAGER }}'",
+          "$port = 1514",
+          "try {",
+          "    $tcp = New-Object System.Net.Sockets.TcpClient",
+          "    $tcp.Connect($manager, $port)",
+          "    if ($tcp.Connected) {",
+          "        Write-Host \"TCP connection to manager $manager`:$port: SUCCESS\"",
+          "        $tcp.Close()",
+          "    }",
+          "} catch {",
+          "    Write-Host \"TCP connection to manager $manager`:$port failed: $($_.Exception.Message)\"",
+          "}",
+          "",
+          "# Read agent log",
+          "$logPath = \"${env:ProgramFiles}\\ossec-agent\\wazuh\\logs\\ossec.log\"",
+          "if (Test-Path $logPath) {",
+          "    $lastLines = Get-Content $logPath -Tail 10",
+          "    Write-Host \"Recent agent log entries:\"",
+          "    $lastLines | ForEach-Object { Write-Host $_ }",
+          "}"
+        ]
+      }
+    }
+  ]
+}

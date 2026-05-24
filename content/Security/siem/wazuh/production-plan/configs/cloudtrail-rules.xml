@@ -1,0 +1,316 @@
+# Wazuh Custom Rules — AWS CloudTrail Multi-Org
+# Rule IDs: 100100-100599 (local_rules.xml)
+# MITRE ATT&CK coverage for AWS environments
+# Replace ORG-ACCOUNT-ID placeholders with actual account ID ranges
+
+<group name="aws-cloudtrail">
+  <!-- ======================================================== -->
+  <!-- CRITICAL (Level 10)                                     -->
+  <!-- ======================================================== -->
+
+  <!-- AWS: S3 bucket made public -->
+  <rule id="100103" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">PutBucketAcl</field>
+    <regex>ALLUSERS|authenticated-read|http://acs.amazonaws.com/groups/global/AllUsers|http://acs.amazonaws.com/groups/global/AuthenticatedUsers</regex>
+    <description>AWS S3 bucket ACL modified to public access — data exposure risk</description>
+    <group>aws,cloudtrail,s3,data_exposure</group>
+    <mitre>
+      <id>T0899</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Admin policy attached to user -->
+  <rule id="100104" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">AttachUserPolicy</field>
+    <regex>AdministratorAccess|arn:aws:iam::aws:policy/AdministratorAccess</regex>
+    <description>Administrator access policy attached to IAM user — privilege escalation</description>
+    <group>aws,cloudtrail,privilege_escalation</group>
+    <mitre>
+      <id>T1098</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Root console login -->
+  <rule id="100105" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">ConsoleLogin</field>
+    <field name="userIdentity.type">Root</field>
+    <field name="responseElements.consoleLogin">Success</field>
+    <description>AWS Root account used for console login — critical privilege escalation</description>
+    <group>aws,cloudtrail,privileged_account</group>
+    <mitre>
+      <id>T1078.004</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: IAM user created with console access -->
+  <rule id="100106" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">CreateUser</field>
+    <field name="requestParameters.permissionsBoundary.effectiveResourceName">.</field>
+    <description>New IAM user created</description>
+    <group>aws,cloudtrail,persistence</group>
+    <mitre>
+      <id>T0859</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: CloudTrail disabled or logging stopped -->
+  <rule id="100107" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">StopLogging</field>
+    <field name="requestParameters.name">.*CloudTrail.*</field>
+    <description>CloudTrail logging stopped — possible attacker evasion</description>
+    <group>aws,cloudtrail,defense_evasion</group>
+    <mitre>
+      <id>T1070</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: VPC flow log deleted or modified -->
+  <rule id="100108" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">DeleteFlowLogs</field>
+    <description>VPC Flow Logs deleted — possible attacker evasion</description>
+    <group>aws,cloudtrail,defense_evasion</group>
+    <mitre>
+      <id>T1070</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Secret access key generated for user -->
+  <rule id="100109" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">CreateAccessKey</field>
+    <field name="userIdentity.type">IAMUser</field>
+    <description>AWS access key created for IAM user — possible credential harvesting</description>
+    <group>aws,cloudtrail,credential_access</group>
+    <mitre>
+      <id>T1552</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Password policy changed to allow weak passwords -->
+  <rule id="100110" level="10">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">UpdateAccountPasswordPolicy</field>
+    <description>AWS account password policy modified — potential security downgrade</description>
+    <group>aws,cloudtrail,defense_evasion</group>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- HIGH (Level 8)                                          -->
+  <!-- ======================================================== -->
+
+  <!-- AWS: Console login failed from external IP (threshold) -->
+  <rule id="100120" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">ConsoleLogin</field>
+    <field name="responseElements.consoleLogin">Failure</field>
+    <same_field srcip>5</same_field>
+    <time_frame>10m</time_frame>
+    <description>Multiple failed AWS console login attempts from same IP — possible brute force</description>
+    <group>aws,cloudtrail,authentication_failure,brute_force</group>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Console login from new/unusual IP (per-account baseline) -->
+  <rule id="100121" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">ConsoleLogin</field>
+    <field name="responseElements.consoleLogin">Success</field>
+    <field name="userIdentity.type">IAMUser</field>
+    <description>AWS console login by IAM user — verify against known IP list</description>
+    <group>aws,cloudtrail,authentication</group>
+    <mitre>
+      <id>T1078.004</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Policy changed to allow public access (SCP-like detection) -->
+  <rule id="100122" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">PutAccountPolicy</field>
+    <field name="requestParameters.policyArn">arn:aws:iam::.*:policy/.*</field>
+    <description>Account-level IAM policy modified — review for misconfiguration</description>
+    <group>aws,cloudtrail,policy_change</group>
+  </rule>
+
+  <!-- AWS: SSM session started (potential lateral movement) -->
+  <rule id="100123" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">StartSession</field>
+    <field name="requestParameters.documentName">AWS-StartPortForwardingSession</field>
+    <description>SSM Session Manager port forwarding started — possible lateral movement</description>
+    <group>aws,cloudtrail,lateral_movement,ssm</group>
+    <mitre>
+      <id>T1021.008</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: New IAM role created -->
+  <rule id="100124" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">CreateRole</field>
+    <description>New IAM role created — possible persistence</description>
+    <group>aws,cloudtrail,persistence</group>
+    <mitre>
+      <id>T0859</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Lambda function created or modified with runtime code -->
+  <rule id="100125" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">UpdateFunctionConfiguration|PublishFunctionVersion</field>
+    <field name="serviceName">lambda</field>
+    <description>Lambda function configuration changed — possible code injection</description>
+    <group>aws,cloudtrail,execution,lambda</group>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: GuardDuty findings exported to S3 (check findings) -->
+  <rule id="100126" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">CreateTrail</field>
+    <field name="requestParameters.isMultiRegionTrail">true</field>
+    <description>New multi-region CloudTrail created — verify it's legitimate</description>
+    <group>aws,cloudtrail,defense_evasion</group>
+  </rule>
+
+  <!-- AWS: EC2 instance created in unexpected region -->
+  <rule id="100127" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">RunInstances</field>
+    <field name="requestParameters.dryRun">false</field>
+    <description>EC2 instance launched — verify against baseline</description>
+    <group>aws,cloudtrail,execution</group>
+  </rule>
+
+  <!-- AWS: Security group modified to allow all traffic (0.0.0.0/0) -->
+  <rule id="100128" level="8">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">AuthorizeSecurityGroupIngress</field>
+    <regex>0\.0\.0\.0/0|::/0</regex>
+    <description>Security group rule added allowing 0.0.0.0/0 ingress — verify necessity</description>
+    <group>aws,cloudtrail,exposure</group>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- MEDIUM (Level 6)                                        -->
+  <!-- ======================================================== -->
+
+  <!-- AWS: IAM user created -->
+  <rule id="100140" level="6">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">CreateUser</field>
+    <description>New IAM user created</description>
+    <group>aws,cloudtrail,persistence</group>
+    <mitre>
+      <id>T0859</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: CloudTrail trail created (informational) -->
+  <rule id="100141" level="6">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">CreateTrail</field>
+    <description>New CloudTrail trail created</description>
+    <group>aws,cloudtrail,audit</group>
+  </rule>
+
+  <!-- AWS: S3 bucket policy changed -->
+  <rule id="100142" level="6">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">PutBucketPolicy</field>
+    <description>S3 bucket policy modified</description>
+    <group>aws,cloudtrail,s3</group>
+  </rule>
+
+  <!-- AWS: MFA device deleted from user -->
+  <rule id="100143" level="6">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">DeleteVirtualMFADevice</field>
+    <description>MFA device deleted — possible adversary removing multi-factor auth</description>
+    <group>aws,cloudtrail,defense_evasion,persistence</group>
+    <mitre>
+      <id>T1556</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: API call error — possible reconnaissance -->
+  <rule id="100144" level="6">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="errorCode">.</field>
+    <field name="errorMessage">.</field>
+    <description>AWS API call returned error — possible reconnaissance activity</description>
+    <group>aws,cloudtrail,reconnaissance</group>
+  </rule>
+
+  <!-- AWS: SNS topic created -->
+  <rule id="100145" level="4">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">CreateTopic</field>
+    <description>SNS topic created</description>
+    <group>aws,cloudtrail,informational</group>
+  </rule>
+
+  <!-- AWS: CloudWatch alarm created -->
+  <rule id="100146" level="4">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">PutMetricAlarm</field>
+    <description>CloudWatch alarm created</description>
+    <group>aws,cloudtrail,informational</group>
+  </rule>
+
+  <!-- ======================================================== -->
+  <!-- THRESHOLD/RATE RULES                                     -->
+  <!-- ======================================================== -->
+
+  <!-- AWS: S3 API calls from single IP exceeding threshold -->
+  <rule id="100160" level="7">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="errorCode">AccessDenied</field>
+    <same_field srcip>20</same_field>
+    <time_frame>5m</time_frame>
+    <description>20+ AccessDenied errors from same IP — possible credential testing</description>
+    <group>aws,cloudtrail,reconnaissance,brute_force</group>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+
+  <!-- AWS: Same user failing many authentications -->
+  <rule id="100161" level="7">
+    <if_sid>aws-cloudtrail</if_sid>
+    <field name="eventName">ConsoleLogin</field>
+    <field name="responseElements.consoleLogin">Failure</field>
+    <same_field user>10</same_field>
+    <time_frame>15m</time_frame>
+    <description>Multiple failed console logins for same user — possible brute force</description>
+    <group>aws,cloudtrail,authentication_failure,brute_force</group>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+  </rule>
+
+  <!-- VPC Flow Logs -->
+  <rule id="100170" level="7">
+    <if_sid>vpc-flowlogs</if_sid>
+    <field name="action">REJECT</field>
+    <same_field srcip>30</same_field>
+    <time_frame>5m</time_frame>
+    <description>Port scan detected: 30+ rejected connections from same source IP in 5 minutes</description>
+    <group>aws,vpc,reconnaissance,port_scan</group>
+    <mitre>
+      <id>T1046</id>
+    </mitre>
+  </rule>
+
+</group>

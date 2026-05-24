@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "cef2e6e5d78e591c",
+        "id": "e81d97d294f61731",
         "type": "tabs",
         "children": [
           {
-            "id": "b858b3ffda4b14d1",
+            "id": "898110cb6fa92915",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Kubernetes/eks/networking/vpc-cni/README.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "README"
+              "title": "New tab"
             }
           }
         ]
@@ -183,43 +179,43 @@
       "bases:Create new base": false
     }
   },
-  "active": "b858b3ffda4b14d1",
+  "active": "898110cb6fa92915",
   "lastOpenFiles": [
-    "Kubernetes/eks/networking/vpc-cni/troubleshooting.md",
-    "Kubernetes/eks/networking/vpc-cni/configuration-reference.md",
-    "Kubernetes/eks/networking/vpc-cni/eni-allocation.md",
-    "Kubernetes/eks/networking/vpc-cni/architecture.md",
-    "Kubernetes/eks/cluster-upgrades/upgrade-process.md",
-    "Kubernetes/eks/cluster-upgrades/README.md",
-    "Kubernetes/eks/networking/README.md",
-    "Kubernetes/eks/README.md",
-    "Kubernetes/concepts/storage.md",
-    "Kubernetes/concepts/troubleshooting.md",
-    "Kubernetes/concepts/setting-up-cluster.md",
-    "Kubernetes/concepts/start-here.md",
-    "Kubernetes/client-go.md",
-    "Kubernetes/troubleshooting.md",
-    "Kubernetes/articles-videos/setting-up-cluster.md",
-    "Kubernetes/articles-videos/secrets.md",
-    "Kubernetes/articles-videos/README.md",
-    "Kubernetes/articles-videos/authentication-authorization.md",
-    "Kubernetes/concepts/kubernetes-objects.md",
-    "Kubernetes/concepts/high-availability.md",
-    "Kubernetes/concepts/garbage-collection.md",
-    "Kubernetes/concepts/custom-controllers.md",
-    "Kubernetes/concepts/config-maps.md",
-    "Kubernetes/concepts/certificates.md",
-    "Kubernetes/concepts/ways-to-run-clusters/README.md",
-    "Kubernetes/concepts/ways-to-run-clusters/local-cluster/kind.md",
-    "Kubernetes/concepts/networking",
-    "Kubernetes/eks/troubleshooting",
-    "Kubernetes/eks/advanced",
-    "Kubernetes/eks/automation/gitops",
-    "Kubernetes/eks/automation/control-planes",
-    "Kubernetes/eks/automation/continuous-delivery",
-    "Kubernetes/eks/automation",
-    "Kubernetes/eks/cluster-upgrades",
-    "Kubernetes/eks/observability/metrics",
-    "Kubernetes/eks/observability/logging"
+    "Kubernetes/guides/cost-management.md",
+    "Kubernetes/guides/README.md",
+    "Kubernetes.md",
+    "Kubernetes/concepts/workloads.md",
+    "Kubernetes/concepts/README.md",
+    "index.md",
+    "Security.md",
+    "Security/siem/wazuh/README.md",
+    "Linux/arch/networking.md",
+    "Linux/arch/system-administration.md",
+    "Linux/arch/philosophy.md",
+    "Linux/arch/aur.md",
+    "Linux/arch/README.md",
+    "Security/siem/wazuh/integrations/README.md",
+    "Security/siem/README.md",
+    "Security/network-security/README.md",
+    "content/Security/siem/wazuh/deployment/README.md",
+    "Security/siem/wazuh/threat-hunting/README.md",
+    "Security/siem/wazuh/rules-decoders/README.md",
+    "Security/siem/wazuh/deployment/README.md",
+    "content/Security/siem/wazuh/README.md",
+    "content/Security/siem/README.md",
+    "content/Security/siem/wazuh/deployment",
+    "content/Security/siem/wazuh",
+    "content/Security/siem",
+    "content/Security",
+    "content/Security.md",
+    "content",
+    "Security/siem/wazuh/threat-hunting",
+    "Security/siem/wazuh/rules-decoders",
+    "Security/siem/wazuh/integrations",
+    "Security/siem/wazuh/deployment",
+    "Security/siem/wazuh",
+    "DevOps/devsecops/README.md",
+    "Kubernetes/guides/envoy-gateway.md",
+    "Kubernetes/eks/security/access/endpoint-access.md"
   ]
 }

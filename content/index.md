@@ -1,3 +1,10 @@
+---
+title: Home
+tags: [index, wiki, cloud-native]
+date: 2025-05-24
+description: Darshan's CloudNative Wiki - knowledge graph covering AWS, Kubernetes, Linux, AI, DevOps, and Security
+---
+
 # Darshan's CloudNative Wiki
 
 Welcome to my knowledge graph! This wiki covers cloud-native engineering, from infrastructure to AI.
@@ -18,9 +25,9 @@ Welcome to my knowledge graph! This wiki covers cloud-native engineering, from i
 
 ## Cloud Providers
 
-- **[[AWS]]** - Amazon Web Services
-- **[[Azure]]** - Microsoft Azure
-- **[[GCP]]** - Google Cloud Platform
+- ☁️ **[[AWS]]** - Amazon Web Services
+- 🔷 **[[Azure]]** - Microsoft Azure
+- 🟠 **[[GCP]]** - Google Cloud Platform
 
 ## Resources
 

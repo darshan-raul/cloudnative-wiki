@@ -1,3 +1,10 @@
+---
+title: Kubernetes
+tags: [kubernetes, k8s, container-orchestration, eks, gitops]
+date: 2025-05-24
+description: Kubernetes container orchestration platform - EKS, GitOps, ingress, secrets management, service mesh, and certification prep
+---
+
 # Kubernetes ☸️
 
 Container orchestration platform.

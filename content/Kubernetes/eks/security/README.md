@@ -13,10 +13,15 @@ EKS provides multiple layers of security for clusters and workloads. AWS and cus
 
 ## Topics
 
-### Access Control
-- [[Kubernetes/eks/security/cluster-access-management|Cluster Access Management API]] - Manage cluster access
-- [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]] - IAM Roles for Service Accounts
-- [[Kubernetes/eks/security/pod-identity|EKS Pod Identity]] - Pod-level IAM permissions
+### Cluster Access & Authentication
+- [[Kubernetes/eks/security/access/README|Access Overview]] - Access patterns overview
+- [[Kubernetes/eks/security/access/endpoint-access|Endpoint Access]] - Public/private endpoints, bastion hosts
+- [[Kubernetes/eks/security/access/aws-auth-legacy|Legacy aws-auth]] - ConfigMap-based access (legacy)
+- [[Kubernetes/eks/security/access/authentication-patterns|Auth Patterns]] - IRSA vs Pod Identity comparison
+
+### Pod Authentication
+- [[Kubernetes/eks/security/iam-roles-for-sa|IRSA Deep-Dive]] - OIDC trust, token details, multi-cluster patterns
+- [[Kubernetes/eks/security/pod-identity|Pod Identity Deep-Dive]] - EKS-managed credentials, agent architecture
 
 ### Secrets Management
 - [[Kubernetes/eks/security/secrets-management/README|Secrets Management]]

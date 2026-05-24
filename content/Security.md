@@ -27,7 +27,7 @@ Centralized security monitoring, detection, and alerting across all sources.
 ### Cloud Security — AWS, Azure, GCP
 Security tooling and configuration per cloud provider.
 
-- [[Security/cloud-security/README|Cloud Security Hub]]
+- [[Security/cloud-security/README|Cloud Security Hub]] — AWS, Azure, GCP security tooling
 - [[Security/cloud-security/aws/README|AWS Security]] — Security Hub, GuardDuty, CloudTrail, SCPs, multi-account
 - [[Security/cloud-security/azure/README|Azure Security]] — Defender for Cloud, Entra ID
 - [[Security/cloud-security/gcp/README|GCP Security]] — Security Command Center, Chronicle
@@ -46,15 +46,15 @@ Security for your EKS clusters and homelab K8s environment.
 Host-based security — Linux hardening, IDS/IPS, runtime security.
 
 - [[Security/endpoint-security/README|Endpoint Security Hub]]
-- [[Security/endpoint-security/hardening/README|Linux Hardening]] — AppArmor, SELinux, sysctl, PAM
-- [[Security/endpoint-security/ids-ips/README|IDS/IPS]] — Suricata (NIDS), Wazuh HIDS
-- [[Security/endpoint-security/falco/README|Falco]] — Runtime security, K8s syscall monitoring
+- [[Security/endpoint-security/hardening|Linux Hardening]] — AppArmor, SELinux, sysctl, PAM
+- [[Security/endpoint-security/ids-ips|IDS/IPS]] — Suricata (NIDS), Wazuh HIDS
+- [[Security/endpoint-security/falco|Falco]] — Runtime security, K8s syscall monitoring
 
 ### Application Security
 Auth, secrets, dependency scanning, supply chain.
 
 - [[Security/application-security/README|Application Security Hub]]
-- Authentication — [[Architecture/solution-architecture-concepts/authentication/README|OAuth2/OIDC/JWT]]
+- [[Architecture/solution-architecture-concepts/authentication/README|Authentication]] — OAuth2/OIDC/JWT
 - Secrets Management — Vault, AWS Secrets Manager, K8s secrets
 - Dependency Scanning — Trivy, Snyk, Grype
 - Supply Chain — SBOM, Sigstore, SLSA
@@ -63,7 +63,7 @@ Auth, secrets, dependency scanning, supply chain.
 TLS/mTLS, zero trust, VPN, firewall.
 
 - [[Security/network-security/README|Network Security Hub]]
-- [[Security/endpoint-security/hardening/README|TLS/mTLS]] — Certificate management, mutual TLS
+- [[Security/network-security/README|TLS/mTLS]] — Certificate management, mutual TLS
 - Zero Trust — BeyondCorp model, identity-based access
 - VPN — WireGuard, OpenVPN, IPSec
 
@@ -71,8 +71,8 @@ TLS/mTLS, zero trust, VPN, firewall.
 Shift-left security, CI/CD pipeline security, container hardening.
 
 - [[Security/devsecops/README|DevSecOps Hub]]
-- [[Security/devsecops/pipeline-security/README|Pipeline Security]] — Securing GitHub Actions, Tekton
-- [[Security/devsecops/container-security/README|Container Security]] — Distroless, rootless, capabilities
+- Pipeline Security — Securing GitHub Actions, Tekton, supply chain security
+- Container Security — Distroless, rootless, capabilities, seccomp
 
 ### Incident Response
 Playbooks, forensics, threat hunting, postmortems.

@@ -1,0 +1,94 @@
+# CloudFormation Template: Per-Org IAM Role for Wazuh Cross-Account S3 Read
+# Deploy this template IN EACH org account (111111111111, 222222222222, 333333333333)
+# The Wazuh manager's instance profile (Account A) will assume this role to read CloudTrail logs.
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Wazuh cross-account IAM role for reading CloudTrail S3 bucket
+
+Parameters:
+  WazuhSecurityAccountId:
+    Description: Account ID where Wazuh manager runs (Account A)
+    Type: String
+    Default: "444444444444"  # REPLACE with your security tooling account ID
+
+  CloudTrailBucketName:
+    Description: Name of the CloudTrail S3 bucket in this account
+    Type: String
+    Default: "cloudtrail-org-alpha-logs"  # REPLACE per org
+
+  AllowedRegion:
+    Description: Region constraint for role assumption
+    Type: String
+    Default: "us-east-1"
+
+Resources:
+  # -------------------------------------------------------
+  # IAM Role — allows Account A to assume this role
+  # -------------------------------------------------------
+  WazuhCrossAccountReadRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: WazuhCrossAccountRead
+      Description: Role for Wazuh SIEM to read CloudTrail logs from S3
+      MaxSessionDuration: 43200  # 12 hours
+
+      # Trust policy — only the Wazuh security account can assume this
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                Fn::Sub: "arn:aws:iam::${WazuhSecurityAccountId}:role/WazuhManagerRole"
+            Action:
+              - sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:RequestedRegion:
+                  Ref: AllowedRegion
+              # Optional: restrict to specific VPC endpoint for extra security
+              # StringEquals:
+              #   aws:sourceVpce: vpce-abc123
+
+      # Permission policy — what this role can access
+      Policies:
+        - PolicyName: WazuhCloudTrailS3Read
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - Fn::Sub: "arn:aws:s3:::${CloudTrailBucketName}/*"
+                  - Fn::Sub: "arn:aws:s3:::${CloudTrailBucketName}"
+
+              # If GuardDuty is enabled in this account and you want GuardDuty findings
+              - Effect: Allow
+                Action:
+                  - guardduty:ListFindings
+                  - guardduty:GetFindings
+                Resource:
+                  - Fn::Sub: "arn:aws:guardduty:${AWS::Region}:${AWS::AccountId}:detector/*"
+
+      Tags:
+        - Key: Application
+          Value: Wazuh
+        - Key: Environment
+          Value: production
+        - Key: ManagedBy
+          Value: CloudFormation
+
+Outputs:
+  RoleArn:
+    Description: ARN of the cross-account read role — use this in ossec.conf iam_role_arn
+    Value:
+      Fn::GetAtt:
+        - WazuhCrossAccountReadRole
+        - Arn
+
+  RoleName:
+    Description: Role name for reference
+    Value:
+      Ref: WazuhCrossAccountReadRole

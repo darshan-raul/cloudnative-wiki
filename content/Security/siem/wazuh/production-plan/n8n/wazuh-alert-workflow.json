@@ -1,0 +1,230 @@
+{
+  "name": "Wazuh Alert Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wazuh-alerts",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        300
+      ],
+      "webhookId": "wazuh-alerts"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst alert = {\n  id: raw.id,\n  timestamp: raw.timestamp,\n  rule_id: raw.rule?.id,\n  rule_description: raw.rule?.description,\n  level: raw.rule?.level,\n  groups: raw.rule?.groups || [],\n  mitre_ids: (raw.rule?.mitre || []).map(m => m.id),\n  srcip: raw.data?.srcip || raw.src_ip,\n  user: raw.data?.user || raw.user,\n  full_log: raw.full_log,\n  location: raw.location,\n  agent_name: raw.agent?.name,\n  aws_account_id: raw.data?.aws_account_id || raw.data?.recipient_account_id,\n  aws_region: raw.data?.aws_region,\n  event_name: raw.data?.eventName\n};\nconst severity = alert.level >= 12 ? 'critical'\n  : alert.level >= 8  ? 'high'\n  : alert.level >= 6  ? 'medium'\n  : 'low';\nreturn [{ json: { ...alert, severity } }];"
+      },
+      "id": "normalize-alert",
+      "name": "Normalize Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true
+          },
+          "conditions": [
+            {
+              "id": "cond-critical",
+              "leftValue": "{{ $json.severity }}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "routing-switch",
+      "name": "Severity Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const alert = $input.first().json;\nconst srcip = alert.srcip;\nif (!srcip || srcip === 'null') {\n  return [{ json: { ...alert, enrichment: null } }];\n}\nconst otxApiKey = $env.OTX_API_KEY || 'REPLACE';\ntry {\n  const response = await fetch('https://otx.alienvault.com/api/v1/indicators/IPv4/' + srcip + '/general', {\n    headers: { 'X-OTX-API-KEY': otxApiKey }\n  });\n  if (response.ok) {\n    const data = await response.json();\n    return [{ json: {\n      ...alert,\n      enrichment: {\n        otx_score: data.reputation || 0,\n        otx_pulses: data.pulse_count || 0,\n        is_malicious: (data.pulse_count || 0) > 0\n      }\n    }}];\n  }\n} catch (e) { console.log('OTX failed: ' + e.message); }\nreturn [{ json: { ...alert, enrichment: { status: 'skipped' } } }];"
+      },
+      "id": "enrich-otx",
+      "name": "OTX Enrichment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://<planio-host>/api/issues.json",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Planio-API-Key",
+              "value": "<planio-api-key>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({ project_id: 1, tracker_id: 2, subject: 'Wazuh [' + $json.severity.toUpperCase() + ']: ' + $json.rule_description, description: 'Alert ID: ' + $json.id + '\\nTimestamp: ' + $json.timestamp + '\\nIP: ' + $json.srcip + '\\nAccount: ' + $json.aws_account_id + '\\nMITRE: ' + $json.mitre_ids.join(', '), priority_id: $json.severity === 'critical' ? 4 : 3 }) }}"
+      },
+      "id": "planio-critical",
+      "name": "Planio Ticket (Critical)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1140,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://<planio-host>/api/issues.json",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Planio-API-Key",
+              "value": "<planio-api-key>"
+            }
+          ]
+        },
+        "sendBody": true,
+        "body": "={{ JSON.stringify({ project_id: 1, tracker_id: 2, subject: 'Wazuh [HIGH]: ' + $json.rule_description, description: 'Alert ID: ' + $json.id + '\\nIP: ' + $json.srcip, priority_id: 3 }) }}"
+      },
+      "id": "planio-high",
+      "name": "Planio Ticket (High)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1140,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#security-critical",
+        "text": "=Wazuh *CRITICAL* Alert\n={{ $json.rule_description }}\nIP: {{ $json.srcip }} | User: {{ $json.user }}\nAccount: {{ $json.aws_account_id }} | Level: {{ $json.level }}\nMITRE: {{ $json.mitre_ids.join(', ') }}",
+        "username": "Wazuh Bot"
+      },
+      "id": "slack-critical",
+      "name": "Slack #security-critical",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#security-high",
+        "text": "=Wazuh *HIGH* Alert\n={{ $json.rule_description }}\nIP: {{ $json.srcip }} | Level: {{ $json.level }}",
+        "username": "Wazuh Bot"
+      },
+      "id": "slack-high",
+      "name": "Slack #security-high",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "summary": "Wazuh: {{ $json.rule_description }}",
+        "severity": "critical",
+        "source": "wazuh"
+      },
+      "id": "pagerduty-critical",
+      "name": "PagerDuty (Critical)",
+      "type": "n8n-nodes-base.pagerDuty",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        -300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          "Normalize Alert"
+        ]
+      ]
+    },
+    "Normalize Alert": {
+      "main": [
+        [
+          "Severity Router"
+        ]
+      ]
+    },
+    "Severity Router": {
+      "main": [
+        [
+          [
+            "OTX Enrichment"
+          ]
+        ],
+        [
+          [
+            "Planio Ticket (High)",
+            "Slack #security-high"
+          ]
+        ],
+        [
+          [
+            "Slack #security-high"
+          ]
+        ]
+      ]
+    },
+    "OTX Enrichment": {
+      "main": [
+        [
+          "Planio Ticket (Critical)",
+          "Slack #security-critical",
+          "PagerDuty (Critical)"
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "id": "wazuh-alert-workflow"
+}

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+      <title>cloudnative wiki</title>
+      <link>https://quartz.jzhao.xyz</link>
+      <description>Last 10 notes on cloudnative wiki</description>
+      <generator>Quartz -- quartz.jzhao.xyz</generator>
+      <item>
+    <title>README</title>
+    <link>https://quartz.jzhao.xyz/Linux/README</link>
+    <guid>https://quartz.jzhao.xyz/Linux/README</guid>
+    <description><![CDATA[ Linux Start Here! Absolutely the best place to start your linux journey :) “linuxjourney.com/“ Main guide Will take time, 4 months maybe, but if you dedicate just 4 hours a week, in 4-5 months, you can be assured that you will never be frightened by a ‘linux issue’ Tip: There are 6 books, rotate you... ]]></description>
+    <pubDate>Sun, 24 May 2026 10:23:29 GMT</pubDate>
+  </item><item>
+    <title>Arch Linux</title>
+    <link>https://quartz.jzhao.xyz/Linux/arch/README</link>
+    <guid>https://quartz.jzhao.xyz/Linux/arch/README</guid>
+    <description><![CDATA[ Arch Linux A comprehensive guide to Arch Linux and Manjaro — rolling release distributions built on the KISS principle. Sections 1. ]]></description>
+    <pubDate>Sun, 24 May 2026 10:23:29 GMT</pubDate>
+  </item><item>
+    <title>AUR &amp; Software Management</title>
+    <link>https://quartz.jzhao.xyz/Linux/arch/aur</link>
+    <guid>https://quartz.jzhao.xyz/Linux/arch/aur</guid>
+    <description><![CDATA[ 3. ]]></description>
+    <pubDate>Sun, 24 May 2026 10:23:29 GMT</pubDate>
+  </item><item>
+    <title>Arch Linux Installation &amp; Setup</title>
+    <link>https://quartz.jzhao.xyz/Linux/arch/installation</link>
+    <guid>https://quartz.jzhao.xyz/Linux/arch/installation</guid>
+    <description><![CDATA[ 2. Installation &amp; Setup archinstall CLI Wizard Arch’s official installer is the archinstall script — a curses-based CLI wizard. ]]></description>
+    <pubDate>Sun, 24 May 2026 10:23:29 GMT</pubDate>
+  </item><item>
+    <title>Arch Linux Networking</title>
+    <link>https://quartz.jzhao.xyz/Linux/arch/networking</link>
+    <guid>https://quartz.jzhao.xyz/Linux/arch/networking</guid>
+    <description><![CDATA[ 5. Networking NetworkManager NetworkManager is the standard for desktop Arch/Manjaro. It handles WiFi, Ethernet, VPN, and mobile broadband. ]]></description>
+    <pubDate>Sun, 24 May 2026 10:23:29 GMT</pubDate>
+  </item><item>
+    <title>Arch Linux Philosophy &amp; Foundation</title>
+    <link>https://quartz.jzhao.xyz/Linux/arch/philosophy</link>
+    <guid>https://quartz.jzhao.xyz/Linux/arch/philosophy</guid>
+    <description><![CDATA[ 1. ]]></description>
+    <pubDate>Sun, 24 May 2026 10:23:29 GMT</pubDate>
+  </item><item>
+    <title>Arch Linux System Administration</title>
+    <link>https://quartz.jzhao.xyz/Linux/arch/system-administration</link>
+    <guid>https://quartz.jzhao.xyz/Linux/arch/system-administration</guid>
+    <description><![CDATA[ 4. System Administration systemd Deep Dive systemd is Arch’s init system and service manager. Virtually all Arch-based distros use it. ]]></description>
+    <pubDate>Sun, 24 May 2026 10:23:29 GMT</pubDate>
+  </item><item>
+    <title>k8s-networking-deep-dive</title>
+    <link>https://quartz.jzhao.xyz/Kubernetes/concepts/networking/k8s-networking-deep-dive</link>
+    <guid>https://quartz.jzhao.xyz/Kubernetes/concepts/networking/k8s-networking-deep-dive</guid>
+    <description><![CDATA[ Kubernetes Networking — Deep Dive A comprehensive technical guide to networking in Kubernetes — from the three independent IP spaces, through pod network namespaces, veth pairs, CNI plugins, kube-proxy, CoreDNS, and Ingress. ]]></description>
+    <pubDate>Sun, 17 May 2026 09:37:17 GMT</pubDate>
+  </item><item>
+    <title>networking</title>
+    <link>https://quartz.jzhao.xyz/Kubernetes/concepts/networking/networking</link>
+    <guid>https://quartz.jzhao.xyz/Kubernetes/concepts/networking/networking</guid>
+    <description><![CDATA[ Networking “sookocheff.com/post/kubernetes/understanding-kubernetes-networking-model/” “youtu.be/cUGXu2tiZMc” “youtu.be/3Ij0aZRsw9w”. ]]></description>
+    <pubDate>Sun, 17 May 2026 09:37:17 GMT</pubDate>
+  </item><item>
+    <title>Amazon EKS</title>
+    <link>https://quartz.jzhao.xyz/Kubernetes/eks/README</link>
+    <guid>https://quartz.jzhao.xyz/Kubernetes/eks/README</guid>
+    <description><![CDATA[ Amazon Elastic Kubernetes Service - managed Kubernetes on AWS ]]></description>
+    <pubDate>Sat, 16 May 2026 18:30:00 GMT</pubDate>
+  </item>
+    </channel>
+  </rss>

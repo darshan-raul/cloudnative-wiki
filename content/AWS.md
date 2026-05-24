@@ -1,3 +1,10 @@
+---
+title: AWS
+tags: [aws, cloud, amazon-web-services]
+date: 2025-05-24
+description: Amazon Web Services cloud platform - EC2, ECS, EKS, Lambda, VPC, IAM, S3, and AWS-native services
+---
+
 # AWS ☁️
 
 Amazon Web Services cloud platform notes.
