@@ -16,6 +16,12 @@ Will take time, 4 months maybe, but if you dedicate just 4 hours a week, in 4-5 
 
 "http://linux-training.be/"
 
+## Arch Linux
+
+Comprehensive guide to Arch Linux and Manjaro — rolling release distributions built on the KISS principle.
+
+**[[Linux/arch/README|Sections 1-5: Philosophy, Installation, AUR, System Admin, Networking]]**
+
 ## Commands
 
 Master this, read them everyday until they are imprinted for life.
