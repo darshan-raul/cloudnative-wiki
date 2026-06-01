@@ -11,10 +11,14 @@
             "id": "898110cb6fa92915",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Architecture/OpenTelemetry/traces-101.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "traces-101"
             }
           }
         ]
@@ -181,6 +185,17 @@
   },
   "active": "898110cb6fa92915",
   "lastOpenFiles": [
+    "Architecture/OpenTelemetry/index.md",
+    "Architecture/OpenTelemetry/exercise-end-to-end.md",
+    "Architecture/OpenTelemetry/signals.md",
+    "Architecture/OpenTelemetry/overview.md",
+    "Architecture/OpenTelemetry/kubernetes.md",
+    "Architecture/OpenTelemetry/context-propagation.md",
+    "Architecture/OpenTelemetry/collector.md",
+    "Architecture/OpenTelemetry/metrics-101.md",
+    "Architecture/OpenTelemetry/traces-101.md",
+    "Architecture/OpenTelemetry/logs-101.md",
+    "Architecture/OpenTelemetry/otel-glossary.md",
     "Kubernetes/guides/cost-management.md",
     "Kubernetes/guides/README.md",
     "Kubernetes.md",
@@ -196,26 +211,15 @@
     "Linux/arch/README.md",
     "Security/siem/wazuh/integrations/README.md",
     "Security/siem/README.md",
-    "Security/network-security/README.md",
-    "content/Security/siem/wazuh/deployment/README.md",
-    "Security/siem/wazuh/threat-hunting/README.md",
-    "Security/siem/wazuh/rules-decoders/README.md",
-    "Security/siem/wazuh/deployment/README.md",
-    "content/Security/siem/wazuh/README.md",
-    "content/Security/siem/README.md",
     "content/Security/siem/wazuh/deployment",
     "content/Security/siem/wazuh",
     "content/Security/siem",
     "content/Security",
-    "content/Security.md",
     "content",
     "Security/siem/wazuh/threat-hunting",
     "Security/siem/wazuh/rules-decoders",
     "Security/siem/wazuh/integrations",
     "Security/siem/wazuh/deployment",
-    "Security/siem/wazuh",
-    "DevOps/devsecops/README.md",
-    "Kubernetes/guides/envoy-gateway.md",
-    "Kubernetes/eks/security/access/endpoint-access.md"
+    "Security/siem/wazuh"
   ]
 }
