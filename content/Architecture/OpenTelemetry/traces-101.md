@@ -386,26 +386,183 @@ span.SetAttributes(
 
 ## Sampling
 
-Sampling decides which spans get exported. The SDK ships with built-in samplers:
+Sampling decides **which spans are recorded and exported**. Without it, high-throughput services would generate millions of spans per minute and overwhelm backends and collectors.
 
-| Sampler | Behavior |
-|---------|---------|
-| `AlwaysOn` | Every span recorded (use in dev) |
-| `AlwaysOff` | No spans (use for perf testing) |
-| `TraceIdRatio` | Sample X% of root spans, all children |
-| `ParentBased` | Child follows parent's sampling decision |
+### Head-Based vs Tail-Based
+
+| Type | When decision is made | What it sees | Use case |
+|------|---------------------|--------------|----------|
+| **Head-based** | At `Span.Start()` — before work is done | Nothing (future tense) | Default SDK behavior |
+| **Tail-based** | After `Span.End()` — when span is complete | Full span with status, attributes, duration | Collector pipeline |
+
+```
+HEAD-BASED (SDK — at start)
+tracer.Start(ctx, "op") → Sampler.ShouldSample(ctx) → decision made → span recorded or dropped
+
+TAIL-BASED (Collector — at end)
+span.End() → span sent to collector → tail_sampling processor sees full span → policy applied
+```
+
+Head-based is **deterministic** — decision is instant, no buffering needed.
+Tail-based is **selective** — you can sample based on errors, slow spans, specific routes.
+
+### How Sampling Works
+
+When `tracer.Start(ctx, name)` is called:
+
+```
+1. TracerProvider checks if a span is already active in ctx (parent)
+   └─ If yes: ParentBased sampler inherits parent's decision
+   └─ If no (root span): Sampler.ShouldSample() is called
+
+2. ShouldSample returns:
+   ├── Sampled    → span is recorded, flags=01 set in traceparent
+   └── NotSampled → span object created but no data is recorded
+                    (lightweight — just discards on End)
+
+3. For sampled spans: data is batched → exporter → collector
+   For not-sampled: span object is lightweight but data is dropped
+```
 
 ```go
-import "go.opentelemetry.io/otel/sdk/trace"
+// Sampler interface
+type Sampler interface {
+    ShouldSample(parentSamplingContext) SamplingResult
+    Description() string
+}
 
-// 10% of traces, but if parent was sampled → sample everything
+type SamplingResult struct {
+    Decision   SamplingDecision  // Sampled | NotSampled | Drop
+    Tracestate Tracestate
+    Attributes []Attribute
+}
+```
+
+### Built-in Samplers
+
+|| Sampler | When to use | Gotcha |
+||---------|------------|--------|
+| `AlwaysOn` | Dev — every span recorded | Produces huge volume |
+| `AlwaysOff` | Perf testing, disabled tracing | All spans dropped |
+| `TraceIdRatioBased(0.1)` | Prod head-based — sample 10% of traces | All children of sampled root are sampled |
+| `ParentBased(child)` | Prod default — respect upstream decision | Child inherits parent's flags; if no parent, uses child sampler |
+
+**ParentBased is the standard for production:**
+
+```go
+// Standard production config: respect parent's decision, fallback to 10% sampling
 sampler := trace.ParentBased(
-    trace.TraceIDRatioBased(0.1),
+    trace.TraceIDRatioBased(0.1),  // root spans: 10%
 )
 
 tp := trace.NewTracerProvider(
     trace.WithSampler(sampler),
 )
+```
+
+### TraceIdRatio: Hash Mechanics
+
+`TraceIDRatioBased` doesn't use random numbers — it hashes the `trace_id` to ensure **consistent sampling**:
+
+```
+trace_id = "0af7651916cd43dd8448eb211c80319c"
+           ↓
+        SHA-256 hash (lower 8 bytes as uint64)
+           ↓
+        Compare against threshold (0.1 × 2^64)
+           ↓
+    If hash < threshold → Sampled
+    If hash >= threshold → NotSampled
+```
+
+**Why hash instead of random?**
+- Same trace_id always gets the same decision — no split traces
+- Across multiple collectors/replicas, consistent sampling
+- If 10% of trace_ids are sampled, exactly 10% of traces are sampled
+
+### The Sampled Flag in traceparent
+
+The `flags` byte in `traceparent` carries the sampling decision:
+
+```
+traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+                                                         ^^
+                                                      flags (01 = sampled)
+```
+
+| Flags | Meaning |
+|-------|---------|
+| `01` | Sampled — all downstream services record spans |
+| `00` | Not sampled — downstream SDKs record NOTsampled spans (see below) |
+
+**Key insight:** A `flags=00` trace still has a valid `trace_id` and `span_id` — you can see it as a "phantom trace" with only the root span. This is useful for **request counting** even without full span data.
+
+**Child span behavior with not-sampled parent:**
+- `ParentBased` sampler: child follows parent → not sampled
+- `TraceIDRatio` on child: child makes its own decision (not recommended — creates partial traces)
+
+### Tail-Based Sampling (Collector)
+
+Head-based sampling is cheap but blunt — you sample before knowing if the request failed or was slow. Tail-based sampling decides **after the span is complete** based on policies:
+
+```yaml
+processors:
+  tail_sampling:
+    decision_wait: 10s  # wait for spans to accumulate before making decision
+    policies:
+      # Sample 100% of errors
+      - name: errors
+        type: status_code
+        status_code: {status_codes: [ERROR]}
+
+      # Sample slow spans > 1s
+      - name: slow-traces
+        type: latency
+        latency: {threshold_ms: 1000}
+
+      # Sample 1% of everything (fallback)
+      - name: probabilistic
+        type: probabilistic
+        probabilistic: {sampling_percentage: 1}
+
+      # Always keep traces with specific service name
+      - name: high-value-service
+        type: string_attribute
+        string_attribute: {key: service.name, values: [["payment-service", "order-service"]]}
+```
+
+```
+Span.End()
+   │
+   ▼
+BatchProcessor (queues spans)
+   │
+   ▼ (after batch timeout or max queue size)
+tail_sampling processor
+   │
+   ├── status_code=ERROR?     → sample 100%
+   ├── duration > 1s?         → sample 100%
+   ├── service.name in list?  → sample 100%
+   └── else                   → probabilistic 1%
+```
+
+**Typical prod setup:**
+- Head-based: sample 10-20% at SDK (keeps costs predictable)
+- Tail-based: override to 100% for errors and slow spans (preserves debugging data)
+
+### Common Configurations
+
+```go
+// DEV: capture everything
+trace.WithSampler(trace.AlwaysOn())
+
+// PROD head-only: 10% with parent inheritance
+trace.WithSampler(trace.ParentBased(trace.TraceIDRatioBased(0.1)))
+
+// PROD head + tail: 10% at SDK, 100% for errors at collector
+// SDK:
+trace.WithSampler(trace.ParentBased(trace.TraceIDRatioBased(0.1)))
+// Collector: tail_sampling with error/latency policies
 ```
 
 ## Typical Setup: Traces

@@ -15,6 +15,14 @@ draft: false
 
 OpenTelemetry defines three **signals** — the fundamental types of telemetry.
 
+| Signal | Description |
+|--------|-------------|
+| **Traces** | End-to-end request paths (spans) |
+| **Metrics** | Aggregated measurements (counters, gauges, histograms) |
+| **Logs** | Timestamp-ordered event records |
+
+> **Note:** Baggage is **not** a signal. It is a context propagation mechanism — key-value metadata that flows alongside trace context. See [[context-propagation]].
+
 ## Traces
 
 ### Data Model
