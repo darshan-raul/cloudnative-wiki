@@ -493,6 +493,201 @@ obs_updown      = meter.create_observable_up_down_counter("name", unit="unit", c
 obs_gauge       = meter.create_observable_gauge( "name", unit="unit", callbacks=[fn])
 ```
 
+Metrics are aggregated by instruments and read by a `MetricReader`. A `View` lets you customize aggregation and attribute handling.
+
+## MetricReader
+
+The `MetricReader` controls **when** metrics are read and exported. Different readers implement different push/pull patterns.
+
+### Reader Types
+
+| Reader | Pattern | Use Case |
+|--------|---------|----------|
+| `PeriodicExportingMetricReader` | **Push** — SDK pushes every interval | Most backends (SigNoz, Grafana, etc.) |
+| `PeriodicBatchMetricReader` | **Push** — batches, then pushes | High throughput, reduced export calls |
+| `PrometheusRemoteWriteReader` | **Push** — sends to Prometheus remote write endpoint | Prometheus, Grafana Mimir |
+| `MetricReader` (base) | Custom | Building custom exporters |
+
+### PeriodicExportingMetricReader (Go)
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `WithInterval(d)` | 10s | How often to read and export |
+| `WithTemporalitySelector(fn)` | Cumulative | Delta or Cumulative per instrument |
+
+```go
+import "go.opentelemetry.io/otel/sdk/metric"
+
+reader := metric.NewPeriodicExportingMetricReader(
+    metricExporter,
+    metric.WithInterval(10*time.Second),
+)
+```
+
+### PeriodicExportingMetricReader (Python)
+
+```python
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+reader = PeriodicExportingMetricReader(
+    metric_exporter,
+    export_interval_millis=10000,  # 10s default
+)
+```
+
+### MetricReader in MeterProvider (Go)
+
+```go
+mp := metric.NewMeterProvider(
+    metric.WithResource(res),
+    metric.WithReader(  // one reader per MeterProvider
+        metric.NewPeriodicExportingMetricReader(exporter,
+            metric.WithInterval(30*time.Second),
+        ),
+    ),
+)
+```
+
+### Multiple Readers (Go)
+
+A MeterProvider can have multiple readers:
+
+```go
+mp := metric.NewMeterProvider(
+    metric.WithResource(res),
+    metric.WithReader(periodicReader),      // → SigNoz (OTLP)
+    metric.WithReader(prometheusReader),     // → Prometheus scrape endpoint
+)
+```
+
+This lets a single app export metrics to multiple backends simultaneously.
+
+## MetricExporter
+
+The `MetricExporter` serializes and sends aggregated metric data.
+
+### Go Exporters
+
+| Exporter | Package | Config |
+|----------|---------|--------|
+| **OTLP** (gRPC) | `go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc` | `WithEndpoint()`, `WithInsecure()` |
+| **OTLP** (HTTP) | `go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp` | `WithEndpoint()`, `WithInsecure()` |
+| **Prometheus** | `go.opentelemetry.io/otel/exporters/prometheus` | Serves `:2222`/metrics for Prometheus pull |
+| **Console** | `go.opentelemetry.io/otel/exporters/stdout/stdoutmetric` | Dev/debug |
+
+```go
+import (
+    "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+    "go.opentelemetry.io/otel/exporters/prometheus"
+    "go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
+)
+
+// OTLP gRPC (SigNoz, Grafana, etc.)
+exporter, _ := otlpmetricgrpc.New(ctx,
+    otlpmetricgrpc.WithEndpoint("localhost:4317"),
+    otlpmetricgrpc.WithInsecure(),
+)
+
+// Prometheus (for Prometheus pull model)
+registry := prometheus.New()  // creates a prometheus.Registry
+exporter := prometheus.NewExporter(prometheus.WithRegistry(registry))
+// Prometheus scrapes http://localhost:2222/metrics
+
+// Console (stdout debug)
+exporter, _ := stdoutmetric.New(stdoutmetric.WithPrettyPrint())
+```
+
+### Python Exporters
+
+| Exporter | Package | Config |
+|----------|---------|--------|
+| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp` | `endpoint`, `insecure` |
+| **Prometheus** | `opentelemetry-exporter-prometheus` | Serves `:2222`/metrics |
+| **Console** | `opentelemetry-sdk` (built-in) | Dev only |
+
+```python
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.exporter.prometheus import PrometheusMetricReader
+
+# OTLP gRPC
+exporter = OTLPMetricExporter(
+    endpoint="http://localhost:4317",
+    insecure=True,
+)
+
+# Prometheus (Prometheus pulls from :2222/metrics)
+from prometheus_client import start_http_server
+exporter = OTLPMetricExporter()  # Prometheus reader handles /metrics
+```
+
+## View
+
+A `View` controls **how** instruments are aggregated and which attributes are retained. Views are the customization layer between instruments and output.
+
+Use views to:
+- Rename metric instruments (e.g., `http_server_requests` → `http_requests`)
+- Drop high-cardinality attributes (e.g., `user_id`, `request_id`) to reduce cardinality
+- Configure histogram bucket boundaries
+- Copy an instrument to multiple destinations with different aggregation
+
+### Go: View to Drop High-Cardinality Attributes
+
+```go
+import "go.opentelemetry.io/otel/sdk/metric"
+
+view := metric.NewView(
+    metric.Instrument{
+        Name: "orders_processed_total",  // match instrument name
+    },
+    metric.Stream{
+        Name: "orders_processed_total",  // exported name
+        Aggregation: metric.AggregationSum{},
+        AttributeFilter: attributeFilter{
+            // drop attributes with high cardinality: user_id, request_id
+            Allowed: []string{"method", "status_code", "path"},
+        },
+    },
+)
+
+mp := metric.NewMeterProvider(
+    metric.WithResource(res),
+    metric.WithReader(reader),
+    metric.WithView(view),
+)
+```
+
+### Go: View to Configure Histogram Buckets
+
+```go
+view := metric.NewView(
+    metric.Instrument{Name: "order_duration_ms"},
+    metric.Stream{
+        Name: "order_duration_ms",
+        Aggregation: metric.AggregationHistogram{
+            Boundaries: []float64{5, 10, 25, 50, 100, 250, 500, 1000},  // custom buckets
+        },
+    },
+)
+```
+
+### Python: View
+
+```python
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.view import View, InstrumentSelector, Stream
+
+# View to rename and drop attributes
+view = View(
+    instrument_selector=InstrumentSelector(instrument_name="orders_processed_total"),
+    stream=Stream(name="orders_processed", attribute_select=["method", "status_code"]),
+)
+
+mp = MeterProvider(
+    metric_readers=[reader],
+    views=[view],
+)
+```
+
 ## Construct Hierarchy
 
 ```

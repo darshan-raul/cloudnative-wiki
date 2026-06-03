@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Architecture/OpenTelemetry/traces-101.md",
+                "file": "Architecture/OpenTelemetry/context-propagation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "traces-101"
+              "title": "context-propagation"
             }
           }
         ]
@@ -185,6 +185,7 @@
   },
   "active": "898110cb6fa92915",
   "lastOpenFiles": [
+    "Architecture/OpenTelemetry/traces-101.md",
     "Architecture/OpenTelemetry/index.md",
     "Architecture/OpenTelemetry/exercise-end-to-end.md",
     "Architecture/OpenTelemetry/signals.md",
@@ -193,7 +194,6 @@
     "Architecture/OpenTelemetry/context-propagation.md",
     "Architecture/OpenTelemetry/collector.md",
     "Architecture/OpenTelemetry/metrics-101.md",
-    "Architecture/OpenTelemetry/traces-101.md",
     "Architecture/OpenTelemetry/logs-101.md",
     "Architecture/OpenTelemetry/otel-glossary.md",
     "Kubernetes/guides/cost-management.md",

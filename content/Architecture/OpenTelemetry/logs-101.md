@@ -449,6 +449,100 @@ if err != nil {
         otellog.WithContext(ctx),
     )
 }
+}
+
+// LogExporter
+
+The `LogExporter` serializes and sends completed log records to a backend.
+
+### Go Exporters
+
+| Exporter | Package | Config |
+|----------|---------|--------|
+| **OTLP** (gRPC) | `go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc` | `WithEndpoint()`, `WithInsecure()` |
+| **OTLP** (HTTP) | `go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp` | `WithEndpoint()`, `WithInsecure()` |
+| **Console** | `go.opentelemetry.io/otel/exporters/stdout/stdoutlog` | Dev/debug |
+| **Loki** | `go.opentelemetry.io/otel/exporters/otlp/otlplog` + Collector | via Collector `loki` exporter |
+
+```go
+import (
+    "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
+    "go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
+)
+
+// OTLP gRPC (SigNoz, Grafana with Loki, etc.)
+exporter, _ := otlploggrpc.New(ctx,
+    otlploggrpc.WithEndpoint("localhost:4317"),
+    otlploggrpc.WithInsecure(),
+)
+
+// Console (stdout debug)
+exporter, _ := stdoutlog.New(stdoutlog.WithPrettyPrint())
+```
+
+### Python Exporters
+
+| Exporter | Package | Config |
+|----------|---------|--------|
+| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp` | `endpoint`, `insecure` |
+| **Console** | `opentelemetry-sdk` (built-in) | Dev only |
+
+```python
+from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
+from opentelemetry.sdk.log import LoggerProvider
+from opentelemetry.sdk.log.export import BatchLogProcessor
+
+# OTLP gRPC
+exporter = OTLPLogExporter(
+    endpoint="http://localhost:4317",
+    insecure=True,
+)
+
+# BatchLogProcessor in LoggerProvider
+logger_provider = LoggerProvider()
+logger_provider.add_log_processor(BatchLogProcessor(exporter))
+```
+
+### LogProcessor (SDK-side)
+
+Unlike traces which use `SpanProcessor`, logs use `LogProcessor`:
+
+| Processor | Behavior | Use |
+|-----------|----------|-----|
+| `SimpleLogProcessor` | Exports synchronously on `log.Record()` | Dev, tests |
+| `BatchLogProcessor` | Batches logs in queue, exports on schedule | **Production default** |
+
+```go
+import "go.opentelemetry.io/otel/sdk/log"
+
+processor := log.NewBatchLogProcessor(
+    logExporter,
+    log.WithBatchSize(1024),
+    log.WithBatchTimeout(5*time.Second),
+)
+```
+
+```python
+from opentelemetry.sdk.log import LoggerProvider
+from opentelemetry.sdk.log.export import BatchLogProcessor, ConsoleLogExporter
+
+exporter = ConsoleLogExporter()
+processor = BatchLogProcessor(
+    exporter,
+    max_batch_size=1024,
+    schedule_delay_seconds=5.0,
+)
+```
+
+### LogExporter Architecture
+
+```
+Logger.Record()              // call in your code
+  → LogProcessor.OnEmit()    // SDK notifies processor
+      → BatchLogProcessor    // batches until size or timeout
+          → LogExporter      // serializes (OTLP protobuf)
+              → Network      // gRPC/HTTP to Collector
+                  → Backend   // SigNoz, Loki, etc.
 ```
 
 ## Gotchas

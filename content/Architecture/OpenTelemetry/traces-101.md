@@ -882,22 +882,179 @@ span.End()                    // 1. Called in your code
           → SpanExporter      // 4. Batch sent to OTLP
 ```
 
-Built-in processors:
-- **SimpleSpanProcessor** — exports each span synchronously (blocks the caller)
-- **BatchSpanProcessor** — batches spans in memory, exports on batch size or timeout
+### SpanProcessor
 
-Never block `span.End()` in production — use `BatchSpanProcessor`.
+The SDK calls a `SpanProcessor` when spans end, before export:
+
+```
+span.End()                    // 1. Called in your code
+  → SpanProcessor.OnEnd(span) // 2. SDK notifies processor
+      → BatchProcessor        // 3. BatchProcessor holds until batch full or timeout
+          → SpanExporter      // 4. Batch sent to OTLP
+```
+
+**Never block `span.End()` in production** — use `BatchSpanProcessor`.
+
+#### SpanProcessors
+
+| Processor | Behavior | Blocking? | Use Case |
+|-----------|----------|-----------|----------|
+| `SimpleSpanProcessor` | Exports each span synchronously on `span.End()` | Yes | Dev, very low traffic, tests |
+| `BatchSpanProcessor` | Buffers spans in queue, exports on batch size or schedule | No | **Production default** |
+| `FilteredSpanProcessor` | Conditionally drops spans before batching | No | Debug filtering |
+
+#### BatchSpanProcessor Options (Go)
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `WithMaxQueueSize(n)` | 2048 | Max spans queued before forcing export |
+| `WithBatchSize(n)` | 512 | Spans per batch before triggering export |
+| `WithBatchTimeout(d)` | 5s | Force export after duration (even if batch not full) |
+| `WithExportThreshold(n)` | 1 | Force sync export when queue reaches n (for critical spans) |
 
 ```go
-// Blocking (only for dev/small load):
-processor := trace.NewSimpleSpanProcessor(exporter)
-
-// Non-blocking (for production):
+// Production: non-blocking batch export
 processor := trace.NewBatchSpanProcessor(exporter,
     trace.WithMaxQueueSize(2048),
+    trace.WithBatchSize(512),
     trace.WithBatchTimeout(5*time.Second),
 )
+
+// Critical path: force sync export for payment spans
+criticalProcessor := trace.NewBatchSpanProcessor(exporter,
+    trace.WithMaxQueueSize(2048),
+    trace.WithExportThreshold(1),  // export immediately if queue ≥ 1
+)
 ```
+
+#### BatchSpanProcessor Options (Python)
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `max_queue_size` | 2048 | Max spans queued |
+| `scheduled_delay_seconds` | 5s | Force export after duration |
+| `max_export_batch_size` | 512 | Spans per batch |
+
+```python
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Production default
+processor = BatchSpanProcessor(
+    span_exporter,
+    max_queue_size=2048,
+    scheduled_delay_seconds=5.0,
+    max_export_batch_size=512,
+)
+```
+
+#### SimpleSpanProcessor (Go + Python)
+
+```go
+// Go — blocks on every span.End(), only for dev/tests
+processor := trace.NewSimpleSpanProcessor(exporter)
+```
+
+```python
+# Python — blocks on every span, only for dev/tests
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+processor = SimpleSpanProcessor(span_exporter)
+```
+
+### SpanExporter
+
+The `SpanExporter` serializes and sends completed spans to a backend.
+
+#### Go Exporters
+
+| Exporter | Package | Config |
+|----------|---------|--------|
+| **OTLP** (gRPC) | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc` | `WithEndpoint()`, `WithInsecure()` |
+| **OTLP** (HTTP) | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | `WithEndpoint()`, `WithInsecure()` |
+| **Jaeger** (Thrift) | `go.opentelemetry.io/otel/exporters/jaeger` | `WithAgentEndpoint()`, `WithEndpoint()` |
+| **Zipkin** | `go.opentelemetry.io/otel/exporters/zipkin` | `WithEndpoint()` |
+| **Console** | `go.opentelemetry.io/otel/exporters/stdout/stdouttrace` | (dev only) |
+| **Datadog** | `gopkg.in/DataDog/dd-trace-go.v1/contrib/otel` | via Datadog exporter package |
+
+```go
+import (
+    "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+    "go.opentelemetry.io/otel/exporters/jaeger"
+    "go.opentelemetry.io/otel/exporters/zipkin"
+    "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+)
+
+// OTLP gRPC (SigNoz, Grafana Tempo, etc.)
+exporter, _ := otlptracegrpc.New(ctx,
+    otlptracegrpc.WithEndpoint("localhost:4317"),
+    otlptracegrpc.WithInsecure(),  // no TLS for local dev
+)
+
+// Jaeger Thrift (legacy Jaeger)
+exporter, _ := jaeger.New(
+    jaeger.WithAgentEndpoint("localhost:6831"),
+)
+
+// Zipkin
+exporter, _ := zipkin.New(
+    zipkin.WithEndpoint("http://localhost:9411/api/v1/traces"),
+)
+
+// Console (stdout debug)
+exporter, _ := stdouttrace.New(stdouttrace.WithPrettyPrint())
+```
+
+#### Python Exporters
+
+| Exporter | Package | Config |
+|----------|---------|--------|
+| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp` | `endpoint`, `insecure` |
+| **Jaeger** | `opentelemetry-exporter-jaeger` | `agent_port` |
+| **Zipkin** | `opentelemetry-exporter-zipkin` | `endpoint` |
+| **Console** | `opentelemetry-sdk` (built-in) | (dev only) |
+
+```python
+from opentelemetry.exporter.otlp import OTLPSpanExporter
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.exporter.zipkin.thrift import ZipkinExporter
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+
+# OTLP gRPC (SigNoz, Grafana Tempo, etc.)
+exporter = OTLPSpanExporter(
+    endpoint="http://localhost:4317",
+    insecure=True,  # no TLS for local dev
+)
+
+# Jaeger Thrift
+exporter = JaegerExporter(
+    agent_host="localhost",
+    agent_port=6831,
+)
+
+# Zipkin
+exporter = ZipkinExporter(
+    endpoint="http://localhost:9411/api/v1/traces",
+)
+
+# Console (stdout debug)
+exporter = ConsoleSpanExporter()
+```
+
+#### Exporter Architecture
+
+```
+SDK SpanProcessor
+      │
+      ▼
+SpanExporter.Export()     ← Protocol-specific serialization (OTLP, Thrift, JSON)
+      │
+      ▼
+Network (gRPC/HTTP)       ← OTLP gRPC :4317, OTLP HTTP :4318, Jaeger Thrift :6831
+      │
+      ▼
+Collector or Backend
+```
+
+> **Note:** The Collector receives OTLP natively on :4317 (gRPC) and :4318 (HTTP). For non-OTLP backends (Jaeger, Zipkin), your app SDK can either export directly or via the Collector as a relay.
 
 ## Construct Hierarchy
 
@@ -919,7 +1076,5 @@ TracerProvider
   └── Tracer ("invoice-service")
         └── Span ("generate_invoice", parent=linked)
               ├── trace_id: same as root (propagated)
-              └── parent_span_id: matches the Go service's child span
-```
               └── parent_span_id: matches the Go service's child span
 ```
