@@ -1,40 +1,65 @@
+---
+title: Linux
+description: "Linux operating system — beginner to advanced: filesystem, users, processes, networking, storage, boot, security, virtualization"
+tags:
+  - linux
+---
+
 # Linux
 
-## Start Here!
+## Start Here — Concepts Curriculum
 
-Absolutely the best place to start your linux journey :\)
+The [[Linux/concepts/README|concepts section]] is a beginner curriculum — work through it in order if you're starting out, or use it as a reference. It progresses from filesystem basics through to services, networking, and shell skills.
 
-"https://linuxjourney.com/"
+```
+01-filesystem-hierarchy.md    — /etc, /var, /usr, /dev, /proc explained
+02-file-permissions.md        — rwx, chmod, chown, umask, ACLs, special bits
+03-processes.md              — PID, parent/child, zombies, daemons
+04-users-and-groups.md        — /etc/passwd, /etc/shadow, /etc/group, sudo
+05-package-management.md      — apt, pacman, dnf — packages and repositories
+06-services.md               — systemd, systemctl, service files
+07-boot-process.md           — BIOS/UEFI → GRUB → kernel → systemd
+08-logging.md                — journalctl, /var/log, logrotate, binary logs
+09-networking-basics.md       — IP, subnet, gateway, DNS, curl, ss
+10-storage-basics.md          — disks, partitions, filesystems, mount, fstab, LVM
+11-shell-basics.md           — bash, environment, PATH, aliases, history, pipes
+12-io-redirection.md         — stdin/stdout/stderr, pipes, tee, xargs, here-docs
+```
 
+## Sections
 
+### [[Linux/concepts/README|Concepts]] — Beginner curriculum
+Fundamentals: filesystem hierarchy, permissions, processes, users/groups, packages, services, boot, logging, networking, storage, shell, I/O redirection. Also: hardlinks/softlinks, ulimit, TTY/PTY, tmpfs, sockets, spool directory.
 
-## Main guide
+### [[Linux/kernel/README|Kernel]] — Kernel internals
+cgroups, /proc & /sys, signals, process management. Reference material for after you've gone through the concepts curriculum.
 
-Will take time, 4 months maybe, but if you dedicate just 4 hours a week, in 4-5 months, you can be assured that you will never be frightened by a 'linux issue'
+### [[Linux/networking/README|Networking]] — TCP/IP, firewall, DNS
+TCP/IP model, routing, iptables, firewalld, DNS resolution, ip command, dhcp, netplan, ss, network performance tuning.
 
-**Tip: There are 6 books, rotate your hour of learning between them so that you cover ground on each sitting.**
+### [[Linux/storage/README|Storage]] — Disks, LVM, filesystems
+Disks and partitions, LVM, RAID, filesystems (ext4, xfs, btrfs), mount and fstab, storage performance tuning.
 
-"http://linux-training.be/"
+### [[Linux/users-groups/README|Users & Groups]] — Identity and PAM
+User management, nologin accounts, sudo, /etc/passwd, /etc/shadow, /etc/group.
 
-## Arch Linux
+### [[Linux/boot-init/README|Boot & Init]] — Boot, systemd, scheduling
+Boot process, systemd, cron and anacron, systemd timers, systemd-tmpfiles, nohup and disown.
 
-Comprehensive guide to Arch Linux and Manjaro — rolling release distributions built on the KISS principle.
+### [[Linux/security/README|Security]] — Hardening and access control
+Capabilities, seccomp, AppArmor, auditd, chattr/lsattr, core dumps, device files, sysctl tuning, systemd service hardening, Linux CIS hardening, container security.
 
-**[[Linux/arch/README|Sections 1-5: Philosophy, Installation, AUR, System Admin, Networking]]**
+### [[Linux/virtualization/README|Virtualization]] — Containers and hypervisors
+Container runtimes (runc, containerd), podman, namespaces (mount, user, network), overlayfs, systemd-nspawn, hypervisors, emulator vs virtualization.
 
-## Commands
+### [[Linux/packaging/README|Packaging]] — apt, pacman
+apt, pacman — package management, repositories, AUR.
 
-Master this, read them everyday until they are imprinted for life.
+### [[Linux/observability/README|Observability]] — Monitoring and tracing
+top, vmstat, iostat, sar, strace, journalctl, log management.
 
-"https://davidjguru.github.io/blog/200-linux-commands-for-everyday-life"
+### [[Linux/shell-scripting/README|Shell Scripting]] — Bash scripting
+bash cheatsheet, shell redirection, here-docs, process substitution, shell expansion, exit codes.
 
-Will make you  a master of using linux practically. Give it a brisk read in one go, take notes of stuff you will need to dig into later, and then keep re-visiting this once in a while
-
-"https://github.com/jlevy/the-art-of-command-line"
-
-extra: [http://dsl.org/cookbook/cookbook\_toc.html](http://dsl.org/cookbook/cookbook_toc.html)
-
-"http://cristal.inria.fr/~weis/info/commandline.html"
-
-
-
+### [[Linux/troubleshooting/README|Troubleshooting]] — Debugging methodology
+Systematic debugging, common issues, diagnosis framework.

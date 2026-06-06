@@ -1,62 +1,241 @@
-# netplan
+---
+title: Netplan
+description: Netplan — YAML network configuration for systemd-networkd and NetworkManager, networkd backend, renderer
+tags:
+  - linux
+  - networking
+---
 
-**Netplan** is a modern network configuration utility for Linux systems, particularly Ubuntu. Introduced in Ubuntu 17.10, it replaces the traditional `/etc/network/interfaces` file, providing a unified and declarative approach to network configuration using YAML files. ([Netplan network configuration tutorial for beginners - LinuxConfig](https://linuxconfig.org/netplan-network-configuration-tutorial-for-beginners?utm_source=chatgpt.com))
+# Netplan
 
-***
+Netplan is Ubuntu's declarative network configuration layer. You write YAML configs describing what network state you want, and Netplan generates the corresponding configuration for either **systemd-networkd** or **NetworkManager** (the "renderer").
 
-#### 🔧 What Is Netplan?
+## The Idea
 
-Netplan serves as an abstraction layer that simplifies network configuration by allowing administrators to define network settings in YAML format. These configurations are then translated into settings for the underlying network management tools.
+```
+Traditional:  /etc/network/interfaces → ifupdown → kernel
+Modern:       Netplan YAML → netplan generate → systemd-networkd OR NetworkManager
+```
 
-***
+Netplan appeared in Ubuntu 17.10 and replaced the old `/etc/network/interfaces` approach.
 
-#### ⚙️ How Netplan Works
+## Config Files
 
-1. **Configuration Files**: Netplan reads YAML configuration files located in `/etc/netplan/`.
-2. **Renderers**: It supports two primary backends, known as "renderers":
-   * **systemd-networkd**: Ideal for servers and headless systems.
-   * **NetworkManager**: Suited for desktop environments and systems requiring dynamic network management.
-3. **Application**: During system boot, Netplan processes the YAML files and generates corresponding configuration files for the selected renderer, applying the network settings accordingly. ([Canonical Netplan](https://netplan.io/?utm_source=chatgpt.com), [Netplan network configuration tutorial for beginners - LinuxConfig](https://linuxconfig.org/netplan-network-configuration-tutorial-for-beginners?utm_source=chatgpt.com), [Netplan systemd-networkd and NetworkManager trio : r/Ubuntu](https://www.reddit.com/r/Ubuntu/comments/16oizuj/netplan_systemdnetworkd_and_networkmanager_trio/?utm_source=chatgpt.com))
+```bash
+# Where configs live:
+ls /etc/netplan/
+# 00-installer-config.yaml   # created by Ubuntu installer
+# 50-cloud-init.yaml         # cloud-init networking
 
-***
+# Additional drop-in directories (less common):
+/etc/netplan/
+/run/netplan/
+/lib/netplan/
+```
 
-#### 📝 Example Configuration
+Files are processed in **lexicographic order**, later files override earlier ones.
 
-Here's a sample Netplan configuration that sets a static IP address using `systemd-networkd`: ([Network configuration using Netplan - Akamai TechDocs](https://techdocs.akamai.com/cloud-computing/docs/network-configuration-using-netplan?utm_source=chatgpt.com))
+## Basic YAML Format
+
+```yaml
+# /etc/netplan/01-config.yaml
+network:
+  version: 2
+  renderer: networkd     # or: NetworkManager
+  ethernets:
+    eth0:
+      dhcp4: yes
+      # or for static:
+      # addresses:
+      #   - 192.168.1.100/24
+      # gateway4: 192.168.1.1          # deprecated, use routes
+      # nameservers:
+      #   addresses:
+      #     - 8.8.8.8
+      #     - 1.1.1.1
+```
+
+## Netplan and systemd-networkd (Server/Headless)
+
+Best for servers — minimal, no GUI dependency:
+
+```yaml
+# /etc/netplan/01-netcfg.yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: false
+      addresses:
+        - 192.168.1.100/24
+      gateway4: 192.168.1.1               # deprecated, use routes:
+      # routes:
+      #   - to: 0.0.0.0/0
+      #     via: 192.168.1.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 1.1.1.1
+        search:
+          - home.local
+```
+
+## Netplan and NetworkManager (Desktop)
+
+Best for desktops/laptops — NM handles WiFi, VPN, etc.:
+
+```yaml
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    eth0:
+      dhcp4: yes
+      dhcp6: yes
+    wlan0:
+      dhcp4: no
+      addresses:
+        - 192.168.2.100/24
+      gateway4: 192.168.2.1
+      nameservers:
+        addresses:
+          - 8.8.8.8
+```
+
+## Generating and Applying
+
+```bash
+# Generate backend configs from YAML (dry run)
+sudo netplan generate
+
+# Apply configuration (replaces current network config)
+sudo netplan apply
+
+# Debug
+sudo netplan apply --debug
+
+# If something breaks:
+# 1. Check generated config:
+ls /run/systemd/network/
+cat /run/systemd/network/10-netplan-eth0.network
+
+# 2. Revert to previous (reboot or systemctl restart)
+systemctl restart systemd-networkd
+```
+
+## Routes in Netplan
 
 ```yaml
 network:
   version: 2
   renderer: networkd
   ethernets:
-    enp3s0:
-      dhcp4: no
-      addresses: [192.168.1.100/24]
+    eth0:
+      addresses:
+        - 10.0.0.10/24
+      routes:
+        - to: 0.0.0.0/0
+          via: 10.0.0.1
+          metric: 100                    # lower = preferred
+        - to: 192.168.0.0/16
+          via: 10.0.0.254
+          metric: 200
+```
+
+## VLANs in Netplan
+
+```yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      addresses:
+        - 192.168.1.10/24
+  vlans:
+    eth0.100:
+      id: 100
+      link: eth0
+      addresses:
+        - 10.0.100.10/24
+```
+
+## Bonds in Netplan
+
+```yaml
+network:
+  version: 2
+  renderer: networkd
+  bonds:
+    bond0:
+      interfaces: [eth0, eth1]
+      addresses:
+        - 192.168.1.100/24
       gateway4: 192.168.1.1
       nameservers:
-        addresses: [8.8.8.8, 8.8.4.4]
+        addresses:
+          - 8.8.8.8
+      parameters:
+        mode: 802.3ad                    # LACP
+        transmit-hash-policy: layer2
+        mii-monitor-interval: 100ms
 ```
 
-To apply this configuration:
+## WiFi in Netplan (with NetworkManager)
+
+```yaml
+network:
+  version: 2
+  renderer: NetworkManager
+  wifis:
+    wlan0:
+      dhcp4: true
+      access-points:
+        "MyHomeWiFi":
+          password: "supersecret"
+      nameservers:
+        addresses:
+          - 8.8.8.8
+```
+
+## Complete Example: Two NICs, Different Networks
+
+```yaml
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: true
+    eth1:
+      addresses:
+        - 10.0.0.10/24
+      routes:
+        - to: 0.0.0.0/0
+          via: 10.0.0.1
+          metric: 100
+      nameservers:
+        addresses:
+          - 10.0.0.53
+        search:
+          - internal.corp
+```
+
+## Common Gotchas
 
 ```bash
-sudo netplan apply
+# 1. IP not applying — netplan generate + apply
+# netplan apply doesn't always reload; generate first
+sudo netplan generate && sudo netplan apply
+
+# 2. YAML indentation matters (2 spaces, no tabs!)
+# Indent with spaces only
+
+# 3. Missing routes — gateway4 is deprecated
+# Use the routes: - to: 0.0.0.0/0 via: X.X.X.X
+
+# 4. NetworkManager vs networkd mismatch
+# If renderer is NetworkManager but NM isn't running:
+systemctl enable --now NetworkManager
 ```
-
-***
-
-#### 🛠️ Netplan Commands
-
-* **`netplan generate`**: Generates configuration files for the chosen renderer.
-* **`netplan apply`**: Applies the current configuration.
-* **`netplan try`**: Applies the configuration temporarily, allowing rollback if issues are detected.
-* **`netplan set`**: Modifies settings in the configuration files.
-* **`netplan get`**: Displays the current configuration. ([How to Use the Netplan Network Configuration Tool on Linux](https://www.linux.com/topic/distributions/how-use-netplan-network-configuration-tool-linux/?utm_source=chatgpt.com))
-
-***
-
-#### 📚 Learn More
-
-For detailed documentation and advanced configurations, visit the [official Netplan documentation](https://netplan.io/). ([Canonical Netplan](https://netplan.io/?utm_source=chatgpt.com))
-
-***
