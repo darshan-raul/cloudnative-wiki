@@ -4,6 +4,6 @@
 
 <div data-full-width="true">
 
-<figure><img src="../../.gitbook/assets/image (237).png" alt=""><figcaption></figcaption></figure>
+[Diagram: HTTPS/TLS handshake illustration]
 
 </div>
