@@ -1,3 +1,0 @@
-# Lab videos
-
-"https://youtu.be/rP-W3Tv3plw?si=qr9ZU_f4Krm7vf5F"

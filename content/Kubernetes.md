@@ -11,12 +11,15 @@ Container orchestration platform.
 
 ## Sections
 
-### Getting Started
-- [[Kubernetes/concepts/README|Concepts]] - Components, workloads, services
-- [[Kubernetes/concepts/workloads|Workloads]] - Pods, Deployments, StatefulSets
+### Concepts (top-down learning path)
+- [[Kubernetes/concepts/00-hub|Concepts Hub]] - 10-level curriculum, read in order
+- [[Kubernetes/concepts/L00-start-here/00-start-here|00 — Start Here]] - prerequisites and mental model
+- [[Kubernetes/concepts/L01-architecture|01 — Architecture]] - control plane, nodes, namespaces
+- [[Kubernetes/concepts/L03-workloads|03 — Workloads]] - Pods, Deployments, StatefulSets
+- [[Kubernetes/concepts/L07-security|07 — Security]] - RBAC, ServiceAccounts, certificates
 
 ### Guides
-- [[Kubernetes/guides/README|Guides Index]]
+- [[Kubernetes/guides/README|Guides Index]] - tool & task walkthroughs
 - [[Kubernetes/guides/gitops|GitOps]] - Argo CD, Flux
 - [[Kubernetes/guides/ingress|Ingress]] - NGINX, Traefik
 - [[Kubernetes/guides/secrets-management|Secrets Management]]

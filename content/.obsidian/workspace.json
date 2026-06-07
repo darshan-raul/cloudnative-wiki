@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "8f61f4ccb09958a7",
+        "id": "1f2de7ca32b340c9",
         "type": "tabs",
         "children": [
           {
-            "id": "21a643313b1a921c",
+            "id": "550bf9cc5d5fb0be",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/disaster-recovery.md",
+                "file": "Linux/shell-scripting/bash-cheatsheet.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "disaster-recovery"
+              "title": "bash-cheatsheet"
             }
           }
         ]
@@ -183,43 +183,43 @@
       "bases:Create new base": false
     }
   },
-  "active": "21a643313b1a921c",
+  "active": "550bf9cc5d5fb0be",
   "lastOpenFiles": [
-    "Architecture/solution-architecture-concepts/migration-patterns/change-data-capture.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/back-of-the-envelope-calculations.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/capacity-planning.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability.md",
-    "Architecture/solution-architecture-concepts/migration-patterns/strangler-fig.md",
-    "Architecture/solution-architecture-concepts/migration-patterns/blue-green-deployments.md",
-    "Architecture/solution-architecture-concepts/api-design/cheatsheets.md",
-    "Architecture/solution-architecture-concepts/migration-patterns/README.md",
-    "Architecture/solution-architecture-concepts/migration-patterns/expand-contract.md",
-    "Architecture/solution-architecture-concepts/migration-patterns/data-migration.md",
-    "Architecture/solution-architecture-concepts/migration-patterns",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/disaster-recovery.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/security.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/maintainability.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/performance.md",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements/reliability.md",
-    "Architecture/solution-architecture-concepts/api-design/cap-theorem.md",
-    "Architecture/solution-architecture-concepts/api-design/12-factor-app.md",
-    "Architecture/solution-architecture-concepts/cluster-management/raft.md",
-    "Architecture/solution-architecture-concepts/PROGRESS.md",
-    "AWS.md",
-    "Architecture/solution-architecture-concepts/security/README.md",
-    "Architecture/solution-architecture-concepts/api-design/README.md",
-    "Architecture/solution-architecture-concepts/data-architecture/README.md",
-    "Architecture/solution-architecture-concepts/foundations/README.md",
-    "Architecture/solution-architecture-concepts/reliability/README.md",
-    "Architecture/solution-architecture-concepts/data-architecture/databases/postgres",
-    "Architecture/solution-architecture-concepts/data-architecture/databases/mongodb",
-    "Architecture/solution-architecture-concepts/data-architecture/databases",
-    "Architecture/solution-architecture-concepts/foundations/non-functional-requirements",
-    "Architecture/solution-architecture-concepts/data-architecture",
-    "Architecture/solution-architecture-concepts/api-design",
-    "Architecture/solution-architecture-concepts/security",
-    "Architecture/solution-architecture-concepts/reliability",
-    "Architecture/solution-architecture-concepts/foundations"
+    "Linux/shell-scripting/README.md",
+    "Linux/README.md",
+    "Resources/guides/databases/columnar-databases.md",
+    "Resources/guides/databases/views.md",
+    "Kubernetes/updates-along-the-versions.md",
+    "Kubernetes/troubleshooting.md",
+    "Kubernetes/client-go.md",
+    "Kubernetes/certifications/cka/lab-videos.md",
+    "Kubernetes/certifications/cka/README.md",
+    "Kubernetes/certifications/README.md",
+    "Kubernetes/certifications/ckad/services-and-networking.md",
+    "Kubernetes/certifications/ckad/README.md",
+    "Kubernetes/certifications/ckad/application-observability-and-maintenance.md",
+    "Kubernetes/certifications/ckad/application-design-and-build.md",
+    "Kubernetes/certifications/ckad/application-deployment.md",
+    "Kubernetes/concepts/L05-config-storage/02-secrets.md",
+    "Kubernetes/concepts/L05-config-storage/01-config-maps.md",
+    "Kubernetes/concepts/L00-start-here/00-start-here.md",
+    "Kubernetes/concepts/L01-architecture/00-README.md",
+    "Kubernetes/concepts/L01-architecture/01-setting-up-cluster.md",
+    "Kubernetes/concepts/L01-architecture/02-high-availability.md",
+    "Kubernetes/concepts/L01-architecture/03-namespaces.md",
+    "Kubernetes/concepts/L03-workloads/06-job.md",
+    "Kubernetes/concepts/L03-workloads/05-daemonset.md",
+    "Kubernetes/concepts/L03-workloads/04-statefulsets.md",
+    "Kubernetes/concepts/L03-workloads/03-deployments.md",
+    "Kubernetes/concepts/L09-advanced",
+    "Kubernetes/concepts/L08-operations",
+    "Kubernetes/concepts/L07-security",
+    "Kubernetes/concepts/L06-scheduling-scaling",
+    "Kubernetes/concepts/L05-config-storage",
+    "Kubernetes/concepts/L04-services-networking",
+    "Kubernetes/concepts/L03-workloads",
+    "Kubernetes/concepts/L02-objects",
+    "Kubernetes/concepts/L01-architecture",
+    "Kubernetes/concepts/L00-start-here"
   ]
 }

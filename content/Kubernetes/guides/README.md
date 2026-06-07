@@ -1,46 +1,47 @@
 # Guides
 
+Tool & task walkthroughs on top of core concepts. If you're new to k8s, read [[Kubernetes/concepts/00-hub|Concepts]] first — guides assume you know the vocabulary.
+
 ## Kubernetes Tools
 
-- [[kubectl]] - Kubernetes CLI
-- [[k9s]] - Terminal UI for Kubernetes clusters
-- [[context-switching]] - Managing multiple kubeconfigs
-- [[multi-cluster]] - Multi-cluster strategies
+- [[Kubernetes/guides/kubectl|kubectl]] - Kubernetes CLI
+- [[Kubernetes/guides/tools/k9s|k9s]] - Terminal UI for Kubernetes clusters
+- [[Kubernetes/guides/context-switching|context-switching]] - Managing multiple kubeconfigs
+- [[Kubernetes/guides/multi-cluster|multi-cluster]] - Multi-cluster strategies
 
 ## Infrastructure
 
-- [[cluster-uprades]] - Upgrading Kubernetes clusters
-- [[cluster-api]] - Cluster API
-- [[cost-management]] - Kubernetes cost optimization
+- [[Kubernetes/guides/cluster-uprades|cluster-uprades]] - Upgrading Kubernetes clusters
+- [[Kubernetes/guides/cluster-api|cluster-api]] - Cluster API
+- [[Kubernetes/guides/cost-management|cost-management]] - Kubernetes cost optimization
 
 ## Networking
 
-- [[ingress]] - Ingress controllers
-- [[envoy-gateway]] - Envoy Gateway API gateway
-- [[service-mesh]] - Service mesh implementations
-- [[k8s-networking-deep-dive]] - Networking internals
+- [[Kubernetes/guides/ingress|ingress]] - Ingress controllers
+- [[Kubernetes/guides/envoy-gateway|envoy-gateway]] - Envoy Gateway API gateway
+- [[Kubernetes/guides/service-mesh|service-mesh]] - Service mesh implementations
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|k8s-networking-deep-dive]] - Networking internals (concept-level deep dive)
 
 ## Operations
 
-- [[logging]] - Logging strategies
-- [[troubleshooting]] - Common issues
-- [[backup-restore]] - Backup strategies
-- [[auto-scaling]] - HPA, VPA, KEDA
+- [[Kubernetes/guides/logging|logging]] - Logging strategies
+- [[Kubernetes/guides/troubleshooting|troubleshooting]] - Common issues
+- [[Kubernetes/guides/backup-restore|backup-restore]] - Backup strategies
+- [[Kubernetes/guides/auto-scaling|auto-scaling]] - HPA, VPA, KEDA
 
 ## Security
 
-- [[secret-management]] - Managing secrets
-- [[security-scanning]] - Image scanning
-- [[authentication]] - Auth strategies
+- [[Kubernetes/guides/secret-management|secret-management]] - Managing secrets
+- [[Kubernetes/guides/security-scanning|security-scanning]] - Image scanning
+- [[Kubernetes/guides/authentication|authentication]] - Auth strategies
 
 ## Application Delivery
 
-- [[gitops]] - GitOps workflows
-- [[helm]] - Helm package management
-- [[templating-patching]] - Kustomize and patches
+- [[Kubernetes/guides/gitops|gitops]] - GitOps workflows
+- [[Kubernetes/guides/templating-patching|helm]] - Helm package management
+- [[Kubernetes/guides/templating-patching|templating-patching]] - Kustomize and patches
 
 ## Specialized Workloads
 
-- [[stateful-workloads]] - StatefulSets
-- [[databases]] - Database operators
-- [[service-mesh]] - Istio, Linkerd
+- [[Kubernetes/guides/stateful-workloads|stateful-workloads]] - StatefulSets
+- [[Kubernetes/guides/databases|databases]] - Database operators
