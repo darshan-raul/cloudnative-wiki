@@ -1,0 +1,104 @@
+# Scenario 02 — Multiple hostnames, one Gateway
+# Two apps, two hostnames, same listener. Hostname intersection is what binds
+# each route to this Gateway.
+#
+# Verify:
+#   curl -H "Host: app1.example.com" http://127.0.0.1/ -i | head
+#   curl -H "Host: app2.example.com" http://127.0.0.1/ -i | head
+#   (different X-App-Name header in response)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1
+  namespace: app
+  labels: { app: app1 }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: app1 } }
+  template:
+    metadata: { labels: { app: app1 } }
+    spec:
+      containers:
+      - name: app1
+        image: mendhak/http-https-echo:32
+        env:
+        - name: HTTP_ECHO_BACKEND_TEXT
+          value: "this is app1"
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1
+  namespace: app
+spec:
+  selector: { app: app1 }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app2
+  namespace: app
+  labels: { app: app2 }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: app2 } }
+  template:
+    metadata: { labels: { app: app2 } }
+    spec:
+      containers:
+      - name: app2
+        image: mendhak/http-https-echo:32
+        env:
+        - name: HTTP_ECHO_BACKEND_TEXT
+          value: "this is app2"
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app2
+  namespace: app
+spec:
+  selector: { app: app2 }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app1-route
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg
+    namespace: infra
+  hostnames: ["app1.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: app1
+      port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app2-route
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg
+    namespace: infra
+  hostnames: ["app2.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: app2
+      port: 80

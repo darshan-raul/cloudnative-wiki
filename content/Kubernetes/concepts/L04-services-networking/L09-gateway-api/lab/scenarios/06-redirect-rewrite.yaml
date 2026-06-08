@@ -1,0 +1,81 @@
+# Scenario 06 — Redirect and URL rewrite (filters)
+# Two spec filters:
+#   - RequestRedirect: 308 / new path  (terminates the request, client retries)
+#   - URLRewrite:      silently rewrites the path before forwarding upstream
+#                      (the client never sees the change)
+#
+# Verify:
+#   # Redirect
+#   curl -sS -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
+#     -H "Host: rewrites.example.com" http://127.0.0.1/old/path
+#   expect: 308 -> http://rewrites.example.com/new/path/
+#
+#   # URL rewrite (silent)
+#   curl -sS -H "Host: rewrites.example.com" -H "X-Test: rewrite" \
+#     http://127.0.0.1/legacy/api/v1 -i
+#   expect: 200 (path was rewritten to /api/v1 internally)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rewrite-target
+  namespace: app
+  labels: { app: rewrite-target }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: rewrite-target } }
+  template:
+    metadata: { labels: { app: rewrite-target } }
+    spec:
+      containers:
+      - name: rewrite-target
+        image: mendhak/http-https-echo:32
+        env:
+        - name: HTTP_ECHO_BACKEND_TEXT
+          value: "rewrite-target: ok"
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rewrite-target
+  namespace: app
+spec:
+  selector: { app: rewrite-target }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: rewrites
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg
+    namespace: infra
+  hostnames: ["rewrites.example.com"]
+  rules:
+  # Redirect: /old/* -> /new/* (308 with path replace)
+  - matches:
+    - path: { type: PathPrefix, value: /old }
+    filters:
+    - type: RequestRedirect
+      requestRedirect:
+        statusCode: 308
+        path:
+          type: ReplacePrefixMatch
+          replacement: /new
+  # URL rewrite: /legacy/api/v1 -> /api/v1 internally
+  - matches:
+    - path: { type: PathPrefix, value: /legacy/api/v1 }
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          type: ReplacePrefixMatch
+          replacement: /api/v1
+    backendRefs:
+    - name: rewrite-target
+      port: 80

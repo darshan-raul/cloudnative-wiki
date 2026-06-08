@@ -1,0 +1,150 @@
+# Scenario 16 — Gateway merging (shared data plane)
+# Two Gateway objects, same GatewayClass, same listener port+protocol
+# are normally `Conflicted`. With merging enabled on the GatewayClass,
+# they share a single data plane Deployment.
+#
+# Use case: multi-tenant Gateway objects with shared infra (DNS, cert, IP).
+#
+# IMPORTANT: in EG v1.3+ you opt in by labeling the GatewayClass:
+#   gateway.envoyproxy.io/merge: "true"
+# (the default GatewayClass from install.sh doesn't have this label, so
+# before applying this scenario, patch the GatewayClass.)
+#
+# Verify:
+#   # Patch the GatewayClass to enable merging
+#   kubectl label gatewayclass eg gateway.envoyproxy.io/merge=true --overwrite
+#
+#   kubectl apply -f 16-gateway-merge.yaml
+#
+#   # Confirm there's only ONE data plane Deployment for both Gateways
+#   kubectl get deploy -n infra -l gateway.envoyproxy.io/owning-gateway-name
+#   # You should see 2 Gateway controllers, but only 1 envoy proxy per
+#   # listener merge group.
+#
+#   curl -H "Host: tenant-a.example.com" http://127.0.0.1/ -i
+#   curl -H "Host: tenant-b.example.com" http://127.0.0.1/ -i
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-a
+  namespace: app
+  labels: { app: tenant-a }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: tenant-a } }
+  template:
+    metadata: { labels: { app: tenant-a } }
+    spec:
+      containers:
+      - name: tenant-a
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "tenant-a" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-a
+  namespace: app
+spec:
+  selector: { app: tenant-a }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-b
+  namespace: app
+  labels: { app: tenant-b }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: tenant-b } }
+  template:
+    metadata: { labels: { app: tenant-b } }
+    spec:
+      containers:
+      - name: tenant-b
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "tenant-b" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tenant-b
+  namespace: app
+spec:
+  selector: { app: tenant-b }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# Two Gateways, same listener, will be merged into one data plane
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: tenant-a-gw
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: tenant-a-gw
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces: { from: All }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: tenant-b-gw
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: tenant-b-gw
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces: { from: All }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tenant-a-route
+  namespace: app
+spec:
+  parentRefs:
+  - name: tenant-a-gw
+    namespace: infra
+  hostnames: ["tenant-a.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: tenant-a
+      port: 80
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tenant-b-route
+  namespace: app
+spec:
+  parentRefs:
+  - name: tenant-b-gw
+    namespace: infra
+  hostnames: ["tenant-b.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: tenant-b
+      port: 80

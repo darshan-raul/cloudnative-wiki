@@ -1,0 +1,104 @@
+# Scenario 11 — Cross-namespace routing with ReferenceGrant
+# Topology:
+#   - Gateway: infra/eg-cross (the infra team owns this)
+#   - HTTPRoute: app-a/xroute (the app-a team owns this)
+#   - Service: app-b/shared-api (the app-b team owns this)
+#   - ReferenceGrant: app-b/allow-app-a (app-b team approves app-a reading)
+#
+# Without the ReferenceGrant, the route's `ResolvedRefs` condition will be
+# `RefNotPermitted`. With it, the route is allowed to point cross-namespace.
+#
+# Verify:
+#   curl -H "Host: cross.example.com" http://127.0.0.1/ -i
+#   # 200 from shared-api in app-b
+#
+#   # Before applying the ReferenceGrant:
+#   kubectl describe httproute xroute -n app-a | grep ResolvedRefs
+#   # RefNotPermitted
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shared-api
+  namespace: app-b
+  labels: { app: shared-api }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: shared-api } }
+  template:
+    metadata: { labels: { app: shared-api } }
+    spec:
+      containers:
+      - name: shared-api
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "shared-api (app-b)" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shared-api
+  namespace: app-b
+spec:
+  selector: { app: shared-api }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# The consumer (app-a) writes this HTTPRoute that points at app-b's Service.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: xroute
+  namespace: app-a
+spec:
+  parentRefs:
+  - name: eg-cross
+    namespace: infra
+  hostnames: ["cross.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - group: ""
+      kind: Service
+      name: shared-api
+      namespace: app-b     # <-- the cross-namespace pointer
+      port: 80
+---
+# The OWNER of app-b writes this ReferenceGrant to approve the cross-ns read.
+# Without this, the HTTPRoute's ResolvedRefs=False, reason=RefNotPermitted.
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-app-a
+  namespace: app-b
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: app-a
+  to:
+  - group: ""
+    kind: Service
+---
+# A second Gateway: same listener port+protocol as the baseline `eg`, but in
+# the same namespace. The two Gateways will conflict on port 80 by default;
+# we use a different port on the NodePort and rely on the merged data plane.
+# For simplicity here we run a SECOND data plane on a different nodeport.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: eg-cross
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: eg-cross
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All

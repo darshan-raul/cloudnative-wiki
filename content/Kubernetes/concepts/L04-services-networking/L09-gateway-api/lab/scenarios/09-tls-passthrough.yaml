@@ -1,0 +1,149 @@
+# Scenario 09 — TLS passthrough
+# The gateway does NOT terminate TLS. It forwards the encrypted stream to the
+# upstream, which handles TLS itself. Routing is by SNI (TLSRoute).
+#
+# Use case: backend owns its cert (legacy app, sidecar, custom CA, etc.)
+#
+# Verify:
+#   curl -k --resolve passthrough.example.com:443:127.0.0.1 \
+#     https://passthrough.example.com/ -i
+#   # 200 from the backend
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned
+  namespace: infra
+spec:
+  selfSigned: {}
+---
+# Cert for the BACKEND, not the gateway. The backend serves this cert.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: passthrough-backend-cert
+  namespace: app
+spec:
+  secretName: passthrough-backend-tls
+  dnsNames:
+  - passthrough.example.com
+  issuerRef:
+    name: selfsigned
+    kind: Issuer
+---
+# A simple TLS echo backend. We use `nginx` with a TLS-only config.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: passthrough-target
+  namespace: app
+  labels: { app: passthrough-target }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: passthrough-target } }
+  template:
+    metadata: { labels: { app: passthrough-target } }
+    spec:
+      containers:
+      - name: passthrough-target
+        image: nginx:1.27-alpine
+        ports: [{ containerPort: 8443 }]
+        volumeMounts:
+        - name: tls
+          mountPath: /etc/nginx/ssl
+          readOnly: true
+        - name: conf
+          mountPath: /etc/nginx/conf.d
+          readOnly: true
+      volumes:
+      - name: tls
+        secret:
+          secretName: passthrough-backend-tls
+      - name: conf
+        configMap:
+          name: passthrough-nginx-conf
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: passthrough-nginx-conf
+  namespace: app
+data:
+  default.conf: |
+    server {
+      listen 8443 ssl;
+      server_name passthrough.example.com;
+      ssl_certificate     /etc/nginx/ssl/tls.crt;
+      ssl_certificate_key /etc/nginx/ssl/tls.key;
+      location / {
+        return 200 "passthrough backend: ok\n";
+        add_header Content-Type text/plain;
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: passthrough-target
+  namespace: app
+spec:
+  selector: { app: passthrough-target }
+  ports:
+  - port: 443
+    targetPort: 8443
+---
+# ReferenceGrant: TLSRoute in `app` references a Service in `app` (same ns, not
+# strictly required, but illustrates the pattern). Useful when a different
+# ns owns the backend.
+apiVersion: gateway.networking.k8s.io/v1
+kind: TLSRoute
+metadata:
+  name: passthrough
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg-tls-passthrough
+    namespace: infra
+  hostnames: ["passthrough.example.com"]
+  rules:
+  - backendRefs:
+    - name: passthrough-target
+      port: 443
+---
+# Gateway with TLS passthrough listener
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: eg-tls-passthrough
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: eg-tls-passthrough
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: tls-passthrough
+    port: 443
+    protocol: TLS
+    tls:
+      mode: Passthrough
+    allowedRoutes:
+      kinds:
+      - kind: TLSRoute
+      namespaces:
+        from: All
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eg-tls-passthrough-nodeport
+  namespace: infra
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: eg-tls-passthrough
+    gateway.envoyproxy.io/owning-gateway-name: eg-tls-passthrough
+  ports:
+  - name: tls
+    port: 443
+    targetPort: 8443
+    nodePort: 30001

@@ -1,0 +1,121 @@
+# Scenario 08 — TLS termination at the gateway (edge mode)
+# We mint a self-signed cert for "edge.example.com" and terminate TLS at the proxy.
+# The upstream is plain HTTP.
+#
+# Production: replace the self-signed Issuer with `letsencrypt-prod` (or your CA)
+# and add the dnsNames you actually need in the Certificate spec.
+#
+# Verify:
+#   curl -k --resolve edge.example.com:443:127.0.0.1 https://edge.example.com/ -i
+#   # 200 from the echo app
+#   # Inspect the cert:
+#   openssl s_client -connect 127.0.0.1:443 -servername edge.example.com </dev/null \
+#     2>/dev/null | openssl x509 -noout -subject -issuer -dates
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned
+  namespace: infra
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: edge-cert
+  namespace: infra
+spec:
+  secretName: edge-tls
+  dnsNames:
+  - edge.example.com
+  issuerRef:
+    name: selfsigned
+    kind: Issuer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-target
+  namespace: app
+  labels: { app: edge-target }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: edge-target } }
+  template:
+    metadata: { labels: { app: edge-target } }
+    spec:
+      containers:
+      - name: edge-target
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "edge: ok" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-target
+  namespace: app
+spec:
+  selector: { app: edge-target }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# A separate Gateway with an HTTPS listener (alongside the existing HTTP listener
+# on the baseline Gateway). TLS is terminated here.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: eg-tls
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: eg-tls
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - kind: Secret
+        name: edge-tls
+    allowedRoutes:
+      namespaces:
+        from: All
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: edge
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg-tls
+    namespace: infra
+  hostnames: ["edge.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: edge-target
+      port: 80
+---
+# A NodePort service exposing the new Gateway's data plane on host:443
+apiVersion: v1
+kind: Service
+metadata:
+  name: eg-tls-nodeport
+  namespace: infra
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: eg-tls
+    gateway.envoyproxy.io/owning-gateway-name: eg-tls
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8443
+    nodePort: 30001

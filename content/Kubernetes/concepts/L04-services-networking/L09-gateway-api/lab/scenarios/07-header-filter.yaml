@@ -1,0 +1,82 @@
+# Scenario 07 — Request/response header filter
+# Adds, sets, and removes headers. Use cases:
+#   - inject tracing IDs / correlation IDs
+#   - strip internal headers before forwarding
+#   - rewrite Host header for vhosts
+#   - add security headers in response
+#
+# Verify:
+#   curl -sS -D - -H "Host: headers.example.com" -H "X-Internal: secret" \
+#     http://127.0.0.1/headers -o /tmp/body
+#   # In response body, look for:
+#   #   "X-Routed-By": "envoy-gateway"        (added)
+#   #   "X-Internal": ""                      (removed before upstream)
+#   # In response headers:
+#   #   X-Gateway-Version: v1.4.0            (added in response)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: header-target
+  namespace: app
+  labels: { app: header-target }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: header-target } }
+  template:
+    metadata: { labels: { app: header-target } }
+    spec:
+      containers:
+      - name: header-target
+        image: mendhak/http-https-echo:32
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: header-target
+  namespace: app
+spec:
+  selector: { app: header-target }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: headers
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg
+    namespace: infra
+  hostnames: ["headers.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    filters:
+    # Add and remove request headers before forwarding upstream
+    - type: RequestHeaderModifier
+      requestHeaderModifier:
+        add:
+        - name: X-Routed-By
+          value: "envoy-gateway"
+        - name: X-Request-Id
+          value: "gw-injected-id"
+        set:
+        - name: X-Forwarded-Host
+          value: "headers.example.com"
+        remove:
+        - "X-Internal"
+    # Modify response headers on the way back
+    - type: ResponseHeaderModifier
+      responseHeaderModifier:
+        add:
+        - name: X-Gateway-Version
+          value: "v1.4.0"
+        remove:
+        - "Server"
+    backendRefs:
+    - name: header-target
+      port: 80

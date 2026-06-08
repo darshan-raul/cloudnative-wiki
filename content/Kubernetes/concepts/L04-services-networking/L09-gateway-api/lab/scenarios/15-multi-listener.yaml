@@ -1,0 +1,151 @@
+# Scenario 15 — Multiple listeners on one Gateway
+# One Gateway, two listeners: HTTP (port 80) and HTTPS (port 443) with TLS.
+# Different routes can attach to different listeners via `parentRefs.sectionName`.
+#
+# This is the "vhost + TLS" pattern. Useful when you want all traffic for a
+# hostname in a single Gateway but want to expose it on both protocols
+# (e.g., the HTTP listener just redirects to HTTPS).
+#
+# Verify:
+#   # HTTP -> 308 redirect to HTTPS
+#   curl -sS -o /dev/null -w "%{http_code} -> %{redirect_url}\n" \
+#     -H "Host: dual.example.com" http://127.0.0.1/
+#   # 308 -> https://dual.example.com/
+#
+#   # HTTPS -> 200
+#   curl -k --resolve dual.example.com:443:127.0.0.1 \
+#     https://dual.example.com/ -i
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned
+  namespace: infra
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dual-cert
+  namespace: infra
+spec:
+  secretName: dual-tls
+  dnsNames: [dual.example.com]
+  issuerRef: { name: selfsigned, kind: Issuer }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dual-target
+  namespace: app
+  labels: { app: dual-target }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: dual-target } }
+  template:
+    metadata: { labels: { app: dual-target } }
+    spec:
+      containers:
+      - name: dual-target
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "dual: ok" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dual-target
+  namespace: app
+spec:
+  selector: { app: dual-target }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+# The Gateway has TWO listeners
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: eg-dual
+  namespace: infra
+  labels:
+    app.kubernetes.io/name: eg-dual
+spec:
+  gatewayClassName: eg
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces: { from: All }
+  - name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - kind: Secret
+        name: dual-tls
+    allowedRoutes:
+      namespaces: { from: All }
+---
+# HTTP route: just redirect to HTTPS
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: dual-http
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg-dual
+    namespace: infra
+    sectionName: http
+  hostnames: ["dual.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    filters:
+    - type: RequestRedirect
+      requestRedirect:
+        statusCode: 308
+        scheme: https
+---
+# HTTPS route: actually serve traffic
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: dual-https
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg-dual
+    namespace: infra
+    sectionName: https
+  hostnames: ["dual.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: dual-target
+      port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eg-dual-nodeport
+  namespace: infra
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: eg-dual
+    gateway.envoyproxy.io/owning-gateway-name: eg-dual
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    nodePort: 30000
+  - name: https
+    port: 443
+    targetPort: 8443
+    nodePort: 30001

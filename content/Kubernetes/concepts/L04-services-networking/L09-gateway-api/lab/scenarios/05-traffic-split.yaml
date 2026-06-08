@@ -1,0 +1,86 @@
+# Scenario 05 — Traffic split / canary
+# 90% to v1, 10% to v2. Native to Gateway API via backendRefs[].weight.
+# No annotations, no Lua. The implementation computes the split.
+#
+# Verify:
+#   for i in $(seq 1 20); do curl -s -H "Host: canary.example.com" http://127.0.0.1/ | grep -oE 'v[12]'; done | sort | uniq -c
+#   expect roughly 18 "v1" and 2 "v2"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-v1
+  namespace: app
+  labels: { app: canary-v1 }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: canary-v1 } }
+  template:
+    metadata: { labels: { app: canary-v1 } }
+    spec:
+      containers:
+      - name: canary-v1
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "v1" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-v1
+  namespace: app
+spec:
+  selector: { app: canary-v1 }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-v2
+  namespace: app
+  labels: { app: canary-v2 }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: canary-v2 } }
+  template:
+    metadata: { labels: { app: canary-v2 } }
+    spec:
+      containers:
+      - name: canary-v2
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "v2" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-v2
+  namespace: app
+spec:
+  selector: { app: canary-v2 }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: canary
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg
+    namespace: infra
+  hostnames: ["canary.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: canary-v1
+      port: 80
+      weight: 90
+    - name: canary-v2
+      port: 80
+      weight: 10

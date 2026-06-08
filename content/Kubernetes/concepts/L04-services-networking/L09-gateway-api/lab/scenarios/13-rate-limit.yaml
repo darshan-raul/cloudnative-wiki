@@ -1,0 +1,77 @@
+# Scenario 13 — Local rate limiting (EG SecurityPolicy)
+# Each client IP gets at most 10 requests per 30s. Excess returns 429.
+#
+# Local rate limit (in-process) is fine for a single-proxy setup. For
+# cluster-wide rate limiting (multiple Gateway replicas), enable the
+# `envoy-ratelimit` subchart with Redis backend (see install.sh --with-ratelimit).
+#
+# Verify:
+#   for i in $(seq 1 15); do
+#     curl -sS -o /dev/null -w "%{http_code}\n" -H "Host: rate.example.com" http://127.0.0.1/
+#   done
+#   # expect ~10 "200" and ~5 "429"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rate-target
+  namespace: app
+  labels: { app: rate-target }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: rate-target } }
+  template:
+    metadata: { labels: { app: rate-target } }
+    spec:
+      containers:
+      - name: rate-target
+        image: mendhak/http-https-echo:32
+        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "rate: ok" }]
+        ports: [{ containerPort: 8080 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rate-target
+  namespace: app
+spec:
+  selector: { app: rate-target }
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: rate
+  namespace: app
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: rate
+  rateLimit:
+    local:
+      rules:
+      - clientSelectors:
+        - sourceIP
+        limit:
+          requests: 10
+          unit: Minute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: rate
+  namespace: app
+spec:
+  parentRefs:
+  - name: eg
+    namespace: infra
+  hostnames: ["rate.example.com"]
+  rules:
+  - matches:
+    - path: { type: PathPrefix, value: / }
+    backendRefs:
+    - name: rate-target
+      port: 80
