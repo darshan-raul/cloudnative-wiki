@@ -181,6 +181,13 @@
   },
   "active": "fe6a17a35e3658b9",
   "lastOpenFiles": [
+    "Kubernetes/guides/troubleshooting/ingress-404.md",
+    "Kubernetes/guides/troubleshooting/pvc-stuck.md",
+    "Kubernetes/guides/troubleshooting/node-not-ready.md",
+    "Kubernetes/guides/troubleshooting/dns-resolution.md",
+    "Kubernetes/guides/troubleshooting/service-unreachable.md",
+    "Kubernetes/guides/troubleshooting/image-pull.md",
+    "Kubernetes/guides/troubleshooting/pod-pending.md",
     "Kubernetes/guides/tools/lens.md",
     "Kubernetes/guides/tools/multi-cluster.md",
     "Kubernetes/guides/tools/context-switching.md",
@@ -209,13 +216,6 @@
     "Kubernetes/guides/tools/k9s.md",
     "Kubernetes/guides/best-practices.md",
     "Kubernetes/guides/api-management.md",
-    "Kubernetes/guides/tools/tools.md",
-    "Kubernetes/guides/tools/multiple-tools.md",
-    "Kubernetes/guides/networking/envoy-gateway.md",
-    "Kubernetes/guides/infrastructure/cost-management.md",
-    "Kubernetes/guides/infrastructure/stateful-workloads.md",
-    "Kubernetes/guides/infrastructure/private-image-registry.md",
-    "Kubernetes/guides/infrastructure/high-availability.md",
-    "Kubernetes/guides/infrastructure/federation.md"
+    "Kubernetes/guides/tools/tools.md"
   ]
 }
