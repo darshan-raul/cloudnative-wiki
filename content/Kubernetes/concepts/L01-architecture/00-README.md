@@ -20,22 +20,22 @@ What runs inside a Kubernetes cluster, and where. Once this is clear, every othe
 
 ## Notes in this level
 
-| Note | Status | What's in it |
+|| Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L01-architecture/01-setting-up-cluster\|Setting up a Cluster]] | 🟡 | Ways to run a local/dev cluster (k3s, kind, minikube), and a real-cluster primer (kubeadm, the-hard-way) |
-| [[Kubernetes/concepts/L01-architecture/02-high-availability\|High Availability]] | ✅ | etcd quorum, multi-master, control-plane failure modes |
-| [[Kubernetes/concepts/L01-architecture/03-namespaces\|Namespaces]] | ✅ | What namespaces are, default limits, when to use them |
-| [[Kubernetes/concepts/L01-architecture/04-local-deployment\|Local Deployment]] | ⚪ | Running k8s locally for dev (k3d, kind, minikube comparison) |
-| [[Kubernetes/concepts/L01-architecture/05-need-for-swapoff\|Need for swapoff]] | ⚪ | Why kubelet refuses to run on a node with swap enabled |
-| [[Kubernetes/concepts/L01-architecture/06-what-happens-when\|What Happens When…]] | ⚪ | End-to-end trace of a `kubectl apply` through every component |
+|| [[Kubernetes/concepts/L01-architecture/01-setting-up-cluster\|Setting up a Cluster]] | ✅ | kubeadm, the-hard-way, managed clusters, cloud-native bootstrap patterns |
+|| [[Kubernetes/concepts/L01-architecture/02-high-availability\|High Availability]] | ✅ | etcd quorum, multi-master, control-plane failure modes, stacked vs external |
+|| [[Kubernetes/concepts/L01-architecture/03-namespaces\|Namespaces]] | ✅ | Namespace model, default namespace, resource limits, namespace deletion lifecycle |
+|| [[Kubernetes/concepts/L01-architecture/04-local-deployment\|Local Deployment]] | ✅ | k3d, kind, minikube comparison, dev cluster patterns |
+|| [[Kubernetes/concepts/L01-architecture/05-need-for-swapoff\|Need for swapoff]] | ✅ | Why kubelet requires swap disabled, cgroup memory pressure, swap vs memory limits |
+|| [[Kubernetes/concepts/L01-architecture/06-what-happens-when\|What Happens When…]] | ✅ | End-to-end trace: kubectl apply → etcd → scheduler → kubelet → container runtime |
 
 ## Suggested reading order
 
-1. [[Kubernetes/concepts/L01-architecture/01-setting-up-cluster|Setting up a Cluster]] — get a cluster running
+1. [[Kubernetes/concepts/L01-architecture/01-setting-up-cluster|Setting up a Cluster]] — get a cluster running first
 2. [[Kubernetes/concepts/L01-architecture/03-namespaces|Namespaces]] — the first thing to know to organize anything
 3. [[Kubernetes/concepts/L01-architecture/02-high-availability|High Availability]] — what "production" means in k8s
 4. [[Kubernetes/concepts/L01-architecture/06-what-happens-when|What Happens When…]] — tie it all together with a request trace
-5. The other two are reference notes — read when you hit the topic in practice
+5. [[Kubernetes/concepts/L01-architecture/04-local-deployment|Local Deployment]] — after you understand the components, set up your dev environment
 
 ## Where to go next
 

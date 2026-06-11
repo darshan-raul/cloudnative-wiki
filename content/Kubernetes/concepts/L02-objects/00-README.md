@@ -15,14 +15,15 @@ The Kubernetes **API is the product**. Everything you do — `kubectl apply`, a 
 - The universal shape: `apiVersion` / `kind` / `metadata` / `spec` / `status`
 - The difference between **desired state** (spec) and **observed state** (status)
 - How the **reconciliation loop** drives current → desired
-- The Downward API — how a pod can read its own metadata
+- The **field selectors and labels** — how you query and filter objects
+- The **apiGroups** structure — how versioning and grouping work
 
 ## Notes in this level
 
-| Note | Status | What's in it |
+|| Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|Kubernetes Objects]] | ✅ | The universal object shape, why spec/status, manifests vs live state |
-| [[Kubernetes/concepts/L02-objects/02-downward-api\|Downward API]] | 🟡 | Injecting pod/field metadata into a container at runtime |
+|| [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|Kubernetes Objects]] | ✅ | The universal object shape, manifest anatomy, dry-run, field selectors, apiGroups |
+|| [[Kubernetes/concepts/L02-objects/02-downward-api\|Downward API]] | ✅ | Injecting pod metadata into containers — env vars, volume mounts, field ref path syntax |
 
 ## Suggested reading order
 
