@@ -1,6 +1,13 @@
-# Networking (L04 Overview)
+---
+title: Networking (L04 Overview)
+tags:
+  - Kubernetes
+  - Networking
+  - L04
+date: 2024-02-10
+---
 
-*"https://kubernetes.io/docs/concepts/cluster-administration/networking/"*
+*Sources: [k8s networking docs](https://kubernetes.io/docs/concepts/cluster-administration/networking/), [CNI spec](https://github.com/containernetworking/cni/blob/master/SPEC.md), [kube-proxy doc](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/)*
 
 This note is the **mental model** for L04 — a frame to hang the deeper notes on. It covers the k8s network model, the four questions you have to answer for any cluster, and the relationship between Services, DNS, Ingress, NetworkPolicy, and the CNI.
 
@@ -32,22 +39,22 @@ Every note in L04 answers one or more of these.
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  Application (Pod)                                    │
+│  Application (Pod)                                  │
 │  ┌──────────┐  ┌──────────┐                          │
-│  │  app     │  │  sidecar │  ← Pod's network ns      │
+│  │  app     │  │  sidecar │  ← Pod's network ns     │
 │  └────┬─────┘  └────┬─────┘                          │
-│       │             │                                 │
-│       └──────┬──────┘  ← localhost on Pod IP         │
-│              │                                        │
-│  ──────────── │ ─────────────────────────────         │
-│              ▼                                        │
-│        eth0 (veth)                                    │
-│              │                                        │
-│  ════════════ │ ════════════════════════════         │
-│              │                                        │
-│   veth (host side) ──── bridge / route table          │
-│              │                                        │
-│         node's network interface                      │
+│       │             │                                │
+│       └──────┬──────┘  ← localhost on Pod IP        │
+│              │                                       │
+│  ──────────── │ ─────────────────────────────        │
+│              ▼                                       │
+│        eth0 (veth)                                   │
+│              │                                       │
+│  ════════════ │ ════════════════════════════        │
+│              │                                       │
+│   veth (host side) ──── bridge / route table        │
+│              │                                       │
+│         node's network interface                     │
 └──────────────────────────────────────────────────────┘
                 │
                 │   ← the CNI's domain ends here
@@ -135,18 +142,185 @@ This has a few consequences:
 * **A single Pod making many requests shares a SNAT port.** If you have a NodePort Service, the SNAT port can collide. Some clouds have SNAT port exhaustion issues.
 * **You can block egress with NetworkPolicy.** A `policyTypes: [Egress]` rule with no `to:` clauses denies all egress.
 
-## The "Service mesh" question
+## kube-proxy: the three modes
 
-If you have a lot of microservices, you eventually want:
+Every node runs a `kube-proxy` pod that programs packet forwarding rules. Three modes:
 
-* mTLS between services
-* Retries and circuit breaking
-* Distributed tracing
-* L7 routing (e.g. route 10% of `/checkout` traffic to v2)
+### iptables mode (default)
 
-These are **L7 features** that a plain ClusterIP Service doesn't give you. A **service mesh** (Istio, Linkerd, Cilium's service mesh features) is the typical answer: a sidecar proxy in every Pod that handles these features.
+kube-proxy writes iptables NAT rules for every Service. On a cluster with 5,000 Services, this means hundreds of thousands of iptables rules in the kernel's netfilter pipeline.
 
-Service mesh is a different layer than what's in L04. It's covered separately — see [[Kubernetes/concepts/guides/service-mesh|service-mesh]].
+**Pros:** Universal, works everywhere, simple.
+**Cons:** Linear scan through rules — O(n) where n = number of Services + Pods. Slows down as the cluster grows. Rule updates are atomic but slow (reload whole ruleset).
+
+```bash
+# see the iptables rules kube-proxy creates for a Service
+iptables -t nat -L KUBE-SERVICES | grep <service-name>
+iptables -t nat -L KUBE-NEWPORTS | grep <service-name>
+```
+
+### IPVS mode (recommended for large clusters)
+
+kube-proxy uses the Linux kernel's IPVS (IP Virtual Server) subsystem. IPVS is a hash-table-based Layer 4 load balancer — O(1) lookups regardless of how many Services exist.
+
+**Pros:** Scales to thousands of Services without packet-loss slowdown. Supports richer load-balancing algorithms (round-robin, least-conn, source-hash).
+**Cons:** Requires the `ip_vs` kernel modules loaded. Slightly more complex to debug.
+
+```bash
+# verify IPVS is active
+lsmod | grep ip_vs
+# see IPVS virtual servers
+ipvsadm -L -n
+```
+
+To enable IPVS, set the kube-proxy config:
+
+```yaml
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: "ipvs"
+ipvs:
+  scheduler: "least-conn"  # or "round-robin", "sourcehash"
+```
+
+### eBPF mode (modern, Cilium/ingkube-native)
+
+kube-proxy is replaced by eBPF programs attached to network interfaces. The kernel itself handles Service NAT — no iptables, no IPVS, just the kernel's fast path.
+
+**Pros:** Near-line-rate performance, per-connection tracking, built-in observability (Cilium).
+**Cons:** Requires a CNI that supports it (Cilium, aws-cni with eBPF mode). Kernel version >= 4.19 for most features.
+
+```
+┌─────────────────────────────────────────┐
+│  Pod sends to ClusterIP                 │
+│         ↓                               │
+│  eBPF program on veth interface         │
+│  (kernel, no userspace routing)          │
+│         ↓                               │
+│  NAT happens in kernel netfilter        │
+│         ↓                               │
+│  Packet forwarded to backend Pod IP     │
+└─────────────────────────────────────────┘
+```
+
+## CNI: what it actually does
+
+The CNI is called by the container runtime (containerd, CRI-O) at two moments: when a Pod is created (ADD) and when it's deleted (DEL). The CNI's job:
+
+1. **Allocate an IP** for the Pod's network namespace from the cluster's Pod CIDR
+2. **Create a veth pair** — one end in the Pod, one on the host
+3. **Bridge or route** — attach the host-side veth to a bridge or wire it into the routing table
+4. **Program routes** — tell the node how to reach the Pod CIDR (via overlay or underlay)
+5. **Set up egress** — NAT rules for outbound traffic
+
+The CNI spec is just JSON over stdin/stdout. A CNI plugin is any executable that speaks that protocol.
+
+```json
+# CNI ADD call (simplified)
+{
+  "cniVersion": "1.0.0",
+  "name": "k8s-pod-network",
+  "netns": "/var/run/netns/...",
+  "ifInterfaces": [{"name": "eth0", "sandbox": "..."}],
+  "prevResult": {...}
+}
+```
+
+## CNI implementations compared
+
+| CNI | Overlay/Underlay | NetworkPolicy | Performance | Best for |
+|-----|-----------------|---------------|-------------|----------|
+| **Calico** | BGP (underlay) or VXLAN (overlay) | Yes (rich) | High (BGP) | On-prem, multi-node, policy-heavy |
+| **Cilium** | eBPF-based | Yes (L7) | Highest | Cloud-native, observability-first |
+| **Flannel** | VXLAN (overlay) | No | Medium | Simple clusters, quick setup |
+| **Weave** | sleeve (overlay) | Yes | Medium | Multi-cloud, simple operational model |
+| **AWS VPC CNI** | Underlay (ENI) | Yes (native) | Highest | EKS, AWS-native |
+| **Azure CNI** | Overlay/underlay hybrid | Yes | High | AKS |
+| **GKE Dataplane V2** | eBPF (GKE-native) | Yes (L7) | Highest | GKE, Google-native |
+
+**The rule:** never use a CNI without NetworkPolicy support in production. Flannel is great for dev/minikube but insufficient for anything with security requirements.
+
+## DNS: how names resolve to IPs
+
+Kubernetes runs **CoreDNS** as the cluster DNS. Every Pod automatically gets DNS config pointing to `kube-dns.kube-system.svc.cluster.local`.
+
+### What CoreDNS resolves
+
+```
+# standard Service
+web.default.svc.cluster.local → 10.96.0.100
+
+# short name (from within default namespace)
+web → 10.96.0.100
+
+# headless Service (no ClusterIP)
+web.default.svc.cluster.local → pod1-ip, pod2-ip, pod3-ip
+# client picks one (client-side load balancing)
+
+# StatefulSet headless
+mysql-0.mysql.default.svc.cluster.local → <pod-ip>
+```
+
+### The `ndots` problem
+
+By default, Pods try 5 search domains before giving up on a name. If you query `mysql`, it tries:
+
+```
+mysql.default.svc.cluster.local
+mysql.svc.cluster.local
+mysql.cluster.local
+mysql (with ndots=5 → tries external DNS last)
+```
+
+For a busy app making many external calls, this adds 4 failed lookups per request. Fix:
+
+```yaml
+# in your Pod spec
+dnsConfig:
+  options:
+    - name: ndots
+      value: "2"    # only append search domains when name has <2 dots
+```
+
+### CoreDNS tuning
+
+```yaml
+# ConfigMap for CoreDNS
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+    .:53 {
+      forward . 8.8.8.8  # upstream resolvers
+      cache 30           # cache TTL
+      loadbalance        # round-robin A records
+    }
+```
+
+## Service types: a quick decision guide
+
+```
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│  ClusterIP   │  │  NodePort    │  │ LoadBalancer │  │ ExternalName │
+│  (internal)  │  │  (fixed port)│  │  (cloud LB)  │  │  (CNAME)     │
+└──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+```
+
+| Type | External access | Use when |
+|------|----------------|---------|
+| **ClusterIP** | No | Internal-only services |
+| **NodePort** | `<node-ip>:<port>` | Dev, on-prem, simple external access |
+| **LoadBalancer** | Cloud LB provisioned | Cloud-hosted k8s (AWS/GCP/Azure) |
+| **ExternalName** | CNAME to external name | Migration, aliasing external services |
+
+Headless Services (`clusterIP: None`) give you direct Pod IPs — no load balancing, no ClusterIP. Useful for:
+
+* StatefulSets where clients need to discover individual Pods
+* Custom client-side load balancing
+* Running your own service discovery
 
 ## When the model breaks
 
@@ -163,6 +337,64 @@ It gets harder when:
 * **Strict network isolation** — some compliance regimes (PCI-DSS, certain DoD configurations) require **no flat network** between tenants. Default-deny NetworkPolicy is the standard approach.
 * **IPv4 address exhaustion** — a `/16` is 65k Pods, which sounds like a lot until you have a busy cluster. Some clusters use IPv6, dual-stack, or aggressive CIDR design.
 
+## The "Service mesh" question
+
+If you have a lot of microservices, you eventually want:
+
+* mTLS between services
+* Retries and circuit breaking
+* Distributed tracing
+* L7 routing (e.g. route 10% of `/checkout` traffic to v2)
+
+These are **L7 features** that a plain ClusterIP Service doesn't give you. A **service mesh** (Istio, Linkerd, Cilium's service mesh features) is the typical answer: a sidecar proxy in every Pod that handles these features.
+
+Service mesh is a different layer than what's in L04. It's covered separately — see [[Kubernetes/concepts/guides/service-mesh|service-mesh]].
+
+## Real packet walkthrough: Service to Pod
+
+Let's go layer by layer for `curl http://api-svc:8080/api/users` from `client` Pod to `api` Pod:
+
+```
+┌─ client pod namespace ──────────────────────────────────┐
+│  ┌──────────────┐    eth0 (veth pair)                   │
+│  │ curl process │ ──→ 10.244.1.15:random-port          │
+│  └──────────────┘                                       │
+└────────────────────│────────────────────────────────────┘
+                     │ packet: src=10.244.1.15, dst=10.96.0.42
+                     ▼
+┌─ node-1 (host) ──────────────────────────────────────────┐
+│  veth-xxx (host side)                                   │
+│        ↓                                                │
+│  bridge (cbr0 or similar)                               │
+│        ↓                                                │
+│  iptables PREROUTING / FORWARD                          │
+│        ↓  ← DNAT: 10.96.0.42 → 10.244.2.30            │
+│  routing table                                          │
+│        ↓  ← dst 10.244.2.30 via node-2                 │
+│  eth0 (node-1)                                          │
+└────────────────────│────────────────────────────────────┘
+                     │ VXLAN or direct route to node-2
+                     ▼
+┌─ node-2 (host) ──────────────────────────────────────────┐
+│  eth0 (node-2)                                          │
+│        ↓                                                │
+│  routing: 10.244.2.30 → veth-yyy (host side)           │
+│        ↓                                                │
+│  veth-yyy (host side)                                   │
+└────────────────────│────────────────────────────────────┘
+                     │ packet: src=10.244.1.15, dst=10.244.2.30
+                     ▼
+┌─ api pod namespace ─────────────────────────────────────┐
+│  veth-yyy (pod side) = eth0                             │
+│        ↓                                                │
+│  ┌──────────────────────────────┐                       │
+│  │ nginx / go process on :8080 │  ← application layer  │
+│  └──────────────────────────────┘                       │
+└─────────────────────────────────────────────────────────┘
+```
+
+Return packet reverses the path, with SNAT applied at node egress.
+
 ## Gotchas (cross-cutting, L04)
 
 * **"Why is my Service unreachable?"** — the most common network problem. Check (1) is the Pod `Ready`? (2) are the Endpoints populated? (3) is kube-proxy running on the node? (4) is there a NetworkPolicy blocking it?
@@ -173,6 +405,9 @@ It gets harder when:
 * **MTU mismatches break things silently.** An overlay (VXLAN) typically has 50-100 bytes of overhead. If the underlying network has MTU 1500, the overlay's effective MTU is 1400-1450. Mismatched MTUs cause mysterious packet loss and slow connections.
 * **Dual-stack IPv4/IPv6 requires both the apiserver and the CNI to support it.** And the nodes need routable IPv6 addresses. Not all clouds do this well.
 * **Service ClusterIPs are not routable from outside the cluster.** Even if you can ping them, you can't actually reach them from outside. NodePort / LoadBalancer / Ingress are the only ways in.
+* **kube-proxy runs as a DaemonSet** — one pod per node. If it's not running, that node can't route Service traffic.
+* **The node's kernel `ip_forward` must be enabled** — the CNI sets this, but double-check if Pod-to-Pod traffic is broken.
+* **Pod CIDR allocation is per-node.** The CNI allocates a slice of the Pod CIDR to each node. If a node runs out of its slice, no new Pods can be scheduled there until you adjust CIDR ranges.
 
 ## The bigger picture
 
