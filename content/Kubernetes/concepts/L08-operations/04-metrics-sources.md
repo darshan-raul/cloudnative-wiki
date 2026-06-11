@@ -141,6 +141,6 @@ The full path for, say, "average Pod memory usage":
 
 ## Where to go for the deployment side
 
-* [[Kubernetes/guides/prometheus|Prometheus on k8s]] (in Guides) — full stack setup
+* Prometheus is the de-facto k8s monitoring stack. See [[Kubernetes/eks/observability/metrics/prometheus]] for the EKS observability guide.
 * `metrics-server` deployment — usually via the `metrics-server` Helm chart or k8s add-on
 * `kube-state-metrics` — usually via Helm or kube-prometheus-stack

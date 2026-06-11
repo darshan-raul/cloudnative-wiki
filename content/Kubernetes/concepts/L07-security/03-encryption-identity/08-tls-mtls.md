@@ -267,7 +267,7 @@ For each, you need:
 2. **Certs per service** (or per instance) — issued by cert-manager.
 3. **The app configured** to use the certs (paths, formats).
 
-cert-manager (the de-facto k8s cert tool) automates this. See [[Kubernetes/guides/cert-manager|the cert-manager section]].
+cert-manager (the de-facto k8s cert tool) automates this. See [[Kubernetes/eks/advanced/advanced-networking]] for EKS-specific cert setup.
 
 ### 8.1 cert-manager's place in the L07 cluster
 

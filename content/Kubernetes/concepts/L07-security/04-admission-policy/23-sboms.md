@@ -860,6 +860,6 @@ cosign sign myregistry/myapp:1.0.0.sbom
 * [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — for admission-level enforcement
 * [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for admission-level enforcement (YAML)
 * [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — the regulatory context
-* [[Kubernetes/guides/security-scanning|security-scanning]] — image scanning in practice
-* [[Kubernetes/guides/image-signing|image-signing]] — image signing in practice
-* [[Kubernetes/guides/supply-chain-security|supply-chain-security]] — the bigger picture
+* [[Kubernetes/guides/security/security-scanning|security-scanning]] — image scanning in practice
+* [[Kubernetes/guides/security/image-signing|image-signing]] — image signing in practice
+* See [[Kubernetes/guides/security/image-signing]] (Cosign, Notary) and [[Kubernetes/guides/security/security-scanning]] (image scanning) for the supply-chain tooling layer.

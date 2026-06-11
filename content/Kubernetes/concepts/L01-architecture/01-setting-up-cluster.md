@@ -296,5 +296,5 @@ The path from "I have a cluster" to "I have a production cluster" is 80% install
 * [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — what runs on every node to give Pods IPs
 * [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — the cluster's source of truth, and how to back it up
 * [[Kubernetes/eks/README|EKS]] — AWS-managed k8s
-* [[Kubernetes/guides/cluster-api|Cluster API Guide]] — declarative cluster management
+* [[Kubernetes/guides/infrastructure/cluster-api|Cluster API Guide]] — declarative cluster management
 * [[Kubernetes/concepts/L01-architecture/04-local-deployment|Local Deployment]] — detailed local-cluster comparison
