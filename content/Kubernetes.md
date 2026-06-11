@@ -21,13 +21,13 @@ Container orchestration platform.
 ### Guides
 - [[Kubernetes/guides/README|Guides Index]] - tool & task walkthroughs
 - [[Kubernetes/guides/delivery/gitops|GitOps]] - Argo CD, Flux
-- [[Kubernetes/guides/networking/ingress|Ingress]] - NGINX, Traefik
-- [[Kubernetes/guides/security/secrets-management-README|Secrets Management]]
+- [[Kubernetes/guides/networking/README|Ingress]] - NGINX, Traefik
+- [[Kubernetes/guides/non-functional/security-baseline|Secrets Management]]
 
 ### Advanced
 - [[Kubernetes/eks/README|EKS]] - AWS Elastic Kubernetes Service
-- [[Kubernetes/guides/networking/service-mesh|Service Mesh]] - Istio, Linkerd
-- [[Kubernetes/guides/security/policy-engine|Policy Engine]] - Kyverno, OPA
+- [[Kubernetes/guides/networking/service-mesh/README|Service Mesh]] - Istio, Linkerd
+- [[Kubernetes/guides/non-functional/security-baseline|Policy Engine]] - Kyverno, OPA
 
 ### Certification
 - [[Kubernetes/certifications/README|CKA/CKAD]]

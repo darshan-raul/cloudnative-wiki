@@ -69,7 +69,7 @@ spec:
 Your vault already has extensive K8s security content:
 - `Kubernetes/eks/security/` — EKS-specific security
 - `Kubernetes/concepts/security.md` — K8s security concepts
-- `Kubernetes/guides/zero-cve-images.md` — Image security
+- `Kubernetes/guides/README.md` — Image security
 
 ## Related
 

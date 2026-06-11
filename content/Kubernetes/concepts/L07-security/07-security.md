@@ -256,6 +256,6 @@ For a **complete read**: follow one of the four reading paths in the README (API
 * [[Kubernetes/concepts/L07-security/00-README|L07 README]] — the full note list
 * [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — the network layer
 * [[Kubernetes/eks/security/README|EKS Security]] — AWS-specific details
-* [[Kubernetes/guides/security/security-scanning|security-scanning]] — image scanning in practice
-* [[Kubernetes/guides/security/image-signing|image-signing]] — image signing in practice
-* [[Kubernetes/guides/security/secrets-management-README|secrets-management]] — external secret stores
+* [[Kubernetes/guides/delivery/ci-cd-integration|security-scanning]] — image scanning in practice
+* [[Kubernetes/guides/delivery/ci-cd-integration|image-signing]] — image signing in practice
+* [[Kubernetes/guides/non-functional/security-baseline|secrets-management]] — external secret stores

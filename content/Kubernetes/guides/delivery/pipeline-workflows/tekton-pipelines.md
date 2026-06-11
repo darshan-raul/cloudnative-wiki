@@ -1,2 +1,0 @@
-# Tekton Pipelines
-

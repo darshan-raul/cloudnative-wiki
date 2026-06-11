@@ -1140,5 +1140,5 @@ If you're on k8s 1.29+, use a native sidecar. Otherwise, accept the workaround o
 | DaemonSet (per-node helpers) | [[Kubernetes/concepts/L03-workloads/05-daemonset\|05 — DaemonSet]] |
 | Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
 | Security context | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
-| Service mesh (Istio/Linkerd) | [[Kubernetes/guides/networking/service-mesh\|Guides — Service Mesh]] |
+| Service mesh (Istio/Linkerd) | [[Kubernetes/guides/networking/service-mesh/README\|Guides — Service Mesh]] |
 | Pod networking (CNI, Pod IPs) | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]] |
