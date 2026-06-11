@@ -41,53 +41,53 @@ This level covers all five.
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L07-security/01-authentication-authorization\|AuthN vs AuthZ]] | ✅ | The split, the chain, OIDC, impersonation, anonymous auth footgun |
-| [[Kubernetes/concepts/L07-security/02-service-accounts\|ServiceAccounts]] | ✅ | Bound tokens, projected volumes, IRSA, automount, default SA footgun |
-| [[Kubernetes/concepts/L07-security/03-rbac\|RBAC]] | ✅ | Role/ClusterRole/Binding, verbs, subresources, aggregation, impersonate/escalate |
-| [[Kubernetes/concepts/L07-security/04-certificates\|Certificates]] | ✅ | Full cluster PKI, CAs, kubelet cert rotation, front-proxy CA |
+| [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization\|AuthN vs AuthZ]] | ✅ | The split, the chain, OIDC, impersonation, anonymous auth footgun |
+| [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts\|ServiceAccounts]] | ✅ | Bound tokens, projected volumes, IRSA, automount, default SA footgun |
+| [[Kubernetes/concepts/L07-security/01-api-access/03-rbac\|RBAC]] | ✅ | Role/ClusterRole/Binding, verbs, subresources, aggregation, impersonate/escalate |
+| [[Kubernetes/concepts/L07-security/01-api-access/04-certificates\|Certificates]] | ✅ | Full cluster PKI, CAs, kubelet cert rotation, front-proxy CA |
 
 ### Workload sandboxing (PSS, SecurityContext, seccomp, AppArmor, runtime)
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L07-security/05-security-context\|SecurityContext]] | ✅ | Every field, the runAsUser/Group, capabilities, readOnlyRootFilesystem, seccomp |
-| [[Kubernetes/concepts/L07-security/06-pod-security-standards\|PSS]] | ✅ | The three profiles, enforce/audit/warn, namespace labels, migration cookbook |
-| [[Kubernetes/concepts/L07-security/16-seccomp-apparmor\|Seccomp / AppArmor]] | ✅ | Kernel-level filters, RuntimeDefault, Localhost, profile generation |
-| [[Kubernetes/concepts/L07-security/17-runtime-sandboxing\|Runtime Sandboxing]] | ✅ | gVisor, Kata Containers, RuntimeClass, performance / compatibility tradeoffs |
-| [[Kubernetes/concepts/L07-security/18-runtime-detection\|Runtime Detection]] | ✅ | Falco, Tetragon, eBPF, the philosophy (detect vs prevent) |
-| [[Kubernetes/concepts/L07-security/19-image-hardening\|Image Hardening]] | ✅ | distroless, scratch, multi-stage, vulnerability scanning, image signing, SBOM |
+| [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|SecurityContext]] | ✅ | Every field, the runAsUser/Group, capabilities, readOnlyRootFilesystem, seccomp |
+| [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards\|PSS]] | ✅ | The three profiles, enforce/audit/warn, namespace labels, migration cookbook |
+| [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor\|Seccomp / AppArmor]] | ✅ | Kernel-level filters, RuntimeDefault, Localhost, profile generation |
+| [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing\|Runtime Sandboxing]] | ✅ | gVisor, Kata Containers, RuntimeClass, performance / compatibility tradeoffs |
+| [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection\|Runtime Detection]] | ✅ | Falco, Tetragon, eBPF, the philosophy (detect vs prevent) |
+| [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening\|Image Hardening]] | ✅ | distroless, scratch, multi-stage, vulnerability scanning, image signing, SBOM |
 
 ### Encryption and identity in transit (TLS, mTLS, SPIFFE, etcd / Secret encryption)
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L07-security/08-tls-mtls\|TLS / mTLS]] | ✅ | TLS handshake, mTLS, in-cluster mTLS, cert rotation, the cluster CA bundle |
-| [[Kubernetes/concepts/L07-security/09-spiffe-spire\|SPIFFE / SPIRE]] | ✅ | Workload identity, SVIDs, the trust bundle, service-mesh mTLS |
-| [[Kubernetes/concepts/L07-security/13-etcd-encryption\|etcd Encryption]] | ✅ | EncryptionConfiguration, KMS providers, envelope encryption, key rotation |
-| [[Kubernetes/concepts/L07-security/14-secret-encryption\|Secret Encryption]] | ✅ | The three states (at rest, in transit, in use), external managers, ESO, sealed-secrets, SOPS |
+| [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls\|TLS / mTLS]] | ✅ | TLS handshake, mTLS, in-cluster mTLS, cert rotation, the cluster CA bundle |
+| [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire\|SPIFFE / SPIRE]] | ✅ | Workload identity, SVIDs, the trust bundle, service-mesh mTLS |
+| [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption\|etcd Encryption]] | ✅ | EncryptionConfiguration, KMS providers, envelope encryption, key rotation |
+| [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption\|Secret Encryption]] | ✅ | The three states (at rest, in transit, in use), external managers, ESO, sealed-secrets, SOPS |
 
 ### Admission control and policy engines
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L07-security/10-admission-controllers\|Admission Controllers]] | ✅ | The mutating/validating pipeline, built-in plugins, dynamic webhooks, side effects |
-| [[Kubernetes/concepts/L07-security/11-opa-gatekeeper\|OPA / Gatekeeper]] | ✅ | Rego policies, ConstraintTemplates, audit mode, multi-system policy |
-| [[Kubernetes/concepts/L07-security/12-kyverno\|Kyverno]] | ✅ | YAML policies, validate/mutate/generate, image signature verification, CEL |
-| [[Kubernetes/concepts/L07-security/23-sboms\|SBOMs]] | ✅ | SPDX / CycloneDX formats, generation, signing, VEX, k8s cluster scanning, regulatory context |
+| [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers\|Admission Controllers]] | ✅ | The mutating/validating pipeline, built-in plugins, dynamic webhooks, side effects |
+| [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper\|OPA / Gatekeeper]] | ✅ | Rego policies, ConstraintTemplates, audit mode, multi-system policy |
+| [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno\|Kyverno]] | ✅ | YAML policies, validate/mutate/generate, image signature verification, CEL |
+| [[Kubernetes/concepts/L07-security/04-admission-policy/23-sboms\|SBOMs]] | ✅ | SPDX / CycloneDX formats, generation, signing, VEX, k8s cluster scanning, regulatory context |
 
 ### Audit and operations
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L07-security/15-audit-logging\|Audit Logging]] | ✅ | The audit policy, log levels (Metadata / Request / RequestResponse), stages, backends |
-| [[Kubernetes/concepts/L07-security/20-cluster-hardening\|Cluster Hardening]] | ✅ | Apiserver flags, etcd, kubelet, control plane lockdown |
-| [[Kubernetes/concepts/L07-security/21-node-hardening\|Node Hardening]] | ✅ | Host OS, container runtime, kernel parameters, kubelet config in depth |
+| [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging\|Audit Logging]] | ✅ | The audit policy, log levels (Metadata / Request / RequestResponse), stages, backends |
+| [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening\|Cluster Hardening]] | ✅ | Apiserver flags, etcd, kubelet, control plane lockdown |
+| [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening\|Node Hardening]] | ✅ | Host OS, container runtime, kernel parameters, kubelet config in depth |
 
 ### Compliance
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L07-security/22-compliance-frameworks\|Compliance Frameworks]] | ✅ | NIST 800-190, CIS Kubernetes Benchmark, OWASP k8s Top 10, SLSA, PCI-DSS/SOC2/HIPAA/FedRAMP |
+| [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks\|Compliance Frameworks]] | ✅ | NIST 800-190, CIS Kubernetes Benchmark, OWASP k8s Top 10, SLSA, PCI-DSS/SOC2/HIPAA/FedRAMP |
 
 ### Overview
 
@@ -99,37 +99,37 @@ This level covers all five.
 
 ### Path 1: API access (the foundation)
 
-1. [[Kubernetes/concepts/L07-security/01-authentication-authorization|AuthN vs AuthZ]] — the conceptual split
-2. [[Kubernetes/concepts/L07-security/02-service-accounts|ServiceAccounts]] — the workload identity
-3. [[Kubernetes/concepts/L07-security/03-rbac|RBAC]] — the authorization model
-4. [[Kubernetes/concepts/L07-security/04-certificates|Certificates]] — the PKI
-5. [[Kubernetes/concepts/L07-security/08-tls-mtls|TLS / mTLS]] — transport security
-6. [[Kubernetes/concepts/L07-security/09-spiffe-spire|SPIFFE / SPIRE]] — workload identity for service mesh
+1. [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|AuthN vs AuthZ]] — the conceptual split
+2. [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — the workload identity
+3. [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — the authorization model
+4. [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the PKI
+5. [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — transport security
+6. [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire|SPIFFE / SPIRE]] — workload identity for service mesh
 
 ### Path 2: Workload hardening (what pods are allowed to do)
 
-1. [[Kubernetes/concepts/L07-security/05-security-context|SecurityContext]] — per-container knobs
-2. [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — apply it cluster-wide
-3. [[Kubernetes/concepts/L07-security/16-seccomp-apparmor|Seccomp / AppArmor]] — kernel-level filters
-4. [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — what code can run
-5. [[Kubernetes/concepts/L07-security/23-sboms|SBOMs]] — what's in the image, with signatures
-6. [[Kubernetes/concepts/L07-security/10-admission-controllers|Admission Controllers]] — where policy is enforced
-7. [[Kubernetes/concepts/L07-security/12-kyverno|Kyverno]] — k8s-native policies
-8. [[Kubernetes/concepts/L07-security/11-opa-gatekeeper|OPA / Gatekeeper]] — Rego-based policies
+1. [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — per-container knobs
+2. [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — apply it cluster-wide
+3. [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — kernel-level filters
+4. [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — what code can run
+5. [[Kubernetes/concepts/L07-security/04-admission-policy/23-sboms|SBOMs]] — what's in the image, with signatures
+6. [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — where policy is enforced
+7. [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — k8s-native policies
+8. [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — Rego-based policies
 
 ### Path 3: Encryption and detection
 
-1. [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]] — at-rest encryption
-2. [[Kubernetes/concepts/L07-security/14-secret-encryption|Secret Encryption]] — secrets in flight
-3. [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] — the forensic record
-4. [[Kubernetes/concepts/L07-security/18-runtime-detection|Runtime Detection]] — Falco / Tetragon
-5. [[Kubernetes/concepts/L07-security/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata
+1. [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — at-rest encryption
+2. [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — secrets in flight
+3. [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — the forensic record
+4. [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco / Tetragon
+5. [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata
 
 ### Path 4: Operations and compliance
 
-1. [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — control plane
-2. [[Kubernetes/concepts/L07-security/21-node-hardening|Node Hardening]] — per-node
-3. [[Kubernetes/concepts/L07-security/22-compliance-frameworks|Compliance Frameworks]] — NIST / CIS / OWASP
+1. [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — control plane
+2. [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — per-node
+3. [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — NIST / CIS / OWASP
 
 ## The "defense in depth" stack
 

@@ -242,7 +242,7 @@ For most production clusters, **service mesh is the default**. The tradeoff is o
 * Certs are issued by the mesh's control plane (Istiod for Istio, linkerd-identity for Linkerd).
 * Certs are short-lived (24h for Istio, 24h for Linkerd) and auto-rotated.
 
-This is the **zero-trust networking** model. See [[Kubernetes/concepts/L07-security/09-spiffe-spire|SPIFFE / SPIRE]] for the underlying identity model.
+This is the **zero-trust networking** model. See [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire|SPIFFE / SPIRE]] for the underlying identity model.
 
 ### 7.2 STRICT vs PERMISSIVE mTLS
 
@@ -267,7 +267,7 @@ For each, you need:
 2. **Certs per service** (or per instance) — issued by cert-manager.
 3. **The app configured** to use the certs (paths, formats).
 
-cert-manager (the de-facto k8s cert tool) automates this. See [[Kubernetes/concepts/L07-security/10-cert-manager-deprecated|the cert-manager section]].
+cert-manager (the de-facto k8s cert tool) automates this. See [[Kubernetes/guides/cert-manager|the cert-manager section]].
 
 ### 8.1 cert-manager's place in the L07 cluster
 
@@ -512,8 +512,8 @@ journalctl -u kubelet | grep apiserver
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/04-certificates|Certificates]] — the cluster PKI
-* [[Kubernetes/concepts/L07-security/09-spiffe-spire|SPIFFE / SPIRE]] — workload identity for service-mesh mTLS
-* [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]] — encrypting data at rest
-* [[Kubernetes/concepts/L07-security/14-secret-encryption|Secret Encryption]] — encrypting Secrets in etcd
+* [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the cluster PKI
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire|SPIFFE / SPIRE]] — workload identity for service-mesh mTLS
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — encrypting data at rest
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — encrypting Secrets in etcd
 * [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — encrypting network traffic (with mTLS)

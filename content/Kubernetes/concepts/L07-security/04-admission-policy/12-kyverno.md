@@ -300,7 +300,7 @@ verifyImages:
           -----END PUBLIC KEY-----
 ```
 
-The policy rejects Pods whose images aren't signed by the listed keys. See [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] for the full supply chain picture.
+The policy rejects Pods whose images aren't signed by the listed keys. See [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] for the full supply chain picture.
 
 ## 8. ClusterPolicy vs Policy
 
@@ -666,7 +666,7 @@ curl localhost:8000/metrics
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/11-opa-gatekeeper|OPA / Gatekeeper]] — the alternative policy engine
-* [[Kubernetes/concepts/L07-security/10-admission-controllers|Admission Controllers]] — where Kyverno fits
-* [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — the built-in alternative
-* [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — image signature verification
+* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — the alternative policy engine
+* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — where Kyverno fits
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the built-in alternative
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — image signature verification

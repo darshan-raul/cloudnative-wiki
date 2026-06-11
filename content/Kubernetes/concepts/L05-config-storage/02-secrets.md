@@ -330,7 +330,7 @@ In practice:
 ## See also
 
 * [[Kubernetes/concepts/L05-config-storage/01-config-maps|ConfigMaps]] — the non-sensitive cousin
-* [[Kubernetes/concepts/L07-security/02-service-accounts|ServiceAccounts]] — bound tokens, the modern way
+* [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — bound tokens, the modern way
 * [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — for mounted-as-a-file Secrets
 * [[Kubernetes/eks/security/secrets-management|EKS Secrets Management]] — AWS-specific
 * [[Kubernetes/guides/secrets-management|Secrets Management Guide]] — practical patterns

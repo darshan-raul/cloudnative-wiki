@@ -299,23 +299,23 @@ A mapping of L07 notes to common controls:
 
 | Control | L07 Note(s) |
 |---|---|
-| **Anonymous auth disabled** | [[Kubernetes/concepts/L07-security/01-authentication-authorization\|AuthN/AuthZ]] |
-| **RBAC** | [[Kubernetes/concepts/L07-security/03-rbac\|RBAC]] |
-| **PSS** | [[Kubernetes/concepts/L07-security/06-pod-security-standards\|PSS]] |
-| **SecurityContext** | [[Kubernetes/concepts/L07-security/05-security-context\|SecurityContext]] |
-| **seccomp / AppArmor** | [[Kubernetes/concepts/L07-security/16-seccomp-apparmor\|Seccomp / AppArmor]] |
+| **Anonymous auth disabled** | [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization\|AuthN/AuthZ]] |
+| **RBAC** | [[Kubernetes/concepts/L07-security/01-api-access/03-rbac\|RBAC]] |
+| **PSS** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards\|PSS]] |
+| **SecurityContext** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|SecurityContext]] |
+| **seccomp / AppArmor** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor\|Seccomp / AppArmor]] |
 | **NetworkPolicy** | [[Kubernetes/concepts/L04-services-networking/05-network-policy\|NetworkPolicy]] (L04) |
-| **mTLS** | [[Kubernetes/concepts/L07-security/08-tls-mtls\|TLS / mTLS]] |
-| **SPIFFE** | [[Kubernetes/concepts/L07-security/09-spiffe-spire\|SPIFFE / SPIRE]] |
-| **Admission policies** | [[Kubernetes/concepts/L07-security/10-admission-controllers\|Admission Controllers]], [[Kubernetes/concepts/L07-security/11-opa-gatekeeper\|OPA]], [[Kubernetes/concepts/L07-security/12-kyverno\|Kyverno]] |
-| **etcd encryption** | [[Kubernetes/concepts/L07-security/13-etcd-encryption\|etcd Encryption]] |
-| **Secret encryption** | [[Kubernetes/concepts/L07-security/14-secret-encryption\|Secret Encryption]] |
-| **Audit logging** | [[Kubernetes/concepts/L07-security/15-audit-logging\|Audit Logging]] |
-| **Runtime sandboxing** | [[Kubernetes/concepts/L07-security/17-runtime-sandboxing\|Runtime Sandboxing]] |
-| **Runtime detection** | [[Kubernetes/concepts/L07-security/18-runtime-detection\|Runtime Detection]] |
-| **Image hardening** | [[Kubernetes/concepts/L07-security/19-image-hardening\|Image Hardening]] |
-| **Cluster hardening** | [[Kubernetes/concepts/L07-security/20-cluster-hardening\|Cluster Hardening]] |
-| **Node hardening** | [[Kubernetes/concepts/L07-security/21-node-hardening\|Node Hardening]] |
+| **mTLS** | [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls\|TLS / mTLS]] |
+| **SPIFFE** | [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire\|SPIFFE / SPIRE]] |
+| **Admission policies** | [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers\|Admission Controllers]], [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper\|OPA]], [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno\|Kyverno]] |
+| **etcd encryption** | [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption\|etcd Encryption]] |
+| **Secret encryption** | [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption\|Secret Encryption]] |
+| **Audit logging** | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging\|Audit Logging]] |
+| **Runtime sandboxing** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing\|Runtime Sandboxing]] |
+| **Runtime detection** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection\|Runtime Detection]] |
+| **Image hardening** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening\|Image Hardening]] |
+| **Cluster hardening** | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening\|Cluster Hardening]] |
+| **Node hardening** | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening\|Node Hardening]] |
 
 The auditor asks: "do you have NetworkPolicy?" — you point to the L04 note + the policy in your repo. The control is documented, the implementation is in your cluster, and the evidence is in your CI.
 
@@ -465,6 +465,6 @@ trivy image myapp:1.0
 ## See also
 
 * All other L07 notes — each addresses specific controls.
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — control plane controls
-* [[Kubernetes/concepts/L07-security/21-node-hardening|Node Hardening]] — node-level controls
-* [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — supply chain (SLSA)
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — control plane controls
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — node-level controls
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — supply chain (SLSA)

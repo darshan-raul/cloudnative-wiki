@@ -736,7 +736,7 @@ containers:
 
 The app runs as non-root; the log shipper can run as root (because it needs to read `/var/log`). The Pod has a mix of security postures, and that's fine.
 
-For full coverage, see [[Kubernetes/concepts/L07-security/05-security-context|L07 — Security Context]].
+For full coverage, see [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|L07 — Security Context]].
 
 ### The shared security context gotcha
 
@@ -1139,6 +1139,6 @@ If you're on k8s 1.29+, use a native sidecar. Otherwise, accept the workaround o
 | Probes (liveness, readiness) | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]] |
 | DaemonSet (per-node helpers) | [[Kubernetes/concepts/L03-workloads/05-daemonset\|05 — DaemonSet]] |
 | Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context | [[Kubernetes/concepts/L07-security/05-security-context\|L07 — Security Context]] |
+| Security context | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
 | Service mesh (Istio/Linkerd) | [[Kubernetes/guides/service-mesh\|Guides — Service Mesh]] |
 | Pod networking (CNI, Pod IPs) | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]] |

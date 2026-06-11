@@ -711,7 +711,7 @@ spec:
 | `capabilities.drop: ["ALL"]` | Drops all Linux capabilities; opt back in if needed |
 | `seccompProfile.type: RuntimeDefault` | Use the runtime's default seccomp filter (much better than unconfined) |
 
-For full coverage, see [[Kubernetes/concepts/L07-security/05-security-context|L07 — Security Context]].
+For full coverage, see [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|L07 — Security Context]].
 
 ---
 
@@ -1124,6 +1124,6 @@ spec:
 | Probes (liveness/readiness/startup) | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]] |
 | Static Pods | [[Kubernetes/concepts/L03-workloads/11-static-pods\|11 — Static Pods]] |
 | Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context (per-container hardening) | [[Kubernetes/concepts/L07-security/05-security-context\|L07 — Security Context]] |
+| Security context (per-container hardening) | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
 | Pod networking (CNI, Pod IPs) | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]] |
 | Persistent storage (PV/PVC) | [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim\|L05 — PersistentVolumeClaim]] |

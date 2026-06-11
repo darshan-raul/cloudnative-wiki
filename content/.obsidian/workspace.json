@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "1f2de7ca32b340c9",
+        "id": "2086e8d4965476ca",
         "type": "tabs",
         "children": [
           {
-            "id": "550bf9cc5d5fb0be",
+            "id": "ff2d5de88c09d9a6",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Linux/shell-scripting/bash-cheatsheet.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "bash-cheatsheet"
+              "title": "New tab"
             }
           }
         ]
@@ -183,43 +179,43 @@
       "bases:Create new base": false
     }
   },
-  "active": "550bf9cc5d5fb0be",
+  "active": "ff2d5de88c09d9a6",
   "lastOpenFiles": [
-    "Linux/shell-scripting/README.md",
-    "Linux/README.md",
-    "Resources/guides/databases/columnar-databases.md",
-    "Resources/guides/databases/views.md",
-    "Kubernetes/updates-along-the-versions.md",
-    "Kubernetes/troubleshooting.md",
-    "Kubernetes/client-go.md",
-    "Kubernetes/certifications/cka/lab-videos.md",
-    "Kubernetes/certifications/cka/README.md",
-    "Kubernetes/certifications/README.md",
-    "Kubernetes/certifications/ckad/services-and-networking.md",
-    "Kubernetes/certifications/ckad/README.md",
-    "Kubernetes/certifications/ckad/application-observability-and-maintenance.md",
-    "Kubernetes/certifications/ckad/application-design-and-build.md",
-    "Kubernetes/certifications/ckad/application-deployment.md",
-    "Kubernetes/concepts/L05-config-storage/02-secrets.md",
-    "Kubernetes/concepts/L05-config-storage/01-config-maps.md",
-    "Kubernetes/concepts/L00-start-here/00-start-here.md",
-    "Kubernetes/concepts/L01-architecture/00-README.md",
-    "Kubernetes/concepts/L01-architecture/01-setting-up-cluster.md",
-    "Kubernetes/concepts/L01-architecture/02-high-availability.md",
-    "Kubernetes/concepts/L01-architecture/03-namespaces.md",
-    "Kubernetes/concepts/L03-workloads/06-job.md",
-    "Kubernetes/concepts/L03-workloads/05-daemonset.md",
-    "Kubernetes/concepts/L03-workloads/04-statefulsets.md",
-    "Kubernetes/concepts/L03-workloads/03-deployments.md",
-    "Kubernetes/concepts/L09-advanced",
-    "Kubernetes/concepts/L08-operations",
-    "Kubernetes/concepts/L07-security",
-    "Kubernetes/concepts/L06-scheduling-scaling",
-    "Kubernetes/concepts/L05-config-storage",
-    "Kubernetes/concepts/L04-services-networking",
-    "Kubernetes/concepts/L03-workloads",
-    "Kubernetes/concepts/L02-objects",
-    "Kubernetes/concepts/L01-architecture",
-    "Kubernetes/concepts/L00-start-here"
+    "Kubernetes/concepts/L07-security/01-api-access/04-certificates.md",
+    "Kubernetes/concepts/L07-security/01-api-access/03-rbac.md",
+    "Kubernetes/concepts/L07-security/01-api-access/02-service-accounts.md",
+    "Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization.md",
+    "Kubernetes/concepts/L07-security/00-README.md",
+    "Kubernetes/concepts/L07-security.md",
+    "Kubernetes/concepts/00-hub.md",
+    "Kubernetes/concepts/L07-security/23-sboms.md",
+    "Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks.md",
+    "Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening.md",
+    "Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening.md",
+    "Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging.md",
+    "Kubernetes/concepts/L07-security/05-audit-ops-compliance",
+    "Kubernetes/concepts/L07-security/04-admission-policy/23-sboms.md",
+    "Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno.md",
+    "Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper.md",
+    "Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers.md",
+    "Kubernetes/concepts/L07-security/04-admission-policy",
+    "Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption.md",
+    "Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption.md",
+    "Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire.md",
+    "Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls.md",
+    "Kubernetes/concepts/L07-security/03-encryption-identity",
+    "Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening.md",
+    "Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection.md",
+    "Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing.md",
+    "Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor.md",
+    "Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards.md",
+    "Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context.md",
+    "Kubernetes/concepts/L07-security/02-workload-sandboxing",
+    "Kubernetes/concepts/L07-security/01-api-access",
+    "Kubernetes/concepts/L04-services-networking/L09-gateway-api/lab/scenarios/16-gateway-merge.yaml",
+    "Kubernetes/concepts/L04-services-networking/L09-gateway-api/lab/scenarios/15-multi-listener.yaml",
+    "Kubernetes/concepts/L04-services-networking/L09-gateway-api/lab/scenarios/14-external-auth.yaml",
+    "Kubernetes/concepts/L04-services-networking/L09-gateway-api/lab/scenarios/13-rate-limit.yaml",
+    "Kubernetes/concepts/L04-services-networking/L09-gateway-api/lab/scenarios/12-cors-jwt.yaml"
   ]
 }

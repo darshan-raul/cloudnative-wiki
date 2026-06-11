@@ -155,7 +155,7 @@ The runtime's socket (`/run/containerd/containerd.sock` or `/var/run/crio/crio.s
 
 ## 4. The Kubelet Config in Depth
 
-The kubelet config is at `/var/lib/kubelet/config.yaml`. See [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] for the basics. The full config:
+The kubelet config is at `/var/lib/kubelet/config.yaml`. See [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] for the basics. The full config:
 
 ```yaml
 apiVersion: kubelet.config.k8s.io/v1beta1
@@ -621,7 +621,7 @@ curl -k https://<apiserver>:6443/healthz
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — the control plane
-* [[Kubernetes/concepts/L07-security/16-seccomp-apparmor|Seccomp / AppArmor]] — kernel-level restrictions
-* [[Kubernetes/concepts/L07-security/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
-* [[Kubernetes/concepts/L07-security/22-compliance-frameworks|Compliance Frameworks]] — CIS / NIST
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the control plane
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — kernel-level restrictions
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — CIS / NIST

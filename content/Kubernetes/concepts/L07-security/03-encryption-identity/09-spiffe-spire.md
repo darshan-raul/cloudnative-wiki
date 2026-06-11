@@ -415,6 +415,6 @@ kubectl logs <proxy>
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/08-tls-mtls|TLS / mTLS]] — the underlying transport security
-* [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] — what gets logged for SPIRE events
-* [[Kubernetes/concepts/L07-security/19-runtime-detection|Runtime Detection]] — Falco/Tetragon as consumers of workload identity
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the underlying transport security
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for SPIRE events
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco/Tetragon as consumers of workload identity

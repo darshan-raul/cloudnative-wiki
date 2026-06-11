@@ -556,7 +556,7 @@ Falco alerts on every container start, every health check, every log read.
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] — apiserver-level audit
-* [[Kubernetes/concepts/L07-security/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as alternatives
-* [[Kubernetes/concepts/L07-security/16-seccomp-apparmor|Seccomp / AppArmor]] — the prevention layer
-* [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — reduce attack surface before runtime
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — apiserver-level audit
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as alternatives
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the prevention layer
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — reduce attack surface before runtime

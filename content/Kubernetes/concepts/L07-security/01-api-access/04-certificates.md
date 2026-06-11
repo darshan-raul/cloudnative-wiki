@@ -704,8 +704,8 @@ kubectl exec <pod> -- date
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/08-tls-mtls|TLS / mTLS]] — the transport layer
-* [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]] — encrypting the data on disk
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — apiserver flags
-* [[Kubernetes/concepts/L07-security/21-node-hardening|Node Hardening]] — kubelet config
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the transport layer
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — encrypting the data on disk
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet config
 * [[Kubernetes/concepts/L01-architecture/04-control-plane|Control Plane]] — the components

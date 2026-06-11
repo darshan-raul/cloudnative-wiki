@@ -597,7 +597,7 @@ docker image ls myapp:1.0
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — the runtime enforcement
-* [[Kubernetes/concepts/L07-security/12-kyverno|Kyverno]] — for image signature verification
-* [[Kubernetes/concepts/L07-security/11-opa-gatekeeper|OPA / Gatekeeper]] — alternative policy engine
-* [[Kubernetes/concepts/L07-security/18-runtime-detection|Runtime Detection]] — detect what's not prevented
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the runtime enforcement
+* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for image signature verification
+* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — alternative policy engine
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detect what's not prevented

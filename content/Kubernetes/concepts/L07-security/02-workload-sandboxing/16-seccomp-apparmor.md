@@ -467,7 +467,7 @@ dmesg | grep -i apparmor
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/05-security-context|SecurityContext]] — where seccomp / AppArmor are set
-* [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — requires `RuntimeDefault` seccomp for `restricted`
-* [[Kubernetes/concepts/L07-security/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as stronger alternatives
-* [[Kubernetes/concepts/L07-security/19-runtime-detection|Runtime Detection]] — Falco / Tetragon detect syscall anomalies
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — where seccomp / AppArmor are set
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — requires `RuntimeDefault` seccomp for `restricted`
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as stronger alternatives
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco / Tetragon detect syscall anomalies

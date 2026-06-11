@@ -84,7 +84,7 @@ Anyone with `base64 --decode` can read a base64-encoded Secret. The encoding is 
 
 ## 4. Encryption at Rest: etcd EncryptionConfiguration
 
-See [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]] for the full deep-dive. The summary:
+See [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] for the full deep-dive. The summary:
 
 * An `EncryptionConfiguration` file on the apiserver's node configures encryption.
 * Local providers (`aescbc`, `secretbox`) use keys in the file.
@@ -102,7 +102,7 @@ For production: **use KMS**. The performance cost is small (with caching); the s
 
 ## 5. Encryption in Transit: TLS and mTLS
 
-See [[Kubernetes/concepts/L07-security/08-tls-mtls|TLS / mTLS]] for the full deep-dive. The summary:
+See [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] for the full deep-dive. The summary:
 
 * **apiserver ↔ client** — TLS by default (port 6443). mTLS optional.
 * **apiserver ↔ etcd** — mTLS by default.
@@ -505,7 +505,7 @@ ETCDCTL_API=3 etcdctl get /registry/secrets/default/my-secret ...
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]] — the at-rest encryption deep-dive
-* [[Kubernetes/concepts/L07-security/08-tls-mtls|TLS / mTLS]] — the in-transit story
-* [[Kubernetes/concepts/L07-security/03-rbac|RBAC]] — controlling who can read Secrets
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — apiserver flags for encryption
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — the at-rest encryption deep-dive
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the in-transit story
+* [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — controlling who can read Secrets
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags for encryption

@@ -27,17 +27,17 @@ How Kubernetes is built, and how to **extend** it. After this level, the platfor
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-| [[Kubernetes/concepts/L09-advanced/01-operators\|Operators]] | 🟡 | What an operator is, the operator pattern, examples |
-| [[Kubernetes/concepts/L09-advanced/02-custom-controllers\|Custom Controllers]] | ⚪ | Writing a controller — informers, work queues, reconcile |
-| [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions\|CRDs]] | ✅ | Extending the API with your own object types, schema validation, versions |
-| [[Kubernetes/concepts/L09-advanced/04-admission-controllers\|Admission Controllers & Webhooks]] | ✅ | Built-in admission, mutating/validating webhooks, OPA / Kyverno |
-| [[Kubernetes/concepts/L09-advanced/05-finalizers\|Finalizers]] | ✅ | Async cleanup, common pitfalls, the deletion lifecycle |
-| [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|Garbage Collection]] | 🟡 | Owner references, foreground vs background deletion |
-| [[Kubernetes/concepts/L09-advanced/07-aggregation-layer\|Aggregation Layer]] | 🟡 | Running additional API servers behind the kube-apiserver |
-| [[Kubernetes/concepts/L09-advanced/08-ipvs\|IPVS]] | 🟡 | kube-proxy's IPVS mode vs iptables mode |
-| [[Kubernetes/concepts/L09-advanced/09-pause-container\|Pause Container]] | 🟡 | The `/pause` process holding the pod's network namespace |
-| [[Kubernetes/concepts/L09-advanced/10-etcd\|etcd]] | ✅ | The cluster's source of truth, backups, encryption at rest, performance |
-| [[Kubernetes/concepts/L09-advanced/11-scheduler-extenders\|Scheduler Extenders]] | ✅ | Out-of-process webhooks that influence scheduling, when to use them |
+|| [[Kubernetes/concepts/L09-advanced/01-operators\|Operators]] | 🟡 | What an operator is, the operator pattern, examples |
+|| [[Kubernetes/concepts/L09-advanced/02-custom-controllers\|Custom Controllers]] | ⚪ | Writing a controller — informers, work queues, reconcile |
+|| [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions\|CRDs]] | ✅ | Extending the API with your own object types, schema validation, versions, CEL |
+|| [[Kubernetes/concepts/L09-advanced/04-admission-controllers\|Admission Controllers & Webhooks]] | ✅ | Built-in admission chain, mutating/validating webhooks, OPA Gatekeeper, Kyverno |
+|| [[Kubernetes/concepts/L09-advanced/05-finalizers\|Finalizers]] | ✅ | Async cleanup, common pitfalls, the deletion lifecycle |
+|| [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|Garbage Collection]] | 🟡 | Owner references, foreground vs background deletion |
+|| [[Kubernetes/concepts/L09-advanced/07-aggregation-layer\|Aggregation Layer]] | ✅ | Running additional API servers behind the kube-apiserver, APIService, auth delegation |
+|| [[Kubernetes/concepts/L09-advanced/08-ipvs\|IPVS]] | ✅ | kube-proxy IPVS mode vs iptables, schedulers, strictARP, debugging with ipvsadm |
+|| [[Kubernetes/concepts/L09-advanced/09-pause-container\|Pause Container]] | 🟡 | The `/pause` process holding the pod's network namespace |
+|| [[Kubernetes/concepts/L09-advanced/10-etcd\|etcd]] | ✅ | The cluster's source of truth, backups, defrag, encryption at rest, disaster recovery |
+|| [[Kubernetes/concepts/L09-advanced/11-scheduler-extenders\|Scheduler Extenders]] | ✅ | Out-of-process webhooks that influence scheduling, when to use them |
 
 ## Suggested reading order
 

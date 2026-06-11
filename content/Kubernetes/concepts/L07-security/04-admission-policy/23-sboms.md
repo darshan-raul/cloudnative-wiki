@@ -519,7 +519,7 @@ Connaisseur verifies image signatures and SBOMs at admission. It's the **defense
 
 K8s 1.30 added the **`ImagePullPolicy` for OCI referrers** — the kubelet can fetch the SBOM and other artifacts alongside the image. This is **alpha** in 1.30; it lets the kubelet verify the SBOM at image pull.
 
-For the **runtime use case** (a Pod is running, a CVE drops), see [[Kubernetes/concepts/L07-security/18-runtime-detection|Runtime Detection]] (Falco / Tetragon) and the new **kubeclarity** tools that scan running images against the CVE database.
+For the **runtime use case** (a Pod is running, a CVE drops), see [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] (Falco / Tetragon) and the new **kubeclarity** tools that scan running images against the CVE database.
 
 ## 13. The SLSA / SLSA-provenance Link
 
@@ -856,10 +856,10 @@ cosign sign myregistry/myapp:1.0.0.sbom
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — the broader image context
-* [[Kubernetes/concepts/L07-security/11-opa-gatekeeper|OPA / Gatekeeper]] — for admission-level enforcement
-* [[Kubernetes/concepts/L07-security/12-kyverno|Kyverno]] — for admission-level enforcement (YAML)
-* [[Kubernetes/concepts/L07-security/22-compliance-frameworks|Compliance Frameworks]] — the regulatory context
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — the broader image context
+* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — for admission-level enforcement
+* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for admission-level enforcement (YAML)
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — the regulatory context
 * [[Kubernetes/guides/security-scanning|security-scanning]] — image scanning in practice
 * [[Kubernetes/guides/image-signing|image-signing]] — image signing in practice
 * [[Kubernetes/guides/supply-chain-security|supply-chain-security]] — the bigger picture

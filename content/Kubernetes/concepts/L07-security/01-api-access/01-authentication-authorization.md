@@ -434,7 +434,7 @@ The workhorse. RBAC has:
 * **Role** / **ClusterRole** — a set of allowed verbs on resources.
 * **RoleBinding** / **ClusterRoleBinding** — assigns a Role to a subject (User, Group, ServiceAccount).
 
-See [[Kubernetes/concepts/L07-security/03-rbac|RBAC]] for the full picture.
+See [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] for the full picture.
 
 ### 12.3 ABAC authorizer
 
@@ -831,7 +831,7 @@ kubectl get rolebinding <name> -n <ns> -o yaml
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-service-accounts|ServiceAccounts]] — the in-cluster identity
-* [[Kubernetes/concepts/L07-security/03-rbac|RBAC]] — the authorization model
-* [[Kubernetes/concepts/L07-security/04-certificates|Certificates]] — the X.509 piece
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+* [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — the in-cluster identity
+* [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — the authorization model
+* [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the X.509 piece
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags

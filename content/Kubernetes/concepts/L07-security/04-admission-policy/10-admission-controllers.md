@@ -426,7 +426,7 @@ PSS is configured via **namespace labels**, not via the plugin directly:
 kubectl label ns production pod-security.kubernetes.io/enforce=restricted
 ```
 
-The plugin reads the labels and enforces the standard. See [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] for the full picture.
+The plugin reads the labels and enforces the standard. See [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] for the full picture.
 
 ## 12. Built-in: LimitRanger, ResourceQuota, DefaultStorageClass
 
@@ -627,7 +627,7 @@ A webhook is making admission slow.
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — the most-used built-in admission
-* [[Kubernetes/concepts/L07-security/11-opa-gatekeeper|OPA / Gatekeeper]] — the policy-engine webhook
-* [[Kubernetes/concepts/L07-security/12-kyverno|Kyverno]] — the k8s-native policy engine
-* [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] — what gets logged for admission failures
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the most-used built-in admission
+* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — the policy-engine webhook
+* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — the k8s-native policy engine
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for admission failures

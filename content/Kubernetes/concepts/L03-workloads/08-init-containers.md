@@ -1059,5 +1059,5 @@ For migrations, prefer a separate Job (not an init container in a Deployment's P
 | Probes (not supported on init) | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]] |
 | Jobs (run-to-completion) | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]] |
 | Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context | [[Kubernetes/concepts/L07-security/05-security-context\|L07 — Security Context]] |
+| Security context | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
 | Volumes (shared with init) | [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim\|L05 — PersistentVolumeClaim]] |

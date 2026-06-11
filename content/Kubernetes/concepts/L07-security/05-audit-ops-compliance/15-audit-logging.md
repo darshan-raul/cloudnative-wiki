@@ -585,7 +585,7 @@ du -sh /var/log/kubernetes/audit/
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/10-admission-controllers|Admission Controllers]] — what admission decisions get audited
-* [[Kubernetes/concepts/L07-security/03-rbac|RBAC]] — RBAC decisions in the audit log
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — enabling audit in the apiserver config
-* [[Kubernetes/concepts/L07-security/19-runtime-detection|Runtime Detection]] — workload-level activity (Falco)
+* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — what admission decisions get audited
+* [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — RBAC decisions in the audit log
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — enabling audit in the apiserver config
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — workload-level activity (Falco)

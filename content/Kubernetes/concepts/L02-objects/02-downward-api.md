@@ -349,4 +349,4 @@ A common pattern: **the Downward API gives the app its identity; a ConfigMap giv
 * [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — the Downward API is a Pod-level concept
 * [[Kubernetes/concepts/L05-config-storage/01-config-maps|ConfigMaps]] — for non-Pod data
 * [[Kubernetes/concepts/L05-config-storage/02-secrets|Secrets]] — for sensitive data
-* [[Kubernetes/concepts/L07-security/02-service-accounts|ServiceAccounts]] — when the app does need to call the API
+* [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — when the app does need to call the API

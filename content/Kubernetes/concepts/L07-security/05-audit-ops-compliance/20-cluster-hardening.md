@@ -141,7 +141,7 @@ The cache TTLs: positive decisions cached 5 min, negative decisions 30s. **Be ca
 --disable-admission-plugins=...
 ```
 
-The plugins to enable / disable. See [[Kubernetes/concepts/L07-security/10-admission-controllers|Admission Controllers]] for the full list.
+The plugins to enable / disable. See [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] for the full list.
 
 The standard set (in addition to defaults):
 
@@ -170,7 +170,7 @@ For external admission webhook configs. The file is a YAML that defines the Muta
 --audit-webhook-config-file=/etc/kubernetes/audit-webhook-config.yaml
 ```
 
-See [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] for the full picture.
+See [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] for the full picture.
 
 ## 6. The apiserver Flags — Encryption
 
@@ -178,7 +178,7 @@ See [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] for the 
 --encryption-provider-config=/etc/kubernetes/encryption-config.yaml
 ```
 
-The `EncryptionConfiguration` for etcd encryption. See [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]] for the full picture.
+The `EncryptionConfiguration` for etcd encryption. See [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] for the full picture.
 
 ## 7. The apiserver Flags — Networking
 
@@ -245,7 +245,7 @@ etcd is the **data store**. Compromising etcd is a cluster compromise.
 * **mTLS** — both directions. Client cert auth is required.
 * **No shell on the etcd host** — limit the attack surface.
 * **Encrypted backups** — etcdctl snapshot save produces a backup file. Encrypt it.
-* **Encryption at rest** — see [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]].
+* **Encryption at rest** — see [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]].
 
 ### 9.3 The etcd storage
 
@@ -537,8 +537,8 @@ kubectl get node <node> -o yaml
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/21-node-hardening|Node Hardening]] — kubelet and node-level
-* [[Kubernetes/concepts/L07-security/13-etcd-encryption|etcd Encryption]] — the encryption deep-dive
-* [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] — what's logged
-* [[Kubernetes/concepts/L07-security/10-admission-controllers|Admission Controllers]] — the admission layer
-* [[Kubernetes/concepts/L07-security/22-compliance-frameworks|Compliance Frameworks]] — NIST / CIS / OWASP
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet and node-level
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — the encryption deep-dive
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what's logged
+* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — the admission layer
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — NIST / CIS / OWASP

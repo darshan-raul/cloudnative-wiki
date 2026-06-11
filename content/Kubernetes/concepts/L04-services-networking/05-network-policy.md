@@ -1836,8 +1836,8 @@ When hardening a namespace with NetworkPolicy, work through this checklist:
 
 | Related Topic            | Link                                                             |
 | ------------------------ | ---------------------------------------------------------------- |
-| Security Context (L0/L1) | `[[Kubernetes/concepts/L07-security/05-security-context]]`       |
-| Pod Security Standards   | `[[Kubernetes/concepts/L07-security/02-pod-security-standards]]` |
+| Security Context (L0/L1) | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context]]`       |
+| Pod Security Standards   | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards]]` |
 | Service Mesh (L7)        | `[[Kubernetes/concepts/networking/06-service-mesh]]`             |
 | DNS in Kubernetes        | `[[Kubernetes/concepts/networking/04-dns]]`                      |
 | Calico NetworkPolicy     | `[[Kubernetes/concepts/networking/cni-calico]]`                  |

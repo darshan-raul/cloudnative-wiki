@@ -511,7 +511,7 @@ crictl logs <container-id>
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/05-security-context|SecurityContext]] — the standard hardening
-* [[Kubernetes/concepts/L07-security/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level filters
-* [[Kubernetes/concepts/L07-security/17-runtime-detection|Runtime Detection]] — detecting exploits even in sandboxes
-* [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — reduce the attack surface before runtime
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — the standard hardening
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level filters
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detecting exploits even in sandboxes
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — reduce the attack surface before runtime

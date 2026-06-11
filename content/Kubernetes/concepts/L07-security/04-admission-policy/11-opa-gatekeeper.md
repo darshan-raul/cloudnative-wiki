@@ -657,7 +657,7 @@ curl localhost:8888/metrics | grep response_time
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/12-kyverno|Kyverno]] — the alternative to OPA / Gatekeeper
-* [[Kubernetes/concepts/L07-security/10-admission-controllers|Admission Controllers]] — how Gatekeeper fits in
-* [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — the built-in alternative for basic checks
-* [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — one of the most common policy targets
+* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — the alternative to OPA / Gatekeeper
+* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — how Gatekeeper fits in
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the built-in alternative for basic checks
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — one of the most common policy targets

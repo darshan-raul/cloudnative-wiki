@@ -459,7 +459,7 @@ It **cannot**:
 * Modify Pods not assigned to it.
 * Do anything outside its lane.
 
-This is enforced by the Node authorizer and the NodeRestriction admission plugin. See [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] and [[Kubernetes/concepts/L07-security/21-node-hardening|Node Hardening]] for details.
+This is enforced by the Node authorizer and the NodeRestriction admission plugin. See [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] and [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] for details.
 
 ## 16. Authorization for System Components
 
@@ -838,8 +838,8 @@ kubectl api-resources | grep <crd-name>
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/01-authentication-authorization|AuthN/AuthZ]] — the bigger picture
-* [[Kubernetes/concepts/L07-security/02-service-accounts|ServiceAccounts]] — the in-cluster identity
+* [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|AuthN/AuthZ]] — the bigger picture
+* [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — the in-cluster identity
 * [[Kubernetes/concepts/L07-security/07-security|Security Overview]] — the security model end-to-end
-* [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — the workload-side complement
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the workload-side complement
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags

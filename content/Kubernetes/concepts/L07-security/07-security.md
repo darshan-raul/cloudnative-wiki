@@ -241,7 +241,7 @@ If you have to satisfy a framework (PCI-DSS, SOC2, HIPAA, FedRAMP), k8s has answ
 
 Most compliance failures in k8s are **not k8s problems** — they're organizational problems (no runbook, no review, no off-cluster backups).
 
-See [[Kubernetes/concepts/L07-security/22-compliance-frameworks|Compliance Frameworks]] for the full picture.
+See [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] for the full picture.
 
 ## The L07 layer at a glance
 

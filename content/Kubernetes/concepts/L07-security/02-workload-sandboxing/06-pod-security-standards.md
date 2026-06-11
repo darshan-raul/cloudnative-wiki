@@ -480,8 +480,8 @@ kubectl version
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/05-security-context|SecurityContext]] — the per-Pod / per-Container settings
-* [[Kubernetes/concepts/L07-security/10-admission-controllers|Admission Controllers]] — the broader admission layer
-* [[Kubernetes/concepts/L07-security/11-opa-gatekeeper|OPA / Gatekeeper]] — for custom rules
-* [[Kubernetes/concepts/L07-security/12-kyverno|Kyverno]] — for custom rules (YAML)
-* [[Kubernetes/concepts/L07-security/22-compliance-frameworks|Compliance Frameworks]] — the CIS / NIST view
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — the per-Pod / per-Container settings
+* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — the broader admission layer
+* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — for custom rules
+* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for custom rules (YAML)
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — the CIS / NIST view

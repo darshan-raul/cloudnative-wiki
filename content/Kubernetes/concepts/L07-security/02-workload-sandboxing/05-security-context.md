@@ -2,7 +2,7 @@
 
 *"https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"*
 
-A `SecurityContext` defines **privilege and access control settings** for a Pod or Container. It runs from "do almost nothing" (default) to "do everything" (`privileged: true`). Most production clusters should be **far from privileged** — the `restricted` PSS profile (covered in [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]]) is the safe default. This note covers every field, the layered defense model, and the real recipes for hardening.
+A `SecurityContext` defines **privilege and access control settings** for a Pod or Container. It runs from "do almost nothing" (default) to "do everything" (`privileged: true`). Most production clusters should be **far from privileged** — the `restricted` PSS profile (covered in [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]]) is the safe default. This note covers every field, the layered defense model, and the real recipes for hardening.
 
 ### Table of Contents
 
@@ -310,7 +310,7 @@ securityContext:
 
 ## 7. The Seccomp and AppArmor Fields
 
-See [[Kubernetes/concepts/L07-security/16-seccomp-apparmor|Seccomp / AppArmor]] for the full treatment. The fields:
+See [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] for the full treatment. The fields:
 
 ```yaml
 securityContext:
@@ -332,7 +332,7 @@ securityContext:
 
 Pod can set safe sysctls. With `protectKernelDefaults: true` on the kubelet, only **safe** sysctls are allowed. Unsafe sysctls require an admission policy to allow.
 
-See [[Kubernetes/concepts/L07-security/21-node-hardening|Node Hardening]] for the full sysctl list.
+See [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] for the full sysctl list.
 
 ## 9. The SELinux Fields
 
@@ -664,8 +664,8 @@ crictl inspect <container-id> | grep -i 'seccomp\|capabilit'
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/06-pod-security-standards|PSS]] — the namespace-level enforcement
-* [[Kubernetes/concepts/L07-security/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level restrictions
-* [[Kubernetes/concepts/L07-security/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
-* [[Kubernetes/concepts/L07-security/19-image-hardening|Image Hardening]] — build non-root images
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the namespace-level enforcement
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level restrictions
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
+* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — build non-root images
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags

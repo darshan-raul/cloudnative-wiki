@@ -481,6 +481,6 @@ ls -la /var/run/kmsplugin/socket.sock
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/14-secret-encryption|Secret Encryption]] — the higher-level view
-* [[Kubernetes/concepts/L07-security/15-audit-logging|Audit Logging]] — what gets logged for encryption events
-* [[Kubernetes/concepts/L07-security/20-cluster-hardening|Cluster Hardening]] — etcd access control
+* [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — the higher-level view
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for encryption events
+* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — etcd access control

@@ -1190,6 +1190,6 @@ Rule: if the answer to "why per-node?" is "well, it's not really, but it's conve
 | CronJob (scheduled jobs) | [[Kubernetes/concepts/L03-workloads/07-cronjob\|07 — CronJob]] |
 | Taints and tolerations | [[Kubernetes/concepts/L06-scheduling-scaling\|L06 — Scheduling and Scaling]] |
 | Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context | [[Kubernetes/concepts/L07-security/05-security-context\|L07 — Security Context]] |
+| Security context | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
 | Host network (CNI, kube-proxy) | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]] |
 | Static Pods (kubelet-managed) | [[Kubernetes/concepts/L03-workloads/11-static-pods\|11 — Static Pods]] |
