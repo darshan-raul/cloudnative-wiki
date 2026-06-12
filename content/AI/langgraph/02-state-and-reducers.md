@@ -1,508 +1,201 @@
-# LangGraph — State & Reducers
-
-> **Part 2 of the LangGraph deep-dive.** The `TypedDict` state
-> schema, channel semantics, the `add_messages` reducer, custom
-> reducers, `state_schema` / `input_schema` / `output_schema`,
-> and the runtime `Context` separate from state.
-
-State is the only thing that flows through the graph. Every
-node reads from it and returns a partial update. The framework
-merges the update using **reducers** (one per state field). This
-file is about how the state schema and reducers work.
-
+---
+title: "LangGraph — State & Reducers"
+tags:
+  - AI
+  - LangGraph
 ---
 
-## 1. The state schema — `TypedDict`
+> **Part 2.** How to define the state schema, what `add_messages`
+> does, how custom reducers work, and how `MessagesState` simplifies
+> the common case.
+
+## The state schema
+
+State is a `TypedDict`. Every field is a key that nodes read and
+write:
+
+```python
+from typing import TypedDict
+
+class AgentState(TypedDict):
+    messages: list[BaseMessage]
+    user_id: str
+    active_form: str
+```
+
+The graph reads the type hints to know what fields exist. Each
+field's Python type tells LangGraph how to serialize it for the
+checkpointer.
+
+### Adding a reducer — `Annotated[..., reducer]`
+
+A reducer controls how a partial update merges into the current
+state. Without a reducer, the field is replaced. With a reducer,
+the reducer function is called:
 
 ```python
 from typing import Annotated
 from langgraph.graph.message import add_messages
-from typing_extensions import TypedDict
 
-class AgentState(TypedDict, total=False):
-    messages: Annotated[list, add_messages]
-    user_id: str
-    thread_id: str
-    pending_action: dict | None
-```
-
-`TypedDict` because Python's structural typing plays well with
-Pydantic and because the keys are strings, which is what
-LangGraph needs.
-
-### `total=False` — all keys are optional
-
-With `total=False`, a node can return a partial update
-containing only some fields, and the framework doesn't error
-about missing keys. This is the right default for state
-machines.
-
-If you use `total=True` (the default for `TypedDict`), every
-key is required and the framework checks for completeness on
-every update. This is the right choice for a strict schema but
-is usually more trouble than it's worth.
-
-### The `Annotated[T, reducer]` syntax
-
-```python
-class AgentState(TypedDict, total=False):
-    messages: Annotated[list, add_messages]
+class AgentState(TypedDict):
+    messages: Annotated[list[BaseMessage], add_messages]
     user_id: str
 ```
 
-`Annotated[T, reducer]` is how you attach a reducer to a field.
-The reducer is a function `(current, update) -> new` that
-decides how a partial update merges into the existing value.
+`add_messages` is a reducer from `langgraph.graph.message`. It
+appends new messages to the list and deduplicates by message ID.
 
-Without `Annotated` (i.e. `messages: list`), the default reducer
-is "overwrite." For a `messages` field, that's almost always
-wrong — you'd lose the conversation history on every node.
-
----
-
-## 2. `add_messages` — the standard message reducer
+### `add_messages` — the standard reducer for messages
 
 ```python
 from langgraph.graph.message import add_messages
 
-class AgentState(TypedDict, total=False):
-    messages: Annotated[list, add_messages]
+def add_messages(left: list, right: list | BaseMessage) -> list:
+    """Append right to left. If right has a message with the same id
+    as one in left, replace the old one (update in place)."""
 ```
 
-The signature:
+When a node returns `{"messages": [AIMessage(...)]}`, the framework
+calls `add_messages(current_messages, [AIMessage(...)])`. The result
+is the old list plus the new message appended.
 
-```python
-def add_messages(
-    left: list[BaseMessage],
-    right: list[BaseMessage] | BaseMessage | RemoveMessage,
-) -> list[BaseMessage]:
-    """Append right to left. If right is a single message, wrap it.
-    If right contains a RemoveMessage, delete the matching id.
-    Deduplicate by id: if a message in right has the same id as
-    one in left, the right one wins (replaces)."""
-```
+**Why `add_messages` instead of a plain list?** A plain list would be
+replaced on every update (wrong). With `add_messages`, updates
+append, and retries/replays that return the same message ID update
+in place rather than duplicate.
 
-### What it does
+### `MessagesState` — the shorthand
 
-| Update | Effect |
-|---|---|
-| `[HumanMessage(content="hi")]` | Append to `left`. |
-| `HumanMessage(content="hi")` (single) | Wrap in list, append. |
-| `[AIMessage(content="x", id="m-1")]` where `left` already has `id="m-1"` | Replace the old message in `left` with the new one. |
-| `[RemoveMessage(id="m-1")]` | Delete `id="m-1"` from `left`. |
-| `[AIMessageChunk(content="ab"), AIMessageChunk(content="cd")]` | Accumulate (use `+` on chunks) and append the merged `AIMessage`. |
-
-### Why dedup matters
-
-Streaming emits `AIMessageChunk`s. The accumulator merges them
-into a single `AIMessage` with one `id`. If the framework
-appended chunks individually, you'd have N messages in the
-state, one per chunk. `add_messages` de-duplicates by `id` so
-only the merged one survives.
-
-### Why `RemoveMessage` matters
-
-In a long-running conversation, the message list grows. To
-trim, append a `RemoveMessage` with the `id` of the message to
-delete. `add_messages` honors it.
-
-```python
-def trim(state):
-    msgs = state["messages"]
-    return {"messages": [RemoveMessage(id=m.id) for m in msgs[:-10]]}
-```
-
-### Why `RemoveMessage` is a message, not a state field
-
-A separate "trash" field would be awkward — the framework
-would have to read it and clean up after every node. Using a
-`RemoveMessage` makes "delete this" part of the message
-semantics; the reducer handles it inline.
-
-### Initial state and `add_messages`
-
-The initial state for an invocation is whatever the caller
-passes. `add_messages` merges it with the existing state
-(checkpointed state, if a checkpointer is in use). For a fresh
-invocation with no checkpointer, "existing" is empty, so the
-initial messages just become the state's `messages`.
-
----
-
-## 3. `MessagesState` — the prebuilt
+For the common case (just messages + optional extra fields):
 
 ```python
 from langgraph.graph import MessagesState
 
-class MyState(MessagesState):
-    user_id: str
-    # `messages` is inherited with the add_messages reducer
+class AgentState(MessagesState):
+    user_id: str       # add custom fields on top
+    active_form: str
 ```
 
-`MessagesState` is a prebuilt `TypedDict` with the `messages`
-field already configured. Use it for the common case where
-your state is "messages + a few extra fields."
+`MessagesState` is pre-built with `messages: Annotated[list[BaseMessage], add_messages]`.
+You just add your custom fields.
 
 ---
 
-## 4. Custom reducers
+## Custom reducers
+
+A reducer is any callable `(current_value, update) -> new_value`:
 
 ```python
+def last_write_wins(left: str, right: str) -> str:
+    """Take the most recent update."""
+    return right
+
+class AgentState(TypedDict):
+    value: Annotated[str, last_write_wins]
+    count: Annotated[int, lambda left, right: left + right]
+```
+
+Common uses:
+- **Counter:** `lambda left, right: left + right`
+- **Config merge:** `lambda left, right: {**left, **right}` (deep merge)
+- **Deduplication:** custom logic for a set or dict
+
+### Reducer for a dict field
+
+```python
+from typing import TypedDict
+
 def merge_dicts(left: dict, right: dict) -> dict:
-    return {**left, **right}    # right wins on key collisions
+    """Deep merge: right wins on conflict, left keys preserved."""
+    result = dict(left)
+    result.update(right)
+    return result
 
-class State(TypedDict, total=False):
-    config: Annotated[dict, merge_dicts]
+class AgentState(TypedDict):
+    context: Annotated[dict, merge_dicts]
+    messages: Annotated[list[BaseMessage], add_messages]
 ```
 
-Custom reducers are useful for:
-
-- **Merge dicts** — accumulate config from multiple nodes.
-- **Append to a list** — a general "add to list" reducer (not
-  just messages).
-- **Custom overwrite logic** — e.g. "always take the larger
-  value."
-- **Concat strings** — accumulate a log.
-
-The signature is `(current, update) -> new`. The framework
-calls it with the current state value and the new partial.
-
-### Operator reducers
-
-```python
-import operator
-
-class State(TypedDict, total=False):
-    counter: Annotated[int, operator.add]
-    flags:   Annotated[set[str], operator.or_]
-```
-
-You can use any binary operator as a reducer. The framework
-imports the operator and calls `op(current, update)`. Common
-choices:
-
-- `operator.add` — sum ints, concat lists, concat strings.
-- `operator.or_` — set union, dict union (bitwise).
-- `operator.and_` — set intersection.
-- `operator.mul` — multiplication (rare).
-
-**Caveat:** `operator.add` on two lists *concatenates*, not
-appends. If you have a list of dicts and want to add one dict,
-`operator.add` will give you `[...existing, new_dict]`. That's
-the right behavior for "append."
-
-### `OverwriteState` — the escape hatch
-
-```python
-from langgraph.types import OverwriteState
-
-def replace_messages(state):
-    return {"messages": OverwriteState([HumanMessage(content="fresh start")])}
-```
-
-`OverwriteState(value)` says "ignore the current value, just
-use this." Use it sparingly. The `add_messages` reducer is
-correct 99% of the time; reaching for `OverwriteState` usually
-means a design rethink.
-
-### `BinaryOperatorAggregate` — explicit operator reducers
-
-```python
-from langgraph.types import BinaryOperatorAggregate
-
-class State(TypedDict, total=False):
-    log: Annotated[list[str], BinaryOperatorAggregate(operator.add)]
-```
-
-Same as `operator.add` but explicit. Useful for clarity in
-team code.
+Each node can return `{"context": {"key": "value"}}` and the dict
+merges instead of replacing.
 
 ---
 
-## 5. `state_schema`, `input_schema`, `output_schema`
+## What nodes return — partial updates
 
-The full state can be split into three schemas:
+A node returns a **partial update**. Only the keys it wants to
+change:
 
 ```python
-class FullState(TypedDict, total=False):
-    messages: Annotated[list, add_messages]
-    user_id: str
-    internal_notes: list[str]
-    debug_info: dict
+def call_model(state: AgentState) -> dict:
+    response = llm.bind_tools(tools).invoke(state["messages"])
+    return {"messages": [response]}      # only messages updated
 
-class InputState(TypedDict, total=False):
-    messages: Annotated[list, add_messages]   # only the input field
-    user_id: str
-
-class OutputState(TypedDict, total=False):
-    messages: Annotated[list, add_messages]   # the final messages
-    # user_id is hidden
-    # internal_notes is hidden
-    # debug_info is hidden
-
-graph = StateGraph(
-    state_schema=FullState,        # the internal state
-    input_schema=InputState,       # what callers can pass in
-    output_schema=OutputState,     # what's in the result
-)
+def update_context(state: AgentState) -> dict:
+    return {"context": {"last_node": "call_model"}}   # only context updated
 ```
 
-- **`state_schema`** — the full state, all fields. Nodes see
-  this.
-- **`input_schema`** — what callers can pass to
-  `graph.invoke(input)`. Stricter than `state_schema`. The
-  framework filters input to match this schema before
-  applying.
-- **`output_schema`** — what's in the result. The framework
-  filters the final state to match this schema before
-  returning to the caller.
+The graph merges the partial update into the current state using
+each field's reducer.
 
-This is the API for "I have private internal state, but I
-don't want it in the response." Strata's `debug_info` or
-`internal_notes` would be in `state_schema` only, hidden from
-callers.
+### Returning multiple fields
 
-### When to use them
+```python
+def call_model(state: AgentState) -> dict:
+    response = llm.bind_tools(tools).invoke(state["messages"])
+    return {
+        "messages": [response],
+        "active_form": "waiting_for_tool" if response.tool_calls else "idle",
+    }
+```
 
-- **Just `state_schema`** — fine for most cases. Strata's
-  Phase 2 does this.
-- **Adding `output_schema`** — when you want to strip internal
-  state from the response (Phase 4+ RAG, where the internal
-  state has retrieved docs and citations that shouldn't leak).
-- **Adding `input_schema`** — when you want strict input
-  validation. Less common.
+### Returning nothing (side-effect node)
+
+```python
+def log_to_db(state: AgentState) -> dict:
+    save_to_db(state["messages"])
+    return {}   # no state change — just a side effect
+```
+
+Returning an empty dict is fine. The state is unchanged.
 
 ---
 
-## 6. Runtime context — separate from state
+## State access inside a node
+
+Nodes are just functions. Access state by key:
 
 ```python
-from langgraph.runtime import Runtime
-from dataclasses import dataclass
-
-@dataclass
-class Context:
-    user_id: str
-    request_id: str
-    db: "Database"
-
-def my_node(state: AgentState, runtime: Runtime[Context]) -> dict:
-    # runtime.context is the read-only Context object
-    user_id = runtime.context.user_id
-    return {"user_id": user_id}
-```
-
-The runtime context is **read-only** — it doesn't go through
-reducers, doesn't get persisted, and is just there for nodes
-that need access to "things from outside the graph"
-(connection pools, user id, request id, feature flags).
-
-Differences from state:
-
-| | State | Runtime context |
-|---|---|---|
-| Mutable | Yes (via reducers) | No |
-| Persisted | Yes (with checkpointer) | No |
-| Pass to `graph.invoke(input, context=...)` | No | Yes |
-| Visible in `get_state` | Yes | No |
-| Goes through reducers | Yes | No |
-
-### How to pass context
-
-```python
-graph.invoke(
-    input_state,
-    context=Context(user_id="user-42", request_id="req-123", db=db),
-)
-```
-
-The `context=` kwarg is the public API. The graph fills in
-`runtime.context` for every node.
-
-### Why context, not state
-
-For things that don't change during the graph run (user id,
-DB client, request id), the reducer machinery is overhead. The
-context is a fast, read-only side-channel.
-
-For things that DO change (the message list, the pending
-action, the iteration count), use state.
-
----
-
-## 7. `config["configurable"]` — another side-channel
-
-Older LangGraph code (and many tutorials) uses
-`config["configurable"]` instead of `runtime.context`. Both
-work; context is the newer, more typesafe form.
-
-```python
-# Old way:
-def my_node(state: AgentState, config: RunnableConfig) -> dict:
-    user_id = config["configurable"]["user_id"]
+def call_model(state: AgentState) -> dict:
+    user_id = state["user_id"]          # read
+    messages = state["messages"]       # read
     ...
-
-graph.invoke(input_state, config={"configurable": {"user_id": "user-42"}})
+    return {"messages": [response]}
 ```
 
-The configurable dict is also where the checkpointer reads
-`thread_id`. Mixed use is common.
-
-Strata uses `runtime.context` for new code (Phase 4+); older
-code may still use `config["configurable"]`.
+Don't mutate `state` in place. Return the update instead.
 
 ---
 
-## 8. Reading state in nodes
+## Common pitfalls
 
-A node's signature can be:
-
-```python
-# Just state
-def node1(state: AgentState) -> dict: ...
-
-# State + config
-def node2(state: AgentState, config: RunnableConfig) -> dict: ...
-
-# State + runtime context
-def node3(state: AgentState, runtime: Runtime[Context]) -> dict: ...
-
-# All three
-def node4(state: AgentState, config: RunnableConfig, runtime: Runtime[Context]) -> dict: ...
-```
-
-The framework detects the signature and fills in the right
-arguments. You can name the parameters however you like (as
-long as the type annotations are correct).
-
-### Reading specific fields
-
-```python
-def my_node(state: AgentState) -> dict:
-    last_msg = state["messages"][-1]
-    user_id = state.get("user_id", "anonymous")
-    pending = state.get("pending_action")
-    return ...
-```
-
-Use `.get(key, default)` for fields that might not be set
-(common with `total=False` schemas).
-
-### Don't mutate state
-
-```python
-# WRONG
-def my_node(state: AgentState) -> dict:
-    state["messages"].append(AIMessage(content="..."))    # mutation!
-    return state
-
-# RIGHT
-def my_node(state: AgentState) -> dict:
-    return {"messages": [AIMessage(content="...")]}    # partial update
-```
-
-The framework owns the state object. If you mutate it, the
-reducer doesn't run, the checkpointer sees the wrong state,
-and downstream nodes see your mutations plus their own
-updates — undefined behavior.
+1. **Forgetting the reducer on `messages`.** Without
+   `Annotated[..., add_messages]`, returning `{"messages": [...]}``
+   replaces the list instead of appending.
+2. **Reducers must be commutative for replay to work.** If
+   `merge(a, merge(b, c)) != merge(merge(a, b), c)`, checkpoint
+   replay may produce different state than forward execution.
+3. **`state` is immutable inside a node.** Don't do
+   `state["messages"].append(...)`. Return `{"messages": [...]}``
+   instead.
+4. **`MessagesState` requires `messages` to be the exact field
+   name.** If you name it `history` or `chat_history`, you need
+   a custom state class.
 
 ---
 
-## 9. Returning a partial update
+## See also
 
-```python
-return {"messages": [AIMessage(content="...")]}
-```
-
-The returned dict has only the fields the node wants to
-change. Fields it omits are not touched.
-
-```python
-# This is fine:
-return {"messages": [AIMessage(content="...")]}
-
-# This is also fine:
-return {"messages": [AIMessage(content="...")], "user_id": "user-42"}
-
-# This is also fine:
-return {"messages": AIMessage(content="...")}    # bare message, wrapped by add_messages
-```
-
-The framework runs the appropriate reducer for each field
-present in the update.
-
-### Bare messages are wrapped
-
-If you return `AIMessage(content="...")`, `add_messages` (or
-any list-typed reducer) treats it as `[AIMessage(content="...")]`.
-Most reducers do this. If a custom reducer doesn't, wrap
-explicitly.
-
-### Returning a list of mixed types
-
-```python
-return {
-    "messages": [
-        SystemMessage(content="Use these docs..."),    # injected context
-        RemoveMessage(id="old-msg-id"),                # delete an old message
-        AIMessage(content="final answer"),             # the new answer
-    ]
-}
-```
-
-A node can return multiple message updates in one return.
-`add_messages` processes them in order: append the new
-messages, delete the marked ones. The system message above
-would land in state before the AI message, so the model sees
-"Use these docs... final answer" — but wait, the model already
-produced "final answer" (this is the node return after the
-model call). The system message would be a new instruction
-that affects the *next* model call.
-
----
-
-## 10. Common pitfalls
-
-1. **Forgetting `Annotated[list, add_messages]`.** Without
-   the reducer, `messages` gets overwritten on every node
-   return. Conversation history is lost.
-2. **Mutating `state["messages"]` in place.** Don't. The
-   framework owns the state.
-3. **`total=True` when you want partial updates.** Use
-   `total=False` for the common case.
-4. **Returning the full state instead of a partial update.**
-   Wasteful, breaks the reducer semantics.
-5. **Mixing `Runtime` and `config["configurable"]`.** Both
-   work; pick one per project. Strata uses `Runtime` for
-   new code.
-6. **`RemoveMessage` is consumed by `add_messages`.** Once
-   applied, the message is gone. Don't use it for "soft
-   delete" — use a flag.
-7. **Reducers run on every partial update, not just on
-   `messages`.** If your field has a side-effecting reducer
-   (writes to a DB, say), it runs every time the field is
-   in the update. Refactor.
-8. **State is JSON-serializable for the checkpointer.**
-   If you put a non-serializable object in state (a
-   `httpx.AsyncClient`, a `PIL.Image`), the checkpointer
-   fails to save. Use the runtime context for those.
-9. **`input_schema` filters but doesn't validate.** A
-   `TypedDict` is structural. For strict input validation,
-   use a Pydantic model (Phase 4+).
-10. **Custom reducers must be deterministic.** If they
-    depend on external state (time, random), the checkpointer
-    can't replay the graph correctly.
-
----
-
-## 11. What to read next
-
-- [03-nodes-and-edges.md](03-nodes-and-edges.md) — what nodes
-  do, what edges do.
-- [04-command-and-control-flow.md](04-command-and-control-flow.md)
-  — `Command(goto, update, resume)`.
-- [08-checkpoints-and-persistence.md](08-checkpoints-and-persistence.md)
-  — what gets persisted and how.
-- [09-memory-store.md](09-memory-store.md) — long-term memory
-  (different from the in-graph state).
-- LangGraph state docs: <https://langchain-ai.github.io/langgraph/concepts/low_level/>
+- [[AI/langgraph/01-mental-model|01-mental-model]] — the four concepts and the agent loop
+- [[AI/langgraph/03-nodes-and-edges|03-nodes-and-edges]] — adding nodes and edges to the graph
+- [[AI/langgraph/08-checkpointers|08-checkpointers]] — how checkpointers use the state schema for serialization

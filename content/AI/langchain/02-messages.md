@@ -1,386 +1,388 @@
-# LangChain — Messages
-
-> **Part 2 of the LangChain deep-dive.** Messages are the atom of
-> the agent loop. Every chat-model call is "send these messages,
-> get back a new message." Read this carefully.
-
-The whole point of `langchain_core.messages` is to give the
-ecosystem **a single, typed shape** for "a thing in a
-conversation." The model sees a list of these. The model returns
-one of these. Tools return values that get wrapped in one of these.
-
+---
+title: "LangChain — Messages"
+tags:
+  - AI
+  - LangChain
+  - Messages
 ---
 
-## 1. The five message types
+> **Part 2.** Messages are the atom of LangChain. Every chat model
+> call is "send a list of messages, get back a new message." Read
+> this before anything else that calls a model.
+
+## The five message types
+
+Everything in LangChain is built on five message types from
+`langchain_core.messages`:
 
 ```python
 from langchain_core.messages import (
-    SystemMessage,
-    HumanMessage,
-    AIMessage,
-    AIMessageChunk,
-    ToolMessage,
-    ToolCall,                  # typed dict, not a Message
-    ToolCallChunk,             # streaming variant
-    RemoveMessage,             # for explicit deletion
-    FunctionMessage,           # LEGACY — do not use
+    SystemMessage,   # developer instructions
+    HumanMessage,    # user input
+    AIMessage,       # model output
+    AIMessageChunk,  # streaming piece
+    ToolMessage,     # tool result
+    RemoveMessage,   # for trimming history
+    # legacy — do not use:
+    FunctionMessage,
 )
 ```
 
-| Type | Who produces it | What it carries |
-|---|---|---|
-| `SystemMessage` | the developer | behavior instructions, persona, hard rules |
-| `HumanMessage` | the user | the prompt (or a multi-modal payload) |
-| `AIMessage` | the model | text content + `tool_calls` + usage metadata |
-| `ToolMessage` | a tool | the result of a tool call, keyed by `tool_call_id` |
-| `RemoveMessage` | you (or the framework) | says "delete the message with this id from state" |
+The model sees a **list** of these. The model returns **one** of
+these. Tools return values that get wrapped in one of these.
 
-The model never sees a `ToolMessage` without a preceding
-`AIMessage` that requested it. If it does, the model will get
-confused or refuse. LangGraph's `ToolNode` enforces this for you.
-If you ever build the state by hand, respect the alternation:
+---
+
+## SystemMessage — developer instructions
+
+The system message is the only message you (the developer) write
+freely. It shapes the model's behavior:
+
+```python
+from langchain_core.messages import SystemMessage
+
+msg = SystemMessage(content="You are a helpful assistant that always "
+                            "answers in French.")
+```
+
+What the model actually sees (after LangChain serializes it):
+
+```json
+{"role": "system", "content": "You are a helpful assistant..."}
+```
+
+The system message goes first and stays for the entire conversation.
+For static behavior (persona, rules), a literal `SystemMessage` is
+enough. For variable behavior (per-user context, injected docs),
+use `ChatPromptTemplate` — see [[AI/langchain/05-prompts]].
+
+**Common pattern for RAG:** inject retrieved context as a
+`SystemMessage`, not a `HumanMessage`. The model treats the system
+slot as instructions, not user input.
+
+```python
+messages = [
+    SystemMessage(content=f"Use these documents to answer:\n\n{retrieved_docs}"),
+    HumanMessage(content="What is Kubernetes?"),
+]
+```
+
+---
+
+## HumanMessage — the user's input
+
+```python
+from langchain_core.messages import HumanMessage
+
+msg = HumanMessage(content="What is the weather in Tokyo?")
+```
+
+**The `id` field.** Every message has an `id` (a UUID by default).
+You can set it explicitly:
+
+```python
+msg = HumanMessage(content="...", id="user-msg-1")
+```
+
+Set it when you're replaying a logged conversation or restoring
+from a database with stable IDs.
+
+**Multi-modal content.** The `content` field accepts a list for
+image/audio input:
+
+```python
+msg = HumanMessage(content=[
+    {"type": "text", "text": "What's in this screenshot?"},
+    {"type": "image_url", "image_url": {"url": "https://example.com/screenshot.png"}},
+])
+```
+
+This follows the OpenAI multimodal format. Most providers
+(OpenAI, Anthropic via LiteLLM, Bedrock) support it.
+
+---
+
+## AIMessage — what the model returns
+
+This is the big one. When you call a chat model, you get back an
+`AIMessage`:
+
+```python
+from langchain_core.messages import AIMessage
+
+response = model.invoke([HumanMessage(content="hi")])
+# response is an AIMessage
+```
+
+### The three key fields
+
+```python
+response.content          # str — the model's text response (or "" if it only called tools)
+response.tool_calls       # list[ToolCall] — structured tool call requests
+response.usage_metadata   # dict — token counts (input, output, total)
+```
+
+Example — the model calls a tool:
+
+```python
+response = model_with_tools.invoke([HumanMessage(content="What's the weather in Tokyo?")])
+
+print(response.content)   # "" (empty — the model only called a tool)
+print(response.tool_calls)
+# [ToolCall(name='get_weather', args={'city': 'Tokyo'}, id='call-abc123')]
+```
+
+Example — the model responds with text only:
+
+```python
+response = model.invoke([HumanMessage(content="Say hello")])
+
+print(response.content)   # "Hello! How can I help you?"
+print(response.tool_calls)  # []
+```
+
+Example — the model does both (some providers support this):
+
+```python
+response = model_with_tools.invoke([HumanMessage(content="Tell me about Tokyo")])
+
+print(response.content)   # "Let me check the weather for Tokyo..."
+print(response.tool_calls)  # [ToolCall(name='get_weather', ...)]
+```
+
+### The `tool_calls` field — the correlation key
+
+`ToolCall` is a typed dict, not a `Message`. It has:
+
+```python
+ToolCall(
+    name="get_weather",   # which tool to call
+    args={"city": "Tokyo"},  # the arguments
+    id="call-abc123",     # the correlation ID
+)
+```
+
+**The `id` is critical.** When a tool returns its result, you must
+wrap it in a `ToolMessage` with the **same `id`** as the `ToolCall`
+that requested it. The model uses this to correlate the result with
+the call:
+
+```python
+ToolMessage(
+    content="The weather in Tokyo is sunny and 72°F.",
+    tool_call_id="call-abc123",   # must match the ToolCall.id
+)
+```
+
+If the IDs don't match, the model has no way to know which tool
+call this result answers. **This is the single most common bug in
+agent code.** LangGraph's `ToolNode` handles this automatically;
+if you build `ToolMessage`s by hand, double-check.
+
+### The `id` field on AIMessage
+
+The `AIMessage.id` is the message's unique ID (a UUID by default).
+It's used by checkpointers for deduplication. You usually don't
+need to set it, but if you're reconstructing a conversation from
+storage, you can:
+
+```python
+msg = AIMessage(content="...", id="msg-xyz-789")
+```
+
+### `usage_metadata` — token counts and cost
+
+```python
+response.usage_metadata
+# {'input_tokens': 87, 'output_tokens': 12, 'total_tokens': 99}
+```
+
+Sum across a conversation to compute cost:
+
+```python
+def cost_of(response: AIMessage, rates: dict) -> float:
+    u = response.usage_metadata or {}
+    input_t = u.get("input_tokens", 0)
+    output_t = u.get("output_tokens", 0)
+    return (input_t / 1000) * rates["input"] + (output_t / 1000) * rates["output"]
+
+rates = {"input": 0.00015, "output": 0.00060}  # $/token
+cost = cost_of(response, rates)
+```
+
+### `response_metadata` — provider-specific extras
+
+```python
+response.response_metadata
+# {'model_name': 'gpt-4o-mini', 'finish_reason': 'stop'}
+```
+
+Common keys: `finish_reason` (`stop`, `length`, `tool_calls`),
+`system_fingerprint`, `logprobs`.
+
+Use `finish_reason == "length"` to detect truncated responses
+and retry with a higher `max_tokens`.
+
+---
+
+## AIMessageChunk — streaming responses
+
+When you call a model with `streaming=True`, you get an iterator
+of `AIMessageChunk` objects. Each chunk has the same shape as
+`AIMessage` but carries only the **delta** for that chunk:
+
+```python
+model = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+
+for chunk in model.stream([HumanMessage(content="Tell me a story")]):
+    print(chunk.content, end="", flush=True)
+```
+
+`chunk.content` is a string delta. `chunk.tool_call_chunks` is a
+list of partial tool-call deltas (tool calls may arrive over
+several chunks).
+
+To reconstruct the full `AIMessage`:
+
+```python
+full: AIMessage | None = None
+for chunk in model.stream([HumanMessage(content="hi")]):
+    full = chunk if full is None else full + chunk
+
+# full is now the complete AIMessage
+```
+
+The `+` operator on `AIMessage` and `AIMessageChunk` merges them.
+
+---
+
+## ToolMessage — the result of a tool call
+
+A `ToolMessage` wraps a tool's result. It's appended to the messages
+list so the model can see it:
+
+```python
+from langchain_core.messages import ToolMessage
+
+tool_msg = ToolMessage(
+    content="The weather in Tokyo is sunny and 72°F.",
+    tool_call_id="call-abc123",   # must match the ToolCall.id from the AIMessage
+)
+```
+
+### The three required fields
+
+```python
+ToolMessage(
+    content="...",        # always a string — the model's only view of the result
+    tool_call_id="...",   # must match an AIMessage.tool_calls[i].id
+    name="get_weather",   # the tool name (for the model's benefit)
+)
+```
+
+### `content` is always a string
+
+**This is the most common bug in agent code:**
+
+```python
+# WRONG — model sees the repr of a list, not the data
+ToolMessage(content=[{"id": "cl-001"}], ...)
+
+# RIGHT — serialize explicitly
+ToolMessage(content='[{"id": "cl-001"}]', ...)
+```
+
+The model's only view is `content` (a string). If your tool returns
+a Pydantic model, serialize it:
+
+```python
+from pydantic import BaseModel
+
+class Cluster(BaseModel):
+    id: str
+    status: str
+
+@tool
+def list_clusters() -> list[Cluster]:
+    return [Cluster(id="cl-001", status="READY")]
+
+# When the ToolMessage is built by ToolNode, it calls str() on the return.
+# For a list of Pydantic models, str([...]) is not JSON.
+# Serialize explicitly:
+@tool
+def list_clusters() -> str:   # return type is str
+    clusters = [Cluster(id="cl-001", status="READY")]
+    return json.dumps([c.model_dump() for c in clusters])
+```
+
+Or use `StructuredTool` with `response_format="content"` (default)
+and ensure your return value serializes cleanly.
+
+### `status` — telling the model something went wrong
+
+```python
+ToolMessage(
+    content="Cluster cl-999 not found.",
+    tool_call_id="call-abc123",
+    name="get_cluster_status",
+    status="error",   # "success" (default) or "error"
+)
+```
+
+The model sees the error and can react (retry, explain, ask for
+clarification). **Use this instead of raising.** Raising kills the
+graph run; erroring-in-content keeps the agent loop alive.
+
+### `artifact` — data the model shouldn't see
+
+The model reads only `content` (a string). For data the model
+shouldn't see but your code needs (a DataFrame, an image):
+
+```python
+ToolMessage(
+    content="Image returned (1024x768).",
+    tool_call_id="call-xyz",
+    name="get_screenshot",
+    artifact=PILImage.open(...),   # available to your code, not the model
+)
+```
+
+### The alternation invariant
+
+In a chat agent, messages must alternate correctly:
 
 ```
 HumanMessage → AIMessage → ToolMessage → AIMessage → ToolMessage → AIMessage
 ```
 
-There is no `AssistantMessage` — it's `AIMessage`. The
-`FunctionMessage` is the pre-tool-calls era; use `ToolMessage`
-instead. LangChain still exports it for backward compat.
+The model never sees a `ToolMessage` without a preceding `AIMessage`
+that requested it. `ToolNode` enforces this. If you build state by
+hand, respect the alternation.
 
 ---
 
-## 2. Anatomy of a `SystemMessage`
+## RemoveMessage — trimming conversation history
 
-The system message is the only one you, the developer, author
-freely. It shapes the model's behavior.
-
-```python
-from langchain_core.messages import SystemMessage
-
-sys = SystemMessage(content="You are Strata, an EKS ops copilot. "
-                            "Always call list_clusters before answering "
-                            "questions about clusters.")
-```
-
-What the model sees:
-
-```json
-{
-  "role": "system",
-  "content": "You are Strata, an EKS ops copilot. ..."
-}
-```
-
-**Strata's Phase 2 pattern:** a literal `SystemMessage` constructed
-once in `graph.py` and prepended to the user message on every
-turn. Don't template it from a `ChatPromptTemplate` until you have
-variables that change (per-user instructions, per-cluster context,
-etc.) — that lands in Phase 5+.
-
-**Common pattern for RAG:** inject retrieved context as a system
-message, *not* a human message, so the model treats it as
-instructions, not user input.
-
-```python
-return {
-  "messages": [
-    SystemMessage(content=f"Use these docs to answer:\n\n{docs}"),
-    # ... existing conversation ...
-  ]
-}
-```
-
----
-
-## 3. Anatomy of a `HumanMessage`
-
-```python
-from langchain_core.messages import HumanMessage
-
-HumanMessage(content="list my clusters")
-```
-
-**The `id` field.** Every message has an `id`. The
-`add_messages` reducer uses it to deduplicate. By default,
-LangChain assigns a UUID when you construct the message, but you
-can override:
-
-```python
-HumanMessage(content="...", id="user-msg-1")
-```
-
-Why you'd set it explicitly: you're replaying a logged
-conversation and want the IDs to match. Or you're restoring from
-a database and want stable IDs.
-
-**Multi-modal content.** The `content` field is typed as `str |
-list[content blocks]`. For images:
-
-```python
-HumanMessage(content=[
-    {"type": "text", "text": "What's in this screenshot?"},
-    {"type": "image_url", "image_url": {"url": "https://..."}},
-])
-```
-
-This is the OpenAI multimodal format. Bedrock via LiteLLM
-translates it. Strata does not use multi-modal in Phase 2, but
-the schema is here for Phase 6+ (EKS dashboard screenshots, log
-diagrams).
-
-**`example=True`.** Marks this message as a few-shot example.
-The model treats it as part of the prompt, not the live
-conversation. Used with `with_structured_output` for
-structured-output few-shotting.
-
----
-
-## 4. Anatomy of an `AIMessage` — the big one
-
-`AIMessage` is what the model returns. It carries:
-
-| Field | Type | What |
-|---|---|---|
-| `content` | `str \| list[content blocks]` | The model's text response. May be empty if the model only called tools. |
-| `tool_calls` | `list[ToolCall]` | Structured tool-call requests. Empty list if no tools called. |
-| `invalid_tool_calls` | `list[InvalidToolCall]` | Tool calls the model tried to make but that failed parsing. Strata doesn't see these in normal flow; `bind_tools` filters them. |
-| `id` | `str` | Correlation id. |
-| `name` | `str \| None` | Optional: custom name for the message (e.g. "assistant_with_tools"). |
-| `usage_metadata` | `UsageMetadata` | Token counts (input, output, total) — populated when the API returns them. |
-| `response_metadata` | `dict` | Provider-specific response metadata (model id, finish reason, logprobs, etc.). |
-| `additional_kwargs` | `dict` | Provider-specific extras you can pass to the model. |
-
-Example after the model decides to call a tool:
-
-```python
-AIMessage(
-    content="",
-    tool_calls=[
-        ToolCall(
-            name="list_clusters",
-            args={},
-            id="call-abc123",
-        ),
-    ],
-    usage_metadata={"input_tokens": 87, "output_tokens": 12, "total_tokens": 99},
-    response_metadata={"model_name": "amazon.nova-pro-v1:0", "finish_reason": "tool_calls"},
-)
-```
-
-### The `id` is a correlation key — pay attention
-
-The model issues a `tool_call_id` (e.g. `call-abc123`). The
-`ToolMessage` you build in response **must** carry that same id:
-
-```python
-ToolMessage(
-    content='[{"id": "cl-001", ...}]',
-    name="list_clusters",
-    tool_call_id="call-abc123",   # must match
-)
-```
-
-If the ids don't match, the model has no way to know which
-tool call the result answers. LangGraph's `ToolNode` does this
-for you. If you ever build `ToolMessage`s by hand, double-check.
-
-### `tool_calls` vs `content`
-
-The model can do both at once: emit text *and* call tools. Some
-providers do this; some don't. Nova Pro usually emits
-`content=""` and only fills `tool_calls`. Anthropic models
-sometimes narrate ("Let me check your clusters...") then call.
-
-If you stream and the model is doing both, you'll see `content`
-chunks interleaved with `tool_call_chunks`. Accumulate them
-separately.
-
-### `usage_metadata` — the cost story
-
-Most providers return token counts. LangChain normalizes:
-
-```python
-AIMessage.usage_metadata = {
-    "input_tokens": 87,
-    "output_tokens": 12,
-    "total_tokens": 99,
-    "input_token_details": {"cache_read": 0, "cache_creation": 0},  # newer providers
-}
-```
-
-You can sum across an entire conversation to compute cost. Strata
-defers per-request cost tracking to Phase 5+; the metadata is
-already in the message.
-
-### `response_metadata` — provider-specific
-
-`response_metadata` is the dump-everything-the-provider-returned
-bag. Common keys:
-
-- `model_name` — the actual model id, not the alias
-- `finish_reason` — `stop`, `length`, `tool_calls`, `content_filter`
-- `system_fingerprint` (OpenAI)
-- `logprobs` (when requested)
-
-You can use `finish_reason == "length"` to detect truncated
-responses and trigger a retry with a longer budget.
-
-### `additional_kwargs` — sending extras
-
-Pass provider-specific params that LangChain doesn't abstract:
-
-```python
-AIMessage(
-    content="...",
-    additional_kwargs={"tools": [{"google_search": {}}]},   # Gemini-style
-)
-```
-
-Or send a request with them:
-
-```python
-model.invoke(messages, additional_kwargs={"top_k": 50})
-```
-
-For Strata, you almost never need this — the parameters you care
-about (`temperature`, `max_tokens`, `top_p`) have first-class
-kwargs on `ChatOpenAI`.
-
----
-
-## 5. `AIMessageChunk` — streaming
-
-When you call a model with `streaming=True`, you get back an
-iterator of `AIMessageChunk` objects. Each chunk has the same
-shape as `AIMessage` but only carries the **delta** for that
-chunk.
-
-```python
-model = ChatOpenAI(..., streaming=True)
-for chunk in model.stream(messages):
-    print(chunk.content, end="", flush=True)
-```
-
-`chunk.content` is a `str` (or empty). `chunk.tool_call_chunks`
-is a list of partial tool-call deltas — they may arrive over
-several chunks. To reconstruct the full `AIMessage`, accumulate:
-
-```python
-full: AIMessage | None = None
-for chunk in model.stream(messages):
-    full = chunk if full is None else full + chunk
-# full is now the complete AIMessage
-```
-
-The `+` operator on `AIMessage` and `AIMessageChunk` is
-overloaded to merge them.
-
-**In a graph**, you don't do this manually. `astream(stream_mode="messages")`
-yields `(message_chunk, metadata)` tuples and LangGraph handles
-the accumulation if you ask for `stream_mode="values"`.
-
----
-
-## 6. Anatomy of a `ToolMessage`
-
-```python
-from langchain_core.messages import ToolMessage
-
-ToolMessage(
-    content='[{"id": "cl-001", "name": "demo", "status": "READY"}]',
-    name="list_clusters",
-    tool_call_id="call-abc123",
-)
-```
-
-Three required fields, two optional:
-
-| Field | Type | What |
-|---|---|---|
-| `content` | `str` | **Always a string.** The model's only view of the result. |
-| `name` | `str` | The tool name (for the model's benefit; doesn't have to match the actual tool's name). |
-| `tool_call_id` | `str` | Correlation id. Must match an `AIMessage.tool_calls[i].id`. |
-| `tool_call_id` ... wait, that's the same | | |
-| `status` | `str` (default `"success"`) | "success" or "error". Affects how the model interprets it. |
-| `artifact` | `Any` | A non-string payload (e.g. a DataFrame, an image) for downstream use. The model doesn't see it. |
-
-### `content` is always a string
-
-The single most common bug in agent code:
-
-```python
-# WRONG — model will see the repr, not the data
-ToolMessage(content=[{"id": "cl-001"}], ...)
-
-# RIGHT
-ToolMessage(content=json.dumps([{"id": "cl-001"}]), ...)
-
-# ALSO RIGHT (Pydantic v2)
-ToolMessage(content=ClusterList.model_validate(rows).model_dump_json(), ...)
-```
-
-If your tool returns a Pydantic model directly, LangChain's
-`StructuredTool.invoke` calls `model_dump_json()` on the return
-value. But if you build the `ToolMessage` by hand (e.g. in a
-custom `ToolNode`-like wrapper), **you** must serialize.
-
-### `status="error"` — telling the model something went wrong
-
-```python
-ToolMessage(
-    content="Cluster cl-001 not found.",
-    name="get_cluster_status",
-    tool_call_id="call-abc123",
-    status="error",
-)
-```
-
-The model sees the error and can react. Use this instead of
-raising — raising kills the graph run, erroring-in-content keeps
-the agent loop alive.
-
-### `artifact` — bypassing the model's view
-
-The model only reads `content` (string). For data the model
-*shouldn't* see (large blobs, images) but that downstream code
-needs:
-
-```python
-ToolMessage(
-    content="Image returned (1024x768).",
-    name="get_screenshot",
-    tool_call_id="call-xyz",
-    artifact=PILImage.open(...),   # available to your code, not the model
-)
-```
-
-Strata doesn't use this in Phase 2. The pattern is useful for
-"return a chart the UI will render, not the data the model
-parses."
-
----
-
-## 7. `RemoveMessage` — explicit deletion
-
-In a stateful graph, the message list grows forever. To prune,
-append a `RemoveMessage`:
+In a stateful agent, the message list grows forever. To prune old
+messages:
 
 ```python
 from langgraph.graph.message import RemoveMessage
 
-def trim(state):
-    # keep only the last 10 messages
+def trimmer(state):
     msgs = state["messages"]
-    return {"messages": [RemoveMessage(id=m.id) for m in msgs[:-10]]}
+    # keep only the last 10 messages
+    return {
+        "messages": [
+            RemoveMessage(id=m.id) for m in msgs[:-10]
+        ]
+    }
 ```
 
 The `add_messages` reducer honors `RemoveMessage` and deletes
-matching ids.
+matching IDs.
 
-**Strata's approach:** when using a checkpointer, use `trim_messages`
-from `langchain_core.messages` rather than `RemoveMessage` —
-it's a one-shot helper:
+A simpler approach is `trim_messages` from `langchain_core.messages`:
 
 ```python
 from langchain_core.messages import trim_messages
@@ -389,121 +391,88 @@ trimmed = trim_messages(
     messages,
     max_tokens=4000,
     token_counter=model,   # uses the model's tokenizer
-    strategy="last",
+    strategy="last",       # keep most recent, drop oldest
 )
 ```
 
-`strategy="last"` keeps the most recent N tokens. `strategy="first"`
-keeps the oldest. Use `start_on="human"` to always start with a
-`HumanMessage` (you never want to send an `AIMessage` as the
-first message to a model).
+`strategy="last"` keeps the last N tokens. `strategy="first"` keeps
+the oldest. Use `start_on="human"` to always start with a
+`HumanMessage` — you never want an `AIMessage` as the first message
+to a model.
 
 ---
 
-## 8. `FunctionMessage` — legacy, do not use
+## The complete message lifecycle
 
-Pre-2024 LangChain had `HumanMessage`, `AIMessage`, and
-`FunctionMessage`. Then OpenAI introduced "tools" and the world
-moved. The mapping:
+Here's the full loop from a single user message to a final response:
 
-- Old `function_call` field on `AIMessage` → new `tool_calls` field.
-- Old `FunctionMessage` (the result) → new `ToolMessage`.
+```python
+# 1. Build the initial messages list
+messages = [
+    SystemMessage(content="You are a helpful assistant."),
+    HumanMessage(content="What's the weather in Tokyo?"),
+]
 
-LangChain still exports `FunctionMessage` for back-compat with
-OpenAI's `function_call` API and older agents. **Do not use it.**
-If you see it in a tutorial, the tutorial is old.
+# 2. Call the model (with tools bound)
+response = model_with_tools.invoke(messages)
+# response is an AIMessage
+# response.tool_calls = [ToolCall(name='get_weather', args={'city': 'Tokyo'}, id='call-1')]
 
----
+# 3. Append the model's response to the messages list
+messages.append(response)
 
-## 9. The message lifecycle in Strata
+# 4. Run the tool
+tool_result = get_weather.invoke({"city": "Tokyo"})
+# tool_result is a str: "The weather in Tokyo is sunny and 72°F."
 
-A single `POST /chat` call in Phase 2 walks these steps:
+# 5. Build a ToolMessage with the SAME id as the ToolCall
+tool_msg = ToolMessage(
+    content=tool_result,
+    tool_call_id="call-1",   # must match ToolCall.id
+    name="get_weather",
+)
+messages.append(tool_msg)
 
-```
-1. Receive {"message": "list my clusters"}.
-2. Build initial state:
-     {"messages": [
-         SystemMessage(content=SYSTEM_PROMPT),
-         HumanMessage(content="list my clusters"),
-     ]}
-3. Graph node `call_model`:
-     response = llm.bind_tools(tools).invoke(state["messages"])
-   → AIMessage(content="", tool_calls=[list_clusters])
-4. add_messages reducer appends the AIMessage.
-5. Conditional edge → ToolNode.
-6. ToolNode invokes list_clusters, gets [{"id": "cl-001", ...}].
-7. ToolNode builds:
-     ToolMessage(content='[{"id": "cl-001", ...}]',
-                name="list_clusters",
-                tool_call_id="<from step 3>")
-8. add_messages appends the ToolMessage.
-9. Conditional edge → call_model (loop).
-10. call_model sees the tool result, emits a final AIMessage
-    with content="You have 3 clusters: ..."
-11. add_messages appends.
-12. Conditional edge → END.
-13. app/main.py walks state["messages"], emits NDJSON.
+# 6. Call the model again with the updated messages
+response2 = model_with_tools.invoke(messages)
+# response2.content = "The weather in Tokyo is sunny and 72°F."
+# response2.tool_calls = [] (no more tools to call)
+
+messages.append(response2)
+# messages is now: SystemMessage, HumanMessage, AIMessage(tool_call),
+#                  ToolMessage, AIMessage(final)
 ```
 
-`add_messages` is the only thing touching the message list. You
-never `state["messages"].append(...)` by hand.
+This is the agent loop. LangGraph automates steps 2–6 and handles
+the state management so you don't build the list by hand.
 
 ---
 
-## 10. How Strata uses this
+## Common pitfalls
 
-**Today (Phase 2):** All five message types in this doc are
-emitted by the graph. The `id` field is set by LangChain
-automatically; you never construct it. `usage_metadata` is
-populated by the model response; we don't act on it yet but it's
-there. `RemoveMessage` is unused (no checkpointer, so no
-accumulation).
-
-**Phase 4+:** RAG injects retrieved docs as a `SystemMessage`
-before `call_model`. The `retrieve` node builds the system
-message and returns a partial state update.
-
-**Phase 6+:** With a checkpointer, the message list can grow
-arbitrarily. Use `trim_messages` before sending to the model.
-Add a `MemoryStore` to read prior facts and inject them as a
-`SystemMessage`. See `langgraph/09-memory-store.md`.
-
----
-
-## 11. Common pitfalls
-
-1. **`ToolMessage.content` must be a string.** Pydantic models,
-   dicts, lists — all must be `model_dump_json()` /
-   `json.dumps()` / `str()` first.
-2. **Mismatched `tool_call_id`.** If the `ToolMessage`'s id
-   doesn't match an `AIMessage.tool_calls[i].id`, the model has
-   no correlation and the conversation breaks. `ToolNode` gets
-   this right; if you write your own, you must.
-3. **Mutating `state["messages"]` in place.** Don't. The
-   framework owns the state object. Always return a partial
-   update.
-4. **Sending `AIMessage(content="", tool_calls=[...])` to the
-   model as input.** The model handles it, but if you build
-   state by hand, double-check the alternation invariant.
-5. **Forgetting `id` on streamed messages.** When you
-   accumulate `AIMessageChunk`s, the resulting `AIMessage` has
-   an id (from the first chunk). If the chunks don't carry ids,
-   the merged message gets a fresh one and downstream correlation
-   breaks.
-6. **`content=[]` vs `content=""` for tool-only `AIMessage`.**
-   Both are legal. Nova Pro and OpenAI both return `""` by
-   convention. Some old code uses `[]`.
-7. **Treating `FunctionMessage` as the result type.** Legacy.
-   Use `ToolMessage`.
+1. **`ToolMessage.content` must be a string.** `json.dumps()` or
+   `str()` your data first. A list or dict will confuse the model.
+2. **Mismatched `tool_call_id`.** The `ToolMessage`'s `tool_call_id`
+   must match the `AIMessage.tool_calls[i].id`. Mismatch = broken
+   correlation.
+3. **Mutating `messages` in place.** Don't do `messages.append(...)`
+   by hand in a graph. Return a partial update `{"messages": [...]}`.
+4. **`content=""` vs `content=[]` for tool-only responses.** Both
+   are legal. Most providers return `""` by convention.
+5. **`FunctionMessage` is legacy.** It was the pre-tool-calls way
+   to return function results. Use `ToolMessage`.
+6. **Sending an `AIMessage` as the first message to a model.** The
+   model has no context for it. Always start with `SystemMessage`
+   then `HumanMessage`.
+7. **Forgetting that `content` can be a list** (for multi-modal).
+   Code that does `str(msg.content)` works for both string and list
+   content, but code that does `msg.content.upper()` fails on lists.
 
 ---
 
-## 12. What to read next
+## See also
 
-- `03-chat-models.md` — the model layer, including how `bind_tools`
-  produces `AIMessage.tool_calls`.
-- `04-tools.md` — building tools that return values that become
-  `ToolMessage.content`.
-- `../langgraph/02-state-and-reducers.md` — `add_messages` and
-  how the framework handles the list.
-- LangChain messages API: <https://api.python.langchain.com/en/stable/messages.html>
+- [[AI/langchain/01-mental-model|01-mental-model]] — what LangChain is and why it exists
+- [[AI/langchain/03-chat-models|03-chat-models]] — what `AIMessage` fields mean when the model returns
+- [[AI/langchain/04-tools|04-tools]] — how tools return `ToolMessage`s
+- [[AI/langchain/08-langgraph-intro|08-langgraph-intro]] — the agent loop above, automated by LangGraph
