@@ -17,7 +17,7 @@ CI/CD, DevSecOps, Platform Engineering, and SRE.
 - [[DevOps/ci-cd/git|Git Configuration]]
 
 ### DevSecOps
-- [[DevOps/devsecops/README|DevSecOps]]
+- [[DevOps/devsecops/README|DevSecOps]] — 20-module curriculum: shift-left to shift-right
 
 ### Platform Engineering
 - [[DevOps/devops-sre-platform-engg/README|Platform Engineering]]
