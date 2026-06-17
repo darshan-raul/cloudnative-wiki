@@ -2,7 +2,7 @@
 title: "M07: Software Composition Analysis (SCA) & Dependency Scanning"
 tags: [devsecops, stage1, code, sca, dependencies, trivy, snyk, dependabot, renovate, cve]
 date: 2026-06-16
-description: Module 7 of 20 — Software Composition Analysis: how to detect vulnerable dependencies, manage license risk, keep dependencies current, and reduce the supply-chain attack surface.
+description: "Module 7 of 20 — Software Composition Analysis: how to detect vulnerable dependencies, manage license risk, keep dependencies current, and reduce the supply-chain attack surface."
 ---
 
 # M07: Software Composition Analysis (SCA) & Dependency Scanning

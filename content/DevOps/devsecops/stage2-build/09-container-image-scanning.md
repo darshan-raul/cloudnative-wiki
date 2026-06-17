@@ -2,7 +2,7 @@
 title: "M09: Container Image Scanning & Hardening"
 tags: [devsecops, stage2, build, containers, docker, distroless, trivy, grype, hardening]
 date: 2026-06-16
-description: Module 9 of 20 — building and scanning container images. Multi-stage builds, distroless/minimal bases, non-root users, image scan gates, and the diff between the developer Dockerfile and the production image.
+description: "Module 9 of 20 — building and scanning container images. Multi-stage builds, distroless/minimal bases, non-root users, image scan gates, and the diff between the developer Dockerfile and the production image."
 ---
 
 # M09: Container Image Scanning & Hardening

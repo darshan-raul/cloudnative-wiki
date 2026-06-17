@@ -2,7 +2,7 @@
 title: DevSecOps
 tags: [devops, security, devsecops, ci-cd]
 date: 2025-05-24
-description: 20-module DevSecOps curriculum — shift-left, shift-right, and the pipeline in between. From culture and threat modeling to runtime detection and the capstone end-to-end pipeline.
+description: "20-module DevSecOps curriculum — shift-left, shift-right, and the pipeline in between. From culture and threat modeling to runtime detection and the capstone end-to-end pipeline."
 ---
 
 # DevSecOps 🔒

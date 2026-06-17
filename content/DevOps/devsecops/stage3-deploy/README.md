@@ -2,7 +2,7 @@
 title: "Stage 3 — Deploy"
 tags: [devsecops, stage3, deploy, hub]
 date: 2026-06-16
-description: Stage 3 of the 20-module DevSecOps curriculum — the moment the artifact meets the cluster. OIDC, signing, attestations, and policy-as-code. The gates that stand between the build and a running workload.
+description: "Stage 3 of the 20-module DevSecOps curriculum — the moment the artifact meets the cluster. OIDC, signing, attestations, and policy-as-code. The gates that stand between the build and a running workload."
 ---
 
 # Stage 3 — Deploy

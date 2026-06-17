@@ -2,7 +2,7 @@
 title: "M13: Artifact Signing"
 tags: [devsecops, stage3, deploy, signing, cosign, sigstore, sigstore-fulcio, rekor, slsa]
 date: 2026-06-16
-description: Module 13 of 20 — signing build artifacts (container images, binaries, SBOMs) with cosign/Sigstore. Keyless signing with OIDC, key management with KMS, and verification at deploy.
+description: "Module 13 of 20 — signing build artifacts (container images, binaries, SBOMs) with cosign/Sigstore. Keyless signing with OIDC, key management with KMS, and verification at deploy."
 ---
 
 # M13: Artifact Signing

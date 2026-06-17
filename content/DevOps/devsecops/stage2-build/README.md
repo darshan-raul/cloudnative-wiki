@@ -2,7 +2,7 @@
 title: "Stage 2 — Build"
 tags: [devsecops, stage2, build, hub]
 date: 2026-06-16
-description: Stage 2 of the 20-module DevSecOps curriculum — what happens after the code is written and the build is running. Image hardening, IaC scanning, and the pipeline itself as code that needs securing.
+description: "Stage 2 of the 20-module DevSecOps curriculum — what happens after the code is written and the build is running. Image hardening, IaC scanning, and the pipeline itself as code that needs securing."
 ---
 
 # Stage 2 — Build

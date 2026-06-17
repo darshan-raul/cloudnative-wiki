@@ -2,7 +2,7 @@
 title: "M17: Runtime Detection & Response"
 tags: [devsecops, stage4, runtime, falco, wazuh, detection, runtime-protection, shift-right]
 date: 2026-06-16
-description: Module 17 of 20 — runtime detection for shift-right. Falco for K8s, eBPF-based detection, anomaly response, and the SOC playbook for containerized workloads.
+description: "Module 17 of 20 — runtime detection for shift-right. Falco for K8s, eBPF-based detection, anomaly response, and the SOC playbook for containerized workloads."
 ---
 
 # M17: Runtime Detection & Response

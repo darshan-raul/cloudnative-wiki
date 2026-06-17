@@ -2,7 +2,7 @@
 title: "M20: Capstone — End-to-End Secure Pipeline"
 tags: [devsecops, stage4, runtime, capstone, end-to-end, slsa, signed, audited]
 date: 2026-06-16
-description: Module 20 of 20 — capstone. Build the entire pipeline end-to-end: code to runtime, with all 19 prior modules applied. The deliverable is a working pipeline that satisfies Tier 3 SSDLC, SLSA L3, and survives a real audit.
+description: "Module 20 of 20 — capstone. Build the entire pipeline end-to-end: code to runtime, with all 19 prior modules applied. The deliverable is a working pipeline that satisfies Tier 3 SSDLC, SLSA L3, and survives a real audit."
 ---
 
 # M20: Capstone — End-to-End Secure Pipeline

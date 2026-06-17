@@ -2,7 +2,7 @@
 title: "Stage 1 — Code"
 tags: [devsecops, stage1, code, hub]
 date: 2026-06-16
-description: Stage 1 of the 20-module DevSecOps curriculum — scanners that run on code, dependencies, and the artifacts that come out of the build. The first line of automated defense.
+description: "Stage 1 of the 20-module DevSecOps curriculum — scanners that run on code, dependencies, and the artifacts that come out of the build. The first line of automated defense."
 ---
 
 # Stage 1 — Code

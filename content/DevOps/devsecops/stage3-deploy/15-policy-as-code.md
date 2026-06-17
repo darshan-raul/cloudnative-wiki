@@ -2,7 +2,7 @@
 title: "M15: Policy-as-Code"
 tags: [devsecops, stage3, deploy, opa, kyverno, rego, cel, policy-as-code, admission-control]
 date: 2026-06-16
-description: Module 15 of 20 — policy-as-code with OPA, Kyverno, and CEL. Writing admission-control policies, RBAC policies, and CI gate policies in code. Version-controlled, testable, auditable policy.
+description: "Module 15 of 20 — policy-as-code with OPA, Kyverno, and CEL. Writing admission-control policies, RBAC policies, and CI gate policies in code. Version-controlled, testable, auditable policy."
 ---
 
 # M15: Policy-as-Code

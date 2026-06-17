@@ -2,7 +2,7 @@
 title: "M06: Secrets Detection & Prevention"
 tags: [devsecops, stage1, code, secrets, gitleaks, trufflehog, vault, prevention]
 date: 2026-06-16
-description: Module 6 of 20 — preventing secrets from ever reaching the repo, detecting them when they do, and rotating them quickly when prevention fails. The full secrets lifecycle.
+description: "Module 6 of 20 — preventing secrets from ever reaching the repo, detecting them when they do, and rotating them quickly when prevention fails. The full secrets lifecycle."
 ---
 
 # M06: Secrets Detection & Prevention

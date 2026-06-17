@@ -2,7 +2,7 @@
 title: "M16: Runtime Secret Management"
 tags: [devsecops, stage4, runtime, secrets, vault, external-secrets-operator, sealed-secrets, workload-identity]
 date: 2026-06-16
-description: Module 16 of 20 — runtime secret management for workloads. HashiCorp Vault, External Secrets Operator, Sealed Secrets, workload identity federation, and the patterns for keeping secrets out of config and env files.
+description: "Module 16 of 20 — runtime secret management for workloads. HashiCorp Vault, External Secrets Operator, Sealed Secrets, workload identity federation, and the patterns for keeping secrets out of config and env files."
 ---
 
 # M16: Runtime Secret Management

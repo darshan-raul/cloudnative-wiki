@@ -2,7 +2,7 @@
 title: "M03: Secure SDLC"
 tags: [devsecops, stage0, foundations, sdlc, secure-development, gates]
 date: 2026-06-16
-description: Module 3 of 20 — the Secure Software Development Lifecycle in practice. Where each control goes, which gate blocks what, and how to phase in a maturity model without halting feature work.
+description: "Module 3 of 20 — the Secure Software Development Lifecycle in practice. Where each control goes, which gate blocks what, and how to phase in a maturity model without halting feature work."
 ---
 
 # M03: Secure SDLC

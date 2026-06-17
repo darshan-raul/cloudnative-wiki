@@ -2,7 +2,7 @@
 title: "M02: Threat Modeling for DevSecOps"
 tags: [devsecops, stage0, foundations, threat-modeling, stride, attack-trees]
 date: 2026-06-16
-description: Module 2 of 20 — practical threat modeling for engineers, not auditors. STRIDE, attack trees, abuse cases, and the "4-question frame" you can run in a 30-minute design session.
+description: 'Module 2 of 20 — practical threat modeling for engineers, not auditors. STRIDE, attack trees, abuse cases, and the "4-question frame" you can run in a 30-minute design session.'
 ---
 
 # M02: Threat Modeling for DevSecOps

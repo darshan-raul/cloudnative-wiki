@@ -2,7 +2,7 @@
 title: "M19: Incident Response in CI"
 tags: [devsecops, stage4, runtime, incident-response, ir, chaos, game-day, blameless]
 date: 2026-06-16
-description: Module 19 of 20 — incident response for pipeline incidents and the integration with M17. Runbooks, blameless postmortems, chaos game days, and closing the loop so each incident makes the pipeline stronger.
+description: "Module 19 of 20 — incident response for pipeline incidents and the integration with M17. Runbooks, blameless postmortems, chaos game days, and closing the loop so each incident makes the pipeline stronger."
 ---
 
 # M19: Incident Response in CI

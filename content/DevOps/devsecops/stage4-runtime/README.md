@@ -2,7 +2,7 @@
 title: "Stage 4 — Runtime"
 tags: [devsecops, stage4, runtime, hub]
 date: 2026-06-16
-description: Stage 4 of the 20-module DevSecOps curriculum — the runtime. Detection, secret management, compliance evidence, incident response, and the capstone end-to-end pipeline.
+description: "Stage 4 of the 20-module DevSecOps curriculum — the runtime. Detection, secret management, compliance evidence, incident response, and the capstone end-to-end pipeline."
 ---
 
 # Stage 4 — Runtime

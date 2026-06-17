@@ -2,7 +2,7 @@
 title: "M08: SBOM Generation & Consumption"
 tags: [devsecops, stage1, code, sbom, spdx, cyclonedx, sigstore, supply-chain]
 date: 2026-06-16
-description: Module 8 of 20 — Software Bill of Materials: what to put in it, which format (SPDX vs. CycloneDX), how to generate it in the build, and how to consume it downstream for vuln tracking and compliance.
+description: "Module 8 of 20 — Software Bill of Materials: what to put in it, which format (SPDX vs. CycloneDX), how to generate it in the build, and how to consume it downstream for vuln tracking and compliance."
 ---
 
 # M08: SBOM Generation & Consumption

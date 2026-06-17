@@ -2,7 +2,7 @@
 title: "Stage 0 — Foundations"
 tags: [devsecops, stage0, foundations, hub]
 date: 2026-06-16
-description: Stage 0 of the 20-module DevSecOps curriculum — culture, threat modeling, SDLC phases, and security requirements. The mental models before the tooling.
+description: "Stage 0 of the 20-module DevSecOps curriculum — culture, threat modeling, SDLC phases, and security requirements. The mental models before the tooling."
 ---
 
 # Stage 0 — Foundations

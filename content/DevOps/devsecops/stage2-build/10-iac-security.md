@@ -2,7 +2,7 @@
 title: "M10: Infrastructure-as-Code Security"
 tags: [devsecops, stage2, build, iac, terraform, checkov, tfsec, terrascan, pulumi, cdk]
 date: 2026-06-16
-description: Module 10 of 20 — securing Infrastructure-as-Code before it applies. Checkov, tfsec, Trivy IaC, OPA, policy-as-code for Terraform/CloudFormation/Pulumi/CDK. The build-time gate for cloud misconfigurations.
+description: "Module 10 of 20 — securing Infrastructure-as-Code before it applies. Checkov, tfsec, Trivy IaC, OPA, policy-as-code for Terraform/CloudFormation/Pulumi/CDK. The build-time gate for cloud misconfigurations."
 ---
 
 # M10: Infrastructure-as-Code Security

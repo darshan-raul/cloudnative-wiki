@@ -2,7 +2,7 @@
 title: "M12: Pipeline Identity & OIDC Federation"
 tags: [devsecops, stage3, deploy, oidc, iam, irsa, wif, workload-identity, cicd-auth]
 date: 2026-06-16
-description: Module 12 of 20 — replacing long-lived cloud credentials in CI with short-lived OIDC tokens. GitHub Actions → AWS, GCP, Azure. IRSA, WIF, and the pattern of "no static keys anywhere."
+description: 'Module 12 of 20 — replacing long-lived cloud credentials in CI with short-lived OIDC tokens. GitHub Actions → AWS, GCP, Azure. IRSA, WIF, and the pattern of "no static keys anywhere."'
 ---
 
 # M12: Pipeline Identity & OIDC Federation

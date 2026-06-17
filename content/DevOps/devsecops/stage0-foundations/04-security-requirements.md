@@ -2,7 +2,7 @@
 title: "M04: Security Requirements & Acceptance Criteria"
 tags: [devsecops, stage0, foundations, requirements, acceptance-criteria, data-classification]
 date: 2026-06-16
-description: Module 4 of 20 — writing security requirements that survive contact with engineering. Data classification, the SEC-prefix template, and how to fold security criteria into the existing Definition of Done.
+description: "Module 4 of 20 — writing security requirements that survive contact with engineering. Data classification, the SEC-prefix template, and how to fold security criteria into the existing Definition of Done."
 ---
 
 # M04: Security Requirements & Acceptance Criteria

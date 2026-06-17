@@ -2,7 +2,7 @@
 title: "M11: CI/CD Pipeline Hardening"
 tags: [devsecops, stage2, build, cicd, github-actions, gitlab, jenkins, runners, hardening]
 date: 2026-06-16
-description: Module 11 of 20 — the pipeline itself is an attack surface. Securing GitHub Actions, GitLab CI, Jenkins, and self-hosted runners. Least-privilege tokens, ephemeral runners, secrets hygiene, and SLSA L3 build provenance.
+description: "Module 11 of 20 — the pipeline itself is an attack surface. Securing GitHub Actions, GitLab CI, Jenkins, and self-hosted runners. Least-privilege tokens, ephemeral runners, secrets hygiene, and SLSA L3 build provenance."
 ---
 
 # M11: CI/CD Pipeline Hardening

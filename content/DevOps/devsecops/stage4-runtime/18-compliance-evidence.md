@@ -2,7 +2,7 @@
 title: "M18: Compliance Evidence & Audit Trail"
 tags: [devsecops, stage4, runtime, compliance, soc2, iso27001, pci-dss, evidence, audit]
 date: 2026-06-16
-description: Module 18 of 20 — generating compliance evidence from your DevSecOps pipeline. SOC2, ISO 27001, PCI-DSS, HIPAA, FedRAMP control mapping, evidence collection automation, and surviving the audit.
+description: "Module 18 of 20 — generating compliance evidence from your DevSecOps pipeline. SOC2, ISO 27001, PCI-DSS, HIPAA, FedRAMP control mapping, evidence collection automation, and surviving the audit."
 ---
 
 # M18: Compliance Evidence & Audit Trail

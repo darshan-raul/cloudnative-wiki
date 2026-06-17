@@ -2,7 +2,7 @@
 title: "M14: Supply Chain Attestations & SLSA"
 tags: [devsecops, stage3, deploy, slsa, attestations, in-toto, sigstore, supply-chain, provenance]
 date: 2026-06-16
-description: Module 14 of 20 — going beyond artifact signing. SLSA levels, in-toto attestations, build provenance, VEX, and the emerging supply-chain standards that customers and regulators now require.
+description: "Module 14 of 20 — going beyond artifact signing. SLSA levels, in-toto attestations, build provenance, VEX, and the emerging supply-chain standards that customers and regulators now require."
 ---
 
 # M14: Supply Chain Attestations & SLSA

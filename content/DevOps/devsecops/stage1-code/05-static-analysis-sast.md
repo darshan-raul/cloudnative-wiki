@@ -2,7 +2,7 @@
 title: "M05: Static Application Security Testing (SAST)"
 tags: [devsecops, stage1, code, sast, semgrep, sonarqube, codeql]
 date: 2026-06-16
-description: Module 5 of 20 — Static Application Security Testing in the developer workflow. Semgrep, CodeQL, SonarQube, language-specific scanners, false-positive tuning, and CI integration patterns.
+description: "Module 5 of 20 — Static Application Security Testing in the developer workflow. Semgrep, CodeQL, SonarQube, language-specific scanners, false-positive tuning, and CI integration patterns."
 ---
 
 # M05: Static Application Security Testing (SAST)

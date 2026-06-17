@@ -2,7 +2,7 @@
 title: "M01: DevSecOps Mindset & Principles"
 tags: [devsecops, stage0, foundations, culture, shift-left]
 date: 2026-06-16
-description: Module 1 of 20 — DevSecOps culture, the shift-left philosophy, shared responsibility model, and the cultural anti-patterns that break secure pipelines.
+description: "Module 1 of 20 — DevSecOps culture, the shift-left philosophy, shared responsibility model, and the cultural anti-patterns that break secure pipelines."
 ---
 
 # M01: DevSecOps Mindset & Principles
