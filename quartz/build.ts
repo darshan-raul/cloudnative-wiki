@@ -9,7 +9,7 @@ import { parseMarkdown } from "./processors/parse";
 import { filterContent } from "./processors/filter";
 import { emitContent } from "./processors/emit";
 import cfg from "../quartz.config";
-import { FilePath, joinSegments, slugifyFilePath } from "./util/path";
+import { FilePath, fileSlug, getFolderNotes, joinSegments } from "./util/path";
 import chokidar from "chokidar";
 import { ProcessedContent } from "./plugins/vfile";
 import { Argv, BuildCtx } from "./util/ctx";
@@ -87,7 +87,8 @@ async function buildQuartz(argv: Argv, mut: Mutex, clientRefresh: () => void) {
     (fp) => joinSegments(argv.directory, fp) as FilePath,
   );
   ctx.allFiles = allFiles;
-  ctx.allSlugs = allFiles.map((fp) => slugifyFilePath(fp as FilePath));
+  const folderNotes = getFolderNotes(allFiles);
+  ctx.allSlugs = allFiles.map((fp) => fileSlug(fp as FilePath, folderNotes));
 
   const parsedFiles = await parseMarkdown(ctx, filePaths);
   const filteredContent = filterContent(ctx, parsedFiles);
@@ -271,7 +272,10 @@ async function rebuild(
 
   // update allFiles and then allSlugs with the consistent view of content map
   ctx.allFiles = Array.from(contentMap.keys());
-  ctx.allSlugs = ctx.allFiles.map((fp) => slugifyFilePath(fp as FilePath));
+  const folderNotes = getFolderNotes(ctx.allFiles);
+  ctx.allSlugs = ctx.allFiles.map((fp) =>
+    fileSlug(fp as FilePath, folderNotes),
+  );
   let processedFiles = filterContent(
     ctx,
     Array.from(contentMap.values())

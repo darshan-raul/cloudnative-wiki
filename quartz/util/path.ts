@@ -99,6 +99,40 @@ export function slugifyFilePath(fp: FilePath, excludeExt?: boolean): FullSlug {
   return (slug + ext) as FullSlug;
 }
 
+export function getFolderNotes(allFiles: (FilePath | string)[]): Set<FullSlug> {
+  const folders = new Set<string>();
+  const indexFiles = new Set<string>();
+
+  for (const fp of allFiles) {
+    const slug = slugifyFilePath(fp as FilePath);
+    if (slug.endsWith("/index") || slug === "index") {
+      indexFiles.add(slug);
+    }
+    const parts = slug.split("/");
+    for (let i = 1; i < parts.length; i++) {
+      folders.add(parts.slice(0, i).join("/"));
+    }
+  }
+
+  const folderNotes = new Set<FullSlug>();
+  for (const fp of allFiles) {
+    const slug = slugifyFilePath(fp as FilePath);
+    if (folders.has(slug) && !indexFiles.has(`${slug}/index`)) {
+      folderNotes.add(slug);
+    }
+  }
+
+  return folderNotes;
+}
+
+export function fileSlug(fp: FilePath, folderNotes?: Set<FullSlug>): FullSlug {
+  const slug = slugifyFilePath(fp);
+  if (folderNotes?.has(slug)) {
+    return joinSegments(slug, "index") as FullSlug;
+  }
+  return slug;
+}
+
 export function simplifySlug(fp: FullSlug): SimpleSlug {
   const res = stripSlashes(trimSuffix(fp, "index"), true);
   return (res.length === 0 ? "/" : res) as SimpleSlug;
@@ -280,7 +314,12 @@ export function transformLink(
       const matchingFileNames = opts.allSlugs.filter((slug) => {
         const parts = slug.split("/");
         const fileName = parts.at(-1);
-        return targetCanonical === fileName;
+        return (
+          targetCanonical === fileName ||
+          (fileName === "index" &&
+            (parts.at(-2) === targetCanonical ||
+              parts.slice(0, -1).join("/") === targetCanonical))
+        );
       });
 
       // only match, just use it

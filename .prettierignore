@@ -1,0 +1,9 @@
+.quartz-cache
+quartz/.quartz-cache
+public
+*.png
+**/*.png
+*.jpg
+**/*.jpg
+content/.obsidian
+content/Security/siem/wazuh/production-plan/ansible/inventory-example.yml

@@ -7,7 +7,7 @@ import { Root as HTMLRoot } from "hast";
 import { MarkdownContent, ProcessedContent } from "../plugins/vfile";
 import { PerfTimer } from "../util/perf";
 import { read } from "to-vfile";
-import { FilePath, QUARTZ, slugifyFilePath } from "../util/path";
+import { FilePath, QUARTZ, fileSlug, getFolderNotes } from "../util/path";
 import path from "path";
 import workerpool, { Promise as WorkerPromise } from "workerpool";
 import { QuartzLogger } from "../util/log";
@@ -84,6 +84,7 @@ async function transpileWorkerScript() {
 
 export function createFileParser(ctx: BuildCtx, fps: FilePath[]) {
   const { argv, cfg } = ctx;
+  const folderNotes = ctx.allFiles ? getFolderNotes(ctx.allFiles) : undefined;
   return async (processor: QuartzMdProcessor) => {
     const res: MarkdownContent[] = [];
     for (const fp of fps) {
@@ -107,7 +108,7 @@ export function createFileParser(ctx: BuildCtx, fps: FilePath[]) {
           argv.directory,
           file.path,
         ) as FilePath;
-        file.data.slug = slugifyFilePath(file.data.relativePath);
+        file.data.slug = fileSlug(file.data.relativePath, folderNotes);
 
         const ast = processor.parse(file);
         const newAst = await processor.run(ast, file);

@@ -74,8 +74,14 @@ async function _navigate(url: URL, isBack: boolean = false) {
   isNavigating = true;
   startLoading();
   p = p || new DOMParser();
+  let responseUrl = url;
   const contents = await fetchCanonical(url)
     .then((res) => {
+      const resUrl = res.url;
+      if (resUrl) {
+        responseUrl = new URL(resUrl);
+        responseUrl.hash = url.hash;
+      }
       const contentType = res.headers.get("content-type");
       if (contentType?.startsWith("text/html")) {
         return res.text();
@@ -100,14 +106,14 @@ async function _navigate(url: URL, isBack: boolean = false) {
   cleanupFns.clear();
 
   const html = p.parseFromString(contents, "text/html");
-  normalizeRelativeURLs(html, url);
+  normalizeRelativeURLs(html, responseUrl);
 
   let title = html.querySelector("title")?.textContent;
   if (title) {
     document.title = title;
   } else {
     const h1 = document.querySelector("h1");
-    title = h1?.innerText ?? h1?.textContent ?? url.pathname;
+    title = h1?.innerText ?? h1?.textContent ?? responseUrl.pathname;
   }
   if (announcer.textContent !== title) {
     announcer.textContent = title;
@@ -120,9 +126,9 @@ async function _navigate(url: URL, isBack: boolean = false) {
 
   // scroll into place and add history
   if (!isBack) {
-    if (url.hash) {
+    if (responseUrl.hash) {
       const el = document.getElementById(
-        decodeURIComponent(url.hash.substring(1)),
+        decodeURIComponent(responseUrl.hash.substring(1)),
       );
       el?.scrollIntoView();
     } else {
@@ -141,7 +147,7 @@ async function _navigate(url: URL, isBack: boolean = false) {
   // delay setting the url until now
   // at this point everything is loaded so changing the url should resolve to the correct addresses
   if (!isBack) {
-    history.pushState({}, "", url);
+    history.pushState({}, "", responseUrl);
   }
 
   notifyNav(getFullSlug(window));

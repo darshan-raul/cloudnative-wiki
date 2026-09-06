@@ -127,6 +127,41 @@ describe("transforms", () => {
     );
   });
 
+  test("getFolderNotes and fileSlug", () => {
+    const files = [
+      "Kubernetes.md",
+      "Kubernetes/concepts/architecture.md",
+      "AWS/solutions-architect-professional.md",
+      "AWS/solutions-architect-professional/index.md",
+      "Linux/commands.md",
+    ];
+    const folderNotes = path.getFolderNotes(files);
+    assert(folderNotes.has("Kubernetes" as FullSlug));
+    assert(
+      !folderNotes.has("AWS/solutions-architect-professional" as FullSlug),
+    );
+    assert(!folderNotes.has("Linux" as FullSlug));
+
+    assert.strictEqual(
+      path.fileSlug("Kubernetes.md" as path.FilePath, folderNotes),
+      "Kubernetes/index",
+    );
+    assert.strictEqual(
+      path.fileSlug(
+        "Kubernetes/concepts/architecture.md" as path.FilePath,
+        folderNotes,
+      ),
+      "Kubernetes/concepts/architecture",
+    );
+    assert.strictEqual(
+      path.fileSlug(
+        "AWS/solutions-architect-professional.md" as path.FilePath,
+        folderNotes,
+      ),
+      "AWS/solutions-architect-professional",
+    );
+  });
+
   test("transformInternalLink", () => {
     asserts(
       [
@@ -305,6 +340,8 @@ describe("link strategies", () => {
         path.transformLink(cur, "index#abc", opts),
         "../../#abc",
       );
+      assert.strictEqual(path.transformLink(cur, "b", opts), "../../a/b/");
+      assert.strictEqual(path.transformLink(cur, "a/b", opts), "../../a/b/");
     });
 
     test("from a/b/index", () => {
@@ -316,6 +353,8 @@ describe("link strategies", () => {
         "../../a/b/",
       );
       assert.strictEqual(path.transformLink(cur, "index", opts), "../../");
+      assert.strictEqual(path.transformLink(cur, "b", opts), "../../a/b/");
+      assert.strictEqual(path.transformLink(cur, "a/b", opts), "../../a/b/");
     });
 
     test("from index", () => {
@@ -324,6 +363,8 @@ describe("link strategies", () => {
       assert.strictEqual(path.transformLink(cur, "h", opts), "./e/g/h");
       assert.strictEqual(path.transformLink(cur, "a/b/index", opts), "./a/b/");
       assert.strictEqual(path.transformLink(cur, "index", opts), "./");
+      assert.strictEqual(path.transformLink(cur, "b", opts), "./a/b/");
+      assert.strictEqual(path.transformLink(cur, "a/b", opts), "./a/b/");
     });
   });
 

@@ -48,7 +48,7 @@ async function* processFolderInfo(
     const externalResources = pageResources(pathToRoot(slug), resources);
     const componentData: QuartzComponentProps = {
       ctx,
-      fileData: file.data,
+      fileData: { ...file.data, slug },
       externalResources,
       cfg,
       children: [],
@@ -91,11 +91,20 @@ function computeFolderInfo(
     ]),
   );
 
+  const hasActualContent = new Set<SimpleSlug>();
   // Update with actual content if available
   for (const [tree, file] of content) {
     const slug = stripSlashes(simplifySlug(file.data.slug!)) as SimpleSlug;
     if (folders.has(slug)) {
-      folderInfo[slug] = [tree, file];
+      const isIndex = file.data.slug?.endsWith("/index") ?? false;
+      const alreadyHasActual = hasActualContent.has(slug);
+      const existingIsIndex =
+        folderInfo[slug]?.[1].data.slug?.endsWith("/index") ?? false;
+
+      if (!alreadyHasActual || isIndex || !existingIsIndex) {
+        folderInfo[slug] = [tree, file];
+        hasActualContent.add(slug);
+      }
     }
   }
 

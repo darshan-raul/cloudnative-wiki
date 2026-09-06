@@ -7652,6 +7652,37 @@ function slugifyFilePath(fp, excludeExt) {
   return slug + ext;
 }
 __name(slugifyFilePath, "slugifyFilePath");
+function getFolderNotes(allFiles) {
+  const folders = /* @__PURE__ */ new Set();
+  const indexFiles = /* @__PURE__ */ new Set();
+  for (const fp of allFiles) {
+    const slug = slugifyFilePath(fp);
+    if (slug.endsWith("/index") || slug === "index") {
+      indexFiles.add(slug);
+    }
+    const parts = slug.split("/");
+    for (let i = 1; i < parts.length; i++) {
+      folders.add(parts.slice(0, i).join("/"));
+    }
+  }
+  const folderNotes = /* @__PURE__ */ new Set();
+  for (const fp of allFiles) {
+    const slug = slugifyFilePath(fp);
+    if (folders.has(slug) && !indexFiles.has(`${slug}/index`)) {
+      folderNotes.add(slug);
+    }
+  }
+  return folderNotes;
+}
+__name(getFolderNotes, "getFolderNotes");
+function fileSlug(fp, folderNotes) {
+  const slug = slugifyFilePath(fp);
+  if (folderNotes?.has(slug)) {
+    return joinSegments(slug, "index");
+  }
+  return slug;
+}
+__name(fileSlug, "fileSlug");
 function simplifySlug(fp) {
   const res = stripSlashes(trimSuffix(fp, "index"), true);
   return res.length === 0 ? "/" : res;
@@ -7759,7 +7790,7 @@ function transformLink(src, target, opts) {
       const matchingFileNames = opts.allSlugs.filter((slug) => {
         const parts = slug.split("/");
         const fileName = parts.at(-1);
-        return targetCanonical === fileName;
+        return targetCanonical === fileName || fileName === "index" && (parts.at(-2) === targetCanonical || parts.slice(0, -1).join("/") === targetCanonical);
       });
       if (matchingFileNames.length === 1) {
         const targetSlug2 = matchingFileNames[0];
@@ -14550,7 +14581,7 @@ async function* processFolderInfo(ctx, folderInfo, allFiles, opts, resources) {
     const externalResources = pageResources(pathToRoot(slug), resources);
     const componentData = {
       ctx,
-      fileData: file.data,
+      fileData: { ...file.data, slug },
       externalResources,
       cfg,
       children: [],
@@ -14586,10 +14617,17 @@ function computeFolderInfo(folders, content, locale) {
       })
     ])
   );
+  const hasActualContent = /* @__PURE__ */ new Set();
   for (const [tree, file] of content) {
     const slug = stripSlashes(simplifySlug(file.data.slug));
     if (folders.has(slug)) {
-      folderInfo[slug] = [tree, file];
+      const isIndex = file.data.slug?.endsWith("/index") ?? false;
+      const alreadyHasActual = hasActualContent.has(slug);
+      const existingIsIndex = folderInfo[slug]?.[1].data.slug?.endsWith("/index") ?? false;
+      if (!alreadyHasActual || isIndex || !existingIsIndex) {
+        folderInfo[slug] = [tree, file];
+        hasActualContent.add(slug);
+      }
     }
   }
   return folderInfo;
@@ -15483,6 +15521,7 @@ function createHtmlProcessor(ctx) {
 __name(createHtmlProcessor, "createHtmlProcessor");
 function createFileParser(ctx, fps) {
   const { argv, cfg } = ctx;
+  const folderNotes = ctx.allFiles ? getFolderNotes(ctx.allFiles) : void 0;
   return async (processor) => {
     const res = [];
     for (const fp of fps) {
@@ -15500,7 +15539,7 @@ function createFileParser(ctx, fps) {
           argv.directory,
           file.path
         );
-        file.data.slug = slugifyFilePath(file.data.relativePath);
+        file.data.slug = fileSlug(file.data.relativePath, folderNotes);
         const ast = processor.parse(file);
         const newAst = await processor.run(ast, file);
         res.push([newAst, file]);
