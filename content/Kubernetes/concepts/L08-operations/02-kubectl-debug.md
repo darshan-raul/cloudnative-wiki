@@ -1,6 +1,15 @@
+---
+title: "kubectl Debug Toolkit"
+tags: [kubernetes, operations, kubectl, debug, troubleshooting]
+date: 2026-09-06
+description: Reference guide for essential kubectl commands during live incidents — describe, logs, exec, debug, and ephemeral containers.
+aliases:
+  - Kubernetes/concepts/L08-operations/02-kubectl-debug
+---
+
 # kubectl Debug Toolkit
 
-*"https://kubernetes.io/docs/tasks/debug/"*
+> https://kubernetes.io/docs/tasks/debug/
 
 A reference for the **`kubectl` commands** you reach for when something is wrong. Bookmark this — you'll come back to it often.
 

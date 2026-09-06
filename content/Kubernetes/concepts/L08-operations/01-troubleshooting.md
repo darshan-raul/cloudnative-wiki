@@ -1,8 +1,22 @@
+---
+title: "Troubleshooting Flow & Decision Trees"
+tags: [kubernetes, operations, troubleshooting, triage, day-2]
+date: 2026-09-06
+description: Systematic decision tree for diagnosing broken pods, services, and cluster components with links to symptom-specific playbooks.
+aliases:
+  - Kubernetes/concepts/L08-operations/01-troubleshooting
+---
+
 # Troubleshooting (L08 Overview)
 
-*"https://kubernetes.io/docs/tasks/debug/"*
+> https://kubernetes.io/docs/tasks/debug/
 
-A high-level overview of the **troubleshooting flow** in Kubernetes. Use this as a quick reference for "where do I look when something is broken". The deeper notes are linked below.
+A systematic decision tree and triage framework for diagnosing failures in Kubernetes. For deeper runbooks on specific symptoms, see:
+- [[Kubernetes/guides/troubleshooting/pod-pending|Pod Pending Playbook]]
+- [[Kubernetes/guides/troubleshooting/pvc-stuck|PVC Stuck Playbook]]
+- [[Kubernetes/troubleshooting|Kubernetes Troubleshooting Hub]]
+- Hands-on Incident Lab: [[Kubernetes/labs/08-observability-and-troubleshooting|Lab 08 — Observability & Troubleshooting]]
+
 
 ## The first question
 

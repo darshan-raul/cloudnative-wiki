@@ -1,4 +1,15 @@
-# Common Failure Modes
+---
+title: "Common Failure Modes & Triage"
+tags: [kubernetes, operations, failure-modes, triage, crashloopbackoff]
+date: 2026-09-06
+description: Stage-by-stage triage guide for common Kubernetes failure modes, exit codes, and root-cause analysis.
+aliases:
+  - Kubernetes/concepts/L08-operations/03-common-failure-modes
+---
+
+# Common Failure Modes & Triage Guide
+
+> https://kubernetes.io/docs/tasks/debug/
 
 A decision tree for **"my Pod isn't working"**. The first question is always: *is the Pod actually running?* If no, why not? If yes, what's the symptom?
 

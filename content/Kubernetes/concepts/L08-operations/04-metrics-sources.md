@@ -1,6 +1,15 @@
-# Metrics Sources
+---
+title: "Metrics Sources & Observability Architecture"
+tags: [kubernetes, operations, metrics, cadvisor, metrics-server, prometheus]
+date: 2026-09-06
+description: Architecture of Kubernetes observability data sources — cAdvisor, kubelet, metrics-server, kube-state-metrics, and Prometheus.
+aliases:
+  - Kubernetes/concepts/L08-operations/04-metrics-sources
+---
 
-*"https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/"*
+# Metrics Sources & Observability Architecture
+
+> https://kubernetes.io/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/
 
 A reference for **where metrics come from** in a Kubernetes cluster. The k8s metrics stack is layered; knowing the layers helps you figure out what's missing when a metric is silent.
 

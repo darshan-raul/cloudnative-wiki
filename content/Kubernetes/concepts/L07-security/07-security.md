@@ -1,6 +1,15 @@
+---
+title: "Security (L07 Overview)"
+tags: [kubernetes, security, defense-in-depth, rbac, threat-model]
+date: 2026-09-06
+description: Comprehensive high-level overview of the Kubernetes layered security model and threat domains.
+aliases:
+  - Kubernetes/concepts/L07-security/07-security
+---
+
 # Security (L07 Overview)
 
-*"https://kubernetes.io/docs/concepts/security/"*
+> https://kubernetes.io/docs/concepts/security/
 
 A high-level overview of the **security model** in Kubernetes. Use this as a quick reference for "where do I look when I have a security question". The deeper notes are linked in the [[Kubernetes/concepts/L07-security/00-README|L07 README]].
 

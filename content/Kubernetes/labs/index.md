@@ -19,9 +19,12 @@ flowchart LR
     L03 --> L04["Lab 04<br/>Networking<br/>(Service & Gateway)"]
     L04 --> L05["Lab 05<br/>Persistence<br/>(PVC & StorageClass)"]
     L05 --> L06["Lab 06<br/>Scaling & QoS<br/>(HPA, PDB, Affinity)"]
+    L06 --> L07["Lab 07<br/>Security Hardening<br/>(RBAC, PSS, NetPol)"]
+    L07 --> L08["Lab 08<br/>Observability<br/>(Triage, Debug, Metrics)"]
+    L08 --> L09["Lab 09<br/>GitOps & Lifecycle<br/>(Kustomize, Upgrades)"]
 
     classDef lab fill:#f9f9f9,stroke:#284b63,stroke-width:2px;
-    class L00,L01,L02,L03,L04,L05,L06 lab;
+    class L00,L01,L02,L03,L04,L05,L06,L07,L08,L09 lab;
 ```
 
 ---
@@ -96,9 +99,13 @@ kind delete cluster --name k8s-lab
 | [[Kubernetes/labs/04-networking-and-services\|Lab 04]] | **Services, DNS & Gateway Routing** | ClusterIP, EndpointSlices, CoreDNS debugging, host port routing | Service selector typo causing 0 endpoints |
 | [[Kubernetes/labs/05-storage-and-persistence\|Lab 05]] | **Stateful Persistence & PVCs** | StorageClass, PVC dynamic provisioning, persistent volume data across pod deletion | `WaitForFirstConsumer` claim pending state |
 | [[Kubernetes/labs/06-scheduling-and-autoscaling\|Lab 06]] | **Scheduling, QoS & Autoscaling** | Requests/limits, QoS classes, topology spread, HPA autoscaling, PDB + node drain | Impossible resource requests causing `Pending` Pods |
+| [[Kubernetes/labs/07-security-hardening\|Lab 07]] | **Workload Security Hardening** | Dedicated ServiceAccounts, PSS `restricted`, hardened securityContext, NetworkPolicy | Root container admission rejection |
+| [[Kubernetes/labs/08-observability-and-troubleshooting\|Lab 08]] | **Observability & Troubleshooting** | Prometheus metrics, ephemeral containers (`kubectl debug`), exit code triage | Deliberate panic `/panic` & CrashLoopBackOff |
+| [[Kubernetes/labs/09-gitops-and-lifecycle\|Lab 09]] | **GitOps Delivery & Lifecycle** | Declarative packaging with Kustomize overlays, drift auto-healing, API deprecation | Configuration drift & disaster recovery drill |
 
 ---
 
 ## Next Steps
 
 Begin your hands-on journey with **[[Kubernetes/labs/00-cluster-setup|Lab 00 — Cluster Setup & Architecture Inspection]]**.
+

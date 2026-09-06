@@ -49,13 +49,22 @@ description: Multi-session persistent execution tracker for the Kubernetes secti
 - [x] Slim down oversized core notes (`01-pods.md` refactored into Tier 1 milestone 14-section contract; created companion `01-pods-deep-dive.md` reference).
 - [x] Apply Two-Tier page contract with Mermaid sequence & architecture diagrams, controlled failures, and scenario knowledge checks.
 
-### Phase 3: Security & Operational Depth (Next Focus 🔄)
-- [ ] Restructure `L07-security` around layered threat model.
-- [ ] Build insecure-to-hardened workload lab with `podinfo`.
-- [ ] Expand `L08-operations` and connect symptom playbooks.
-- [ ] Implement Labs 07–09 (hardened security, day-2 observability, GitOps delivery).
+### Phase 3: Security & Operational Depth (Complete ✅)
+- [x] Restructure `L07-security` around progressive threat model:
+  - Created `L07-security/index.md` with defense-in-depth architecture, control matrix, and note index.
+  - Added YAML frontmatter and threat-domain mapping to `L07-security/07-security.md`.
+- [x] Build insecure-to-hardened workload lab with `podinfo`:
+  - `07-security-hardening.md`: 5-layer hardening pipeline (Dedicated SA, least-privilege RBAC, PSS `restricted`, hardened securityContext, default-deny NetworkPolicy, root admission rejection).
+- [x] Expand `L08-operations` and connect symptom playbooks:
+  - Created `L08-operations/index.md` with end-to-end triage flowchart and modern `readyz`/`livez` checks replacing legacy `componentstatuses`.
+  - Added frontmatter and connected symptom playbooks to `01-troubleshooting.md`, `02-kubectl-debug.md`, `03-common-failure-modes.md`, and `04-metrics-sources.md`.
+- [x] Implement Labs 07–09 (Hardened security, day-2 observability, GitOps delivery):
+  - `07-security-hardening.md`: Multi-layer security hardening and admission violation testing.
+  - `08-observability-and-troubleshooting.md`: Prometheus metrics, `kubectl debug` ephemeral containers, panic crash-loop triage, and exit code analysis.
+  - `09-gitops-and-lifecycle.md`: Declarative Kustomize overlays, drift auto-healing, API deprecation discovery, and disaster recovery drill.
+- [x] Update `content/Kubernetes/labs/index.md` flowchart and curriculum table to span Labs 00 through 09.
 
-### Phase 4: Revision System & Decision Tables
+### Phase 4: Revision System & Decision Tables (Next Focus 🔄)
 - [ ] Create 5-minute refresher pages.
 - [ ] Add standard decision flowcharts and tables (Workload selection, Storage access, Ingress vs Gateway API).
 - [ ] Add scenario-based review questions with solutions.
