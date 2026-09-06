@@ -1,3 +1,12 @@
+---
+title: "CustomResourceDefinitions (CRDs)"
+tags: [kubernetes, advanced, crd, api-machinery, schema, cel]
+date: 2026-09-06
+description: Extending the Kubernetes API with CustomResourceDefinitions — OpenAPI v3 schemas, validation, conversion webhooks, and storage versions.
+aliases:
+  - Kubernetes/concepts/L09-advanced/03-customresourcedefinitions
+---
+
 # CustomResourceDefinitions (CRDs)
 
 >*"https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/"*

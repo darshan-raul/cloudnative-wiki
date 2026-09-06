@@ -1,3 +1,10 @@
+---
+title: etcd in Kubernetes
+tags: [kubernetes, internals, etcd, control-plane, storage, raft, consensus, disaster-recovery]
+date: 2026-09-06
+description: Complete production guide to etcd in Kubernetes — Raft consensus, key registry layout, defragmentation, snapshots, compaction, TLS, and disaster recovery.
+---
+
 # etcd
 
 >*"https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/"*

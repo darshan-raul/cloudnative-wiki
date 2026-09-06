@@ -1,7 +1,13 @@
+---
+title: "Finalizers & Asynchronous Deletion"
+tags: [kubernetes, advanced, finalizers, garbage-collection, controllers, deletion]
+date: 2026-09-06
+description: Understanding finalizers, the metadata.deletionTimestamp lifecycle, asynchronous resource cleanup, and resolving stuck terminating objects.
+aliases:
+  - Kubernetes/concepts/L09-advanced/05-finalizers
+---
+
 # Finalizers
-
-
-
 Kubernetes finalizers are a powerful mechanism that allow you to control the deletion lifecycle of resources. They ensure that specific cleanup operations are completed before a resource is permanently removed from the cluster.([Zesty](https://zesty.co/finops-glossary/kubernetes-finalizers/?utm_source=chatgpt.com))
 
 ***

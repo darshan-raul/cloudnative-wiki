@@ -79,11 +79,18 @@ description: Multi-session persistent execution tracker for the Kubernetes secti
 - [x] Create revision hub:
   - `review/index.md`: Central landing page connecting refreshers, decision tables, and incident walkthroughs.
 
-### Phase 5: Extensibility & EKS Provider Track (Next Focus 🔄)
-- [ ] Reorganize advanced internals as L10 Extensibility.
-- [ ] Decouple universal concepts from AWS-specific implementations in `eks/`.
-- [ ] Add client-go and custom controller guide.
+### Phase 5: Extensibility & EKS Provider Track (Complete ✅)
+- [x] Complete L09 Advanced & Extensibility track:
+  - Added Quartz folder landing page `content/Kubernetes/concepts/L09-advanced/index.md` with full control plane extensibility architecture diagram.
+  - Added YAML frontmatter and technical metadata across all notes: `01-operators.md`, `02-custom-controllers.md`, `03-customresourcedefinitions.md`, `04-admission-controllers.md`, `05-finalizers.md`, `06-garbage-collection.md`, `07-aggregation-layer.md`, `08-ipvs.md`, `09-pause-container.md`, `10-etcd.md`, `11-scheduler-extenders.md`.
+  - Updated status badges to 100% complete in `L09-advanced/00-README.md`.
+- [x] Create comprehensive `client-go` and custom controller guide:
+  - Deepened `content/Kubernetes/client-go.md` covering client hierarchy (Clientset, DynamicClient, MetadataClient), Informer/DeltaFIFO mechanics, ThreadSafeStore, rate-limiting work queues, exponential backoff, worker reconcile loops, and leader election.
+- [x] Decouple universal concepts from AWS-specific implementations in `content/Kubernetes/eks/README.md`:
+  - Prepended the Universal Concept → EKS Implementation Translation Matrix (AuthN, AuthZ, Pod Identity, VPC CNI, Network Policy, Karpenter, Managed Node Groups, EBS/EFS CSI, ALB/NLB, VPC Lattice, Secrets Manager, CloudWatch/AMP).
+  - Wired bidirectional cross-links between upstream conceptual levels (L01–L08) and EKS architecture chapters.
 
-### Phase 6: CI Gates & Upstream Maintenance
-- [ ] Wire `check:k8s` into CI test pipeline.
+### Phase 6: CI Gates & Upstream Maintenance (Next Focus 🔄)
+- [ ] Wire `check:k8s` into CI test pipeline / `package.json`.
 - [ ] Document upstream synchronization playbook.
+

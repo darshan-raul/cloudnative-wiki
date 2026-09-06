@@ -1,3 +1,10 @@
+---
+title: Aggregation Layer
+tags: [kubernetes, internals, apiserver, aggregation-layer, extension, apiservice]
+date: 2026-09-06
+description: Architecture of the Kubernetes API aggregation layer, APIService resources, mutual TLS delegation, and extending the kube-apiserver with auxiliary API servers.
+---
+
 # Aggregation Layer
 
 >*"https://kubernetes.io/docs/tasks/access-kubernetes-api/configure-aggregation-layer/"*

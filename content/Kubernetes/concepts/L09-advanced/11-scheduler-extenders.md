@@ -1,3 +1,10 @@
+---
+title: Scheduler Extenders
+tags: [kubernetes, internals, scheduling, scheduler-extender, scheduling-framework, webhooks]
+date: 2026-09-06
+description: Architecture of Kubernetes scheduler extenders, HTTP webhook filter/prioritize/preempt protocols, and comparison with in-tree Scheduling Framework plugins.
+---
+
 # Scheduler Extenders
 
 *"https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/"*

@@ -1,3 +1,10 @@
+---
+title: The Pause Container
+tags: [kubernetes, internals, pause-container, pods, networking, cgroups, linux-namespaces]
+date: 2026-09-06
+description: Detailed breakdown of the Kubernetes pause (sandbox) container, Linux namespace sharing, PID 1 reaping, and Pod lifecycle mechanics.
+---
+
 # Pause Container
 
 *"https://kubernetes.io/docs/concepts/workloads/pods/#workload-resources-for-managing-pods"*

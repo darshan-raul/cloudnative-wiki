@@ -1,6 +1,15 @@
+---
+title: "Custom Controllers"
+tags: [kubernetes, advanced, controllers, reconcile, informers, workqueue]
+date: 2026-09-06
+description: Engineering custom controllers in Kubernetes — the level-triggered reconciliation loop, informers, workqueues, and error recovery.
+aliases:
+  - Kubernetes/concepts/L09-advanced/02-custom-controllers
+---
+
 # Custom Controllers
 
-*"https://kubernetes.io/docs/concepts/architecture/controller/"*
+> https://kubernetes.io/docs/concepts/architecture/controller/
 
 A custom controller is a **control loop** that watches the state of the cluster and makes changes to move the actual state toward the desired state. Every useful thing in k8s is a controller — Deployments, ReplicaSets, StatefulSets, DaemonSets, Jobs, the cloud-controller-manager. Custom controllers are how you add your own.
 

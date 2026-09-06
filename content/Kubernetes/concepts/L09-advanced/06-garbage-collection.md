@@ -1,3 +1,10 @@
+---
+title: Garbage Collection
+tags: [kubernetes, internals, garbage-collection, owner-references, controllers]
+date: 2026-09-06
+description: Deep dive into Kubernetes garbage collection mechanisms, owner references, cascading deletion policies (Foreground, Background, Orphan), and TTL controller.
+---
+
 # Garbage Collection
 
 *"https://kubernetes.io/docs/concepts/architecture/garbage-collection/"*

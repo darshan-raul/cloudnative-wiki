@@ -1,6 +1,15 @@
+---
+title: "Kubernetes Operators"
+tags: [kubernetes, advanced, operators, controllers, crd]
+date: 2026-09-06
+description: Architectural overview of the Operator pattern — capturing human operational domain knowledge into declarative Kubernetes controllers.
+aliases:
+  - Kubernetes/concepts/L09-advanced/01-operators
+---
+
 # Operators
 
-*"https://kubernetes.io/docs/concepts/extend-kubernetes/operator/"*
+> https://kubernetes.io/docs/concepts/extend-kubernetes/operator/
 
 An operator is a **method of packaging, deploying, and managing a Kubernetes application** that uses custom resources to manage applications and their components. It's a controller pattern (see L09-deep) applied to operational knowledge — the "operator" captures how a human SRE would manage a complex application, encoded as software that runs in the cluster.
 

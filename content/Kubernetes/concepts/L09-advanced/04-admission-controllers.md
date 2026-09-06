@@ -1,3 +1,12 @@
+---
+title: "Admission Controllers & Webhooks"
+tags: [kubernetes, advanced, admission-controllers, webhooks, cel, validation, mutation]
+date: 2026-09-06
+description: Detailed reference on mutating and validating admission webhooks, execution order, failure policies, and ValidatingAdmissionPolicy.
+aliases:
+  - Kubernetes/concepts/L09-advanced/04-admission-controllers
+---
+
 # Admission Controllers and Webhooks
 
 >*"https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/"*
