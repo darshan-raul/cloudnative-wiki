@@ -1,1129 +1,322 @@
 ---
-title: Pods — The Foundation of Kubernetes Workloads
+title: "Pods — The Foundation of Kubernetes Workloads"
 tags: [kubernetes, workloads, pods, core-concepts]
-date: 2026-06-07
-description: The smallest deployable unit in Kubernetes. Container grouping, networking, lifecycle, scheduling, security context, and the deep internals that every controller builds on.
+date: 2026-09-06
+description: The smallest deployable unit in Kubernetes. Anatomy, shared Linux namespaces, lifecycle phases, graceful termination, and why bare Pods are rarely deployed.
+aliases:
+  - Kubernetes/concepts/L03-workloads/01-pods
 ---
 
 # Pods — The Foundation of Kubernetes Workloads
 
-> https://kubernetes.io/docs/concepts/workloads/pods/
-
-A **Pod** is the **smallest deployable unit** in Kubernetes. It is **not** a single container. It is a wrapper around one or more containers that share a network namespace, volumes, and a lifecycle, and that are always scheduled onto the **same node**.
-
-If you only learn one Kubernetes concept deeply, it should be this one. Every controller in L03 — ReplicaSet, Deployment, StatefulSet, DaemonSet, Job — is a strategy for managing Pods. Every L04 networking primitive operates on Pods. Every L07 security control targets Pods. Get Pods wrong and everything else collapses.
-
-## Table of Contents
-
-1. [Why Pods Exist — The Container Colocation Problem](#1-why-pods-exist--the-container-colocation-problem)
-2. [What a Pod Is (and Isn't)](#2-what-a-pod-is-and-isnt)
-3. [The Pod Manifest — Anatomy](#3-the-pod-manifest--anatomy)
-4. [Pod Networking Deep Dive](#4-pod-networking-deep-dive)
-5. [Pod Lifecycle — From Pending to Termination](#5-pod-lifecycle--from-pending-to-termination)
-6. [Container Lifecycle Hooks](#6-container-lifecycle-hooks)
-7. [Init Containers — Ordered Setup Before the App](#7-init-containers--ordered-setup-before-the-app)
-8. [Multi-Container Pods — Sidecar / Ambassador / Adapter](#8-multi-container-pods--sidecar--ambassador--adapter)
-9. [Probes — Liveness, Readiness, Startup](#9-probes--liveness-readiness-startup)
-10. [Resource Requests and Limits](#10-resource-requests-and-limits)
-11. [Security Context — Per-Container Hardening](#11-security-context--per-container-hardening)
-12. [Volumes and Storage in Pods](#12-volumes-and-storage-in-pods)
-13. [Pod Scheduling — How the Scheduler Sees a Pod](#13-pod-scheduling--how-the-scheduler-sees-a-pod)
-14. [Pod Disruption — How Pods Get Killed](#14-pod-disruption--how-pods-get-killed)
-15. [Pod QoS Classes](#15-pod-qos-classes)
-16. [Static Pods — The Outlier](#16-static-pods--the-outlier)
-17. [Why You Almost Never Write a Bare Pod](#17-why-you-almost-never-write-a-bare-pod)
-18. [Operational Recipes](#18-operational-recipes)
-19. [Gotchas and Common Mistakes](#19-gotchas-and-common-mistakes)
-20. [Related Notes](#20-related-notes)
+A **Pod** is the smallest and simplest deployable unit in Kubernetes. It represents a single instance of a running process in your cluster, wrapping one or more containers that share network, storage, and lifecycle boundaries.
 
 ---
 
-## 1. Why Pods Exist — The Container Colocation Problem
+## 1. Why This Matters
 
-Before Pods, the question was simple: "Can I run containers in Kubernetes?" The answer turned out to be: "Yes, but you almost always want to run **groups** of containers together." And the abstraction k8s settled on is the Pod.
+In Kubernetes, you never deploy standalone containers directly to worker nodes. The system schedules, routes traffic to, monitors, and terminates **Pods**.
 
-### The two-container case
-
-Imagine a web app that writes structured logs to a file, plus a log shipper that reads that file and forwards to a central backend. You need:
-
-- Both containers on the **same node** (so the log file is local)
-- Both to share the **same volume** (so the shipper can read the app's log file)
-- Both to share a **network namespace** (so the app can call the shipper on `localhost`, no DNS needed)
-- Both to **start together and die together**
-
-You could run two separate containers on the same node and try to enforce all of that yourself. Or you could let the scheduler know "these two belong together" and have the kubelet start them as a unit. That unit is the Pod.
-
-```
-┌──────────────────────────────────────────────────┐
-│ Pod                                               │
-│  ┌────────────────┐  ┌────────────────────────┐  │
-│  │  app           │  │  log-shipper            │  │
-│  │  /var/log/app  │──▶│  reads /var/log/app/*   │  │
-│  │  (writes)      │  │  forwards to backend    │  │
-│  └────────────────┘  └────────────────────────┘  │
-│         shared volume (emptyDir)                  │
-│         shared network namespace                  │
-│         same node, same lifecycle                 │
-└──────────────────────────────────────────────────┘
-```
-
-The pattern generalizes. Service mesh sidecars (Envoy, Linkerd proxies), Dapr sidecars, metrics exporters, debug sidecars — all are variations on "helper container that lives with the main app."
-
-### Why not just deploy containers directly?
-
-Three reasons:
-
-1. **No native way to group containers.** Docker Compose has `depends_on`, but Kubernetes has no equivalent at the container level — only at the Pod level.
-2. **Networking across containers on the same node is awkward.** Without a shared network namespace, container A would have to know container B's IP, which only exists after B is scheduled.
-3. **Lifecycles are coupled but managed separately.** Two "loose" containers with separate lifecycles break the "start together, die together" guarantee.
-
-The Pod is the unit the scheduler schedules, the kubelet starts, the Service targets, the network policy selects, and the controller reconciles. **Everything in k8s is a Pod.** Containers are an implementation detail of a Pod.
+Every workload controller—Deployments, StatefulSets, DaemonSets, Jobs, and CronJobs—is fundamentally an automated strategy for creating, updating, and deleting Pods. Every networking abstraction (Services, Ingress, Gateway API) and every security policy (NetworkPolicy, Pod Security Standards) evaluates and routes traffic at the Pod level. Understanding the Pod's lifecycle, shared namespaces, and failure modes is the bedrock of cluster operations.
 
 ---
 
-## 2. What a Pod Is (and Isn't)
+## 2. Prerequisites
 
-### The mental model
-
-```
-┌──────────────────────────────────────────┐
-│ Pod                                       │
-│                                           │
-│  Network namespace (one IP, one hostname)│
-│  ┌──────────┐  ┌──────────┐  ┌────────┐  │
-│  │ container│  │ container│  │ ...    │  │
-│  │   A      │  │   B      │  │        │  │
-│  └──────────┘  └──────────┘  └────────┘  │
-│                                           │
-│  Volumes (shared mounts)                  │
-│  IPC namespace (shared)                   │
-│  PID namespace (optionally shared)        │
-│  UTS namespace (shared hostname)         │
-│  Cgroup (shared)                          │
-└──────────────────────────────────────────┘
-```
-
-### What a Pod is
-
-| Property | Value |
-|---|---|
-| **Smallest deployable unit** | Yes — you cannot deploy a container without a Pod |
-| **One or more containers** | Always at least one |
-| **One network namespace** | All containers share the same IP and `localhost` |
-| **One IPC namespace** | Shared System V IPC + POSIX shared memory |
-| **One UTS namespace** | All containers see the same hostname (the Pod's name) |
-| **One PID namespace** | Optionally shared (`shareProcessNamespace: true`) |
-| **Scheduled as a unit** | All containers land on the same node |
-| **Started as a unit** | kubelet starts them in declared order |
-| **Terminated as a unit** | kubelet sends SIGTERM to all, then SIGKILL after grace period |
-| **Has a unique UID** | Generated by the API server, changes on every recreation |
-| **Has a stable name within its lifetime** | DNS A record: `<pod-ip>.<namespace>.pod.cluster.local` |
-
-### What a Pod is NOT
-
-| Misconception | Reality |
-|---|---|
-| A Pod is a container | A Pod is a wrapper. It can hold one or more. |
-| A Pod is a VM | A Pod is not a VM. It doesn't have its own kernel, doesn't virtualize hardware. |
-| A Pod's IP is stable | A Pod's IP is stable **for the lifetime of the Pod**. Recreate the Pod, get a new IP. |
-| A Pod is a security boundary | A Pod is a weak security boundary. Containers in a Pod share kernel namespaces. For real isolation, use separate Pods (or separate Nodes). |
-| A Pod is the right place to put cross-cutting concerns | Sometimes — but more often, a sidecar container (still inside a Pod) is the right abstraction. |
-| A Pod is restarted when its node dies | **No.** A new Pod is created, with a new UID, possibly on a different node. The original Pod is gone. |
+Before studying Pods, you should be familiar with:
+- **Linux Containers:** Basic understanding of container images, runtimes, and processes.
+- **Cluster Architecture:** How the API server, scheduler, and node kubelet interact ([[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]]).
+- **Kubernetes Object Anatomy:** Declarative manifests with `apiVersion`, `kind`, `metadata`, and `spec` ([[Kubernetes/concepts/L02-objects/00-README|L02 — Objects]]).
 
 ---
 
-## 3. The Pod Manifest — Anatomy
+## 3. What You Will Understand or Do
 
-The full shape of a Pod spec, in field order:
+- Explain why Kubernetes groups containers into Pods instead of running them individually.
+- Inspect the anatomy of a Pod manifest and identify its core fields.
+- Trace the Pod lifecycle state machine from `Pending` through `Running` to termination.
+- Master the graceful termination timeline (`preStop` hooks, `SIGTERM`, and `SIGKILL`).
+- Understand why deploying "bare" unmanaged Pods is an operational anti-pattern in production.
 
-```yaml
-apiVersion: v1                   # always v1 for Pod
-kind: Pod
-metadata:
-  name: nginx                    # DNS-compatible name (lowercase, ≤63 chars)
-  namespace: default             # every Pod lives in exactly one namespace
-  labels:                        # used by selectors, Service routing, NetworkPolicy
-    app: nginx
-    tier: frontend
-  annotations:                   # non-identifying metadata, used by tools
-    prometheus.io/scrape: "true"
-spec:                            # desired state
-  containers:                    # one or more
-  - name: nginx                  # required, unique within Pod
-    image: nginx:1.27            # image:tag — pin the tag
-    imagePullPolicy: IfNotPresent
-    ports:                       # informational — does not actually publish
-    - name: http                 # named port for use elsewhere (probes, NetPol)
-      containerPort: 80
-      protocol: TCP
-    env:                         # environment variables
-    - name: LOG_LEVEL
-      value: info
-    envFrom:                     # bulk load from ConfigMap/Secret
-    - configMapRef:
-        name: app-config
-    resources:                   # see section 10
-      requests:
-        cpu: 100m                # 0.1 CPU
-        memory: 128Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
-    volumeMounts:                # see section 12
-    - name: data
-      mountPath: /var/www/html
-    livenessProbe:               # see probes note
-      httpGet:
-        path: /healthz
-        port: http
-    readinessProbe:
-      httpGet:
-        path: /ready
-        port: http
-    startupProbe:
-      httpGet:
-        path: /healthz
-        port: http
-      failureThreshold: 30
-      periodSeconds: 5
-    lifecycle:                   # see section 6
-      preStop:
-        exec:
-          command: ["sh", "-c", "nginx -s quit"]
-      postStart:
-        exec:
-          command: ["/bin/sh", "-c", "echo started > /tmp/started"]
-    securityContext:             # see section 11
-      runAsNonRoot: true
-      runAsUser: 101
-      readOnlyRootFilesystem: true
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-  initContainers:                # see section 7 — run before main containers
-  - name: wait-for-db
-    image: busybox:1.36
-    command: ['sh', '-c', 'until nc -z db 5432; do sleep 2; done']
-  volumes:                       # see section 12
-  - name: data
-    emptyDir: {}
-  - name: config
-    configMap:
-      name: app-config
-  restartPolicy: Always          # Always | OnFailure | Never
-  nodeSelector:                  # constraint: which nodes
-    node-role.kubernetes.io/worker: ""
-  affinity:                      # richer constraints — see L06
-  tolerations:                   # tolerate taints
-  serviceAccountName: my-sa      # identity for API calls
-  hostNetwork: false             # share node network? usually false
-  dnsPolicy: ClusterFirst        # see L04
-  priorityClassName: normal      # see L06
-  schedulingGates: []            # see L06
-  overhead:                      # resource overhead for scheduling
-    pod:
-      cpu: 100m
-  terminationGracePeriodSeconds: 30  # see section 14
-  activeDeadlineSeconds: 3600    # Job-only; see Job note
-  hostname: my-pod               # sets the UTS hostname
-  subdomain: db                  # forms a headless Service DNS name
-  hostAliases:                   # /etc/hosts entries
-  - ip: 1.2.3.4
-    hostnames: ["db.local"]
-status:                          # current state, written by kubelet
-  phase: Running
-  conditions: []
-  containerStatuses: []
-  podIP: 10.244.1.5
-  hostIP: 10.0.0.12
-  startTime: "2025-05-24T10:00:00Z"
+---
+
+## 4. Five-Minute Refresher
+
+| Concept | What it is | Key Rule / Behavior |
+| :--- | :--- | :--- |
+| **Pod** | Atomic unit of deployment | Wraps 1+ tightly-coupled containers scheduled together on the same node. |
+| **Network Sharing** | Single network namespace | All containers in a Pod share one IP and communicate over `localhost`. |
+| **Storage Sharing** | Shared volume mounts | Multiple containers in a Pod can mount the same Volume for shared file access. |
+| **Lifecycle Phase** | High-level status | `Pending` → `Running` → `Succeeded` / `Failed`. |
+| **Granular Conditions** | Precise readiness state | `PodScheduled`, `Initialized`, `ContainersReady`, `Ready`. |
+| **Bare Pod** | Unmanaged Pod | **Never self-heals!** If a node dies, unmanaged Pods are deleted and never rescheduled. |
+
+---
+
+## 5. Mental Model
+
+### The Pod Sandbox & Shared Resources
+
+A Pod is a collection of Linux namespaces managed as a single sandbox. All containers inside the Pod share the network stack, IPC space, and volume mounts:
+
+```mermaid
+graph TB
+    subgraph PodSandbox["Pod (Bound to a single Node)"]
+        subgraph NetNS["Shared Network Namespace (Pod IP: 10.244.1.5)"]
+            Loopback["Loopback Interface (localhost)"]
+            Port1["Port 9898: App Process"]
+            Port2["Port 9090: Telemetry Sidecar"]
+        end
+
+        subgraph SharedStorage["Shared Storage Volumes"]
+            Vol1["emptyDir / PVC Mount (/data)"]
+        end
+
+        ContainerA["Main Container: podinfo"]
+        ContainerB["Sidecar: metrics-exporter"]
+
+        ContainerA --- NetNS
+        ContainerB --- NetNS
+        ContainerA --- SharedStorage
+        ContainerB --- SharedStorage
+    end
 ```
 
-That looks enormous. Most of the fields are optional. A minimum-viable Pod is just `apiVersion`, `kind`, `metadata.name`, and `spec.containers[].image`. Everything else exists to handle real-world constraints (probes, security, resources, networking).
+### Pod Lifecycle State Machine
 
-### Required fields
-
-| Field | Required | Why |
-|---|---|---|
-| `apiVersion` | yes | Schema version — always `v1` for Pod |
-| `kind` | yes | Must be `Pod` |
-| `metadata.name` | yes | DNS-1123 label: lowercase, ≤63 chars, no leading/trailing `-` |
-| `spec.containers[].name` | yes | Unique within Pod |
-| `spec.containers[].image` | yes | Image reference (registry/repo:tag) |
-| `spec.containers[].ports[].name` | no, but recommended | Makes ports referenceable by name in probes and NetworkPolicy |
-
-### Container name rules
-
-Container names must be **unique within a Pod** and be valid DNS-1123 labels. Use names that describe the role, not the image:
-
-```yaml
-containers:
-- name: api          # ✅ role-based
-  image: ghcr.io/myorg/api:v2.3.1
-- name: proxy        # ✅ role-based
-  image: envoyproxy/envoy:v1.30
-```
-
-Avoid:
-
-```yaml
-containers:
-- name: myorg-api-v2-3-1   # ❌ couples name to image
+```mermaid
+stateDiagram-v2
+    [*] --> Pending: Object created in API server
+    Pending --> Pending: Waiting for Scheduler / Image Pull
+    Pending --> Running: Kubelet starts all containers
+    Running --> Succeeded: Completed with exit code 0 (Jobs)
+    Running --> Failed: Terminated with non-zero code
+    Running --> Terminating: Deletion requested (SIGTERM)
+    Terminating --> [*]: Grace period elapsed (SIGKILL)
 ```
 
 ---
 
-## 4. Pod Networking Deep Dive
+## 6. Minimal Working Example
 
-Pod networking is its own layer of complexity. It's covered in detail in [[Kubernetes/concepts/L04-services-networking/01-networking|L04 — Networking]], but here's the 60-second version you need before reading the rest of L03.
-
-### The flat network: every Pod gets a routable IP
-
-In a Kubernetes cluster, **every Pod gets a real IP** (no NAT, no port translation, no overlay if you use a CNI that supports it). A Pod can reach any other Pod by IP. From a Pod's perspective:
-
-```
-Pod A                            Pod B
-10.244.1.5                       10.244.2.7
-   │                                ▲
-   │  curl 10.244.2.7:8080          │
-   └───────────────────────────────▶┘
-        (no NAT, no proxy)
-```
-
-This is enforced by the CNI plugin (Calico, Cilium, Flannel, Weave, etc.). The CNI provisions a virtual network on every node and wires up the routes so Pod IPs are reachable cluster-wide.
-
-### One IP, one namespace, one localhost
-
-All containers in a Pod share a **single network namespace**:
-
-```yaml
-# Pod with two containers — they reach each other on localhost
-containers:
-- name: api
-  ports:
-  - containerPort: 8080
-- name: cache-warmup
-  image: mywarmer:1.0
-  command: ["sh", "-c", "curl -s http://localhost:8080/warmup"]
-  # The warmer talks to api on localhost:8080
-  # Same Pod IP, same localhost, no DNS lookup needed
-```
-
-Two containers in the same Pod **cannot** bind to the same port. If container A binds `:8080`, container B trying to bind `:8080` will get an "address already in use" error.
-
-### Pod DNS
-
-Every Pod gets a DNS A record of the form:
-
-```
-<pod-ip-with-dashes>.<namespace>.pod.cluster.local
-```
-
-For example, a Pod with IP `10.244.1.5` in namespace `production` is resolvable as:
-
-```
-10-244-1-5.production.pod.cluster.local
-```
-
-(This is mostly used by Service discovery from outside the Pod — for in-Pod communication, `localhost` is enough.)
-
-### hostNetwork — escape the Pod network
-
-Setting `hostNetwork: true` makes the Pod share the **node's** network namespace. The Pod is reachable on the node's IP and can bind to privileged ports. This is occasionally needed for CNI components, kube-proxy, and Ingress controllers, but it's almost always wrong for application Pods:
-
-```yaml
-# ❌ Avoid this for application Pods
-spec:
-  hostNetwork: true
-  containers:
-  - name: app
-    image: myapp:1.0
-```
-
-Why avoid it: it bypasses NetworkPolicy, it removes the Pod's natural isolation, and it requires the host's port range to be available cluster-wide.
-
-### `localhost` traffic in NetworkPolicy
-
-When a Pod talks to itself (`localhost`), the traffic **does not leave the Pod's network namespace**, so NetworkPolicy does **not** see it. This is sometimes surprising — "why can my Pod still reach itself after I locked down egress?" — and the answer is: that traffic never hit the CNI datapath.
-
----
-
-## 5. Pod Lifecycle — From Pending to Termination
-
-A Pod moves through a state machine. Understanding the states is critical for debugging.
-
-### The state machine
-
-```
-                    ┌────────────────────────────────────────┐
-                    │                                         │
-                    ▼                                         │
-              ┌──────────┐                                   │
-              │ Pending  │                                   │
-              └─────┬────┘                                   │
-                    │                                       │
-                    │ (image pulled, scheduled, started)     │
-                    ▼                                       │
-              ┌──────────┐                                   │
-              │ Running  │──────────────────────────────────▶│ (node lost)
-              └─────┬────┘                                   │
-                    │                                       │
-   ┌────────────────┼────────────────┐                       │
-   ▼                ▼                ▼                       │
-┌────────┐   ┌──────────┐   ┌──────────┐                    │
-│Succeed │   │ Failed   │   │ Unknown  │                    │
-│ ed     │   │          │   │          │                    │
-└────────┘   └──────────┘   └──────────┘                    │
-                                                         ▼
-                                                  (new Pod created
-                                                   by controller)
-```
-
-### Phase meanings
-
-| Phase | Meaning | Action |
-|---|---|---|
-| **Pending** | Accepted by API server, but not yet running. Could be: scheduling, image pull, init container running, volume mounting | Check `kubectl describe pod` for `Events`. |
-| **Running** | Bound to a node, at least one container is running | Normal state. |
-| **Succeeded** | All containers terminated with exit code 0, won't be restarted | Typical of Jobs. |
-| **Failed** | At least one container terminated with non-zero, won't be restarted | Typical of failed Jobs. |
-| **Unknown** | State can't be obtained (usually node communication lost) | Check the node. |
-
-### Conditions (more granular than phase)
-
-The `status.conditions` array is the **truthful** state. Phase is a coarse summary; conditions are precise.
-
-| Condition | True means |
-|---|---|
-| `PodScheduled` | Pod has been assigned to a node |
-| `PodReadyToStartContainers` (k8s 1.28+) | Sandbox (and volumes, etc.) is ready |
-| `ContainersReady` | All containers in the Pod are ready |
-| `Initialized` | All init containers completed successfully |
-| `Ready` | Pod is ready to serve traffic (the AND of `ContainersReady` and being routable) |
-| `DisruptionTarget` | Pod is being deleted (PDB-aware eviction) |
-
-A Pod can be `Phase: Running` with `Ready: False` (e.g., during a rolling update, or when readiness probe fails). That's normal — it just means it's not in the Service endpoint list yet.
-
-### Container states (separate from Pod phase)
-
-Each container has its own state:
-
-| Container state | Meaning |
-|---|---|
-| `Waiting` | Not running yet. `reason: ContainerCreating`, `CrashLoopBackOff`, `ImagePullBackOff`, `ErrImagePull` |
-| `Running` | Process is up |
-| `Terminated` | Exited. `reason: Completed`, `Error`, `OOMKilled` |
-
-`CrashLoopBackOff` is the state you'll see most often during debugging. It means: the container started, crashed, and the kubelet is backing off before retrying. The backoff is 10s, 20s, 40s, 80s, 160s, 300s (cap).
-
----
-
-## 6. Container Lifecycle Hooks
-
-Two hooks per container: `postStart` and `preStop`.
-
-### postStart
-
-Runs **after** the container's main process has started, but the engine doesn't guarantee ordering with the entrypoint:
-
-```yaml
-lifecycle:
-  postStart:
-    exec:
-      command: ["/bin/sh", "-c", "echo started > /tmp/started"]
-```
-
-Critical: postStart runs **in parallel** with the container's main process. Don't depend on it having completed before your app is ready. For "wait until X" gating, use a readiness probe or init container.
-
-### preStop
-
-Runs **before** the container is sent SIGTERM:
-
-```yaml
-lifecycle:
-  preStop:
-    exec:
-      command: ["sh", "-c", "nginx -s quit"]   # graceful shutdown
-```
-
-This is the right place to:
-- Drain in-flight HTTP connections (`nginx -s quit`, `kill -SIGTERM <pid>`)
-- Flush buffers to a sidecar
-- Deregister from a load balancer (e.g., the AWS Load Balancer Controller)
-- Wait for a sleep to let the readiness probe flip to "not ready" (so the Service stops routing traffic)
-
-**The preStop sleep pattern:**
-
-```yaml
-lifecycle:
-  preStop:
-    exec:
-      command: ["sh", "-c", "sleep 10"]   # give kube-proxy / iptables time to propagate
-```
-
-The reason: when a Pod is deleted, the Endpoints controller removes the Pod from the Service **in parallel** with sending SIGTERM. There's a race: traffic can still arrive at the Pod for a few seconds after SIGTERM. Sleeping in preStop gives the endpoint-removal time to propagate. This is a known k8s gotcha and the sleep is a common workaround.
-
-### The graceful shutdown flow
-
-```
-1. Pod deletion requested (kubectl delete / scale down / node drain)
-2. Pod enters "Terminating" state
-3. Endpoints controller removes the Pod from Service endpoints
-4. kubelet sends SIGTERM to containers
-5. preStop hook runs
-6. Container has terminationGracePeriodSeconds (default 30) to exit
-7. kubelet sends SIGKILL if still running
-8. Pod object is deleted from etcd
-```
-
-The 30-second grace period is the global default. Override per-Pod:
-
-```yaml
-spec:
-  terminationGracePeriodSeconds: 60
-```
-
----
-
-## 7. Init Containers — Ordered Setup Before the App
-
-Init containers are specialized containers that **run before the main app containers**, in declared order, and must succeed before the next one starts.
+Here is a minimal, production-ready Pod manifest running our canonical application, `podinfo`:
 
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: app
-spec:
-  initContainers:
-  - name: wait-for-db
-    image: busybox:1.36
-    command: ['sh', '-c', 'until nc -z db 5432; do echo waiting; sleep 2; done']
-  - name: migrate
-    image: app:1.0
-    command: ['./migrate', 'up']
-  containers:
-  - name: app
-    image: app:1.0
-    command: ['./serve']
-```
-
-Init container rules:
-
-| Rule | Detail |
-|---|---|
-| **Order** | Declared order, started one at a time |
-| **Success required** | Must exit 0 for the next one to start |
-| **Run to completion** | No restart, no long-running |
-| **Separate images** | Often a different image (e.g., `busybox` for waiting) |
-| **Separate resources** | Init container resources are NOT added to the main container's |
-| **No probes** | Can't use liveness/readiness/startup on init containers |
-| **No lifecycle hooks** | preStop/postStart don't apply to init containers |
-| **Restart policy** | Follows Pod's `restartPolicy` (typically `Always`) |
-
-### Common patterns
-
-1. **Wait for a dependency** — DB, cache, message broker. Simpler than a sidecar.
-2. **Schema migration** — run once before the app boots.
-3. **Git clone / config fetch** — pull secrets from a remote source.
-4. **Permissions setup** — `chown` a volume, generate certs.
-5. **Registration** — register the Pod with an external system (e.g., Consul, an LB).
-
-### Init container resources
-
-Init container resources are **independent** of the main containers. The scheduler treats the larger of (sum of init containers) or (sum of app containers) as the effective request, but the runtime enforces them separately:
-
-```yaml
-initContainers:
-- name: migrate
-  image: app:1.0
-  resources:
-    requests:
-      memory: 512Mi      # big, for migration
-      cpu: 500m
-containers:
-- name: app
-  resources:
-    requests:
-      memory: 128Mi      # small, for steady state
-      cpu: 100m
-```
-
-The Pod's `effective.memory.request = max(sum of init, sum of app)`.
-
-For full coverage, see [[Kubernetes/concepts/L03-workloads/08-init-containers|08 — Init Containers]].
-
----
-
-## 8. Multi-Container Pods — Sidecar / Ambassador / Adapter
-
-A Pod can have multiple containers. The three recognized patterns (from the official k8s docs):
-
-### 1. Sidecar
-
-The most common. A helper that extends or enhances the main container.
-
-```
-┌──────────────────────────────────────┐
-│ Pod                                   │
-│  ┌──────────┐    ┌────────────────┐  │
-│  │   app    │    │    sidecar      │  │
-│  │          │    │ (log shipper,   │  │
-│  │          │    │  metrics, mesh) │  │
-│  └──────────┘    └────────────────┘  │
-│   same network ns, shared volumes     │
-└──────────────────────────────────────┘
-```
-
-Examples: Fluent Bit, Istio envoy, Linkerd proxy, Dapr sidecar, metrics exporter, secrets refresher.
-
-### 2. Ambassador
-
-Proxies network traffic for the main app. The app talks to `localhost`, the ambassador figures out the real destination.
-
-```
-┌──────────────────────────────────────┐
-│ Pod                                   │
-│  ┌──────────┐    ┌────────────────┐  │
-│  │   app    │───▶│  ambassador     │  │
-│  │          │    │  (forwards to   │  │
-│  │          │    │   real broker)  │  │
-│  └──────────┘    └────────────────┘  │
-└──────────────────────────────────────┘
-   localhost:9092 → remote broker
-```
-
-Used in legacy migrations: app code stays the same, ambassador handles the new topology.
-
-### 3. Adapter
-
-Normalizes the main app's output. App emits a custom log format, adapter rewrites to a standard one.
-
-```
-┌──────────────────────────────────────┐
-│ Pod                                   │
-│  ┌──────────┐    ┌────────────────┐  │
-│  │   app    │───▶│    adapter      │  │
-│  │ (custom  │    │  (converts to   │  │
-│  │  logs)   │    │   JSON/OTLP)    │  │
-│  └──────────┘    └────────────────┘  │
-└──────────────────────────────────────┘
-```
-
-For full coverage, see [[Kubernetes/concepts/L03-workloads/09-multi-container-pods|09 — Multi-Container Pods]].
-
----
-
-## 9. Probes — Liveness, Readiness, Startup
-
-Three probe types, all run by the **kubelet** (not the API server, not a sidecar, not a Service):
-
-| Probe | Question it answers | If it fails | Use it for |
-|---|---|---|---|
-| `startupProbe` | "Has the app finished starting?" | Container is killed if it never succeeds | Slow-starting apps (JVM, big data loads) |
-| `livenessProbe` | "Is the container still alive?" | Container is killed and restarted | Detect deadlocks, unrecoverable errors |
-| `readinessProbe` | "Can the container serve traffic?" | Pod removed from Service endpoints | Signal "draining" or "warming up" |
-
-Probe handlers: `httpGet`, `tcpSocket`, `exec`, `gRPC`.
-
-Critical gotcha: **liveness probes must check internal health only.** A liveness probe that hits a downstream dependency (DB, cache) will restart the Pod when the dependency is briefly unavailable — making the situation worse, not better. Use readiness for downstream checks.
-
-For the full reference, see [[Kubernetes/concepts/L03-workloads/10-probes|10 — Probes]].
-
----
-
-## 10. Resource Requests and Limits
-
-Resources are the **scheduler's contract** with the kubelet. They control both **scheduling decisions** and **runtime enforcement**.
-
-```yaml
-spec:
-  containers:
-  - name: app
-    image: app:1.0
-    resources:
-      requests:
-        cpu: 100m           # 0.1 vCPU core
-        memory: 128Mi       # 128 mebibytes
-      limits:
-        cpu: 200m
-        memory: 256Mi
-```
-
-### What each value means
-
-| Field | Used at | If not set |
-|---|---|---|
-| `requests.cpu` | Scheduling — guarantees this much CPU | Pod may be scheduled onto a fully-utilized node and get throttled |
-| `requests.memory` | Scheduling — guarantees this much memory | Pod may be scheduled onto a node with no free memory and OOMKilled |
-| `limits.cpu` | Runtime — throttles above this | Container can use all available CPU |
-| `limits.memory` | Runtime — OOMKills above this | Container can use all available memory |
-
-### The difference between CPU and memory enforcement
-
-- **CPU** is compressible. The kernel throttles — the process gets less CPU but keeps running.
-- **Memory** is incompressible. The kernel OOMKills the process. There is no "throttle memory" — if you're over your limit, you die.
-
-This is why memory limits are scarier than CPU limits, and why most production workloads set memory `requests == limits` (Guaranteed QoS) for critical Pods.
-
-### Default behavior
-
-If you don't set requests or limits, the Pod is **BestEffort** QoS. The scheduler can place it on any node, and it has no guaranteed resources. This is almost always wrong for production.
-
-For full coverage, see [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|L06 — Resource Requests and Limits]].
-
----
-
-## 11. Security Context — Per-Container Hardening
-
-`securityContext` lets you apply security constraints at the Pod or container level. In production, every container should have at least these:
-
-```yaml
-spec:
-  securityContext:                          # pod-level
-    runAsNonRoot: true
-    runAsUser: 1000
-    runAsGroup: 3000
-    fsGroup: 2000
-    seccompProfile:
-      type: RuntimeDefault                  # default seccomp, not unconfined
-  containers:
-  - name: app
-    image: app:1.0
-    securityContext:                        # container-level
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop: ["ALL"]
-      runAsNonRoot: true
-```
-
-### What each field does
-
-| Field | Effect |
-|---|---|
-| `runAsNonRoot: true` | Container refuses to start if the image has USER 0 |
-| `runAsUser: <uid>` | Forces the container's main process to run as that UID |
-| `runAsGroup: <gid>` | Same, for primary GID |
-| `fsGroup: <gid>` | Group ownership of any volumes mounted into the Pod |
-| `readOnlyRootFilesystem: true` | Container's root FS is read-only. App must write to a mounted volume. |
-| `allowPrivilegeEscalation: false` | Disables setuid binaries and capability escalation |
-| `capabilities.drop: ["ALL"]` | Drops all Linux capabilities; opt back in if needed |
-| `seccompProfile.type: RuntimeDefault` | Use the runtime's default seccomp filter (much better than unconfined) |
-
-For full coverage, see [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|L07 — Security Context]].
-
----
-
-## 12. Volumes and Storage in Pods
-
-Containers in a Pod share **volumes**. A volume is mounted into one or more containers at a path, and the contents are visible to all of them.
-
-```yaml
-spec:
-  volumes:
-  - name: data
-    emptyDir: {}                  # ephemeral, lives with the Pod
-  - name: config
-    configMap:
-      name: app-config
-  - name: secret
-    secret:
-      secretName: app-secret
-  - name: persistent
-    persistentVolumeClaim:
-      claimName: app-data
-  containers:
-  - name: app
-    volumeMounts:
-    - name: data
-      mountPath: /var/lib/app
-    - name: config
-      mountPath: /etc/app
-      readOnly: true
-    - name: secret
-      mountPath: /etc/app-secrets
-      readOnly: true
-    - name: persistent
-      mountPath: /var/lib/app/db
-```
-
-### Volume types
-
-| Type | Lifetime | Use case |
-|---|---|---|
-| `emptyDir` | Pod lifetime | Scratch space, sidecar-shared data |
-| `configMap` | Until ConfigMap changes | App config |
-| `secret` | Until Secret changes | Credentials, tokens |
-| `hostPath` | Node lifetime (data lives on the node) | node-level agents reading /var/log |
-| `persistentVolumeClaim` | Independent of Pod | Databases, durable state |
-| `ephemeral` (k8s 1.19+) | Per-Pod, dynamic provisioning | Per-Pod scratch that survives container restarts |
-| `gitRepo` (deprecated → `initContainer` clone) | n/a | Don't use this; use an init container |
-| `nfs`, `iscsi`, `csi` | Various | External storage backends |
-
-### The emptyDir caveat
-
-`emptyDir` is **lost when the Pod is deleted**. It is not durable. It is for scratch space, shared between containers in a Pod, or for ephemeral data that doesn't need to survive a restart.
-
-For full coverage, see [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|L05 — PersistentVolumeClaim]].
-
----
-
-## 13. Pod Scheduling — How the Scheduler Sees a Pod
-
-The scheduler sees a Pod, not the containers inside it. It places the Pod on a node based on:
-
-1. **Resource requests** — the sum of all containers' requests
-2. **Node selectors** — `nodeSelector` and `nodeName`
-3. **Affinity / anti-affinity** — soft or hard constraints
-4. **Taints and tolerations** — "this node repels Pods unless they tolerate the taint"
-5. **Topology spread constraints** — spread Pods across zones / nodes
-6. **Priority** — `priorityClassName`
-7. **Scheduling gates** — `schedulingGates` (k8s 1.27+, defer scheduling)
-
-If the scheduler can't place the Pod, it stays in `Pending` and emits a `FailedScheduling` event:
-
-```
-Events:
-  Type     Reason            Age   From               Message
-  ----     ------            ----  ----               -------
-  Warning  FailedScheduling  12s   default-scheduler  0/5 nodes are available: 3 Insufficient memory, 2 Insufficient cpu.
-```
-
-For full coverage, see [[Kubernetes/concepts/L06-scheduling-scaling|L06 — Scheduling and Scaling]].
-
----
-
-## 14. Pod Disruption — How Pods Get Killed
-
-Pods get killed in three ways:
-
-### 1. Voluntary disruption (you control it)
-
-- `kubectl delete pod`
-- Scaling a Deployment down
-- Rolling update replacing the Pod
-- `kubectl drain <node>` (node maintenance)
-
-For voluntary disruption, a **PodDisruptionBudget** (PDB) sets a floor:
-
-```yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: app
-spec:
-  minAvailable: 2     # always keep at least 2 Pods
-  selector:
-    matchLabels:
-      app: myapp
-```
-
-### 2. Involuntary disruption (you don't control it)
-
-- Node failure (hardware, OOM)
-- Cluster autoscaler removing a node
-- Cloud provider evicting the instance
-- Kernel panic
-
-PDBs do **not** protect against involuntary disruption.
-
-### 3. The deletion flow
-
-When a Pod is deleted (voluntary), the order is:
-
-```
-1. API server marks Pod for deletion (deletionTimestamp set)
-2. PodDisruptionBudget controller counts current disruptions
-3. Endpoints controller removes the Pod from Service endpoints
-4. kube-proxy / CNI update iptables / routing
-5. kubelet sends SIGTERM to all containers (in reverse declaration order)
-6. preStop hooks run
-7. terminationGracePeriodSeconds elapses
-8. SIGKILL if still running
-9. Pod object is deleted from etcd
-```
-
-The 30-second default grace period is configurable per-Pod. If your app needs longer to drain (e.g., long-polling connections, in-flight uploads), raise it:
-
-```yaml
-spec:
-  terminationGracePeriodSeconds: 120
-```
-
-### The endpoint-removal race
-
-There's a subtle race: the kubelet can send SIGTERM **before** the kube-proxy update propagates, meaning traffic can still hit the dying Pod. The common workaround is the preStop sleep:
-
-```yaml
-lifecycle:
-  preStop:
-    exec:
-      command: ["sh", "-c", "sleep 10"]   # let endpoint removal propagate
-```
-
-The exact sleep time depends on your cluster size and CNI. AWS Load Balancer Controller docs recommend 5-10 seconds. Bigger clusters may need more.
-
----
-
-## 15. Pod QoS Classes
-
-Kubernetes assigns every Pod to one of three **Quality of Service** classes based on its resource requests and limits:
-
-| Class | Rule | Treatment |
-|---|---|---|
-| **Guaranteed** | Every container has `requests == limits` for both CPU and memory | Last to be evicted |
-| **Burstable** | At least one container has `requests` set, but not Guaranteed | Evicted after BestEffort, before Guaranteed |
-| **BestEffort** | No container has any requests or limits | Evicted first |
-
-### Why it matters
-
-When a node runs out of resources, the kubelet evicts Pods in this order: **BestEffort first, then Burstable, then Guaranteed**. Setting Guaranteed QoS is the most reliable way to ensure your Pod stays up under node pressure.
-
-### The full set of QoS rules
-
-| Container config | QoS |
-|---|---|
-| `resources: {}` (no requests, no limits) for all containers | **BestEffort** |
-| Some requests/limits set, but not equal on all containers | **Burstable** |
-| All containers have `requests == limits` for both CPU and memory | **Guaranteed** |
-
-Mixed cases:
-- One container with `requests == limits`, another with no requests → **Burstable**
-- All containers with `requests == limits` for CPU, but memory not set → **Burstable**
-
-Guaranteed requires **all** containers, **both** resources.
-
----
-
-## 16. Static Pods — The Outlier
-
-A **Static Pod** is managed directly by the **kubelet** on a specific node, not by the API server. The kubelet reads them from a local manifest directory (default `/etc/kubernetes/manifests/`) and starts them. The API server reflects them as read-only mirrors.
-
-```yaml
-# /etc/kubernetes/manifests/kube-apiserver.yaml on the master
-apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-apiserver
-spec:
-  containers:
-  - name: kube-apiserver
-    image: registry.k8s.io/kube-apiserver:v1.30
-```
-
-Static Pods are how the **control plane itself runs**. `kube-apiserver`, `etcd`, `kube-controller-manager`, `kube-scheduler` are typically static Pods on the control plane nodes. They are also used for node-level agents (like a custom CNI or monitoring agent) that you want to run before the API server is up.
-
-Key properties:
-
-| Property | Detail |
-|---|---|
-| **Managed by** | kubelet (not a controller) |
-| **Stored in** | Local file on a node (not etcd) |
-| **API server view** | Mirror, read-only, with `mirror` annotation |
-| **Survives** | API server outage. As long as the kubelet is up, the static Pod runs. |
-| **Restarted by** | kubelet watches the file. If the file changes, the Pod is recreated. |
-| **No controller** | ReplicaSet, Deployment, etc. don't see static Pods. |
-
-For full coverage, see [[Kubernetes/concepts/L03-workloads/11-static-pods|11 — Static Pods]].
-
----
-
-## 17. Why You Almost Never Write a Bare Pod
-
-In production, a bare `kind: Pod` is a bug:
-
-- **No self-healing** — if the node dies, the Pod stays dead
-- **No rolling updates** — you have to delete and recreate by hand
-- **No scaling** — you can't scale a single Pod
-- **No selector semantics** — Services can't target it predictably
-
-Always use a **controller** (Deployment, StatefulSet, DaemonSet, Job) so something is responsible for keeping the desired number of Pods alive.
-
-### When you DO write a bare Pod
-
-- `kubectl run --rm -it <image> -- <cmd>` — one-off debugging
-- `kubectl debug node/<node> -it --image=<img>` — node-level debugging
-- Static Pods for control plane components
-- Custom controllers that manage their own Pods
-
-The rule of thumb: if a human is going to write the Pod manifest, it should be inside a controller.
-
----
-
-## 18. Operational Recipes
-
-### Recipe 1: A web app with a log shipper sidecar
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: web-with-sidecar
+  name: podinfo-demo
+  namespace: default
   labels:
-    app: web
+    app.kubernetes.io/name: podinfo
 spec:
   containers:
-  - name: app
-    image: myorg/web:2.1
-    ports:
-    - name: http
-      containerPort: 8080
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 500m
-        memory: 256Mi
-    readinessProbe:
-      httpGet:
-        path: /ready
-        port: http
-      periodSeconds: 5
-    livenessProbe:
-      httpGet:
-        path: /healthz
-        port: http
-      periodSeconds: 10
-    securityContext:
-      runAsNonRoot: true
-      readOnlyRootFilesystem: true
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log/app
-  - name: log-shipper
-    image: fluent/fluent-bit:3.0
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log/app
-      readOnly: true
-  volumes:
-  - name: logs
-    emptyDir: {}
+    - name: podinfo
+      image: ghcr.io/stefanprodan/podinfo:6.7.1
+      ports:
+        - name: http
+          containerPort: 9898
+      resources:
+        requests:
+          cpu: 50m
+          memory: 32Mi
+        limits:
+          cpu: 200m
+          memory: 128Mi
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: http
+        initialDelaySeconds: 2
+        periodSeconds: 10
+      readinessProbe:
+        httpGet:
+          path: /readyz
+          port: http
+        initialDelaySeconds: 2
+        periodSeconds: 5
 ```
 
-### Recipe 2: A Pod that waits for a database, then runs migrations
+---
 
-```yaml
+## 7. How It Works Under the Hood
+
+### 1. The Pause Container & Shared Namespaces
+When the kubelet receives a Pod assignment from `kube-scheduler`, it calls the Container Runtime (e.g., `containerd`) via the CRI to create a **Pod Sandbox**.
+- The runtime spins up an internal **pause container** (`registry.k8s.io/pause`).
+- The pause container holds the Linux `net`, `ipc`, and `uts` kernel namespaces open.
+- Application containers are then launched, joining those existing namespaces. This is why containers in the same Pod can reach each other via `localhost` and share ports.
+- For deep field-level schemas and namespace flags, see [[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|01-pods-deep-dive]].
+
+### 2. Pod Phases vs Pod Conditions
+- **`status.phase`** is a coarse summary (`Pending`, `Running`, `Succeeded`, `Failed`, `Unknown`).
+- **`status.conditions`** provide the exact operational truth:
+  - `PodScheduled`: The scheduler successfully bound the Pod to a node.
+  - `Initialized`: All `initContainers` completed successfully.
+  - `ContainersReady`: All containers passed startup checks.
+  - `Ready`: The Pod is healthy and ready to receive Service traffic.
+
+### 3. Graceful Termination Timeline
+When a Pod is deleted (`kubectl delete pod` or during rolling updates), Kubernetes initiates a zero-downtime termination sequence:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant KubeAPI as kube-apiserver
+    participant Endpoints as EndpointSlice Controller
+    participant Kubelet as Node kubelet
+    participant Container as Pod Container Process
+
+    KubeAPI->>Endpoints: 1. Pod marked Terminating
+    Endpoints-->>Endpoints: Remove Pod IP from Service Endpoints (in parallel)
+    KubeAPI->>Kubelet: 2. Trigger Pod deletion
+    opt If preStop hook defined
+        Kubelet->>Container: Execute preStop hook (e.g. sleep 10)
+    end
+    Kubelet->>Container: 3. Send SIGTERM to process (PID 1)
+    Note over Container: Process stops taking new requests & finishes in-flight work
+    alt Exits within terminationGracePeriodSeconds (default 30s)
+        Container-->>Kubelet: Process exits cleanly
+    else Grace period expires
+        Kubelet->>Container: Send SIGKILL (force terminate)
+    end
+    Kubelet->>KubeAPI: 4. Remove Pod record from etcd
+```
+
+---
+
+## 8. Production Considerations
+
+### Why Bare Pods Are an Anti-Pattern
+A **bare Pod** is a Pod created directly via `kind: Pod` without a controller.
+- If a worker node crashes or is drained, Kubernetes **will not reschedule** a bare Pod.
+- You cannot perform rolling updates or rollbacks.
+- **Production Rule:** Always deploy Pods using controllers:
+  - Use **Deployments** for stateless services ([[Kubernetes/concepts/L03-workloads/03-deployments|03-deployments]]).
+  - Use **StatefulSets** for persistent workloads ([[Kubernetes/concepts/L03-workloads/04-statefulsets|04-statefulsets]]).
+  - Use **DaemonSets** for node-level agents ([[Kubernetes/concepts/L03-workloads/05-daemonset|05-daemonset]]).
+  - Use **Jobs / CronJobs** for batch tasks ([[Kubernetes/concepts/L03-workloads/06-job|06-job]]).
+
+### Native Sidecar Containers (Kubernetes v1.29+ / v1.37 Baseline)
+Historically, sidecars were ordinary containers with non-deterministic startup order. In modern Kubernetes, define helper sidecars inside `initContainers` with `restartPolicy: Always`:
+- Starts **before** application containers.
+- Kubelet waits for its startup probe before proceeding.
+- Survives until the Pod terminates.
+- Detailed reference: [[Kubernetes/concepts/L03-workloads/08-init-containers|08-init-containers]].
+
+### In-Place Pod Resize (GA in Kubernetes v1.37)
+Prior to recent versions, changing CPU or memory required restarting the Pod. With the `InPlacePodVerticalScaling` feature GA in v1.37, you can patch container resources without restarting the underlying container process.
+
+---
+
+## 9. Failure Modes and Debugging
+
+| Symptom | Root Cause | Primary Diagnostic Command |
+| :--- | :--- | :--- |
+| **`ImagePullBackOff`** | Typo in image name, tag does not exist, or private registry credentials missing. | `kubectl describe pod <name>` (inspect `Events`) |
+| **`CrashLoopBackOff`** | Container entrypoint exits with non-zero code shortly after starting. | `kubectl logs <name> --previous` |
+| **`Pending`** | No node fits resource requests, node tainted, or required PVC unbound. | `kubectl describe pod <name>` (look at `FailedScheduling`) |
+| **`OOMKilled`** (Exit 137) | Container exceeded its memory limit (`limits.memory`). Linux kernel killed the process. | `kubectl get pod <name> -o yaml \| grep -A 5 lastState` |
+| **Stuck `Terminating`** | `preStop` hook hangs, or process ignores `SIGTERM` and storage unmount is delayed. | `kubectl describe pod <name>` (check unmount events) |
+
+---
+
+## 10. Hands-on Exercise
+
+### Goal:
+Deploy a standalone Pod with a graceful termination delay and observe the termination lifecycle in action.
+
+### Step 1: Deploy a Pod with a `preStop` Hook
+
+```bash
+kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Pod
 metadata:
-  name: app
+  name: podinfo-lifecycle-demo
+  namespace: default
 spec:
-  initContainers:
-  - name: wait-for-db
-    image: busybox:1.36
-    command: ['sh', '-c', 'until nc -z db 5432; do echo waiting; sleep 2; done']
-  - name: migrate
-    image: myorg/app:2.1
-    command: ['./manage', 'migrate']
+  terminationGracePeriodSeconds: 20
   containers:
-  - name: app
-    image: myorg/app:2.1
-    command: ['./serve']
-    readinessProbe:
-      exec:
-        command: ['/bin/sh', '-c', 'curl -fs http://localhost:8080/healthz']
-      initialDelaySeconds: 5
-      periodSeconds: 5
+    - name: podinfo
+      image: ghcr.io/stefanprodan/podinfo:6.7.1
+      ports:
+        - containerPort: 9898
+      lifecycle:
+        preStop:
+          exec:
+            command: ["sh", "-c", "echo 'preStop started' >> /tmp/lifecycle.log && sleep 8"]
+EOF
 ```
 
-### Recipe 3: A Pod with a graceful-shutdown sleep
+### Step 2: Verify Pod is Running
 
-```yaml
-spec:
-  terminationGracePeriodSeconds: 60
-  containers:
-  - name: app
-    image: myorg/app:2.1
-    lifecycle:
-      preStop:
-        exec:
-          command: ["sh", "-c", "sleep 10"]   # let endpoint removal propagate
+```bash
+kubectl wait --for=condition=Ready pod/podinfo-lifecycle-demo --timeout=30s
 ```
 
-### Recipe 4: A Pod with hard memory limits (Guaranteed QoS)
+### Step 3: Trigger Deletion and Measure Graceful Shutdown
 
-```yaml
-spec:
-  containers:
-  - name: app
-    image: myorg/app:2.1
-    resources:
-      requests:
-        cpu: 200m
-        memory: 256Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
+Run `time kubectl delete pod podinfo-lifecycle-demo`:
+
+```bash
+time kubectl delete pod podinfo-lifecycle-demo
 ```
 
-`requests == limits` → Guaranteed QoS → last to be evicted under node pressure.
+**Expected output:**
+Notice the command takes ~8–10 seconds to finish. Kubelet executed the `preStop` hook, waited 8 seconds, and then sent `SIGTERM`, giving the process a clean shutdown window before removing the Pod from the cluster.
+
+> [!TIP]
+> For the complete multi-pod deployment workflow, proceed to **[[Kubernetes/labs/01-deploy-workload|Lab 01 — Deploying the Application]]**.
 
 ---
 
-## 19. Gotchas and Common Mistakes
+## 11. Knowledge Check
 
-### Pod identity
+<details>
+<summary><b>1. Why can two containers inside the same Pod communicate over <code>localhost</code>?</b></summary>
+Because all containers within a Pod share the same Linux network namespace, created by the Pod sandbox pause container. They share the same IP address and loopback interface.
+</details>
 
-- **A Pod's UID is not stable across recreations.** Never store it. If the Pod restarts, it gets a new UID, new name (if its name had a hash suffix), and new IP.
-- **A Pod's IP is not stable across recreations.** Same reason. Reach Pods through Services, not by IP.
-- **Two Pods cannot live on the same node with the same UID** — UID is globally unique.
+<details>
+<summary><b>2. If a worker node's hardware completely fails, what happens to bare unmanaged Pods versus Pods managed by a Deployment?</b></summary>
+Bare unmanaged Pods are marked <code>Unknown</code> / <code>NodeLost</code> and deleted after the eviction timeout; they are <b>never recreated</b>. Pods managed by a Deployment are recognized as missing by the ReplicaSet controller, which immediately schedules replacement Pods onto healthy worker nodes.
+</details>
 
-### Networking
+<details>
+<summary><b>3. Why is it recommended to add a short <code>sleep</code> inside a <code>preStop</code> hook for public-facing web applications?</b></summary>
+When a Pod is marked for deletion, EndpointSlice removal occurs in parallel with sending signals to the container. A brief sleep (e.g. 5–10s) gives cluster-wide CNI, kube-proxy, and ingress data planes time to update routing tables before the container process stops accepting incoming TCP connections, eliminating 502 Bad Gateway drops.
+</details>
 
-- **Containers in a Pod share the network namespace but not the port space.** Two containers trying to bind `:8080` will conflict.
-- **`localhost` traffic never leaves the Pod's namespace.** NetworkPolicy doesn't see it. If you've locked down egress and `localhost` still works, that's why.
-- **`hostNetwork: true` bypasses NetworkPolicy entirely.** Avoid for application Pods.
-
-### Resources
-
-- **No requests = BestEffort = first to be killed under pressure.** Always set at least `requests`.
-- **Memory limit == death.** A container that exceeds its memory limit is OOMKilled, no warning. Set limits carefully, and monitor `container_memory_failures_total` for OOM events.
-- **CPU is throttled, not killed.** A container that exceeds its CPU limit slows down but keeps running. CPU throttling can hurt latency-sensitive apps; raise the limit or fix the app.
-
-### Lifecycle
-
-- **`postStart` runs in parallel with the main process.** Don't depend on it having completed.
-- **`preStop` sleep is sometimes necessary** to let endpoint removal propagate. Tune the sleep based on your cluster size.
-- **The 30-second termination grace is a default, not a guarantee.** If your app needs longer to drain, set `terminationGracePeriodSeconds`.
-
-### Probes
-
-- **Liveness probes must check internal health only.** A liveness probe that hits a downstream DB will restart the Pod when the DB hiccups. Use readiness for external deps.
-- **`failureThreshold: 1` with `periodSeconds: 1` is too aggressive** for production. A single blip kills the container.
-
-### Scheduling
-
-- **A `Pending` Pod is normal only briefly.** If it stays Pending for more than a few minutes, check `kubectl describe pod` for `FailedScheduling` events.
-- **The scheduler sees the Pod, not the containers.** Don't try to "balance" containers across nodes — it doesn't work that way.
-
-### Security
-
-- **`runAsNonRoot: true` is a guardrail, not a fix.** It refuses to start the container if the image has USER 0. It doesn't fix the image.
-- **`readOnlyRootFilesystem: true` breaks apps that write to `/tmp` or `/var/log`.** Mount writable emptyDir volumes at those paths.
+<details>
+<summary><b>4. What is the difference between a Pod's <code>phase: Running</code> and condition <code>Ready: True</code>?</b></summary>
+<code>phase: Running</code> means the Pod has been bound to a node and all containers have been created (at least one is currently running). <code>Ready: True</code> means all containers have also passed their readiness probes and the Pod is eligible to receive traffic from Services.
+</details>
 
 ---
 
-## 20. Related Notes
+## 12. Key Takeaways
 
-| Topic | Note |
-|---|---|
-| ReplicaSet (manages Pods) | [[Kubernetes/concepts/L03-workloads/02-replicaset\|02 — ReplicaSet]] |
-| Deployment (manages ReplicaSets) | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]] |
-| StatefulSet (stable network IDs) | [[Kubernetes/concepts/L03-workloads/04-statefulsets\|04 — StatefulSets]] |
-| DaemonSet (one per node) | [[Kubernetes/concepts/L03-workloads/05-daemonset\|05 — DaemonSet]] |
-| Job (run to completion) | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]] |
-| CronJob (scheduled Jobs) | [[Kubernetes/concepts/L03-workloads/07-cronjob\|07 — CronJob]] |
-| Init Containers | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]] |
-| Multi-Container Pods (sidecar/ambassador/adapter) | [[Kubernetes/concepts/L03-workloads/09-multi-container-pods\|09 — Multi-Container Pods]] |
-| Probes (liveness/readiness/startup) | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]] |
-| Static Pods | [[Kubernetes/concepts/L03-workloads/11-static-pods\|11 — Static Pods]] |
-| Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context (per-container hardening) | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
-| Pod networking (CNI, Pod IPs) | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]] |
-| Persistent storage (PV/PVC) | [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim\|L05 — PersistentVolumeClaim]] |
+1. **The Pod is the unit of scheduling and networking:** Containers do not exist in isolation in Kubernetes.
+2. **Shared boundaries:** Containers in a Pod share IP addresses, network ports, IPC, and volume mounts.
+3. **Phases are coarse, conditions are precise:** Always inspect `status.conditions` (`Ready`, `ContainersReady`) when diagnosing traffic issues.
+4. **Graceful shutdown matters:** Configure `preStop` hooks and `terminationGracePeriodSeconds` to ensure zero connection drops during rollouts.
+5. **Never deploy bare Pods:** Always wrap Pods in a controller (Deployment, StatefulSet, DaemonSet, Job) for high availability and automated reconciliation.
+
+---
+
+## 13. Next Lesson and Related References
+
+- **Next Lesson:** **[[Kubernetes/concepts/L03-workloads/02-replicaset|02 — ReplicaSets]]** & **[[Kubernetes/concepts/L03-workloads/03-deployments|03 — Deployments]]**
+- **Deep Reference:** **[[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|01-pods-deep-dive]]** (Full YAML schema and Linux namespaces)
+- **Init & Sidecars:** **[[Kubernetes/concepts/L03-workloads/08-init-containers|08-init-containers]]**
+- **Health Probes:** **[[Kubernetes/concepts/L03-workloads/10-probes|10-probes]]**
+- **Hands-on Lab:** **[[Kubernetes/labs/01-deploy-workload|Lab 01 — Deploying the Application]]**
+
+---
+
+## 14. Official Sources
+
+- [Kubernetes Official Documentation — Pods](https://kubernetes.io/docs/concepts/workloads/pods/)
+- [Kubernetes Official Documentation — Pod Lifecycle](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/)
+- [Kubernetes Official Documentation — Container Lifecycle Hooks](https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/)

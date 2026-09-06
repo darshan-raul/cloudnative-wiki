@@ -35,13 +35,21 @@ description: Multi-session persistent execution tracker for the Kubernetes secti
 - [x] Update `client-go.md` and `troubleshooting.md` with structured directories and frontmatter.
 - [x] Rewrite `Kubernetes.md` landing page by reader intent with v1.37 baseline and visual curriculum map.
 
-### Phase 2: Beginner Spine & Sample Application (Next Focus 🔄)
-- [ ] Define canonical `kind-config.yaml` with multi-node roles and `extraPortMappings` (ports 80/443).
-- [ ] Build continuous `podinfo` manifest sequence for Labs 00–06.
-- [ ] Slim down oversized core notes (e.g. `01-pods.md`).
-- [ ] Apply Two-Tier page contract (Tier 1 Milestone Lessons vs Tier 2 Atomic Concepts).
+### Phase 2: Beginner Spine & Sample Application (Complete ✅)
+- [x] Define canonical `kind-config.yaml` with multi-node roles and `extraPortMappings` (ports 80/443).
+- [x] Create hands-on labs landing page `content/Kubernetes/labs/index.md` with visual curriculum map.
+- [x] Build continuous `podinfo` manifest sequence for Labs 00–06:
+  - `00-cluster-setup.md`: multi-node kind cluster, system namespaces, kubelet disconnect test.
+  - `01-deploy-workload.md`: podinfo Deployment, ReplicaSet reconciliation, labels/selectors.
+  - `02-updates-and-rollbacks.md`: RollingUpdate surge parameters, stuck rollout diagnosis, `rollout undo`.
+  - `03-configuration.md`: ConfigMaps, Secrets, env vars, live volume reload, missing key failure.
+  - `04-networking-and-services.md`: ClusterIP, modern EndpointSlices, CoreDNS, zero-endpoint typo.
+  - `05-storage-and-persistence.md`: Dynamic PVC provisioning, persistent cache data across pod deletion, `WaitForFirstConsumer`.
+  - `06-scheduling-and-autoscaling.md`: Requests/limits, QoS, topologySpreadConstraints, PDB node drain, unschedulable pod diagnosis.
+- [x] Slim down oversized core notes (`01-pods.md` refactored into Tier 1 milestone 14-section contract; created companion `01-pods-deep-dive.md` reference).
+- [x] Apply Two-Tier page contract with Mermaid sequence & architecture diagrams, controlled failures, and scenario knowledge checks.
 
-### Phase 3: Security & Operational Depth
+### Phase 3: Security & Operational Depth (Next Focus 🔄)
 - [ ] Restructure `L07-security` around layered threat model.
 - [ ] Build insecure-to-hardened workload lab with `podinfo`.
 - [ ] Expand `L08-operations` and connect symptom playbooks.
