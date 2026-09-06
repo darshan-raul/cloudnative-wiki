@@ -3,6 +3,8 @@ title: "L08 — Operations"
 tags: [kubernetes, k8s, operations, troubleshooting, day-2]
 date: 2026-06-06
 description: Kubernetes day-2 operations — troubleshooting flows, observability hooks, cluster health, kubectl debug
+aliases:
+  - Kubernetes/concepts/L08-operations
 ---
 
 # L08 — Operations
@@ -20,7 +22,7 @@ Day-2: things are running, and now you have to keep them running. This level is 
 
 ## Notes in this level
 
-|| Note | Status | What's in it |
+| Note | Status | What's in it |
 |------|--------|--------------|
 | [[Kubernetes/concepts/L08-operations/01-troubleshooting\|Troubleshooting]] | ✅ | Decision tree for "my pod isn't working" — the quick reference |
 | [[Kubernetes/concepts/L08-operations/02-kubectl-debug\|kubectl Debug Toolkit]] | ✅ | `describe`, `logs`, `exec`, `debug`, ephemeral containers — the commands you reach for |
@@ -50,6 +52,6 @@ Pod not working?
 
 ## Where to go next
 
-→ [[Kubernetes/concepts/L09-advanced|L09 — Advanced]]: how Kubernetes itself is built — controllers, operators, etcd, internals.
+→ [[Kubernetes/concepts/L09-advanced/00-README|L09 — Advanced]]: how Kubernetes itself is built — controllers, operators, etcd, internals.
 
 > **Tooling for observability and log routing** (Prometheus, Grafana, Loki, Fluent Bit) lives in [[Kubernetes/guides/README|Guides]] — this level is about understanding the data sources, not deploying the stack.

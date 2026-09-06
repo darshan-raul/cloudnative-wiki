@@ -3,6 +3,8 @@ title: "L02 — Objects"
 tags: [kubernetes, k8s, api, objects, kubernetes-api]
 date: 2026-06-06
 description: The Kubernetes API object model — spec/status, desired state, manifest anatomy
+aliases:
+  - Kubernetes/concepts/L02-objects
 ---
 
 # L02 — Objects
@@ -20,10 +22,10 @@ The Kubernetes **API is the product**. Everything you do — `kubectl apply`, a 
 
 ## Notes in this level
 
-|| Note | Status | What's in it |
+| Note | Status | What's in it |
 |------|--------|--------------|
-|| [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|Kubernetes Objects]] | ✅ | The universal object shape, manifest anatomy, dry-run, field selectors, apiGroups |
-|| [[Kubernetes/concepts/L02-objects/02-downward-api\|Downward API]] | ✅ | Injecting pod metadata into containers — env vars, volume mounts, field ref path syntax |
+| [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|Kubernetes Objects]] | ✅ | The universal object shape, manifest anatomy, dry-run, field selectors, apiGroups |
+| [[Kubernetes/concepts/L02-objects/02-downward-api\|Downward API]] | ✅ | Injecting pod metadata into containers — env vars, volume mounts, field ref path syntax |
 
 ## Suggested reading order
 

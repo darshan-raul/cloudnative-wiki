@@ -88,4 +88,4 @@ The `aws-auth` ConfigMap approach is deprecated. New clusters don't have it by d
 - [[Kubernetes/eks/security/access/README|EKS Security Access Hub]]
 - [[Kubernetes/eks/security/pod-identity|Pod Identity]]
 - [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]]
-- [[AWS/concepts/iam|IAM]]
+- [[AWS/concepts/iam/README|IAM]]

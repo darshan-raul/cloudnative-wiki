@@ -348,7 +348,7 @@ If you have a lot of microservices, you eventually want:
 
 These are **L7 features** that a plain ClusterIP Service doesn't give you. A **service mesh** (Istio, Linkerd, Cilium's service mesh features) is the typical answer: a sidecar proxy in every Pod that handles these features.
 
-Service mesh is a different layer than what's in L04. It's covered separately — see [[Kubernetes/concepts/guides/service-mesh|service-mesh]].
+Service mesh is a different layer than what's in L04. It's covered separately — see [[Kubernetes/guides/networking/comparison|service mesh]] and [[Kubernetes/guides/networking/istio|Istio]].
 
 ## Real packet walkthrough: Service to Pod
 

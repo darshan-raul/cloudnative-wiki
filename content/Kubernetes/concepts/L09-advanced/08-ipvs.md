@@ -1,4 +1,17 @@
+---
+title: IPVS Mode for Kube-Proxy (Deprecated)
+tags: [kubernetes, networking, kube-proxy, ipvs, nftables, deprecated]
+date: 2026-09-06
+description: Architecture, performance, and configuration of kube-proxy IPVS mode, including its deprecation status in v1.35 and migration path to nftables.
+---
+
 # IPVS (kube-proxy mode)
+
+> [!WARNING] Deprecation Notice (Kubernetes v1.35+)
+> The **IPVS mode for `kube-proxy` is formally deprecated** as of Kubernetes v1.35 and is subject to removal in a future release.
+> - `kube-proxy` emits a warning when `mode: "ipvs"` is configured.
+> - Upstream Kubernetes has adopted **`nftables`** as the modern, high-performance successor to both `iptables` and `ipvs` on Linux nodes.
+> - For new high-scale clusters, use the `nftables` proxy mode or an eBPF-based data plane (such as Cilium).
 
 >*"https://kubernetes.io/docs/reference/networking/virtual-ips/"*
 

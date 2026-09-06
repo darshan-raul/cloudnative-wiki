@@ -692,5 +692,6 @@ EOF
 
 * [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — when the pod is the symptom, PVC is the cause
 * [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the pod fails after PVC binds
-* [[Kubernetes/concepts/L05-config-storage/05-persistent-volumes|persistent-volumes]] — how storage works
-* [[Kubernetes/concepts/L05-config-storage/06-storage-classes|storage-classes]] — how SCs work
+* [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — cluster storage resource
+* [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — namespaced claim lifecycle
+* [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning and storage classes

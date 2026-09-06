@@ -1,3 +1,10 @@
+---
+title: PersistentVolume (PV)
+tags: [kubernetes, storage, persistent-volume, csi, pv]
+date: 2026-09-06
+description: Deep dive into Kubernetes PersistentVolumes — cluster storage primitives, access modes, reclaim policies, and CSI provisioning.
+---
+
 # PersistentVolume (PV)
 
 *"https://kubernetes.io/docs/concepts/storage/persistent-volumes/"*

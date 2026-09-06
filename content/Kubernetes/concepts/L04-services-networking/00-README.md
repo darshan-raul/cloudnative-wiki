@@ -3,6 +3,8 @@ title: "L04 — Services & Networking"
 tags: [kubernetes, k8s, networking, services, ingress, cni]
 date: 2026-06-06
 description: Kubernetes networking — Services, DNS, Ingress, NetworkPolicy, CNI, endpoint slices
+aliases:
+  - Kubernetes/concepts/L04-services-networking
 ---
 
 # L04 — Services & Networking
@@ -21,16 +23,16 @@ Pods are ephemeral and get random IPs. Networking in Kubernetes is the layer tha
 
 ## Notes in this level
 
-|| Note | Status | What's in it |
+| Note | Status | What's in it |
 |------|--------|--------------|
-|| [[Kubernetes/concepts/L04-services-networking/01-networking\|Networking]] | 🟡 | Top-level mental model for k8s networking — the CNI model, namespaces, traffic flow |
-|| [[Kubernetes/concepts/L04-services-networking/02-services\|Services]] | ✅ | The four Service types (ClusterIP, NodePort, LoadBalancer, ExternalName), headless services, session affinity, externalTrafficPolicy |
-|| [[Kubernetes/concepts/L04-services-networking/03-dns\|DNS]] | ✅ | CoreDNS, Service/Pod DNS names, `ndots` and the search path gotcha, headless DNS |
-|| [[Kubernetes/concepts/L04-services-networking/04-ingress\|Ingress]] | ✅ | The HTTP routing layer, ingressClassName, TLS, path rewrites, Ingress vs Gateway API |
-|| [[Kubernetes/concepts/L04-services-networking/05-network-policy\|NetworkPolicy]] | ✅ | Pod-to-pod firewall rules, selectors, default-deny recipes, CNI-implementation differences |
-|| [[Kubernetes/concepts/L04-services-networking/06-cni\|CNI]] | ✅ | How Pods actually get IPs, overlay vs underlay, plugin comparison (Flannel, Calico, Cilium) |
-|| [[Kubernetes/concepts/L04-services-networking/08-endpoint-slices\|EndpointSlices]] | 🟡 | Scalable endpoint tracking, topology hints, why it replaced Endpoints, the 100-endpoint limit |
-|| [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive\|Networking Deep Dive]] | ✅ | Pod-to-pod, pod-to-service, service-to-external — packet-level walkthroughs, NAT, hairpin |
+| [[Kubernetes/concepts/L04-services-networking/01-networking\|Networking]] | 🟡 | Top-level mental model for k8s networking — the CNI model, namespaces, traffic flow |
+| [[Kubernetes/concepts/L04-services-networking/02-services\|Services]] | ✅ | The four Service types (ClusterIP, NodePort, LoadBalancer, ExternalName), headless services, session affinity, externalTrafficPolicy |
+| [[Kubernetes/concepts/L04-services-networking/03-dns\|DNS]] | ✅ | CoreDNS, Service/Pod DNS names, `ndots` and the search path gotcha, headless DNS |
+| [[Kubernetes/concepts/L04-services-networking/04-ingress\|Ingress]] | ✅ | The HTTP routing layer, ingressClassName, TLS, path rewrites, Ingress vs Gateway API |
+| [[Kubernetes/concepts/L04-services-networking/05-network-policy\|NetworkPolicy]] | ✅ | Pod-to-pod firewall rules, selectors, default-deny recipes, CNI-implementation differences |
+| [[Kubernetes/concepts/L04-services-networking/06-cni\|CNI]] | ✅ | How Pods actually get IPs, overlay vs underlay, plugin comparison (Flannel, Calico, Cilium) |
+| [[Kubernetes/concepts/L04-services-networking/08-endpoint-slices\|EndpointSlices]] | 🟡 | Scalable endpoint tracking, topology hints, why it replaced Endpoints, the 100-endpoint limit |
+| [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive\|Networking Deep Dive]] | ✅ | Pod-to-pod, pod-to-service, service-to-external — packet-level walkthroughs, NAT, hairpin |
 
 ## Suggested reading order
 

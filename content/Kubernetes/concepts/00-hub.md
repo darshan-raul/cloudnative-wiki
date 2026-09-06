@@ -16,15 +16,15 @@ A **top-down learning path** for Kubernetes, from "what is it" to "how the contr
 | # | Section | What you'll understand |
 |---|---------|------------------------|
 | 00 | [[Kubernetes/concepts/L00-start-here/00-start-here\|Start Here]] | What Kubernetes is, the cluster mental model, how to read this section |
-| 01 | [[Kubernetes/concepts/L01-architecture\|Architecture]] | Control plane components, nodes, what runs where, HA topology, namespaces |
-| 02 | [[Kubernetes/concepts/L02-objects\|Objects]] | The Kubernetes API model — `spec` / `status` / `metadata`, declarative intent, how the API server stores state |
-| 03 | [[Kubernetes/concepts/L03-workloads\|Workloads]] | Pods → ReplicaSets → Deployments → StatefulSets → DaemonSets → Jobs/CronJobs — the layered workload model |
-| 04 | [[Kubernetes/concepts/L04-services-networking\|Services & Networking]] | Services, DNS, Ingress, NetworkPolicy, CNI, endpoint slices |
-| 05 | [[Kubernetes/concepts/L05-config-storage\|Config & Storage]] | ConfigMap, Secret, PersistentVolume, PersistentVolumeClaim, StorageClass, resource quotas |
-| 06 | [[Kubernetes/concepts/L06-scheduling-scaling\|Scheduling & Scaling]] | Scheduling (taints, tolerations, affinity), HPA/VPA/Cluster Autoscaler, restart policies |
-| 07 | [[Kubernetes/concepts/L07-security\|Security]] | RBAC, ServiceAccounts, certificates, authentication vs authorization, Pod Security Standards |
-| 08 | [[Kubernetes/concepts/L08-operations\|Operations]] | Troubleshooting flow, observability hooks, day-2 ops |
-| 09 | [[Kubernetes/concepts/L09-advanced\|Advanced]] | Operators, custom controllers, finalizers, garbage collection, etcd, the pause container, aggregation layer |
+| 01 | [[Kubernetes/concepts/L01-architecture/00-README\|Architecture]] | Control plane components, nodes, what runs where, HA topology, namespaces |
+| 02 | [[Kubernetes/concepts/L02-objects/00-README\|Objects]] | The Kubernetes API model — `spec` / `status` / `metadata`, declarative intent, how the API server stores state |
+| 03 | [[Kubernetes/concepts/L03-workloads/00-README\|Workloads]] | Pods → ReplicaSets → Deployments → StatefulSets → DaemonSets → Jobs/CronJobs — the layered workload model |
+| 04 | [[Kubernetes/concepts/L04-services-networking/00-README\|Services & Networking]] | Services, DNS, Gateway API, Ingress, NetworkPolicy, CNI, EndpointSlices |
+| 05 | [[Kubernetes/concepts/L05-config-storage/00-README\|Config & Storage]] | ConfigMap, Secret, PersistentVolume, PersistentVolumeClaim, StorageClass, resource quotas |
+| 06 | [[Kubernetes/concepts/L06-scheduling-scaling/00-README\|Scheduling & Scaling]] | Scheduling (taints, tolerations, affinity), HPA/VPA/Karpenter, restart policies |
+| 07 | [[Kubernetes/concepts/L07-security/00-README\|Security]] | RBAC, ServiceAccounts, certificates, authentication vs authorization, Pod Security Standards |
+| 08 | [[Kubernetes/concepts/L08-operations/00-README\|Operations]] | Troubleshooting flow, observability hooks, day-2 ops, node maintenance |
+| 09 | [[Kubernetes/concepts/L09-advanced/00-README\|Advanced]] | Operators, custom controllers, finalizers, garbage collection, etcd, pause container, aggregation layer |
 
 ## How to read this section
 

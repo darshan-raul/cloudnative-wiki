@@ -3,6 +3,8 @@ title: "L06 — Scheduling & Scaling"
 tags: [kubernetes, k8s, scheduling, hpa, vpa, autoscaling, karpenter, keda, priority, preemption]
 date: 2026-06-08
 description: Kubernetes scheduling and scaling — taints/tolerations, affinity, HPA, VPA, Karpenter, KEDA, priority, preemption, the scheduler internals
+aliases:
+  - Kubernetes/concepts/L06-scheduling-scaling
 ---
 
 # L06 — Scheduling & Scaling

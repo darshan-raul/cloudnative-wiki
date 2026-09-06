@@ -234,4 +234,4 @@ This is used by **topology-aware routing** (k8s 1.27+, beta in 1.21 as `service.
 
 * [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — the parent object
 * [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — handles the actual packet delivery
-* [[Kubernetes/concepts/L08-ipvs|IPVS]] — alternative kube-proxy mode for scalability
+* [[Kubernetes/concepts/L09-advanced/08-ipvs|IPVS]] — alternative kube-proxy mode for scalability

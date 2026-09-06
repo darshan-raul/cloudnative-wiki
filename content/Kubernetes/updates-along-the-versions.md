@@ -1,3 +1,10 @@
+---
+title: Kubernetes Version Updates (v1.19 – v1.37)
+tags: [kubernetes, k8s, versions, changelog, upgrades]
+date: 2026-09-06
+description: Comprehensive feature matrix and version-by-version changes across Kubernetes releases from v1.19 through current v1.37.
+---
+
 # updates along the versions
 
 "https://www.youtube.com/playlist?list=PL2We04F3Y_42ay3zqo1XHXWpG1RMdDpBM"
@@ -254,3 +261,70 @@ _Compared to v1.31:_
 * **Validating Admission Policy Improvements:** Continued stabilization and feature additions.
 * **API Removals:** `flowcontrol.apiserver.k8s.io/v1beta2` removed (use `v1beta3`). `autoscaling/v2beta2` HorizontalPodAutoscaler removed (use `v2`).
 * **Go Version:** Updated to Go 1.23.x.
+
+***
+
+**Kubernetes v1.33 — "Octarine" (Released: April 2025)**
+
+_Compared to v1.32:_
+
+* <mark style="background-color:green;">**Native Sidecar Containers (Stable):**</mark> Full lifecycle guarantees for init-containers marked as sidecars.
+* **DRA for AI/ML Workloads (Beta):** Dynamic Resource Allocation matured for GPU, accelerator, and NUMA-aware allocation.
+* **User Namespaces for Linux Pods (Beta):** Pod-level UID/GID mapping for rootless container execution.
+* **Topology-Aware Routing Improvements:** Better scoring and heuristics for multi-zone traffic routing.
+* **In-Place Resource Resizing Progress:** Enhanced kubelet actuation for CPU and memory updates.
+
+***
+
+**Kubernetes v1.34 — "Of Wind & Will" (Released: August 2025)**
+
+_Compared to v1.33:_
+
+* <mark style="background-color:green;">**Dynamic Resource Allocation (DRA) Core (Stable):**</mark> Graduated to GA for production GPU and custom device scheduling.
+* **Distributed Tracing for Kubelet & API Server (Stable):** Production-grade OpenTelemetry tracing across control plane and node daemons.
+* **Snapshottable API Server Cache:** Reduced etcd read load and improved serialization performance.
+* **Container Restart Rules:** Fine-grained restart policies per container within a Pod.
+* **Native Pod Certificates:** Direct integration for automated workload identity and mTLS cert issuance.
+
+***
+
+**Kubernetes v1.35 — "Timbernetes" (Released: December 2025)**
+
+_Compared to v1.34:_
+
+* <mark style="background-color:green;">**In-Place Pod Resource Resizing (Stable):**</mark> Graduated to GA. Workloads can resize CPU and memory limits/requests on the fly without Pod recreation.
+* <mark style="background-color:red;">**IPVS Mode for Kube-Proxy Deprecated:**</mark> Formally marked deprecated; startup warnings emit when IPVS is enabled. Upstream standardizes on **nftables** as the successor data plane.
+* **Shift to nftables (Beta):** The `nftables` kube-proxy backend advances as the primary modern Linux packet filtering layer.
+* **Node Declared Features (Alpha):** Nodes advertise hardware and software capabilities directly to the control plane for intelligent placement.
+* **Job `managedBy` Field (Beta):** Allows external batch schedulers and multi-cluster controllers to own Job reconciliation cleanly.
+
+***
+
+**Kubernetes v1.36 — "Haru" (Released: April 2026)**
+
+_Compared to v1.35:_
+
+* <mark style="background-color:green;">**User Namespaces (Stable):**</mark> Graduated to GA, bringing production rootless container sandboxing into standard clusters.
+* <mark style="background-color:green;">**Mutating Admission Policies via CEL (Stable):**</mark> Graduated to GA. In-process CEL policies can mutate objects without external webhook round-trips.
+* <mark style="background-color:green;">**Fine-grained Kubelet API Authorization (Stable):**</mark> Direct node endpoint access is locked down with granular subresource RBAC.
+* **DRA Downward API Integration:** Containers can consume allocated hardware device attributes directly via Downward API environment variables.
+* **Scheduler Fallback & Prioritized Lists:** Workload device claims can specify fallback preference lists (e.g. primary GPU type with fallback alternatives).
+* **Community `ingress-nginx` Retirement:** SIG Network and SRC officially retire `kubernetes/ingress-nginx` in March 2026; users instructed to migrate to Gateway API or maintained alternatives.
+
+***
+
+**Kubernetes v1.37 — "Garhwal" (Released: August 26, 2026)**
+
+_Current Baseline Release:_
+
+* <mark style="background-color:green;">**Metrics API (`metrics.k8s.io`) (Stable):**</mark> Graduated to GA, establishing guaranteed API stability for `kubectl top` and HPA.
+* <mark style="background-color:green;">**DRA Extended Resources (Stable):**</mark> Graduated to GA. Dynamic Resource Allocation drivers can now satisfy requests from traditional extended resource APIs (`resources.requests[example.com/gpu]`) without separate device plugins.
+* <mark style="background-color:green;">**SELinuxMount (Stable):**</mark> Graduated to GA. Volumes are labeled with SELinux contexts at mount time rather than recursively relabeling file by file.
+* <mark style="background-color:green;">**Structured YAML (`KYAML`) (Stable):**</mark> Schema-conformant, structured YAML output locked enabled by default across `kubectl` output flags.
+* **HPA Scale-to-Zero (Beta - Enabled by Default):** HorizontalPodAutoscaler can scale Deployments/StatefulSets to zero replicas on idle metrics and scale back up on demand.
+* **SecurityContext `ulimits` (Beta):** Native container security field for setting POSIX `ulimit` values directly in the Pod manifest.
+* **Volume Security Hardening:** Native `stickyBit` support on `emptyDir` volumes; bind mount hardening options (`noexec`, `nosuid`, `nodev`).
+* <mark style="background-color:red;">**Cgroup v1 Hard-Fail:**</mark> Kubelet now hard-fails by default on nodes running cgroup v1.
+* <mark style="background-color:red;">**Static Pod Security Restriction:**</mark> Static Pods can no longer reference ConfigMaps or Secrets.
+* <mark style="background-color:red;">**IPVS Deprecation Clock:**</mark> IPVS mode scheduled for future removal; warning emitted if used. `nftables` is the recommended Linux backend.
+

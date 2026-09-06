@@ -112,4 +112,4 @@ spec:
 
 - [ADOT Documentation](https://aws-otel.github.io/)
 - [EKS Workshop - ADOT](https://www.eksworkshop.com/docs/observability/open-source-metrics/)
-- [[Architecture/solution-architecture-concepts/observability/telemetry|Telemetry Concepts]]
+- [[Resources/guides/observability/open-telemetry/README|OpenTelemetry Guide]]

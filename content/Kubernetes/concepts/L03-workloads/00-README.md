@@ -3,6 +3,8 @@ title: "L03 — Workloads"
 tags: [kubernetes, k8s, workloads, pods, deployments, statefulsets]
 date: 2026-06-06
 description: Kubernetes workloads — Pods, Deployments, StatefulSets, DaemonSets, Jobs, CronJobs
+aliases:
+  - Kubernetes/concepts/L03-workloads
 ---
 
 # L03 — Workloads

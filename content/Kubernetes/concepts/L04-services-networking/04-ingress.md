@@ -58,16 +58,22 @@ The k8s API does **not** ship a controller. You install one yourself. An Ingress
     Pod Pod      Pod Pod      Pod Pod
 ```
 
-### 1.1 The four popular controllers
+> [!WARNING] Retirement Notice: Community `ingress-nginx` (March 2026)
+> The community-managed **`kubernetes/ingress-nginx`** controller reached End-of-Life in March 2026 and receives no further security patches. 
+> - **The Ingress API itself is NOT deprecated** (`networking.k8s.io/v1` is GA and supported).
+> - For new deployments, **Gateway API** (e.g., Envoy Gateway, Cilium) is the recommended standard.
+> - For Ingress resources, use maintained controllers such as **Traefik**, **HAProxy Ingress**, or commercial NGINX distributions (`nginxinc/kubernetes-ingress`).
 
-| Controller | Base | Strengths | Weaknesses |
+### 1.1 Ingress & Gateway Controllers
+
+| Controller | Data Plane | Primary Role & Strengths | Considerations & Migration |
 |---|---|---|---|
-| **ingress-nginx** | NGINX | Most common, mature, huge community, the k8s project's "blessed" one | Configuration via annotations (a sprawling API), no native service mesh features |
-| **Traefik** | Traefik | Simpler config (CRDs), built-in dashboard, automatic Let's Encrypt | Smaller community, some advanced features behind Traefik Proxy Enterprise |
-| **HAProxy Ingress** | HAProxy | High performance, mature HAProxy | Smaller community, less feature-rich than ingress-nginx |
-| **Envoy Gateway / Contour** | Envoy | Gateway API native, modern, integrates well with service mesh | Newer, less documentation, more complex |
+| **Envoy Gateway** | Envoy | Gateway API native, traffic splitting, modern observability | Successor standard for Kubernetes ingress routing |
+| **Traefik** | Traefik | Built-in dashboard, automatic Let's Encrypt, middleware CRDs | Actively maintained ingress controller |
+| **HAProxy Ingress** | HAProxy | Ultra-high throughput, battle-tested connection handling | Configuration via annotations/configmaps |
+| **ingress-nginx** *(Legacy)* | NGINX | Historic standard, massive existing manifest footprint | **Retired March 2026**; plan migration to Gateway API or Traefik |
 
-Pick based on your team's familiarity and operational model. **ingress-nginx is the safe default** — it has the largest community and the most documentation. Traefik is good if you want a simpler, dashboard-driven experience.
+Pick based on your architecture. **Gateway API with Envoy Gateway or Cilium is the modern standard for new clusters.** If maintaining traditional Ingress manifests, choose an actively maintained controller like Traefik or HAProxy.
 
 ## 2. Basic Example
 

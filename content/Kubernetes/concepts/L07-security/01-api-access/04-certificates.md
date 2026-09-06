@@ -708,4 +708,4 @@ kubectl exec <pod> -- date
 * [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — encrypting the data on disk
 * [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags
 * [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet config
-* [[Kubernetes/concepts/L01-architecture/04-control-plane|Control Plane]] — the components
+* [[Kubernetes/concepts/L01-architecture/06-what-happens-when|Control Plane Architecture]] — the components and request flow

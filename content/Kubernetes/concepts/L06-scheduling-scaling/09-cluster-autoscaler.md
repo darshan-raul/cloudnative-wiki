@@ -551,4 +551,4 @@ kubectl get pdb -A
 * [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — the modern alternative
 * [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
 * [[Kubernetes/eks/compute/managed-node-groups/cluster-autoscaler|Cluster Autoscaler on EKS]] — EKS-specific install
-* [[Kubernetes/eks/compute/karpenter|Karpenter on EKS]] — EKS-specific install
+* [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — EKS-specific install

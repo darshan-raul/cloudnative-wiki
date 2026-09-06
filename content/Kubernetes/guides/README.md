@@ -6,6 +6,8 @@ tags:
   - Hub
 ---
 
+# Kubernetes Guides
+
 Practical, day-2 k8s content. **Concepts** explain *what* and *why* — **Guides** explain *how*: how to use the tools, how to recover from breakage, how to operate against non-functional requirements, and how to ship code to production.
 
 If you're new to k8s, read [[Kubernetes/concepts/00-hub|Concepts]] first.
@@ -14,11 +16,11 @@ If you're new to k8s, read [[Kubernetes/concepts/00-hub|Concepts]] first.
 
 | Section | What it covers | Status |
 |---------|----------------|--------|
-| **[[Kubernetes/guides/tools\|tools]]** | CLI / TUI / debugging UIs (kubectl, k9s, Lens, multi-cluster workflows) | 🟡 Partial |
-| **[[Kubernetes/guides/troubleshooting\|troubleshooting]]** | Issue → diagnosis → fix playbooks for the most common cluster problems | 🟡 Partial |
-| **[[Kubernetes/guides/non-functional\|non-functional]]** | NFRs: scale, cost, HA, performance, security baseline, backup, upgrades, multi-tenancy | 🟠 Stub phase |
-| **[[Kubernetes/guides/delivery\|delivery]]** | How code reaches prod: GitOps, Helm/Kustomize, CI/CD pipelines, progressive delivery | 🟢 Solid (helm), 🟠 rest stub |
-| **[[Kubernetes/guides/networking\|networking]]** | Ingress, Gateway API, service mesh (the practical/network side, not the L04 concepts) | 🟡 Partial |
+| **[[Kubernetes/guides/tools/index\|tools]]** | CLI / TUI / debugging UIs (kubectl, k9s, Lens, multi-cluster workflows) | 🟢 Complete |
+| **[[Kubernetes/guides/troubleshooting/index\|troubleshooting]]** | Symptom-driven playbooks for pods, networking, nodes, and storage outages | 🟢 Complete |
+| **[[Kubernetes/guides/non-functional/index\|non-functional]]** | NFRs: scale, cost, HA, performance, security baseline, backup, upgrades, multi-tenancy | 🟢 Complete |
+| **[[Kubernetes/guides/delivery/index\|delivery]]** | How code reaches prod: GitOps, Helm masterclass, Kustomize, Argo CD, Argo Rollouts | 🟢 Complete |
+| **[[Kubernetes/guides/networking/index\|networking]]** | Gateway API, Envoy Gateway, Traefik, Istio, Linkerd, and service mesh comparison | 🟢 Complete |
 
 ## Section summaries
 
@@ -83,10 +85,9 @@ Practical / network-side notes. Complements L04 concepts with hands-on controlle
 - traefik — Traefik ingress controller
 - nginx — NGINX ingress controller
 - gateway-api — overview, points to envoy-gateway
-- service-mesh — overview
-  - [[Kubernetes/guides/networking/service-mesh/istio|istio]]
-  - [[Kubernetes/guides/networking/service-mesh/linkerd|linkerd]]
-  - comparison — istio vs linkerd vs cilium service mesh
+- [[Kubernetes/guides/networking/comparison|comparison]] — ingress and service mesh overview
+  - [[Kubernetes/guides/networking/istio|istio]] — Istio service mesh
+  - [[Kubernetes/guides/networking/linkerd|linkerd]] — Linkerd service mesh
 
 ## Status legend
 

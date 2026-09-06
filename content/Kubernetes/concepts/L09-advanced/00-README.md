@@ -3,6 +3,8 @@ title: "L09 — Advanced"
 tags: [kubernetes, k8s, advanced, operators, controllers, etcd, internals]
 date: 2026-06-06
 description: Advanced Kubernetes internals — operators, custom controllers, finalizers, garbage collection, etcd, the pause container
+aliases:
+  - Kubernetes/concepts/L09-advanced
 ---
 
 # L09 — Advanced
@@ -27,17 +29,17 @@ How Kubernetes is built, and how to **extend** it. After this level, the platfor
 
 | Note | Status | What's in it |
 |------|--------|--------------|
-|| [[Kubernetes/concepts/L09-advanced/01-operators\|Operators]] | 🟡 | What an operator is, the operator pattern, examples |
-|| [[Kubernetes/concepts/L09-advanced/02-custom-controllers\|Custom Controllers]] | ⚪ | Writing a controller — informers, work queues, reconcile |
-|| [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions\|CRDs]] | ✅ | Extending the API with your own object types, schema validation, versions, CEL |
-|| [[Kubernetes/concepts/L09-advanced/04-admission-controllers\|Admission Controllers & Webhooks]] | ✅ | Built-in admission chain, mutating/validating webhooks, OPA Gatekeeper, Kyverno |
-|| [[Kubernetes/concepts/L09-advanced/05-finalizers\|Finalizers]] | ✅ | Async cleanup, common pitfalls, the deletion lifecycle |
-|| [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|Garbage Collection]] | 🟡 | Owner references, foreground vs background deletion |
-|| [[Kubernetes/concepts/L09-advanced/07-aggregation-layer\|Aggregation Layer]] | ✅ | Running additional API servers behind the kube-apiserver, APIService, auth delegation |
-|| [[Kubernetes/concepts/L09-advanced/08-ipvs\|IPVS]] | ✅ | kube-proxy IPVS mode vs iptables, schedulers, strictARP, debugging with ipvsadm |
-|| [[Kubernetes/concepts/L09-advanced/09-pause-container\|Pause Container]] | 🟡 | The `/pause` process holding the pod's network namespace |
-|| [[Kubernetes/concepts/L09-advanced/10-etcd\|etcd]] | ✅ | The cluster's source of truth, backups, defrag, encryption at rest, disaster recovery |
-|| [[Kubernetes/concepts/L09-advanced/11-scheduler-extenders\|Scheduler Extenders]] | ✅ | Out-of-process webhooks that influence scheduling, when to use them |
+| [[Kubernetes/concepts/L09-advanced/01-operators\|Operators]] | 🟡 | What an operator is, the operator pattern, examples |
+| [[Kubernetes/concepts/L09-advanced/02-custom-controllers\|Custom Controllers]] | ⚪ | Writing a controller — informers, work queues, reconcile |
+| [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions\|CRDs]] | ✅ | Extending the API with your own object types, schema validation, versions, CEL |
+| [[Kubernetes/concepts/L09-advanced/04-admission-controllers\|Admission Controllers & Webhooks]] | ✅ | Built-in admission chain, mutating/validating webhooks, OPA Gatekeeper, Kyverno |
+| [[Kubernetes/concepts/L09-advanced/05-finalizers\|Finalizers]] | ✅ | Async cleanup, common pitfalls, the deletion lifecycle |
+| [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|Garbage Collection]] | 🟡 | Owner references, foreground vs background deletion |
+| [[Kubernetes/concepts/L09-advanced/07-aggregation-layer\|Aggregation Layer]] | ✅ | Running additional API servers behind the kube-apiserver, APIService, auth delegation |
+| [[Kubernetes/concepts/L09-advanced/08-ipvs\|IPVS]] | ✅ | kube-proxy IPVS mode vs iptables, schedulers, strictARP, debugging with ipvsadm |
+| [[Kubernetes/concepts/L09-advanced/09-pause-container\|Pause Container]] | 🟡 | The `/pause` process holding the pod's network namespace |
+| [[Kubernetes/concepts/L09-advanced/10-etcd\|etcd]] | ✅ | The cluster's source of truth, backups, defrag, encryption at rest, disaster recovery |
+| [[Kubernetes/concepts/L09-advanced/11-scheduler-extenders\|Scheduler Extenders]] | ✅ | Out-of-process webhooks that influence scheduling, when to use them |
 
 ## Suggested reading order
 
@@ -54,6 +56,6 @@ How Kubernetes is built, and how to **extend** it. After this level, the platfor
 
 If you've made it from L00 to L09, you have the same conceptual model the Kubernetes docs and source code use. From here, the natural next stops are:
 
-- [[Kubernetes/certifications/README|CKA / CKAD prep]] — exercise what you know
+- [[Kubernetes/troubleshooting|Symptom-based Troubleshooting]] — exercise diagnostic skills
 - [[Kubernetes/eks/README|EKS]] — same model, AWS-specific implementations
 - [[Kubernetes/guides/README|Guides]] — practical tooling on top of the model

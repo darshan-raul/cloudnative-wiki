@@ -600,4 +600,4 @@ Together: at low load, 5 pods on 2 nodes. At 1000 RPS, HPA scales to ~30 pods, K
 * [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — autoscaling + right-sizing = cost
 * [[Kubernetes/guides/non-functional/high-availability|high-availability]] — PDBs, multi-AZ
 * [[Kubernetes/guides/non-functional/performance-tuning|performance-tuning]] — resource requests and limits
-* [[Kubernetes/concepts/L06-scheduling-scaling|L06-scheduling-scaling]] — the concept layer
+* [[Kubernetes/concepts/L06-scheduling-scaling/00-README|L06 Scheduling & Scaling]] — the concept layer

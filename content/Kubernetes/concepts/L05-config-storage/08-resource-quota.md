@@ -804,5 +804,5 @@ But for PVCs, the standard is to use `requests` (the limit is the same as the re
 * [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped storage object
 * [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing storage API
 * [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
-* [[Kubernetes/concepts/L06-scheduling-scaling/02-resource-requests-limits|Resource Requests and Limits]] — the per-Pod view
+* [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests and Limits]] — the per-Pod view
 * [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model

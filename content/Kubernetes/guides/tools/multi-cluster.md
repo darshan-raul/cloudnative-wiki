@@ -7,6 +7,8 @@ tags:
   - Multi-cluster
 ---
 
+# Multi-Cluster Management
+
 *Sources: [Kubernetes Federation v2 (KubeFed)](https://github.com/kubernetes-retired/contrib/tree/master/federation), [Cluster API](https://cluster-api.sigs.k8s.io/), [Rancher](https://ranchermanager.docs.rancher.com/), [Lens](https://k8slens.dev/)*
 
 Operating 1 cluster is ops. Operating 10+ is a different discipline. This note covers the **patterns, tools, and gotchas** of fleet-scale Kubernetes.

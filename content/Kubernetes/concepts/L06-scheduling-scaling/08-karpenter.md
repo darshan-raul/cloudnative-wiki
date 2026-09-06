@@ -691,5 +691,5 @@ Check the NodeClaim's `status.conditions` and the controller logs.
 
 * [[Kubernetes/concepts/L06-scheduling-scaling/09-cluster-autoscaler|Cluster Autoscaler]] — the predecessor
 * [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
-* [[Kubernetes/eks/compute/karpenter|Karpenter on EKS]] — EKS-specific install / IAM
+* [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — EKS-specific install / IAM
 * [[Kubernetes/eks/compute/managed-node-groups/cluster-autoscaler|Cluster Autoscaler on EKS]] — EKS-specific install

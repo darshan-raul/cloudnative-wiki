@@ -1,3 +1,10 @@
+---
+title: Memory Swap & Kubelet NodeSwap Configuration
+tags: [kubernetes, architecture, nodes, kubelet, swap, memory, cgroupv2]
+date: 2026-09-06
+description: Understanding why Kubernetes historically disabled swap, modern cgroup v2 NodeSwap configuration, and memory QoS implications.
+---
+
 # Need for swapoff
 
 *"https://kubernetes.io/docs/concepts/architecture/nodes/"*
@@ -68,29 +75,28 @@ In k8s 1.22, support for swap was added **as a beta feature**. The kubelet gaine
 * `--fail-swap-on` (default true) — when false, kubelet starts even with swap enabled
 * Memory accounting that takes swap into account
 
-### k8s 1.28 — `NodeSwap` graduates to beta, default ON
+### Modern Kubernetes (v1.28–v1.37): `NodeSwap` on cgroup v2
 
-Starting in k8s 1.28, `NodeSwap` is enabled by default but **only on cgroup-v2 systems** (which most modern Linux distros use). The kubelet now:
+On modern Linux distributions running **cgroup v2**, Kubernetes supports running with swap enabled via the `NodeSwap` feature. However, **kubelet will still refuse to start with swap enabled by default** unless explicitly configured.
 
-* Detects swap
-* Accounts for swap in memory cgroup limits
-* Allows Pods to use swap when configured
-
-This means **on a modern Linux with cgroup-v2, the kubelet does not refuse to start with swap enabled.** It still does on cgroup-v1 systems.
-
-The gotcha: even with k8s 1.28+, the cgroup accounting assumes that **swap usage of a cgroup counts against its memory limit**. So `limits.memory: 256Mi` means "256 MiB of RAM + swap combined". Which is what you want for hard limits, but is a behavior change from "256 MiB of RAM, period".
+To allow swap memory on a node:
+1. The node **must run cgroup v2** (in Kubernetes v1.37+, kubelet hard-fails on cgroup v1 by default).
+2. The administrator must explicitly set `failSwapOn: false` in `KubeletConfiguration`.
+3. The administrator must configure `memorySwap.swapBehavior`:
 
 ```yaml
-# In k8s 1.28+ with NodeSwap enabled:
-spec:
-  containers:
-  - name: app
-    resources:
-      limits:
-        memory: 256Mi    # 256 MiB of RAM + swap combined
-      requests:
-        memory: 128Mi
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+failSwapOn: false
+memorySwap:
+  swapBehavior: LimitedSwap # or NoSwap
 ```
+
+- **`LimitedSwap`**: Pods can use swap up to their memory limit. Swap usage counts against the container's memory limit (`limits.memory: 256Mi` means RAM + swap combined). Burstable pods can swap, while Guaranteed pods cannot.
+- **`NoSwap`**: Workload containers are forbidden from using swap even if swap is present on the node.
+
+> [!NOTE]
+> Even on modern kernels, if you do not set `failSwapOn: false`, kubelet will immediately abort startup if swap partitions or files are active.
 
 ## So what do I do today?
 

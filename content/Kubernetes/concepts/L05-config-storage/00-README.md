@@ -3,6 +3,8 @@ title: "L05 — Config & Storage"
 tags: [kubernetes, k8s, configmap, secret, storage, pvc]
 date: 2026-06-06
 description: Kubernetes config and storage — ConfigMap, Secret, PersistentVolume, PersistentVolumeClaim, StorageClass
+aliases:
+  - Kubernetes/concepts/L05-config-storage
 ---
 
 # L05 — Config & Storage
@@ -21,16 +23,16 @@ Two intertwined problems: how do containers get their **configuration** (and how
 
 ## Notes in this level
 
-|| Note | Status | What's in it |
+| Note | Status | What's in it |
 |------|--------|--------------|
-|| [[Kubernetes/concepts/L05-config-storage/01-config-maps\|ConfigMaps]] | ✅ | The config-as-object pattern, env vs volume mounts, file mount permissions, immutable ConfigMaps |
-|| [[Kubernetes/concepts/L05-config-storage/02-secrets\|Secrets]] | ✅ | Secret types (Opaque, dockerconfigjson, tls, bootstrap-token), base64 encoding, encryption-at-rest |
-|| [[Kubernetes/concepts/L05-config-storage/07-storage\|Storage]] | 🟡 | High-level overview of PV/PVC/StorageClass — quick-reference summary, not a deep-dive |
-|| [[Kubernetes/concepts/L05-config-storage/04-persistentvolume\|PersistentVolume]] | ✅ | Cluster-scoped storage resource, lifecycle, reclaim policies (Retain/Delete/Recycle), access modes |
-|| [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim\|PersistentVolumeClaim]] | ✅ | Namespaced storage request, binding, expansion, snapshots, clone |
-|| [[Kubernetes/concepts/L05-config-storage/06-storageclass\|StorageClass]] | ✅ | Dynamic provisioning, provisioners, WaitForFirstConsumer, the default-class trap |
-|| [[Kubernetes/concepts/L05-config-storage/03-volumes\|Volume Types]] | ✅ | emptyDir, hostPath, NFS, CSI, ephemeral, mount options, the volume mount propagation problem |
-|| [[Kubernetes/concepts/L05-config-storage/08-resource-quota\|Resource Quota]] | ✅ | Quotas on CPU/memory/object counts, LimitRange defaults per namespace, the priority class trick |
+| [[Kubernetes/concepts/L05-config-storage/01-config-maps\|ConfigMaps]] | ✅ | The config-as-object pattern, env vs volume mounts, file mount permissions, immutable ConfigMaps |
+| [[Kubernetes/concepts/L05-config-storage/02-secrets\|Secrets]] | ✅ | Secret types (Opaque, dockerconfigjson, tls, bootstrap-token), base64 encoding, encryption-at-rest |
+| [[Kubernetes/concepts/L05-config-storage/07-storage\|Storage]] | 🟡 | High-level overview of PV/PVC/StorageClass — quick-reference summary, not a deep-dive |
+| [[Kubernetes/concepts/L05-config-storage/04-persistentvolume\|PersistentVolume]] | ✅ | Cluster-scoped storage resource, lifecycle, reclaim policies (Retain/Delete/Recycle), access modes |
+| [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim\|PersistentVolumeClaim]] | ✅ | Namespaced storage request, binding, expansion, snapshots, clone |
+| [[Kubernetes/concepts/L05-config-storage/06-storageclass\|StorageClass]] | ✅ | Dynamic provisioning, provisioners, WaitForFirstConsumer, the default-class trap |
+| [[Kubernetes/concepts/L05-config-storage/03-volumes\|Volume Types]] | ✅ | emptyDir, hostPath, NFS, CSI, ephemeral, mount options, the volume mount propagation problem |
+| [[Kubernetes/concepts/L05-config-storage/08-resource-quota\|Resource Quota]] | ✅ | Quotas on CPU/memory/object counts, LimitRange defaults per namespace, the priority class trick |
 
 ## Suggested reading order
 
@@ -43,4 +45,4 @@ Two intertwined problems: how do containers get their **configuration** (and how
 
 ## Where to go next
 
-→ [[Kubernetes/concepts/L06-scheduling-scaling|L06 — Scheduling & Scaling]]: now that pods exist, decide where they run and what to do when load changes.
+→ [[Kubernetes/concepts/L06-scheduling-scaling/00-README|L06 — Scheduling & Scaling]]: now that pods exist, decide where they run and what to do when load changes.

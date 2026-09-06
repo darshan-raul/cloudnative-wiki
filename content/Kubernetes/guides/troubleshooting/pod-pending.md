@@ -577,4 +577,4 @@ The scheduler will **preempt** (evict) low-priority pods to make room for high-p
 * [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the container is the problem
 * [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — when the node is the problem
 * [[Kubernetes/guides/troubleshooting/pvc-stuck|pvc-stuck]] — when storage is the problem
-* [[Kubernetes/concepts/L06-scheduling-scaling|scheduling & scaling]] — how scheduling works
+* [[Kubernetes/concepts/L06-scheduling-scaling/00-README|Scheduling & Scaling]] — how scheduling works

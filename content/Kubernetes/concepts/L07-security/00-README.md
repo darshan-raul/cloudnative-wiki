@@ -3,6 +3,8 @@ title: "L07 — Security"
 tags: [kubernetes, k8s, security, rbac, pss, authentication, encryption, compliance]
 date: 2026-06-09
 description: Kubernetes security — authN/Z, RBAC, ServiceAccounts, PSS, encryption at rest/transit, mTLS, admission, image/runtime hardening, compliance
+aliases:
+  - Kubernetes/concepts/L07-security
 ---
 
 # L07 — Security
@@ -157,4 +159,4 @@ The EKS-specific versions of these (IRSA, Pod Identity, EKS access entries, Guar
 
 ## Where to go next
 
-→ [[Kubernetes/concepts/L08-operations|L08 — Operations]]: keep things running, debug them, scale them.
+→ [[Kubernetes/concepts/L08-operations/00-README|L08 — Operations]]: keep things running, debug them, scale them.

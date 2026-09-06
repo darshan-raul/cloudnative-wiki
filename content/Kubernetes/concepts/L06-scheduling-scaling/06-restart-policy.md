@@ -544,5 +544,5 @@ kubectl get pod <pod> -o jsonpath='{.status.phase}'
 
 * [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — OOM-kill is a major cause of restarts
 * [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — what restart policy applies to
-* [[Kubernetes/concepts/L03-workloads/02-replicasets|ReplicaSets]] — the controllers that create Pods
+* [[Kubernetes/concepts/L03-workloads/02-replicaset|ReplicaSets]] — the controllers that create Pods
 * [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — readiness probes affect Service routing
