@@ -54,7 +54,7 @@ Host-based security — Linux hardening, IDS/IPS, runtime security.
 Auth, secrets, dependency scanning, supply chain.
 
 - [[Security/application-security/README|Application Security Hub]]
-- [[Architecture/solution-architecture-concepts/authentication/README|Authentication]] — OAuth2/OIDC/JWT
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Auth Curriculum]] — 6-stage OIDC/JWT/OAuth2/SAML/SSO curriculum with Keycloak capstone lab
 - Secrets Management — Vault, AWS Secrets Manager, K8s secrets
 - Dependency Scanning — Trivy, Snyk, Grype
 - Supply Chain — SBOM, Sigstore, SLSA

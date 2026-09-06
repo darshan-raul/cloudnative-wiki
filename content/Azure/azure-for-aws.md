@@ -1,2 +1,0 @@
-# Azure for AWS
-

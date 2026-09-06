@@ -27,7 +27,15 @@ Software architecture, system design, and engineering concepts.
 - [[Architecture/languages/python/README|Python]]
 
 ### Authentication
-- [[Architecture/solution-architecture-concepts/authentication/README|Auth]]
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Auth Curriculum]] — 6-stage, 26-module deep dive: OIDC, JWT, OAuth 2.x, SAML 2.0, SSO, federation, security, Keycloak capstone
+  - [[Architecture/solution-architecture-concepts/authentication/stage0/README|Stage 0]] — Crypto, encoding, HTTP/TLS primitives
+  - [[Architecture/solution-architecture-concepts/authentication/stage1/README|Stage 1]] — JWT deep dive + JOSE family
+  - [[Architecture/solution-architecture-concepts/authentication/stage2/README|Stage 2]] — OAuth 2.0 (flows, PKCE, DPoP, 2.1)
+  - [[Architecture/solution-architecture-concepts/authentication/stage3/README|Stage 3]] — OpenID Connect
+  - [[Architecture/solution-architecture-concepts/authentication/stage4/README|Stage 4]] — Federation, SSO, SAML 2.0, B2B
+  - [[Architecture/solution-architecture-concepts/authentication/stage5/README|Stage 5]] — Security, attacks, hardening
+  - [[Architecture/solution-architecture-concepts/authentication/stage6/README|Stage 6]] — HA, performance, frontier standards
+  - [[Architecture/solution-architecture-concepts/authentication/capstone/README|Capstone]] — Keycloak reference lab + tabletop
 
 ### Architecture Foundations
 - [[Architecture/solution-architecture-concepts/foundations/solutions-architecture.md|Solutions Architecture]] - Solution architect role, NFRs, tradeoffs
