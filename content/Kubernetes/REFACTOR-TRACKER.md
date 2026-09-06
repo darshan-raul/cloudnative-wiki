@@ -64,12 +64,22 @@ description: Multi-session persistent execution tracker for the Kubernetes secti
   - `09-gitops-and-lifecycle.md`: Declarative Kustomize overlays, drift auto-healing, API deprecation discovery, and disaster recovery drill.
 - [x] Update `content/Kubernetes/labs/index.md` flowchart and curriculum table to span Labs 00 through 09.
 
-### Phase 4: Revision System & Decision Tables (Next Focus 🔄)
-- [ ] Create 5-minute refresher pages.
-- [ ] Add standard decision flowcharts and tables (Workload selection, Storage access, Ingress vs Gateway API).
-- [ ] Add scenario-based review questions with solutions.
+### Phase 4: Revision System & Decision Tables (Complete ✅)
+- [x] Create 5-minute refresher pages:
+  - `architecture-refresher.md`: Control plane, nodes, and `kubectl apply` request trace.
+  - `workloads-refresher.md`: Controller hierarchy, rolling updates, and graceful termination.
+  - `networking-refresher.md`: Packet flow, Service VIPs, EndpointSlices, and Gateway API.
+  - `storage-refresher.md`: Storage provisioning pipeline, CSI volume attachment, and access modes.
+  - `scheduling-scaling-refresher.md`: Scheduler pipeline, QoS eviction tiers, and PDB node drains.
+  - `security-refresher.md`: AuthN/Z, RBAC, PSS profiles, securityContext, and NetworkPolicy.
+- [x] Add standard decision flowcharts and tables:
+  - `decision-tables.md`: Workload controllers, configuration & secrets, traffic exposition, storage access modes, autoscaling family, placement controls, and cluster governance.
+- [x] Add scenario-based review questions with solutions:
+  - `scenarios.md`: Production post-mortems analyzing stuck rollouts, zero-endpoint DNS timeouts, HPA capacity ceilings, blocked node drains, and admission webhook outages.
+- [x] Create revision hub:
+  - `review/index.md`: Central landing page connecting refreshers, decision tables, and incident walkthroughs.
 
-### Phase 5: Extensibility & EKS Provider Track
+### Phase 5: Extensibility & EKS Provider Track (Next Focus 🔄)
 - [ ] Reorganize advanced internals as L10 Extensibility.
 - [ ] Decouple universal concepts from AWS-specific implementations in `eks/`.
 - [ ] Add client-go and custom controller guide.
