@@ -1,174 +1,88 @@
 ---
-title: Azure Kubernetes Service (AKS)
-description: AKS architecture — Azure CNI vs Kubenet vs CNI Overlay, Cilium eBPF dataplane, System vs User node pools, Ephemeral OS disks, and Workload Identity.
+title: Azure Kubernetes Service (AKS) Architecture Hub
+description: Enterprise architecture hub for Azure Kubernetes Service (AKS) — Managed control planes, AKS Automatic, Azure CNI Overlay, Cilium eBPF, Application Gateway for Containers, Workload Identity, GPU AI infrastructure, and multi-cluster Fleets.
 tags:
   - azure
   - compute
   - kubernetes
   - aks
   - containers
+  - hub
 ---
 
-# Azure Kubernetes Service (AKS) ☸️
+# Azure Kubernetes Service (AKS) Architecture Hub ☸️☁️
 
-Azure Kubernetes Service (AKS) is Microsoft's managed Kubernetes platform. AKS handles the complexity of control plane provisioning, automated patching, etcd clustering, and multi-zone resilience while providing deep native integration with **Azure Virtual Networks (Azure CNI)**, **Microsoft Entra ID**, and **Azure Monitor**.
+**Azure Kubernetes Service (AKS)** is Microsoft's hyperscale managed Kubernetes platform. AKS abstracts control plane provisioning, automated patching, `etcd` multi-zone clustering, and high-availability operations while integrating deeply with **Azure Virtual Networks (VNet)**, **Microsoft Entra ID**, **Azure Monitor**, and the **Azure AI Supercomputing** infrastructure.
+
+This hub serves as the master engineering directory for enterprise AKS architecture. Explore the dedicated deep-dive modules below for production configurations, CLI reference commands, performance quotas, cost models, and battle-tested gotchas.
 
 ---
 
-## Architecture & Mental Model
-
-### Network Plugin Comparison: Azure CNI vs. CNI Overlay vs. Kubenet
-
-Choosing the networking model is the most critical Day-0 architectural decision when provisioning an AKS cluster:
+## Architectural Master Index
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   1. Azure CNI (Node-Assigned)                         │
-│ Every Pod consumes a real, routable IP from your corporate VNet Subnet.│
-│ Pro: Direct VNet routability. Con: Severe Subnet IP Exhaustion!        │
-├────────────────────────────────────────────────────────────────────────┤
-│                   2. Azure CNI Overlay (Modern Default)                │
-│ Nodes get VNet IPs; Pods get private overlay IPs (e.g. 192.168.0.0/16).│
-│ Pro: Zero VNet IP exhaustion + wire-speed routing + scales to 1,000s   │
-├────────────────────────────────────────────────────────────────────────┤
-│                   3. Azure CNI Powered by Cilium                       │
-│ Uses Linux kernel eBPF bytecode for routing, replacing kube-proxy      │
-│ iptables. Built-in Cilium Network Policies and L7 Hubble observability.│
-└────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Networking Decision Matrix
-
-| Dimension | Kubenet | Traditional Azure CNI | Azure CNI Overlay (Recommended) |
-| :--- | :--- | :--- | :--- |
-| **Pod IP Source** | Virtual overlay CIDR | **VNet Subnet IP Pool** | Independent private overlay CIDR |
-| **VNet IP Consumption** | Only Node VMs consume VNet IPs | **Nodes + All Pods** consume VNet IPs | **Only Node VMs** consume VNet IPs |
-| **Subnet Size Requirement** | Small (`/24` or `/23`) | **Massive (`/20` or `/19`)** | Small (`/24` or `/23`) |
-| **Pod Reachability from VNet** | Requires NAT (not directly reachable) | Directly reachable via VNet IP | Reachable through Kubernetes Services |
-| **Max Scale** | Limited to 400 nodes | Subnet IP bound | **5,000 nodes** |
-
----
-
-## Core Concepts
-
-### 1. System Node Pools vs. User Node Pools
-
-Production AKS architectures isolate control components from application code:
-* **System Node Pool:** Dedicated exclusively to running critical Kubernetes pods (`CoreDNS`, `metrics-server`, `konnectivity-agent`). Automatically tainted with `CriticalAddonsOnly=true:NoSchedule`.
-* **User Node Pools:** Dedicated to customer applications and microservices. Can be sized with specialized VM series (e.g., GPU compute, high-memory, Spot instances).
-
-### 2. Ephemeral OS Disks
-
-Traditional AKS nodes host their root operating system on remote Azure Managed Disks (Persistent Storage).
-* **Ephemeral OS Disks (Production Standard):**
-  * The node OS disk is placed directly on the physical host VM's local NVMe or SSD cache.
-  * Delivers near-zero disk latency, faster read/write speeds, and dramatically faster node provisioning and re-imaging times during auto-scaling events.
-  * Incurs **zero storage disk cost**.
-
-### 3. Cluster Tiers & Uptime SLA
-
-* **Free Tier:** Free cluster management. No financial SLA on the Kubernetes control plane. Suitable for development and testing.
-* **Standard Tier ($0.10 / hour):** Includes a financially backed **99.95% control plane uptime SLA** for clusters using Availability Zones (99.9% without AZs).
-* **Premium Tier:** Adds long-term support (LTS) for older Kubernetes versions and automated enterprise guardrails.
-
----
-
-## Production `az` CLI Commands
-
-### 1. Provisioning a Production Multi-Zone AKS Cluster with CNI Overlay & Cilium
-
-```bash
-# Create AKS cluster in custom VNet with CNI Overlay and Cilium
-az aks create \
-  --resource-group prod-aks-rg \
-  --name prod-core-aks \
-  --location eastus \
-  --tier standard \
-  --node-count 3 \
-  --zones 1 2 3 \
-  --vnet-subnet-id "/subscriptions/sub-123/resourceGroups/prod-net-rg/providers/Microsoft.Network/virtualNetworks/prod-vnet/subnets/snet-aks-nodes" \
-  --network-plugin azure \
-  --network-plugin-mode overlay \
-  --network-dataplane cilium \
-  --pod-cidr 192.168.0.0/16 \
-  --service-cidr 10.240.0.0/16 \
-  --dns-service-ip 10.240.0.10 \
-  --enable-managed-identity \
-  --enable-oidc-issuer \
-  --enable-workload-identity \
-  --enable-cluster-autoscaler \
-  --min-count 3 \
-  --max-count 10 \
-  --node-osdisk-type Ephemeral \
-  --node-osdisk-size 64 \
-  --node-vm-size Standard_D4ds_v5
-```
-
-### 2. Adding a User Node Pool with Spot VMs for Batch Workloads
-
-```bash
-az aks nodepool add \
-  --resource-group prod-aks-rg \
-  --cluster-name prod-core-aks \
-  --name spotpool \
-  --priority Spot \
-  --eviction-policy Delete \
-  --spot-max-price -1 \
-  --node-vm-size Standard_D8s_v5 \
-  --enable-cluster-autoscaler \
-  --min-count 0 \
-  --max-count 20 \
-  --node-taints "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+                                AZURE KUBERNETES SERVICE (AKS)
+                                              │
+    ┌──────────────────┬──────────────────┬───┴──────────────┬──────────────────┬──────────────────┐
+    │                  │                  │                  │                  │                  │
+    ▼                  ▼                  ▼                  ▼                  ▼                  ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│CONTROL PLANE │ │  NETWORKING  │ │   COMPUTE    │ │   STORAGE    │ │   SECURITY   │ │  OPERATIONS  │
+│& AUTOMATION  │ │  & TRAFFIC   │ │& ACCELERATORS│ │ CSI DRIVERS  │ │ & GOVERNANCE │ │  & FINOPS    │
+├──────────────┤ ├──────────────┤ ├──────────────┤ ├──────────────┤ ├──────────────┤ ├──────────────┤
+│• Automatic   │ │• Azure CNI   │ │• Hetero Pools│ │• Azure Disks │ │• Workload ID │ │• Observability
+│• Tiers & SLA │ │• Cilium eBPF │ │• Autoscaling │ │• Azure Files │ │• Key Vault   │ │• Backup & DR │
+│• Upgrades    │ │• Gateway API │ │• GPU / AI    │ │• Azure Blob  │ │• Azure Policy│ │• Runbook     │
+│• Maintenance │ │• App Gateway │ │• Kueue Batch │ │• Elastic SAN │ │• Kata/SEV-SNP│ │• FinOps & RI │
+└──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
 ---
 
-## Quotas & Limits
+### 1. Control Plane, Automation & Upgrades
+* **[[Azure/compute/aks/automatic-deep-dive|AKS Automatic Deep Dive]]** — Fully managed Kubernetes, Karpenter-powered Node Auto-Provisioning (NAP), automated weekly OS patch rollouts, SLA mechanics, and compute class economics.
+* **[[Azure/compute/aks/cluster-tiers-sla|Cluster Tiers, High Availability Control Plane & Private Clusters]]** — Free vs Standard (99.95% SLA) vs Premium (LTS), API Server VNet Integration, Private Link clusters, and `etcd` Raft quorum across Availability Zones.
+* **[[Azure/compute/aks/upgrades-maintenance|Upgrades, Maintenance Windows & Safe Rollout Strategies]]** — Node image auto-upgrades (`NodeImage`), Kubernetes auto-upgrades, planned maintenance windows, surge upgrade tuning (`maxSurge`), PDB deadlocks, and blue-green cluster rollouts.
 
-| Parameter | Limit | Production Notes |
+### 2. Networking, Datapath & Traffic Routing
+* **[[Azure/compute/aks/networking-cni|AKS Networking Deep Dive: Azure CNI, CNI Overlay & Pod Subnets]]** — Kubenet vs Azure CNI (Node Subnet) vs Azure CNI Overlay vs Dynamic Pod IP Allocation (Pod Subnet), IPAM allocation mechanics, packet routing, and subnet sizing.
+* **[[Azure/compute/aks/cilium-ebpf|Azure CNI Powered by Cilium: eBPF Datapath, WireGuard & Hubble]]** — eBPF kernel datapath, `kube-proxy` iptables replacement, transparent WireGuard node-to-node encryption, Layer 7 CiliumNetworkPolicies, and Hubble deep observability.
+* **[[Azure/compute/aks/ingress-appgw-gateway|AKS Ingress, Application Gateway for Containers & Gateway API]]** — AGIC vs Application Routing Add-on vs Application Gateway for Containers (AGfC), Gateway API controller (`HTTPRoute`), WAF v2 inspection, and Key Vault TLS termination.
+
+### 3. Compute, Heterogeneous Pools & AI/ML Acceleration
+* **[[Azure/compute/aks/node-pools-heterogeneous|Heterogeneous Node Pools: System vs User, Ephemeral OS & Azure Linux]]** — System vs User pools, Ephemeral OS disks on local NVMe/Cache, Azure Linux 3 vs Ubuntu, custom Kubelet/sysctl configurations, and Spot VM pool architectures.
+* **[[Azure/compute/aks/autoscaling-keda|Autoscaling Architecture: Cluster Autoscaler, KEDA & Virtual Nodes]]** — Cluster Autoscaler (CA) tuning, Node Auto-Provisioning (NAP / Karpenter), HPA v2 with custom metrics, KEDA event-driven queue scalers, and Azure Virtual Nodes (ACI bursts).
+* **[[Azure/compute/aks/gpu-orchestration-ai|GPU Orchestration for AI/ML: NVIDIA H100/A100, InfiniBand & KubeRay]]** — NVIDIA NC/ND-series VMs (H100, H200, A100), automated GPU driver extensions, Quantum-2 3.2 Tbps InfiniBand GPUDirect RDMA, KubeRay operator, and vLLM model serving.
+* **[[Azure/compute/aks/batch-workloads|Batch Workloads, Job Orchestration & Kueue Scheduling]]** — IndexedJob API, Kueue multi-tenant queueing, fair-share scheduling, Spot instance preemption checkpointing, and gang scheduling.
+
+### 4. Stateful Storage & CSI Drivers
+* **[[Azure/compute/aks/storage-csi-disks|Azure Managed Disks, Premium SSD v2 & Elastic SAN CSI]]** — Azure Disk CSI driver (v2), Premium SSD v2, Ultra Disk, Azure Elastic SAN, online volume expansion, volume snapshots, and RWO failover tuning.
+* **[[Azure/compute/aks/storage-csi-files-blob|Shared Storage CSI: Azure Files (NFS/SMB) & Azure Blob Storage]]** — Multi-pod ReadWriteMany (RWX) storage, Azure Files CSI driver (NFS v4.1 vs SMB), Azure Blob Storage CSI driver (BlobFuse2 vs NFS v3), POSIX compatibility, and high-throughput AI streaming.
+
+### 5. Security, Identity, Governance & Isolation
+* **[[Azure/compute/aks/security-workload-identity|Security Architecture & Microsoft Entra Workload Identity]]** — Keyless authentication, OIDC federated credentials, eliminating deprecated `aad-pod-identity`, Azure RBAC for Kubernetes Authorization, and PIM just-in-time access.
+* **[[Azure/compute/aks/security-key-vault-csi|Secrets Management: Azure Key Vault Provider for Secrets Store CSI]]** — Azure Key Vault CSI driver add-on, in-memory `tmpfs` mounts, auto-syncing to Kubernetes Secret objects, secret auto-rotation, and FIPS 140-2 Level 3 HSM security.
+* **[[Azure/compute/aks/governance-azure-policy|Governance: Azure Policy for Kubernetes & OPA Gatekeeper Guardrails]]** — Azure Policy add-on, Open Policy Agent (OPA) Gatekeeper, CIS Kubernetes benchmarks, custom Rego constraint templates, and audit vs deny enforcement modes.
+* **[[Azure/compute/aks/multi-tenancy-isolation|Multi-Tenancy, Hard Isolation & Confidential Containers]]** — Soft vs Hard multi-tenancy, Pod Security Standards (PSS), Azure Linux Kata Containers (Hyper-V micro-VM isolation), and AMD SEV-SNP Confidential Containers.
+
+### 6. Observability, DR, FinOps & Multi-Cluster Management
+* **[[Azure/compute/aks/observability-monitoring|Observability: Container Insights, Managed Prometheus & ContainerLogV2]]** — Azure Monitor Container Insights, Azure Managed Prometheus, Azure Managed Grafana, ContainerLogV2 cost optimization, and KQL performance troubleshooting.
+* **[[Azure/compute/aks/backup-disaster-recovery|Backup, Disaster Recovery & Cross-Region Business Continuity]]** — Azure Backup for AKS (managed Velero extension), BackupVault, VolumeSnapshot replication, cross-region disaster recovery, and multi-region active-active routing via Azure Front Door.
+* **[[Azure/compute/aks/troubleshooting-runbook|SRE Troubleshooting & Incident Runbook]]** — Exit code taxonomy, Node NotReady triage, OOMKilled remediation, CNI IP exhaustion, Azure Disk attachment deadlocks, and `az aks` diagnostic tooling.
+* **[[Azure/compute/aks/cost-optimization-finops|FinOps, Cost Allocation & Cloud Spend Optimization]]** — Microsoft Cost Management AKS Cost Allocation (namespace/pod splitting), Azure Savings Plans, Spot node pools, VPA rightsizing, and pause pod overprovisioning.
+* **[[Azure/compute/aks/fleet-manager-multicluster|Azure Kubernetes Fleet Manager: Multi-Cluster Governance & MCS]]** — Azure Kubernetes Fleet Manager, staged rolling update runs, ClusterResourcePlacement, Multi-Cluster Services (MCS), and global Anycast load balancing.
+
+---
+
+## Quick Reference Architecture Cheat Sheet
+
+| Requirement | Recommended Technology Pattern | Architecture Rationale |
 | :--- | :--- | :--- |
-| **Max nodes per cluster** | 5,000 nodes | Using Azure CNI Overlay |
-| **Max node pools per cluster** | 100 node pools | Supports diverse VM types |
-| **Default max pods per node** | 110 pods (Azure CNI) | Configurable up to 250 pods/node |
-| **Control plane SLA (Standard Tier)** | 99.95% availability | Requires multi-zone node pools |
-| **Ephemeral OS disk minimum VM size** | Standard_D4ds_v5 or higher | Must have sufficient local cache size |
-
----
-
-## References
-
-* **Homepage:** https://azure.microsoft.com/en-us/products/kubernetes-service
-* **AKS Documentation:** https://learn.microsoft.com/en-us/azure/aks/
-* **Azure CNI Overlay Guide:** https://learn.microsoft.com/en-us/azure/aks/azure-cni-overlay
-* **Azure CNI Powered by Cilium:** https://learn.microsoft.com/en-us/azure/aks/azure-cni-powered-by-cilium
-* **Pricing:** https://azure.microsoft.com/en-us/pricing/details/kubernetes-service/
-
----
-
-## Pricing Examples
-
-### Scenario 1: Production Multi-Zone AKS Cluster (Standard Tier)
-* Control Plane: Standard Tier Uptime SLA ($0.10 / hr × 730 hrs = **$73.00 / month**).
-* Worker Nodes: 6 instances of `Standard_D4ds_v5` (4 vCPU, 16 GB RAM) across 3 zones.
-* Compute: 6 × ~$140.00 / month = **$840.00 / month**.
-* OS Storage: **$0.00** (Using local Ephemeral OS disks).
-* Egress and Azure Load Balancer: ~$50.00.
-* **Total Monthly Cost:** $73 + $840 + $50 = **~$963.00 / month**.
-
-### Scenario 2: Batch Analytics on AKS Spot Node Pool
-* 20 instances of `Standard_D8s_v5` (8 vCPU, 32 GB RAM) processing batch queues for 4 hours every night (120 hours / month).
-* Standard On-Demand cost: 20 × $0.384 / hr × 120 hrs = $921.60.
-* Spot discount (~80% savings): 20 × $0.0768 / hr × 120 hrs = **$184.32 / month**.
-* **Monthly Savings:** **$737.28** per month.
-
----
-
-## Nuggets & Gotchas
-
-1. **The Traditional Azure CNI Subnet Exhaustion Trap:** In traditional Azure CNI, every pod requires an IP address allocated directly from your VNet subnet. If you deploy a 50-node cluster with default `max-pods=110`, Azure immediately reserves **5,500 private IP addresses** from your corporate subnet upon cluster creation! If the subnet does not have 5,500 free IPs, deployment fails. **Always choose Azure CNI Overlay for new clusters.**
-2. **Never Run Application Workloads on the System Node Pool:** The System Node Pool runs cluster-critical pods like `coredns` and `konnectivity-agent`. If customer microservices experience memory leaks or CPU starvation on the system nodes, core DNS resolution fails and the entire cluster enters a degraded state. Always maintain separate User Node Pools for applications.
-3. **Control Plane Upgrades and `maxSurge` Disruption:** During AKS version upgrades, Azure uses a rolling node replacement strategy governed by `maxSurge` (default: 1 extra node). If you have Pod Disruption Budgets (`PDBs`) requiring 100% of pods available (`minAvailable: 100%`), AKS cannot evict pods from upgrading nodes, causing cluster upgrades to stall and time out after 1 hour.
-4. **Service CIDR and Pod CIDR Can Never Overlap:** The `--service-cidr` (ClusterIP range) and `--pod-cidr` must not overlap with each other, with the host VNet subnet, with any peered VNet, or with on-premises networks. If you specify an overlapping CIDR, routing loops will cause pods to fail reaching external APIs.
-5. **Ephemeral OS Disks Require Specific VM Sizes:** To enable Ephemeral OS disks, the selected VM size must have a local temporary cache larger than the OS disk size (typically >= 64 GB). Selecting small instances like `Standard_B2s` will cause ephemeral disk provisioning to fail with `EphemeralDiskNotSupportedForVmSize`.
+| **New Production Cluster** | **Azure CNI Overlay + Cilium eBPF** | Zero VNet IP exhaustion, $O(1)$ routing, WireGuard encryption, and L7 Hubble metrics. |
+| **Managed Set-and-Forget** | **AKS Automatic (`--sku automatic`)** | Auto-managed nodes via Karpenter, Azure Linux 3, automated weekly patching. |
+| **Layer 7 Traffic Routing** | **Application Gateway for Containers (AGfC)**| Official Kubernetes Gateway API controller with sub-second xDS endpoint updates. |
+| **Pod Cloud Credentials** | **Microsoft Entra Workload Identity** | Eliminates static credentials; leverages OIDC federation with short-lived tokens. |
+| **Secret Management** | **Azure Key Vault Secrets Store CSI Driver** | Mounts secrets into in-memory `tmpfs` without persisting plain text in `etcd`. |
+| **High-Performance DBs** | **Premium SSD v2 (`WaitForFirstConsumer`)**| Sub-millisecond latency; independently scales IOPS (up to 80,000) and throughput. |
+| **Shared Multi-Pod State**| **Azure Files Premium NFS v4.1 (`nconnect=4`)**| Full Linux POSIX file locking; multiplexes parallel TCP connections for 10 GB/s. |
+| **Multi-Cluster Federation**| **Azure Kubernetes Fleet Manager (Fleet Hub)** | Staged rolling updates across clusters and cross-cluster service discovery (MCS). |

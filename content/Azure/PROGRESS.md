@@ -29,7 +29,28 @@ Tracks completion of the Microsoft Azure knowledge base, adhering to the high-de
 - [x] **[[Azure/networking/private-link/README|Azure Private Link & Private Endpoints]]** — Private PaaS connectivity, Private DNS Zones, eliminating public IPs, and data exfiltration prevention
 
 ### 3. Compute & Containers 🖥️
-- [x] **[[Azure/compute/aks|Azure Kubernetes Service (AKS)]]** — Azure CNI vs Kubenet vs CNI Overlay, Cilium eBPF dataplane, System/User node pools, Ephemeral OS disks, and Workload Identity
+- [x] **[[Azure/compute/aks|Azure Kubernetes Service (AKS)]]** — Master Architectural Hub: Azure CNI vs Kubenet vs CNI Overlay, Cilium eBPF dataplane, System/User node pools, Ephemeral OS disks, and Workload Identity
+  - [x] **[[Azure/compute/aks/automatic-deep-dive|AKS Automatic Deep Dive]]** — Fully managed Kubernetes, Karpenter-powered Node Auto-Provisioning (NAP), weekly automated patch rollouts
+  - [x] **[[Azure/compute/aks/cluster-tiers-sla|Cluster Tiers & SLA]]** — Free vs Standard (99.95% SLA) vs Premium (LTS), Private Link clusters, and API Server VNet Integration
+  - [x] **[[Azure/compute/aks/networking-cni|AKS Networking Deep Dive]]** — Kubenet vs Azure CNI (Node Subnet) vs Azure CNI Overlay vs Dynamic Pod IP Allocation (Pod Subnet)
+  - [x] **[[Azure/compute/aks/cilium-ebpf|Azure CNI Powered by Cilium]]** — eBPF kernel datapath, kube-proxy replacement, WireGuard encryption, and Hubble observability
+  - [x] **[[Azure/compute/aks/ingress-appgw-gateway|Ingress & Gateway API]]** — Application Gateway for Containers (AGfC), Gateway API (`HTTPRoute`), and WAF v2
+  - [x] **[[Azure/compute/aks/node-pools-heterogeneous|Heterogeneous Node Pools]]** — System vs User pools, Ephemeral OS disks on NVMe/Cache, Azure Linux 3, and Spot pools
+  - [x] **[[Azure/compute/aks/upgrades-maintenance|Upgrades & Maintenance Windows]]** — Node image auto-upgrades (`NodeImage`), planned maintenance windows, and surge upgrades (`maxSurge`)
+  - [x] **[[Azure/compute/aks/autoscaling-keda|Autoscaling Architecture]]** — Cluster Autoscaler (CA), Node Auto-Provisioning (Karpenter), HPA v2, KEDA, and Virtual Nodes
+  - [x] **[[Azure/compute/aks/storage-csi-disks|Storage CSI (Disks)]]** — Azure Managed Disks, Premium SSD v2, Ultra Disk, and Azure Elastic SAN
+  - [x] **[[Azure/compute/aks/storage-csi-files-blob|Shared Storage CSI (Files & Blob)]]** — Multi-pod RWX, Azure Files NFS v4.1, and Azure Blob Storage BlobFuse2
+  - [x] **[[Azure/compute/aks/gpu-orchestration-ai|GPU AI/ML Infrastructure]]** — NVIDIA H100/H200 (NDv5), Quantum-2 3.2 Tbps InfiniBand RDMA, KubeRay, and vLLM serving
+  - [x] **[[Azure/compute/aks/batch-workloads|Batch Workloads & Kueue]]** — IndexedJob API, Kueue multi-tenant queueing, fair-share scheduling, and Spot preemption handling
+  - [x] **[[Azure/compute/aks/security-workload-identity|Entra Workload Identity]]** — Keyless authentication, OIDC federated credentials, and Azure RBAC for Kubernetes
+  - [x] **[[Azure/compute/aks/security-key-vault-csi|Key Vault Secrets Store CSI]]** — In-memory tmpfs mounts, secret auto-rotation, and FIPS 140-2 Level 3 HSM
+  - [x] **[[Azure/compute/aks/governance-azure-policy|Azure Policy & Gatekeeper]]** — OPA Gatekeeper admission guardrails, CIS benchmarks, and custom Rego constraints
+  - [x] **[[Azure/compute/aks/multi-tenancy-isolation|Multi-Tenancy & Confidential Containers]]** — PSS, Azure Linux Kata Containers (Hyper-V micro-VMs), and AMD SEV-SNP
+  - [x] **[[Azure/compute/aks/observability-monitoring|Observability & Monitoring]]** — Azure Monitor Container Insights, Managed Prometheus, Grafana, and ContainerLogV2
+  - [x] **[[Azure/compute/aks/backup-disaster-recovery|Backup & Disaster Recovery]]** — Azure Backup for AKS (managed Velero), BackupVault, and multi-region Active-Active Front Door
+  - [x] **[[Azure/compute/aks/troubleshooting-runbook|SRE Troubleshooting Runbook]]** — Exit code taxonomy (137 OOMKilled), Node NotReady triage, and CNI IP exhaustion
+  - [x] **[[Azure/compute/aks/cost-optimization-finops|FinOps & Cost Allocation]]** — Microsoft Cost Management AKS Cost Allocation, Savings Plans, and pause pod overprovisioning
+  - [x] **[[Azure/compute/aks/fleet-manager-multicluster|Azure Kubernetes Fleet Manager]]** — Staged rolling update runs across clusters and Multi-Cluster Services (MCS)
 - [x] **[[Azure/compute/vm|Virtual Machines & Scale Sets (VMSS)]]** — VM series, Flexible VMSS, Availability Zones vs Fault Domains, Spot VMs, Proximity Placement Groups, and Azure Bastion
 - [x] **[[Azure/compute/vm/spot-vms|Azure Spot VMs & Scheduled Events]]** — Unallocated capacity at 90% discount, 30-second eviction notification, metadata polling, and resilient batch architectures
 - [x] **[[Azure/compute/container-apps/README|Azure Container Apps (ACA), KEDA & Dapr]]** — Serverless containers on AKS/Envoy, KEDA event-driven autoscaling, Dapr microservice sidecars, and scale-to-zero
@@ -60,4 +81,5 @@ Tracks completion of the Microsoft Azure knowledge base, adhering to the high-de
 - [x] **Azure Databases & In-Memory Caching** — PostgreSQL Flexible Server, Azure Cache for Redis
 - [x] **Azure Event Streaming & Enterprise Messaging** — Azure Service Bus, Azure Event Hubs
 - [x] **Azure Observability & Cloud SIEM** — Azure Monitor / Log Analytics, Microsoft Sentinel, Key Vault & Managed HSM
+- [x] **AKS Mega Expansion (20x Content Depth)** — 22 exhaustive engineering modules covering AKS Automatic, CNI Overlay, Cilium eBPF, Gateway API, GPU AI/ML, Key Vault CSI, Kata Containers, Fleet Manager, and SRE Runbooks
 - [ ] **Azure AI & Modern Data Stack** — Azure OpenAI Service, Microsoft Fabric, Azure Synapse
