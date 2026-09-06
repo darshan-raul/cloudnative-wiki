@@ -14,10 +14,10 @@
   "scripts": {
     "quartz": "./quartz/bootstrap-cli.mjs",
     "docs": "npx quartz build --serve -d docs",
-    "check": "tsc --noEmit && npx prettier . --check",
+    "check": "tsc --noEmit && npm run check:k8s && npx prettier . --check",
     "check:k8s": "node scripts/check-k8s-content.mjs",
     "format": "npx prettier . --write",
-    "test": "tsx --test",
+    "test": "tsx --test && npm run check:k8s",
     "profile": "0x -D prof ./quartz/bootstrap-cli.mjs build --concurrency=1"
   },
   "engines": {

@@ -73,19 +73,43 @@ Sequential, provider-neutral fundamentals building a single mental model:
 - [[Kubernetes/concepts/L04-services-networking/00-README|L04 — Services & Networking]]: Service VIPs, EndpointSlices, CoreDNS, and Gateway API.
 - [[Kubernetes/concepts/L05-config-storage/00-README|L05 — Config & Storage]]: ConfigMaps, Secrets, dynamic PersistentVolumes, and CSI.
 - [[Kubernetes/concepts/L06-scheduling-scaling/00-README|L06 — Scheduling & Scaling]]: Resource QoS, placement constraints, HPA, and capacity management.
-- [[Kubernetes/concepts/L07-security/00-README|L07 — Security]]: Identity, least-privilege RBAC, Pod Security Standards, and policy engines.
-- [[Kubernetes/concepts/L08-operations/00-README|L08 — Operations]]: Systematic failure triage, observability hooks, node lifecycle, and day-2 ops.
-- [[Kubernetes/concepts/L09-advanced/00-README|L09 — Advanced & Internals]]: CRDs, reconciliation loops, custom controllers, finalizers, and etcd.
+- [[Kubernetes/concepts/L07-security/index|L07 — Security]]: Defense-in-depth model, RBAC, Pod Security Standards, and policy engines.
+- [[Kubernetes/concepts/L08-operations/index|L08 — Operations]]: Systematic failure triage, observability hooks, node lifecycle, and day-2 ops.
+- [[Kubernetes/concepts/L09-advanced/index|L09 — Advanced & Extensibility]]: CRDs, reconciliation loops, custom controllers, finalizers, and etcd.
 
-### 2. Practical Guides (`guides/`)
-- [[Kubernetes/guides/README|Guides Hub]]: Real-world implementation guides.
+### 2. Cumulative Hands-on Labs (`labs/`)
+A 10-part progressive lab track in a reproducible multi-node `kind` cluster with `podinfo`:
+- [[Kubernetes/labs/index|Labs Hub]]: Environment setup, architecture, and step-by-step progress.
+- [[Kubernetes/labs/00-cluster-setup|Lab 00 — Cluster Setup]]: Multi-node `kind` with topology zones.
+- [[Kubernetes/labs/01-deploy-workload|Lab 01 — Workload Deployment]]: Declarative `podinfo` deployment, probes, and resource limits.
+- [[Kubernetes/labs/02-updates-and-rollbacks|Lab 02 — Updates & Rollbacks]]: Zero-downtime rollouts, rollback strategies, and maxSurge/maxUnavailable.
+- [[Kubernetes/labs/03-configuration|Lab 03 — Config & Secrets]]: ConfigMaps, Secret injection, and immutable configuration.
+- [[Kubernetes/labs/04-networking-and-services|Lab 04 — Networking & Services]]: ClusterIP, NodePort, LoadBalancer, and Gateway API routing.
+- [[Kubernetes/labs/05-storage-and-persistence|Lab 05 — Storage & Persistence]]: Dynamic PV provisioning and stateful storage.
+- [[Kubernetes/labs/06-scheduling-and-autoscaling|Lab 06 — Scheduling & Autoscaling]]: Affinity, taints, tolerations, and HPA metrics-driven autoscaling.
+- [[Kubernetes/labs/07-security-hardening|Lab 07 — Workload Hardening]]: PSS `restricted`, non-root securityContext, and NetworkPolicies.
+- [[Kubernetes/labs/08-observability-and-troubleshooting|Lab 08 — Observability & Triage]]: `kubectl debug`, Prometheus metrics, and crashloop analysis.
+- [[Kubernetes/labs/09-gitops-and-lifecycle|Lab 09 — GitOps & Lifecycle]]: Kustomize overlays, drift correction, and disaster recovery drill.
+
+### 3. Revision & Master Decision Tables (`review/`)
+High-density references for experienced practitioners, technical interviews, and exam review:
+- [[Kubernetes/review/index|Revision Hub]]: Central navigation for refreshers and decision frameworks.
+- [[Kubernetes/review/decision-tables|Master Decision Tables]]: Multi-dimensional trade-off matrices (Workloads, Storage, Gateway API vs Ingress, Autoscaling, Governance).
+- [[Kubernetes/review/scenarios|Production Incidents & Walkthroughs]]: Real-world post-mortems and diagnostic playbooks.
+- **5-Minute Refreshers:** [[Kubernetes/review/architecture-refresher|Architecture]], [[Kubernetes/review/workloads-refresher|Workloads]], [[Kubernetes/review/networking-refresher|Networking]], [[Kubernetes/review/storage-refresher|Storage]], [[Kubernetes/review/scheduling-scaling-refresher|Scheduling & Scaling]], [[Kubernetes/review/security-refresher|Security]].
+
+### 4. Practical Guides (`guides/`)
+- [[Kubernetes/guides/README|Guides Hub]]: Real-world production guides and runbooks.
 - **Troubleshooting:** [[Kubernetes/guides/troubleshooting/crashloop-backoff|CrashLoopBackOff]], [[Kubernetes/guides/troubleshooting/pod-pending|Pod Pending]], [[Kubernetes/guides/troubleshooting/service-unreachable|Service Unreachable]], [[Kubernetes/guides/troubleshooting/dns-resolution|DNS Resolution]], [[Kubernetes/guides/troubleshooting/pvc-stuck|PVC Stuck]], [[Kubernetes/guides/troubleshooting/node-not-ready|Node NotReady]].
 - **Delivery & GitOps:** [[Kubernetes/guides/delivery/gitops/basics|GitOps Concepts]], [[Kubernetes/guides/delivery/gitops/argo-cd/README|Argo CD]], [[Kubernetes/guides/delivery/templating-patching/helm/README|Helm Series]], [[Kubernetes/guides/delivery/templating-patching/kustomize|Kustomize]].
 - **Networking & Ingress:** [[Kubernetes/guides/networking/envoy-gateway|Envoy Gateway (Gateway API)]], [[Kubernetes/guides/networking/comparison|Service Mesh Comparison]], [[Kubernetes/guides/networking/istio|Istio]], [[Kubernetes/guides/networking/linkerd|Linkerd]].
 - **Production Operations:** [[Kubernetes/guides/non-functional/high-availability|High Availability]], [[Kubernetes/guides/non-functional/auto-scaling|Autoscaling Strategy]], [[Kubernetes/guides/non-functional/security-baseline|Security Baseline]], [[Kubernetes/guides/non-functional/backup-restore|Backup & Restore]].
 
-### 3. Provider Tracks
-- [[Kubernetes/eks/README|AWS EKS Implementation Track]]: Cloud-specific implementations for IAM, VPC networking, storage classes, Karpenter node provisioning, and observability.
+### 5. Provider Tracks & Deep Dives
+- [[Kubernetes/eks/README|AWS EKS Implementation Track]]: Universal Concept to EKS Translation Matrix, Karpenter, VPC CNI, IAM Access Entries, and EKS Pod Identity.
+- [[Kubernetes/client-go|client-go & Controller Architecture]]: Informers, DeltaFIFO, RateLimitingQueue, and reconciliation loops.
+- [[Kubernetes/certifications/index|Certification Alignment Guide]]: CKA, CKAD, and CKS curriculum mapping.
+- [[Kubernetes/MAINTENANCE|Curriculum Maintenance Playbook]]: Upstream release cadence, lab verification, and quality gates.
 
 ---
 

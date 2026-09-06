@@ -90,7 +90,11 @@ description: Multi-session persistent execution tracker for the Kubernetes secti
   - Prepended the Universal Concept → EKS Implementation Translation Matrix (AuthN, AuthZ, Pod Identity, VPC CNI, Network Policy, Karpenter, Managed Node Groups, EBS/EFS CSI, ALB/NLB, VPC Lattice, Secrets Manager, CloudWatch/AMP).
   - Wired bidirectional cross-links between upstream conceptual levels (L01–L08) and EKS architecture chapters.
 
-### Phase 6: CI Gates & Upstream Maintenance (Next Focus 🔄)
-- [ ] Wire `check:k8s` into CI test pipeline / `package.json`.
-- [ ] Document upstream synchronization playbook.
+### Phase 6: CI Gates & Upstream Maintenance (Complete ✅)
+- [x] Wire `check:k8s` into CI test pipeline / `package.json`:
+  - Integrated `check:k8s` into `npm test` (`tsx --test && npm run check:k8s`) and `npm run check` (`tsc --noEmit && npm run check:k8s && npx prettier . --check`).
+  - Verified end-to-end site generation with `npx quartz build` (1001 Markdown files processed, 3337 output files emitted cleanly).
+- [x] Document upstream synchronization playbook:
+  - Created `content/Kubernetes/MAINTENANCE.md` specifying tri-annual release audit cadence (April, August, December), deprecation tracking, lab verification protocols with pinned versions/digests, and editorial guidelines.
+  - Linked maintenance playbook, cumulative labs, and revision system into the root curriculum map `content/Kubernetes.md`.
 
