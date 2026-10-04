@@ -1,6 +1,13 @@
+---
+title: "Services"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Services — Kubernetes reference and architecture guide."
+---
+
 # Services
 
-*"https://kubernetes.io/docs/concepts/services-networking/service/"*
+_"https://kubernetes.io/docs/concepts/services-networking/service/"_
 
 A Service is a **stable virtual IP + DNS name** that fronts a dynamic set of Pods. Pods come and go, their IPs change, but a Service IP stays put. It's the foundational object in L04 — every other networking primitive (Ingress, Gateway, NetworkPolicy) is built on top of the Service abstraction.
 
@@ -29,9 +36,9 @@ Pod IPs are **fundamentally unstable**. When a Pod is rescheduled, it gets a new
 
 Three things break if you try to talk to Pods by IP:
 
-* **Rescheduling** — a node dies, Pods get evicted, new Pods get new IPs.
-* **Scaling** — a Deployment with 5 replicas has 5 IPs. Which one does the client hit?
-* **Rolling updates** — old Pods are killed, new Pods are created. The set of IPs is constantly shifting.
+- **Rescheduling** — a node dies, Pods get evicted, new Pods get new IPs.
+- **Scaling** — a Deployment with 5 replicas has 5 IPs. Which one does the client hit?
+- **Rolling updates** — old Pods are killed, new Pods are created. The set of IPs is constantly shifting.
 
 A Service solves this with **a stable virtual IP** (the ClusterIP) backed by a **dynamic set of backend Pods**. The kube-proxy on every node watches Services and Programs the data plane (iptables / IPVS / eBPF) so that traffic sent to the ClusterIP gets DNAT'd to a real backend Pod IP.
 
@@ -59,12 +66,12 @@ The client doesn't know about backend Pods. It talks to a stable IP, and kube-pr
 
 ## 2. The Four Service Types
 
-| Type | ClusterIP | External exposure | Typical use case |
-|---|---|---|---|
-| `ClusterIP` | Yes (auto-assigned) | None — internal only | Pod-to-pod, app-to-DB within the cluster |
-| `NodePort` | Yes | `<NodeIP>:<NodePort>` (30000-32767 default) | Dev, on-prem, when you don't have a load balancer |
-| `LoadBalancer` | Yes | Cloud LB (NLB / ELB / GLB) | Production external traffic on a cloud |
-| `ExternalName` | None (no selector) | CNAME alias to external DNS | Migration to a service living outside the cluster |
+| Type           | ClusterIP           | External exposure                           | Typical use case                                  |
+| -------------- | ------------------- | ------------------------------------------- | ------------------------------------------------- |
+| `ClusterIP`    | Yes (auto-assigned) | None — internal only                        | Pod-to-pod, app-to-DB within the cluster          |
+| `NodePort`     | Yes                 | `<NodeIP>:<NodePort>` (30000-32767 default) | Dev, on-prem, when you don't have a load balancer |
+| `LoadBalancer` | Yes                 | Cloud LB (NLB / ELB / GLB)                  | Production external traffic on a cloud            |
+| `ExternalName` | None (no selector)  | CNAME alias to external DNS                 | Migration to a service living outside the cluster |
 
 There's also a 5th: **`Headless Service`** (`clusterIP: None`). It's not a "type" — it's a ClusterIP Service with `clusterIP: None`. It returns A records for each backing Pod, not a single virtual IP. Covered in section 5.
 
@@ -77,14 +84,14 @@ metadata:
   name: backend
   namespace: prod
 spec:
-  type: ClusterIP    # default, can be omitted
+  type: ClusterIP # default, can be omitted
   selector:
     app: backend
   ports:
-  - name: http
-    port: 80             # Service port
-    targetPort: 8080     # container port on the Pod
-    protocol: TCP
+    - name: http
+      port: 80 # Service port
+      targetPort: 8080 # container port on the Pod
+      protocol: TCP
 ```
 
 Reachable from within the cluster at `backend.prod.svc.cluster.local:80`. From inside the same namespace: just `backend`. From a different namespace: `backend.prod` or the full FQDN.
@@ -103,18 +110,18 @@ spec:
   selector:
     app: web
   ports:
-  - port: 80
-    targetPort: 8080
-    nodePort: 30080     # optional, 30000-32767 by default
+    - port: 80
+      targetPort: 8080
+      nodePort: 30080 # optional, 30000-32767 by default
 ```
 
 Every node listens on port 30080. From outside: `http://<any-node-ip>:30080`. The Service is **also** a ClusterIP — the NodePort is layered on top.
 
 `NodePort` is useful for:
 
-* **On-prem** — when there's no cloud LB, but you have a stable set of node IPs behind a hardware LB.
-* **Dev / bare-metal** — kind, k3d, minikube with `minikube tunnel`.
-* **SSH-style** — sometimes you want to expose a port that's not HTTP (e.g. a database) and there's no Ingress controller handy.
+- **On-prem** — when there's no cloud LB, but you have a stable set of node IPs behind a hardware LB.
+- **Dev / bare-metal** — kind, k3d, minikube with `minikube tunnel`.
+- **SSH-style** — sometimes you want to expose a port that's not HTTP (e.g. a database) and there's no Ingress controller handy.
 
 **Cost:** every node is open on the port. Security groups / firewall rules must allow it.
 
@@ -133,18 +140,18 @@ spec:
   selector:
     app: web
   ports:
-  - port: 443
-    targetPort: 8080
-    protocol: TCP
+    - port: 443
+      targetPort: 8080
+      protocol: TCP
 ```
 
 Provisions a **cloud load balancer** (NLB on AWS by default, internal-NLB with the `internal` annotation). The LB has the cluster's nodes as targets and forwards to the NodePort.
 
 Cloud-specific annotations shape behavior:
 
-* AWS: `aws-load-balancer-type` (nlb / alb), `aws-load-balancer-scheme` (internal / internet-facing), `aws-load-balancer-cross-zone-load-balancing-enabled`
-* GCP: `cloud.google.com/neg` (Network Endpoint Groups)
-* Azure: `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path`
+- AWS: `aws-load-balancer-type` (nlb / alb), `aws-load-balancer-scheme` (internal / internet-facing), `aws-load-balancer-cross-zone-load-balancing-enabled`
+- GCP: `cloud.google.com/neg` (Network Endpoint Groups)
+- Azure: `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path`
 
 **Cost:** one LB per Service. For 30 services, that's 30 LBs. Most teams use **Ingress** (one LB, many Services) for HTTP, and LoadBalancer Service only for raw TCP/UDP (e.g. Postgres).
 
@@ -164,8 +171,8 @@ No selector, no ports. Just a **CNAME** — DNS queries for `legacy-api` (or its
 
 Useful for:
 
-* **Migration** — moving a service out of the cluster without changing client code.
-* **Aliasing to a managed service** — pointing to an RDS endpoint, a third-party API, etc.
+- **Migration** — moving a service out of the cluster without changing client code.
+- **Aliasing to a managed service** — pointing to an RDS endpoint, a third-party API, etc.
 
 **Gotcha:** ExternalName Services can't be backed by Endpoints. There's no backend. The CNAME is resolved by the resolver, and the resulting IP is whatever the external name points to.
 
@@ -178,9 +185,9 @@ Once allocated:
 1. **apiserver** creates the Service object with `.spec.clusterIP` set.
 2. **Endpoints / EndpointSlices controller** (in kube-controller-manager) watches the Service and resolves the `selector` to a list of `<ip:port>` pairs.
 3. **kube-proxy** on every node watches Services and Endpoints/EndpointSlices. It programs the local data plane:
-   * **iptables mode** (default): installs iptables chains that DNAT ClusterIP traffic.
-   * **IPVS mode**: creates an IPVS virtual server with hash-table lookup.
-   * **eBPF mode** (Cilium): programs eBPF maps and a TC program for the DNAT.
+   - **iptables mode** (default): installs iptables chains that DNAT ClusterIP traffic.
+   - **IPVS mode**: creates an IPVS virtual server with hash-table lookup.
+   - **eBPF mode** (Cilium): programs eBPF maps and a TC program for the DNAT.
 
 The choice of mode is set by the kube-proxy ConfigMap (or the `--proxy-mode` flag). Most managed clusters use iptables by default. Larger clusters move to IPVS. Cilium replaces kube-proxy entirely with eBPF.
 
@@ -216,8 +223,8 @@ spec:
 
 A `matchLabels`-style selector. Every Pod with both labels becomes a backend.
 
-* **No selector = no Endpoints** — the Service has no backends. Common with ExternalName and `headless` Services that target manual Endpoints.
-* **Empty selector (`{}`)** — matches nothing. Backends must be added manually via an Endpoints object.
+- **No selector = no Endpoints** — the Service has no backends. Common with ExternalName and `headless` Services that target manual Endpoints.
+- **Empty selector (`{}`)** — matches nothing. Backends must be added manually via an Endpoints object.
 
 ### 4.2 Endpoints (legacy)
 
@@ -253,20 +260,20 @@ metadata:
     kubernetes.io/service-name: backend
 addressType: IPv4
 endpoints:
-- addresses: [10.244.1.5]
-  conditions:
-    ready: true
-  targetRef: { kind: Pod, name: backend-abc, namespace: prod }
+  - addresses: [10.244.1.5]
+    conditions:
+      ready: true
+    targetRef: { kind: Pod, name: backend-abc, namespace: prod }
 ports:
-- port: 8080
-  protocol: TCP
+  - port: 8080
+    protocol: TCP
 ```
 
 Benefits:
 
-* **Smaller updates** — adding one backend updates one slice, not the whole Endpoints object.
-* **Topology fields** — `zone`, `nodeName` for topology-aware routing.
-* **Per-endpoint conditions** — `ready`, `serving`, `terminating` are tracked per endpoint, not per Service.
+- **Smaller updates** — adding one backend updates one slice, not the whole Endpoints object.
+- **Topology fields** — `zone`, `nodeName` for topology-aware routing.
+- **Per-endpoint conditions** — `ready`, `serving`, `terminating` are tracked per endpoint, not per Service.
 
 **Deep dive:** see `L04-services-networking/08-endpoint-slices.md`.
 
@@ -280,17 +287,17 @@ metadata:
 spec:
   # no selector
   ports:
-  - port: 5432
+    - port: 5432
 ---
 apiVersion: v1
 kind: Endpoints
 metadata:
   name: external-db
 subsets:
-- addresses:
-  - ip: 10.20.30.40     # IP of an external DB
-  ports:
-  - port: 5432
+  - addresses:
+      - ip: 10.20.30.40 # IP of an external DB
+    ports:
+      - port: 5432
 ```
 
 This is the **pre-EndpointSlices way** to point a Service at external IPs. With EndpointSlices, you can do the same — create a Service with no selector and write the EndpointSlices by hand (or have a controller do it).
@@ -309,16 +316,16 @@ spec:
   selector:
     app: db
   ports:
-  - port: 5432
+    - port: 5432
 ```
 
 DNS query for `db.prod.svc.cluster.local` returns **A records for each backing Pod**, not a single ClusterIP. The client picks which Pod to talk to (or uses the records in round-robin order).
 
 ### 5.1 When to use headless
 
-* **StatefulSets** — you want to discover each Pod by stable name (`mongo-0`, `mongo-1`, ...). See `L03-workloads/04-statefulsets.md`.
-* **Client-side load balancing** — the client (e.g. gRPC, Kafka client) does its own load balancing and wants the full set of Pod IPs.
-* **Peer-to-peer discovery** — Cassandra, Elasticsearch, Consul, etcd all need direct Pod-to-Pod communication.
+- **StatefulSets** — you want to discover each Pod by stable name (`mongo-0`, `mongo-1`, ...). See `L03-workloads/04-statefulsets.md`.
+- **Client-side load balancing** — the client (e.g. gRPC, Kafka client) does its own load balancing and wants the full set of Pod IPs.
+- **Peer-to-peer discovery** — Cassandra, Elasticsearch, Consul, etcd all need direct Pod-to-Pod communication.
 
 ### 5.2 Headless + StatefulSet = per-Pod DNS
 
@@ -334,10 +341,10 @@ This is the **canonical way to address individual replicas** for stateful worklo
 
 ### 5.3 Headless gotchas
 
-* **No ClusterIP** — anything that does a name → IP lookup gets multiple records. Some clients assume a single record and break.
-* **No kube-proxy DNAT** — kube-proxy doesn't install iptables rules for headless Services. The traffic goes straight from the client Pod to the Pod IP, which means the **client Pod's network stack must be able to reach the Pod IP directly**. On any well-configured CNI, this works.
-* **Service discovery is "stale" until DNS TTL expires** — the client caches the IPs. With Kubernetes DNS, the default TTL is 30s. A Pod that gets recreated may keep being hit until the cache refreshes.
-* **`publishNotReadyAddresses: true` is common on headless StatefulSets** — so that clients can find Pods that aren't Ready yet (e.g. for a join operation).
+- **No ClusterIP** — anything that does a name → IP lookup gets multiple records. Some clients assume a single record and break.
+- **No kube-proxy DNAT** — kube-proxy doesn't install iptables rules for headless Services. The traffic goes straight from the client Pod to the Pod IP, which means the **client Pod's network stack must be able to reach the Pod IP directly**. On any well-configured CNI, this works.
+- **Service discovery is "stale" until DNS TTL expires** — the client caches the IPs. With Kubernetes DNS, the default TTL is 30s. A Pod that gets recreated may keep being hit until the cache refreshes.
+- **`publishNotReadyAddresses: true` is common on headless StatefulSets** — so that clients can find Pods that aren't Ready yet (e.g. for a join operation).
 
 ## 6. Multi-Port Services
 
@@ -350,18 +357,18 @@ spec:
   selector:
     app: app
   ports:
-  - name: http
-    port: 80
-    targetPort: 8080
-    protocol: TCP
-  - name: metrics
-    port: 9090
-    targetPort: 9090
-    protocol: TCP
-  - name: grpc
-    port: 50051
-    targetPort: 50051
-    protocol: TCP
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+      protocol: TCP
 ```
 
 Each port has a name. **The name is required** when you have more than one port (this was added in v1.0 to disambiguate; some legacy Services with single ports still work without names).
@@ -370,14 +377,14 @@ You can also mix protocols:
 
 ```yaml
 ports:
-- name: http
-  port: 80
-  targetPort: 8080
-  protocol: TCP
-- name: dns-udp
-  port: 53
-  targetPort: 53
-  protocol: UDP
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: dns-udp
+    port: 53
+    targetPort: 53
+    protocol: UDP
 ```
 
 **Note:** ClusterIP Services are **per-protocol** — TCP traffic and UDP traffic don't share a Service. A Service can't have both a TCP port 80 and a UDP port 80.
@@ -393,20 +400,20 @@ spec:
   sessionAffinity: ClientIP
   sessionAffinityConfig:
     clientIP:
-      timeoutSeconds: 10800   # 3 hours, max value
+      timeoutSeconds: 10800 # 3 hours, max value
 ```
 
 With this, all connections from the same client IP go to the same backend. Useful for:
 
-* Apps with in-memory state (legacy session storage)
-* WebSocket connections
-* Long-lived TCP connections where you don't want reconnect overhead
+- Apps with in-memory state (legacy session storage)
+- WebSocket connections
+- Long-lived TCP connections where you don't want reconnect overhead
 
 **Limitations:**
 
-* The "client IP" is the **source IP as seen by the Service**. With `externalTrafficPolicy: Cluster` (default for NodePort / LoadBalancer), the source is the **node IP**, not the original client. So all clients hitting a given node go to the same backend, which is a worse affinity than you'd want. Use `externalTrafficPolicy: Local` to preserve the original client IP (see 7.2).
-* The default timeout is 10800s (3 hours), the max. There's no way to make it shorter per Service.
-* Headless Services have **no session affinity** — they're not kube-proxy-backed.
+- The "client IP" is the **source IP as seen by the Service**. With `externalTrafficPolicy: Cluster` (default for NodePort / LoadBalancer), the source is the **node IP**, not the original client. So all clients hitting a given node go to the same backend, which is a worse affinity than you'd want. Use `externalTrafficPolicy: Local` to preserve the original client IP (see 7.2).
+- The default timeout is 10800s (3 hours), the max. There's no way to make it shorter per Service.
+- Headless Services have **no session affinity** — they're not kube-proxy-backed.
 
 ### 7.2 externalTrafficPolicy
 
@@ -414,8 +421,8 @@ For NodePort and LoadBalancer Services, the source IP of incoming traffic matter
 
 **`Cluster` (default):** kube-proxy on any node can DNAT the traffic to any backend Pod. Source IP is the **node IP**, not the client IP. Two consequences:
 
-* **Source IP is lost** — the backend Pod sees the node as the client. Logging, geo-IP, rate-limiting all see the node's IP.
-* **Asymmetric routing** — packets come in via node A (because that's where the LB sent them), get DNAT'd to a Pod on node B, and the response goes back through node B. Sometimes this works, sometimes the LB gets confused.
+- **Source IP is lost** — the backend Pod sees the node as the client. Logging, geo-IP, rate-limiting all see the node's IP.
+- **Asymmetric routing** — packets come in via node A (because that's where the LB sent them), get DNAT'd to a Pod on node B, and the response goes back through node B. Sometimes this works, sometimes the LB gets confused.
 
 **`Local`:** only kube-proxy on a node that **runs a backend Pod** can accept the traffic. The LB is configured to send traffic only to nodes that run backends. Source IP is preserved (the original client IP), but the LB health check is more complex (each node reports health only if it has a local backend).
 
@@ -431,8 +438,8 @@ spec:
 
 For ClusterIP Services, controls whether kube-proxy on a node can DNAT to a Pod on a different node:
 
-* `Cluster` (default) — any node, any Pod.
-* `Local` — only Pods on the same node. Useful for keeping traffic local for cost / latency reasons.
+- `Cluster` (default) — any node, any Pod.
+- `Local` — only Pods on the same node. Useful for keeping traffic local for cost / latency reasons.
 
 ```yaml
 spec:
@@ -497,8 +504,8 @@ A naive setup with 30 microservices and 30 LoadBalancer Services = 30 LBs. At AW
 
 For non-HTTP traffic that genuinely needs a LB, consider:
 
-* **A single shared NLB** that fans out to NodePort Services behind it.
-* **Gateway API** (the future) — same idea as Ingress but for non-HTTP too.
+- **A single shared NLB** that fans out to NodePort Services behind it.
+- **Gateway API** (the future) — same idea as Ingress but for non-HTTP too.
 
 ## 9. publishNotReadyAddresses and the "ready" Boundary
 
@@ -513,8 +520,8 @@ spec:
 
 With this set, the Pod is added to Endpoints **as soon as it exists**, regardless of readiness. Used for:
 
-* **StatefulSet joins** — a new Pod needs to be reachable for the cluster join handshake, even if its readiness probe hasn't passed yet.
-* **Headless services for stateful apps** — the new replica needs to accept bootstrap traffic.
+- **StatefulSet joins** — a new Pod needs to be reachable for the cluster join handshake, even if its readiness probe hasn't passed yet.
+- **Headless services for stateful apps** — the new replica needs to accept bootstrap traffic.
 
 **Don't set this on stateless services** — it routes traffic to a Pod that isn't ready, which causes user-facing failures.
 
@@ -534,9 +541,10 @@ backend.prod.svc.cluster.local  # full FQDN
 
 **Should it?** Usually no. Cross-namespace Service selectors are a code smell — they couple namespaces that should be isolated. If you need to share, use:
 
-* A separate Service in `ns-b` (the right way)
-* A `kubernetes.io/metadata.name` selector with the target namespace
-- **Never** do this with a `prod` → `dev` selector; it's a common path for privilege escalation.
+- A separate Service in `ns-b` (the right way)
+- A `kubernetes.io/metadata.name` selector with the target namespace
+
+* **Never** do this with a `prod` → `dev` selector; it's a common path for privilege escalation.
 
 ### 10.2 External services
 
@@ -555,14 +563,14 @@ spec:
 ```yaml
 spec:
   ports:
-  - port: 5432
+    - port: 5432
 ---
 # Endpoints object
 subsets:
-- addresses:
-  - ip: 10.20.30.40
-  ports:
-  - port: 5432
+  - addresses:
+      - ip: 10.20.30.40
+    ports:
+      - port: 5432
 ```
 
 **(c) EndpointSlice (modern):**
@@ -576,9 +584,9 @@ metadata:
     kubernetes.io/service-name: external-db
 addressType: IPv4
 endpoints:
-- addresses: [10.20.30.40]
+  - addresses: [10.20.30.40]
 ports:
-- port: 5432
+  - port: 5432
 ```
 
 For **(b)** and **(c)**, the Service behaves like a ClusterIP — it gets a ClusterIP, kube-proxy DNATs traffic to the external IP. The client doesn't know the backend is external.
@@ -589,19 +597,19 @@ A service mesh (Istio, Linkerd, Cilium) doesn't replace Services. It adds **side
 
 Even with a mesh:
 
-* **You still create a Service** for every workload. The mesh uses the Service for discovery.
-* **The Service's ClusterIP is still the entry point** — the sidecar intercepts it on the way through.
-* **Headless Services are still needed** for stateful workloads (Envoy uses the Pod IPs for the load balancing).
+- **You still create a Service** for every workload. The mesh uses the Service for discovery.
+- **The Service's ClusterIP is still the entry point** — the sidecar intercepts it on the way through.
+- **Headless Services are still needed** for stateful workloads (Envoy uses the Pod IPs for the load balancing).
 
 A common mistake: thinking the mesh is "instead of" Services. The mesh is "in addition to" Services. They're orthogonal.
 
 **When you actually need a service mesh:**
 
-* mTLS between services
-* Traffic splitting (canary, A/B)
-* Retries with circuit breaking
-* L7 routing by header
-* Distributed tracing woven into the proxy
+- mTLS between services
+- Traffic splitting (canary, A/B)
+- Retries with circuit breaking
+- L7 routing by header
+- Distributed tracing woven into the proxy
 
 If you don't need those, you don't need a mesh. A plain ClusterIP is fine.
 
@@ -724,7 +732,7 @@ Service unreachable
        │       ├── From same Pod: nslookup fails ──── CoreDNS issue
        │       └── From outside the cluster: doesn't reach the Service ── externalTrafficPolicy / LB issue
        │
-       └── Random / intermittent failures ──── kube-proxy not running, NetworkPolicy blocking, 
+       └── Random / intermittent failures ──── kube-proxy not running, NetworkPolicy blocking,
                                                  MTU issues, conntrack exhaustion
 ```
 
@@ -749,11 +757,11 @@ Need to alias an external service?
 
 ## See also
 
-* [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
-* [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how clients find Services
-* [[Kubernetes/concepts/L04-services-networking/04-ingress|Ingress]] — L7 routing from outside
-* [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — firewall for Pods
-* [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
-* [[Kubernetes/concepts/L04-services-networking/08-endpoint-slices|EndpointSlices]] — scalable Endpoints
-* [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs
-* [[Kubernetes/concepts/L09-advanced/08-ipvs|IPVS]] — kube-proxy mode deep-dive
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how clients find Services
+- [[Kubernetes/concepts/L04-services-networking/04-ingress|Ingress]] — L7 routing from outside
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — firewall for Pods
+- [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
+- [[Kubernetes/concepts/L04-services-networking/08-endpoint-slices|EndpointSlices]] — scalable Endpoints
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs
+- [[Kubernetes/concepts/L09-advanced/08-ipvs|IPVS]] — kube-proxy mode deep-dive

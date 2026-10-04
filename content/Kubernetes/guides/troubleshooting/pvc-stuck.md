@@ -173,27 +173,33 @@ aws iam get-role --role-name AmazonEKS_EBS_CSI_DriverRole
 **Common sub-causes:**
 
 1. **IAM role missing permissions.** AWS EKS, IRSA setup incomplete.
+
    ```bash
    $ kubectl logs -n kube-system ebs-csi-controller-xxx
    failed to create volume: ... AccessDenied
    ```
+
    Fix: ensure the IRSA service account has `arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy` (or equivalent).
 
 2. **CSI driver not installed.** Some distributions need explicit installation (e.g., kOps, kind, kubeadm).
+
    ```bash
    $ kubectl get csidriver
    # empty
    ```
+
    Fix: install the driver (Helm, manifests, etc.).
 
 3. **CSI driver version incompatible with k8s.** Old CSI drivers don't work on new k8s.
    Fix: upgrade the CSI driver.
 
 4. **Cloud API rate limit.** Especially during cluster boot or large deployments.
+
    ```bash
    $ kubectl logs -n kube-system ebs-csi-controller-xxx
    failed to create volume: ... RequestLimitExceeded
    ```
+
    Fix: back off, retry. Or use a different region.
 
 5. **Network unreachable to the cloud API.** Node can't reach `ec2.amazonaws.com` or the metadata service.
@@ -280,6 +286,7 @@ kubectl get pvc data -o jsonpath='{.spec.storageClassName}'
 **Fix:** fix the pod's scheduling issue. The PVC will provision once the pod is placed.
 
 For more control, change to `Immediate` binding (the PVC provisions without waiting for a pod). Useful when:
+
 - You want to pre-provision volumes
 - You don't have node-specific storage requirements
 - The pod can move between nodes without volume migration
@@ -320,14 +327,15 @@ kubectl get sc gp3 -o yaml | grep -A 3 "volumeBindingMode\|parameters"
 
 **Common access modes:**
 
-| Mode | Meaning | Backed by |
-|------|---------|-----------|
-| `ReadWriteOnce` (RWO) | One node can mount read-write | EBS, GCE PD, most block storage |
-| `ReadOnlyMany` (ROX) | Multiple nodes can mount read-only | Same as above |
-| `ReadWriteMany` (RWX) | Multiple nodes can mount read-write | EFS, NFS, CephFS, GlusterFS |
-| `ReadWriteOncePod` (RWOP) | One pod can mount read-write | CSI 1.0+ drivers |
+| Mode                      | Meaning                             | Backed by                       |
+| ------------------------- | ----------------------------------- | ------------------------------- |
+| `ReadWriteOnce` (RWO)     | One node can mount read-write       | EBS, GCE PD, most block storage |
+| `ReadOnlyMany` (ROX)      | Multiple nodes can mount read-only  | Same as above                   |
+| `ReadWriteMany` (RWX)     | Multiple nodes can mount read-write | EFS, NFS, CephFS, GlusterFS     |
+| `ReadWriteOncePod` (RWOP) | One pod can mount read-write        | CSI 1.0+ drivers                |
 
 **Fix:** use an SC that supports the access mode you need. For RWX, common options:
+
 - AWS: EFS (NFS-based)
 - GCP: Filestore (NFS)
 - Azure: Azure Files (SMB)
@@ -365,13 +373,14 @@ metadata:
   namespace: my-ns
 spec:
   hard:
-    persistentvolumeclaims: "50"     # up from 10
-    requests.storage: "10Ti"          # up from 2Ti
+    persistentvolumeclaims: "50" # up from 10
+    requests.storage: "10Ti" # up from 2Ti
     # AWS-specific
     requests.ephemeral-storage: "1Ti"
 ```
 
 For cloud-specific quotas (EBS volumes per node, IOPS limits), the issue might be at the cloud level, not k8s. AWS limits:
+
 - Default: 28 EBS volumes per node (with the AWS VPC CNI)
 - Max IOPS per volume: 64,000 for io2, 16,000 for gp3
 - Max throughput: 1,000 MiB/s for gp3
@@ -409,6 +418,7 @@ kubectl get pvc data -o jsonpath='{.spec}' | jq .
 ```
 
 **For static provisioning to work:**
+
 - The PV and PVC must match on `storageClassName`
 - The PV's capacity must be >= PVC's request
 - The PV's access modes must include the PVC's requested access mode
@@ -425,11 +435,11 @@ spec:
   capacity:
     storage: 100Gi
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: manual     # matches the PVC's storageClassName
+  storageClassName: manual # matches the PVC's storageClassName
   hostPath:
-    path: /mnt/data            # or nfs, iscsi, etc.
+    path: /mnt/data # or nfs, iscsi, etc.
 ```
 
 ## 8. PV access mode wrong
@@ -479,11 +489,13 @@ Events:
 **Common sub-causes:**
 
 1. **Pod is in zone us-east-1a, volume is in us-east-1b.** EBS volumes are zone-bound.
+
    ```bash
    $ kubectl describe pod web-1
    Events:
      Warning  FailedScheduling  ...  volume "pv-001" affinity rules conflict with node "node-1"
    ```
+
    Fix: schedule the pod in the same zone as the volume, or use a multi-zone storage (EFS).
 
 2. **Pod has `nodeSelector: topology.kubernetes.io/zone: us-east-1a` and the only available zones are different.**
@@ -597,16 +609,16 @@ aws ec2 describe-account-attributes \
 
 ## Common gotchas
 
-* **Re-applying the PVC doesn't help.** PVC binding is one-shot. The provisioner will try again only if you delete and recreate the PVC.
-* **WaitForFirstConsumer is the default for many cloud SCs.** It's usually the right setting, but it can confuse diagnosis (no provisioner events = pod is the problem).
-* **ReadWriteMany is rare on block storage.** EBS is RWO only. If you need RWX, use EFS or NFS.
-* **EBS volumes are zone-bound.** A pod in zone A can't attach a volume in zone B. Use topology constraints to schedule in the same zone.
-* **`storageClassName: ""` means default.** The cluster's default SC. If you want a specific SC, set it explicitly.
-* **Some CSI drivers don't support expansion.** AWS EBS supports it, but only when `allowVolumeExpansion: true` in the SC.
-* **Snapshot-based restore creates new volumes.** If you restore from a snapshot, you get a new PV with a new volume handle. The PVC's existing pod is unaffected.
-* **Volume finalizers.** A PVC with a finalizer (e.g., `kubernetes.io/pvc-protection`) doesn't get deleted until the finalizer is removed. If the deletion hangs, check the finalizer.
-* **Long-term stuck PVCs.** A PVC that's been Pending for hours won't be re-evaluated. `kubectl delete pvc data` and recreate (after fixing the cause).
-* **The volume "exists" in the cloud but isn't a PV yet.** AWS shows a volume, but k8s doesn't know about it. The provisioner needs to create the PV object. If the provisioner is broken, the volume is orphaned in the cloud.
+- **Re-applying the PVC doesn't help.** PVC binding is one-shot. The provisioner will try again only if you delete and recreate the PVC.
+- **WaitForFirstConsumer is the default for many cloud SCs.** It's usually the right setting, but it can confuse diagnosis (no provisioner events = pod is the problem).
+- **ReadWriteMany is rare on block storage.** EBS is RWO only. If you need RWX, use EFS or NFS.
+- **EBS volumes are zone-bound.** A pod in zone A can't attach a volume in zone B. Use topology constraints to schedule in the same zone.
+- **`storageClassName: ""` means default.** The cluster's default SC. If you want a specific SC, set it explicitly.
+- **Some CSI drivers don't support expansion.** AWS EBS supports it, but only when `allowVolumeExpansion: true` in the SC.
+- **Snapshot-based restore creates new volumes.** If you restore from a snapshot, you get a new PV with a new volume handle. The PVC's existing pod is unaffected.
+- **Volume finalizers.** A PVC with a finalizer (e.g., `kubernetes.io/pvc-protection`) doesn't get deleted until the finalizer is removed. If the deletion hangs, check the finalizer.
+- **Long-term stuck PVCs.** A PVC that's been Pending for hours won't be re-evaluated. `kubectl delete pvc data` and recreate (after fixing the cause).
+- **The volume "exists" in the cloud but isn't a PV yet.** AWS shows a volume, but k8s doesn't know about it. The provisioner needs to create the PV object. If the provisioner is broken, the volume is orphaned in the cloud.
 
 ## A worked example
 
@@ -690,8 +702,8 @@ EOF
 
 ## See also
 
-* [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — when the pod is the symptom, PVC is the cause
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the pod fails after PVC binds
-* [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — cluster storage resource
-* [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — namespaced claim lifecycle
-* [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning and storage classes
+- [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — when the pod is the symptom, PVC is the cause
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the pod fails after PVC binds
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — cluster storage resource
+- [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — namespaced claim lifecycle
+- [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning and storage classes

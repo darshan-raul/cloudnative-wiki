@@ -24,16 +24,19 @@ Security tooling and configuration across AWS, Azure, and GCP.
 ## Multi-Cloud Themes
 
 ### Identity & Access Management
+
 - Enforce least privilege via cloud-native IAM
 - Use workload identity (IRSA, WIF) instead of service account keys
 - Regular access reviews and automated remediation
 
 ### Logging & Monitoring
+
 - Centralize cloud logs to your SIEM (Wazuh agentless for AWS)
 - Enable guardduty/defender-for-cloud/chronicle everywhere
 - Ship logs to S3 → Wazuh → n8n → Planio
 
 ### Network Security
+
 - No public ingress to control planes
 - Private subnets for workloads
 - Security groups / NSGs as firewalls

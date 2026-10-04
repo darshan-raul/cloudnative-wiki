@@ -39,19 +39,19 @@ inf2.xlarge   → inf (Inferentia), 4 vCPU, 16 GB RAM, AWS ML chips
 
 ### Instance Families
 
-| Family | Characteristic | Best For |
-|--------|--------------|----------|
-| T | Burstable CPU (baseline + credits) | Dev/test, low-traffic web |
-| M | Balanced (CPU/memory) | General purpose |
-| C | High CPU | Media encoding, CI/CD |
-| R | High memory | Databases, caches |
-| X | Very high memory | SAP, SAP HANA |
-| I | High disk IOPS | NoSQL, data warehousing |
-| D | High disk throughput | HDFS, MapReduce |
-| G | GPU (graphics/ML) | ML inference, gaming |
-| P | GPU (parallel) | ML training |
-| Inf | ML inferentia chip | Low-cost ML inference |
-| Hpc | High performance CPU | Scientific computing |
+| Family | Characteristic                     | Best For                  |
+| ------ | ---------------------------------- | ------------------------- |
+| T      | Burstable CPU (baseline + credits) | Dev/test, low-traffic web |
+| M      | Balanced (CPU/memory)              | General purpose           |
+| C      | High CPU                           | Media encoding, CI/CD     |
+| R      | High memory                        | Databases, caches         |
+| X      | Very high memory                   | SAP, SAP HANA             |
+| I      | High disk IOPS                     | NoSQL, data warehousing   |
+| D      | High disk throughput               | HDFS, MapReduce           |
+| G      | GPU (graphics/ML)                  | ML inference, gaming      |
+| P      | GPU (parallel)                     | ML training               |
+| Inf    | ML inferentia chip                 | Low-cost ML inference     |
+| Hpc    | High performance CPU               | Scientific computing      |
 
 ### Current Generation vs Previous
 
@@ -233,13 +233,13 @@ aws autoscaling put-scaling-policy \
 
 ## Pricing Models
 
-| Model | Description | Use Case | Savings vs On-Demand |
-|-------|-------------|----------|---------------------|
-| On-Demand | Pay per second/minute | Short, unpredictable | 0% |
-| Reserved | 1 or 3 year commitment | Baseline workloads | Up to 70% |
-| Savings Plans | Flexible commitment | Any compute | Up to 60% |
-| Spot | Interruptible, cheap | Fault-tolerant batch | 70-90% |
-| Dedicated | Physical server | Compliance, licensing | Varies |
+| Model         | Description            | Use Case              | Savings vs On-Demand |
+| ------------- | ---------------------- | --------------------- | -------------------- |
+| On-Demand     | Pay per second/minute  | Short, unpredictable  | 0%                   |
+| Reserved      | 1 or 3 year commitment | Baseline workloads    | Up to 70%            |
+| Savings Plans | Flexible commitment    | Any compute           | Up to 60%            |
+| Spot          | Interruptible, cheap   | Fault-tolerant batch  | 70-90%               |
+| Dedicated     | Physical server        | Compliance, licensing | Varies               |
 
 ### Spot Instances
 
@@ -290,13 +290,13 @@ aws ssm send-command \
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Instances per region (default) | 20 |
-| Elastic IPs per region | 5 |
-| Security groups per VPC | 500 |
-| Rules per security group | 60 (inbound) + 60 (outbound) |
-| Launch templates per region | 100 |
+| Resource                       | Limit                        |
+| ------------------------------ | ---------------------------- |
+| Instances per region (default) | 20                           |
+| Elastic IPs per region         | 5                            |
+| Security groups per VPC        | 500                          |
+| Rules per security group       | 60 (inbound) + 60 (outbound) |
+| Launch templates per region    | 100                          |
 
 ## References
 

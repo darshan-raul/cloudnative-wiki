@@ -58,15 +58,15 @@ Application Code
 
 ## Key Terms
 
-| Term | Meaning |
-|------|---------|
-| **Signal** | One of the three telemetry types: trace, metric, log |
-| **Span** | A named, timed operation representing a unit of work in a trace |
-| **Trace** | A collection of spans sharing a root span (end-to-end request path) |
-| **Context** | W3C Trace Context (traceparent + tracestate) propagated across process boundaries |
-| **Baggage** | Key-value pairs propagated alongside trace context |
-| **Resource** | Entity producing telemetry (service, container, host) |
-| **Semantic Convention** | Standardized naming for attributes |
+| Term                    | Meaning                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| **Signal**              | One of the three telemetry types: trace, metric, log                              |
+| **Span**                | A named, timed operation representing a unit of work in a trace                   |
+| **Trace**               | A collection of spans sharing a root span (end-to-end request path)               |
+| **Context**             | W3C Trace Context (traceparent + tracestate) propagated across process boundaries |
+| **Baggage**             | Key-value pairs propagated alongside trace context                                |
+| **Resource**            | Entity producing telemetry (service, container, host)                             |
+| **Semantic Convention** | Standardized naming for attributes                                                |
 
 ## Why OpenTelemetry?
 

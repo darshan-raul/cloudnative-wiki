@@ -14,11 +14,11 @@ tags:
 When you call `graph.stream(input, stream_mode=...)`, LangGraph
 can stream in two modes:
 
-| Mode | What it yields | Use when |
-|---|---|---|
-| `"values"` (default) | Each state snapshot after a node runs | Debugging, state inspection |
-| `"messages"` | Message deltas (like `AIMessageChunk`) | Building a chat UI |
-| `"updates"` | Each node's partial update | Debugging, per-node progress |
+| Mode                 | What it yields                         | Use when                     |
+| -------------------- | -------------------------------------- | ---------------------------- |
+| `"values"` (default) | Each state snapshot after a node runs  | Debugging, state inspection  |
+| `"messages"`         | Message deltas (like `AIMessageChunk`) | Building a chat UI           |
+| `"updates"`          | Each node's partial update             | Debugging, per-node progress |
 
 For a chat UI, use `stream_mode="messages"`.
 
@@ -165,9 +165,9 @@ checkpointing are orthogonal — you can use one without the other.
 
 ## `stream` (sync) vs `astream` (async)
 
-| Method | When to use |
-|---|---|
-| `graph.stream(input)` | Sync context (not in an async handler) |
+| Method                 | When to use                                  |
+| ---------------------- | -------------------------------------------- |
+| `graph.stream(input)`  | Sync context (not in an async handler)       |
 | `graph.astream(input)` | Async context (FastAPI `async def` handlers) |
 
 Always prefer `astream` in async web frameworks. Sync `stream`

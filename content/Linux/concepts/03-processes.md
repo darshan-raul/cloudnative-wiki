@@ -13,6 +13,7 @@ A process is a running program. Every time you run a command, start a service, o
 ## What is a Process?
 
 A process is a container that holds:
+
 - **PID** — a unique Process ID number
 - **Memory** — its own address space (code, stack, heap, data)
 - **Environment** — environment variables, working directory
@@ -55,6 +56,7 @@ top -p 1234         # monitor specific PID
 ```
 
 In top:
+
 - `M` — sort by memory
 - `P` — sort by CPU (default)
 - `T` — sort by time
@@ -136,6 +138,7 @@ kill -l                # list all signal names and numbers
 A daemon is a process that runs in the background, detached from any terminal. They're how servers work — SSH, nginx, PostgreSQL all run as daemons.
 
 Rules for daemons:
+
 1. **No controlling terminal** — stdin/stdout/stderr point to /dev/null
 2. **Parent is PID 1** — started by init/systemd, not a shell
 3. **Run in the background** — detached from the terminal session

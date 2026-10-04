@@ -52,15 +52,15 @@ While block storage (Azure Disks) excels at single-node high-performance databas
 
 ## 2. Storage Comparison: Azure Files vs. Azure Blob Storage
 
-| Feature / Metric | Azure Files (NFS v4.1) | Azure Files (SMB 3.0) | Azure Blob (BlobFuse2) | Azure Blob (NFS v3) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Kubernetes AccessMode**| **ReadWriteMany (RWX)** | **ReadWriteMany (RWX)** | **ReadWriteMany (RWX)** | **ReadWriteMany (RWX)** |
-| **POSIX Compatibility** | **Full POSIX** (chown/chmod) | Windows ACLs / Linux GID | Near-POSIX (Emulated via FUSE)| Partial POSIX |
-| **File Locking Support** | **Native fcntl / flock** | Native SMB oplocks | Limited / Weak locks | Weak locks |
-| **Max Capacity per Share**| **100 TiB** | **100 TiB** | **Petabytes (Unlimited)** | **Petabytes (Unlimited)** |
-| **Max IOPS per Share** | **Up to 100,000 IOPS** | **Up to 100,000 IOPS** | High (Multi-part parallel) | High (Multi-part parallel) |
-| **Authentication Mode** | Private VNet IP / Private Link| Storage Account Access Key | Managed Identity / Workload ID | Private VNet IP / Private Link|
-| **Cost Profile** | Moderate ($0.16/GiB Premium) | Moderate ($0.16/GiB Premium)| **Ultra-Low ($0.018/GiB Hot)** | **Ultra-Low ($0.018/GiB Hot)** |
+| Feature / Metric           | Azure Files (NFS v4.1)         | Azure Files (SMB 3.0)        | Azure Blob (BlobFuse2)         | Azure Blob (NFS v3)            |
+| :------------------------- | :----------------------------- | :--------------------------- | :----------------------------- | :----------------------------- |
+| **Kubernetes AccessMode**  | **ReadWriteMany (RWX)**        | **ReadWriteMany (RWX)**      | **ReadWriteMany (RWX)**        | **ReadWriteMany (RWX)**        |
+| **POSIX Compatibility**    | **Full POSIX** (chown/chmod)   | Windows ACLs / Linux GID     | Near-POSIX (Emulated via FUSE) | Partial POSIX                  |
+| **File Locking Support**   | **Native fcntl / flock**       | Native SMB oplocks           | Limited / Weak locks           | Weak locks                     |
+| **Max Capacity per Share** | **100 TiB**                    | **100 TiB**                  | **Petabytes (Unlimited)**      | **Petabytes (Unlimited)**      |
+| **Max IOPS per Share**     | **Up to 100,000 IOPS**         | **Up to 100,000 IOPS**       | High (Multi-part parallel)     | High (Multi-part parallel)     |
+| **Authentication Mode**    | Private VNet IP / Private Link | Storage Account Access Key   | Managed Identity / Workload ID | Private VNet IP / Private Link |
+| **Cost Profile**           | Moderate ($0.16/GiB Premium)   | Moderate ($0.16/GiB Premium) | **Ultra-Low ($0.018/GiB Hot)** | **Ultra-Low ($0.018/GiB Hot)** |
 
 ---
 
@@ -135,7 +135,7 @@ metadata:
   namespace: web
 spec:
   accessModes:
-  - ReadWriteMany
+    - ReadWriteMany
   storageClassName: azurefile-premium-nfs
   resources:
     requests:
@@ -157,15 +157,15 @@ spec:
         app: web-frontend
     spec:
       containers:
-      - name: nginx
-        image: mcr.microsoft.com/oss/nginx/nginx:1.25.3
-        volumeMounts:
-        - name: shared-storage
-          mountPath: /usr/share/nginx/html/assets
+        - name: nginx
+          image: mcr.microsoft.com/oss/nginx/nginx:1.25.3
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /usr/share/nginx/html/assets
       volumes:
-      - name: shared-storage
-        persistentVolumeClaim:
-          claimName: shared-content-pvc
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: shared-content-pvc
 ```
 
 Apply manifests:
@@ -180,13 +180,13 @@ kubectl apply -f shared-web-deployment.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Dimension | Metric / Hard Limit | Production Impact |
-| :--- | :--- | :--- |
-| **Azure Files Share Max Size** | **100 TiB (102,400 GiB)** | Provisioned capacity on Premium tier |
-| **Max Open Files per Share** | **1,000,000 handles** | High-concurrency web servers |
-| **Max Throughput (NFS Share)** | **10,340 MB/s (10 GB/s)** | Achieved using `nconnect=4` mount flag |
-| **Max Single File Size (Blob)** | **190.7 TiB** | Block blob maximum size for LLM weights |
-| **Blob CSI Mount Protocol** | **BlobFuse2 (FUSE daemon)** | Operates inside container user space |
+| Dimension                       | Metric / Hard Limit         | Production Impact                       |
+| :------------------------------ | :-------------------------- | :-------------------------------------- |
+| **Azure Files Share Max Size**  | **100 TiB (102,400 GiB)**   | Provisioned capacity on Premium tier    |
+| **Max Open Files per Share**    | **1,000,000 handles**       | High-concurrency web servers            |
+| **Max Throughput (NFS Share)**  | **10,340 MB/s (10 GB/s)**   | Achieved using `nconnect=4` mount flag  |
+| **Max Single File Size (Blob)** | **190.7 TiB**               | Block blob maximum size for LLM weights |
+| **Blob CSI Mount Protocol**     | **BlobFuse2 (FUSE daemon)** | Operates inside container user space    |
 
 ---
 
@@ -222,7 +222,7 @@ kubectl apply -f shared-web-deployment.yaml
   - Blob Storage Capacity (50 TiB): 51,200 GiB × $0.018/GiB = **$921.60**
   - Read Operations (5,000,000 reads): 50 × $0.004 per 10,000 = **$2.00**
   - VNet Data Transfer (Within same Azure region): **$0.00**
-- **Total Monthly Storage Cost:** **$923.60 / month** *(Compared to $8,192/mo if stored on Premium Files).*
+- **Total Monthly Storage Cost:** **$923.60 / month** _(Compared to $8,192/mo if stored on Premium Files)._
 
 ---
 

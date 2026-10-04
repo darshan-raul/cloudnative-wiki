@@ -1,6 +1,13 @@
+---
+title: "StorageClass"
+tags: ["kubernetes", "k8s-concepts", "storage"]
+date: 2026-09-06
+description: "StorageClass — Kubernetes reference and architecture guide."
+---
+
 # StorageClass
 
-*"https://kubernetes.io/docs/concepts/storage/storage-classes/"*
+_"https://kubernetes.io/docs/concepts/storage/storage-classes/"_
 
 A StorageClass is a **way to describe "types" of storage** you can dynamically provision. It maps a name (like `gp3` or `ssd`) to a provisioner and a set of parameters. Without StorageClasses, you'd hand-create PVs for every workload — a nightmare at scale.
 
@@ -58,12 +65,12 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: gp3
-provisioner: ebs.csi.aws.com       # the CSI driver
+provisioner: ebs.csi.aws.com # the CSI driver
 parameters:
   type: gp3
   fsType: ext4
   iopsPerGB: "3000"
-reclaimPolicy: Delete              # what happens to the PV when PVC is deleted
+reclaimPolicy: Delete # what happens to the PV when PVC is deleted
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 mountOptions:
@@ -79,7 +86,7 @@ metadata:
   name: data
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: gp3
   resources:
     requests:
@@ -96,7 +103,7 @@ kind: StorageClass
 metadata:
   name: gold
   annotations:
-    storageclass.kubernetes.io/is-default-class: "true"  # marks this as default
+    storageclass.kubernetes.io/is-default-class: "true" # marks this as default
 provisioner: ebs.csi.aws.com
 parameters:
   type: io2
@@ -107,21 +114,21 @@ reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 allowedTopologies:
-- matchLabelExpressions:
-  - key: topology.kubernetes.io/zone
-    values: ["us-east-1a", "us-east-1b"]
+  - matchLabelExpressions:
+      - key: topology.kubernetes.io/zone
+        values: ["us-east-1a", "us-east-1b"]
 mountOptions:
-- noatime
-- debug
+  - noatime
+  - debug
 ```
 
 ### 3.1 The `provisioner` field
 
 The driver to call. Three kinds:
 
-* **CSI driver** — `ebs.csi.aws.com`, `disk.csi.azure.com`, `pd.csi.storage.gke.io`, etc. **The standard.**
-* **In-tree provisioner** — `kubernetes.io/aws-ebs`, `kubernetes.io/gce-pd`, etc. **Removed in k8s 1.26+.**
-* **Local provisioner** — `kubernetes.io/no-provisioner`. Used with `local` PVs (the user creates the PV manually, no cloud volume).
+- **CSI driver** — `ebs.csi.aws.com`, `disk.csi.azure.com`, `pd.csi.storage.gke.io`, etc. **The standard.**
+- **In-tree provisioner** — `kubernetes.io/aws-ebs`, `kubernetes.io/gce-pd`, etc. **Removed in k8s 1.26+.**
+- **Local provisioner** — `kubernetes.io/no-provisioner`. Used with `local` PVs (the user creates the PV manually, no cloud volume).
 
 The provisioner name is **opaque to k8s** — it's just a string the driver registers itself as. The driver watches for PVCs with a matching `storageClassName.provisioner` and creates volumes.
 
@@ -129,12 +136,12 @@ The provisioner name is **opaque to k8s** — it's just a string the driver regi
 
 Provisioner-specific configuration. Each driver has its own parameter set:
 
-* **EBS CSI**: `type`, `iopsPerGB`, `fsType`, `encrypted`, `kmsKeyId`
-* **EBS CSI (v1.30+)**: `blockSize`, `inodeSize`, `throughput`
-* **GCE PD CSI**: `type` (pd-standard, pd-balanced, pd-ssd), `replication-type`
-* **Azure Disk CSI**: `skuName` (Premium_LRS, StandardSSD_LRS, etc.)
-* **Azure File CSI**: `skuName`, `protocol`
-* **Ceph RBD CSI**: `pool`, `clusterID`, `imageFeatures`
+- **EBS CSI**: `type`, `iopsPerGB`, `fsType`, `encrypted`, `kmsKeyId`
+- **EBS CSI (v1.30+)**: `blockSize`, `inodeSize`, `throughput`
+- **GCE PD CSI**: `type` (pd-standard, pd-balanced, pd-ssd), `replication-type`
+- **Azure Disk CSI**: `skuName` (Premium_LRS, StandardSSD_LRS, etc.)
+- **Azure File CSI**: `skuName`, `protocol`
+- **Ceph RBD CSI**: `pool`, `clusterID`, `imageFeatures`
 
 Always check the driver's docs. **Parameters are case-sensitive and validated by the driver**, not the apiserver.
 
@@ -142,8 +149,8 @@ Always check the driver's docs. **Parameters are case-sensitive and validated by
 
 What happens to the PV when the PVC is deleted. See `04-persistentvolume.md` for the full discussion. The two useful values:
 
-* `Delete` (default for dynamic) — the underlying volume is deleted.
-* `Retain` — the underlying volume is kept, the PV goes to `Released` state.
+- `Delete` (default for dynamic) — the underlying volume is deleted.
+- `Retain` — the underlying volume is kept, the PV goes to `Released` state.
 
 ```yaml
 reclaimPolicy: Delete    # default
@@ -154,8 +161,8 @@ reclaimPolicy: Retain    # for databases, anything that should survive PVC delet
 
 When the PV is created and bound:
 
-* `Immediate` (default) — as soon as the PVC is created.
-* `WaitForFirstConsumer` — when a Pod using the PVC is scheduled.
+- `Immediate` (default) — as soon as the PVC is created.
+- `WaitForFirstConsumer` — when a Pod using the PVC is scheduled.
 
 See section 4 for the full discussion. **For cloud storage, use `WaitForFirstConsumer`.**
 
@@ -175,16 +182,16 @@ Mount options passed to the kubelet when the volume is mounted. **Driver-specifi
 
 Common safe options:
 
-* `noatime` — don't update access times. Speeds up reads.
-* `nodiratime` — same, for directories.
-* `ro` — read-only.
-* `debug` — extra logging.
+- `noatime` — don't update access times. Speeds up reads.
+- `nodiratime` — same, for directories.
+- `ro` — read-only.
+- `debug` — extra logging.
 
 Dangerous options:
 
-* `noexec` — some apps need to execute binaries from the mount.
-* `nosuid`, `nodev` — can break some apps.
-* `sync` vs `async` — affects consistency.
+- `noexec` — some apps need to execute binaries from the mount.
+- `nosuid`, `nodev` — can break some apps.
+- `sync` vs `async` — affects consistency.
 
 Always test mountOptions in a non-prod environment first. **A bad mountOption can prevent the Pod from starting.**
 
@@ -194,12 +201,12 @@ Restrict the topology the volume can be provisioned in. Used for multi-zone clus
 
 ```yaml
 allowedTopologies:
-- matchLabelExpressions:
-  - key: topology.kubernetes.io/zone
-    values: ["us-east-1a", "us-east-1b"]
-- matchLabelExpressions:
-  - key: topology.kubernetes.io/region
-    values: ["us-east-1"]
+  - matchLabelExpressions:
+      - key: topology.kubernetes.io/zone
+        values: ["us-east-1a", "us-east-1b"]
+  - matchLabelExpressions:
+      - key: topology.kubernetes.io/region
+        values: ["us-east-1"]
 ```
 
 The provisioner creates the volume in a topology that matches one of the entries. If no entry matches, the volume can't be created.
@@ -253,9 +260,9 @@ PVC binds, Pod mounts successfully
 
 ### 4.3 When to use `Immediate`
 
-* **Storage that's not zone-specific** — NFS, hostPath, some CephFS setups.
-* **When you control the placement** — single-zone clusters.
-* **When the bind needs to happen before the Pod is scheduled** — unusual, but some controllers may want this.
+- **Storage that's not zone-specific** — NFS, hostPath, some CephFS setups.
+- **When you control the placement** — single-zone clusters.
+- **When the bind needs to happen before the Pod is scheduled** — unusual, but some controllers may want this.
 
 ## 5. Reclaim Policy on the StorageClass
 
@@ -275,9 +282,9 @@ But it's easier to set it correctly on the StorageClass.
 
 **Best practice:**
 
-* `Delete` for ephemeral workloads (caches, build scratch).
-* `Retain` for databases, anything with persistent data.
-* Have **two StorageClasses** with different reclaim policies for different tiers.
+- `Delete` for ephemeral workloads (caches, build scratch).
+- `Retain` for databases, anything with persistent data.
+- Have **two StorageClasses** with different reclaim policies for different tiers.
 
 ## 6. The Default StorageClass
 
@@ -297,15 +304,15 @@ You can mark a class as default with the annotation. **Only one class can be def
 
 ### 6.1 The default dangers
 
-* **The default can change between clusters.** A PVC that worked in dev may get a different volume in prod.
-* **The default class may not be available in every namespace.** Some setups restrict the default class to certain namespaces (e.g. via a default policy).
-* **The default class is not enforced to be production-grade.** Some teams' "default" is a low-tier class that shouldn't be used for prod databases.
+- **The default can change between clusters.** A PVC that worked in dev may get a different volume in prod.
+- **The default class may not be available in every namespace.** Some setups restrict the default class to certain namespaces (e.g. via a default policy).
+- **The default class is not enforced to be production-grade.** Some teams' "default" is a low-tier class that shouldn't be used for prod databases.
 
 **Best practice:** always set `storageClassName` explicitly in production. To explicitly opt out of the default (for static provisioning), set `storageClassName: ""`.
 
 ```yaml
 spec:
-  storageClassName: ""     # empty string = opt out of dynamic
+  storageClassName: "" # empty string = opt out of dynamic
 ```
 
 ### 6.2 Changing the default
@@ -322,22 +329,22 @@ kubectl annotate storageclass gp3 storageclass.kubernetes.io/is-default-class=tr
 
 ## 7. Common Provisioners
 
-| Provisioner | Backend | Notes |
-|---|---|---|
-| `ebs.csi.aws.com` | AWS EBS | gp2, gp3, io1, io2, st1, sc1. **Default on EKS.** |
-| `efs.csi.aws.com` | AWS EFS | RWX support. Slower than EBS but cross-node. |
-| `fsx.csi.aws.com` | AWS FSx | Lustre, ONTAP, OpenZFS. HPC use cases. |
-| `disk.csi.azure.com` | Azure Disk | Premium_LRS, StandardSSD_LRS, etc. **Default on AKS.** |
-| `file.csi.azure.com` | Azure Files | SMB / NFS. RWX. |
-| `blob.csi.azure.com` | Azure Blob | Object storage as filesystem. |
-| `pd.csi.storage.gke.io` | GCP Persistent Disk | pd-standard, pd-balanced, pd-ssd. **Default on GKE.** |
-| `filestore.csi.storage.gke.io` | GCP Filestore | NFS. RWX. |
-| `nfs.csi.k8s.io` | NFS | External NFS server. RWX. |
-| `rook-ceph.rbd.csi.ceph.com` | Ceph RBD | Block storage. |
-| `rook-ceph.cephfs.csi.ceph.com` | CephFS | Filesystem. RWX. |
-| `csi.trident.netapp.io` | NetApp | OnTap, SolidFire, etc. |
-| `csi-pure-csi.k8s.io` | Pure Storage | FlashArray, FlashBlade. |
-| `kubernetes.io/no-provisioner` | Local PV | User creates the PV manually. |
+| Provisioner                     | Backend             | Notes                                                  |
+| ------------------------------- | ------------------- | ------------------------------------------------------ |
+| `ebs.csi.aws.com`               | AWS EBS             | gp2, gp3, io1, io2, st1, sc1. **Default on EKS.**      |
+| `efs.csi.aws.com`               | AWS EFS             | RWX support. Slower than EBS but cross-node.           |
+| `fsx.csi.aws.com`               | AWS FSx             | Lustre, ONTAP, OpenZFS. HPC use cases.                 |
+| `disk.csi.azure.com`            | Azure Disk          | Premium_LRS, StandardSSD_LRS, etc. **Default on AKS.** |
+| `file.csi.azure.com`            | Azure Files         | SMB / NFS. RWX.                                        |
+| `blob.csi.azure.com`            | Azure Blob          | Object storage as filesystem.                          |
+| `pd.csi.storage.gke.io`         | GCP Persistent Disk | pd-standard, pd-balanced, pd-ssd. **Default on GKE.**  |
+| `filestore.csi.storage.gke.io`  | GCP Filestore       | NFS. RWX.                                              |
+| `nfs.csi.k8s.io`                | NFS                 | External NFS server. RWX.                              |
+| `rook-ceph.rbd.csi.ceph.com`    | Ceph RBD            | Block storage.                                         |
+| `rook-ceph.cephfs.csi.ceph.com` | CephFS              | Filesystem. RWX.                                       |
+| `csi.trident.netapp.io`         | NetApp              | OnTap, SolidFire, etc.                                 |
+| `csi-pure-csi.k8s.io`           | Pure Storage        | FlashArray, FlashBlade.                                |
+| `kubernetes.io/no-provisioner`  | Local PV            | User creates the PV manually.                          |
 
 ### 7.1 In-tree provisioners — removed in 1.26+
 
@@ -356,11 +363,11 @@ metadata:
   name: gp3-encrypted
 provisioner: ebs.csi.aws.com
 parameters:
-  type: gp3               # gp2, gp3, io1, io2, st1, sc1
-  fsType: ext4             # ext4, xfs, ext3
-  iopsPerGB: "3000"        # gp3: 3000-16000, io1/io2: per-IOP
-  throughput: "125"        # gp3: 125-1000 MiB/s
-  encrypted: "true"        # encrypt with the default KMS key
+  type: gp3 # gp2, gp3, io1, io2, st1, sc1
+  fsType: ext4 # ext4, xfs, ext3
+  iopsPerGB: "3000" # gp3: 3000-16000, io1/io2: per-IOP
+  throughput: "125" # gp3: 125-1000 MiB/s
+  encrypted: "true" # encrypt with the default KMS key
   # kmsKeyId: "arn:aws:kms:..."  # use a specific KMS key
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
@@ -372,7 +379,7 @@ For `io1` / `io2` (high-performance), specify IOPS explicitly:
 ```yaml
 parameters:
   type: io2
-  iops: "10000"            # total IOPS, not per-GB
+  iops: "10000" # total IOPS, not per-GB
 ```
 
 ### 8.2 Azure Disk CSI
@@ -384,7 +391,7 @@ metadata:
   name: azure-premium
 provisioner: disk.csi.azure.com
 parameters:
-  skuName: Premium_LRS     # Standard_LRS, StandardSSD_LRS, Premium_LRS, UltraSSD_LRS
+  skuName: Premium_LRS # Standard_LRS, StandardSSD_LRS, Premium_LRS, UltraSSD_LRS
   # kind: Shared     # for maxShares > 1
   # diskEncryptionSetID: /subscriptions/.../diskEncryptionSets/...
 volumeBindingMode: WaitForFirstConsumer
@@ -401,8 +408,8 @@ metadata:
   name: gce-pd-balanced
 provisioner: pd.csi.storage.gke.io
 parameters:
-  type: pd-balanced        # pd-standard, pd-balanced, pd-ssd, pd-extreme
-  replication-type: none   # or regional-pd for HA
+  type: pd-balanced # pd-standard, pd-balanced, pd-ssd, pd-extreme
+  replication-type: none # or regional-pd for HA
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 reclaimPolicy: Delete
@@ -422,9 +429,9 @@ For multi-zone clusters where storage is zone-specific, you may need to restrict
 
 ```yaml
 allowedTopologies:
-- matchLabelExpressions:
-  - key: topology.kubernetes.io/zone
-    values: ["us-east-1a", "us-east-1b", "us-east-1c"]
+  - matchLabelExpressions:
+      - key: topology.kubernetes.io/zone
+        values: ["us-east-1a", "us-east-1b", "us-east-1c"]
 ```
 
 The provisioner will only create volumes in zones that match one of the entries. If the Pod is scheduled to a zone that's not in the list, the volume can't be created (and the Pod stays in `Pending`).
@@ -435,19 +442,19 @@ The provisioner will only create volumes in zones that match one of the entries.
 
 ```yaml
 mountOptions:
-- noatime
-- nodiratime
-- debug
+  - noatime
+  - nodiratime
+  - debug
 ```
 
 These are passed to the kubelet, which passes them to `mount` when mounting the volume. **Driver-specific** — some options may not be supported.
 
 **Common gotchas:**
 
-* `noexec` — the volume can't be used to run binaries. Some apps need this.
-* `nosuid` — setuid binaries don't work. May break some apps.
-* `ro` — read-only. The Pod can't write to the volume. Set this on the Pod's `volumeMounts.readOnly: true` instead, so the StorageClass is reusable.
-* `sync` — synchronous I/O. Slower but more consistent. Don't set this on SSDs.
+- `noexec` — the volume can't be used to run binaries. Some apps need this.
+- `nosuid` — setuid binaries don't work. May break some apps.
+- `ro` — read-only. The Pod can't write to the volume. Set this on the Pod's `volumeMounts.readOnly: true` instead, so the StorageClass is reusable.
+- `sync` — synchronous I/O. Slower but more consistent. Don't set this on SSDs.
 
 **Test before applying** — a bad mountOption can prevent the Pod from starting, and the error message may not be obvious.
 
@@ -565,7 +572,7 @@ provisioner: ebs.csi.aws.com
 parameters:
   type: io2
   iops: "10000"
-reclaimPolicy: Retain        # DB volumes should survive PVC delete
+reclaimPolicy: Retain # DB volumes should survive PVC delete
 ---
 # Cold, for archives
 apiVersion: storage.k8s.io/v1
@@ -574,7 +581,7 @@ metadata:
   name: cold
 provisioner: ebs.csi.aws.com
 parameters:
-  type: sc1                  # cold HDD
+  type: sc1 # cold HDD
 reclaimPolicy: Delete
 ```
 
@@ -635,8 +642,8 @@ kubectl describe storageclass <name>
 
 If the volume was created but with the wrong parameters (e.g. wrong type, wrong size):
 
-* The provisioner is honoring the StorageClass, but the parameters were wrong when the PV was created. You can't change a bound PV's parameters — create a new PVC.
-* The PVC's `storageClassName` is right, but the StorageClass's parameters are wrong. Edit the StorageClass — but new PVs will use the new parameters, existing PVs are unchanged.
+- The provisioner is honoring the StorageClass, but the parameters were wrong when the PV was created. You can't change a bound PV's parameters — create a new PVC.
+- The PVC's `storageClassName` is right, but the StorageClass's parameters are wrong. Edit the StorageClass — but new PVs will use the new parameters, existing PVs are unchanged.
 
 ## 15. Gotchas and Common Mistakes
 
@@ -704,8 +711,8 @@ If the volume was created but with the wrong parameters (e.g. wrong type, wrong 
 
 ## See also
 
-* [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — the volume types, including PVCs
-* [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped storage object
-* [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API
-* [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
-* [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level storage quotas
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — the volume types, including PVCs
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped storage object
+- [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API
+- [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
+- [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level storage quotas

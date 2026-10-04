@@ -33,9 +33,7 @@ aws secretsmanager create-secret \
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "secretsmanager:GetSecretValue"
-      ],
+      "Action": ["secretsmanager:GetSecretValue"],
       "Resource": "arn:aws:secretsmanager:us-west-2:123456789:secret:my-app/*"
     }
   ]
@@ -92,19 +90,19 @@ metadata:
 spec:
   serviceAccountName: my-app
   containers:
-  - name: app
-    image: my-app
-    volumeMounts:
-    - name: secrets
-      mountPath: /secrets
-      readOnly: true
+    - name: app
+      image: my-app
+      volumeMounts:
+        - name: secrets
+          mountPath: /secrets
+          readOnly: true
   volumes:
-  - name: secrets
-    csi:
-      driver: secrets-store.csi.k8s.io
-      readOnly: true
-      volumeAttributes:
-        secretProviderClass: my-app-secrets
+    - name: secrets
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: my-app-secrets
 ```
 
 ## Secret Rotation

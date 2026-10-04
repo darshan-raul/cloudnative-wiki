@@ -1,6 +1,13 @@
+---
+title: "Seccomp and AppArmor"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Seccomp and AppArmor — Kubernetes reference and architecture guide."
+---
+
 # Seccomp and AppArmor
 
-*"https://kubernetes.io/docs/tutorials/security/seccomp/ | https://kubernetes.io/docs/tutorials/security/apparmor/"*
+_"https://kubernetes.io/docs/tutorials/security/seccomp/ | https://kubernetes.io/docs/tutorials/security/apparmor/"_
 
 Seccomp and AppArmor are **Linux kernel security modules** that restrict what a process can do at the syscall / file level. They are the **last line of defense** in the container sandbox: PSS / SecurityContext restrict what a container is allowed to request, but seccomp and AppArmor restrict what the kernel will do for the process inside. This is defense-in-depth — even if an attacker exploits the app, the kernel's restrictions limit the blast radius.
 
@@ -27,14 +34,14 @@ Seccomp and AppArmor are **Linux kernel security modules** that restrict what a 
 
 A container is a process. The kernel's sandboxing primitives limit what the process can do:
 
-| Layer | What it restricts | Where it lives |
-|---|---|---|
-| **Linux capabilities** | Privileged operations (mount, raw socket, etc.) | `security.capability` |
-| **Seccomp** | Syscalls (`open`, `read`, `write`, `clone`, ...) | `seccomp` |
-| **AppArmor** | File paths, capabilities, network, mount | LSM (Linux Security Module) |
-| **SELinux** | File paths, network, capabilities (more granular than AppArmor) | LSM |
-| **Namespaces** | What the process can see (PIDs, network, mount) | `clone()` flags |
-| **cgroups** | Resource limits (CPU, memory, disk) | cgroup fs |
+| Layer                  | What it restricts                                               | Where it lives              |
+| ---------------------- | --------------------------------------------------------------- | --------------------------- |
+| **Linux capabilities** | Privileged operations (mount, raw socket, etc.)                 | `security.capability`       |
+| **Seccomp**            | Syscalls (`open`, `read`, `write`, `clone`, ...)                | `seccomp`                   |
+| **AppArmor**           | File paths, capabilities, network, mount                        | LSM (Linux Security Module) |
+| **SELinux**            | File paths, network, capabilities (more granular than AppArmor) | LSM                         |
+| **Namespaces**         | What the process can see (PIDs, network, mount)                 | `clone()` flags             |
+| **cgroups**            | Resource limits (CPU, memory, disk)                             | cgroup fs                   |
 
 Seccomp restricts **syscalls** — the process can only call a specific set. AppArmor restricts **file paths, capabilities, and network** — the process can only access a specific set of resources.
 
@@ -48,11 +55,11 @@ The seccomp filter is a **BPF program** (the same BPF as eBPF / Cilium / Falco).
 
 The BPF program returns one of:
 
-* `SECCOMP_RET_ALLOW` — the syscall runs.
-* `SECCOMP_RET_ERRNO` — the syscall returns an error (with a specific errno).
-* `SECCOMP_RET_TRAP` — the process is killed with `SIGSYS`.
-* `SECCOMP_RET_LOG` — the syscall is allowed, but the action is logged.
-* `SECCOMP_RET_KILL_PROCESS` — the process (and all threads) are killed.
+- `SECCOMP_RET_ALLOW` — the syscall runs.
+- `SECCOMP_RET_ERRNO` — the syscall returns an error (with a specific errno).
+- `SECCOMP_RET_TRAP` — the process is killed with `SIGSYS`.
+- `SECCOMP_RET_LOG` — the syscall is allowed, but the action is logged.
+- `SECCOMP_RET_KILL_PROCESS` — the process (and all threads) are killed.
 
 The default in most kernels is `Unconfined` — all syscalls allowed. With seccomp, you narrow the set.
 
@@ -66,7 +73,28 @@ A seccomp profile is a JSON file that describes the allowed syscalls:
   "architectures": ["SCMP_ARCH_X86_64", "SCMP_ARCH_AARCH64"],
   "syscalls": [
     {
-      "names": ["read", "write", "open", "close", "stat", "fstat", "mmap", "mprotect", "munmap", "brk", "rt_sigaction", "rt_sigprocmask", "rt_sigreturn", "ioctl", "nanosleep", "select", "mmap2", "madvise", "exit_group", "exit"],
+      "names": [
+        "read",
+        "write",
+        "open",
+        "close",
+        "stat",
+        "fstat",
+        "mmap",
+        "mprotect",
+        "munmap",
+        "brk",
+        "rt_sigaction",
+        "rt_sigprocmask",
+        "rt_sigreturn",
+        "ioctl",
+        "nanosleep",
+        "select",
+        "mmap2",
+        "madvise",
+        "exit_group",
+        "exit"
+      ],
       "action": "SCMP_ACT_ALLOW"
     }
   ]
@@ -75,9 +103,9 @@ A seccomp profile is a JSON file that describes the allowed syscalls:
 
 The structure:
 
-* **`defaultAction`** — what to do for syscalls not explicitly listed. `SCMP_ACT_ERRNO` returns an error; `SCMP_ACT_KILL` kills the process.
-* **`architectures`** — which CPU architectures the profile applies to.
-* **`syscalls`** — list of rules. Each rule has syscall names and an action.
+- **`defaultAction`** — what to do for syscalls not explicitly listed. `SCMP_ACT_ERRNO` returns an error; `SCMP_ACT_KILL` kills the process.
+- **`architectures`** — which CPU architectures the profile applies to.
+- **`syscalls`** — list of rules. Each rule has syscall names and an action.
 
 A **whitelist** profile has `defaultAction: SCMP_ACT_ERRNO` and explicit `SCMP_ACT_ALLOW` rules for allowed syscalls. A **blacklist** profile has `defaultAction: SCMP_ACT_ALLOW` and explicit `SCMP_ACT_ERRNO` rules for denied syscalls.
 
@@ -94,20 +122,20 @@ metadata: { name: myapp }
 spec:
   securityContext:
     seccompProfile:
-      type: RuntimeDefault        # or Localhost or Unconfined
+      type: RuntimeDefault # or Localhost or Unconfined
   containers:
-  - name: app
-    image: myapp:1.0
-    securityContext:
-      seccompProfile:
-        type: RuntimeDefault
+    - name: app
+      image: myapp:1.0
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
 ```
 
 Three values for `type`:
 
-* **`Unconfined`** — no seccomp (the default). All syscalls allowed.
-* **`RuntimeDefault`** — use the container runtime's default seccomp profile. This is a **safe superset** of syscalls the runtime considers safe.
-* **`Localhost`** — use a custom profile loaded from the node (in `/var/lib/kubelet/seccomp/<name>.json`).
+- **`Unconfined`** — no seccomp (the default). All syscalls allowed.
+- **`RuntimeDefault`** — use the container runtime's default seccomp profile. This is a **safe superset** of syscalls the runtime considers safe.
+- **`Localhost`** — use a custom profile loaded from the node (in `/var/lib/kubelet/seccomp/<name>.json`).
 
 PSS `restricted` requires `seccompProfile.type: RuntimeDefault` or `Localhost` (no `Unconfined`).
 
@@ -119,8 +147,8 @@ The container runtime (containerd, CRI-O) has a **default seccomp profile** that
 
 The profile is in the runtime's source:
 
-* **containerd's default** — a JSON file in the containerd repo.
-* **CRI-O's default** — a JSON file in the CRI-O repo.
+- **containerd's default** — a JSON file in the containerd repo.
+- **CRI-O's default** — a JSON file in the CRI-O repo.
 
 These profiles are **very similar** (whitelist of ~50 syscalls). They allow the common syscalls and deny the rest.
 
@@ -146,9 +174,9 @@ The downside: **the profile is on every node**. With managed clusters (EKS, GKE)
 
 Writing a seccomp profile by hand is tedious. Tools:
 
-* **bashica** (spd-tx) — generates from a process's actual syscalls. Run the app, capture the syscalls, generate a profile.
-* **kubectl-debug** (Bhojwani) — runs in a pod, captures syscalls, generates a profile.
-* **Kubernetes Security Profile Operator (SPO)** — generates and manages seccomp profiles as k8s objects.
+- **bashica** (spd-tx) — generates from a process's actual syscalls. Run the app, capture the syscalls, generate a profile.
+- **kubectl-debug** (Bhojwani) — runs in a pod, captures syscalls, generates a profile.
+- **Kubernetes Security Profile Operator (SPO)** — generates and manages seccomp profiles as k8s objects.
 
 The SPO is the **k8s-native way** to manage seccomp profiles. It:
 
@@ -163,8 +191,8 @@ metadata: { name: my-app }
 spec:
   defaultAction: SCMP_ACT_ERRNO
   syscalls:
-  - names: [read, write, open, ...]
-    action: SCMP_ACT_ALLOW
+    - names: [read, write, open, ...]
+      action: SCMP_ACT_ALLOW
 ```
 
 The SPO controller makes the profile available to all nodes. The Pod references it:
@@ -172,17 +200,17 @@ The SPO controller makes the profile available to all nodes. The Pod references 
 ```yaml
 seccompProfile:
   type: Localhost
-  localhostProfile: my-app.json    # matches the SPO's name
+  localhostProfile: my-app.json # matches the SPO's name
 ```
 
 ## 8. AppArmor — the File + Capability Filter
 
 **AppArmor** is a Linux Security Module that restricts:
 
-* **File access** — which files the process can read / write / execute.
-* **Capabilities** — which Linux capabilities the process has.
-* **Network** — which network operations the process can do.
-* **Mount** — which mount operations are allowed.
+- **File access** — which files the process can read / write / execute.
+- **Capabilities** — which Linux capabilities the process has.
+- **Network** — which network operations the process can do.
+- **Mount** — which mount operations are allowed.
 
 AppArmor is **path-based** — rules are tied to file paths. SELinux (the alternative) is **label-based** — rules are tied to inode labels. AppArmor is simpler; SELinux is more granular.
 
@@ -223,12 +251,12 @@ profile myapp flags=(attach_disconnected) {
 
 The structure:
 
-* **`profile myapp flags=(attach_disconnected)`** — the profile name and flags. `attach_disconnected` applies the profile to threads that don't have one.
-* **`#include <abstractions/base>`** — common rules (read /lib, etc.).
-* **Path rules** — `path permission,` (r = read, w = write, x = execute, etc.).
-* **`deny`** — explicit denials.
-* **`network`** — network rules.
-* **`capability`** — Linux capabilities.
+- **`profile myapp flags=(attach_disconnected)`** — the profile name and flags. `attach_disconnected` applies the profile to threads that don't have one.
+- **`#include <abstractions/base>`** — common rules (read /lib, etc.).
+- **Path rules** — `path permission,` (r = read, w = write, x = execute, etc.).
+- **`deny`** — explicit denials.
+- **`network`** — network rules.
+- **`capability`** — Linux capabilities.
 
 A profile is loaded into the kernel with `apparmor_parser`. Once loaded, the profile is in `/sys/kernel/security/apparmor/profiles`.
 
@@ -245,15 +273,15 @@ metadata:
     container.apparmor.security.beta.kubernetes.io/app: runtime/default
 spec:
   containers:
-  - name: app
-    image: myapp:1.0
+    - name: app
+      image: myapp:1.0
 ```
 
 The annotation key is `container.apparmor.security.beta.kubernetes.io/<container-name>`. The value is:
 
-* **`runtime/default`** — use the runtime's default profile.
-* **`localhost/<profile-name>`** — use a profile loaded on the node (in `/etc/apparmor.d/<name>`).
-* **`unconfined`** — no AppArmor.
+- **`runtime/default`** — use the runtime's default profile.
+- **`localhost/<profile-name>`** — use a profile loaded on the node (in `/etc/apparmor.d/<name>`).
+- **`unconfined`** — no AppArmor.
 
 The profile is **loaded on the node** (not in the Pod spec). The kubelet sets the profile via the container runtime.
 
@@ -267,25 +295,25 @@ AppArmor profiles are loaded on each node:
 
 For k8s-native management:
 
-* **AppArmor profiles as a DaemonSet** — a DaemonSet that loads profiles on each node.
-* **Security Profiles Operator (SPO)** — k8s-native AppArmor + seccomp management.
+- **AppArmor profiles as a DaemonSet** — a DaemonSet that loads profiles on each node.
+- **Security Profiles Operator (SPO)** — k8s-native AppArmor + seccomp management.
 
 ## 11. Seccomp vs AppArmor — When to Use Which
 
-| | Seccomp | AppArmor |
-|---|---|---|
-| **Restricts** | Syscalls | Files, capabilities, network, mount |
-| **Granularity** | Per-syscall | Per-path |
-| **Profile format** | JSON | Text |
-| **Common in k8s** | Very (PSS `restricted` requires it) | Less (annotation-based, OS-dependent) |
-| **OS support** | All Linux | Debian / Ubuntu primarily |
-| **Equivalent on RHEL** | (seccomp itself) | SELinux (different syntax) |
+|                        | Seccomp                             | AppArmor                              |
+| ---------------------- | ----------------------------------- | ------------------------------------- |
+| **Restricts**          | Syscalls                            | Files, capabilities, network, mount   |
+| **Granularity**        | Per-syscall                         | Per-path                              |
+| **Profile format**     | JSON                                | Text                                  |
+| **Common in k8s**      | Very (PSS `restricted` requires it) | Less (annotation-based, OS-dependent) |
+| **OS support**         | All Linux                           | Debian / Ubuntu primarily             |
+| **Equivalent on RHEL** | (seccomp itself)                    | SELinux (different syntax)            |
 
 The decision:
 
-* **Use seccomp** as a baseline. It's supported everywhere and is the PSS `restricted` requirement.
-* **Use AppArmor** for additional path-based restrictions on Debian / Ubuntu. SELinux on RHEL.
-* **Use both** for defense-in-depth (a syscall that bypasses seccomp is still caught by AppArmor, and vice versa).
+- **Use seccomp** as a baseline. It's supported everywhere and is the PSS `restricted` requirement.
+- **Use AppArmor** for additional path-based restrictions on Debian / Ubuntu. SELinux on RHEL.
+- **Use both** for defense-in-depth (a syscall that bypasses seccomp is still caught by AppArmor, and vice versa).
 
 For most clusters, **seccomp `RuntimeDefault` is enough**. AppArmor is added when there's a specific threat (e.g. "the app should never read /etc/shadow").
 
@@ -335,7 +363,10 @@ A seccomp profile that denies everything except a small whitelist:
 {
   "defaultAction": "SCMP_ACT_ERRNO",
   "syscalls": [
-    {"names": ["read", "write", "exit", "exit_group"], "action": "SCMP_ACT_ALLOW"}
+    {
+      "names": ["read", "write", "exit", "exit_group"],
+      "action": "SCMP_ACT_ALLOW"
+    }
   ]
 }
 ```
@@ -467,7 +498,7 @@ dmesg | grep -i apparmor
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — where seccomp / AppArmor are set
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — requires `RuntimeDefault` seccomp for `restricted`
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as stronger alternatives
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco / Tetragon detect syscall anomalies
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — where seccomp / AppArmor are set
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — requires `RuntimeDefault` seccomp for `restricted`
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as stronger alternatives
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco / Tetragon detect syscall anomalies

@@ -22,6 +22,7 @@ Shift Left:
 ```
 
 **Cost of fixing a bug by phase:**
+
 ```
 Design ──────────────────────────── 1x
 Code ───────────────────────────10x
@@ -36,12 +37,12 @@ Prod    ────────────────────────
 
 ### Security — DevSecOps
 
-| Without Shift Left | With Shift Left |
-|-------------------|-----------------|
-| Pen test in staging | SAST/DAST in CI |
+| Without Shift Left             | With Shift Left                 |
+| ------------------------------ | ------------------------------- |
+| Pen test in staging            | SAST/DAST in CI                 |
 | Security review before release | Threat modeling in design phase |
-| Manual security audit | Automated CVE scanning |
-| Secrets in prod | Vault + secret scanning in PR |
+| Manual security audit          | Automated CVE scanning          |
+| Secrets in prod                | Vault + secret scanning in PR   |
 
 ```yaml
 # GitHub Actions — SAST in CI
@@ -55,20 +56,20 @@ Prod    ────────────────────────
 
 ### Testing — TDD / E2E Earlier
 
-| Without Shift Left | With Shift Left |
-|-------------------|-----------------|
-| E2E tests only in staging | Unit + integration in dev |
-| Manual QA gate | Automated QA in PR |
-| Performance test at release | Load testing in CI |
-| Accessibility ignored | a11y checks in CI |
+| Without Shift Left          | With Shift Left           |
+| --------------------------- | ------------------------- |
+| E2E tests only in staging   | Unit + integration in dev |
+| Manual QA gate              | Automated QA in PR        |
+| Performance test at release | Load testing in CI        |
+| Accessibility ignored       | a11y checks in CI         |
 
 ### Observability — Design-Time
 
-| Without Shift Left | With Shift Left |
-|-------------------|-----------------|
-| Logs added after bugs | Structured logging in design |
-| Dashboards built post-launch | SLOs defined in design phase |
-| Alerting is reactive | Proactive alerts from SLO definitions |
+| Without Shift Left           | With Shift Left                       |
+| ---------------------------- | ------------------------------------- |
+| Logs added after bugs        | Structured logging in design          |
+| Dashboards built post-launch | SLOs defined in design phase          |
+| Alerting is reactive         | Proactive alerts from SLO definitions |
 
 ---
 
@@ -105,15 +106,19 @@ ADRs shift **design decisions** left — record the why, not just the what.
 # ADR-001: Use PostgreSQL instead of MongoDB
 
 ## Status: Accepted
+
 ## Date: 2025-05-24
 
 ## Context
+
 Need a relational store for order items with ACID transactions.
 
 ## Decision
+
 PostgreSQL 16 with psycopg3.
 
 ## Consequences
+
 - ✅ ACID compliance for order processing
 - ✅ Schema enforcement reduces bugs
 - ❌ Need migration strategy for schema changes
@@ -130,24 +135,24 @@ Design ──▶ IaC Scan ──▶ Container Scan ──▶ Wazuh FIM ──▶
          (checkov)    (trivy)           (in-prod)     (alerting)
 ```
 
-| Phase | Tool | What It Catches |
-|-------|------|-----------------|
-| IaC (Terraform) | checkov | OpenSecurity S3, IAM misconfigs |
-| Container build | trivy | CVE in base images |
-| K8s deploy | kyverno | Policy violations before apply |
-| Runtime | Wazuh FIM | File integrity changes |
-| Runtime | GuardDuty | AWS API anomaly detection |
+| Phase           | Tool      | What It Catches                 |
+| --------------- | --------- | ------------------------------- |
+| IaC (Terraform) | checkov   | OpenSecurity S3, IAM misconfigs |
+| Container build | trivy     | CVE in base images              |
+| K8s deploy      | kyverno   | Policy violations before apply  |
+| Runtime         | Wazuh FIM | File integrity changes          |
+| Runtime         | GuardDuty | AWS API anomaly detection       |
 
 ---
 
 ## Common Pitfalls
 
-| Pitfall | Why It's a Problem | Fix |
-|---------|-------------------|-----|
-| Shift everything left | Slows down dev, team ignores gates | Shift high-value, high-signal items only |
-| No owner for security in design | Security is an afterthought | Add security review to design checklist |
-| Gates without action | Scan runs, nobody cares | Make gates blocking for critical issues |
-| No feedback loop | Same bugs keep slipping through | Track bug origin → fix the gate |
+| Pitfall                         | Why It's a Problem                 | Fix                                      |
+| ------------------------------- | ---------------------------------- | ---------------------------------------- |
+| Shift everything left           | Slows down dev, team ignores gates | Shift high-value, high-signal items only |
+| No owner for security in design | Security is an afterthought        | Add security review to design checklist  |
+| Gates without action            | Scan runs, nobody cares            | Make gates blocking for critical issues  |
+| No feedback loop                | Same bugs keep slipping through    | Track bug origin → fix the gate          |
 
 ---
 
@@ -155,14 +160,14 @@ Design ──▶ IaC Scan ──▶ Container Scan ──▶ Wazuh FIM ──▶
 
 **Shift Left = catch issues early = cheaper to fix**
 
-| Activity | Traditional Phase | Shifted Phase |
-|----------|-----------------|---------------|
-| Security review | Pre-release | Design |
-| SAST | Staging | CI (PR) |
-| Load testing | Pre-release | CI |
-| Accessibility | Staging | CI |
-| Chaos engineering | Prod | Staging |
-| SLO definition | Post-launch | Design |
+| Activity          | Traditional Phase | Shifted Phase |
+| ----------------- | ----------------- | ------------- |
+| Security review   | Pre-release       | Design        |
+| SAST              | Staging           | CI (PR)       |
+| Load testing      | Pre-release       | CI            |
+| Accessibility     | Staging           | CI            |
+| Chaos engineering | Prod              | Staging       |
+| SLO definition    | Post-launch       | Design        |
 
 ---
 

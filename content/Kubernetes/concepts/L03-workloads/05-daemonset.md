@@ -85,28 +85,28 @@ This bypasses the normal scheduler but respects taints, tolerations, and node se
 
 A DaemonSet is the right answer when your workload has the property **"there must be one of me on every node"** (or every node matching a criteria).
 
-| Use case | Why DS |
-|---|---|
-| **Node-level log shippers** (Fluent Bit, Filebeat, Promtail, Vector) | Each node has unique local logs to read |
-| **Node-level metrics agents** (node-exporter, Datadog agent, Dynatrace OneAgent) | Each node has unique metrics to emit |
-| **Cluster networking components** (CNI agents like Calico, Cilium; kube-proxy replacements) | The CNI needs to be on every node to function |
-| **Storage daemons** (CSI drivers like Glusterd, Ceph, local-path-provisioner) | The storage backend has a per-node agent |
-| **Node-level security agents** (Falco, Tracee, Wazuh agent) | Each node has unique kernel events to monitor |
-| **GPU drivers / device plugins** | Some hardware needs a per-node agent |
-| **Node-level debug tools** (e.g., a privileged toolbox Pod that's always there for SSH-style debugging) | A "break glass" Pod available on every node |
+| Use case                                                                                                | Why DS                                        |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Node-level log shippers** (Fluent Bit, Filebeat, Promtail, Vector)                                    | Each node has unique local logs to read       |
+| **Node-level metrics agents** (node-exporter, Datadog agent, Dynatrace OneAgent)                        | Each node has unique metrics to emit          |
+| **Cluster networking components** (CNI agents like Calico, Cilium; kube-proxy replacements)             | The CNI needs to be on every node to function |
+| **Storage daemons** (CSI drivers like Glusterd, Ceph, local-path-provisioner)                           | The storage backend has a per-node agent      |
+| **Node-level security agents** (Falco, Tracee, Wazuh agent)                                             | Each node has unique kernel events to monitor |
+| **GPU drivers / device plugins**                                                                        | Some hardware needs a per-node agent          |
+| **Node-level debug tools** (e.g., a privileged toolbox Pod that's always there for SSH-style debugging) | A "break glass" Pod available on every node   |
 
 ### The wrong use cases
 
 A DaemonSet is the **wrong** answer when:
 
-| Use case | Why NOT DS |
-|---|---|
-| **You want a fixed count of replicas** | Use a Deployment |
-| **You want stable network IDs and ordered deployment** | Use a StatefulSet |
-| **You want run-to-completion** | Use a Job |
-| **You want a scheduled workload** | Use a CronJob |
-| **You want a "per-customer" or "per-tenant" Pod** | The "per-X" unit isn't a node |
-| **The workload scales with traffic, not with nodes** | Use a Deployment with HPA |
+| Use case                                               | Why NOT DS                    |
+| ------------------------------------------------------ | ----------------------------- |
+| **You want a fixed count of replicas**                 | Use a Deployment              |
+| **You want stable network IDs and ordered deployment** | Use a StatefulSet             |
+| **You want run-to-completion**                         | Use a Job                     |
+| **You want a scheduled workload**                      | Use a CronJob                 |
+| **You want a "per-customer" or "per-tenant" Pod**      | The "per-X" unit isn't a node |
+| **The workload scales with traffic, not with nodes**   | Use a Deployment with HPA     |
 
 ### The decision tree
 
@@ -169,25 +169,25 @@ metadata:
   name: fluentbit
   namespace: logging
 spec:
-  selector:                              # CRITICAL — like ReplicaSet
+  selector: # CRITICAL — like ReplicaSet
     matchLabels:
       app: fluentbit
-  template:                              # Pod template
+  template: # Pod template
     metadata:
       labels:
         app: fluentbit
     spec:
       containers:
-      - name: fluentbit
-        image: fluent/fluent-bit:3.0
-        volumeMounts:
-        - name: varlog
-          mountPath: /var/log
+        - name: fluentbit
+          image: fluent/fluent-bit:3.0
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
       volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log
-          type: Directory
+        - name: varlog
+          hostPath:
+            path: /var/log
+            type: Directory
 ```
 
 Full anatomy:
@@ -204,84 +204,84 @@ spec:
   selector:
     matchLabels:
       app: node-exporter
-  updateStrategy:                        # see section 6
+  updateStrategy: # see section 6
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-  minReadySeconds: 0                     # min time a Pod must be Ready before considered ready
-  revisionHistoryLimit: 10               # how many old ReplicaSets to keep
+  minReadySeconds: 0 # min time a Pod must be Ready before considered ready
+  revisionHistoryLimit: 10 # how many old ReplicaSets to keep
   template:
     metadata:
       labels:
         app: node-exporter
     spec:
       # Pod scheduling
-      nodeSelector:                      # restrict to nodes with this label
+      nodeSelector: # restrict to nodes with this label
         node-role.kubernetes.io/worker: ""
-      affinity:                          # richer constraints
+      affinity: # richer constraints
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/os
-                operator: In
-                values: ["linux"]
-      tolerations:                       # tolerate node taints
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: NoSchedule
-      priorityClassName: system-node-critical  # high priority for system DS
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values: ["linux"]
+      tolerations: # tolerate node taints
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      priorityClassName: system-node-critical # high priority for system DS
       # Pod spec
       serviceAccountName: node-exporter
-      hostNetwork: true                  # use node's network (often true for DS)
+      hostNetwork: true # use node's network (often true for DS)
       hostPID: false
       containers:
-      - name: node-exporter
-        image: prom/node-exporter:v1.7.0
-        args:
-        - --path.procfs=/host/proc
-        - --path.sysfs=/host/sys
-        - --path.rootfs=/host/root
-        - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
-        ports:
-        - name: metrics
-          containerPort: 9100
-          hostPort: 9100                  # expose on the node's IP
-        resources:
-          requests:
-            cpu: 100m
-            memory: 30Mi
-          limits:
-            cpu: 200m
-            memory: 50Mi
-        readinessProbe:
-          httpGet:
-            path: /
-            port: metrics
-          periodSeconds: 10
-        securityContext:
-          runAsNonRoot: false             # node-exporter needs root for /proc, /sys
-          hostPID: true                   # see /host/proc
-        volumeMounts:
-        - name: proc
-          mountPath: /host/proc
-          readOnly: true
-        - name: sys
-          mountPath: /host/sys
-          readOnly: true
-        - name: root
-          mountPath: /host/root
-          readOnly: true
+        - name: node-exporter
+          image: prom/node-exporter:v1.7.0
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+          ports:
+            - name: metrics
+              containerPort: 9100
+              hostPort: 9100 # expose on the node's IP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 30Mi
+            limits:
+              cpu: 200m
+              memory: 50Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: metrics
+            periodSeconds: 10
+          securityContext:
+            runAsNonRoot: false # node-exporter needs root for /proc, /sys
+            hostPID: true # see /host/proc
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              readOnly: true
       volumes:
-      - name: proc
-        hostPath:
-          path: /proc
-      - name: sys
-        hostPath:
-          path: /sys
-      - name: root
-        hostPath:
-          path: /
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
 status:
   desiredNumberScheduled: 5
   currentNumberScheduled: 5
@@ -295,15 +295,15 @@ status:
 
 ### Required fields
 
-| Field | Required | Why |
-|---|---|---|
-| `apiVersion` | yes | Always `apps/v1` |
-| `kind` | yes | Must be `DaemonSet` |
-| `metadata.name` | yes | DNS-1123 label |
-| `spec.selector` | yes | Determines which Pods the DS owns |
-| `spec.template` | yes | Pod template |
-| `spec.updateStrategy` | no (default `RollingUpdate`) | How the DS updates its Pods |
-| `spec.template.spec.nodeSelector` | no | Restrict which nodes the DS runs on |
+| Field                             | Required                     | Why                                 |
+| --------------------------------- | ---------------------------- | ----------------------------------- |
+| `apiVersion`                      | yes                          | Always `apps/v1`                    |
+| `kind`                            | yes                          | Must be `DaemonSet`                 |
+| `metadata.name`                   | yes                          | DNS-1123 label                      |
+| `spec.selector`                   | yes                          | Determines which Pods the DS owns   |
+| `spec.template`                   | yes                          | Pod template                        |
+| `spec.updateStrategy`             | no (default `RollingUpdate`) | How the DS updates its Pods         |
+| `spec.template.spec.nodeSelector` | no                           | Restrict which nodes the DS runs on |
 
 ### The selector constraint
 
@@ -322,7 +322,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        node-role.kubernetes.io/worker: ""    # only nodes with this label
+        node-role.kubernetes.io/worker: "" # only nodes with this label
 ```
 
 You can also use `kubernetes.io/os: linux` to exclude Windows nodes, or `kubernetes.io/arch: amd64` to exclude ARM nodes.
@@ -337,16 +337,16 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: disktype
-                operator: In
-                values: ["ssd"]
-              - key: kubernetes.io/hostname
-                operator: NotIn
-                values: ["legacy-1", "legacy-2"]
+              - matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values: ["ssd"]
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values: ["legacy-1", "legacy-2"]
 ```
 
-`nodeAffinity` supports AND, OR, In, NotIn, Exists, DoesNotExist — the full Pod-affinity expression language. See [[Kubernetes/concepts/L06-scheduling-scaling|L06 — Scheduling and Scaling]] for details.
+`nodeAffinity` supports AND, OR, In, NotIn, Exists, DoesNotExist — the full Pod-affinity expression language. See [[Kubernetes/concepts/L06-scheduling-scaling/00-README|L06 — Scheduling and Scaling]] for details.
 
 ### Per-node exclusion
 
@@ -389,12 +389,12 @@ spec:
   template:
     spec:
       tolerations:
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: NoSchedule
-      - key: node-role.kubernetes.io/master     # older clusters
-        operator: Exists
-        effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master # older clusters
+          operator: Exists
+          effect: NoSchedule
 ```
 
 The result: the DS runs on every node, including control-plane. If you don't add the toleration, the DS runs only on worker nodes.
@@ -413,9 +413,9 @@ Some DaemonSets (e.g., a debug agent, a security scanner) need to survive a `kub
 
 ```yaml
 tolerations:
-- key: node.kubernetes.io/unschedulable
-  operator: Exists
-  effect: NoSchedule
+  - key: node.kubernetes.io/unschedulable
+    operator: Exists
+    effect: NoSchedule
 ```
 
 This is appropriate for system-critical DS like CNI plugins, but not for general-purpose agents.
@@ -439,7 +439,7 @@ spec:
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1         # at most 1 Pod down at a time
+      maxUnavailable: 1 # at most 1 Pod down at a time
 ```
 
 `maxSurge` is supported as of k8s 1.22, but only when your cluster supports it. With `maxSurge: 1`, a new Pod is created before the old one is killed, ensuring no gap in coverage.
@@ -490,12 +490,12 @@ This gives you complete control over the rollout order and timing.
 
 ### Choosing a strategy
 
-| Need | Strategy |
-|---|---|
-| Standard log/metrics shippers, low impact | RollingUpdate with `maxUnavailable: 1` |
-| Critical: zero gap in coverage | RollingUpdate with `maxSurge: 1` (k8s 1.22+) |
-| GPU drivers, kernel modules, ordered updates | OnDelete |
-| Canary / staged rollout | OnDelete + manual deletion per node |
+| Need                                         | Strategy                                     |
+| -------------------------------------------- | -------------------------------------------- |
+| Standard log/metrics shippers, low impact    | RollingUpdate with `maxUnavailable: 1`       |
+| Critical: zero gap in coverage               | RollingUpdate with `maxSurge: 1` (k8s 1.22+) |
+| GPU drivers, kernel modules, ordered updates | OnDelete                                     |
+| Canary / staged rollout                      | OnDelete + manual deletion per node          |
 
 ---
 
@@ -528,13 +528,13 @@ kubectl get ds <name> -o jsonpath='{.status}'
 
 ```yaml
 status:
-  desiredNumberScheduled: 5     # total nodes that should have a Pod
-  currentNumberScheduled: 5     # Pods scheduled
-  numberReady: 5                # Pods that are Ready
-  updatedNumberScheduled: 5     # Pods running the new template
-  numberUnavailable: 0          # Pods not Ready
-  numberMisscheduled: 0         # Pods on nodes that no longer match the DS
-  observedGeneration: 2         # last DS spec generation seen
+  desiredNumberScheduled: 5 # total nodes that should have a Pod
+  currentNumberScheduled: 5 # Pods scheduled
+  numberReady: 5 # Pods that are Ready
+  updatedNumberScheduled: 5 # Pods running the new template
+  numberUnavailable: 0 # Pods not Ready
+  numberMisscheduled: 0 # Pods on nodes that no longer match the DS
+  observedGeneration: 2 # last DS spec generation seen
 ```
 
 If `numberReady == desiredNumberScheduled` and `updatedNumberScheduled == desiredNumberScheduled`, the rollout is complete.
@@ -593,10 +593,10 @@ spec:
     spec:
       hostNetwork: true
       containers:
-      - name: node-exporter
-        ports:
-        - containerPort: 9100
-          hostPort: 9100
+        - name: node-exporter
+          ports:
+            - containerPort: 9100
+              hostPort: 9100
 ```
 
 Why use it:
@@ -619,25 +619,25 @@ The Pod mounts a directory from the node's filesystem.
 
 ```yaml
 volumes:
-- name: varlog
-  hostPath:
-    path: /var/log
-    type: DirectoryOrCreate
+  - name: varlog
+    hostPath:
+      path: /var/log
+      type: DirectoryOrCreate
 ```
 
 The Pod sees the node's `/var/log` as if it were its own. This is how log shippers read local logs.
 
 `type` controls behavior on the node:
 
-| Type | Behavior |
-|---|---|
+| Type                | Behavior                                                   |
+| ------------------- | ---------------------------------------------------------- |
 | `DirectoryOrCreate` | Use existing dir, or create empty dir (default if omitted) |
-| `Directory` | Must exist, fail if missing |
-| `FileOrCreate` | Use existing file, or create empty file |
-| `File` | Must exist, fail if missing |
-| `Socket` | Must be a Unix socket |
-| `CharDevice` | Must be a char device |
-| `BlockDevice` | Must be a block device |
+| `Directory`         | Must exist, fail if missing                                |
+| `FileOrCreate`      | Use existing file, or create empty file                    |
+| `File`              | Must exist, fail if missing                                |
+| `Socket`            | Must be a Unix socket                                      |
+| `CharDevice`        | Must be a char device                                      |
+| `BlockDevice`       | Must be a block device                                     |
 
 The `DirectoryOrCreate` default can mask configuration mistakes. Use `Directory` if you need to ensure the host path exists.
 
@@ -647,8 +647,8 @@ The Pod shares the node's PID or IPC namespace.
 
 ```yaml
 spec:
-  hostPID: true              # Pod can see all host processes (ps aux shows host PIDs)
-  hostIPC: true              # Pod shares SysV IPC with the host
+  hostPID: true # Pod can see all host processes (ps aux shows host PIDs)
+  hostIPC: true # Pod shares SysV IPC with the host
 ```
 
 `hostPID: true` is needed for agents that watch host processes (e.g., node-exporter, security tools). It's a **significant security risk** — a compromised Pod can inspect every process on the node. Use it only for trusted, security-reviewed DS Pods.
@@ -679,11 +679,11 @@ DaemonSet Pods run on **every node**. Their resource requests are summed across 
 
 ### The math
 
-| DS requests | Cluster size | Total reserved |
-|---|---|---|
-| 100m CPU, 128Mi memory | 10 nodes | 1 CPU, 1.28Gi |
-| 200m CPU, 256Mi memory | 100 nodes | 20 CPU, 25.6Gi |
-| 500m CPU, 512Mi memory | 1000 nodes | 500 CPU, 512Gi |
+| DS requests            | Cluster size | Total reserved |
+| ---------------------- | ------------ | -------------- |
+| 100m CPU, 128Mi memory | 10 nodes     | 1 CPU, 1.28Gi  |
+| 200m CPU, 256Mi memory | 100 nodes    | 20 CPU, 25.6Gi |
+| 500m CPU, 512Mi memory | 1000 nodes   | 500 CPU, 512Gi |
 
 A "small" DS that asks for 500m CPU and you have 100 nodes = **50 cores reserved cluster-wide**, just for that one DS.
 
@@ -764,9 +764,9 @@ To keep a DS running during drain, add:
 
 ```yaml
 tolerations:
-- key: node.kubernetes.io/unschedulable
-  operator: Exists
-  effect: NoSchedule
+  - key: node.kubernetes.io/unschedulable
+    operator: Exists
+    effect: NoSchedule
 ```
 
 This is appropriate for system-critical DS like CNI, kube-proxy replacements, and core security agents.
@@ -815,45 +815,45 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
       tolerations:
-      - operator: Exists
+        - operator: Exists
       containers:
-      - name: node-exporter
-        image: prom/node-exporter:v1.7.0
-        args:
-        - --path.procfs=/host/proc
-        - --path.sysfs=/host/sys
-        - --path.rootfs=/host/root
-        - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
-        ports:
-        - name: metrics
-          containerPort: 9100
-          hostPort: 9100
-        resources:
-          requests:
-            cpu: 100m
-            memory: 30Mi
-          limits:
-            cpu: 200m
-            memory: 50Mi
-        securityContext:
-          runAsNonRoot: false     # node-exporter needs root for /proc, /sys
-        volumeMounts:
-        - name: proc
-          mountPath: /host/proc
-          readOnly: true
-        - name: sys
-          mountPath: /host/sys
-          readOnly: true
-        - name: root
-          mountPath: /host/root
-          readOnly: true
+        - name: node-exporter
+          image: prom/node-exporter:v1.7.0
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+          ports:
+            - name: metrics
+              containerPort: 9100
+              hostPort: 9100
+          resources:
+            requests:
+              cpu: 100m
+              memory: 30Mi
+            limits:
+              cpu: 200m
+              memory: 50Mi
+          securityContext:
+            runAsNonRoot: false # node-exporter needs root for /proc, /sys
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              readOnly: true
       volumes:
-      - name: proc
-        hostPath: { path: /proc }
-      - name: sys
-        hostPath: { path: /sys }
-      - name: root
-        hostPath: { path: / }
+        - name: proc
+          hostPath: { path: /proc }
+        - name: sys
+          hostPath: { path: /sys }
+        - name: root
+          hostPath: { path: / }
 ```
 
 ### Recipe 2: Fluent Bit log shipper
@@ -881,36 +881,36 @@ spec:
     spec:
       serviceAccountName: fluentbit
       tolerations:
-      - operator: Exists
+        - operator: Exists
       containers:
-      - name: fluentbit
-        image: fluent/fluent-bit:3.0
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 100m
-            memory: 128Mi
-        volumeMounts:
-        - name: varlog
-          mountPath: /var/log
-          readOnly: true
-        - name: varlibdockercontainers
-          mountPath: /var/lib/docker/containers
-          readOnly: true
-        - name: fluentbit-config
-          mountPath: /fluent-bit/etc/
+        - name: fluentbit
+          image: fluent/fluent-bit:3.0
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: fluentbit-config
+              mountPath: /fluent-bit/etc/
       volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log
-      - name: varlibdockercontainers
-        hostPath:
-          path: /var/lib/docker/containers
-      - name: fluentbit-config
-        configMap:
-          name: fluentbit-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: fluentbit-config
+          configMap:
+            name: fluentbit-config
 ```
 
 ### Recipe 3: Calico CNI (production)
@@ -939,24 +939,24 @@ spec:
       priorityClassName: system-node-critical
       hostNetwork: true
       tolerations:
-      - effect: NoSchedule
-        operator: Exists
-      - key: CriticalAddonsOnly
-        operator: Exists
+        - effect: NoSchedule
+          operator: Exists
+        - key: CriticalAddonsOnly
+          operator: Exists
       containers:
-      - name: calico-node
-        image: docker.io/calico/node:v3.27.0
-        env:
-        - name: DATASTORE_TYPE
-          value: kubernetes
-        - name: WAIT_FOR_DATASTORE
-          value: "true"
-        securityContext:
-          privileged: true        # CNI needs to manipulate iptables, routes
-        resources:
-          requests:
-            cpu: 100m
-            memory: 64Mi
+        - name: calico-node
+          image: docker.io/calico/node:v3.27.0
+          env:
+            - name: DATASTORE_TYPE
+              value: kubernetes
+            - name: WAIT_FOR_DATASTORE
+              value: "true"
+          securityContext:
+            privileged: true # CNI needs to manipulate iptables, routes
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
 ```
 
 Note `privileged: true` — this is the exception, not the rule. The CNI Pod needs raw network access to set up routing on the node.
@@ -1181,15 +1181,15 @@ Rule: if the answer to "why per-node?" is "well, it's not really, but it's conve
 
 ## 14. Related Notes
 
-| Topic | Note |
-|---|---|
-| Pods (what a DS manages) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] |
-| Deployment (fixed-count workloads) | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]] |
-| StatefulSet (stable network IDs) | [[Kubernetes/concepts/L03-workloads/04-statefulsets\|04 — StatefulSets]] |
-| Job (run-to-completion) | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]] |
-| CronJob (scheduled jobs) | [[Kubernetes/concepts/L03-workloads/07-cronjob\|07 — CronJob]] |
-| Taints and tolerations | [[Kubernetes/concepts/L06-scheduling-scaling\|L06 — Scheduling and Scaling]] |
-| Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
-| Host network (CNI, kube-proxy) | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]] |
-| Static Pods (kubelet-managed) | [[Kubernetes/concepts/L03-workloads/11-static-pods\|11 — Static Pods]] |
+| Topic                              | Note                                                                                                           |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Pods (what a DS manages)           | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]]                                                       |
+| Deployment (fixed-count workloads) | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]]                                         |
+| StatefulSet (stable network IDs)   | [[Kubernetes/concepts/L03-workloads/04-statefulsets\|04 — StatefulSets]]                                       |
+| Job (run-to-completion)            | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]]                                                         |
+| CronJob (scheduled jobs)           | [[Kubernetes/concepts/L03-workloads/07-cronjob\|07 — CronJob]]                                                 |
+| Taints and tolerations             | [[Kubernetes/concepts/L06-scheduling-scaling/00-README\|L06 — Scheduling and Scaling]]                         |
+| Resource requests and limits       | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
+| Security context                   | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]]        |
+| Host network (CNI, kube-proxy)     | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]]                                |
+| Static Pods (kubelet-managed)      | [[Kubernetes/concepts/L03-workloads/11-static-pods\|11 — Static Pods]]                                         |

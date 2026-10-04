@@ -14,14 +14,14 @@ Due to the nature of SHA-1, even a minor change in the commit's content (e.g., a
 
 It's important to note that Git hashes are designed to be unique within a single repository. However, there's an extremely small chance of collision (two different commits having the same hash) across different repositories.
 
-***
+---
 
 Docker uses several types of hashes for images and containers, each with its own purpose and construction:
 
 **Image Hashes:**
 
-* **Image ID (also known as a Short ID):** This is a 12-character hexadecimal string that is a truncated version of the full image digest. It is not globally unique, but unique enough within a single Docker host.
-* **Image Digest (Content Addressable Hash):** This is a longer hash, usually prefixed with `sha256:`, representing the SHA-256 hash of the image's manifest (which includes information about layers, architecture, and configuration). This hash is globally unique and ensures the integrity of the image. It is used to pull specific images from registries.
+- **Image ID (also known as a Short ID):** This is a 12-character hexadecimal string that is a truncated version of the full image digest. It is not globally unique, but unique enough within a single Docker host.
+- **Image Digest (Content Addressable Hash):** This is a longer hash, usually prefixed with `sha256:`, representing the SHA-256 hash of the image's manifest (which includes information about layers, architecture, and configuration). This hash is globally unique and ensures the integrity of the image. It is used to pull specific images from registries.
 
 Docker calculates the image digest by hashing the following information:
 
@@ -31,22 +31,20 @@ Docker calculates the image digest by hashing the following information:
 
 **Container Hashes:**
 
-* **Container ID (also known as a Short ID):** Similar to the Image ID, it is a 12-character hexadecimal string that is unique to a container on a single Docker host. It is a truncated version of the full container ID.
-* **Full Container ID:** This is a longer, unique hash that identifies a specific container instance globally. It is typically not displayed directly but can be retrieved using `docker inspect`.
+- **Container ID (also known as a Short ID):** Similar to the Image ID, it is a 12-character hexadecimal string that is unique to a container on a single Docker host. It is a truncated version of the full container ID.
+- **Full Container ID:** This is a longer, unique hash that identifies a specific container instance globally. It is typically not displayed directly but can be retrieved using `docker inspect`.
 
 The container ID is not a hash of specific content like the image digest. Instead, it is generated randomly when the container is created to provide a unique identifier.
 
 **Key Points:**
 
-* **Uniqueness:** Image digests are designed to be globally unique, while image IDs and container IDs are only unique on a single host.
-* **Integrity:** Image digests ensure the integrity of the image content and can be used to verify that an image has not been tampered with.
-* **Mutability:** Container IDs are mutable and will change if a container is recreated, while image digests remain constant as long as the image content doesn't change.
+- **Uniqueness:** Image digests are designed to be globally unique, while image IDs and container IDs are only unique on a single host.
+- **Integrity:** Image digests ensure the integrity of the image content and can be used to verify that an image has not been tampered with.
+- **Mutability:** Container IDs are mutable and will change if a container is recreated, while image digests remain constant as long as the image content doesn't change.
 
 You can view image digests using `docker images --digests` and retrieve container IDs using `docker ps` or `docker inspect`.
 
-
-
-***
+---
 
 Hashes, regardless of the data's size, are designed to be fixed-length outputs. This is a fundamental property of cryptographic hash functions. Here's why a hash can be small even for large files:
 
@@ -74,7 +72,6 @@ Consider a SHA-256 hash, which produces a 256-bit (32-byte) output. There are fa
 
 The small size of hashes makes them ideal for:
 
-* **Data Integrity:** Verifying that a file hasn't been altered by comparing its hash to a previously recorded one.
-* **Quick Comparisons:** Quickly checking if two files are identical by comparing their hashes instead of the entire file contents.
-* **Security:** Storing passwords as hashes instead of plaintext, making it harder for attackers to recover the original passwords.
-
+- **Data Integrity:** Verifying that a file hasn't been altered by comparing its hash to a previously recorded one.
+- **Quick Comparisons:** Quickly checking if two files are identical by comparing their hashes instead of the entire file contents.
+- **Security:** Storing passwords as hashes instead of plaintext, making it harder for attackers to recover the original passwords.

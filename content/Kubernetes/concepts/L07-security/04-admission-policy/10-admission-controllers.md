@@ -1,6 +1,13 @@
+---
+title: "Admission Controllers"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Admission Controllers — Kubernetes reference and architecture guide."
+---
+
 # Admission Controllers
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/"_
 
 Admission controllers are the **plugins that run on the apiserver** for every request that creates, updates, or deletes a Kubernetes object. They run **after** authentication and authorization, but **before** the object is persisted to etcd. Two flavors: **mutating** (can modify the object) and **validating** (can reject it). This is where cluster policy actually gets enforced — PSS, OPA/Kyverno, default-resource-quota, and the dozens of built-in admission plugins all live here.
 
@@ -45,25 +52,25 @@ A request that fails admission **never reaches etcd**. The client gets a 4xx res
 
 Admission runs in **two phases**:
 
-* **Mutating phase** — first. Each mutating plugin/webhook can modify the request. The output of one plugin is the input of the next.
-* **Validating phase** — second. Validators can only accept or reject; they can't modify.
+- **Mutating phase** — first. Each mutating plugin/webhook can modify the request. The output of one plugin is the input of the next.
+- **Validating phase** — second. Validators can only accept or reject; they can't modify.
 
 Within each phase, plugins run in **a configured order**. The order matters when one plugin's mutation is the input to another's validation.
 
 ### 1.2 The request types that go through admission
 
-* **CREATE** — yes
-* **UPDATE** — yes
-* **DELETE** — yes (special admission: `ValidatingAdmissionWebhook` and `MutatingAdmissionWebhook` can intercept delete; most built-in plugins don't care)
-* **READ** — no
-* **WATCH** — no
-* **CONNECT** — no
-* **SUBRESOURCE** (e.g. `/scale`, `/status`, `/exec`) — yes, but the admission plugins see a synthetic object (the subresource, not the parent)
+- **CREATE** — yes
+- **UPDATE** — yes
+- **DELETE** — yes (special admission: `ValidatingAdmissionWebhook` and `MutatingAdmissionWebhook` can intercept delete; most built-in plugins don't care)
+- **READ** — no
+- **WATCH** — no
+- **CONNECT** — no
+- **SUBRESOURCE** (e.g. `/scale`, `/status`, `/exec`) — yes, but the admission plugins see a synthetic object (the subresource, not the parent)
 
 ## 2. Mutating vs Validating
 
-* **Mutating** — can modify the object (add labels, set defaults, inject sidecars). The modified object is what gets stored.
-* **Validating** — can only accept or reject. Used for policy enforcement ("reject if not compliant").
+- **Mutating** — can modify the object (add labels, set defaults, inject sidecars). The modified object is what gets stored.
+- **Validating** — can only accept or reject. Used for policy enforcement ("reject if not compliant").
 
 A plugin is **either** mutating **or** validating, not both. **Webhooks** can be configured as either type (via the `ValidatingAdmissionWebhook` or `MutatingAdmissionWebhook` API).
 
@@ -102,46 +109,46 @@ The apiserver ships with **30+ built-in admission plugins**. They're enabled via
 
 Default-enabled (since k8s 1.27+):
 
-| Plugin | Type | What it does |
-|---|---|---|
-| `CertificateApproval` | V | Approves CSRs as system:certificates.k8s.io |
-| `CertificateSigning` | V | Signs CSRs as system:certificates.k8s.io |
-| `CertificateSubjectRestriction` | V | Rejects CSRs with disallowed subject fields |
-| `DefaultIngressClass` | M | Sets `spec.ingressClassName` if unset |
-| `DefaultStorageClass` | M | Sets `spec.storageClassName` if unset |
-| `DefaultTolerationSeconds` | M | Sets 5-min toleration for not-ready / unreachable taints |
-| `LimitRanger` | V | Enforces LimitRange defaults and constraints |
-| `MutatingAdmissionWebhook` | M | Runs all `MutatingWebhookConfiguration`s |
-| `NamespaceLifecycle` | V | Prevents creating objects in terminating namespaces |
-| `NodeRestriction` | V | Restricts what kubelets can do (label, taint) |
-| `PersistentVolumeClaimResize` | V | Allows volume resize (or not, by feature gate) |
-| `PodSecurity` | V | Enforces Pod Security Standards (the `restricted` / `baseline` / `privileged` profiles) |
-| `Priority` | M | Sets priority from PriorityClass if unset |
-| `ResourceQuota` | V | Enforces ResourceQuota on the namespace |
-| `RuntimeClass` | M | Sets `RuntimeClass` defaults |
-| `ServiceAccount` | M | Sets the default ServiceAccount and ensures the SA exists |
-| `StorageObjectInUseProtection` | V | Prevents deleting PVs / PVCs in use |
-| `TaintNodesByCondition` | M | Adds taints to nodes with conditions |
-| `ValidatingAdmissionWebhook` | V | Runs all `ValidatingWebhookConfiguration`s |
+| Plugin                          | Type | What it does                                                                            |
+| ------------------------------- | ---- | --------------------------------------------------------------------------------------- |
+| `CertificateApproval`           | V    | Approves CSRs as system:certificates.k8s.io                                             |
+| `CertificateSigning`            | V    | Signs CSRs as system:certificates.k8s.io                                                |
+| `CertificateSubjectRestriction` | V    | Rejects CSRs with disallowed subject fields                                             |
+| `DefaultIngressClass`           | M    | Sets `spec.ingressClassName` if unset                                                   |
+| `DefaultStorageClass`           | M    | Sets `spec.storageClassName` if unset                                                   |
+| `DefaultTolerationSeconds`      | M    | Sets 5-min toleration for not-ready / unreachable taints                                |
+| `LimitRanger`                   | V    | Enforces LimitRange defaults and constraints                                            |
+| `MutatingAdmissionWebhook`      | M    | Runs all `MutatingWebhookConfiguration`s                                                |
+| `NamespaceLifecycle`            | V    | Prevents creating objects in terminating namespaces                                     |
+| `NodeRestriction`               | V    | Restricts what kubelets can do (label, taint)                                           |
+| `PersistentVolumeClaimResize`   | V    | Allows volume resize (or not, by feature gate)                                          |
+| `PodSecurity`                   | V    | Enforces Pod Security Standards (the `restricted` / `baseline` / `privileged` profiles) |
+| `Priority`                      | M    | Sets priority from PriorityClass if unset                                               |
+| `ResourceQuota`                 | V    | Enforces ResourceQuota on the namespace                                                 |
+| `RuntimeClass`                  | M    | Sets `RuntimeClass` defaults                                                            |
+| `ServiceAccount`                | M    | Sets the default ServiceAccount and ensures the SA exists                               |
+| `StorageObjectInUseProtection`  | V    | Prevents deleting PVs / PVCs in use                                                     |
+| `TaintNodesByCondition`         | M    | Adds taints to nodes with conditions                                                    |
+| `ValidatingAdmissionWebhook`    | V    | Runs all `ValidatingWebhookConfiguration`s                                              |
 
 ### 3.2 Some plugins that need to be explicitly enabled
 
-| Plugin | Type | Notes |
-|---|---|---|
-| `PodNodeSelector` | M | Constrains `nodeSelector` to a cluster-wide set |
-| `PodNodeConstraints` | V | Constrains `nodeName` to the Pod's node |
-| `ImagePolicyWebhook` | V | Calls out to an external image policy service (deprecated in favor of OPA / Kyverno) |
-| `EventRateLimit` | V | Caps the rate of events |
-| `ExtendedResourceToleration` | M | Taints for extended resources (GPU, etc.) |
-| `DenyServiceExternalIPs` | V | Rejects Services with `externalIPs` (k8s 1.27+) |
-| `PodSecurityPolicy` | V | PSP — deprecated, removed in 1.25 |
+| Plugin                       | Type | Notes                                                                                |
+| ---------------------------- | ---- | ------------------------------------------------------------------------------------ |
+| `PodNodeSelector`            | M    | Constrains `nodeSelector` to a cluster-wide set                                      |
+| `PodNodeConstraints`         | V    | Constrains `nodeName` to the Pod's node                                              |
+| `ImagePolicyWebhook`         | V    | Calls out to an external image policy service (deprecated in favor of OPA / Kyverno) |
+| `EventRateLimit`             | V    | Caps the rate of events                                                              |
+| `ExtendedResourceToleration` | M    | Taints for extended resources (GPU, etc.)                                            |
+| `DenyServiceExternalIPs`     | V    | Rejects Services with `externalIPs` (k8s 1.27+)                                      |
+| `PodSecurityPolicy`          | V    | PSP — deprecated, removed in 1.25                                                    |
 
 ### 3.3 The order
 
 Within a phase, plugins run in a specific order. The order is hard-coded in the apiserver. You can see the order in the apiserver's source. As a rule:
 
-* Mutating: defaults first, then user-driven mutations.
-* Validating: cheap checks first, then expensive (webhooks last).
+- Mutating: defaults first, then user-driven mutations.
+- Validating: cheap checks first, then expensive (webhooks last).
 
 ## 4. The `--enable-admission-plugins` Flag
 
@@ -151,14 +158,14 @@ The apiserver flag controls what's enabled:
 # /etc/kubernetes/manifests/kube-apiserver.yaml
 spec:
   containers:
-  - command:
-    - kube-apiserver
-    - --enable-admission-plugins=NodeRestriction,PodSecurity,...
-    - --disable-admission-plugins=...
+    - command:
+        - kube-apiserver
+        - --enable-admission-plugins=NodeRestriction,PodSecurity,...
+        - --disable-admission-plugins=...
 ```
 
-* `--enable-admission-plugins` — list of plugins to enable (additive to defaults).
-* `--disable-admission-plugins` — list of plugins to disable (overrides defaults).
+- `--enable-admission-plugins` — list of plugins to enable (additive to defaults).
+- `--disable-admission-plugins` — list of plugins to disable (overrides defaults).
 
 You can enable additional plugins. You can also disable defaults, but be careful — some are required for normal operation (e.g. `ServiceAccount` is required for Pod creation to work).
 
@@ -176,50 +183,50 @@ kubectl -n kube-system get pod kube-apiserver-<node> -o yaml | grep admission
 
 The built-in plugins are static. For custom logic, you use **dynamic admission** — webhooks. Two CRDs:
 
-* `MutatingWebhookConfiguration` — list of mutating webhooks.
-* `ValidatingWebhookConfiguration` — list of validating webhooks.
+- `MutatingWebhookConfiguration` — list of mutating webhooks.
+- `ValidatingWebhookConfiguration` — list of validating webhooks.
 
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata: { name: my-policy }
 webhooks:
-- name: validate.example.com
-  rules:
-  - operations: [CREATE, UPDATE]
-    apiGroups: [""]
-    apiVersions: ["v1"]
-    resources: ["pods"]
-  clientConfig:
-    service:
-      name: my-policy-server
-      namespace: my-ns
-      path: /validate
-      port: 443
-  admissionReviewVersions: ["v1"]
-  sideEffects: None
-  failurePolicy: Fail        # or Ignore
-  namespaceSelector:         # optional: limit to namespaces
-    matchLabels:
-      enforce: my-policy
-  objectSelector:            # optional: limit to objects
-    matchLabels:
-      enforce: my-policy
-  timeoutSeconds: 10
+  - name: validate.example.com
+    rules:
+      - operations: [CREATE, UPDATE]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    clientConfig:
+      service:
+        name: my-policy-server
+        namespace: my-ns
+        path: /validate
+        port: 443
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail # or Ignore
+    namespaceSelector: # optional: limit to namespaces
+      matchLabels:
+        enforce: my-policy
+    objectSelector: # optional: limit to objects
+      matchLabels:
+        enforce: my-policy
+    timeoutSeconds: 10
 ```
 
 The apiserver sees this CRD and **calls the webhook** for matching requests. The webhook is a server (typically a Pod) that returns an admission response.
 
 ### 5.1 The structure of a webhook configuration
 
-* **`rules`** — what requests the webhook applies to. Operations (CREATE / UPDATE / DELETE), api groups, versions, resources.
-* **`clientConfig`** — how to call the webhook. Either a service ref (Service in the cluster), URL, or a kubeconfig file.
-* **`admissionReviewVersions`** — the AdmissionReview API versions the webhook supports.
-* **`sideEffects`** — `None` (no side effects), `NoneOnDryRun`, or `Some` (has side effects). Affects whether dry-run works.
-* **`failurePolicy`** — `Fail` (reject the request if the webhook fails) or `Ignore` (allow if the webhook fails).
-* **`namespaceSelector` / `objectSelector`** — limit the webhook to specific namespaces or objects.
-* **`timeoutSeconds`** — how long to wait for the webhook to respond (default 10s).
-* **`reinvocationPolicy`** — whether the webhook is re-invoked if a previous mutator changed the object. `Never` or `IfNeeded`.
+- **`rules`** — what requests the webhook applies to. Operations (CREATE / UPDATE / DELETE), api groups, versions, resources.
+- **`clientConfig`** — how to call the webhook. Either a service ref (Service in the cluster), URL, or a kubeconfig file.
+- **`admissionReviewVersions`** — the AdmissionReview API versions the webhook supports.
+- **`sideEffects`** — `None` (no side effects), `NoneOnDryRun`, or `Some` (has side effects). Affects whether dry-run works.
+- **`failurePolicy`** — `Fail` (reject the request if the webhook fails) or `Ignore` (allow if the webhook fails).
+- **`namespaceSelector` / `objectSelector`** — limit the webhook to specific namespaces or objects.
+- **`timeoutSeconds`** — how long to wait for the webhook to respond (default 10s).
+- **`reinvocationPolicy`** — whether the webhook is re-invoked if a previous mutator changed the object. `Never` or `IfNeeded`.
 
 ## 6. The Webhook Flow
 
@@ -281,16 +288,16 @@ The webhook sees the full object. It can also see the `oldObject` (for UPDATE), 
   "response": {
     "uid": "...",
     "allowed": true,
-    "status": {"message": "..."},
+    "status": { "message": "..." },
     "patch": "base64-encoded-JSON-patch",
     "patchType": "JSONPatch"
   }
 }
 ```
 
-* `allowed: true` — the request is accepted.
-* `allowed: false` — the request is rejected; `status.message` is shown to the user.
-* `patch` — for mutating webhooks, a base64-encoded JSON patch to apply to the object.
+- `allowed: true` — the request is accepted.
+- `allowed: false` — the request is rejected; `status.message` is shown to the user.
+- `patch` — for mutating webhooks, a base64-encoded JSON patch to apply to the object.
 
 ## 7. Webhook Configuration in Depth
 
@@ -336,18 +343,18 @@ This is important for webhook ordering. If webhook A adds a label and webhook B 
 
 A webhook server is an HTTPS server that:
 
-* Listens on a port (typically 443).
-* Has a valid TLS cert (signed by a CA the apiserver trusts).
-* Accepts `AdmissionReview` requests.
-* Returns `AdmissionReview` responses.
+- Listens on a port (typically 443).
+- Has a valid TLS cert (signed by a CA the apiserver trusts).
+- Accepts `AdmissionReview` requests.
+- Returns `AdmissionReview` responses.
 
 Common implementations:
 
-* **Kubewatch** (Go) — a small framework.
-* **Kyverno** (Go) — runs as a Deployment, exposes a webhook for policy.
-* **OPA Gatekeeper** (Go) — runs as a Deployment, exposes a webhook for Rego-based policy.
-* **Cert-manager's policy webhook** — for image verification.
-* **Custom** — your own Go / Python / Rust / Node server.
+- **Kubewatch** (Go) — a small framework.
+- **Kyverno** (Go) — runs as a Deployment, exposes a webhook for policy.
+- **OPA Gatekeeper** (Go) — runs as a Deployment, exposes a webhook for Rego-based policy.
+- **Cert-manager's policy webhook** — for image verification.
+- **Custom** — your own Go / Python / Rust / Node server.
 
 The webhook server is a regular Pod (or Deployment) with a Service. The apiserver reaches it via the Service's DNS.
 
@@ -357,8 +364,8 @@ The webhook server is a regular Pod (or Deployment) with a Service. The apiserve
 
 What happens when the webhook is unreachable or errors?
 
-* `Fail` (default) — the request is rejected. "Admission webhook denied the request: failed calling webhook."
-* `Ignore` — the request is allowed. "Admission webhook errored, but `failurePolicy: Ignore`."
+- `Fail` (default) — the request is rejected. "Admission webhook denied the request: failed calling webhook."
+- `Ignore` — the request is allowed. "Admission webhook errored, but `failurePolicy: Ignore`."
 
 For **policy enforcement** (you want strict), use `Fail`. For **best-effort checks** (warnings, telemetry), use `Ignore`.
 
@@ -382,9 +389,9 @@ A slow webhook **slows down the entire apiserver**. The apiserver holds the requ
 
 `sideEffects` tells the apiserver whether the webhook has side effects.
 
-* `None` — no side effects. The webhook is safe to call during dry-run.
-* `NoneOnDryRun` — no side effects during dry-run, may have side effects on real requests.
-* `Some` — has side effects. Dry-run is **disabled** for this webhook.
+- `None` — no side effects. The webhook is safe to call during dry-run.
+- `NoneOnDryRun` — no side effects during dry-run, may have side effects on real requests.
+- `Some` — has side effects. Dry-run is **disabled** for this webhook.
 
 `None` is the safe default for policy webhooks. `Some` is for webhooks that mutate state (e.g. a webhook that records metrics — though typically this is done out-of-band).
 
@@ -454,9 +461,9 @@ Mutating only.
 
 `NodeRestriction` restricts what kubelets can do. A kubelet can only:
 
-* Modify its own Node and Pod status.
-* Add labels / taints to its own Node (with the `kubernetes.io/hostname` or `topology.kubernetes.io/zone` prefix).
-* Read most API resources (for `kubectl exec`, `kubectl logs`, etc.).
+- Modify its own Node and Pod status.
+- Add labels / taints to its own Node (with the `kubernetes.io/hostname` or `topology.kubernetes.io/zone` prefix).
+- Read most API resources (for `kubectl exec`, `kubectl logs`, etc.).
 
 `NodeRestriction` is enabled by default. It works with the Node authorizer.
 
@@ -477,26 +484,26 @@ A custom webhook is a server. The simplest implementation:
 
 Libraries (Go):
 
-* `k8s.io/apiserver/pkg/admission` — the apiserver's own admission framework.
-* `sigs.k8s.io/controller-runtime/pkg/webhook` — controller-runtime's webhook helper.
-* `github.com/kubernetes-sigs/kubebuilder` — generates the boilerplate.
+- `k8s.io/apiserver/pkg/admission` — the apiserver's own admission framework.
+- `sigs.k8s.io/controller-runtime/pkg/webhook` — controller-runtime's webhook helper.
+- `github.com/kubernetes-sigs/kubebuilder` — generates the boilerplate.
 
 Libraries (Python):
 
-* `kubernetes.client` — the official client, with admission helpers.
+- `kubernetes.client` — the official client, with admission helpers.
 
 Libraries (other):
 
-* Most languages have a way to consume the `AdmissionReview` JSON and produce a response.
+- Most languages have a way to consume the `AdmissionReview` JSON and produce a response.
 
 The webhook typically:
 
-* Runs on HTTPS (TLS cert required).
-* Listens for POST requests.
-* Parses the `AdmissionReview` body.
-* Returns the response.
-* Is deployed as a Deployment with a Service.
-* Has a cert-manager-issued cert (rotated automatically).
+- Runs on HTTPS (TLS cert required).
+- Listens for POST requests.
+- Parses the `AdmissionReview` body.
+- Returns the response.
+- Is deployed as a Deployment with a Service.
+- Has a cert-manager-issued cert (rotated automatically).
 
 ## 15. Operations and Debugging
 
@@ -627,7 +634,7 @@ A webhook is making admission slow.
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the most-used built-in admission
-* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — the policy-engine webhook
-* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — the k8s-native policy engine
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for admission failures
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the most-used built-in admission
+- [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — the policy-engine webhook
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — the k8s-native policy engine
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for admission failures

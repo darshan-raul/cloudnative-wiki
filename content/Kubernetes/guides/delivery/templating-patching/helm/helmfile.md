@@ -56,12 +56,12 @@ environments:
 releases:
   - name: myapp
     chart: ./charts/myapp
-    namespace: {{ .Environment.Name }}
+    namespace: { { .Environment.Name } }
     values:
       - values/{{ .Environment.Name }}.yaml
     secrets:
       - secrets/{{ .Environment.Name }}.yaml.gpg
-    installed: {{ .Environment.Name != "dev" || .Values.installMyapp }}
+    installed: { { .Environment.Name != "dev" || .Values.installMyapp } }
 ```
 
 ## Environment Configuration
@@ -126,7 +126,7 @@ releases:
     namespace: cache
     values:
       - values/redis.yaml
-    installed: {{ .Environment.Name != "dev" }}
+    installed: { { .Environment.Name != "dev" } }
 ```
 
 ### Conditional Release
@@ -135,7 +135,7 @@ releases:
 releases:
   - name: monitoring
     chart: prometheus-community/prometheus
-    installed: {{ .Values.enableMonitoring }}
+    installed: { { .Values.enableMonitoring } }
     namespace: monitoring
     values:
       - values/monitoring.yaml
@@ -167,9 +167,9 @@ releases:
     chart: ./charts/myapp
     values:
       - image:
-          repository: {{ requiredEnv "IMAGE_REPO" }}
-          tag: {{ .Environment.Name | toYaml | quote }}
-        replicaCount: {{ .Values.defaultReplicas | default 2 }}
+          repository: { { requiredEnv "IMAGE_REPO" } }
+          tag: { { .Environment.Name | toYaml | quote } }
+        replicaCount: { { .Values.defaultReplicas | default 2 } }
 ```
 
 ### Environment-Specific Secrets
@@ -180,7 +180,7 @@ releases:
     chart: ./charts/myapp
     secrets:
       - path: secrets/{{ .Environment.Name }}/db-creds.yaml
-        Encrypted: true  # helm-secrets required
+        Encrypted: true # helm-secrets required
 ```
 
 ## Multiple Environments
@@ -456,7 +456,7 @@ helmfile -e prod apply
 releases:
   - name: myapp
     chart: ./charts/myapp
-    atomic: true  # Rollback on failure
+    atomic: true # Rollback on failure
     timeout: 5m
     wait: true
     cleanupOnFail: true
@@ -501,12 +501,12 @@ helmfile -e prod apply --debug
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| `helmfile: command not found` | Install helmfile binary |
-| `multiple repositories with same name` | Check for duplicate entries |
-| `environment not found` | Check `environments` section |
-| `release not found` | Verify release name in `releases` |
+| Issue                                  | Solution                          |
+| -------------------------------------- | --------------------------------- |
+| `helmfile: command not found`          | Install helmfile binary           |
+| `multiple repositories with same name` | Check for duplicate entries       |
+| `environment not found`                | Check `environments` section      |
+| `release not found`                    | Verify release name in `releases` |
 
 ### Reset Environment
 

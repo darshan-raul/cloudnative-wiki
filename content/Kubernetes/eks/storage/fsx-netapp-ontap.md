@@ -57,15 +57,15 @@ metadata:
   name: app-with-fsx
 spec:
   containers:
-  - name: app
-    image: nginx
-    volumeMounts:
-    - mountPath: /data
-      name: fsx-volume
+    - name: app
+      image: nginx
+      volumeMounts:
+        - mountPath: /data
+          name: fsx-volume
   volumes:
-  - name: fsx-volume
-    persistentVolumeClaim:
-      claimName: fsx-ontap-claim
+    - name: fsx-volume
+      persistentVolumeClaim:
+        claimName: fsx-ontap-claim
 ```
 
 ## Key Features

@@ -48,12 +48,12 @@ sequenceDiagram
 
 ## Storage Access Modes Summary
 
-| Mode | Short | Node Scope | Backend Types | Typical Workload |
-| :--- | :--- | :--- | :--- | :--- |
-| **ReadWriteOnce** | `RWO` | Single node | Block storage (EBS, PD, Azure Disk, local path) | Databases (Postgres, MySQL, MongoDB) |
-| **ReadWriteMany** | `RWX` | Many nodes | File storage (NFS, EFS, Azure Files, CephFS) | Content management (WordPress), shared ML data |
-| **ReadOnlyMany** | `ROX` | Many nodes | Read-only snapshots, NFS | Static assets, reference datasets |
-| **ReadWriteOncePod** | `RWOP` | Single Pod | Specific CSI block drivers | Strict stateful databases preventing split-brain |
+| Mode                 | Short  | Node Scope  | Backend Types                                   | Typical Workload                                 |
+| :------------------- | :----- | :---------- | :---------------------------------------------- | :----------------------------------------------- |
+| **ReadWriteOnce**    | `RWO`  | Single node | Block storage (EBS, PD, Azure Disk, local path) | Databases (Postgres, MySQL, MongoDB)             |
+| **ReadWriteMany**    | `RWX`  | Many nodes  | File storage (NFS, EFS, Azure Files, CephFS)    | Content management (WordPress), shared ML data   |
+| **ReadOnlyMany**     | `ROX`  | Many nodes  | Read-only snapshots, NFS                        | Static assets, reference datasets                |
+| **ReadWriteOncePod** | `RWOP` | Single Pod  | Specific CSI block drivers                      | Strict stateful databases preventing split-brain |
 
 ---
 

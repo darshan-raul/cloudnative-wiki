@@ -1,6 +1,13 @@
+---
+title: "TLS and mTLS in Kubernetes"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "TLS and mTLS in Kubernetes — Kubernetes reference and architecture guide."
+---
+
 # TLS and mTLS in Kubernetes
 
-*"https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/"*
+_"https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/"_
 
 TLS (Transport Layer Security) is what makes "HTTPS" work — it encrypts the bytes on the wire, verifies the server's identity, and (optionally) verifies the client's identity. **mTLS (mutual TLS)** is TLS where **both** sides verify each other. Kubernetes uses TLS everywhere by default — apiserver↔etcd, apiserver↔kubelet, kubelet↔apiserver, ingress↔client, pod-to-pod in service meshes. This note covers the concepts: how TLS works in the cluster, what mTLS adds, and how to operate it.
 
@@ -67,10 +74,10 @@ If all three pass, TLS is established. If any fail, the connection is rejected (
 
 TLS needs a way to verify that a certificate is **trusted**. The model:
 
-* **Certificate Authority (CA)** — a trusted entity that signs certificates.
-* **Root CA** — the top of the trust chain. Its certificate is in the client's trust store.
-* **Intermediate CA** — signed by the root, can sign other certs.
-* **Leaf certificate** — the actual server (or client) cert, signed by an intermediate.
+- **Certificate Authority (CA)** — a trusted entity that signs certificates.
+- **Root CA** — the top of the trust chain. Its certificate is in the client's trust store.
+- **Intermediate CA** — signed by the root, can sign other certs.
+- **Leaf certificate** — the actual server (or client) cert, signed by an intermediate.
 
 The chain: leaf → intermediate → root. The client trusts the root, validates the chain to the root, and trusts the leaf.
 
@@ -114,14 +121,14 @@ Client                                  Server
 
 mTLS is the right answer when:
 
-* **Both sides need to know who's calling.** Example: apiserver verifying that a request is from a valid kubelet (and not an attacker who can reach the network).
-* **No passwords or tokens.** mTLS replaces bearer tokens for service-to-service auth.
-* **Zero-trust network.** Don't trust the network, verify identity.
+- **Both sides need to know who's calling.** Example: apiserver verifying that a request is from a valid kubelet (and not an attacker who can reach the network).
+- **No passwords or tokens.** mTLS replaces bearer tokens for service-to-service auth.
+- **Zero-trust network.** Don't trust the network, verify identity.
 
 mTLS is **not** the right answer when:
 
-* **Browsers are involved.** Browsers don't ship per-client certs (most don't). Use cookies / OAuth for browsers.
-* **The client is human.** Humans don't manage certs.
+- **Browsers are involved.** Browsers don't ship per-client certs (most don't). Use cookies / OAuth for browsers.
+- **The client is human.** Humans don't manage certs.
 
 For Pod-to-Pod traffic in k8s, mTLS is the standard. Service meshes (Istio, Linkerd, Cilium) make it transparent.
 
@@ -129,18 +136,18 @@ For Pod-to-Pod traffic in k8s, mTLS is the standard. Service meshes (Istio, Link
 
 Kubernetes uses TLS in **at least** these places:
 
-| Connection | Direction | Who certifies whom |
-|---|---|---|
-| `kubectl` → apiserver | outbound (from user) | Server only (mTLS if you have a client cert) |
-| apiserver → etcd | outbound (from apiserver) | mTLS (both sides) |
-| apiserver → kubelet | outbound | mTLS (both sides) |
-| kubelet → apiserver | outbound (from kubelet) | mTLS (both sides) |
-| apiserver → webhook | outbound | Server (or mTLS) |
-| apiserver ↔ apiserver (HA) | both | mTLS |
-| Pod → apiserver (in-cluster) | outbound | mTLS (if using SA token w/ cert, otherwise server-only) |
-| Pod → Pod (in-cluster) | both | Plaintext by default, mTLS via service mesh |
-| Ingress → Pod | inbound (from user) | Server (the ingress) |
-| NodePort / LB → Pod | inbound (from user) | Server (or no TLS) |
+| Connection                   | Direction                 | Who certifies whom                                      |
+| ---------------------------- | ------------------------- | ------------------------------------------------------- |
+| `kubectl` → apiserver        | outbound (from user)      | Server only (mTLS if you have a client cert)            |
+| apiserver → etcd             | outbound (from apiserver) | mTLS (both sides)                                       |
+| apiserver → kubelet          | outbound                  | mTLS (both sides)                                       |
+| kubelet → apiserver          | outbound (from kubelet)   | mTLS (both sides)                                       |
+| apiserver → webhook          | outbound                  | Server (or mTLS)                                        |
+| apiserver ↔ apiserver (HA)   | both                      | mTLS                                                    |
+| Pod → apiserver (in-cluster) | outbound                  | mTLS (if using SA token w/ cert, otherwise server-only) |
+| Pod → Pod (in-cluster)       | both                      | Plaintext by default, mTLS via service mesh             |
+| Ingress → Pod                | inbound (from user)       | Server (the ingress)                                    |
+| NodePort / LB → Pod          | inbound (from user)       | Server (or no TLS)                                      |
 
 **The control plane is mTLS by default.** **Pod-to-pod is plaintext by default** (until you add a service mesh or app-level mTLS).
 
@@ -181,8 +188,8 @@ The Pods trust the apiserver's cert because they have the cluster's CA cert.
 
 A standard cluster has:
 
-* **Cluster CA** — signs apiserver, kubelet, controller-manager, scheduler, etcd certs.
-* **Service Account CA** — signs ServiceAccount tokens (the JWT signing key).
+- **Cluster CA** — signs apiserver, kubelet, controller-manager, scheduler, etcd certs.
+- **Service Account CA** — signs ServiceAccount tokens (the JWT signing key).
 
 Some clusters (especially EKS, GKE) have additional CAs for front-proxy, OIDC, etc.
 
@@ -235,12 +242,12 @@ For most production clusters, **service mesh is the default**. The tradeoff is o
 
 ### 7.1 How Istio / Linkerd do mTLS
 
-* Each Pod gets a sidecar proxy.
-* The proxy has an identity (a SPIFFE ID).
-* When Pod A calls Pod B, the traffic goes through both sidecars.
-* The sidecars establish mTLS. The application is unaware.
-* Certs are issued by the mesh's control plane (Istiod for Istio, linkerd-identity for Linkerd).
-* Certs are short-lived (24h for Istio, 24h for Linkerd) and auto-rotated.
+- Each Pod gets a sidecar proxy.
+- The proxy has an identity (a SPIFFE ID).
+- When Pod A calls Pod B, the traffic goes through both sidecars.
+- The sidecars establish mTLS. The application is unaware.
+- Certs are issued by the mesh's control plane (Istiod for Istio, linkerd-identity for Linkerd).
+- Certs are short-lived (24h for Istio, 24h for Linkerd) and auto-rotated.
 
 This is the **zero-trust networking** model. See [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire|SPIFFE / SPIRE]] for the underlying identity model.
 
@@ -248,8 +255,8 @@ This is the **zero-trust networking** model. See [[Kubernetes/concepts/L07-secur
 
 Istio has two modes:
 
-* **PERMISSIVE** — accept both plaintext and mTLS. Lets you roll out mTLS without breaking existing services.
-* **STRICT** — only accept mTLS. Plaintext is rejected.
+- **PERMISSIVE** — accept both plaintext and mTLS. Lets you roll out mTLS without breaking existing services.
+- **STRICT** — only accept mTLS. Plaintext is rejected.
 
 The standard rollout: PERMISSIVE in the namespace, then STRICT after all services are mesh-enabled.
 
@@ -257,9 +264,9 @@ The standard rollout: PERMISSIVE in the namespace, then STRICT after all service
 
 You can do mTLS at the application layer:
 
-* **gRPC with TLS** — the gRPC framework supports TLS natively. The server presents a cert, the client verifies.
-* **HTTPS with mutual auth** — the HTTP server requires a client cert. The client presents one.
-* **Database connections** — Postgres, MySQL support TLS. Some support client cert auth.
+- **gRPC with TLS** — the gRPC framework supports TLS natively. The server presents a cert, the client verifies.
+- **HTTPS with mutual auth** — the HTTP server requires a client cert. The client presents one.
+- **Database connections** — Postgres, MySQL support TLS. Some support client cert auth.
 
 For each, you need:
 
@@ -279,9 +286,9 @@ For L07 (concepts), the takeaway: cert-manager is the standard way to manage in-
 
 ### 9.1 The current state
 
-* **TLS 1.0, 1.1** — deprecated, do not use.
-* **TLS 1.2** — the minimum acceptable. Most tools support it.
-* **TLS 1.3** — the current best. Faster handshake, removes weak ciphers, mandatory forward secrecy.
+- **TLS 1.0, 1.1** — deprecated, do not use.
+- **TLS 1.2** — the minimum acceptable. Most tools support it.
+- **TLS 1.3** — the current best. Faster handshake, removes weak ciphers, mandatory forward secrecy.
 
 For new clusters, configure TLS 1.2+ on the apiserver, kubelet, etcd. TLS 1.3 is preferred.
 
@@ -314,13 +321,13 @@ These apply to connections the apiserver accepts. For TLS 1.3, the `--tls-cipher
 
 ## 10. The cert-manager Tool
 
-*"https://cert-manager.io/"*
+_"https://cert-manager.io/"_
 
 cert-manager is the de-facto tool for managing TLS certs in k8s. It automates:
 
-* **Issuance** — request certs from Let's Encrypt, Vault, your own CA, etc.
-* **Renewal** — renew certs before they expire.
-* **Distribution** — store certs as Secrets, expose to Pods.
+- **Issuance** — request certs from Let's Encrypt, Vault, your own CA, etc.
+- **Renewal** — renew certs before they expire.
+- **Distribution** — store certs as Secrets, expose to Pods.
 
 It uses **Issuer** and **ClusterIssuer** resources (CRDs):
 
@@ -334,7 +341,7 @@ spec:
     email: ops@example.com
     privateKeySecretRef: { name: letsencrypt-account-key }
     solvers:
-    - http01: { ingress: { class: nginx } }
+      - http01: { ingress: { class: nginx } }
 ```
 
 A cert is requested via an annotation on an Ingress, or by creating a `Certificate` resource:
@@ -357,14 +364,14 @@ For L07's purposes, cert-manager is a **practitioner tool** covered in `/guides/
 
 ### 11.1 Common errors
 
-| Error | Cause |
-|---|---|
-| `x509: certificate signed by unknown authority` | The server's CA is not in the client's trust store |
-| `x509: certificate is valid for X, not Y` | The cert's SAN doesn't match the hostname being requested |
+| Error                                               | Cause                                                     |
+| --------------------------------------------------- | --------------------------------------------------------- |
+| `x509: certificate signed by unknown authority`     | The server's CA is not in the client's trust store        |
+| `x509: certificate is valid for X, not Y`           | The cert's SAN doesn't match the hostname being requested |
 | `x509: certificate has expired or is not yet valid` | The cert is past its `notAfter` or before its `notBefore` |
-| `tls: handshake failure` | The client and server don't share a TLS version or cipher |
-| `tls: bad certificate` | The client cert is invalid (e.g. expired) |
-| `connection refused` | Not a TLS error — the server isn't listening |
+| `tls: handshake failure`                            | The client and server don't share a TLS version or cipher |
+| `tls: bad certificate`                              | The client cert is invalid (e.g. expired)                 |
+| `connection refused`                                | Not a TLS error — the server isn't listening              |
 
 ### 11.2 The `openssl s_client` debug
 
@@ -512,8 +519,8 @@ journalctl -u kubelet | grep apiserver
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the cluster PKI
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire|SPIFFE / SPIRE]] — workload identity for service-mesh mTLS
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — encrypting data at rest
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — encrypting Secrets in etcd
-* [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — encrypting network traffic (with mTLS)
+- [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the cluster PKI
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire|SPIFFE / SPIRE]] — workload identity for service-mesh mTLS
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — encrypting data at rest
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — encrypting Secrets in etcd
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — encrypting network traffic (with mTLS)

@@ -283,28 +283,28 @@ spec:
     runAsGroup: 1000
     fsGroup: 1000
   containers:
-  - name: app
-    image: myapp:latest
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-          - ALL
-        add:
-          - NET_BIND_SERVICE
-    resources:
-      limits:
-        memory: "512Mi"
-        cpu: "500m"
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-    volumeMounts:
-    - name: tmp
-      mountPath: /tmp
+    - name: app
+      image: myapp:latest
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+          add:
+            - NET_BIND_SERVICE
+      resources:
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+        requests:
+          memory: "256Mi"
+          cpu: "100m"
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
   volumes:
-  - name: tmp
-    tmpfs:
-      sizeLimit: "64Mi"
+    - name: tmp
+      tmpfs:
+        sizeLimit: "64Mi"
 ```

@@ -9,13 +9,13 @@ description: Advanced autoscaling options for EKS workloads
 
 ## Autoscaling Options
 
-| Type | What It Scales | Metric Source |
-|------|---------------|---------------|
-| HPA | Pods | Custom metrics |
-| VPA | Pod resources | Resource usage |
-| KEDA | Pods + Workers | 50+ external sources |
-| Cluster Proportional VPA | Nodes | Pod count |
-| Karpenter | Nodes | Pending pods |
+| Type                     | What It Scales | Metric Source        |
+| ------------------------ | -------------- | -------------------- |
+| HPA                      | Pods           | Custom metrics       |
+| VPA                      | Pod resources  | Resource usage       |
+| KEDA                     | Pods + Workers | 50+ external sources |
+| Cluster Proportional VPA | Nodes          | Pod count            |
+| Karpenter                | Nodes          | Pending pods         |
 
 ## Horizontal Pod Autoscaler (HPA)
 
@@ -34,26 +34,26 @@ spec:
   minReplicas: 2
   maxReplicas: 10
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Pods
-    pods:
-      metric:
-        name: http_requests_per_second
-      target:
-        type: AverageValue
-        averageValue: "100"
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "100"
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
-      - type: Percent
-        value: 10
-        periodSeconds: 60
+        - type: Percent
+          value: 10
+          periodSeconds: 60
 ```
 
 ### HPA with Prometheus Metrics
@@ -82,14 +82,14 @@ spec:
     updateMode: "Auto"
   resourcePolicy:
     containerPolicies:
-    - containerName: app
-      minAllowed:
-        cpu: 100m
-        memory: 128Mi
-      maxAllowed:
-        cpu: 2
-        memory: 4Gi
-      controlledResources: ["cpu", "memory"]
+      - containerName: app
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+        maxAllowed:
+          cpu: 2
+          memory: 4Gi
+        controlledResources: ["cpu", "memory"]
 ```
 
 ## KEDA
@@ -119,25 +119,25 @@ spec:
   maxReplicaCount: 20
   cooldownPeriod: 300
   triggers:
-  - type: prometheus
-    metadata:
-      serverAddress: http://prometheus:9090
-      metricName: http_requests_total
-      threshold: "100"
-      query: sum(rate(http_requests_total[2m]))
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus:9090
+        metricName: http_requests_total
+        threshold: "100"
+        query: sum(rate(http_requests_total[2m]))
 ```
 
 ### KEDA Scalers
 
-| Scaler | Use Case |
-|--------|----------|
-| prometheus | Metrics-based scaling |
-| mysql | Database connection pool |
-| redis | Queue length |
-| aws-sqs-queue | SQS message count |
-| kafka | Topic lag |
-| cron | Time-based scaling |
-| rabbitmq | Queue depth |
+| Scaler        | Use Case                 |
+| ------------- | ------------------------ |
+| prometheus    | Metrics-based scaling    |
+| mysql         | Database connection pool |
+| redis         | Queue length             |
+| aws-sqs-queue | SQS message count        |
+| kafka         | Topic lag                |
+| cron          | Time-based scaling       |
+| rabbitmq      | Queue depth              |
 
 ## Cluster Proportional Autoscaler
 

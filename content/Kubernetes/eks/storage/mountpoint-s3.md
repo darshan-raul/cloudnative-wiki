@@ -43,15 +43,15 @@ metadata:
   name: app-with-s3
 spec:
   containers:
-  - name: app
-    image: nginx
-    volumeMounts:
-    - mountPath: /data
-      name: s3-volume
+    - name: app
+      image: nginx
+      volumeMounts:
+        - mountPath: /data
+          name: s3-volume
   volumes:
-  - name: s3-volume
-    persistentVolumeClaim:
-      claimName: s3-claim
+    - name: s3-volume
+      persistentVolumeClaim:
+        claimName: s3-claim
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -63,7 +63,7 @@ spec:
   storageClassName: s3-sc
   resources:
     requests:
-      storage: 1000Gi  # Virtual size, S3 is unlimited
+      storage: 1000Gi # Virtual size, S3 is unlimited
 ```
 
 ## Use Cases

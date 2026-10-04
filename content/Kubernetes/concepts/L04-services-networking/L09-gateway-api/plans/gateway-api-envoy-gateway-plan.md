@@ -1,3 +1,10 @@
+---
+title: "Plan: Gateway API In-Depth Research & Envoy Gateway Implementation — **DONE"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Plan: Gateway API In-Depth Research & Envoy Gateway Implementation — **DONE — Kubernetes reference and architecture guide."
+---
+
 # Plan: Gateway API In-Depth Research & Envoy Gateway Implementation — **DONE**
 
 **Owner:** Mavis (root session)
@@ -56,36 +63,36 @@
 
 ### 16 Scenarios (numbered, ordered)
 
-| # | Demonstrates | File |
-|---|---|---|
-| 01 | Minimal HTTP | `01-minimal-http.yaml` |
-| 02 | Multiple hostnames | `02-multi-host.yaml` |
-| 03 | Path-based routing | `03-path-routing.yaml` |
-| 04 | Header-based routing (A/B) | `04-header-routing.yaml` |
-| 05 | Traffic split / canary (90/10) | `05-traffic-split.yaml` |
-| 06 | `RequestRedirect` + `URLRewrite` | `06-redirect-rewrite.yaml` |
-| 07 | Request/response header filters | `07-header-filter.yaml` |
-| 08 | TLS edge (cert-manager + `mode: Terminate`) | `08-tls-edge.yaml` |
-| 09 | TLS passthrough (`TLSRoute`, SNI) | `09-tls-passthrough.yaml` |
-| 10 | TLS re-encrypt + `BackendTLSPolicy` (mTLS) | `10-tls-reencrypt.yaml` |
-| 11 | Cross-namespace + `ReferenceGrant` | `11-cross-ns.yaml` |
-| 12 | CORS + JWT (`SecurityPolicy`) | `12-cors-jwt.yaml` |
-| 13 | Local rate limit | `13-rate-limit.yaml` |
-| 14 | External auth (`extAuthz`) | `14-external-auth.yaml` |
-| 15 | Multi-listener (HTTP+HTTPS with 80→443 redirect) | `15-multi-listener.yaml` |
-| 16 | Gateway merging (shared data plane) | `16-gateway-merge.yaml` |
+| #   | Demonstrates                                     | File                       |
+| --- | ------------------------------------------------ | -------------------------- |
+| 01  | Minimal HTTP                                     | `01-minimal-http.yaml`     |
+| 02  | Multiple hostnames                               | `02-multi-host.yaml`       |
+| 03  | Path-based routing                               | `03-path-routing.yaml`     |
+| 04  | Header-based routing (A/B)                       | `04-header-routing.yaml`   |
+| 05  | Traffic split / canary (90/10)                   | `05-traffic-split.yaml`    |
+| 06  | `RequestRedirect` + `URLRewrite`                 | `06-redirect-rewrite.yaml` |
+| 07  | Request/response header filters                  | `07-header-filter.yaml`    |
+| 08  | TLS edge (cert-manager + `mode: Terminate`)      | `08-tls-edge.yaml`         |
+| 09  | TLS passthrough (`TLSRoute`, SNI)                | `09-tls-passthrough.yaml`  |
+| 10  | TLS re-encrypt + `BackendTLSPolicy` (mTLS)       | `10-tls-reencrypt.yaml`    |
+| 11  | Cross-namespace + `ReferenceGrant`               | `11-cross-ns.yaml`         |
+| 12  | CORS + JWT (`SecurityPolicy`)                    | `12-cors-jwt.yaml`         |
+| 13  | Local rate limit                                 | `13-rate-limit.yaml`       |
+| 14  | External auth (`extAuthz`)                       | `14-external-auth.yaml`    |
+| 15  | Multi-listener (HTTP+HTTPS with 80→443 redirect) | `15-multi-listener.yaml`   |
+| 16  | Gateway merging (shared data plane)              | `16-gateway-merge.yaml`    |
 
 ### Coverage of Your Asks
 
-| You asked for | Covered by |
-|---|---|
-| Gateway API in depth | `research/gateway-api.md` (14 sections) + `research/envoy-gateway.md` (11 sections) |
-| Implementation with Envoy Gateway | 16 scenario manifests + `install.sh` + `RUNBOOK.md` |
-| All possible scenarios | 16 scenarios covering HTTP, multi-host, path, header, traffic split, filters, TLS (3 modes), cross-ns, auth (JWT/OIDC/extAuthz), rate limit, CORS, multi-listener, gateway merging |
-| Diffs with Ingress | Full diff table in `research/gateway-api.md` §12; recommendation in `research/envoy-gateway.md` §3 |
-| Installation methods | `lab/install.sh` (Helm — the canonical path); `research/envoy-gateway.md` §6 covers the chart + key values; RUNBOOK §5 covers upgrades |
-| ClusterIP gotchas | `research/gateway-api.md` §13 item 4; RUNBOOK §7.3; research/gateway-api.md §5.2-5.4 covers route attachment mechanics; clusterip specifics called out in plan and RUNBOOK troubleshooting |
-| TLS gotchas | `research/gateway-api.md` §8 (cert manager, rotation, SANs, intermediate certs, mTLS via BackendTLSPolicy, edge vs passthrough vs re-encrypt); scenario 10 demonstrates re-encrypt + mTLS in practice; RUNBOOK §7.4 covers cert rotation issues |
+| You asked for                     | Covered by                                                                                                                                                                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gateway API in depth              | `research/gateway-api.md` (14 sections) + `research/envoy-gateway.md` (11 sections)                                                                                                                                                             |
+| Implementation with Envoy Gateway | 16 scenario manifests + `install.sh` + `RUNBOOK.md`                                                                                                                                                                                             |
+| All possible scenarios            | 16 scenarios covering HTTP, multi-host, path, header, traffic split, filters, TLS (3 modes), cross-ns, auth (JWT/OIDC/extAuthz), rate limit, CORS, multi-listener, gateway merging                                                              |
+| Diffs with Ingress                | Full diff table in `research/gateway-api.md` §12; recommendation in `research/envoy-gateway.md` §3                                                                                                                                              |
+| Installation methods              | `lab/install.sh` (Helm — the canonical path); `research/envoy-gateway.md` §6 covers the chart + key values; RUNBOOK §5 covers upgrades                                                                                                          |
+| ClusterIP gotchas                 | `research/gateway-api.md` §13 item 4; RUNBOOK §7.3; research/gateway-api.md §5.2-5.4 covers route attachment mechanics; clusterip specifics called out in plan and RUNBOOK troubleshooting                                                      |
+| TLS gotchas                       | `research/gateway-api.md` §8 (cert manager, rotation, SANs, intermediate certs, mTLS via BackendTLSPolicy, edge vs passthrough vs re-encrypt); scenario 10 demonstrates re-encrypt + mTLS in practice; RUNBOOK §7.4 covers cert rotation issues |
 
 ---
 

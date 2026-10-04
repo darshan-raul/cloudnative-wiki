@@ -62,6 +62,7 @@ In an enterprise-grade AKS cluster provisioned with Availability Zones (`--zones
 ### Control Plane Communication: The Konnectivity Tunnel
 
 To securely bridge communication between the Microsoft-managed control plane and customer worker nodes in private VNets without exposing worker nodes to the public internet, AKS deploys **Konnectivity (Uplink/Agent)**:
+
 - `konnectivity-agent` runs as a DaemonSet/Deployment on the worker nodes.
 - It initiates an outbound secure gRPC tunnel over TCP port 443 to the `konnectivity-server` inside the managed control plane.
 - When the API server needs to stream logs (`kubectl logs`) or open an interactive shell (`kubectl exec`), traffic is multiplexed down this existing outbound tunnel.
@@ -72,29 +73,34 @@ To securely bridge communication between the Microsoft-managed control plane and
 
 Microsoft offers three distinct SLA and support tiers for AKS:
 
-| Dimension | Free Tier | Standard Tier (Production Recommended) | Premium Tier (Enterprise LTS) |
-| :--- | :--- | :--- | :--- |
-| **Control Plane Cost** | **$0.00 / hour** | **$0.10 / hour** (~$73 / month) | **$0.60 / hour** (~$438 / month) |
-| **Uptime SLA (with AZs)** | No financially backed SLA | **99.95% Availability SLA** | **99.95% Availability SLA** |
-| **Uptime SLA (without AZs)**| No financially backed SLA | **99.90% Availability SLA** | **99.90% Availability SLA** |
-| **Scale Limit** | Up to 1,000 nodes | **Up to 5,000 nodes** | **Up to 5,000 nodes** |
-| **Kubernetes Version Support**| Standard N-2 community window | Standard N-2 community window (~14 mo) | **Long-Term Support (LTS - 2 Years)** |
-| **Target Workload** | Dev/Test, Staging, Sandboxes | Production Enterprise Applications | Regulated industries (Banking, Health) |
+| Dimension                      | Free Tier                     | Standard Tier (Production Recommended) | Premium Tier (Enterprise LTS)          |
+| :----------------------------- | :---------------------------- | :------------------------------------- | :------------------------------------- |
+| **Control Plane Cost**         | **$0.00 / hour**              | **$0.10 / hour** (~$73 / month)        | **$0.60 / hour** (~$438 / month)       |
+| **Uptime SLA (with AZs)**      | No financially backed SLA     | **99.95% Availability SLA**            | **99.95% Availability SLA**            |
+| **Uptime SLA (without AZs)**   | No financially backed SLA     | **99.90% Availability SLA**            | **99.90% Availability SLA**            |
+| **Scale Limit**                | Up to 1,000 nodes             | **Up to 5,000 nodes**                  | **Up to 5,000 nodes**                  |
+| **Kubernetes Version Support** | Standard N-2 community window | Standard N-2 community window (~14 mo) | **Long-Term Support (LTS - 2 Years)**  |
+| **Target Workload**            | Dev/Test, Staging, Sandboxes  | Production Enterprise Applications     | Regulated industries (Banking, Health) |
 
 ---
 
 ## 3. Control Plane Network Topologies
 
 ### 1. Public Cluster with Authorized IP Ranges
+
 The API server receives a public IP, but access is restricted via Azure network firewalls to designated CIDRs (corporate egress IPs or bastion CIDRs).
 
 ### 2. Private AKS Cluster (Azure Private Link)
+
 The API server FQDN resolves exclusively to a private IP located on a Private Endpoint inside your Azure VNet:
+
 - Requires a **Private DNS Zone** (`privatelink.<region>.azmk8s.io`) linked to your VNet.
 - Prevents any public internet exposure. Access requires an on-premises VPN/ExpressRoute connection or an Azure Bastion jumpbox.
 
 ### 3. API Server VNet Integration (Modern Standard)
+
 Rather than provisioning a separate Private Endpoint with complex Private DNS Zone peering, **API Server VNet Integration** projects the API server directly into a dedicated delegated subnet within your VNet:
+
 - Eliminates the need for Private DNS Zone management.
 - Guarantees bi-directional network routability between API server and customer subnets.
 
@@ -157,14 +163,14 @@ az aks update \
 
 ## 5. Quotas, Performance & Configuration Limits
 
-| Architectural Parameter | Hard Limit / Metric | Production Recommendation |
-| :--- | :--- | :--- |
-| **Max Nodes (Standard Tier)** | **5,000 nodes** | Free tier is restricted to 1,000 nodes |
-| **API Server QPS / Burst** | Managed dynamically | Control plane auto-scales compute automatically |
-| **etcd Database Size Limit** | **8 GiB** | Monitor `etcd_mvcc_db_total_size_in_bytes` via Prometheus |
-| **Max Pods per Cluster** | **100,000 pods** | Subject to CIDR IP allocation limits |
-| **Uptime SLA Availability** | **99.95% (Multi-Zone)** | 99.90% for single-zone or regional non-AZ clusters |
-| **Private DNS Records** | 1 per private cluster | Auto-registered in `privatelink.<region>.azmk8s.io` |
+| Architectural Parameter       | Hard Limit / Metric     | Production Recommendation                                 |
+| :---------------------------- | :---------------------- | :-------------------------------------------------------- |
+| **Max Nodes (Standard Tier)** | **5,000 nodes**         | Free tier is restricted to 1,000 nodes                    |
+| **API Server QPS / Burst**    | Managed dynamically     | Control plane auto-scales compute automatically           |
+| **etcd Database Size Limit**  | **8 GiB**               | Monitor `etcd_mvcc_db_total_size_in_bytes` via Prometheus |
+| **Max Pods per Cluster**      | **100,000 pods**        | Subject to CIDR IP allocation limits                      |
+| **Uptime SLA Availability**   | **99.95% (Multi-Zone)** | 99.90% for single-zone or regional non-AZ clusters        |
+| **Private DNS Records**       | 1 per private cluster   | Auto-registered in `privatelink.<region>.azmk8s.io`       |
 
 ---
 

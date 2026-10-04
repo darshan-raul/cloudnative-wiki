@@ -16,13 +16,12 @@ Here’s a step-by-step look at how it works **in action**, compared to the trad
 
 DoH can be activated at different levels, affecting what traffic on your device is protected:
 
-* **In Web Browsers**: The most common method. Browsers like **Firefox, Chrome, and Edge** have built-in DoH settings. When enabled, **only DNS queries from that specific browser** are encrypted. Queries from other apps on your device still use traditional DNS unless the OS is configured.
-* **At the Operating System Level**: Configuring DoH in your OS (like Windows 11 or macOS) encrypts **all DNS queries from every application** on the device, providing system-wide protection.
+- **In Web Browsers**: The most common method. Browsers like **Firefox, Chrome, and Edge** have built-in DoH settings. When enabled, **only DNS queries from that specific browser** are encrypted. Queries from other apps on your device still use traditional DNS unless the OS is configured.
+- **At the Operating System Level**: Configuring DoH in your OS (like Windows 11 or macOS) encrypts **all DNS queries from every application** on the device, providing system-wide protection.
 
 #### ⚠️ Important Considerations
 
 While DoH enhances privacy, its implementation has trade-offs:
 
-* **Security & Privacy vs. Visibility**: The encryption that protects you from eavesdroppers also makes DNS traffic invisible to network security tools. This can bypass **corporate web filters, parental controls, or security monitoring** that rely on inspecting DNS queries. In enterprise settings, it's often recommended to use an internal DoH resolver instead of public ones to maintain security policies.
-* **Centralization Concern**: DoH can centralize DNS traffic with a few large public providers (like Google or Cloudflare), giving them broad visibility into browsing patterns, even though the traffic is encrypted between you and them.
-
+- **Security & Privacy vs. Visibility**: The encryption that protects you from eavesdroppers also makes DNS traffic invisible to network security tools. This can bypass **corporate web filters, parental controls, or security monitoring** that rely on inspecting DNS queries. In enterprise settings, it's often recommended to use an internal DoH resolver instead of public ones to maintain security policies.
+- **Centralization Concern**: DoH can centralize DNS traffic with a few large public providers (like Google or Cloudflare), giving them broad visibility into browsing patterns, even though the traffic is encrypted between you and them.

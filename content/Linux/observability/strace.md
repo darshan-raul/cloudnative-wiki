@@ -203,11 +203,11 @@ The `/proc/sys/kernel/yama/ptrace_scope` setting can prevent non-root processes 
 
 ## Alternatives
 
-| Tool      | What it does                          |
-|-----------|---------------------------------------|
-| `ltrace`  | Library calls (not syscalls)           |
-| `perf`    | CPU profiling, hardware counters        |
-| `bpftrace`| Dynamic kernel/userspace tracing        |
-| `sysdig`  | Container-aware strace-like tool        |
+| Tool        | What it does                          |
+| ----------- | ------------------------------------- |
+| `ltrace`    | Library calls (not syscalls)          |
+| `perf`      | CPU profiling, hardware counters      |
+| `bpftrace`  | Dynamic kernel/userspace tracing      |
+| `sysdig`    | Container-aware strace-like tool      |
 | `wireshark` | Network protocol analysis             |
-| `tcpdump` | Network packet capture (packet level)  |
+| `tcpdump`   | Network packet capture (packet level) |

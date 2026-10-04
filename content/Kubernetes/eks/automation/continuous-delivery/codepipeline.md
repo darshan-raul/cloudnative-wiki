@@ -103,8 +103,8 @@ spec:
   template:
     spec:
       containers:
-      - name: app
-        image: my-app:latest
+        - name: app
+          image: my-app:latest
 ```
 
 ## References

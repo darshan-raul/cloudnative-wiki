@@ -13,25 +13,25 @@ Availability is the **proportion of time a system is operational and accessible*
 
 ## Key Terms
 
-| Term | Meaning | Example |
-|------|---------|---------|
+| Term                              | Meaning                             | Example                           |
+| --------------------------------- | ----------------------------------- | --------------------------------- |
 | **SLA** (Service Level Agreement) | Contractual commitment to customers | "99.9% uptime, or we pay credits" |
-| **SLO** (Service Level Objective) | Internal target you aim for | "Target 99.95% uptime" |
-| **SLI** (Service Level Indicator) | What you actually measure | Real p99 latency, real error rate |
-| **Error Budget** | Allowable downtime per period | 4.38 min/month at 99.9% |
+| **SLO** (Service Level Objective) | Internal target you aim for         | "Target 99.95% uptime"            |
+| **SLI** (Service Level Indicator) | What you actually measure           | Real p99 latency, real error rate |
+| **Error Budget**                  | Allowable downtime per period       | 4.38 min/month at 99.9%           |
 
 ---
 
 ## Availability Tiers
 
-| Target | Downtime/Year | Downtime/Month | Downtime/Week |
-|--------|--------------|----------------|---------------|
-| 90% | 36.5 days |3 days | 16.8 hours |
-| 99% | 3.65 days | 7.3 hours | 1.7 hours |
-| 99.9% | 8.76 hours | 43.8 min | 10.1 min |
-| 99.95% | 4.38 hours | 21.9 min | 5.0 min |
-| 99.99% | 52.6 min | 4.4 min | 1.0 min |
-| 99.999% | 5.26 min | 26.3 sec | 6.1 sec |
+| Target  | Downtime/Year | Downtime/Month | Downtime/Week |
+| ------- | ------------- | -------------- | ------------- |
+| 90%     | 36.5 days     | 3 days         | 16.8 hours    |
+| 99%     | 3.65 days     | 7.3 hours      | 1.7 hours     |
+| 99.9%   | 8.76 hours    | 43.8 min       | 10.1 min      |
+| 99.95%  | 4.38 hours    | 21.9 min       | 5.0 min       |
+| 99.99%  | 52.6 min      | 4.4 min        | 1.0 min       |
+| 99.999% | 5.26 min      | 26.3 sec       | 6.1 sec       |
 
 **Rule:** Each9 costs ~10x in complexity and infrastructure cost.
 
@@ -52,13 +52,13 @@ availability = successful_requests / total_requests * 100
 
 ### Common SLIs
 
-| Service Type | Good SLI | Bad SLI |
-|-------------|---------|---------|
-| User-facing API | Request success rate | — |
-| Read-heavy data | Cache hit ratio | — |
-| Write-heavy data | Commit success rate | — |
-| Background jobs | Job completion rate | — |
-| Data pipeline | Records processed / expected | — |
+| Service Type     | Good SLI                     | Bad SLI |
+| ---------------- | ---------------------------- | ------- |
+| User-facing API  | Request success rate         | —       |
+| Read-heavy data  | Cache hit ratio              | —       |
+| Write-heavy data | Commit success rate          | —       |
+| Background jobs  | Job completion rate          | —       |
+| Data pipeline    | Records processed / expected | —       |
 
 ---
 
@@ -129,15 +129,15 @@ Multi-AZ deployment:
 
 ## Common Causes of Downtime
 
-| Cause | Mitigation |
-|-------|-----------|
-| Database overload | Read replicas, connection pooling, query limits |
-| Cascading failures | Circuit breakers, bulkheads, rate limiting |
-| Deployment failures | Blue-green, canary, rollback automation |
-| Dependency outage | Graceful degradation, fallback behavior |
-| Traffic spikes | Auto-scaling, rate limiting, CDN |
-| Configuration errors | Config-as-code, staged rollout, validation |
-| Resource exhaustion | Auto-scaling, resource limits (K8s) |
+| Cause                | Mitigation                                      |
+| -------------------- | ----------------------------------------------- |
+| Database overload    | Read replicas, connection pooling, query limits |
+| Cascading failures   | Circuit breakers, bulkheads, rate limiting      |
+| Deployment failures  | Blue-green, canary, rollback automation         |
+| Dependency outage    | Graceful degradation, fallback behavior         |
+| Traffic spikes       | Auto-scaling, rate limiting, CDN                |
+| Configuration errors | Config-as-code, staged rollout, validation      |
+| Resource exhaustion  | Auto-scaling, resource limits (K8s)             |
 
 ---
 

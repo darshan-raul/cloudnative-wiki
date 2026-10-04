@@ -1,6 +1,16 @@
 ---
 title: Probes — Liveness, Readiness, Startup
-tags: [kubernetes, workloads, probes, liveness, readiness, startup, reliability, core-concepts]
+tags:
+  [
+    kubernetes,
+    workloads,
+    probes,
+    liveness,
+    readiness,
+    startup,
+    reliability,
+    core-concepts,
+  ]
 date: 2026-06-07
 description: The kubelet's three tools for knowing whether a container is alive, ready, and started. Handler types, tunables, the startup-vs-liveness pattern, why liveness must not check external dependencies, and the failure modes that make probes the #1 cause of cascading outages.
 ---
@@ -39,11 +49,11 @@ Get probes right and your app is resilient. Get them wrong and you've built a se
 
 ### The summary
 
-| Probe | Question | If it fails | When to use |
-|---|---|---|---|
-| `startupProbe` | "Has the app finished starting?" | Disables other probes; container is killed if it never succeeds | Slow-starting apps (JVM warmup, big data loads) |
-| `livenessProbe` | "Is the container still alive?" | Container is killed and restarted | Detect deadlocks, unrecoverable errors |
-| `readinessProbe` | "Can the container serve traffic?" | Pod IP removed from Service endpoints (not restarted) | "Draining" or "warming up" or "not yet ready" |
+| Probe            | Question                           | If it fails                                                     | When to use                                     |
+| ---------------- | ---------------------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| `startupProbe`   | "Has the app finished starting?"   | Disables other probes; container is killed if it never succeeds | Slow-starting apps (JVM warmup, big data loads) |
+| `livenessProbe`  | "Is the container still alive?"    | Container is killed and restarted                               | Detect deadlocks, unrecoverable errors          |
+| `readinessProbe` | "Can the container serve traffic?" | Pod IP removed from Service endpoints (not restarted)           | "Draining" or "warming up" or "not yet ready"   |
 
 ### The mental model
 
@@ -74,11 +84,11 @@ A slow-starting JVM needs `startupProbe`. A long-running API that should always 
 
 ### What each probe does NOT do
 
-| Probe | Does NOT do |
-|---|---|
-| `startupProbe` | Does not check if the app is "correct" — only if it's started. After it succeeds, the kubelet runs liveness/readiness. |
-| `livenessProbe` | Does not stop traffic — it restarts the container. Use readiness for traffic management. |
-| `readinessProbe` | Does not restart the container — it just removes the Pod from Service endpoints. |
+| Probe            | Does NOT do                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `startupProbe`   | Does not check if the app is "correct" — only if it's started. After it succeeds, the kubelet runs liveness/readiness. |
+| `livenessProbe`  | Does not stop traffic — it restarts the container. Use readiness for traffic management.                               |
+| `readinessProbe` | Does not restart the container — it just removes the Pod from Service endpoints.                                       |
 
 ---
 
@@ -119,15 +129,16 @@ successThreshold: how many consecutive successes before "ready"
 
 Default values:
 
-| Field | Default |
-|---|---|
-| `periodSeconds` | 10 |
-| `timeoutSeconds` | 1 |
-| `failureThreshold` | 3 |
-| `successThreshold` | 1 (must be 1 for liveness/startup) |
+| Field                 | Default                                           |
+| --------------------- | ------------------------------------------------- |
+| `periodSeconds`       | 10                                                |
+| `timeoutSeconds`      | 1                                                 |
+| `failureThreshold`    | 3                                                 |
+| `successThreshold`    | 1 (must be 1 for liveness/startup)                |
 | `initialDelaySeconds` | 0 (deprecated for slow apps — use `startupProbe`) |
 
 For a default liveness probe:
+
 - Runs every 10 seconds
 - Times out after 1 second
 - After 3 consecutive failures, the container is killed
@@ -136,11 +147,11 @@ So a hung container is restarted within ~30 seconds (3 × 10s period).
 
 ### When the probe starts
 
-| Probe | When it starts |
-|---|---|
-| `startupProbe` | When the container starts |
-| `livenessProbe` | After `startupProbe` succeeds (or immediately if no `startupProbe`) |
-| `readinessProbe` | When the container starts, and continues throughout its life |
+| Probe            | When it starts                                                      |
+| ---------------- | ------------------------------------------------------------------- |
+| `startupProbe`   | When the container starts                                           |
+| `livenessProbe`  | After `startupProbe` succeeds (or immediately if no `startupProbe`) |
+| `readinessProbe` | When the container starts, and continues throughout its life        |
 
 `initialDelaySeconds` is the wait time before the first probe. It applies to all three probe types, but it's deprecated for slow-starting apps. Use `startupProbe` instead.
 
@@ -158,9 +169,9 @@ livenessProbe:
     path: /healthz
     port: 8080
     httpHeaders:
-    - name: X-Probe
-      value: kubelet
-    scheme: HTTP         # default; HTTPS is also valid
+      - name: X-Probe
+        value: kubelet
+    scheme: HTTP # default; HTTPS is also valid
   initialDelaySeconds: 10
   periodSeconds: 5
   timeoutSeconds: 1
@@ -185,12 +196,12 @@ Anything outside 200-399 is a failure. This includes:
 
 ```yaml
 ports:
-- name: http
-  containerPort: 8080
+  - name: http
+    containerPort: 8080
 livenessProbe:
   httpGet:
     path: /healthz
-    port: http         # resolves to 8080
+    port: http # resolves to 8080
 ```
 
 Named ports make probe configs survive container port changes.
@@ -202,13 +213,14 @@ httpGet:
   path: /healthz
   port: 8080
   httpHeaders:
-  - name: X-Health-Check
-    value: kubelet
-  - name: User-Agent
-    value: kube-probe/1.30
+    - name: X-Health-Check
+      value: kubelet
+    - name: User-Agent
+      value: kube-probe/1.30
 ```
 
 Useful for:
+
 - Differentiating probe traffic from real user traffic (in metrics/logs)
 - Routing probes to a different code path in your app
 
@@ -227,11 +239,13 @@ The kubelet opens a TCP connection to `<container-ip>:<port>`. The probe is **su
 A TCP probe verifies that **something is listening** on the port. It does **not** verify that the listener is healthy (e.g., a database that's accepting connections but failing every query).
 
 **Use cases:**
+
 - Databases (MySQL, PostgreSQL, Redis) — TCP confirms the server is up
 - Apps that don't expose an HTTP endpoint
 - Quick liveness checks where HTTP is overkill
 
 **Don't use for:**
+
 - Apps that need a deeper health check (use `httpGet` or `exec`)
 
 ### `exec` — Run a command
@@ -240,9 +254,9 @@ A TCP probe verifies that **something is listening** on the port. It does **not*
 livenessProbe:
   exec:
     command:
-    - sh
-    - -c
-    - "cat /tmp/healthy | grep -q OK"
+      - sh
+      - -c
+      - "cat /tmp/healthy | grep -q OK"
   initialDelaySeconds: 10
   periodSeconds: 5
 ```
@@ -250,11 +264,13 @@ livenessProbe:
 The kubelet runs the command **inside the container's namespace**. The probe is **successful** if the command exits with status 0.
 
 **Use cases:**
+
 - Apps that don't expose HTTP or TCP
 - Custom health checks that need to inspect files, env vars, or run scripts
 - Apps with complex state (e.g., a queue consumer that's processing but not yet "ready")
 
 **Caveats:**
+
 - The command is run by the kubelet, **not** by your app. It runs in the container's namespace, but the kubelet determines success/failure.
 - The command should be **fast** and **idempotent**. A long-running exec probe will time out.
 - The command is **synchronous** in the kubelet. A probe that hangs will block subsequent probes.
@@ -265,20 +281,23 @@ The kubelet runs the command **inside the container's namespace**. The probe is 
 livenessProbe:
   grpc:
     port: 9090
-    service: my-service     # optional, defaults to the empty string
+    service: my-service # optional, defaults to the empty string
 ```
 
 The kubelet uses the gRPC Health Checking Protocol to query the service. The probe is **successful** if the service responds with `SERVING`.
 
 **Use cases:**
+
 - gRPC services that implement the standard health check protocol
 - Avoiding the overhead of HTTP probes on gRPC services
 
 **Requirements:**
+
 - The container must implement the gRPC Health Checking Protocol (most modern gRPC frameworks do)
 - The kubelet's gRPC client must be able to reach the container (port must be open)
 
 **Caveats:**
+
 - TLS is not yet supported (k8s 1.30+ may add this)
 - HTTP/2 must be supported by the container
 
@@ -288,40 +307,43 @@ The kubelet uses the gRPC Health Checking Protocol to query the service. The pro
 
 ### The full reference
 
-| Field | Default | Meaning | Notes |
-|---|---|---|---|
-| `initialDelaySeconds` | 0 | Wait this long before the first probe | Deprecated for slow apps — use `startupProbe` |
-| `periodSeconds` | 10 | How often the kubelet runs the probe | Higher = less load, slower detection |
-| `timeoutSeconds` | 1 | Probe timeout | Raise for slow apps |
-| `successThreshold` | 1 | Consecutive successes for "ready" | **Must be 1 for liveness/startup** |
-| `failureThreshold` | 3 | Consecutive failures before action | Higher = more tolerant of blips |
-| `terminationGracePeriodSeconds` | 30 | Time to wait for container to exit after liveness failure | Separate from the Pod's grace period |
+| Field                           | Default | Meaning                                                   | Notes                                         |
+| ------------------------------- | ------- | --------------------------------------------------------- | --------------------------------------------- |
+| `initialDelaySeconds`           | 0       | Wait this long before the first probe                     | Deprecated for slow apps — use `startupProbe` |
+| `periodSeconds`                 | 10      | How often the kubelet runs the probe                      | Higher = less load, slower detection          |
+| `timeoutSeconds`                | 1       | Probe timeout                                             | Raise for slow apps                           |
+| `successThreshold`              | 1       | Consecutive successes for "ready"                         | **Must be 1 for liveness/startup**            |
+| `failureThreshold`              | 3       | Consecutive failures before action                        | Higher = more tolerant of blips               |
+| `terminationGracePeriodSeconds` | 30      | Time to wait for container to exit after liveness failure | Separate from the Pod's grace period          |
 
 ### The math
 
 For a default probe:
+
 - Period: 10s
 - Failure threshold: 3
 - Detection time: up to 30s (3 × 10s) after the probe starts failing
 
 For a tighter probe (e.g., critical service):
+
 - Period: 2s
 - Failure threshold: 3
 - Detection time: up to 6s
 
 For a more tolerant probe (e.g., background worker):
+
 - Period: 30s
 - Failure threshold: 3
 - Detection time: up to 90s
 
 ### The trade-offs
 
-| Tighter probes | Looser probes |
-|---|---|
-| Faster failure detection | Slower failure detection |
-| More load on the kubelet | Less load on the kubelet |
-| More sensitive to transient blips | More tolerant of transient blips |
-| More risk of false positives | More risk of prolonged outages |
+| Tighter probes                        | Looser probes                            |
+| ------------------------------------- | ---------------------------------------- |
+| Faster failure detection              | Slower failure detection                 |
+| More load on the kubelet              | Less load on the kubelet                 |
+| More sensitive to transient blips     | More tolerant of transient blips         |
+| More risk of false positives          | More risk of prolonged outages           |
 | Good for: critical, latency-sensitive | Good for: batch jobs, background workers |
 
 ### `successThreshold: 1` is enforced for liveness and startup
@@ -345,7 +367,7 @@ livenessProbe:
   httpGet:
     path: /healthz
     port: 8080
-  initialDelaySeconds: 60   # wait 60 seconds before starting liveness
+  initialDelaySeconds: 60 # wait 60 seconds before starting liveness
   periodSeconds: 10
   failureThreshold: 3
 ```
@@ -364,7 +386,7 @@ startupProbe:
     path: /healthz
     port: 8080
   failureThreshold: 30
-  periodSeconds: 10    # 30 × 10 = 300s (5 minutes) to start
+  periodSeconds: 10 # 30 × 10 = 300s (5 minutes) to start
 livenessProbe:
   httpGet:
     path: /healthz
@@ -380,6 +402,7 @@ readinessProbe:
 ```
 
 The flow:
+
 1. Container starts. `startupProbe` runs.
 2. While `startupProbe` is failing, `livenessProbe` and `readinessProbe` are **disabled**.
 3. If `startupProbe` succeeds, the kubelet starts running `livenessProbe` and `readinessProbe`.
@@ -391,17 +414,18 @@ This gives slow-starting apps (JVMs, big data loads) up to 5 minutes to start, w
 
 `failureThreshold × periodSeconds = max startup time`
 
-| Use case | failureThreshold | periodSeconds | Total |
-|---|---|---|---|
-| Fast app (Node, Go) | 12 | 5 | 60s |
-| Medium app (Python) | 30 | 10 | 300s (5 min) |
-| Slow app (JVM with warmup) | 60 | 10 | 600s (10 min) |
+| Use case                   | failureThreshold | periodSeconds | Total         |
+| -------------------------- | ---------------- | ------------- | ------------- |
+| Fast app (Node, Go)        | 12               | 5             | 60s           |
+| Medium app (Python)        | 30               | 10            | 300s (5 min)  |
+| Slow app (JVM with warmup) | 60               | 10            | 600s (10 min) |
 
 Tune to your app's actual startup time. A fast app doesn't need 5 minutes; a slow JVM might need 10.
 
 ### The startup + readiness interaction
 
 While `startupProbe` is running:
+
 - The Pod is **not Ready** (`Ready: False`)
 - The Pod is **not in Service endpoints** (traffic is not routed)
 - The Pod is "starting"
@@ -411,11 +435,13 @@ This is correct behavior. You don't want traffic routed to a Pod that's still in
 ### The startup + liveness interaction
 
 While `startupProbe` is running:
+
 - `livenessProbe` is **disabled**
 - The container is not killed (even if the liveness probe would fail)
 - Only `startupProbe` runs
 
 After `startupProbe` succeeds:
+
 - `livenessProbe` starts running
 - If `livenessProbe` fails, the container is killed
 
@@ -430,12 +456,14 @@ Most teams set `livenessProbe` and skip `readinessProbe`. This is a mistake. Rea
 ### What readiness does
 
 When a readiness probe fails:
+
 - The Pod IP is **removed from the Service endpoints** (no traffic routed to it)
 - The Pod is **not restarted**
 - The Pod is still "alive" (liveness can succeed or fail independently)
 - The Pod is still in the cluster (you can `kubectl exec` into it)
 
 When a readiness probe succeeds again:
+
 - The Pod IP is **added back to the Service endpoints**
 - Traffic is routed again
 
@@ -465,7 +493,7 @@ readinessProbe:
     path: /ready
     port: 8080
   periodSeconds: 5
-  failureThreshold: 2    # be quick to mark unready
+  failureThreshold: 2 # be quick to mark unready
 ```
 
 The app defines `/ready` to return 200 only when it's truly ready to serve traffic. The kubelet polls this; until it returns 200, the Pod is not in the Service endpoints.
@@ -489,6 +517,7 @@ lifecycle:
 ```
 
 The flow:
+
 1. Pod is marked for deletion (e.g., during a rolling update)
 2. **As soon as the deletion is requested, the Pod's `Ready` condition becomes `False`** (the kubelet does this for terminating Pods)
 3. The Service endpoints controller removes the Pod from the Service
@@ -500,6 +529,7 @@ Wait, step 2 isn't quite right. Let me correct it:
 Actually, when a Pod is marked for deletion, the endpoints controller removes the Pod from the Service endpoints. The Pod is removed from the Service **before** SIGTERM is sent. But there's a race: in-flight requests can still arrive at the Pod for a few seconds.
 
 To handle this race, the app should:
+
 - Have a `preStop` hook that sleeps (giving the endpoint removal time to propagate)
 - AND/OR return 503 from `/ready` on SIGTERM (so any new requests get rejected)
 
@@ -582,11 +612,11 @@ If the new Pod's readiness probe fails (e.g., the app takes 30s to warm up), the
 
 ### The three failure modes
 
-| Probe failure | Action | Reversible? |
-|---|---|---|
-| `startupProbe` fails | Container is killed (after `failureThreshold × periodSeconds`) | No (Pod restarts) |
-| `livenessProbe` fails | Container is killed and restarted (after `failureThreshold × periodSeconds`) | No (Pod restarts) |
-| `readinessProbe` fails | Pod IP is removed from Service endpoints (no restart) | Yes (Pod can become ready again) |
+| Probe failure          | Action                                                                       | Reversible?                      |
+| ---------------------- | ---------------------------------------------------------------------------- | -------------------------------- |
+| `startupProbe` fails   | Container is killed (after `failureThreshold × periodSeconds`)               | No (Pod restarts)                |
+| `livenessProbe` fails  | Container is killed and restarted (after `failureThreshold × periodSeconds`) | No (Pod restarts)                |
+| `readinessProbe` fails | Pod IP is removed from Service endpoints (no restart)                        | Yes (Pod can become ready again) |
 
 ### Container restart vs Pod restart
 
@@ -632,6 +662,7 @@ livenessProbe:
 ```
 
 When the database hiccups:
+
 1. `/healthz` returns 500 (because step 2 failed)
 2. The kubelet marks the Pod as unhealthy
 3. The kubelet kills the container
@@ -670,6 +701,7 @@ def ready():
 ```
 
 When the DB hiccups:
+
 1. `/ready` returns 503
 2. The Pod is removed from Service endpoints
 3. No new traffic is routed to the Pod
@@ -681,11 +713,11 @@ The DB hiccup caused a **graceful degradation**, not a cascading failure. Some P
 
 ### The summary
 
-| Probe | Checks | Why |
-|---|---|---|
-| `livenessProbe` | Internal state only | Restarting on external failure makes the failure worse |
+| Probe            | Checks                                 | Why                                                                  |
+| ---------------- | -------------------------------------- | -------------------------------------------------------------------- |
+| `livenessProbe`  | Internal state only                    | Restarting on external failure makes the failure worse               |
 | `readinessProbe` | Internal state + external dependencies | Removing from rotation is the right action for "can't serve traffic" |
-| `startupProbe` | "Has the app started?" | Anything else is wrong |
+| `startupProbe`   | "Has the app started?"                 | Anything else is wrong                                               |
 
 ### The exception
 
@@ -702,6 +734,7 @@ But for **most** external dependencies (DB, cache, downstream services), use rea
 Probes are run by the kubelet directly against the container. They do **not** go through the Service.
 
 This means:
+
 - A Service with no endpoints is fine — the probe still works
 - A Service with a different port mapping doesn't affect the probe
 - A NetworkPolicy that denies Service traffic doesn't affect the probe
@@ -711,6 +744,7 @@ This means:
 The Service endpoints controller watches Pods. When a Pod's `Ready: True`, the controller adds the Pod IP to the Service's endpoints. When `Ready: False`, the controller removes it.
 
 The Pod's `Ready` condition is the AND of:
+
 - All containers are `Ready` (i.e., their readiness probes are succeeding)
 - The Pod is not being deleted
 
@@ -740,11 +774,12 @@ spec:
   selector:
     app: my-app
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
 ```
 
 This is useful for:
+
 - Stateful applications (e.g., a database cluster) where the "ready" Pod is the leader and the "not ready" Pods are replicas
 - Applications where the client handles routing (e.g., a custom load balancer that knows about all Pods)
 
@@ -765,32 +800,32 @@ spec:
   template:
     spec:
       containers:
-      - name: app
-        image: myorg/web:2.1
-        ports:
-        - containerPort: 8080
-        startupProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-          failureThreshold: 30
-          periodSeconds: 5       # 30 × 5 = 150s to start
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-          periodSeconds: 10
-          failureThreshold: 3    # 30s detection time
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8080
-          periodSeconds: 5
-          failureThreshold: 2    # 10s detection time
-        lifecycle:
-          preStop:
-            exec:
-              command: ["sh", "-c", "sleep 10"]
+        - name: app
+          image: myorg/web:2.1
+          ports:
+            - containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 5 # 30 × 5 = 150s to start
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3 # 30s detection time
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 2 # 10s detection time
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 10"]
       terminationGracePeriodSeconds: 60
 ```
 
@@ -802,7 +837,7 @@ startupProbe:
     path: /healthz
     port: 8080
   failureThreshold: 60
-  periodSeconds: 10    # 60 × 10 = 600s (10 min) to start
+  periodSeconds: 10 # 60 × 10 = 600s (10 min) to start
 livenessProbe:
   httpGet:
     path: /healthz
@@ -820,7 +855,7 @@ startupProbe:
   tcpSocket:
     port: 5432
   failureThreshold: 30
-  periodSeconds: 5     # 150s to start
+  periodSeconds: 5 # 150s to start
 livenessProbe:
   tcpSocket:
     port: 5432
@@ -835,6 +870,7 @@ readinessProbe:
 ```
 
 For a database:
+
 - Liveness: TCP probe (something is listening on the port)
 - Readiness: `pg_isready` (the database is actually accepting connections)
 - Startup: TCP probe with longer threshold
@@ -845,9 +881,9 @@ For a database:
 livenessProbe:
   exec:
     command:
-    - sh
-    - -c
-    - "test -f /tmp/worker-alive"
+      - sh
+      - -c
+      - "test -f /tmp/worker-alive"
   periodSeconds: 30
   failureThreshold: 3
 ```
@@ -891,7 +927,7 @@ readinessProbe:
 lifecycle:
   preStop:
     exec:
-      command: ["sh", "-c", "sleep 10"]    # let endpoints removal propagate
+      command: ["sh", "-c", "sleep 10"] # let endpoints removal propagate
 terminationGracePeriodSeconds: 60
 ```
 
@@ -997,6 +1033,7 @@ Common causes:
 - **Init container fails** — see [[Kubernetes/concepts/L03-workloads/08-init-containers|08 — Init Containers]]
 
 For probe-related restarts, check:
+
 - The `/healthz` endpoint exists and returns 200
 - The probe's `periodSeconds` and `timeoutSeconds` are appropriate
 - The probe's `failureThreshold` isn't too tight
@@ -1044,6 +1081,7 @@ kubectl get endpoints <service-name>
 ```
 
 If empty:
+
 - No Pods match the Service selector
 - All matching Pods have `Ready: False` (readiness failing)
 
@@ -1058,10 +1096,12 @@ kubectl describe pod <pod>
 ### Symptom: Probe timing is too tight
 
 A probe that's too sensitive:
+
 - `periodSeconds: 1` + `failureThreshold: 1` = a single missed probe kills the container
 - `timeoutSeconds: 1` with a slow `/healthz` = the probe times out
 
 Fix:
+
 - Raise `periodSeconds` and `failureThreshold`
 - Raise `timeoutSeconds` if the app's `/healthz` is slow
 - Make the `/healthz` endpoint faster (no DB queries, no heavy work)
@@ -1069,10 +1109,12 @@ Fix:
 ### Symptom: Probe is too slow to detect failures
 
 A probe that takes too long to detect failure:
+
 - `periodSeconds: 60` + `failureThreshold: 3` = 3 minutes to detect a failure
 - This might be fine for batch workers, but bad for user-facing services
 
 Fix:
+
 - Lower `periodSeconds` (e.g., 5-10s)
 - Lower `failureThreshold` (e.g., 2-3)
 - Optimize the probe handler (e.g., use TCP instead of HTTP for simple liveness)
@@ -1082,6 +1124,7 @@ Fix:
 If adding probes makes the app's memory grow, the probe handler itself is heavy. For example, `/healthz` does a database query or a complex computation. The probe runs every 10s, so the app is doing this work 6 times per minute.
 
 Fix:
+
 - Make the probe handler lightweight
 - Use TCP for liveness instead of HTTP (just check the port is open)
 - Cache the result of expensive health checks
@@ -1221,10 +1264,10 @@ Use a multi-threaded app server (Gunicorn, uvicorn workers, etc.) so probes can 
 ```yaml
 # ❌ Confusing
 ports:
-- containerPort: 8080     # main app
+  - containerPort: 8080 # main app
 livenessProbe:
   httpGet:
-    port: 9090             # probe on a different port
+    port: 9090 # probe on a different port
 ```
 
 The probe must match the app's port. If the app listens on 8080, the probe should hit 8080. If you want a separate "management" port for probes, document it clearly.
@@ -1311,13 +1354,13 @@ Fix: make the readiness probe more lenient. "Is the HTTP server up and the app r
 
 ## 15. Related Notes
 
-| Topic | Note |
-|---|---|
-| Pods (probes are a container field) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] |
-| Lifecycle hooks (preStop) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] (Section 6) |
-| Deployments (rolling updates) | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]] |
-| Init containers (no probes) | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]] |
-| Multi-container Pods (probes per container) | [[Kubernetes/concepts/L03-workloads/09-multi-container-pods\|09 — Multi-Container Pods]] |
-| Services and Endpoints (readiness drives routing) | [[Kubernetes/concepts/L04-services-networking/02-services\|L04 — Services]] |
-| Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| PDBs (voluntary disruption) | [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling\|L06 — Scaling]] |
+| Topic                                             | Note                                                                                                           |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Pods (probes are a container field)               | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]]                                                       |
+| Lifecycle hooks (preStop)                         | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] (Section 6)                                           |
+| Deployments (rolling updates)                     | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]]                                         |
+| Init containers (no probes)                       | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]]                                 |
+| Multi-container Pods (probes per container)       | [[Kubernetes/concepts/L03-workloads/09-multi-container-pods\|09 — Multi-Container Pods]]                       |
+| Services and Endpoints (readiness drives routing) | [[Kubernetes/concepts/L04-services-networking/02-services\|L04 — Services]]                                    |
+| Resource requests and limits                      | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
+| PDBs (voluntary disruption)                       | [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling\|L06 — Scaling]]                                       |

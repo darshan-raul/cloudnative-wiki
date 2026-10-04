@@ -7,7 +7,7 @@ description: Planning artifacts and processes for solution architecture
 
 # Software Planning
 
-Architecture decisions live and die by documentation. Without a paper trail, the team forgets *why* something was built a certain way — and repeats the same mistakes.
+Architecture decisions live and die by documentation. Without a paper trail, the team forgets _why_ something was built a certain way — and repeats the same mistakes.
 
 ---
 
@@ -21,24 +21,30 @@ A short document capturing a **significant architectural decision**: the context
 # ADR-042: Use Kafka for async inter-service events
 
 ## Status: Accepted
+
 ## Date: 2025-05-24
+
 ## Deciders: jane@corp.com, bob@corp.com
 
 ## Context
+
 Orders service needs to notify fulfillment, billing, and analytics
 without coupling. Sync HTTP calls create circular dependency risk.
 
 ## Decision
+
 Apache Kafka with consumer groups per downstream service.
 Topic: `orders.events`
 
 ## Consequences
-+ Decoupled: producers don't know consumers
-+ Replay: new services can consume from beginning
-+ High throughput: handles 50k events/sec
-- Operational complexity: need Kafka cluster / MSK
-- Learning curve: offset management, consumer groups
-- Latency: async, not real-time
+
+- Decoupled: producers don't know consumers
+- Replay: new services can consume from beginning
+- High throughput: handles 50k events/sec
+
+* Operational complexity: need Kafka cluster / MSK
+* Learning curve: offset management, consumer groups
+* Latency: async, not real-time
 ```
 
 **Store ADRs in version control** (`docs/adr/`) — keeps them in sync with code.
@@ -134,11 +140,11 @@ Format (4Ls):
 
 ### Now / Next / Later Framework
 
-| Horizon | Timeframe | Output |
-|---------|-----------|--------|
-| **Now** | This quarter | Sprint backlog |
-| **Next** | Next quarter | Roadmap (themes, not features) |
-| **Later** | 6-12 months | Strategic initiatives |
+| Horizon   | Timeframe    | Output                         |
+| --------- | ------------ | ------------------------------ |
+| **Now**   | This quarter | Sprint backlog                 |
+| **Next**  | Next quarter | Roadmap (themes, not features) |
+| **Later** | 6-12 months  | Strategic initiatives          |
 
 ### OKRs for Architecture
 
@@ -155,25 +161,25 @@ Key Results:
 
 ## Anti-Patterns
 
-| Anti-Pattern | Problem | Fix |
-|-------------|---------|-----|
-| No ADRs | Same debates every year | Mandate ADR for any cross-team decision |
-| ADRs written after the fact | They become rationalization, not documentation | Write ADR before decision is final |
-| Giant spec documents | Nobody reads them | Keep ADRs under 1 page |
-| Planning without constraints | Architects design fantasies | Start with budget, timeline, team size |
-| No rollback plan | Changes are one-way | Always document rollback procedure |
+| Anti-Pattern                 | Problem                                        | Fix                                     |
+| ---------------------------- | ---------------------------------------------- | --------------------------------------- |
+| No ADRs                      | Same debates every year                        | Mandate ADR for any cross-team decision |
+| ADRs written after the fact  | They become rationalization, not documentation | Write ADR before decision is final      |
+| Giant spec documents         | Nobody reads them                              | Keep ADRs under 1 page                  |
+| Planning without constraints | Architects design fantasies                    | Start with budget, timeline, team size  |
+| No rollback plan             | Changes are one-way                            | Always document rollback procedure      |
 
 ---
 
 ## Tools
 
-| Artifact | Tool |
-|----------|------|
-| ADRs | Markdown in `docs/adr/`, or use [adr-tools](https://github.com/npryce/adr-tools) |
-| RFCs | GitHub PRs, Notion, or HackMD |
-| SLOs | Prometheus, Datadog, or Grafana |
-| Roadmap | Linear, Notion, or Aha! |
-| Diagrams | Excalidraw, draw.io, Mermaid |
+| Artifact | Tool                                                                             |
+| -------- | -------------------------------------------------------------------------------- |
+| ADRs     | Markdown in `docs/adr/`, or use [adr-tools](https://github.com/npryce/adr-tools) |
+| RFCs     | GitHub PRs, Notion, or HackMD                                                    |
+| SLOs     | Prometheus, Datadog, or Grafana                                                  |
+| Roadmap  | Linear, Notion, or Aha!                                                          |
+| Diagrams | Excalidraw, draw.io, Mermaid                                                     |
 
 ---
 

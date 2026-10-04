@@ -57,30 +57,35 @@ GKE abstracts two fundamentally distinct accelerator architectures into a unifie
 
 ### Accelerator Taxonomy & Machine Families
 
-| Dimension | NVIDIA L4 (G2) | NVIDIA H100 (A3 Mega) | NVIDIA H200 (A3 Ultra) | Cloud TPU v5e / v5p | Cloud TPU v6e (Trillium) |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Primary Use Case** | LLM Inference & Vision | Massive Frontier Training | Ultra-Memory LLM Training | Foundation Training & Serving | Next-Gen Foundation Training |
-| **VRAM / HBM** | 24 GB GDDR6 | 80 GB HBM3 | 141 GB HBM3e | 16/32 GB (v5e), 95 GB (v5p) | 32 GB HBM (4.7x v5e perf) |
-| **Interconnect** | PCIe Gen4 | NVLink 4 (900 GB/s) | NVLink 4 (900 GB/s) | ICI (Torus 3D mesh) | ICI (up to 256 chips/pod) |
-| **Cross-Node Fabric**| Standard TCP/IP | GPUDirect RDMA (3.2 Tbps)| GPUDirect RDMA (6.4 Tbps)| Optical Circuit Switch (OCS) | Optical Circuit Switch (OCS) |
-| **Next-Gen Counterpart**| — | — | NVIDIA Blackwell B200 (A4)| — | Scalable AI Hypercomputer |
-| **Best Framework** | PyTorch, vLLM, TensorRT | Megatron-LM, NeMo, PyTorch| DeepSpeed, Megatron, vLLM | JAX, PyTorch/XLA, MaxText | JAX, PyTorch/XLA, MaxText |
+| Dimension                | NVIDIA L4 (G2)          | NVIDIA H100 (A3 Mega)      | NVIDIA H200 (A3 Ultra)     | Cloud TPU v5e / v5p           | Cloud TPU v6e (Trillium)     |
+| :----------------------- | :---------------------- | :------------------------- | :------------------------- | :---------------------------- | :--------------------------- |
+| **Primary Use Case**     | LLM Inference & Vision  | Massive Frontier Training  | Ultra-Memory LLM Training  | Foundation Training & Serving | Next-Gen Foundation Training |
+| **VRAM / HBM**           | 24 GB GDDR6             | 80 GB HBM3                 | 141 GB HBM3e               | 16/32 GB (v5e), 95 GB (v5p)   | 32 GB HBM (4.7x v5e perf)    |
+| **Interconnect**         | PCIe Gen4               | NVLink 4 (900 GB/s)        | NVLink 4 (900 GB/s)        | ICI (Torus 3D mesh)           | ICI (up to 256 chips/pod)    |
+| **Cross-Node Fabric**    | Standard TCP/IP         | GPUDirect RDMA (3.2 Tbps)  | GPUDirect RDMA (6.4 Tbps)  | Optical Circuit Switch (OCS)  | Optical Circuit Switch (OCS) |
+| **Next-Gen Counterpart** | —                       | —                          | NVIDIA Blackwell B200 (A4) | —                             | Scalable AI Hypercomputer    |
+| **Best Framework**       | PyTorch, vLLM, TensorRT | Megatron-LM, NeMo, PyTorch | DeepSpeed, Megatron, vLLM  | JAX, PyTorch/XLA, MaxText     | JAX, PyTorch/XLA, MaxText    |
 
 ---
 
 ## 2. Distributed AI Frameworks: Kueue, DWS, and Ray on GKE
 
 ### Dynamic Workload Scheduler (DWS)
+
 Accelerator capacity for frontier AI/ML nodes (A3 Ultra, TPU pods) is in extreme global demand. Rather than suffering immediate pod scheduling rejections (`Insufficient nvidia.com/gpu`), GKE integrates **Dynamic Workload Scheduler (DWS)**:
+
 - **Flex-Start Mode:** Allows queueing batch workloads with specified execution durations. GKE holds the job and provisions GPUs as soon as contiguous hardware capacity opens up in the region.
 - **Calendar Mode:** Enables reserving dedicated GPU/TPU node pools ahead of time for deterministic training runs.
 
 ### Kueue: Multi-Tenant Batch Job Queueing
+
 Standard Kubernetes schedules pods immediately or fails them if capacity is unavailable. In multi-team AI clusters:
+
 - **Kueue** acts as a Kubernetes-native job queue manager.
 - It pools available GPU/TPU capacity, enforces team-level quotas, and holds jobs in a `Queue` until all required accelerators are simultaneously available (**All-or-Nothing gang scheduling**), preventing deadlocks where Job A holds 4 GPUs and Job B holds 4 GPUs while both require 8 GPUs to train.
 
 ### Ray on GKE (KubeRay)
+
 - **Ray** is the leading open-source framework for scaling Python and AI workloads (vLLM, Ray Train, Ray Data).
 - The **KubeRay Operator** manages Ray clusters on GKE, dynamically orchestrating a Ray Head pod and autoscaling Ray Worker pods across heterogeneous GPU node pools.
 
@@ -102,7 +107,8 @@ gcloud container node-pools create tpu-v5e-pool \
     --num-nodes=4 \
     --project=core-infrastructure-prod
 ```
-*(Note: Cloud TPU slices are multi-host; all nodes in a slice must reside in the exact same physical zone).*
+
+_(Note: Cloud TPU slices are multi-host; all nodes in a slice must reside in the exact same physical zone)._
 
 ### 2. Deploy NVIDIA GPU Node Pool with GPUDirect RDMA (A3 Series)
 
@@ -142,44 +148,44 @@ metadata:
   name: ray-llm-serving
   namespace: ai-workloads
 spec:
-  rayVersion: '2.30.0'
+  rayVersion: "2.30.0"
   headGroupSpec:
     rayStartParams:
-      dashboard-host: '0.0.0.0'
+      dashboard-host: "0.0.0.0"
     template:
       spec:
         containers:
-        - name: ray-head
-          image: rayproject/ray-ml:2.30.0-py310-gpu
-          resources:
-            requests:
-              cpu: "4"
-              memory: "16Gi"
+          - name: ray-head
+            image: rayproject/ray-ml:2.30.0-py310-gpu
+            resources:
+              requests:
+                cpu: "4"
+                memory: "16Gi"
   workerGroupSpecs:
-  - groupName: gpu-inference-workers
-    replicas: 4
-    minReplicas: 1
-    maxReplicas: 10
-    rayStartParams: {}
-    template:
-      spec:
-        tolerations:
-        - key: "nvidia.com/gpu"
-          operator: "Equal"
-          value: "present"
-          effect: "NoSchedule"
-        containers:
-        - name: ray-worker
-          image: rayproject/ray-ml:2.30.0-py310-gpu
-          resources:
-            limits:
-              nvidia.com/gpu: "1"
-              cpu: "8"
-              memory: "32Gi"
-            requests:
-              nvidia.com/gpu: "1"
-              cpu: "8"
-              memory: "32Gi"
+    - groupName: gpu-inference-workers
+      replicas: 4
+      minReplicas: 1
+      maxReplicas: 10
+      rayStartParams: {}
+      template:
+        spec:
+          tolerations:
+            - key: "nvidia.com/gpu"
+              operator: "Equal"
+              value: "present"
+              effect: "NoSchedule"
+          containers:
+            - name: ray-worker
+              image: rayproject/ray-ml:2.30.0-py310-gpu
+              resources:
+                limits:
+                  nvidia.com/gpu: "1"
+                  cpu: "8"
+                  memory: "32Gi"
+                requests:
+                  nvidia.com/gpu: "1"
+                  cpu: "8"
+                  memory: "32Gi"
 ```
 
 Apply RayCluster:
@@ -203,12 +209,12 @@ metadata:
 spec:
   namespaceSelector: {} # Cluster-wide
   resourceGroups:
-  - coveredResources: ["nvidia.com/gpu", "cpu", "memory"]
-    flavors:
-    - name: "h100-flavor"
-      resources:
-      - name: "nvidia.com/gpu"
-        nominalQuota: 16 # 16 physical GPUs total quota
+    - coveredResources: ["nvidia.com/gpu", "cpu", "memory"]
+      flavors:
+        - name: "h100-flavor"
+          resources:
+            - name: "nvidia.com/gpu"
+              nominalQuota: 16 # 16 physical GPUs total quota
 ---
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: LocalQueue
@@ -229,13 +235,13 @@ kubectl apply -f kueue-config.yaml
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Limit / Constraint | Engineering Guidance |
-| :--- | :--- | :--- |
-| **GPU Interconnect Speed** | 900 GB/s NVLink 4 | Enables ultra-fast tensor-parallel All-Reduce |
-| **TPU ICI Latency** | Sub-microsecond | Direct optical connection bypassing TCP |
-| **Max GPUs per Node** | 8 GPUs (A3 / A2) | 640 GB total VRAM on a single physical host |
-| **Max Pods per TPU Slice** | 1 Pod per TPU VM host | Multi-host TPU jobs must use `Job` or `IndexedJob` |
-| **GPUDirect RDMA** | Requires Fast Socket & VPC | Eliminates CPU copying during distributed training |
+| Parameter / Dimension      | Limit / Constraint         | Engineering Guidance                               |
+| :------------------------- | :------------------------- | :------------------------------------------------- |
+| **GPU Interconnect Speed** | 900 GB/s NVLink 4          | Enables ultra-fast tensor-parallel All-Reduce      |
+| **TPU ICI Latency**        | Sub-microsecond            | Direct optical connection bypassing TCP            |
+| **Max GPUs per Node**      | 8 GPUs (A3 / A2)           | 640 GB total VRAM on a single physical host        |
+| **Max Pods per TPU Slice** | 1 Pod per TPU VM host      | Multi-host TPU jobs must use `Job` or `IndexedJob` |
+| **GPUDirect RDMA**         | Requires Fast Socket & VPC | Eliminates CPU copying during distributed training |
 
 ---
 
@@ -252,6 +258,7 @@ kubectl apply -f kueue-config.yaml
 ## 6. Realistic Pricing Scenarios
 
 Accelerator pricing is the largest component of AI cloud infrastructure bills:
+
 - **NVIDIA L4 (24 GB):** ~$0.56 per GPU-hour.
 - **NVIDIA A100 80GB SXM4:** ~$3.93 per GPU-hour.
 - **NVIDIA H100 80GB SXM5:** ~$9.88 per GPU-hour.
@@ -279,7 +286,7 @@ Accelerator pricing is the largest component of AI cloud infrastructure bills:
   - TPU Slice Compute: $19.20/hr × 336 hrs = **$6,451.20**
   - GCS FUSE dataset streaming (5 TB in-region): **$100.00**
 - **Total Monthly Cost:** **$6,551.20 / month**
-*(An identical 16-accelerator training run on A100 GPUs would cost ~$21,000.00, yielding a **69% cost reduction** using TPU v5e).*
+  _(An identical 16-accelerator training run on A100 GPUs would cost ~$21,000.00, yielding a **69% cost reduction** using TPU v5e)._
 
 ---
 

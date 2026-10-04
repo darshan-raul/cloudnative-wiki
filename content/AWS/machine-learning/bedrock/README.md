@@ -18,23 +18,23 @@ Bedrock provides API access to foundation models from Anthropic (Claude), Meta (
 
 ### Text Models (LLMs)
 
-| Model | Provider | Context | Strengths |
-|-------|----------|---------|-----------|
-| Claude 3.5 Sonnet | Anthropic | 200K | Coding, reasoning, long documents |
-| Claude 3 Haiku | Anthropic | 200K | Fast, affordable, good reasoning |
-| Llama 3.1 70B | Meta | 128K | Open weights, good all-rounder |
-| Llama 3.1 8B | Meta | 128K | Fast, local deployment friendly |
-| Mistral Large 2 | Mistral | 32K | French/German/Spanish, code |
-| Mistral 7B | Mistral | 32K | Open weights, fast |
-| Command R+ | Cohere | 128K | RAG, citations, multilingual |
-| Titan Text | AWS | 32K | Tight AWS integration |
+| Model             | Provider  | Context | Strengths                         |
+| ----------------- | --------- | ------- | --------------------------------- |
+| Claude 3.5 Sonnet | Anthropic | 200K    | Coding, reasoning, long documents |
+| Claude 3 Haiku    | Anthropic | 200K    | Fast, affordable, good reasoning  |
+| Llama 3.1 70B     | Meta      | 128K    | Open weights, good all-rounder    |
+| Llama 3.1 8B      | Meta      | 128K    | Fast, local deployment friendly   |
+| Mistral Large 2   | Mistral   | 32K     | French/German/Spanish, code       |
+| Mistral 7B        | Mistral   | 32K     | Open weights, fast                |
+| Command R+        | Cohere    | 128K    | RAG, citations, multilingual      |
+| Titan Text        | AWS       | 32K     | Tight AWS integration             |
 
 ### Image Models
 
-| Model | Provider | Strengths |
-|-------|----------|-----------|
+| Model                   | Provider     | Strengths                |
+| ----------------------- | ------------ | ------------------------ |
 | Stable Diffusion XL 1.0 | Stability AI | Artistic, photorealistic |
-| Titan Image Generator | AWS | Fast, AWS integration |
+| Titan Image Generator   | AWS          | Fast, AWS integration    |
 
 ## Using Bedrock (API)
 
@@ -178,6 +178,7 @@ for event in response['completion']:
 ### Agent Tools
 
 Agents can use:
+
 - **Knowledge bases** — RAG from your documents
 - **Lambda functions** — Execute code
 - **OpenSearch queries** — Search internal data
@@ -203,6 +204,7 @@ bedrock.invoke_model(
 ```
 
 Guardrails configured via console:
+
 - **Content filters** — Violence, hate speech, sexual content
 - **Topic filters** — Block certain topics
 - **Word filters** — Block specific words/phrases
@@ -248,24 +250,24 @@ bedrock.create_provisioned_model_throughput(
 
 ## Pricing
 
-| Model | Input | Output |
-|-------|-------|--------|
-| Claude 3.5 Sonnet | $0.003/1K tokens | $0.015/1K tokens |
-| Claude 3 Haiku | $0.00025/1K tokens | $0.00125/1K tokens |
-| Llama 3.1 70B | $0.00265/1K tokens | $0.00265/1K tokens |
-| Mistral Large 2 | $0.008/1K tokens | $0.024/1K tokens |
-| Stable Diffusion XL | $0.018/image | — |
+| Model               | Input              | Output             |
+| ------------------- | ------------------ | ------------------ |
+| Claude 3.5 Sonnet   | $0.003/1K tokens   | $0.015/1K tokens   |
+| Claude 3 Haiku      | $0.00025/1K tokens | $0.00125/1K tokens |
+| Llama 3.1 70B       | $0.00265/1K tokens | $0.00265/1K tokens |
+| Mistral Large 2     | $0.008/1K tokens   | $0.024/1K tokens   |
+| Stable Diffusion XL | $0.018/image       | —                  |
 
 Provisioned throughput: ~$45K/month for 1 model unit (negotiable).
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Context window | Varies by model (8K-200K tokens) |
-| Concurrent requests | Per-model, varies |
-| RAG Knowledge bases | 5 per agent |
-| Fine-tuning | Not available for all models (Claude: no fine-tuning) |
+| Resource            | Limit                                                 |
+| ------------------- | ----------------------------------------------------- |
+| Context window      | Varies by model (8K-200K tokens)                      |
+| Concurrent requests | Per-model, varies                                     |
+| RAG Knowledge bases | 5 per agent                                           |
+| Fine-tuning         | Not available for all models (Claude: no fine-tuning) |
 
 ## References
 

@@ -1,0 +1,16 @@
+<!-- /var/ossec/etc/decoders/0500-aws-cloudtrail-org.xml -->
+<decoder name="aws-cloudtrail-multi-org">
+  <program_name>aws-cloudtrail</program_name>
+  <prematch>^{\"eventVersion\"</prematch>
+  <json/>
+  <order>src_ip, user, action, result, aws_account_id, aws_region</order>
+  <description>AWS CloudTrail Multi-Org JSON logs</description>
+</decoder>
+
+<!-- Org enrichment decoder — adds org name based on bucket name via rule -->
+<decoder name="cloudtrail-org-enrich" parent="aws-cloudtrail-multi-org">
+  <prematch>cloudtrail-org-alpha</prematch>
+  <regex>.*</regex>
+  <order>aws_org_name</order>
+  <description>Org-Alpha CloudTrail</description>
+</decoder>

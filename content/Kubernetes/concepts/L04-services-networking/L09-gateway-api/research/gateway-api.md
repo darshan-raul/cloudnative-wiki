@@ -1,3 +1,10 @@
+---
+title: "Gateway API — In-Depth Reference"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Gateway API — In-Depth Reference — Kubernetes reference and architecture guide."
+---
+
 # Gateway API — In-Depth Reference
 
 > Source of truth: https://gateway-api.sigs.k8s.io (spec v1, channel `standard`).
@@ -50,12 +57,12 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces:
-        from: All
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
 ```
 
 A Gateway's `status.listeners[].conditions` and the top-level `conditions[]` array is the source of truth for "is this thing actually serving?"
@@ -72,15 +79,15 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg
-    namespace: infra
+    - name: eg
+      namespace: infra
   hostnames: ["my-app.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: my-app
-      port: 8080
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: my-app
+          port: 8080
 ```
 
 Sister resources: `TCPRoute`, `UDPRoute`, `TLSRoute` (SNI-based), `GRPCRoute` (gRPC method matching, with a `GRPCRouteMatch` first-class support).
@@ -94,6 +101,7 @@ Attach to a `Gateway`, listener, route, or service. The standard ones in `standa
 - The rest (`RateLimitPolicy`, `AuthPolicy`, `SessionPersistence`, etc.) are in `experimental` channel or vendor-extensions.
 
 Plus, **EG-specific extensions** (out of spec, but stable in the project):
+
 - `SecurityPolicy` — JWT, OIDC, Basic auth, extAuthz, CORS, IP allow/deny, rate limit (local)
 - `EnvoyProxy` — break the glass into the underlying Envoy config
 
@@ -125,11 +133,11 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 
 ## 4. Roles & Personas — The Killer Feature
 
-| Role | Owns | Examples |
-|------|------|----------|
-| **Infrastructure provider** | `GatewayClass` | Vendor, platform team |
-| **Cluster operator** | `Gateway`, namespace, RBAC | Cluster admin, SRE |
-| **Application developer** | `HTTPRoute`, Services, `SecurityPolicy` | App team |
+| Role                        | Owns                                    | Examples              |
+| --------------------------- | --------------------------------------- | --------------------- |
+| **Infrastructure provider** | `GatewayClass`                          | Vendor, platform team |
+| **Cluster operator**        | `Gateway`, namespace, RBAC              | Cluster admin, SRE    |
+| **Application developer**   | `HTTPRoute`, Services, `SecurityPolicy` | App team              |
 
 In practice: the infra team creates `Gateway` objects with `allowedRoutes.namespaces: from: Selector` (or `All`). The app team never touches the Gateway — they only write `HTTPRoute` and Services in their own namespace. The cluster admin gates everything with RBAC:
 
@@ -138,9 +146,9 @@ In practice: the infra team creates `Gateway` objects with `allowedRoutes.namesp
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 rules:
-- apiGroups: ["gateway.networking.k8s.io"]
-  resources: ["httproutes"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["gateway.networking.k8s.io"]
+    resources: ["httproutes"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ```
 
 This is what the Ingress model never gave you cleanly.
@@ -155,12 +163,12 @@ A route is "claimed" by a Gateway (or a specific listener via `sectionName`) via
 
 ```yaml
 parentRefs:
-- group: gateway.networking.k8s.io
-  kind: Gateway
-  name: eg
-  namespace: infra
-  sectionName: http        # specific listener; optional
-  port: 80                 # only if listener name doesn't disambiguate
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: eg
+    namespace: infra
+    sectionName: http # specific listener; optional
+    port: 80 # only if listener name doesn't disambiguate
 ```
 
 ### 5.2 Hostname intersection
@@ -196,15 +204,15 @@ apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
   name: allow-app-a
-  namespace: app-b     # target namespace
+  namespace: app-b # target namespace
 spec:
   from:
-  - group: gateway.networking.k8s.io
-    kind: HTTPRoute
-    namespace: app-a  # consumer
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: app-a # consumer
   to:
-  - group: ""
-    kind: Service
+    - group: ""
+      kind: Service
 ```
 
 Same pattern applies to Secret refs in `BackendTLSPolicy`. **The grant must be in the target namespace**, which is what makes it safe — the target owner approves.
@@ -223,16 +231,16 @@ metadata:
   namespace: app
 spec:
   targetRefs:
-  - group: ""
-    kind: Service
-    name: my-app
+    - group: ""
+      kind: Service
+      name: my-app
   tls:
     caCertificateRefs:
-    - group: ""
-      kind: ConfigMap
-      name: upstream-ca
+      - group: ""
+        kind: ConfigMap
+        name: upstream-ca
     hostname: my-app.app.svc.cluster.local
-    wellKnownCACertificates: SystemTrustStore  # or omit for just CAref
+    wellKnownCACertificates: SystemTrustStore # or omit for just CAref
     mode: Require
 ```
 
@@ -248,14 +256,14 @@ Gateway API does **not** define how certs are minted — only how they're refere
 
 ```yaml
 listeners:
-- name: https
-  port: 443
-  protocol: HTTPS
-  tls:
-    mode: Terminate
-    certificateRefs:
-    - kind: Secret
-      name: my-app-tls
+  - name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      mode: Terminate
+      certificateRefs:
+        - kind: Secret
+          name: my-app-tls
 ```
 
 The Secret **must** be of type `kubernetes.io/tls` with keys `tls.crt` and `tls.key`. That's the only shape that works.
@@ -273,8 +281,8 @@ metadata:
 spec:
   secretName: my-app-tls
   dnsNames:
-  - my-app.example.com
-  - "*.example.com"
+    - my-app.example.com
+    - "*.example.com"
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
@@ -301,11 +309,13 @@ Gateway API itself does not rotate. cert-manager (or your operator) does. Envoy 
 - `SessionPersistence` (alpha)
 
 `experimental` adds:
+
 - `RateLimitPolicy`, `AuthPolicy` (note: distinct from EG's `SecurityPolicy`)
 - `BackendLBPolicy`
 - `ClientTrafficPolicy`, `EnvoyExperimentalFilter`
 
 **EG-specific** (not in spec):
+
 - `SecurityPolicy` (CORS, JWT, OIDC, Basic, extAuthz, IP allow/deny, rate limit)
 - `EnvoyProxy` (the "break glass")
 
@@ -349,28 +359,28 @@ If you see `OverlappingTLSConfig` on a listener, two listeners in the same Gatew
 
 ## 12. Gateway API vs Ingress — Diff Table
 
-| Capability | Ingress (NGINX) | Gateway API |
-|---|---|---|
-| HTTP routing | ✅ core | ✅ core (HTTPRoute) |
-| L4 (TCP/UDP) | ❌ (Custom NGINX) | ✅ `TCPRoute`/`UDPRoute`/`TLSRoute` |
-| TLS passthrough | ⚠️ annotation hack | ✅ `tls.mode: Passthrough` + `TLSRoute` |
-| Role separation | ❌ | ✅ `GatewayClass` / `Gateway` / route |
-| Traffic split / canary | ⚠️ vendor annotations | ✅ `backendRefs[].weight` (first-class) |
-| Header rewrite | ⚠️ annotation | ✅ `RequestHeaderModifier` filter |
-| URL rewrite | ⚠️ annotation | ✅ `URLRewrite` filter (path / host) |
-| Redirect | ⚠️ annotation | ✅ `RequestRedirect` filter |
-| CORS | ⚠️ annotation | ✅ EG `SecurityPolicy.cors` (spec alpha) |
-| Auth (JWT/OIDC) | ⚠️ annotation + Lua | ✅ EG `SecurityPolicy.oidc` / `jwt` |
-| Rate limit | ⚠️ annotation | ✅ EG `SecurityPolicy.rateLimit` (local) |
-| Cross-namespace | ❌ (only by Service name) | ✅ via `ReferenceGrant` |
-| Mirror | ⚠️ annotation | ✅ `RequestMirror` (alpha) |
-| Upstream mTLS | ❌ | ✅ `BackendTLSPolicy` |
-| Listener merging | ❌ (only one resource) | ✅ (`parentRefs` + sectionName) |
-| Vendor neutrality | ❌ (annotations differ) | ✅ (spec) |
-| Conformance | ❌ (kustomize + chaos) | ✅ (`conformance` profile) |
-| Maturity | GA 2016, slowly evolving | GA 2023 (v1.0), still adding features |
-| Tooling (kustomize, helm) | ✅ broad | ✅ broad, less mature |
-| nginx-1.0 EOL | n/a (project retiring) | n/a |
+| Capability                | Ingress (NGINX)           | Gateway API                              |
+| ------------------------- | ------------------------- | ---------------------------------------- |
+| HTTP routing              | ✅ core                   | ✅ core (HTTPRoute)                      |
+| L4 (TCP/UDP)              | ❌ (Custom NGINX)         | ✅ `TCPRoute`/`UDPRoute`/`TLSRoute`      |
+| TLS passthrough           | ⚠️ annotation hack        | ✅ `tls.mode: Passthrough` + `TLSRoute`  |
+| Role separation           | ❌                        | ✅ `GatewayClass` / `Gateway` / route    |
+| Traffic split / canary    | ⚠️ vendor annotations     | ✅ `backendRefs[].weight` (first-class)  |
+| Header rewrite            | ⚠️ annotation             | ✅ `RequestHeaderModifier` filter        |
+| URL rewrite               | ⚠️ annotation             | ✅ `URLRewrite` filter (path / host)     |
+| Redirect                  | ⚠️ annotation             | ✅ `RequestRedirect` filter              |
+| CORS                      | ⚠️ annotation             | ✅ EG `SecurityPolicy.cors` (spec alpha) |
+| Auth (JWT/OIDC)           | ⚠️ annotation + Lua       | ✅ EG `SecurityPolicy.oidc` / `jwt`      |
+| Rate limit                | ⚠️ annotation             | ✅ EG `SecurityPolicy.rateLimit` (local) |
+| Cross-namespace           | ❌ (only by Service name) | ✅ via `ReferenceGrant`                  |
+| Mirror                    | ⚠️ annotation             | ✅ `RequestMirror` (alpha)               |
+| Upstream mTLS             | ❌                        | ✅ `BackendTLSPolicy`                    |
+| Listener merging          | ❌ (only one resource)    | ✅ (`parentRefs` + sectionName)          |
+| Vendor neutrality         | ❌ (annotations differ)   | ✅ (spec)                                |
+| Conformance               | ❌ (kustomize + chaos)    | ✅ (`conformance` profile)               |
+| Maturity                  | GA 2016, slowly evolving  | GA 2023 (v1.0), still adding features    |
+| Tooling (kustomize, helm) | ✅ broad                  | ✅ broad, less mature                    |
+| nginx-1.0 EOL             | n/a (project retiring)    | n/a                                      |
 
 **Bottom line:** if you're on `ingress-nginx` and don't need L4 routing, canary traffic split, or true role separation, the migration is straightforward. If you do, Gateway API is a no-brainer. The migration is also one of the few good reasons to switch — `ingress-nginx` is being retired and the recommended successor is Envoy Gateway.
 

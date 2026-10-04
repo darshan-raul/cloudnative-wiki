@@ -12,10 +12,10 @@ GitOps: **git is the source of truth for both app code AND infrastructure**. A c
 
 ## The two operations
 
-| Pattern | Model | Tools | State |
-|---------|-------|-------|-------|
-| **Push** | CI pushes to cluster (kubectl apply) | Jenkins, GitHub Actions | Cluster state can drift |
-| **Pull** (GitOps) | Controller pulls from git | Argo CD, Flux | Cluster state always matches git |
+| Pattern           | Model                                | Tools                   | State                            |
+| ----------------- | ------------------------------------ | ----------------------- | -------------------------------- |
+| **Push**          | CI pushes to cluster (kubectl apply) | Jenkins, GitHub Actions | Cluster state can drift          |
+| **Pull** (GitOps) | Controller pulls from git            | Argo CD, Flux           | Cluster state always matches git |
 
 **GitOps is pull-based.** The cluster decides what to run, not CI.
 
@@ -62,6 +62,7 @@ From the [OpenGitOps](https://opengitops.dev/) spec:
 CNCF Graduated. The most popular.
 
 **Pros:**
+
 - Web UI
 - Multi-cluster support
 - App of Apps pattern
@@ -72,6 +73,7 @@ CNCF Graduated. The most popular.
 - Helm, Kustomize, Jsonnet, plain manifests
 
 **Cons:**
+
 - More complex than Flux
 - Stateful UI/DB (Redis)
 - Heavier resource footprint
@@ -81,6 +83,7 @@ CNCF Graduated. The most popular.
 CNCF Graduated. The CNCF reference.
 
 **Pros:**
+
 - Lighter weight
 - Composable (GitOps Toolkit)
 - Multi-tenancy
@@ -89,28 +92,29 @@ CNCF Graduated. The CNCF reference.
 - CRDs are the interface
 
 **Cons:**
+
 - No built-in UI (use Weave GitOps)
 - Less out-of-box features
 
 ### Comparison
 
-| Feature | Argo CD | Flux |
-|---------|---------|------|
-| Web UI | ✅ built-in | ❌ use Weave GitOps |
-| Multi-cluster | ✅ hub-spoke | ✅ hub-spoke |
-| Image automation | ✅ via Image Updater | ✅ built-in |
-| RBAC | ✅ rich | ✅ simpler |
-| Notifications | ✅ built-in | ✅ via Notification Controller |
-| Helm | ✅ | ✅ |
-| Kustomize | ✅ | ✅ |
-| Jsonnet | ✅ | ❌ |
-| Helm values | ✅ | ✅ |
-| OCI registry | ✅ | ✅ |
-| App of Apps | ✅ | ✅ (Kustomization) |
-| Sync waves | ✅ | ✅ (dependsOn) |
-| Drift detection | ✅ | ✅ |
-| Resource hooks | ✅ | ❌ |
-| Multi-tenancy | ✅ Projects | ✅ namespaces |
+| Feature          | Argo CD              | Flux                           |
+| ---------------- | -------------------- | ------------------------------ |
+| Web UI           | ✅ built-in          | ❌ use Weave GitOps            |
+| Multi-cluster    | ✅ hub-spoke         | ✅ hub-spoke                   |
+| Image automation | ✅ via Image Updater | ✅ built-in                    |
+| RBAC             | ✅ rich              | ✅ simpler                     |
+| Notifications    | ✅ built-in          | ✅ via Notification Controller |
+| Helm             | ✅                   | ✅                             |
+| Kustomize        | ✅                   | ✅                             |
+| Jsonnet          | ✅                   | ❌                             |
+| Helm values      | ✅                   | ✅                             |
+| OCI registry     | ✅                   | ✅                             |
+| App of Apps      | ✅                   | ✅ (Kustomization)             |
+| Sync waves       | ✅                   | ✅ (dependsOn)                 |
+| Drift detection  | ✅                   | ✅                             |
+| Resource hooks   | ✅                   | ❌                             |
+| Multi-tenancy    | ✅ Projects          | ✅ namespaces                  |
 
 **For most teams:** Argo CD has better UX, Flux has better GitOps principles. Both work.
 
@@ -180,11 +184,11 @@ gitops-prod/
 
 ### When to use which
 
-| Pattern | Best for |
-|---------|----------|
-| App-per-repo | Small orgs, independent apps |
-| Monorepo | Platform team owns ops, app teams contribute |
-| Env-per-repo | Strict change control, audit requirements |
+| Pattern      | Best for                                     |
+| ------------ | -------------------------------------------- |
+| App-per-repo | Small orgs, independent apps                 |
+| Monorepo     | Platform team owns ops, app teams contribute |
+| Env-per-repo | Strict change control, audit requirements    |
 
 ## The reconciliation model
 
@@ -244,10 +248,11 @@ For ordered deployments:
 ```yaml
 metadata:
   annotations:
-    argocd.argoproj.io/sync-wave: "0"  # applied first
+    argocd.argoproj.io/sync-wave: "0" # applied first
 ```
 
 Higher numbers applied later. Use this for:
+
 - Database migrations before app
 - App before monitoring
 - ConfigMaps before Pods
@@ -290,6 +295,7 @@ argocd app diff my-app
 ```
 
 **Drift sources:**
+
 - Manual `kubectl apply`
 - A different controller modifying the resource
 - A bug in the GitOps controller
@@ -338,9 +344,9 @@ spec:
   target:
     name: my-secret
   data:
-  - secretKey: password
-    remoteRef:
-      key: my-app/prod/password
+    - secretKey: password
+      remoteRef:
+        key: my-app/prod/password
 ```
 
 The controller reads from AWS Secrets Manager / Vault / etc. and creates a k8s Secret.
@@ -478,15 +484,15 @@ metadata:
   name: my-app-all-clusters
 spec:
   generators:
-  - list:
-      elements:
-      - cluster: prod-us
-        url: https://prod-us.example.com
-      - cluster: prod-eu
-        url: https://prod-eu.example.com
+    - list:
+        elements:
+          - cluster: prod-us
+            url: https://prod-us.example.com
+          - cluster: prod-eu
+            url: https://prod-eu.example.com
   template:
     metadata:
-      name: '{{cluster}}-my-app'
+      name: "{{cluster}}-my-app"
     spec:
       project: default
       source:
@@ -494,7 +500,7 @@ spec:
         targetRevision: HEAD
         path: overlays/{{cluster}}
       destination:
-        server: '{{url}}'
+        server: "{{url}}"
 ```
 
 One ApplicationSet, one source, N applications across clusters.
@@ -517,11 +523,11 @@ spec:
   strategy:
     canary:
       steps:
-      - setWeight: 10
-      - pause: {duration: 5m}
-      - setWeight: 50
-      - pause: {duration: 5m}
-      - setWeight: 100
+        - setWeight: 10
+        - pause: { duration: 5m }
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - setWeight: 100
   selector:
     matchLabels:
       app: my-app
@@ -531,8 +537,8 @@ spec:
         app: my-app
     spec:
       containers:
-      - name: my-app
-        image: myregistry/myapp:v1
+        - name: my-app
+          image: myregistry/myapp:v1
 ```
 
 See [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] for full details.
@@ -557,12 +563,12 @@ spec:
     interval: 30s
     threshold: 5
     metrics:
-    - name: request-success-rate
-      thresholdRange:
-        min: 99
-    - name: request-duration
-      thresholdRange:
-        max: 500
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+      - name: request-duration
+        thresholdRange:
+          max: 500
 ```
 
 Flagger uses Istio/Linkerd/App Mesh for traffic splitting.
@@ -603,15 +609,15 @@ Same GitOps flow, but for cluster components (CNI, ingress, cert-manager, etc.).
 
 ## Common gotchas
 
-* **Argo CD and the cluster-admin role.** The controller needs broad access to apply manifests. Restrict to specific namespaces / projects.
-* **Flux with the GitOps Toolkit is more verbose than Argo CD.** Trade-off: more flexibility, more yaml.
-* **Image updater can spam PRs** if you use floating tags (latest, semver ranges).
-* **Sync windows (e.g., "no syncs on Friday")** can delay fixes. Use sparingly.
-* **Multi-cluster with cluster-scoped resources** needs careful RBAC. Avoid cluster-scoped when possible.
-* **Helm values in GitOps** — different controllers handle them differently. Argo CD has values files, Flux has Kustomization.
-* **Manifests with side-effects** (e.g., creating a database) are dangerous in GitOps. Use a separate process for one-time infra.
-* **The cluster that runs the GitOps controller** — is it a "trick question" if it's not in git? Use GitOps for the GitOps controller too.
-* **GitOps != no CI.** You still need CI for tests, builds, image scans. GitOps handles deployment only.
+- **Argo CD and the cluster-admin role.** The controller needs broad access to apply manifests. Restrict to specific namespaces / projects.
+- **Flux with the GitOps Toolkit is more verbose than Argo CD.** Trade-off: more flexibility, more yaml.
+- **Image updater can spam PRs** if you use floating tags (latest, semver ranges).
+- **Sync windows (e.g., "no syncs on Friday")** can delay fixes. Use sparingly.
+- **Multi-cluster with cluster-scoped resources** needs careful RBAC. Avoid cluster-scoped when possible.
+- **Helm values in GitOps** — different controllers handle them differently. Argo CD has values files, Flux has Kustomization.
+- **Manifests with side-effects** (e.g., creating a database) are dangerous in GitOps. Use a separate process for one-time infra.
+- **The cluster that runs the GitOps controller** — is it a "trick question" if it's not in git? Use GitOps for the GitOps controller too.
+- **GitOps != no CI.** You still need CI for tests, builds, image scans. GitOps handles deployment only.
 
 ## A worked example
 
@@ -644,6 +650,7 @@ Same GitOps flow, but for cluster components (CNI, ingress, cert-manager, etc.).
    - No access to kube-system or other namespaces
 
 **On push to main:**
+
 1. CI builds image `myregistry/myapp:v123`
 2. CI updates `overlays/dev/kustomization.yaml` to `v123`
 3. Argo CD detects change, syncs
@@ -658,8 +665,8 @@ Same GitOps flow, but for cluster components (CNI, ingress, cert-manager, etc.).
 
 ## See also
 
-* [[Kubernetes/guides/delivery/templating-patching/kustomize|kustomize]] — patching layered with GitOps
-* [[Kubernetes/guides/delivery/templating-patching/helm/cicd|helm-cicd]] — Helm in GitOps
-* [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — CI for image builds
-* [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — safe rollouts
-* [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for the controller
+- [[Kubernetes/guides/delivery/templating-patching/kustomize|kustomize]] — patching layered with GitOps
+- [[Kubernetes/guides/delivery/templating-patching/helm/cicd|helm-cicd]] — Helm in GitOps
+- [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — CI for image builds
+- [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — safe rollouts
+- [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for the controller

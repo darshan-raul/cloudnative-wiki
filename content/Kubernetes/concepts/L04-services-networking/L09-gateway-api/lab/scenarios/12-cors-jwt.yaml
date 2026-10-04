@@ -39,10 +39,10 @@ spec:
     metadata: { labels: { app: secure-target } }
     spec:
       containers:
-      - name: secure-target
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "secure: ok" }]
-        ports: [{ containerPort: 8080 }]
+        - name: secure-target
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "secure: ok" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -52,8 +52,8 @@ metadata:
 spec:
   selector: { app: secure-target }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 # The EG SecurityPolicy. Targets the HTTPRoute by name. CORS + JWT.
 apiVersion: gateway.envoyproxy.io/v1alpha1
@@ -63,35 +63,35 @@ metadata:
   namespace: app
 spec:
   targetRefs:
-  - group: gateway.networking.k8s.io
-    kind: HTTPRoute
-    name: secure
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: secure
   cors:
     allowOrigins:
-    - "https://app.example.com"
+      - "https://app.example.com"
     allowMethods:
-    - GET
-    - POST
-    - PUT
-    - DELETE
-    - OPTIONS
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
     allowHeaders:
-    - "Authorization"
-    - "Content-Type"
+      - "Authorization"
+      - "Content-Type"
     exposeHeaders:
-    - "X-Request-Id"
+      - "X-Request-Id"
     maxAge: 600s
   jwt:
     providers:
-    - name: my-idp
-      remoteJWKS:
-        uri: https://idp.example.com/.well-known/jwks.json
-        # For self-signed test keys, use inline JWKS via `localJWKS` instead.
-      claimToHeaders:
-      - claim: sub
-        header: X-User-Id
-      - claim: scope
-        header: X-User-Scopes
+      - name: my-idp
+        remoteJWKS:
+          uri: https://idp.example.com/.well-known/jwks.json
+          # For self-signed test keys, use inline JWKS via `localJWKS` instead.
+        claimToHeaders:
+          - claim: sub
+            header: X-User-Id
+          - claim: scope
+            header: X-User-Scopes
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -100,12 +100,12 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg
-    namespace: infra
+    - name: eg
+      namespace: infra
   hostnames: ["secure.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: secure-target
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: secure-target
+          port: 80

@@ -1,6 +1,13 @@
+---
+title: "Compliance Frameworks (NIST, CIS, OWASP)"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Compliance Frameworks (NIST, CIS, OWASP) — Kubernetes reference and architecture guide."
+---
+
 # Compliance Frameworks (NIST, CIS, OWASP)
 
-*"https://www.nist.gov/cyberframework | https://www.cisecurity.org/ | https://owasp.org/"*
+_"https://www.nist.gov/cyberframework | https://www.cisecurity.org/ | https://owasp.org/"_
 
 If your cluster has to satisfy an external standard — a regulator, a customer, a partner — you need to know the major **compliance frameworks** and how they apply to k8s. The three most relevant for k8s security: **NIST 800-190** (Application Container Security Guide), **CIS Kubernetes Benchmark** (the de-facto operational standard), and **OWASP** (Top 10 for containers / k8s, separate from the web app Top 10). This note is the **L07 layer** for compliance — it ties the other L07 notes to the frameworks they implement.
 
@@ -27,28 +34,28 @@ If your cluster has to satisfy an external standard — a regulator, a customer,
 
 Compliance is the **"have to"** of security. Most production k8s clusters have one of:
 
-* **Regulatory** — PCI-DSS (payment cards), HIPAA (healthcare), FedRAMP (US gov), GDPR (EU).
-* **Customer-driven** — SOC2 (the SaaS standard), ISO 27001 (international).
-* **Industry-driven** — NIST CSF, CIS Controls, SLSA (supply chain).
+- **Regulatory** — PCI-DSS (payment cards), HIPAA (healthcare), FedRAMP (US gov), GDPR (EU).
+- **Customer-driven** — SOC2 (the SaaS standard), ISO 27001 (international).
+- **Industry-driven** — NIST CSF, CIS Controls, SLSA (supply chain).
 
 The frameworks give you:
 
-* A **checklist** of controls — what to implement.
-* A **common language** — auditors, partners, customers understand the framework.
-* A **shared standard** — what "good" looks like.
+- A **checklist** of controls — what to implement.
+- A **common language** — auditors, partners, customers understand the framework.
+- A **shared standard** — what "good" looks like.
 
 For k8s specifically, the relevant frameworks are:
 
-* **NIST 800-190** — application container security. The federal / standards view.
-* **CIS Kubernetes Benchmark** — the operational standard. Adopted by EKS, GKE, AKS hardening guides.
-* **OWASP Container / k8s Top 10** — the developer's view. What's commonly wrong.
-* **SLSA** — supply-chain integrity. Google's framework, increasingly adopted.
+- **NIST 800-190** — application container security. The federal / standards view.
+- **CIS Kubernetes Benchmark** — the operational standard. Adopted by EKS, GKE, AKS hardening guides.
+- **OWASP Container / k8s Top 10** — the developer's view. What's commonly wrong.
+- **SLSA** — supply-chain integrity. Google's framework, increasingly adopted.
 
 The frameworks **complement each other**. NIST is the high-level; CIS is the operational; OWASP is the developer; SLSA is the supply chain.
 
 ## 2. NIST 800-190 — Application Container Security Guide
 
-*"https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-190.pdf"*
+_"https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-190.pdf"_
 
 NIST 800-190 is the **federal standard** for container security. It covers the full lifecycle: image, registry, orchestrator, container, host OS.
 
@@ -62,17 +69,17 @@ The 5 sections:
 
 The recommendations (paraphrased):
 
-* **Image** — use minimal base images, scan for CVEs, use multi-stage builds, sign images.
-* **Registry** — use a private registry, enable vulnerability scanning, encrypt at rest, require authentication.
-* **Orchestrator** — enable RBAC, use PSS / SecurityContext, NetworkPolicy, audit logging, encryption at rest, namespace isolation.
-* **Container** — drop capabilities, run as non-root, read-only root filesystem, seccomp, AppArmor, resource limits.
-* **Host OS** — minimal OS, patch regularly, disable unnecessary services, kernel hardening, dedicated hosts for k8s components.
+- **Image** — use minimal base images, scan for CVEs, use multi-stage builds, sign images.
+- **Registry** — use a private registry, enable vulnerability scanning, encrypt at rest, require authentication.
+- **Orchestrator** — enable RBAC, use PSS / SecurityContext, NetworkPolicy, audit logging, encryption at rest, namespace isolation.
+- **Container** — drop capabilities, run as non-root, read-only root filesystem, seccomp, AppArmor, resource limits.
+- **Host OS** — minimal OS, patch regularly, disable unnecessary services, kernel hardening, dedicated hosts for k8s components.
 
 NIST 800-190 is the **federal baseline**. For US government clusters (FedRAMP), it's required. For others, it's a useful reference.
 
 ## 3. CIS Kubernetes Benchmark
 
-*"https://www.cisecurity.org/benchmark/kubernetes"*
+_"https://www.cisecurity.org/benchmark/kubernetes"_
 
 The **CIS Kubernetes Benchmark** is the de-facto operational standard. It's a list of recommendations (with check commands) for hardening a k8s cluster.
 
@@ -80,10 +87,10 @@ The benchmark is **versioned** per k8s release. CIS publishes a v1.30 benchmark,
 
 The sections:
 
-* **Control Plane** — apiserver flags, etcd config, scheduler, controller-manager.
-* **Worker Node** — kubelet config, container runtime, kernel.
-* **Policies** — RBAC, PSS, NetworkPolicy.
-* **Managed Services** — EKS, GKE, AKS specifics.
+- **Control Plane** — apiserver flags, etcd config, scheduler, controller-manager.
+- **Worker Node** — kubelet config, container runtime, kernel.
+- **Policies** — RBAC, PSS, NetworkPolicy.
+- **Managed Services** — EKS, GKE, AKS specifics.
 
 A sample recommendation (from the kubelet section):
 
@@ -98,25 +105,25 @@ A sample recommendation (from the kubelet section):
 
 Each recommendation has:
 
-* **ID** — `3.2.1` (section 3, subsection 2, item 1).
-* **Description** — what to do.
-* **Audit** — the check command.
-* **Remediation** — the fix.
+- **ID** — `3.2.1` (section 3, subsection 2, item 1).
+- **Description** — what to do.
+- **Audit** — the check command.
+- **Remediation** — the fix.
 
 The benchmark is **automated** by **kube-bench** (CIS's official tool).
 
 ## 4. The kube-bench Tool
 
-*"https://github.com/aquasecurity/kube-bench"*
+_"https://github.com/aquasecurity/kube-bench"_
 
 `kube-bench` runs the CIS benchmark automatically. It checks:
 
-* Apiserver flags (via the static pod manifest).
-* Kubelet config.
-* Container runtime config.
-* etcd config.
-* File permissions.
-* Network / firewall (limited).
+- Apiserver flags (via the static pod manifest).
+- Kubelet config.
+- Container runtime config.
+- etcd config.
+- File permissions.
+- Network / firewall (limited).
 
 It outputs a report:
 
@@ -142,9 +149,9 @@ docker run --pid host --net host -v /etc:/etc:ro -v /var:/var:ro \
 
 ### 4.2 Interpreting the output
 
-* **PASS** — the recommendation is met.
-* **FAIL** — the recommendation is not met. Action required.
-* **WARN** — the recommendation is partially met or not applicable. Investigate.
+- **PASS** — the recommendation is met.
+- **FAIL** — the recommendation is not met. Action required.
+- **WARN** — the recommendation is partially met or not applicable. Investigate.
 
 The output is a **Junit XML** (for CI integration) and a human-readable text. In CI, the exit code is non-zero on FAIL.
 
@@ -154,17 +161,17 @@ The **CIS Docker Benchmark** is for the Docker daemon. It's less relevant for k8
 
 The recommendations:
 
-* **Daemon config** — `daemon.json` (or `config.toml` for containerd).
-* **Images** — vulnerability scanning, content trust.
-* **Container runtime** — capability drops, security options, read-only root filesystem.
-* **Networking** — inter-container communication, IP forwarding.
-* **Storage** — `/var/lib/docker` permissions.
+- **Daemon config** — `daemon.json` (or `config.toml` for containerd).
+- **Images** — vulnerability scanning, content trust.
+- **Container runtime** — capability drops, security options, read-only root filesystem.
+- **Networking** — inter-container communication, IP forwarding.
+- **Storage** — `/var/lib/docker` permissions.
 
 For k8s, the **CIS Kubernetes Benchmark** is the relevant one. The CIS Docker Benchmark is for non-k8s Docker usage.
 
 ## 6. OWASP Container / k8s Top 10
 
-*"https://owasp.org/www-project-kubernetes-top-ten/"*
+_"https://owasp.org/www-project-kubernetes-top-ten/"_
 
 The **OWASP Kubernetes Top 10** is a list of the most common security issues in k8s environments. It's the **k8s-specific counterpart** to the OWASP Top 10 for web apps.
 
@@ -189,16 +196,16 @@ The "big four" compliance frameworks and how they apply to k8s:
 
 ### 7.1 PCI-DSS (Payment Card Industry)
 
-*"https://www.pcisecuritystandards.org/"*
+_"https://www.pcisecuritystandards.org/"_
 
 For clusters that process payment data. Requirements:
 
-* **Network segmentation** — NetworkPolicy, namespace isolation.
-* **Access control** — RBAC, OIDC, MFA.
-* **Encryption** — TLS in transit, encryption at rest for data.
-* **Logging** — audit logs, retention.
-* **Vulnerability management** — image scanning, CVE monitoring.
-* **Patch management** — k8s version upgrades.
+- **Network segmentation** — NetworkPolicy, namespace isolation.
+- **Access control** — RBAC, OIDC, MFA.
+- **Encryption** — TLS in transit, encryption at rest for data.
+- **Logging** — audit logs, retention.
+- **Vulnerability management** — image scanning, CVE monitoring.
+- **Patch management** — k8s version upgrades.
 
 The k8s side: the cluster is the **CDE (Cardholder Data Environment)** boundary. The k8s-specific controls come from CIS + NIST 800-190.
 
@@ -206,11 +213,11 @@ The k8s side: the cluster is the **CDE (Cardholder Data Environment)** boundary.
 
 For SaaS providers. Trust Service Criteria:
 
-* **Security** — access control, monitoring, incident response.
-* **Availability** — uptime, DR, backups.
-* **Confidentiality** — data encryption, access control.
-* **Processing Integrity** — accuracy, completeness of data.
-* **Privacy** — PII handling.
+- **Security** — access control, monitoring, incident response.
+- **Availability** — uptime, DR, backups.
+- **Confidentiality** — data encryption, access control.
+- **Processing Integrity** — accuracy, completeness of data.
+- **Privacy** — PII handling.
 
 The k8s side: the cluster is part of the **system description**. The controls (RBAC, encryption, logging, etc.) are part of the audit.
 
@@ -218,10 +225,10 @@ The k8s side: the cluster is part of the **system description**. The controls (R
 
 For clusters that handle PHI (Protected Health Information). Requirements:
 
-* **Access control** — RBAC, unique user IDs.
-* **Audit controls** — audit logs of PHI access.
-* **Integrity** — data integrity (encryption, checksums).
-* **Transmission security** — TLS in transit.
+- **Access control** — RBAC, unique user IDs.
+- **Audit controls** — audit logs of PHI access.
+- **Integrity** — data integrity (encryption, checksums).
+- **Transmission security** — TLS in transit.
 
 The k8s side: PHI must be in **encrypted Secrets**, **encrypted at rest in etcd**, **access logged**, and **only accessible by authorized SAs**.
 
@@ -229,34 +236,34 @@ The k8s side: PHI must be in **encrypted Secrets**, **encrypted at rest in etcd*
 
 For US government clusters. Baselines:
 
-* **Low** — minimal controls.
-* **Moderate** — most clusters.
-* **High** — sensitive data.
+- **Low** — minimal controls.
+- **Moderate** — most clusters.
+- **High** — sensitive data.
 
 Requirements: NIST 800-53 controls. The k8s implementation is via CIS + NIST 800-190 + FedRAMP-specific overlays.
 
 ## 8. The SLSA Framework
 
-*"https://slsa.dev/"*
+_"https://slsa.dev/"_
 
 **SLSA (Supply chain Levels for Software Artifacts)** is Google's framework for **supply chain integrity**. It defines levels:
 
-* **Level 0** — no SLSA. No guarantees.
-* **Level 1** — documented build process. Basic provenance.
-* **Level 2** — signed provenance. Hosted build platform.
-* **Level 3** — hardened build platform. Two-party review.
+- **Level 0** — no SLSA. No guarantees.
+- **Level 1** — documented build process. Basic provenance.
+- **Level 2** — signed provenance. Hosted build platform.
+- **Level 3** — hardened build platform. Two-party review.
 
 The k8s implementation:
 
-* **Build provenance** — generate a `provenance.json` for each image (what built it, from what source).
-* **Signing** — sign the provenance with cosign.
-* **Verification** — the cluster verifies the provenance at admission (via Kyverno / Connaisseur).
+- **Build provenance** — generate a `provenance.json` for each image (what built it, from what source).
+- **Signing** — sign the provenance with cosign.
+- **Verification** — the cluster verifies the provenance at admission (via Kyverno / Connaisseur).
 
 The **SLSA levels** map to image signing and supply chain controls:
 
-* **Level 1** — use a private registry, scan images.
-* **Level 2** — sign images with cosign, generate SBOMs.
-* **Level 3** — two-party review of changes, hermetic builds, signed provenance.
+- **Level 1** — use a private registry, scan images.
+- **Level 2** — sign images with cosign, generate SBOMs.
+- **Level 3** — two-party review of changes, hermetic builds, signed provenance.
 
 Most production clusters aim for **SLSA Level 2** for the application images.
 
@@ -277,19 +284,19 @@ The audit is **continuous**, not annual. The auditor wants evidence of **ongoing
 
 Manual audits are point-in-time. **Continuous compliance** is the practice of:
 
-* **Running kube-bench in CI** — every PR, every cluster change.
-* **Scanning images in CI** — every image build.
-* **Verifying RBAC** — every change to a Role / ClusterRole.
-* **Verifying NetworkPolicy** — every namespace change.
-* **Alerting on audit log anomalies** — failed logins, escalation attempts.
+- **Running kube-bench in CI** — every PR, every cluster change.
+- **Scanning images in CI** — every image build.
+- **Verifying RBAC** — every change to a Role / ClusterRole.
+- **Verifying NetworkPolicy** — every namespace change.
+- **Alerting on audit log anomalies** — failed logins, escalation attempts.
 
 Tools:
 
-* **kube-bench** in CI.
-* **Trivy** for image scanning.
-* **Conftest** (OPA) for manifest validation.
-* **Kyverno / OPA** for policy enforcement.
-* **Falco / Tetragon** for runtime detection.
+- **kube-bench** in CI.
+- **Trivy** for image scanning.
+- **Conftest** (OPA) for manifest validation.
+- **Kyverno / OPA** for policy enforcement.
+- **Falco / Tetragon** for runtime detection.
 
 The goal: **compliance is enforced in the build, not discovered in the audit**.
 
@@ -297,25 +304,25 @@ The goal: **compliance is enforced in the build, not discovered in the audit**.
 
 A mapping of L07 notes to common controls:
 
-| Control | L07 Note(s) |
-|---|---|
-| **Anonymous auth disabled** | [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization\|AuthN/AuthZ]] |
-| **RBAC** | [[Kubernetes/concepts/L07-security/01-api-access/03-rbac\|RBAC]] |
-| **PSS** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards\|PSS]] |
-| **SecurityContext** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|SecurityContext]] |
-| **seccomp / AppArmor** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor\|Seccomp / AppArmor]] |
-| **NetworkPolicy** | [[Kubernetes/concepts/L04-services-networking/05-network-policy\|NetworkPolicy]] (L04) |
-| **mTLS** | [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls\|TLS / mTLS]] |
-| **SPIFFE** | [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire\|SPIFFE / SPIRE]] |
-| **Admission policies** | [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers\|Admission Controllers]], [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper\|OPA]], [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno\|Kyverno]] |
-| **etcd encryption** | [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption\|etcd Encryption]] |
-| **Secret encryption** | [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption\|Secret Encryption]] |
-| **Audit logging** | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging\|Audit Logging]] |
-| **Runtime sandboxing** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing\|Runtime Sandboxing]] |
-| **Runtime detection** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection\|Runtime Detection]] |
-| **Image hardening** | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening\|Image Hardening]] |
-| **Cluster hardening** | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening\|Cluster Hardening]] |
-| **Node hardening** | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening\|Node Hardening]] |
+| Control                     | L07 Note(s)                                                                                                                                                                                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Anonymous auth disabled** | [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization\|AuthN/AuthZ]]                                                                                                                                                                         |
+| **RBAC**                    | [[Kubernetes/concepts/L07-security/01-api-access/03-rbac\|RBAC]]                                                                                                                                                                                                        |
+| **PSS**                     | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards\|PSS]]                                                                                                                                                                              |
+| **SecurityContext**         | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|SecurityContext]]                                                                                                                                                                        |
+| **seccomp / AppArmor**      | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor\|Seccomp / AppArmor]]                                                                                                                                                                     |
+| **NetworkPolicy**           | [[Kubernetes/concepts/L04-services-networking/05-network-policy\|NetworkPolicy]] (L04)                                                                                                                                                                                  |
+| **mTLS**                    | [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls\|TLS / mTLS]]                                                                                                                                                                                     |
+| **SPIFFE**                  | [[Kubernetes/concepts/L07-security/03-encryption-identity/09-spiffe-spire\|SPIFFE / SPIRE]]                                                                                                                                                                             |
+| **Admission policies**      | [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers\|Admission Controllers]], [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper\|OPA]], [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno\|Kyverno]] |
+| **etcd encryption**         | [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption\|etcd Encryption]]                                                                                                                                                                         |
+| **Secret encryption**       | [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption\|Secret Encryption]]                                                                                                                                                                     |
+| **Audit logging**           | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging\|Audit Logging]]                                                                                                                                                                            |
+| **Runtime sandboxing**      | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing\|Runtime Sandboxing]]                                                                                                                                                                   |
+| **Runtime detection**       | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection\|Runtime Detection]]                                                                                                                                                                     |
+| **Image hardening**         | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening\|Image Hardening]]                                                                                                                                                                         |
+| **Cluster hardening**       | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening\|Cluster Hardening]]                                                                                                                                                                    |
+| **Node hardening**          | [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening\|Node Hardening]]                                                                                                                                                                          |
 
 The auditor asks: "do you have NetworkPolicy?" — you point to the L04 note + the policy in your repo. The control is documented, the implementation is in your cluster, and the evidence is in your CI.
 
@@ -323,24 +330,24 @@ The auditor asks: "do you have NetworkPolicy?" — you point to the L04 note + t
 
 The most common findings, and where to fix them:
 
-| Finding | Severity | L07 Fix |
-|---|---|---|
-| Anonymous auth enabled | HIGH | Set `--anonymous-auth=false` (Cluster Hardening) |
-| Read-only kubelet port enabled | HIGH | Set `readOnlyPort: 0` (Node Hardening) |
-| Profiling enabled on apiserver | MEDIUM | Set `--profiling=false` (Cluster Hardening) |
-| `ABAC` authorizer enabled | HIGH | Use `RBAC` only (AuthN/AuthZ) |
-| TLS 1.0/1.1 enabled | MEDIUM | Set `--tls-min-version=VersionTLS12` (Cluster Hardening) |
-| Secrets not encrypted at rest | MEDIUM | Add `EncryptionConfiguration` (etcd Encryption) |
-| `hostPID: true` in app Pods | MEDIUM | Use PSS `restricted` (PSS) |
-| NetworkPolicy: default-allow | MEDIUM | Add default-deny (L04 NetworkPolicy) |
-| Audit log not shipped off-cluster | LOW | Ship to a SIEM (Audit Logging) |
-| `:latest` images in production | MEDIUM | Use versioned tags (Image Hardening) |
-| `privileged: true` containers | HIGH | Remove or justify (SecurityContext) |
-| No `PodSecurity` admission | MEDIUM | Enable PSS (PSS) |
-| `cluster-admin` granted widely | HIGH | Use least-privilege RBAC (RBAC) |
-| No image scanning | HIGH | Add Trivy / Snyk in CI (Image Hardening) |
-| No runtime detection | MEDIUM | Add Falco / Tetragon (Runtime Detection) |
-| SSH password auth enabled | HIGH | Disable, use key auth (Node Hardening) |
+| Finding                           | Severity | L07 Fix                                                  |
+| --------------------------------- | -------- | -------------------------------------------------------- |
+| Anonymous auth enabled            | HIGH     | Set `--anonymous-auth=false` (Cluster Hardening)         |
+| Read-only kubelet port enabled    | HIGH     | Set `readOnlyPort: 0` (Node Hardening)                   |
+| Profiling enabled on apiserver    | MEDIUM   | Set `--profiling=false` (Cluster Hardening)              |
+| `ABAC` authorizer enabled         | HIGH     | Use `RBAC` only (AuthN/AuthZ)                            |
+| TLS 1.0/1.1 enabled               | MEDIUM   | Set `--tls-min-version=VersionTLS12` (Cluster Hardening) |
+| Secrets not encrypted at rest     | MEDIUM   | Add `EncryptionConfiguration` (etcd Encryption)          |
+| `hostPID: true` in app Pods       | MEDIUM   | Use PSS `restricted` (PSS)                               |
+| NetworkPolicy: default-allow      | MEDIUM   | Add default-deny (L04 NetworkPolicy)                     |
+| Audit log not shipped off-cluster | LOW      | Ship to a SIEM (Audit Logging)                           |
+| `:latest` images in production    | MEDIUM   | Use versioned tags (Image Hardening)                     |
+| `privileged: true` containers     | HIGH     | Remove or justify (SecurityContext)                      |
+| No `PodSecurity` admission        | MEDIUM   | Enable PSS (PSS)                                         |
+| `cluster-admin` granted widely    | HIGH     | Use least-privilege RBAC (RBAC)                          |
+| No image scanning                 | HIGH     | Add Trivy / Snyk in CI (Image Hardening)                 |
+| No runtime detection              | MEDIUM   | Add Falco / Tetragon (Runtime Detection)                 |
+| SSH password auth enabled         | HIGH     | Disable, use key auth (Node Hardening)                   |
 
 The auditor's report is a **checklist of these**. Each fix maps to an L07 note.
 
@@ -464,7 +471,7 @@ trivy image myapp:1.0
 
 ## See also
 
-* All other L07 notes — each addresses specific controls.
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — control plane controls
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — node-level controls
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — supply chain (SLSA)
+- All other L07 notes — each addresses specific controls.
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — control plane controls
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — node-level controls
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — supply chain (SLSA)

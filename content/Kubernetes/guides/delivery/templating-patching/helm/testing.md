@@ -11,14 +11,14 @@ Comprehensive testing ensures Helm charts work correctly before deployment.
 
 ## Testing Overview
 
-| Type | Purpose | When |
-|------|---------|------|
-| Lint | Validate chart structure and syntax | Every commit |
-| Template render | Verify templates produce valid YAML | Every commit |
-| Schema validation | Enforce values structure | Every commit |
-| Unit tests | Test template logic and helpers | Every commit |
-| Integration tests | Test actual deployment | PR/merge |
-| Smoke tests | Verify basic functionality | Post-deploy |
+| Type              | Purpose                             | When         |
+| ----------------- | ----------------------------------- | ------------ |
+| Lint              | Validate chart structure and syntax | Every commit |
+| Template render   | Verify templates produce valid YAML | Every commit |
+| Schema validation | Enforce values structure            | Every commit |
+| Unit tests        | Test template logic and helpers     | Every commit |
+| Integration tests | Test actual deployment              | PR/merge     |
+| Smoke tests       | Verify basic functionality          | Post-deploy  |
 
 ## Helm Lint
 
@@ -97,7 +97,10 @@ helm template --skip-schema-validation ./mychart  # Skip for testing
       "properties": {
         "repository": { "type": "string" },
         "tag": { "type": "string" },
-        "pullPolicy": { "type": "string", "enum": ["IfNotPresent", "Always", "Never"] }
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["IfNotPresent", "Always", "Never"]
+        }
       },
       "required": ["repository"]
     },

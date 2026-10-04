@@ -15,32 +15,32 @@ Prefix delegation increases the number of pods per node by assigning IP **prefix
 
 ### Standard Mode (No Prefix Delegation)
 
-| Component | Limit |
-|-----------|-------|
-| ENIs per instance | Instance-dependent (e.g., m5.xlarge = 4) |
-| IPs per ENI | 15 secondary IPs |
-| Usable IPs per ENI | 15 (one is primary for node) |
-| **Max pods formula** | `(ENIs × 14) + 2 = (4 × 14) + 2 = 58` |
+| Component            | Limit                                    |
+| -------------------- | ---------------------------------------- |
+| ENIs per instance    | Instance-dependent (e.g., m5.xlarge = 4) |
+| IPs per ENI          | 15 secondary IPs                         |
+| Usable IPs per ENI   | 15 (one is primary for node)             |
+| **Max pods formula** | `(ENIs × 14) + 2 = (4 × 14) + 2 = 58`    |
 
 ### Prefix Delegation Mode
 
-| Component | Limit |
-|-----------|-------|
-| ENIs per instance | Instance-dependent |
-| Prefixes per ENI | 15 prefixes |
-| IPs per prefix | 16 IPs |
-| Usable IPs per ENI | 15 × 16 = 240 |
+| Component            | Limit                  |
+| -------------------- | ---------------------- |
+| ENIs per instance    | Instance-dependent     |
+| Prefixes per ENI     | 15 prefixes            |
+| IPs per prefix       | 16 IPs                 |
+| Usable IPs per ENI   | 15 × 16 = 240          |
 | **Max pods formula** | `(ENIs × 15 × 16) + 2` |
 
 ### Pod Capacity Comparison
 
 | Instance Type | Standard Mode | With Prefix Delegation | Increase |
-|---------------|---------------|------------------------|----------|
-| t3.medium | 17 | ~110 | 6.5× |
-| t3.large | 35 | ~234 | 6.7× |
-| m5.xlarge | 58 | ~722 | 12.4× |
-| m5.2xlarge | 118 | ~1474 | 12.5× |
-| c5.4xlarge | 234 | ~2922 | 12.5× |
+| ------------- | ------------- | ---------------------- | -------- |
+| t3.medium     | 17            | ~110                   | 6.5×     |
+| t3.large      | 35            | ~234                   | 6.7×     |
+| m5.xlarge     | 58            | ~722                   | 12.4×    |
+| m5.2xlarge    | 118           | ~1474                  | 12.5×    |
+| c5.4xlarge    | 234           | ~2922                  | 12.5×    |
 
 **Note**: Exact numbers vary by instance generation and ENI attachments for other purposes.
 
@@ -111,14 +111,14 @@ kubectl set env daemonset/aws-node -n kube-system \
 
 ```yaml
 env:
-- name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
-  value: "true"
-- name: AWS_VPC_K8S_CNI_WARM_PREFIX_TARGET
-  value: "1"
-- name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
-  value: "16"
-- name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
-  value: "16"
+  - name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
+    value: "true"
+  - name: AWS_VPC_K8S_CNI_WARM_PREFIX_TARGET
+    value: "1"
+  - name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
+    value: "16"
+  - name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
+    value: "16"
 ```
 
 ### Verify Configuration
@@ -186,6 +186,7 @@ eksctl delete nodegroup --cluster my-cluster --name <old-ng-name>
 ### Why Rolling Replace Doesn't Work
 
 When a node joins the cluster:
+
 1. Node gets ENIs attached
 2. ipamd starts with existing ENIs (secondary IPs, not prefixes)
 3. Transitioning to prefix mode would require full ENI detachment/reattachment
@@ -201,15 +202,16 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_WARM_PREFIX_TARGET=1
 ```
 
-| Value | Behavior |
-|-------|----------|
-| `0` | Allocate prefixes only when needed |
-| `1` (default) | Keep 1 prefix (16 IPs) warm |
-| `2` | Keep 2 prefixes (32 IPs) warm |
+| Value         | Behavior                           |
+| ------------- | ---------------------------------- |
+| `0`           | Allocate prefixes only when needed |
+| `1` (default) | Keep 1 prefix (16 IPs) warm        |
+| `2`           | Keep 2 prefixes (32 IPs) warm      |
 
 ### Interaction with WARM_IP_TARGET
 
 When `ENABLE_PREFIX_DELEGATION=true`:
+
 - `WARM_IP_TARGET` overrides `WARM_PREFIX_TARGET`
 - If `WARM_IP_TARGET=16` and `WARM_PREFIX_TARGET=1`, the behavior follows `WARM_IP_TARGET`
 
@@ -221,11 +223,11 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET=64
 ```
 
-| Scenario | WARM_IP_TARGET | WARM_PREFIX_TARGET | Result |
-|----------|----------------|-------------------|--------|
-| A | 16 | 1 | 16 IPs warm (via prefixes) |
-| B | 32 | 1 | 32 IPs warm (2 prefixes needed) |
-| C | not set | 1 | 16 IPs warm (1 prefix) |
+| Scenario | WARM_IP_TARGET | WARM_PREFIX_TARGET | Result                          |
+| -------- | -------------- | ------------------ | ------------------------------- |
+| A        | 16             | 1                  | 16 IPs warm (via prefixes)      |
+| B        | 32             | 1                  | 32 IPs warm (2 prefixes needed) |
+| C        | not set        | 1                  | 16 IPs warm (1 prefix)          |
 
 ## Using with Security Groups for Pods
 
@@ -234,21 +236,21 @@ Prefix delegation works with Security Groups for Pods (SGP):
 ```yaml
 # Both can be enabled together
 env:
-- name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
-  value: "true"
-- name: AWS_VPC_K8S_CNI_ENABLE_POD_ENI
-  value: "true"
-- name: POD_SECURITY_GROUP_ENFORCING_MODE
-  value: "standard"
+  - name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
+    value: "true"
+  - name: AWS_VPC_K8S_CNI_ENABLE_POD_ENI
+    value: "true"
+  - name: POD_SECURITY_GROUP_ENFORCING_MODE
+    value: "standard"
 ```
 
 ### Branch ENI Behavior with Prefix Delegation
 
-| Feature | Standard Mode | With Prefix Delegation |
-|---------|---------------|------------------------|
-| Branch ENIs per instance | Instance limit | Same instance limit |
-| IPs per branch ENI | 1 (primary only) | 1 (primary only) |
-| Prefix delegation effect | N/A | Does not affect branch ENI pods |
+| Feature                  | Standard Mode    | With Prefix Delegation          |
+| ------------------------ | ---------------- | ------------------------------- |
+| Branch ENIs per instance | Instance limit   | Same instance limit             |
+| IPs per branch ENI       | 1 (primary only) | 1 (primary only)                |
+| Prefix delegation effect | N/A              | Does not affect branch ENI pods |
 
 Branch ENI pods (with SGP) still get a single primary IP from their dedicated ENI - prefix delegation affects only standard pods.
 
@@ -275,6 +277,7 @@ kubectl logs -n kube-system -l k8s-app=aws-node --tail=100 | grep -i prefix
 ```
 
 Expected log entries:
+
 ```
 level=debug msg="Creating/deleting ENI"
 level=debug msg="Allocating prefix" ipv4Prefix=10.0.1.16/28
@@ -290,6 +293,7 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 ```
 
 Example output:
+
 ```
 [
     ["eni-abc123", [{"Ipv4Prefix": "10.0.1.16/28"}, {"Ipv4Prefix": "10.0.1.32/28"}]],
@@ -315,6 +319,7 @@ Example output:
 ### Memory Usage
 
 ipamd memory usage increases slightly with prefix delegation (tracking more IPs):
+
 - Standard: ~100MB typical
 - Prefix Delegation: ~120MB typical (20% increase)
 
@@ -323,6 +328,7 @@ ipamd memory usage increases slightly with prefix delegation (tracking more IPs)
 ### Issue: Pods stuck in Pending after enabling prefix delegation
 
 **Diagnosis**:
+
 ```bash
 # Check if prefix delegation is actually enabled
 kubectl exec -n kube-system aws-node-xxxx -- \

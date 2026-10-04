@@ -11,16 +11,16 @@ When a Kubernetes workload or node fails, follow the systematic triage flow to i
 
 ## Quick Jump by Symptom
 
-| Symptom | Layer | Detailed Playbook |
-| :--- | :--- | :--- |
-| **Pod stuck in CrashLoopBackOff** | Container / App | [[Kubernetes/guides/troubleshooting/crashloop-backoff\|CrashLoopBackOff Playbook]] |
-| **Pod stuck in Pending** | Scheduling / Capacity | [[Kubernetes/guides/troubleshooting/pod-pending\|Pod Pending Playbook]] |
-| **Image pull error (`ImagePullBackOff`)** | Registry / Auth | [[Kubernetes/guides/troubleshooting/image-pull\|ImagePullBackOff Playbook]] |
-| **Service unreachable / connection timeout** | CoreDNS / Kube-Proxy | [[Kubernetes/guides/troubleshooting/service-unreachable\|Service Unreachable Playbook]] |
-| **DNS query fails inside Pod** | CoreDNS / Resolv | [[Kubernetes/guides/troubleshooting/dns-resolution\|DNS Resolution Playbook]] |
-| **Ingress 404 Not Found or 502 Bad Gateway** | Gateway / Ingress | [[Kubernetes/guides/troubleshooting/ingress-404\|Ingress 404 / 502 Playbook]] |
-| **PersistentVolumeClaim stuck in Pending** | Storage / CSI | [[Kubernetes/guides/troubleshooting/pvc-stuck\|PVC Stuck Playbook]] |
-| **Node status is NotReady** | Kubelet / Runtime | [[Kubernetes/guides/troubleshooting/node-not-ready\|Node NotReady Playbook]] |
+| Symptom                                      | Layer                 | Detailed Playbook                                                                       |
+| :------------------------------------------- | :-------------------- | :-------------------------------------------------------------------------------------- |
+| **Pod stuck in CrashLoopBackOff**            | Container / App       | [[Kubernetes/guides/troubleshooting/crashloop-backoff\|CrashLoopBackOff Playbook]]      |
+| **Pod stuck in Pending**                     | Scheduling / Capacity | [[Kubernetes/guides/troubleshooting/pod-pending\|Pod Pending Playbook]]                 |
+| **Image pull error (`ImagePullBackOff`)**    | Registry / Auth       | [[Kubernetes/guides/troubleshooting/image-pull\|ImagePullBackOff Playbook]]             |
+| **Service unreachable / connection timeout** | CoreDNS / Kube-Proxy  | [[Kubernetes/guides/troubleshooting/service-unreachable\|Service Unreachable Playbook]] |
+| **DNS query fails inside Pod**               | CoreDNS / Resolv      | [[Kubernetes/guides/troubleshooting/dns-resolution\|DNS Resolution Playbook]]           |
+| **Ingress 404 Not Found or 502 Bad Gateway** | Gateway / Ingress     | [[Kubernetes/guides/troubleshooting/ingress-404\|Ingress 404 / 502 Playbook]]           |
+| **PersistentVolumeClaim stuck in Pending**   | Storage / CSI         | [[Kubernetes/guides/troubleshooting/pvc-stuck\|PVC Stuck Playbook]]                     |
+| **Node status is NotReady**                  | Kubelet / Runtime     | [[Kubernetes/guides/troubleshooting/node-not-ready\|Node NotReady Playbook]]            |
 
 ## Conceptual Diagnostic Toolkits
 
@@ -30,4 +30,4 @@ When a Kubernetes workload or node fails, follow the systematic triage flow to i
 
 ---
 
-*External Reference: [k8s-500-prod-issues](https://github.com/vijay2181/k8s-500-prod-issues)*
+_External Reference: [k8s-500-prod-issues](https://github.com/vijay2181/k8s-500-prod-issues)_

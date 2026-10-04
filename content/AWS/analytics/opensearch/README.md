@@ -51,6 +51,7 @@ Index (5 primary shards, 1 replica each = 10 total shards)
 ```
 
 **Sharding decisions:**
+
 - More shards = more parallel processing = faster indexing and searching
 - Each shard has overhead — too many small shards is inefficient
 - Rule of thumb: 20-50GB per shard is a good target
@@ -105,6 +106,7 @@ PUT /sales-events
 ```
 
 **Field types:**
+
 - `keyword` — exact value matching, sorting, aggregation (not analyzed)
 - `text` — full-text search (analyzed, tokenized)
 - `date` — ISO 8601 timestamps
@@ -157,6 +159,7 @@ PUT /_ilm/policy/sales-policy
 ```
 
 **Use with index template:**
+
 ```json
 PUT /_index_template/sales-template
 {
@@ -222,6 +225,7 @@ POST /sales-events/_search
 OpenSearch Dashboards (successor to Kibana) provides visualization and exploration:
 
 **Use cases:**
+
 - Log analytics: Search and filter application logs
 - Time-series: Visualize metrics over time with line charts
 - Saved searches: Save and share query templates
@@ -239,7 +243,10 @@ OpenSearch Security plugin provides role-based access control:
 {
   "reserved_roles": {
     "all_access": { "index_permissions": ["*"], "cluster_permissions": ["*"] },
-    "readall": { "index_permissions": ["read"], "cluster_permissions": ["cluster_composite_ops_ro"] }
+    "readall": {
+      "index_permissions": ["read"],
+      "cluster_permissions": ["cluster_composite_ops_ro"]
+    }
   }
 }
 ```
@@ -247,6 +254,7 @@ OpenSearch Security plugin provides role-based access control:
 **VPC-based access:** OpenSearch domains deployed in a VPC are accessible only via the VPC endpoint. No public internet access by default.
 
 **Encryption:**
+
 - In transit: TLS (automatically enforced on new domains)
 - At rest: AES-256 encryption with KMS
 
@@ -265,7 +273,7 @@ def handler(event, context):
         http_auth=aws_auth,
         use_ssl=True
     )
-    
+
     result = client.search(
         index='sales-events-*',
         body={
@@ -280,7 +288,7 @@ def handler(event, context):
             }
         }
     )
-    
+
     return {'revenue': result['aggregations']['daily_revenue']['buckets']}
 ```
 
@@ -291,6 +299,7 @@ def handler(event, context):
 **Refresh interval:** Default is 1s. For high-indexing workloads, increase to 5-10s to reduce indexing overhead.
 
 **Bulk API:** Use the bulk API for ingestion — much more efficient than individual document indexing:
+
 ```json
 POST /_bulk
 { "index": { "_index": "sales-events" } }

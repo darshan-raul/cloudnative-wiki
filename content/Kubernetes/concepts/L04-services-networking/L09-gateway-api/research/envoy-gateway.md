@@ -1,3 +1,10 @@
+---
+title: "Envoy Gateway — In-Depth Reference"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Envoy Gateway — In-Depth Reference — Kubernetes reference and architecture guide."
+---
+
 # Envoy Gateway — In-Depth Reference
 
 > Source of truth: https://gateway.envoyproxy.io (this doc tracks v1.4.x as of writing).
@@ -43,16 +50,16 @@ It replaced the older `envoyproxy/envoy` "gateway" project (which was experiment
 
 ## 3. Why Envoy Gateway (and not the alternatives)
 
-| Impl | Status | Why pick it | Why not |
-|------|--------|-------------|---------|
-| **Envoy Gateway** | Active, official | Cleanly tracks Gateway API, strong conformance, security-hardened defaults, no vendored extensions needed for most cases | Lighter on bells-and-whistles vs NGINX (no Lua, no fancy authn modules) |
-| `ingress-nginx` | **Retired** (EOL ~March 2026) | Familiar, broad ecosystem | Project is being sunset; community migration plan points to EG |
-| `nginx-gateway-fabric` | Active | NGINX semantics, Gateway API, fast | Smaller community; some features still maturing |
-| `Traefik Proxy / Gateway` | Active | L7 features, simple, single binary | Different model, not always Gateway API conformant |
-| `HAProxy` | Active | Performance, mature | Less Gateway API feature coverage; mostly L4 |
-| `Cilium` Gateway | Active | Network-policy integration, eBPF | Optimized for L4; L7 still emerging |
-| `Istio` (Ingress Gateway) | Active | Mesh integration, mTLS native | Heavy; mesh runtime when you only want ingress |
-| `Kong` | Active | Plugin ecosystem | Opinionated; many enterprise features paid |
+| Impl                      | Status                        | Why pick it                                                                                                              | Why not                                                                 |
+| ------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| **Envoy Gateway**         | Active, official              | Cleanly tracks Gateway API, strong conformance, security-hardened defaults, no vendored extensions needed for most cases | Lighter on bells-and-whistles vs NGINX (no Lua, no fancy authn modules) |
+| `ingress-nginx`           | **Retired** (EOL ~March 2026) | Familiar, broad ecosystem                                                                                                | Project is being sunset; community migration plan points to EG          |
+| `nginx-gateway-fabric`    | Active                        | NGINX semantics, Gateway API, fast                                                                                       | Smaller community; some features still maturing                         |
+| `Traefik Proxy / Gateway` | Active                        | L7 features, simple, single binary                                                                                       | Different model, not always Gateway API conformant                      |
+| `HAProxy`                 | Active                        | Performance, mature                                                                                                      | Less Gateway API feature coverage; mostly L4                            |
+| `Cilium` Gateway          | Active                        | Network-policy integration, eBPF                                                                                         | Optimized for L4; L7 still emerging                                     |
+| `Istio` (Ingress Gateway) | Active                        | Mesh integration, mTLS native                                                                                            | Heavy; mesh runtime when you only want ingress                          |
+| `Kong`                    | Active                        | Plugin ecosystem                                                                                                         | Opinionated; many enterprise features paid                              |
 
 **My pick: Envoy Gateway** for greenfield. It's the cleanest Gateway API conformance story, the project's momentum is strongest, and `ingress-nginx`'s retirement makes the migration argument compelling.
 
@@ -97,20 +104,20 @@ helm repo update
 
 ### 6.2 Values to know
 
-| Key | Default | Why you care |
-|-----|---------|--------------|
-| `deployment.affinity` | `{}` | Pin to specific node pools |
-| `envoyGateway.resources` | light | Controller; usually fine as-is |
-| `config.envoyGateway.gatewayControllerName` | `gateway.envoyproxy.io/gatewayclass-controller` | Must match `GatewayClass.spec.controllerName` |
-| `config.envoyGateway.extensionApis.enableEnvoyPatchPolicy` | `false` | Off by default; only enable if you need `EnvoyPatchPolicy` |
-| `resources.requests/limits` | nil | Set for prod; controller is fine on 100m/128Mi, data plane is 500m/512Mi min |
-| `podSecurityContext` | strict (non-root, no priv) | Don't loosen |
-| `securityContext` | strict | Same |
-| `gateway` block | nil | The `envoyproxy`/`gateway` subchart that renders the default Gateway |
-| `telemetry.metrics` | nil | Set to `{ prometheus: { enabled: true } }` for Prometheus scrape |
-| `telemetry.accessLog` | disabled | Set to `{ enabled: true, format: ... }` for request logs |
-| `telemetry.tracing` | disabled | Set for OTel tracing |
-| `ratelimit` subchart | disabled | Enable for global rate limiting with Redis |
+| Key                                                        | Default                                         | Why you care                                                                 |
+| ---------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------- |
+| `deployment.affinity`                                      | `{}`                                            | Pin to specific node pools                                                   |
+| `envoyGateway.resources`                                   | light                                           | Controller; usually fine as-is                                               |
+| `config.envoyGateway.gatewayControllerName`                | `gateway.envoyproxy.io/gatewayclass-controller` | Must match `GatewayClass.spec.controllerName`                                |
+| `config.envoyGateway.extensionApis.enableEnvoyPatchPolicy` | `false`                                         | Off by default; only enable if you need `EnvoyPatchPolicy`                   |
+| `resources.requests/limits`                                | nil                                             | Set for prod; controller is fine on 100m/128Mi, data plane is 500m/512Mi min |
+| `podSecurityContext`                                       | strict (non-root, no priv)                      | Don't loosen                                                                 |
+| `securityContext`                                          | strict                                          | Same                                                                         |
+| `gateway` block                                            | nil                                             | The `envoyproxy`/`gateway` subchart that renders the default Gateway         |
+| `telemetry.metrics`                                        | nil                                             | Set to `{ prometheus: { enabled: true } }` for Prometheus scrape             |
+| `telemetry.accessLog`                                      | disabled                                        | Set to `{ enabled: true, format: ... }` for request logs                     |
+| `telemetry.tracing`                                        | disabled                                        | Set for OTel tracing                                                         |
+| `ratelimit` subchart                                       | disabled                                        | Enable for global rate limiting with Redis                                   |
 
 ### 6.3 Install
 
@@ -140,6 +147,7 @@ EG is built to be secure out of the box:
 - **No default `LoadBalancer`** for the data plane — you choose. Often a `NodePort`/`ClusterIP` + your own LB/ingress.
 
 **Things to verify** when you customize:
+
 - `securityContext.privileged` should never be `true`
 - `hostNetwork` should never be `true`
 - Service account token mount should be explicit (`automountServiceAccountToken: false` if not needed)
@@ -162,7 +170,7 @@ spec:
     value: |
       ...
   concurrency: 4
-  envoyDaemonSet: {}   # or omit for Deployment
+  envoyDaemonSet: {} # or omit for Deployment
 ```
 
 Apply via `infrastructure.parametersRef` on the `Gateway`:
@@ -251,23 +259,23 @@ The data plane is graceful on shutdown — Envoy drains connections. `terminatio
 
 ## 10. When to use EG extensions vs spec
 
-| Need | Use |
-|------|-----|
-| Plain HTTP/HTTPS routing | Spec (HTTPRoute) |
-| Header rewrite, redirect, URL rewrite | Spec (filters) |
-| Weighted traffic split | Spec (backendRefs weight) |
-| Cross-namespace | Spec (ReferenceGrant) |
-| Upstream mTLS | Spec (BackendTLSPolicy) |
-| TLS termination | Spec (Gateway listener) |
-| JWT validation | EG extension (`SecurityPolicy`) |
-| OIDC | EG extension |
-| Basic auth | EG extension |
-| External authz (OPA, custom) | EG extension (`extAuthz`) |
-| IP allow/deny | EG extension |
-| CORS | EG extension |
-| Local rate limit | EG extension |
-| Global rate limit (Redis) | EG extension + subchart |
-| Service mesh | Use Istio/Linkerd/Cilium, not EG |
+| Need                                  | Use                              |
+| ------------------------------------- | -------------------------------- |
+| Plain HTTP/HTTPS routing              | Spec (HTTPRoute)                 |
+| Header rewrite, redirect, URL rewrite | Spec (filters)                   |
+| Weighted traffic split                | Spec (backendRefs weight)        |
+| Cross-namespace                       | Spec (ReferenceGrant)            |
+| Upstream mTLS                         | Spec (BackendTLSPolicy)          |
+| TLS termination                       | Spec (Gateway listener)          |
+| JWT validation                        | EG extension (`SecurityPolicy`)  |
+| OIDC                                  | EG extension                     |
+| Basic auth                            | EG extension                     |
+| External authz (OPA, custom)          | EG extension (`extAuthz`)        |
+| IP allow/deny                         | EG extension                     |
+| CORS                                  | EG extension                     |
+| Local rate limit                      | EG extension                     |
+| Global rate limit (Redis)             | EG extension + subchart          |
+| Service mesh                          | Use Istio/Linkerd/Cilium, not EG |
 
 EG extensions are stable but **vendor-specific**. If portability is critical, keep auth/CORS/rate-limit in the app, not the gateway. If you want centralized control, EG extensions are the pragmatic choice.
 
@@ -275,15 +283,15 @@ EG extensions are stable but **vendor-specific**. If portability is critical, ke
 
 ## 11. Quick Troubleshooting Map
 
-| Symptom | First check | Likely fix |
-|---------|-------------|-----------|
-| `kubectl apply` hangs | Webhook unreachable | Check NetworkPolicy, controller Service `:443` |
-| Gateway `Programmed=False` | `kubectl describe` | Fix listener conflict or invalid cert |
-| HTTPRoute `Accepted=False, NoMatchingParent` | Hostname intersection | Fix `hostnames` on route or listener |
-| HTTPRoute `ResolvedRefs=False, RefNotPermitted` | Cross-ns | Add `ReferenceGrant` |
-| Cert errors in browser | SAN list | `dnsNames` in cert-manager Certificate |
-| 503 from gateway | `kubectl get endpoints` | Pods aren't ready; check `kubectl describe` |
-| `connection refused` on admin | No port-forward | `kubectl port-forward` first |
-| OOM in data plane | Routes / clusters | Bump `limits.memory` or split Gateway |
-| xDS NACKs | `kubectl logs` | Schema change; check EG version compat |
-| Slow first request | Cluster warm-up | Expected; subsequent requests are fast |
+| Symptom                                         | First check             | Likely fix                                     |
+| ----------------------------------------------- | ----------------------- | ---------------------------------------------- |
+| `kubectl apply` hangs                           | Webhook unreachable     | Check NetworkPolicy, controller Service `:443` |
+| Gateway `Programmed=False`                      | `kubectl describe`      | Fix listener conflict or invalid cert          |
+| HTTPRoute `Accepted=False, NoMatchingParent`    | Hostname intersection   | Fix `hostnames` on route or listener           |
+| HTTPRoute `ResolvedRefs=False, RefNotPermitted` | Cross-ns                | Add `ReferenceGrant`                           |
+| Cert errors in browser                          | SAN list                | `dnsNames` in cert-manager Certificate         |
+| 503 from gateway                                | `kubectl get endpoints` | Pods aren't ready; check `kubectl describe`    |
+| `connection refused` on admin                   | No port-forward         | `kubectl port-forward` first                   |
+| OOM in data plane                               | Routes / clusters       | Bump `limits.memory` or split Gateway          |
+| xDS NACKs                                       | `kubectl logs`          | Schema change; check EG version compat         |
+| Slow first request                              | Cluster warm-up         | Expected; subsequent requests are fast         |

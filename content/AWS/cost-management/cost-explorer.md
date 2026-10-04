@@ -17,6 +17,7 @@ Access it via: AWS Console → Cost Management → Cost Explorer
 ### Spending Over Time
 
 The default view shows daily or monthly spend as a bar chart. You can:
+
 - Filter by date range (last 7 days, 30 days, 3 months, custom)
 - Group by: Service, Linked Account, Region, Tag, Availability Zone
 - Compare periods (this month vs last month, MoM growth)
@@ -26,6 +27,7 @@ The chart is interactive — click a bar to drill into what drove that spend spi
 ### Cost by Service
 
 Sorts all AWS services by spend. At scale you'll typically see:
+
 1. EC2 (compute + NAT Gateway + EBS)
 2. S3 (storage + requests + data transfer)
 3. RDS / Aurora (compute + storage + backup snapshot storage)
@@ -55,6 +57,7 @@ Coverage = (Spend covered by RI + SP) / Total eligible spend × 100
 ```
 
 **Breakdown by service:**
+
 - EC2 Coverage: How much EC2 spend is covered
 - RDS Coverage: How much RDS spend is covered
 - Lambda Coverage: How much Lambda spend is covered (SP only, no RI for Lambda)
@@ -74,6 +77,7 @@ Low utilization (below 70%) suggests you bought too much. But don't just buy bas
 ### Recommendations
 
 Cost Explorer generates purchase recommendations:
+
 - "Buy 50 more m6i.large RIs to improve coverage from 67% to 85%"
 - "Switch from No Upfront to All Upfront for better savings"
 
@@ -84,6 +88,7 @@ Take these with a grain of salt — the recommendation algorithm is conservative
 Cost Explorer provides a 3-month forward forecast based on your historical spend pattern. It's a simple linear projection with seasonality detection.
 
 **Limitations:**
+
 - Doesn't account for known upcoming changes (new product launches, expected traffic spikes)
 - Doesn't model Savings Plan commitments into the forecast
 - Can be wildly off during growth phases or before migrations
@@ -96,6 +101,7 @@ The forecast is useful for budgeting, not for commitment buying decisions.
 For advanced analysis, Cost Explorer reads from the Cost and Usage Report (CUR). If you've set up CUR with Athena integration, you can write SQL queries against your billing data that go far beyond what Cost Explorer shows in the UI.
 
 Common queries:
+
 - Exact AZ-to-AZ data transfer by account
 - Per-ENI network traffic breakdown
 - Cross-account RI utilization comparison

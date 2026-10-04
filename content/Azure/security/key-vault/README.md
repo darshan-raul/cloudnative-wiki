@@ -56,25 +56,26 @@ Key Vault segregates sensitive cryptographic assets into three distinct entity t
 
 ### Key Vault Standard/Premium vs Managed HSM
 
-| Dimension | Key Vault Standard | Key Vault Premium | Managed HSM |
-| :--- | :--- | :--- | :--- |
-| **Tenant Model** | Multi-tenant | Multi-tenant | **Dedicated single-tenant pool** |
-| **FIPS 140 Validation** | FIPS 140-2 Level 1 (Software) | FIPS 140-2 Level 2 (HSM) | **FIPS 140-2 Level 3 (Dedicated HSM)** |
-| **Asset Types** | Keys, Secrets, Certificates | Keys, Secrets, Certificates | **Cryptographic Keys only** |
-| **Throughput Guarantee** | Shared throttling limits | Shared throttling limits | **Dedicated, thousands of QPS** |
-| **Authorization Model** | Azure RBAC or Vault Policies| Azure RBAC or Vault Policies| **Local Data Plane RBAC only** |
-| **Security Domain** | Managed by Microsoft | Managed by Microsoft | **Customer-controlled offline quorum** |
-| **Base Hourly Pricing** | $0.00 base (pay per op) | $0.00 base (pay per op) | **~$4.40 per hour ($3,212/month)** |
+| Dimension                | Key Vault Standard            | Key Vault Premium            | Managed HSM                            |
+| :----------------------- | :---------------------------- | :--------------------------- | :------------------------------------- |
+| **Tenant Model**         | Multi-tenant                  | Multi-tenant                 | **Dedicated single-tenant pool**       |
+| **FIPS 140 Validation**  | FIPS 140-2 Level 1 (Software) | FIPS 140-2 Level 2 (HSM)     | **FIPS 140-2 Level 3 (Dedicated HSM)** |
+| **Asset Types**          | Keys, Secrets, Certificates   | Keys, Secrets, Certificates  | **Cryptographic Keys only**            |
+| **Throughput Guarantee** | Shared throttling limits      | Shared throttling limits     | **Dedicated, thousands of QPS**        |
+| **Authorization Model**  | Azure RBAC or Vault Policies  | Azure RBAC or Vault Policies | **Local Data Plane RBAC only**         |
+| **Security Domain**      | Managed by Microsoft          | Managed by Microsoft         | **Customer-controlled offline quorum** |
+| **Base Hourly Pricing**  | $0.00 base (pay per op)       | $0.00 base (pay per op)      | **~$4.40 per hour ($3,212/month)**     |
 
 ---
 
 ## 2. Core Concepts: Access Policies vs Azure RBAC
 
-Historically, Key Vault used **Vault Access Policies**, which granted blanket permissions across *all* keys or *all* secrets in a vault (no resource-level granularity).
+Historically, Key Vault used **Vault Access Policies**, which granted blanket permissions across _all_ keys or _all_ secrets in a vault (no resource-level granularity).
 
 ### The Azure RBAC Permission Model (Production Standard)
 
 Modern architectures configure Key Vault with **Azure role-based access control (Azure RBAC)**:
+
 - Enables assigning permissions at the level of an **individual key, secret, or certificate**.
 - Leverages built-in roles:
   - `Key Vault Administrator`: Full management of vault and data plane.
@@ -207,15 +208,15 @@ az network private-endpoint create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Key Vault Standard / Premium | Managed HSM |
-| :--- | :--- | :--- |
-| **Transactions per Region** | 4,000 requests / 10 seconds | Thousands of dedicated QPS |
-| **Max Secret Size** | 25 KB | N/A (Keys only) |
-| **Max Certificate Size** | 100 KB | N/A (Keys only) |
-| **Max Keys / Secrets per Vault**| 25,000 items | 5,000 HSM keys |
-| **Soft-Delete Retention** | 7 to 90 days | 7 to 90 days |
-| **Purge Protection** | Immutable once enabled | Enabled by default |
-| **Network Isolation** | Private Link & Firewall | Private Link only |
+| Parameter / Dimension            | Key Vault Standard / Premium | Managed HSM                |
+| :------------------------------- | :--------------------------- | :------------------------- |
+| **Transactions per Region**      | 4,000 requests / 10 seconds  | Thousands of dedicated QPS |
+| **Max Secret Size**              | 25 KB                        | N/A (Keys only)            |
+| **Max Certificate Size**         | 100 KB                       | N/A (Keys only)            |
+| **Max Keys / Secrets per Vault** | 25,000 items                 | 5,000 HSM keys             |
+| **Soft-Delete Retention**        | 7 to 90 days                 | 7 to 90 days               |
+| **Purge Protection**             | Immutable once enabled       | Enabled by default         |
+| **Network Isolation**            | Private Link & Firewall      | Private Link only          |
 
 ---
 
@@ -232,6 +233,7 @@ az network private-endpoint create \
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **Key Vault Standard:** $0.00 base fee; $0.03 per 10,000 operations.
 2. **Key Vault Premium (HSM Keys):** $1.00 per key version / month + $0.03 per 10,000 operations.
 3. **Managed HSM (Dedicated Pool):** ~$4.40 per hour (~$3,212/month base fee).
@@ -263,9 +265,9 @@ Pricing components:
 
 ## 7. Battle-Tested Nuggets & Production Gotchas
 
-1. **The Regional Throttling Boundary (4,000 Ops / 10s):** Key Vault enforces strict throttling limits of 4,000 requests per 10-second window *per vault per subscription per region*. If 50 Kubernetes microservice pods restart simultaneously and each attempts to read 20 database secrets on startup without caching, Key Vault returns `HTTP 429 Too Many Requests`. The entire microservice fleet will crash in `CrashLoopBackOff`. Always implement client-side secret caching using libraries like `Azure.Security.KeyVault.Secrets` with exponential backoff.
+1. **The Regional Throttling Boundary (4,000 Ops / 10s):** Key Vault enforces strict throttling limits of 4,000 requests per 10-second window _per vault per subscription per region_. If 50 Kubernetes microservice pods restart simultaneously and each attempts to read 20 database secrets on startup without caching, Key Vault returns `HTTP 429 Too Many Requests`. The entire microservice fleet will crash in `CrashLoopBackOff`. Always implement client-side secret caching using libraries like `Azure.Security.KeyVault.Secrets` with exponential backoff.
 2. **Purge Protection Cannot Be Disabled:** Once Purge Protection is enabled on an Azure Key Vault, **it can NEVER be disabled by anyone, including the Global Administrator or Microsoft Engineering**. If an engineer deletes a test vault with Purge Protection enabled, that vault name remains locked and soft-deleted for the full 90-day retention period; you cannot recreate a new vault with the same name until the 90 days expire. Always append unique environment suffixes to vault names (`kv-app-dev-01`).
-3. **Vault Access Policies vs Azure RBAC Migration Gotcha:** If you change a Key Vault from "Vault Access Policy" to "Azure role-based access control (Azure RBAC)", **all existing access policies are instantly superseded and invalidated**. Any application relying on legacy access policies will immediately lose access with `403 Forbidden: Caller is not authorized`. Ensure you pre-assign all necessary Azure RBAC roles to applications *before* flipping the authorization toggle.
+3. **Vault Access Policies vs Azure RBAC Migration Gotcha:** If you change a Key Vault from "Vault Access Policy" to "Azure role-based access control (Azure RBAC)", **all existing access policies are instantly superseded and invalidated**. Any application relying on legacy access policies will immediately lose access with `403 Forbidden: Caller is not authorized`. Ensure you pre-assign all necessary Azure RBAC roles to applications _before_ flipping the authorization toggle.
 4. **Secrets Are Not Monitored by Default:** While Key Vault stores secrets securely, it does not alert anyone when an API secret or certificate is about to expire. When a production database credential expires at midnight, services crash without warning. Integrate Key Vault with **Azure Event Grid** to listen to `Microsoft.KeyVault.SecretNearExpiry` events and trigger automated PagerDuty tickets or Slack notifications 30 days prior to expiration.
 5. **Private Endpoint DNS Loopback Trap:** When deploying a Private Endpoint for Key Vault, ensure your VNet resolves `kv-enterprise-core-prod.vault.azure.net` to the private IP via the `privatelink.vaultcore.azure.net` Private DNS Zone. If local DNS resolution fails or returns public IP `20.x.x.x`, calls to Key Vault will be rejected by the vault's firewall with `ForbiddenByFirewall: Public network access is disabled`.
 6. **Managed HSM Security Domain Quorum Requirement:** When provisioning an Azure Managed HSM, you must download and distribute the **Security Domain** among 3 to 10 security officers (using an $M$-of-$N$ Shamir's Secret Sharing quorum, e.g., 3 of 5 keys required). If a regional disaster occurs and you need to restore your Managed HSM pool, **it is physically impossible to restore without the Security Domain quorum keys**. Store these quorum keys in physical safes in separate geographic locations.

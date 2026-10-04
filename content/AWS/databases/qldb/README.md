@@ -36,13 +36,13 @@ The journal is the heart of QLDB — it's an immutable, sequenced log of all cha
 
 ### Immutable vs Traditional DB
 
-| | Traditional DB | QLDB |
-|--|--|--|
-| UPDATE | Allowed | Not allowed (append new revision) |
-| DELETE | Allowed | Not allowed (soft delete only) |
-| History | Overwritten | Preserved (full audit trail) |
-| Tamper detection | Application-level | Built-in (SHA-256 chain) |
-| Verification | Manual (application) | Automatic (digest comparison) |
+|                  | Traditional DB       | QLDB                              |
+| ---------------- | -------------------- | --------------------------------- |
+| UPDATE           | Allowed              | Not allowed (append new revision) |
+| DELETE           | Allowed              | Not allowed (soft delete only)    |
+| History          | Overwritten          | Preserved (full audit trail)      |
+| Tamper detection | Application-level    | Built-in (SHA-256 chain)          |
+| Verification     | Manual (application) | Automatic (digest comparison)     |
 
 ## Creating a Ledger
 
@@ -128,6 +128,7 @@ aws qldb get-digest \
 ```
 
 Returns:
+
 ```json
 {
   "Digest": {
@@ -229,35 +230,35 @@ SELECT * FROM Account WHERE id = 'ACC001' AS OF '2024-01-15T10:00:00Z'
 
 ## Use Cases
 
-| Use Case | Why QLDB |
-|----------|---------|
+| Use Case               | Why QLDB                                  |
+| ---------------------- | ----------------------------------------- |
 | Financial transactions | Immutable, auditable, cryptographic proof |
-| Supply chain | Full history of goods movement |
-| Medical records | HIPAA compliance, tamper-evident |
-| Legal documents | Immutable contract versions |
-| HR/Payroll | Audit trail of employee changes |
-| Government records | Regulatory compliance |
+| Supply chain           | Full history of goods movement            |
+| Medical records        | HIPAA compliance, tamper-evident          |
+| Legal documents        | Immutable contract versions               |
+| HR/Payroll             | Audit trail of employee changes           |
+| Government records     | Regulatory compliance                     |
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Journal storage | $0.50/GB/month |
-| Indexed storage | $0.025/GB/month |
-| Write I/O | $0.13 per million I/O |
-| Read I/O | $0.02 per million I/O |
-| Journal export | $0.025/GB (S3) |
+| Component       | Cost                  |
+| --------------- | --------------------- |
+| Journal storage | $0.50/GB/month        |
+| Indexed storage | $0.025/GB/month       |
+| Write I/O       | $0.13 per million I/O |
+| Read I/O        | $0.02 per million I/O |
+| Journal export  | $0.025/GB (S3)        |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max ledger storage | 64 TB |
-| Max document size | 64 KB |
-| Max fields per document | 500 |
-| Max field name length | 50 characters |
+| Resource                    | Limit         |
+| --------------------------- | ------------- |
+| Max ledger storage          | 64 TB         |
+| Max document size           | 64 KB         |
+| Max fields per document     | 500           |
+| Max field name length       | 50 characters |
 | Max concurrent transactions | 15 per ledger |
-| Max query timeout | 30 seconds |
+| Max query timeout           | 30 seconds    |
 
 ## References
 

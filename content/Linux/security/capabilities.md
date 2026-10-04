@@ -13,7 +13,7 @@ Traditional Unix distinguishes between **root** (UID 0, all privileges) and **no
 
 ## The Problem with Root
 
-Historically, if a process needed to bind port 80 (a privileged port), it had to run as root. Running as root means it could do *anything*: mount filesystems, load kernel modules, read all files, etc.
+Historically, if a process needed to bind port 80 (a privileged port), it had to run as root. Running as root means it could do _anything_: mount filesystems, load kernel modules, read all files, etc.
 
 Linux capabilities solve this by breaking up what "root" means into individual capabilities.
 
@@ -167,6 +167,7 @@ setcap -r /usr/bin/nginx
 ```
 
 When a file has `cap_net_bind_service+ep`:
+
 - Anyone running it gets `CAP_NET_BIND_SERVICE` permitted
 - `e` flag means effective immediately (no need to call `capset()`)
 
@@ -199,20 +200,20 @@ This is important for privilege escalation prevention: even if a vulnerability i
 
 ## Quick Reference: What You Need
 
-| Task                    | Capability Needed               |
-|------------------------|-------------------------------|
-| Bind port < 1024       | CAP_NET_BIND_SERVICE          |
-| Use ping (ICMP raw)    | CAP_NET_RAW                    |
-| tcpdump                 | CAP_NET_RAW + CAP_SYS_ADMIN   |
-| strace                  | CAP_SYS_PTRACE                |
-| mount (in user NS)     | CAP_SYS_ADMIN (in user NS)   |
-| Network namespace       | CAP_SYS_ADMIN (or user NS)    |
-| Modify routing table    | CAP_NET_ADMIN                  |
-| Modify iptables rules   | CAP_NET_ADMIN                  |
-| Load kernel module      | CAP_SYS_MODULE                |
-| chmod +i (immutable)   | CAP_LINUX_IMMUTABLE          |
-| mlock (lock memory)    | CAP_IPC_LOCK                  |
-| Set real-time clock     | CAP_SYS_TIME                  |
+| Task                  | Capability Needed           |
+| --------------------- | --------------------------- |
+| Bind port < 1024      | CAP_NET_BIND_SERVICE        |
+| Use ping (ICMP raw)   | CAP_NET_RAW                 |
+| tcpdump               | CAP_NET_RAW + CAP_SYS_ADMIN |
+| strace                | CAP_SYS_PTRACE              |
+| mount (in user NS)    | CAP_SYS_ADMIN (in user NS)  |
+| Network namespace     | CAP_SYS_ADMIN (or user NS)  |
+| Modify routing table  | CAP_NET_ADMIN               |
+| Modify iptables rules | CAP_NET_ADMIN               |
+| Load kernel module    | CAP_SYS_MODULE              |
+| chmod +i (immutable)  | CAP_LINUX_IMMUTABLE         |
+| mlock (lock memory)   | CAP_IPC_LOCK                |
+| Set real-time clock   | CAP_SYS_TIME                |
 
 ## Listing Current Capabilities
 

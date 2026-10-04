@@ -69,19 +69,21 @@ JOSE (JSON Object Signing and Encryption)
 JWT = a "claim" (RFC 7519)
        └─ signed with JWS (RFC 7515)   ← most common
        └─ encrypted with JWE (RFC 7516) ← when confidentiality needed
-       
+
        JWS header / JWE header references keys from a JWKS
        JWKS contains JWKs (RFC 7517)
-       
+
        All algorithms specified in JWA (RFC 7518)
 ```
 
 **You don't need to learn all of JOSE to use JWT effectively.** The 90% case is:
+
 - JWS compact (which you already know from 1.1)
 - JWK (to represent your keys)
 - JWKS (to publish them, with rotation)
 
 The remaining 10%:
+
 - JWS JSON (for multiple signatures on one payload)
 - JWE (for encrypted JWTs)
 - JWE compact (5 parts instead of 3)
@@ -118,6 +120,7 @@ Done. Move on to the variants.
 ## 3. JWS JSON Serialization
 
 JWS JSON serialization supports **multiple signatures** on the same payload. Useful when:
+
 - Multiple parties need to verify (cross-org signing)
 - You want a second signature for non-repudiation
 - You're aggregating signatures from different signers
@@ -217,13 +220,13 @@ JWE is **encrypted** (and typically also signed inside). The payload is unreadab
 header.encrypted_key.iv.ciphertext.tag
 ```
 
-| Part | What |
-|------|------|
-| `header` | JWE protected header (alg, enc, kid, etc.) |
+| Part            | What                                                               |
+| --------------- | ------------------------------------------------------------------ |
+| `header`        | JWE protected header (alg, enc, kid, etc.)                         |
 | `encrypted_key` | The CEK (content encryption key), wrapped with the recipient's key |
-| `iv` | Initialization vector (96 bits for AES-GCM) |
-| `ciphertext` | The encrypted payload |
-| `tag` | Authentication tag from the AEAD cipher (128 bits for AES-GCM) |
+| `iv`            | Initialization vector (96 bits for AES-GCM)                        |
+| `ciphertext`    | The encrypted payload                                              |
+| `tag`           | Authentication tag from the AEAD cipher (128 bits for AES-GCM)     |
 
 **The encryption flow:**
 
@@ -238,13 +241,13 @@ header.encrypted_key.iv.ciphertext.tag
 
 **JWE header fields (in addition to JWS ones):**
 
-| Field | Meaning | Example |
-|-------|---------|---------|
-| `alg` | Algorithm used to wrap the CEK | `RSA-OAEP`, `RSA-OAEP-256`, `ECDH-ES`, `ECDH-ES+A256KW`, `A256KW` |
-| `enc` | Algorithm used to encrypt the content | `A256GCM`, `A128CBC-HS256`, `A128GCM`, `ChaCha20-Poly1305` |
-| `zip` | Compression algorithm applied before encryption | `DEF` (zlib) — rarely used |
-| `kid` | Key ID for the recipient | `rsa-key-2024-01` |
-| `epk` | Ephemeral public key (for ECDH-ES) | `{ "kty": "EC", "crv": "P-256", "x": "...", "y": "..." }` |
+| Field | Meaning                                         | Example                                                           |
+| ----- | ----------------------------------------------- | ----------------------------------------------------------------- |
+| `alg` | Algorithm used to wrap the CEK                  | `RSA-OAEP`, `RSA-OAEP-256`, `ECDH-ES`, `ECDH-ES+A256KW`, `A256KW` |
+| `enc` | Algorithm used to encrypt the content           | `A256GCM`, `A128CBC-HS256`, `A128GCM`, `ChaCha20-Poly1305`        |
+| `zip` | Compression algorithm applied before encryption | `DEF` (zlib) — rarely used                                        |
+| `kid` | Key ID for the recipient                        | `rsa-key-2024-01`                                                 |
+| `epk` | Ephemeral public key (for ECDH-ES)              | `{ "kty": "EC", "crv": "P-256", "x": "...", "y": "..." }`         |
 
 **The most common `alg` + `enc` combinations:**
 
@@ -261,11 +264,11 @@ alg: dir,          enc: A256GCM       ← direct (shared secret) — rarely
 
 ```
 alg = "dir"  →  the encryption key is the shared secret itself
-  
+
 Used when both parties already share a key (like HMAC).
 For the JWT case, you might have a key-encryption key shared between
 two services that need to send encrypted JWTs.
-  
+
 alg = "dir" is a footgun in the same way alg = "none" is.
 Some libs default to "trust the header" — and "dir" means "no key wrapping,
 just encrypt with the key you find."
@@ -358,14 +361,14 @@ w0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
 }
 ```
 
-| Field | Meaning |
-|-------|---------|
+| Field | Meaning                                                   |
+| ----- | --------------------------------------------------------- |
 | `kty` | Key type: `RSA`, `EC`, `oct` (symmetric), `OKP` (Edwards) |
-| `use` | Intended use: `sig` (signature) or `enc` (encryption) |
-| `alg` | Algorithm intended for this key |
-| `kid` | Key ID — used by verifiers to pick the right key |
-| `n` | RSA modulus (base64url-encoded, big number) |
-| `e` | RSA public exponent (base64url-encoded) |
+| `use` | Intended use: `sig` (signature) or `enc` (encryption)     |
+| `alg` | Algorithm intended for this key                           |
+| `kid` | Key ID — used by verifiers to pick the right key          |
+| `n`   | RSA modulus (base64url-encoded, big number)               |
+| `e`   | RSA public exponent (base64url-encoded)                   |
 
 The `n` and `e` are the standard RSA public key components. Together, they reconstruct the public key.
 
@@ -383,12 +386,12 @@ The `n` and `e` are the standard RSA public key components. Together, they recon
 }
 ```
 
-| Field | Meaning |
-|-------|---------|
-| `kty` | `EC` |
+| Field | Meaning                                                             |
+| ----- | ------------------------------------------------------------------- |
+| `kty` | `EC`                                                                |
 | `crv` | Curve name: `P-256`, `P-384`, `P-521` (and `secp256k1` for Bitcoin) |
-| `x` | X coordinate of the public point |
-| `y` | Y coordinate of the public point |
+| `x`   | X coordinate of the public point                                    |
+| `y`   | Y coordinate of the public point                                    |
 
 ### 5.3 OKP (Ed25519) public key as a JWK
 
@@ -403,11 +406,11 @@ The `n` and `e` are the standard RSA public key components. Together, they recon
 }
 ```
 
-| Field | Meaning |
-|-------|---------|
+| Field | Meaning                                           |
+| ----- | ------------------------------------------------- |
 | `kty` | `OKP` (Octet Key Pair — used for Ed25519, X25519) |
-| `crv` | Curve name: `Ed25519`, `X25519` |
-| `x` | The 32-byte public key |
+| `crv` | Curve name: `Ed25519`, `X25519`                   |
+| `x`   | The 32-byte public key                            |
 
 ### 5.4 Symmetric key as a JWK (use with care)
 
@@ -421,10 +424,10 @@ The `n` and `e` are the standard RSA public key components. Together, they recon
 }
 ```
 
-| Field | Meaning |
-|-------|---------|
+| Field | Meaning                                |
+| ----- | -------------------------------------- |
 | `kty` | `oct` (octet sequence — raw key bytes) |
-| `k` | The key bytes (base64url-encoded) |
+| `k`   | The key bytes (base64url-encoded)      |
 
 **WARNING:** publishing symmetric keys in a JWKS means anyone who fetches the JWKS has the HMAC key. Don't do this. Symmetric keys should be pre-shared, not published. Some JWKS implementations even reject `kty: oct` for `use: sig`.
 
@@ -453,6 +456,7 @@ For private keys, the JWK includes the public components AND the private compone
 ### 5.6 The "thumbprint" of a JWK
 
 A JWK thumbprint is a hash of the canonical JSON of the public key components. Used for:
+
 - DPoP's `jkt` claim (binds token to a key)
 - Cache busting (thumbprint changes if key changes)
 - Key matching without comparing full keys
@@ -517,16 +521,16 @@ A JWKS is a JSON document with an array of public JWKs. The IdP publishes it at 
 
 **Required fields per key:**
 
-| Field | Required? | Notes |
-|-------|-----------|-------|
-| `kty` | **Yes** | `RSA`, `EC`, `oct`, `OKP` |
-| `use` | Recommended | `sig` or `enc` |
-| `alg` | Recommended | `RS256`, `ES256`, etc. |
-| `kid` | **Strongly recommended** | Without kid, the verifier can't tell which key to use |
-| `n`, `e` | Required for RSA | Modulus and exponent |
-| `crv`, `x`, `y` | Required for EC | Curve and point |
-| `crv`, `x` | Required for OKP | Curve and key |
-| `k` | Required for oct | The key bytes (don't publish these) |
+| Field           | Required?                | Notes                                                 |
+| --------------- | ------------------------ | ----------------------------------------------------- |
+| `kty`           | **Yes**                  | `RSA`, `EC`, `oct`, `OKP`                             |
+| `use`           | Recommended              | `sig` or `enc`                                        |
+| `alg`           | Recommended              | `RS256`, `ES256`, etc.                                |
+| `kid`           | **Strongly recommended** | Without kid, the verifier can't tell which key to use |
+| `n`, `e`        | Required for RSA         | Modulus and exponent                                  |
+| `crv`, `x`, `y` | Required for EC          | Curve and point                                       |
+| `crv`, `x`      | Required for OKP         | Curve and key                                         |
+| `k`             | Required for oct         | The key bytes (don't publish these)                   |
 
 **The `/.well-known/jwks.json` endpoint:**
 
@@ -535,7 +539,7 @@ Standard locations:
   https://idp.example.com/.well-known/jwks.json
   https://idp.example.com/jwks.json
   https://login.example.com/.well-known/openid-configuration (contains jwks_uri)
-  
+
 Security:
   - HTTPS only
   - CORS: restrict to your known relying parties
@@ -559,6 +563,7 @@ Security:
 ## 7. JWKS Rotation: The Production Pattern
 
 This is where theory meets ops. JWKS rotation is how you:
+
 - Migrate from RS256 to ES256 over months
 - Recover from a signing key compromise
 - Re-key on a regular schedule
@@ -569,7 +574,7 @@ This is where theory meets ops. JWKS rotation is how you:
 ```
 T0:   Sign with Key A. JWKS contains [A].
 T1:   Generate Key B. JWKS still contains [A] only.
-T2:   Start signing new tokens with Key B. JWKS contains [A, B]. 
+T2:   Start signing new tokens with Key B. JWKS contains [A, B].
       Old tokens (signed with A) still verify.
 T3:   Stop signing with A. JWKS still contains [A, B].
       Wait for old A-signed tokens to expire (or max age).
@@ -600,6 +605,7 @@ JWKS:      [A]   [A]   [A,B] [A,B] [B]   [B,C] [B,C]
 ```
 
 **The overlap window (T2-T4) is the critical period.** This is when both old and new tokens are valid. The length of the overlap depends on:
+
 - Your access token lifetime (T2-T4 should be > max token lifetime)
 - How quickly you can detect a failed rotation
 - How brave you're feeling (longer = safer, but more "exposure" if B is compromised)
@@ -633,11 +639,11 @@ class SigningKey:
         self.private_pem = private_pem
         self.public_jwk = public_jwk
         self.created_at = created_at
-    
+
     def active_until(self) -> float:
         # Key is "active for signing" for 90 days
         return self.created_at + 90 * 86400
-    
+
     def grace_until(self) -> float:
         # Key stays in JWKS for 30 more days (overlap window)
         return self.active_until() + 30 * 86400
@@ -648,7 +654,7 @@ class JWKSManager:
         self.keys_dir = keys_dir
         os.makedirs(keys_dir, exist_ok=True)
         self._load_keys()
-    
+
     def _load_keys(self):
         """Load all keys from disk at startup."""
         self.keys: dict[str, SigningKey] = {}
@@ -658,10 +664,10 @@ class JWKSManager:
             kid = fname[:-4]
             with open(f"{self.keys_dir}/{fname}", "rb") as f:
                 priv_pem = f.read()
-            
+
             priv = serialization.load_pem_private_key(priv_pem, password=None)
             pub = priv.public_key()
-            
+
             # Build JWK from public key
             pub_pem = pub.public_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -669,14 +675,14 @@ class JWKSManager:
             )
             # Convert PEM JWK to dict (use a library in production)
             jwk = pem_to_jwk(pub_pem, kid=kid, alg="RS256")
-            
+
             created_at = os.path.getmtime(f"{self.keys_dir}/{fname}")
             self.keys[kid] = SigningKey(
                 kid=kid, algorithm="RS256",
                 private_pem=priv_pem, public_jwk=jwk,
                 created_at=created_at,
             )
-    
+
     def get_active_signing_key(self) -> SigningKey:
         """Get the current key for signing new tokens."""
         now = time.time()
@@ -689,7 +695,7 @@ class JWKSManager:
             return self._generate_key()
         # Return the most recently created active key
         return max(active, key=lambda k: k.created_at)
-    
+
     def get_jwks(self) -> dict:
         """Get the JWKS document (public keys only)."""
         now = time.time()
@@ -701,11 +707,11 @@ class JWKSManager:
         return {
             "keys": [k.public_jwk for k in visible]
         }
-    
+
     def _generate_key(self, algorithm: str = "RS256") -> SigningKey:
         """Generate a new signing key, save to disk, add to the manager."""
         kid = f"{algorithm.lower()}-{int(time.time())}"
-        
+
         if algorithm == "RS256":
             priv = rsa.generate_private_key(public_exponent=65537, key_size=2048)
             priv_pem = priv.private_bytes(
@@ -720,12 +726,12 @@ class JWKSManager:
             )
             jwk = pem_to_jwk(pub_pem, kid=kid, alg=algorithm)
         # ... add ES256, EdDSA, etc.
-        
+
         # Save to disk
         with open(f"{self.keys_dir}/{kid}.pem", "wb") as f:
             f.write(priv_pem)
         os.chmod(f"{self.keys_dir}/{kid}.pem", 0o600)  # owner read/write only
-        
+
         key = SigningKey(
             kid=kid, algorithm=algorithm,
             private_pem=priv_pem, public_jwk=jwk,
@@ -733,7 +739,7 @@ class JWKSManager:
         )
         self.keys[kid] = key
         return key
-    
+
     def prune_old_keys(self):
         """Remove keys past their grace period. Run daily."""
         now = time.time()
@@ -800,7 +806,7 @@ def retire_key(kid: str):
 With JWKS rotation + access token denylist + refresh token revoke:
   → All compromised tokens dead within minutes
   → All users re-auth within minutes
-  
+
 Without these mechanisms:
   → All compromised tokens valid until exp (15 min for access, 30 days for refresh)
   → 30 days of attacker access
@@ -835,25 +841,25 @@ class JWKSCache:
         self._cache: dict | None = None
         self._cache_time: float = 0
         self._lock = threading.Lock()
-    
+
     def get_keys(self) -> list[dict]:
         with self._lock:
             if self._cache is None or time.time() - self._cache_time > self.ttl:
                 self._refresh()
             return self._cache["keys"]
-    
+
     def get_key_by_kid(self, kid: str) -> dict | None:
         keys = self.get_keys()
         for k in keys:
             if k.get("kid") == kid:
                 return k
         return None
-    
+
     def force_refresh(self):
         """Force a refresh. Use when kid not found."""
         with self._lock:
             self._refresh()
-    
+
     def _refresh(self):
         # Use requests with a short timeout
         resp = requests.get(self.jwks_url, timeout=5)
@@ -869,17 +875,17 @@ def get_signing_key(token: str, jwks_cache: JWKSCache) -> dict:
     kid = parse_kid_from_token(token)
     if not kid:
         raise InvalidTokenError("token has no kid")
-    
+
     key = jwks_cache.get_key_by_kid(kid)
     if key:
         return key
-    
+
     # Refresh once (might be a rotation we don't have yet)
     jwks_cache.force_refresh()
     key = jwks_cache.get_key_by_kid(kid)
     if key:
         return key
-    
+
     # Genuinely unknown kid
     raise InvalidTokenError("unknown kid")
 ```
@@ -912,18 +918,18 @@ for request in requests:
 
 The JOSE spec lets you put more than just `alg` in the header. Common extensions:
 
-| Header | Meaning | Use |
-|--------|---------|-----|
-| `kid` | Key ID | Standard. Most common extension. |
-| `cty` | Content type | `JWT` for nested (signed-then-encrypted) |
-| `x5t` | X.509 SHA-1 thumbprint | Legacy, avoid |
-| `x5t#S256` | X.509 SHA-256 thumbprint | Cert-bound tokens (mTLS) |
-| `x5u` | URL to X.509 cert chain | **Don't trust this URL** (see A4 in 1.1) |
-| `jku` | URL to JWK Set | **Don't trust this URL** (see A4 in 1.1) |
-| `url` | URL the token is intended for | RFC 9929, prevents token misuse across endpoints |
-| `crit` | List of critical extensions | Verifier MUST understand or reject |
-| `b64` | Whether payload is base64-encoded | Always true for JWS compact |
-| `ppt` | Per-Passphrase Token | New (RFC 9861), passphrase-derived keys |
+| Header     | Meaning                           | Use                                              |
+| ---------- | --------------------------------- | ------------------------------------------------ |
+| `kid`      | Key ID                            | Standard. Most common extension.                 |
+| `cty`      | Content type                      | `JWT` for nested (signed-then-encrypted)         |
+| `x5t`      | X.509 SHA-1 thumbprint            | Legacy, avoid                                    |
+| `x5t#S256` | X.509 SHA-256 thumbprint          | Cert-bound tokens (mTLS)                         |
+| `x5u`      | URL to X.509 cert chain           | **Don't trust this URL** (see A4 in 1.1)         |
+| `jku`      | URL to JWK Set                    | **Don't trust this URL** (see A4 in 1.1)         |
+| `url`      | URL the token is intended for     | RFC 9929, prevents token misuse across endpoints |
+| `crit`     | List of critical extensions       | Verifier MUST understand or reject               |
+| `b64`      | Whether payload is base64-encoded | Always true for JWS compact                      |
+| `ppt`      | Per-Passphrase Token              | New (RFC 9861), passphrase-derived keys          |
 
 **The `crit` header — the "you must understand this or reject" mechanism:**
 
@@ -964,7 +970,7 @@ If you have an internal-only header, prefix it with your organization
 to avoid collisions:
   "x-acme-tenant-id": "tenant-123"
   "https://acme.example.com/tenant-id": "tenant-123"
-  
+
 Or use the IANA "JSON Web Token Claims" registry for things that
 might be industry-wide.
 ```
@@ -982,7 +988,7 @@ You have a token that:
   - Must be readable only by the recipient (JWE)
   - Must be verifiable as authentic (JWS)
   - Must contain claims that some intermediate can't see
-  
+
 Example: a payment authorization token from a wallet provider
 to a payment processor, going through a banking intermediary.
 The intermediary should be able to route it but not see the payment details.
@@ -1137,22 +1143,22 @@ if __name__ == "__main__":
         rsa_priv, alg="RS256", kid="rsa-2024-01"
     )
     print(f"JWS: {token[:50]}...")
-    
+
     # Verify
     claims = verify_jws(token, rsa_priv.public_key(), algs=["RS256"])
     print(f"Verified: {claims}")
-    
+
     # Encrypt (a different token)
     encrypted = encrypt_jwe(
         {"sub": "alice", "ssn": "123-45-6789"},
         rsa_priv.public_key()
     )
     print(f"JWE: {encrypted[:50]}... ({len(encrypted.split('.'))} parts)")
-    
+
     # Decrypt
     plaintext = decrypt_jwe(encrypted, rsa_priv)
     print(f"Decrypted: {plaintext}")
-    
+
     # Build JWKS
     jwks = build_jwks([
         key_to_jwk(rsa_priv.public_key(), kid="rsa-2024-01", alg="RS256"),
@@ -1171,18 +1177,18 @@ This is 100 lines and exercises every major JOSE operation. Run it and inspect t
 
 Imagine a corporate Public Key Infrastructure (PKI) — the kind that issues employee smart cards.
 
-| JOSE concept | PKI equivalent |
-|--------------|----------------|
-| **JWK** | The format of one employee's public key on their smart card |
-| **JWKS** | The published list of all active employee public keys |
-| **JWKS endpoint** | The HR directory where anyone can look up an employee's public key |
-| **kid** | The employee's badge number — used to find the right key |
-| **JWKS rotation** | Re-issuing smart cards to all employees on a schedule |
-| **JWE** | An encrypted memo — anyone can see "this is from Bob to Alice" but only Alice can read the contents |
-| **JWS** | A signed memo — anyone can verify "this is from Bob" and read it |
-| **Nested JWT (JWS+JWE)** | A sealed, signed envelope — only the recipient can open it, and they can verify who sent it |
-| **Cert revocation list (CRL)** | A denylist of revoked JTI values |
-| **OCSP** | Real-time check if a specific cert is still valid (analogous to introspection) |
+| JOSE concept                   | PKI equivalent                                                                                      |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| **JWK**                        | The format of one employee's public key on their smart card                                         |
+| **JWKS**                       | The published list of all active employee public keys                                               |
+| **JWKS endpoint**              | The HR directory where anyone can look up an employee's public key                                  |
+| **kid**                        | The employee's badge number — used to find the right key                                            |
+| **JWKS rotation**              | Re-issuing smart cards to all employees on a schedule                                               |
+| **JWE**                        | An encrypted memo — anyone can see "this is from Bob to Alice" but only Alice can read the contents |
+| **JWS**                        | A signed memo — anyone can verify "this is from Bob" and read it                                    |
+| **Nested JWT (JWS+JWE)**       | A sealed, signed envelope — only the recipient can open it, and they can verify who sent it         |
+| **Cert revocation list (CRL)** | A denylist of revoked JTI values                                                                    |
+| **OCSP**                       | Real-time check if a specific cert is still valid (analogous to introspection)                      |
 
 **The key lifecycle in both systems:**
 
@@ -1192,7 +1198,7 @@ Smart cards (PKI):
   - CA's CRL updated nightly
   - Card renewed annually
   - Lost card → added to CRL, new card issued
-  
+
 JWTs (JOSE):
   - Token issued with 15-min validity
   - IdP's JWKS updated as keys rotate
@@ -1222,10 +1228,10 @@ JOSE: Compromised IdP key → emergency rotate, all refresh tokens revoked
 ```
 Vulnerability: the JWKS endpoint returns a JWK with the private
 component (d, p, q for RSA; d for EC).
-  
+
   Attacker fetches JWKS, gets the private key.
   Attacker forges tokens.
-  
+
 Cause: bug in the key-to-JWK serialization. Some libraries have
 "dump the whole key" vs "dump public" modes.
 
@@ -1237,10 +1243,10 @@ Test: fetch your JWKS, verify it has NO d, p, q, dp, dq, qi fields.
 
 ```
 Vulnerability: JWKS fetched over HTTP.
-  
+
   Attacker MITM, swaps in their own key set.
   Attacker forges tokens.
-  
+
 Fix: HTTPS only. HSTS. Redirect HTTP → HTTPS.
 ```
 
@@ -1251,7 +1257,7 @@ Some IdPs allow any origin to fetch the JWKS. This is fine for
 public JWKS (which is the design), but watch out for:
   - JWKS that includes private info (like tenant-specific keys)
   - JWKS rate limiting (DoS by exhausting your JWKS bandwidth)
-  
+
 Allow wildcard CORS only for truly public JWKS. Otherwise,
 restrict to known relying-party origins.
 ```
@@ -1260,10 +1266,10 @@ restrict to known relying-party origins.
 
 ```
 JWS header: {"alg":"RS256","jku":"https://attacker.com/keys"}
-  
+
   Buggy library fetches jku, uses the keys there to verify.
   Attacker forges tokens.
-  
+
 Fix: ignore jku/x5u in tokens. Use only your configured JWKS URL.
 ```
 
@@ -1277,13 +1283,13 @@ Scenario: signing key compromised at 14:00.
     Attacker has access for max(access_ttl).
     For long-lived refresh tokens: attacker has access for refresh_ttl
     (could be 30 days).
-    
+
   With JWKS rotation:
     Generate new key (1 min)
     Publish new JWKS (1 min)
     Mark old key as compromised (1 min)
     Revoke all refresh tokens in family (1 min)
-    
+
   Recovery time: minutes, not days.
 ```
 
@@ -1292,16 +1298,16 @@ Scenario: signing key compromised at 14:00.
 ```
 Scenario: at T2, start signing with new key. At T3, drop old key
 from JWKS.
-  
+
   T3 - T2 = 1 day.
   But access tokens last 30 days, refresh tokens last 30 days.
   Tokens signed with old key are still in the wild.
-  
+
   Verifier: "kid old-2024-01 not in JWKS"
   Validator: "invalid token"
   Every user with an old token: locked out.
   3am page: "ALL USERS CAN'T LOG IN"
-  
+
 Fix: T3 - T2 must be > max(token lifetime) + grace.
 For 30-day refresh: keep old key in JWKS for 30-60 days.
 ```
@@ -1312,10 +1318,10 @@ For 30-day refresh: keep old key in JWKS for 30-60 days.
 Some buggy IdPs return:
   HTTP 200 OK
   {"keys": []}
-  
+
   Verifier: "no keys in JWKS, can't verify any token"
   Result: every token rejected
-  
+
 Fix: test your JWKS endpoint. It should always have at least one key.
 If you're rotating, ensure the new key is published before you start
 signing with it.
@@ -1328,7 +1334,7 @@ Verifier caches for 1 hour (configured).
 IdP rotates keys.
 Verifiers don't pick up the new key for 1 hour.
 Every new token fails.
-  
+
 Fix: set Cache-Control: max-age=300 on the JWKS response.
 Or: have verifiers do proactive refresh.
 ```
@@ -1337,15 +1343,15 @@ Or: have verifiers do proactive refresh.
 
 ```
 JWE header: {"alg":"dir","enc":"A256GCM"}
-  
+
   This means: "the encryption key is a pre-shared secret"
   The library looks up the secret based on... kid? config? header?
-  
+
   Buggy library: "alg=dir, let me find the secret"
   Library reads some shared-secret from a config file
   Library uses the wrong secret
   Decryption produces garbage, but the library might not error cleanly
-  
+
 Fix: explicitly handle alg=dir in your library of choice, OR never
 use it (use a real key wrap algorithm).
 ```
@@ -1356,7 +1362,7 @@ use it (use a real key wrap algorithm).
 The "encrypt then MAC" pattern is good in principle.
 AES-CBC + HMAC-SHA256 (enc=A128CBC-HS256) is one of the authenticated
 encryption modes supported.
-  
+
 But: it's tricky to get right. Padding oracle attacks, MAC timing
 leaks, etc.
 
@@ -1369,10 +1375,10 @@ They combine encryption + authentication in one primitive.
 ```
 Some older JWE modes are "encrypt but don't MAC" (e.g., RSA-OAEP
 without an AEAD enc). These have NO integrity protection.
-  
+
   Attacker can modify the ciphertext, the decryption "succeeds"
   (garbage plaintext), but the application might not detect this.
-  
+
 Modern JWE modes are all AEAD. Don't use the non-AEAD enc values.
 ```
 
@@ -1380,14 +1386,14 @@ Modern JWE modes are all AEAD. Don't use the non-AEAD enc values.
 
 ```
 JWK: {"kty":"RSA","use":"enc","alg":"RS256","kid":"..."}
-  
+
   This says: this key is for encryption, not signing.
-  
+
   A signing verifier should skip this key.
-  
+
 Bug: some libraries use `use: enc` keys for signature verification
 if they're the only one in the JWKS.
-  
+
 Fix: respect the `use` field. Use `use: sig` keys for signature
 verification, `use: enc` for encryption.
 ```
@@ -1397,10 +1403,10 @@ verification, `use: enc` for encryption.
 ```
 JWK: {"kty":"RSA","kid":"rsa-2024-01","n":"...","e":"AQAB"}
 JWK: {"kty":"RSA","kid":"rsa-2024-01-v2","n":"...","e":"AQAB"}  ← same key, different kid
-  
+
 Confusing. Verifier picks the first one. Tokens issued with the
 "v2" kid might not verify.
-  
+
 Fix: each key gets exactly one kid. If you need to version, it's
 a new key, not a new label.
 ```
@@ -1410,25 +1416,33 @@ a new key, not a new label.
 ## 14. Exercises
 
 ### Exercise 1: Generate a JWKS
+
 Generate 3 keys (RS256, ES256, EdDSA). Build a JWKS document. Verify the document has only public components (no `d`, `p`, `q`, etc.).
 
 ### Exercise 2: Sign with all 3 algorithms
+
 Sign the same payload with all 3. Verify each with the right key. Try to verify an RS256 token with the ES256 key — should fail.
 
 ### Exercise 3: Implement JWK thumbprint
+
 For each of your 3 keys, compute the JWK thumbprint. Use the algorithm from RFC 7638. Compare to the result of an online calculator.
 
 ### Exercise 4: JWE round-trip
+
 Encrypt a payload with JWE, decrypt it. Print all 5 parts. Inspect each.
 
 ### Exercise 5: Nested JWT
+
 Sign a JWT, then encrypt it as JWE. Decrypt the JWE, get the JWT back, verify it. Print the `cty` header.
 
 ### Exercise 6: JWKS rotation
+
 Build a tiny JWKS server. Add a key, publish, wait 30 seconds, add a second key, publish, wait 30 seconds, remove the first key, publish. Test that a verifier with a 60-second cache handles all 3 states correctly.
 
 ### Exercise 7: Compromise drill
+
 Simulate a key compromise:
+
 - Generate a key, sign tokens with it
 - "Compromise" it
 - Generate a new key
@@ -1436,19 +1450,24 @@ Simulate a key compromise:
 - Add all current access tokens to denylist
 - Revoke all refresh tokens
 - New tokens are signed with the new key
-Time each step. How long from "compromise detected" to "all tokens dead"?
+  Time each step. How long from "compromise detected" to "all tokens dead"?
 
 ### Exercise 8: JWKS caching
+
 Build a verifier with a 5-minute JWKS cache. Test:
+
 - Normal: token verifies
 - Key rotation: token with new kid → cache miss → refresh → verify
 - Unknown kid: refresh once, give up
 
 ### Exercise 9: A real JWE
+
 Find a JWE in your environment (or generate one). Decode all 5 parts. What algorithm? What encryption? What kid?
 
 ### Exercise 10: Audit your IdP
+
 If you have an IdP in production (Keycloak, Auth0, Okta, etc.):
+
 - What's the JWKS URL?
 - How many keys are in the JWKS?
 - What's the rotation schedule?
@@ -1460,6 +1479,7 @@ If you have an IdP in production (Keycloak, Auth0, Okta, etc.):
 ## 15. Next Step & Stage 1 Wrap-Up
 
 **Stage 1 complete.** You can now:
+
 - Read and write any JWT
 - Pick the right algorithm
 - Validate with the 7 checks in the right order
@@ -1472,9 +1492,10 @@ If you have an IdP in production (Keycloak, Auth0, Okta, etc.):
 
 → [[../stage2/README|Stage 2 — OAuth 2.0: The Authorization Framework]]
 
-Now that you can manipulate tokens, OAuth 2.0 shows you how to *issue* them — and the redirect dance, the flows, and the security decisions that make OAuth the most-deployed auth framework in the world.
+Now that you can manipulate tokens, OAuth 2.0 shows you how to _issue_ them — and the redirect dance, the flows, and the security decisions that make OAuth the most-deployed auth framework in the world.
 
 **Before you move on, verify you can answer these:**
+
 1. What's the difference between JWS and JWE, and when do you use each?
 2. What is a JWK, and what's a JWK thumbprint used for?
 3. How do you rotate JWKS keys without a 3am outage?

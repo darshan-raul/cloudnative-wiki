@@ -15,15 +15,15 @@ S3 pricing has four components: storage (per GB-month), requests (per 1,000 requ
 
 S3 offers seven storage classes across two axes: access frequency and durability.
 
-| Class | Use When | GB/Month | Retrieval |
-|-------|----------|----------|-----------|
-| **Standard** | Frequently accessed (< 90 days) | ~$0.023 | Free |
-| **Intelligent-Tiering** | Unknown/unpredictable access | $0.023 + monitoring | Free |
-| **Standard-IA** | Infrequent (accessed 1-3x/month) | ~$0.0125 | $0.01/GB |
-| **One Zone-IA** | Re-creatable, infrequent | ~$0.01 | $0.01/GB |
-| **Glacier Instant Retrieval** | Rarely accessed, needs ms retrieval | ~$0.004 | $0.004/GB |
-| **Glacier Flexible Retrieval** | Archival, 1min-12hr retrieval | ~$0.001 | $0.03-0.01/GB |
-| **Glacier Deep Archive** | Long-term retention, 12hr+ retrieval | ~$0.00099 | $0.09-0.01/GB |
+| Class                          | Use When                             | GB/Month            | Retrieval     |
+| ------------------------------ | ------------------------------------ | ------------------- | ------------- |
+| **Standard**                   | Frequently accessed (< 90 days)      | ~$0.023             | Free          |
+| **Intelligent-Tiering**        | Unknown/unpredictable access         | $0.023 + monitoring | Free          |
+| **Standard-IA**                | Infrequent (accessed 1-3x/month)     | ~$0.0125            | $0.01/GB      |
+| **One Zone-IA**                | Re-creatable, infrequent             | ~$0.01              | $0.01/GB      |
+| **Glacier Instant Retrieval**  | Rarely accessed, needs ms retrieval  | ~$0.004             | $0.004/GB     |
+| **Glacier Flexible Retrieval** | Archival, 1min-12hr retrieval        | ~$0.001             | $0.03-0.01/GB |
+| **Glacier Deep Archive**       | Long-term retention, 12hr+ retrieval | ~$0.00099           | $0.09-0.01/GB |
 
 **Key decision:** Is the data re-creatable? If yes, One Zone-IA saves 20% over Standard-IA. Is retrieval time critical? Instant Retrieval costs more than Flexible but delivers in milliseconds.
 
@@ -34,6 +34,7 @@ S3 offers seven storage classes across two axes: access frequency and durability
 Lifecycle policies automatically transition objects between storage classes or expire them. They're the primary mechanism for cost optimization — you set rules once, S3 applies them automatically.
 
 **Transition actions:**
+
 ```
 Rule 1: Move to Standard-IA after 30 days
 Rule 2: Move to Glacier after 90 days
@@ -42,6 +43,7 @@ Rule 4: Move to Intelligent-Tiering after 0 days (auto-optimize)
 ```
 
 **Expiration actions:**
+
 ```
 Rule 5: Delete incomplete multipart uploads after 7 days
 Rule 6: Delete objects with tag "Cleanup=true" after 90 days
@@ -69,6 +71,7 @@ This is where people get surprised. S3 charges for data retrieved from Standard-
 **Example:** You have 10TB in Standard-IA and someone runs a full scan of it. Retrieval cost alone: 10TB × $0.01/GB = ~$100.
 
 **Mitigation:**
+
 - Use S3 Select to retrieve only the data you need from objects (CSV, JSON, Parquet)
 - Use Athena instead of retrieving entire objects
 - Set lifecycle rules so frequently-accessed data stays in Standard
@@ -93,6 +96,7 @@ S3 Replication (CRR/SRR) has two cost components:
 S3 data transfer out to internet is priced at ~$0.09/GB (varies by region). This is one of the most common unexpected costs.
 
 **Optimization:**
+
 - Use CloudFront in front of S3 — CloudFront origin fetch is free, CloudFront egress is cheaper than S3 direct egress for large audiences
 - Keep data in the same region — S3 data transfer to AWS services in the same region is free (Lambda, EC2, CloudWatch)
 - Use VPC endpoints to access S3 privately without going through the internet (no data transfer charge for S3→EC2 within region)
@@ -100,6 +104,7 @@ S3 data transfer out to internet is priced at ~$0.09/GB (varies by region). This
 ## S3 Analytics
 
 S3 Analytics → Storage Lens gives visibility into:
+
 - Which prefixes/buckets are growing fastest
 - How many objects in each storage class
 - Which objects haven't been accessed in X days

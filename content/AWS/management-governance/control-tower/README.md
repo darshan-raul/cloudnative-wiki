@@ -63,6 +63,7 @@ Detective guardrails use AWS Config rules to detect non-compliant resources afte
 ### Guardrail States
 
 Each guardrail can be in one of three states:
+
 - **Enforced:** Non-compliant actions are blocked (preventive) or resources are remediated (detective)
 - **Not enabled:** Guardrail is not active
 - ** detective only (clear):** Guardrail is in detection mode only (non-compliant but not blocked)
@@ -81,15 +82,15 @@ Root
 
 ## Control Tower vs Manual Setup
 
-| Task | Control Tower | Manual |
-|------|--------------|--------|
-| Set up Organizations | Automated | Manual |
-| Create OUs | Pre-configured template | Manual |
-| Enable CloudTrail | Auto-enabled in all accounts | Manual per account |
-| Guardrails | 50+ pre-built | Write SCPs/Config rules from scratch |
-| SSO integration | Built-in AWS IAM Identity Center | Manual |
-| Time to deploy | Hours | Days to weeks |
-| Customization | Limited (guardrail set is fixed) | Full control |
+| Task                 | Control Tower                    | Manual                               |
+| -------------------- | -------------------------------- | ------------------------------------ |
+| Set up Organizations | Automated                        | Manual                               |
+| Create OUs           | Pre-configured template          | Manual                               |
+| Enable CloudTrail    | Auto-enabled in all accounts     | Manual per account                   |
+| Guardrails           | 50+ pre-built                    | Write SCPs/Config rules from scratch |
+| SSO integration      | Built-in AWS IAM Identity Center | Manual                               |
+| Time to deploy       | Hours                            | Days to weeks                        |
+| Customization        | Limited (guardrail set is fixed) | Full control                         |
 
 ## Extending Control Tower
 
@@ -105,9 +106,7 @@ You can create custom preventive guardrails (SCPs) and attach them to your custo
   "Statement": [
     {
       "Effect": "Deny",
-      "Action": [
-        "s3:PutBucketPublicAccessBlock"
-      ],
+      "Action": ["s3:PutBucketPublicAccessBlock"],
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
@@ -134,6 +133,7 @@ aws servicecatalog accept-responsibility-for-portfolio-access \
 ### Guardrail Compliance Dashboard
 
 The Control Tower dashboard shows:
+
 - Number of compliant vs non-compliant accounts
 - Guardrails by category (security, operations, cost optimization)
 - Non-compliant resources with remediation steps
@@ -151,12 +151,12 @@ Drift detected:
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Landing zones per organization | 1 |
-| Custom OUs | 5 (in addition to Core OUs) |
-| AWS Regions where Control Tower is enabled | 3 (default) |
-| Accounts per landing zone | 20 |
+| Resource                                   | Limit                       |
+| ------------------------------------------ | --------------------------- |
+| Landing zones per organization             | 1                           |
+| Custom OUs                                 | 5 (in addition to Core OUs) |
+| AWS Regions where Control Tower is enabled | 3 (default)                 |
+| Accounts per landing zone                  | 20                          |
 
 ## References
 

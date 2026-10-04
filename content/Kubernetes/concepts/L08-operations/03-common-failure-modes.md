@@ -11,7 +11,7 @@ aliases:
 
 > https://kubernetes.io/docs/tasks/debug/
 
-A decision tree for **"my Pod isn't working"**. The first question is always: *is the Pod actually running?* If no, why not? If yes, what's the symptom?
+A decision tree for **"my Pod isn't working"**. The first question is always: _is the Pod actually running?_ If no, why not? If yes, what's the symptom?
 
 ## Table of Contents
 
@@ -38,16 +38,16 @@ kubectl get pod <pod> -n <namespace>
 kubectl describe pod <pod> | grep -A 20 "^Events"
 ```
 
-| Status | What it means | Next step |
-|--------|---------------|-----------|
-| `Pending` | Scheduler hasn't placed it yet | Read Events — usually resources, affinity, PVC |
-| `ContainerCreating` | Scheduled, preparing containers | Read Events — image pull, volume, CNI |
-| `Running` | Container started | Go to Stage 2 |
-| `CrashLoopBackOff` | Container keeps dying | Go to Stage 3 |
-| `ImagePullBackOff` | Can't pull the image | Registry / auth / network issue |
-| `Error` | Container exited with non-zero code | Go to Stage 3 |
-| `Terminating` | Graceful shutdown in progress | Wait or check finalizers |
-| `Unknown` | Node unreachable by API server | Check node (Stage 5) |
+| Status              | What it means                       | Next step                                      |
+| ------------------- | ----------------------------------- | ---------------------------------------------- |
+| `Pending`           | Scheduler hasn't placed it yet      | Read Events — usually resources, affinity, PVC |
+| `ContainerCreating` | Scheduled, preparing containers     | Read Events — image pull, volume, CNI          |
+| `Running`           | Container started                   | Go to Stage 2                                  |
+| `CrashLoopBackOff`  | Container keeps dying               | Go to Stage 3                                  |
+| `ImagePullBackOff`  | Can't pull the image                | Registry / auth / network issue                |
+| `Error`             | Container exited with non-zero code | Go to Stage 3                                  |
+| `Terminating`       | Graceful shutdown in progress       | Wait or check finalizers                       |
+| `Unknown`           | Node unreachable by API server      | Check node (Stage 5)                           |
 
 #### Pending: the full decision tree
 
@@ -106,15 +106,15 @@ ContainerCreating
 
 ### 2. Stage 2: the Pod is Running, but the app isn't
 
-| Symptom | Likely cause | Check |
-|---------|-------------|-------|
-| Service has no endpoints | Readiness probe failing, selector mismatch | `kubectl get endpoints <svc>` |
-| DNS resolves but connection refused | Wrong port, app not listening | `kubectl exec` → `ss -tlnp` |
-| DNS works but 5xx from app | App error, wrong targetPort | `kubectl logs`, check Service `targetPort` |
-| DNS works but 9xx / timeout | NetworkPolicy blocking | `kubectl get networkpolicy -A` |
-| Slow responses | CPU throttling, OOM in progress | `kubectl top pod`, resource limits |
-| 403 / RBAC error | RBAC missing for ServiceAccount | `kubectl auth can-i` |
-| Requests routed to wrong Pod | Session affinity + backend flap | check endpoint stability |
+| Symptom                             | Likely cause                               | Check                                      |
+| ----------------------------------- | ------------------------------------------ | ------------------------------------------ |
+| Service has no endpoints            | Readiness probe failing, selector mismatch | `kubectl get endpoints <svc>`              |
+| DNS resolves but connection refused | Wrong port, app not listening              | `kubectl exec` → `ss -tlnp`                |
+| DNS works but 5xx from app          | App error, wrong targetPort                | `kubectl logs`, check Service `targetPort` |
+| DNS works but 9xx / timeout         | NetworkPolicy blocking                     | `kubectl get networkpolicy -A`             |
+| Slow responses                      | CPU throttling, OOM in progress            | `kubectl top pod`, resource limits         |
+| 403 / RBAC error                    | RBAC missing for ServiceAccount            | `kubectl auth can-i`                       |
+| Requests routed to wrong Pod        | Session affinity + backend flap            | check endpoint stability                   |
 
 #### The "Service has no endpoints" checklist
 
@@ -161,15 +161,15 @@ kubectl logs <pod> --all-containers    # all containers at once
 
 #### Exit code reference
 
-| Exit code | Name | What happened |
-|-----------|------|--------------|
-| 0 | Success | Container exited normally. Normal for Jobs; for Deployments, Kubernetes restarts it |
-| 1 | Application error | Your code exited with non-zero. Check logs |
-| 127 | Command not found | Entrypoint / CMD references a non-existent binary |
-| 137 | SIGKILL (128 + 9) | OOM-killed (memory limit exceeded) OR `kill -9` |
-| 139 | SIGSEGV (128 + 11) | Segmentation fault — memory corruption, bad pointer |
-| 143 | SIGTERM (128 + 15) | Graceful termination (`kill -15`). Expected during Pod shutdown |
-| 255 | Exit code out of range | Something went very wrong before the entrypoint ran |
+| Exit code | Name                   | What happened                                                                       |
+| --------- | ---------------------- | ----------------------------------------------------------------------------------- |
+| 0         | Success                | Container exited normally. Normal for Jobs; for Deployments, Kubernetes restarts it |
+| 1         | Application error      | Your code exited with non-zero. Check logs                                          |
+| 127       | Command not found      | Entrypoint / CMD references a non-existent binary                                   |
+| 137       | SIGKILL (128 + 9)      | OOM-killed (memory limit exceeded) OR `kill -9`                                     |
+| 139       | SIGSEGV (128 + 11)     | Segmentation fault — memory corruption, bad pointer                                 |
+| 143       | SIGTERM (128 + 15)     | Graceful termination (`kill -15`). Expected during Pod shutdown                     |
+| 255       | Exit code out of range | Something went very wrong before the entrypoint ran                                 |
 
 #### CrashLoopBackOff: the decision tree
 
@@ -244,14 +244,14 @@ kubectl rollout history deployment/<name>
 kubectl get events -n <namespace> --sort-by='.lastTimestamp' | tail -20
 ```
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Rollout stuck | New Pods failing readiness, old ones not terminating | `kubectl rollout undo` |
-| Rollout succeeded but traffic broken | Probes too lax | Tighten probes, canary |
-| `ProgressDeadlineExceeded` | No progress in 10 min (configurable) | Investigate scheduling/image issues |
-| Pods Pending after rollout | New replicas can't be scheduled | Resources, affinity, taints |
-| Revision mismatch | Rollback went wrong | `kubectl rollout history`, check revision |
-| Pods CrashLoopBackOff after rollout | New version broken | `kubectl rollout undo` |
+| Symptom                              | Cause                                                | Fix                                       |
+| ------------------------------------ | ---------------------------------------------------- | ----------------------------------------- |
+| Rollout stuck                        | New Pods failing readiness, old ones not terminating | `kubectl rollout undo`                    |
+| Rollout succeeded but traffic broken | Probes too lax                                       | Tighten probes, canary                    |
+| `ProgressDeadlineExceeded`           | No progress in 10 min (configurable)                 | Investigate scheduling/image issues       |
+| Pods Pending after rollout           | New replicas can't be scheduled                      | Resources, affinity, taints               |
+| Revision mismatch                    | Rollback went wrong                                  | `kubectl rollout history`, check revision |
+| Pods CrashLoopBackOff after rollout  | New version broken                                   | `kubectl rollout undo`                    |
 
 #### Rollback commands
 
@@ -280,9 +280,9 @@ livenessProbe:
   httpGet:
     path: /healthz
     port: 8080
-  initialDelaySeconds: 0   # passes immediately, even if app is starting
-  periodSeconds: 10         # waits 10s before declaring dead
-  failureThreshold: 3       # waits 30s before killing
+  initialDelaySeconds: 0 # passes immediately, even if app is starting
+  periodSeconds: 10 # waits 10s before declaring dead
+  failureThreshold: 3 # waits 30s before killing
 # If app needs 60s to start, it gets killed before it boots
 ```
 
@@ -296,14 +296,14 @@ kubectl describe node <node>
 kubectl top node <node>
 ```
 
-| Condition | Meaning | Pods affected |
-|-----------|---------|---------------|
-| `Ready` | Normal | None |
-| `MemoryPressure` | Node is low on memory | New Pods with BestEffort QoS rejected |
-| `DiskPressure` | Node is low on disk | New Pods rejected |
-| `PIDPressure` | Node is out of PIDs | New Pods rejected |
-| `NetworkUnavailable` | CNI has not configured pod network | Pods on this node can't communicate |
-| `NotReady` | kubelet can't reach API server, or node overwhelmed | All Pods on this node are treated as terminating |
+| Condition            | Meaning                                             | Pods affected                                    |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| `Ready`              | Normal                                              | None                                             |
+| `MemoryPressure`     | Node is low on memory                               | New Pods with BestEffort QoS rejected            |
+| `DiskPressure`       | Node is low on disk                                 | New Pods rejected                                |
+| `PIDPressure`        | Node is out of PIDs                                 | New Pods rejected                                |
+| `NetworkUnavailable` | CNI has not configured pod network                  | Pods on this node can't communicate              |
+| `NotReady`           | kubelet can't reach API server, or node overwhelmed | All Pods on this node are treated as terminating |
 
 #### Node NotReady: what to check
 
@@ -485,15 +485,15 @@ Events:                                                         ← MOST USEFUL 
 
 ### 8. Exit code reference
 
-| Code | Signal | Meaning | Action |
-|------|--------|---------|--------|
-| 0 | — | Exited normally | Jobs: expected. Deployments: will restart |
-| 1 | SIGKILL (128+1) | Application error | Check logs |
-| 127 | — | Command not found | Entrypoint typo, wrong image base |
-| 137 | SIGKILL (128+9) | OOM-killed OR `kill -9` | Increase limit or find leak |
-| 139 | SIGSEGV (128+11) | Segfault — memory corruption | App bug, check core dump |
-| 143 | SIGTERM (128+15) | Graceful termination | Normal during shutdown |
-| 255 | — | Entrypoint failed before exec | Entrypoint script error |
+| Code | Signal           | Meaning                       | Action                                    |
+| ---- | ---------------- | ----------------------------- | ----------------------------------------- |
+| 0    | —                | Exited normally               | Jobs: expected. Deployments: will restart |
+| 1    | SIGKILL (128+1)  | Application error             | Check logs                                |
+| 127  | —                | Command not found             | Entrypoint typo, wrong image base         |
+| 137  | SIGKILL (128+9)  | OOM-killed OR `kill -9`       | Increase limit or find leak               |
+| 139  | SIGSEGV (128+11) | Segfault — memory corruption  | App bug, check core dump                  |
+| 143  | SIGTERM (128+15) | Graceful termination          | Normal during shutdown                    |
+| 255  | —                | Entrypoint failed before exec | Entrypoint script error                   |
 
 ---
 
@@ -580,25 +580,25 @@ kubectl get componentstatuses
 
 #### ImagePullBackOff causes
 
-| Error message | Cause | Fix |
-|---------------|-------|-----|
-| `ImagePullBackOff` + `ErrImagePull` | Wrong image name / tag | Verify image exists, correct name |
-| `ImagePullBackOff` + `unauthorized` | No registry credentials | Add `imagePullSecrets` |
-| `ImagePullBackOff` + `denied` | Image is private / org policy | `imagePullSecrets`, registry policy |
-| `ImagePullBackOff` + `tcp timeout` | Network to registry blocked | Firewall rules, egress allowed |
-| `ImagePullBackOff` + `manifest unknown` | Tag doesn't exist | Use correct tag / digest |
+| Error message                           | Cause                         | Fix                                 |
+| --------------------------------------- | ----------------------------- | ----------------------------------- |
+| `ImagePullBackOff` + `ErrImagePull`     | Wrong image name / tag        | Verify image exists, correct name   |
+| `ImagePullBackOff` + `unauthorized`     | No registry credentials       | Add `imagePullSecrets`              |
+| `ImagePullBackOff` + `denied`           | Image is private / org policy | `imagePullSecrets`, registry policy |
+| `ImagePullBackOff` + `tcp timeout`      | Network to registry blocked   | Firewall rules, egress allowed      |
+| `ImagePullBackOff` + `manifest unknown` | Tag doesn't exist             | Use correct tag / digest            |
 
 #### Pending pod causes
 
-| Event | Cause | Fix |
-|-------|-------|-----|
-| `0/3 nodes available: 1 Insufficient cpu` | No CPU headroom | Add nodes, lower requests |
-| `0/3 nodes available: 1 Insufficient memory` | No memory headroom | Add nodes, lower requests |
-| `node(s) had taints` | Taints not tolerated | Add toleration to Pod |
-| `didn't match Pod affinity` | Affinity rule unsatisfiable | Relax affinity |
-| `pvc not found` | PVC doesn't exist | Create PVC |
-| `waiting for first consumer` | StorageClass delay | Wait or check provisioner |
-| `unexpected unresolved PodSchedulingGate` | Pod has scheduling gates | Remove `schedulingGates` |
+| Event                                        | Cause                       | Fix                       |
+| -------------------------------------------- | --------------------------- | ------------------------- |
+| `0/3 nodes available: 1 Insufficient cpu`    | No CPU headroom             | Add nodes, lower requests |
+| `0/3 nodes available: 1 Insufficient memory` | No memory headroom          | Add nodes, lower requests |
+| `node(s) had taints`                         | Taints not tolerated        | Add toleration to Pod     |
+| `didn't match Pod affinity`                  | Affinity rule unsatisfiable | Relax affinity            |
+| `pvc not found`                              | PVC doesn't exist           | Create PVC                |
+| `waiting for first consumer`                 | StorageClass delay          | Wait or check provisioner |
+| `unexpected unresolved PodSchedulingGate`    | Pod has scheduling gates    | Remove `schedulingGates`  |
 
 ---
 
@@ -642,26 +642,26 @@ cat /proc/sys/kernel/pid_max
 
 ### 13. Gotchas
 
-* **"Pending" can mean many things.** The Events section is the only way to know which.
-* **A "Running" Pod is not necessarily a working Pod.** The container is up; the app may not be.
-* **The same error can have many causes.** "CrashLoopBackOff" tells you it's crashing, not why.
-* **Restart count in `kubectl get pod` is cumulative across the Pod's life.** A Pod running 30 days with 3 restarts is fine. One running 30 seconds with 3 restarts is a problem.
-* **`kubectl rollout undo` is a real rollback.** It changes the Deployment's template to the previous revision. Safer than editing YAML.
-* **A node can be "Ready" but still have problems.** Disk full, kernel deadlock, kubelet hang — none of these immediately flip the Ready condition.
-* **The "CrashLoopBackOff" timing is exponential.** First restart 10s, then 20s, 40s ... up to 5 minutes. A Pod in CLB may be slow to recover.
-* **`kubectl get events` has a 1-hour TTL.** If the event is old, it's gone. Ship events to a log aggregator for cluster-wide history.
-* **"No endpoints" means the Service selector found no Ready Pods.** It does NOT mean the Pods don't exist — check readiness and selector.
-* **Cross-namespace Services don't work.** The Service selector can only match Pods in the same namespace.
-* **`kubectl rollout restart` doesn't change the image tag.** It just deletes/recreates the pods. Use `kubectl set image` for an actual update.
-* **`kubectl describe pod` shows `Last State: Terminated`** — this is the state of the previous (crashed) container, not the current one.
+- **"Pending" can mean many things.** The Events section is the only way to know which.
+- **A "Running" Pod is not necessarily a working Pod.** The container is up; the app may not be.
+- **The same error can have many causes.** "CrashLoopBackOff" tells you it's crashing, not why.
+- **Restart count in `kubectl get pod` is cumulative across the Pod's life.** A Pod running 30 days with 3 restarts is fine. One running 30 seconds with 3 restarts is a problem.
+- **`kubectl rollout undo` is a real rollback.** It changes the Deployment's template to the previous revision. Safer than editing YAML.
+- **A node can be "Ready" but still have problems.** Disk full, kernel deadlock, kubelet hang — none of these immediately flip the Ready condition.
+- **The "CrashLoopBackOff" timing is exponential.** First restart 10s, then 20s, 40s ... up to 5 minutes. A Pod in CLB may be slow to recover.
+- **`kubectl get events` has a 1-hour TTL.** If the event is old, it's gone. Ship events to a log aggregator for cluster-wide history.
+- **"No endpoints" means the Service selector found no Ready Pods.** It does NOT mean the Pods don't exist — check readiness and selector.
+- **Cross-namespace Services don't work.** The Service selector can only match Pods in the same namespace.
+- **`kubectl rollout restart` doesn't change the image tag.** It just deletes/recreates the pods. Use `kubectl set image` for an actual update.
+- **`kubectl describe pod` shows `Last State: Terminated`** — this is the state of the previous (crashed) container, not the current one.
 
 ---
 
 ## See also
 
-* [[Kubernetes/concepts/L08-operations/02-kubectl-debug|kubectl Debug Toolkit]] — the commands to use during this flow
-* [[Kubernetes/concepts/L08-operations/01-troubleshooting|Troubleshooting]] — the quick-reference version
-* [[Kubernetes/concepts/L08-operations/04-metrics-sources|Metrics Sources]] — where observability data comes from
-* [[Kubernetes/concepts/L03-workloads/10-probes|Probes]] — liveness/readiness probes are a common crash cause
-* [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — OOM and CPU throttling
-* [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — when the cluster itself is broken
+- [[Kubernetes/concepts/L08-operations/02-kubectl-debug|kubectl Debug Toolkit]] — the commands to use during this flow
+- [[Kubernetes/concepts/L08-operations/01-troubleshooting|Troubleshooting]] — the quick-reference version
+- [[Kubernetes/concepts/L08-operations/04-metrics-sources|Metrics Sources]] — where observability data comes from
+- [[Kubernetes/concepts/L03-workloads/10-probes|Probes]] — liveness/readiness probes are a common crash cause
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — OOM and CPU throttling
+- [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — when the cluster itself is broken

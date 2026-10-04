@@ -34,14 +34,14 @@ After:  20 app servers → handles10,000 RPS
 
 ### The Architecture Decision
 
-| Factor | Go Vertical | Go Horizontal |
-|---|---|---|
-| Team size | Small team | Large team with platform/SRE |
-| Growth curve | Predictable, slow | Unpredictable or fast |
-| Complexity tolerance | Low | High |
-| Failure tolerance | Single node OK | Need resilience |
-| Latency sensitivity | Very high (shared memory) | Moderate (stateless is fast enough) |
-| Data layer | Single-writer DB | Sharded or distributed DB |
+| Factor               | Go Vertical               | Go Horizontal                       |
+| -------------------- | ------------------------- | ----------------------------------- |
+| Team size            | Small team                | Large team with platform/SRE        |
+| Growth curve         | Predictable, slow         | Unpredictable or fast               |
+| Complexity tolerance | Low                       | High                                |
+| Failure tolerance    | Single node OK            | Need resilience                     |
+| Latency sensitivity  | Very high (shared memory) | Moderate (stateless is fast enough) |
+| Data layer           | Single-writer DB          | Sharded or distributed DB           |
 
 Most architectures start vertical, then shift to horizontal when they hit hardware limits or need fault tolerance. A hybrid approach (vertical for data layer, horizontal for app layer) is common.
 
@@ -158,15 +158,16 @@ spec:
   minReplicas: 3
   maxReplicas: 100
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
 ```
 
 **Scaling thresholds** must account for:
+
 - **Cold start time** — new instances take 30-120 seconds to be ready
 - **Cooldown period** — prevent thrashing (scale up, then immediately scale down)
 - **Predictable spikes** — auto-scale reacts, scheduled scale pre-empts (daily traffic patterns, product launches)

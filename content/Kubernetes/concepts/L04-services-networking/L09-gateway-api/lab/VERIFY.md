@@ -1,3 +1,10 @@
+---
+title: "Verify — One-Liner Smoke Tests for Every Scenario"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Verify — One-Liner Smoke Tests for Every Scenario — Kubernetes reference and architecture guide."
+---
+
 # Verify — One-Liner Smoke Tests for Every Scenario
 
 These are the `curl` invocations that prove each scenario works. Re-runnable.
@@ -254,15 +261,15 @@ kubectl delete -f scenarios/01-minimal-http.yaml
 
 ## Troubleshooting quick reference
 
-| Symptom | First check |
-|---------|-------------|
-| `kubectl apply` hangs | `kubectl get validatingwebhookconfigurations` — webhook reachable? |
-| `curl` returns 503 | `kubectl get endpoints -n app <svc>` — pods ready? |
-| Route `Accepted=False, NoMatchingParent` | Hostname on route doesn't intersect listener |
-| `ResolvedRefs=False, RefNotPermitted` | Add `ReferenceGrant` in target namespace |
-| `curl -k` works but `curl` (no `-k`) fails | Cert SANs don't include the Host header |
-| `curl: (35) TLS handshake error` | Cert not yet ready, or `tls.certificateRefs` wrong Secret |
-| TLS passthrough returns 502 | Backend not serving on the same port as `backendRefs.port` |
-| Re-encrypt: gateway rejects backend | `BackendTLSPolicy` CA doesn't sign the backend cert |
-| Rate limit returns 429 unexpectedly | Check `clientSelectors` — `sourceIP` doesn't work behind NAT/LB |
-| `kubectl get gateway` shows `Conflicted` | Two listeners in same Gateway share port+protocol |
+| Symptom                                    | First check                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| `kubectl apply` hangs                      | `kubectl get validatingwebhookconfigurations` — webhook reachable? |
+| `curl` returns 503                         | `kubectl get endpoints -n app <svc>` — pods ready?                 |
+| Route `Accepted=False, NoMatchingParent`   | Hostname on route doesn't intersect listener                       |
+| `ResolvedRefs=False, RefNotPermitted`      | Add `ReferenceGrant` in target namespace                           |
+| `curl -k` works but `curl` (no `-k`) fails | Cert SANs don't include the Host header                            |
+| `curl: (35) TLS handshake error`           | Cert not yet ready, or `tls.certificateRefs` wrong Secret          |
+| TLS passthrough returns 502                | Backend not serving on the same port as `backendRefs.port`         |
+| Re-encrypt: gateway rejects backend        | `BackendTLSPolicy` CA doesn't sign the backend cert                |
+| Rate limit returns 429 unexpectedly        | Check `clientSelectors` — `sourceIP` doesn't work behind NAT/LB    |
+| `kubectl get gateway` shows `Conflicted`   | Two listeners in same Gateway share port+protocol                  |

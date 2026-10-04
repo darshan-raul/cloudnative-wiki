@@ -51,15 +51,15 @@ GRUB_CMDLINE_LINUX="\
 
 Key params explained:
 
-| Parameter | Purpose |
-|-----------|---------|
-| `audit=1` | Enable audit logging at boot |
-| `page_poison=1` | Fill freed pages with poison bytes (detect heap corruption) |
-| `slab_nomerge` | Don't merge slabs (makes alloc bugs more visible) |
-| `slub_debug=P` | Enable slub debugging (detect use-after-free) |
-| `mce=0` | Disable Machine Check Exception (set to 0 if not needed) |
-| `mitigations=auto` | Enable CPU mitigations (Spectre/Meltdown) |
-| `consoleblank=0` | Disable console blanking |
+| Parameter          | Purpose                                                     |
+| ------------------ | ----------------------------------------------------------- |
+| `audit=1`          | Enable audit logging at boot                                |
+| `page_poison=1`    | Fill freed pages with poison bytes (detect heap corruption) |
+| `slab_nomerge`     | Don't merge slabs (makes alloc bugs more visible)           |
+| `slub_debug=P`     | Enable slub debugging (detect use-after-free)               |
+| `mce=0`            | Disable Machine Check Exception (set to 0 if not needed)    |
+| `mitigations=auto` | Enable CPU mitigations (Spectre/Meltdown)                   |
+| `consoleblank=0`   | Disable console blanking                                    |
 
 ### Disable unused filesystems at boot
 

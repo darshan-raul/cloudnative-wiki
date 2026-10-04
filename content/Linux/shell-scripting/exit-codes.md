@@ -41,17 +41,17 @@ fi
 
 ## Common Exit Codes
 
-| Code | Meaning | Common cause |
-|------|---------|--------------|
-| 0 | Success | All good |
-| 1 | General error | grep finds nothing, mild failure |
-| 2 | Misuse of shell builtin | Syntax error in built-in |
-| 126 | Not executable | Missing `+x`, wrong shebang |
-| 127 | Command not found | Typo, PATH issue |
-| 128 | Invalid exit arg | `exit "string"` |
-| 130 | Ctrl+C (SIGINT) | User interrupt |
-| 137 | SIGKILL (128+9) | `kill -9` |
-| 139 | SIGSEGV (128+11) | Segmentation fault |
+| Code | Meaning                 | Common cause                     |
+| ---- | ----------------------- | -------------------------------- |
+| 0    | Success                 | All good                         |
+| 1    | General error           | grep finds nothing, mild failure |
+| 2    | Misuse of shell builtin | Syntax error in built-in         |
+| 126  | Not executable          | Missing `+x`, wrong shebang      |
+| 127  | Command not found       | Typo, PATH issue                 |
+| 128  | Invalid exit arg        | `exit "string"`                  |
+| 130  | Ctrl+C (SIGINT)         | User interrupt                   |
+| 137  | SIGKILL (128+9)         | `kill -9`                        |
+| 139  | SIGSEGV (128+11)        | Segmentation fault               |
 
 ## Logical Operators and Exit Codes
 

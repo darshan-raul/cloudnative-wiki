@@ -32,7 +32,7 @@ Google Compute Engine provides secure, customizable virtual machines running on 
 └─────────────────┴─────────────────┴──────────────────┴─────────────────┘
 ```
 
-* **Custom Sizing:** If your application needs 6 vCPUs and 21 GB of RAM, you configure exactly `custom-6-21504`, paying only for what you allocate rather than jumping to a rigid 8 vCPU / 32 GB instance tier.
+- **Custom Sizing:** If your application needs 6 vCPUs and 21 GB of RAM, you configure exactly `custom-6-21504`, paying only for what you allocate rather than jumping to a rigid 8 vCPU / 32 GB instance tier.
 
 ---
 
@@ -42,35 +42,36 @@ Google Compute Engine provides secure, customizable virtual machines running on 
 
 A Managed Instance Group pools identical VM instances created from an **Instance Template**:
 
-* **Regional vs. Zonal MIGs:**
-  * **Zonal MIG:** Deploys VMs inside a single availability zone.
-  * **Regional MIG:** Distributes instances evenly across 3 zones in a region. **Mandatory for production HA.**
-* **Auto-Healing:** Attaches a health check probe. If a VM fails the application health check, the MIG automatically destroys and recreates the instance.
-* **Rolling Updates:** Zero-downtime canary and phased deployments:
-  * `max-surge`: Number of extra instances created above target capacity during update.
-  * `max-unavailable`: Number of instances permitted down simultaneously.
+- **Regional vs. Zonal MIGs:**
+  - **Zonal MIG:** Deploys VMs inside a single availability zone.
+  - **Regional MIG:** Distributes instances evenly across 3 zones in a region. **Mandatory for production HA.**
+- **Auto-Healing:** Attaches a health check probe. If a VM fails the application health check, the MIG automatically destroys and recreates the instance.
+- **Rolling Updates:** Zero-downtime canary and phased deployments:
+  - `max-surge`: Number of extra instances created above target capacity during update.
+  - `max-unavailable`: Number of instances permitted down simultaneously.
 
 ### 2. Spot VMs vs. Standard VMs
 
-* **Spot VMs:** Offer 60% to 91% discounts compared to on-demand pricing by running on spare GCP capacity.
-* **Preemption Mechanics:**
-  * GCP can reclaim a Spot VM at any time when capacity is needed.
-  * The VM receives an ACPI shutdown signal with a **30-second termination notice**.
-  * Unlike legacy "Preemptible VMs" (which had a hard 24-hour lifetime limit), Spot VMs have **no 24-hour limit** and run indefinitely until reclaimed.
+- **Spot VMs:** Offer 60% to 91% discounts compared to on-demand pricing by running on spare GCP capacity.
+- **Preemption Mechanics:**
+  - GCP can reclaim a Spot VM at any time when capacity is needed.
+  - The VM receives an ACPI shutdown signal with a **30-second termination notice**.
+  - Unlike legacy "Preemptible VMs" (which had a hard 24-hour lifetime limit), Spot VMs have **no 24-hour limit** and run indefinitely until reclaimed.
 
 ### 3. Live Migration
 
 During hypervisor patching, physical hardware degradation, or network maintenance:
-* GCP's hypervisor freezes the VM's execution for milliseconds, transfers memory pages across Google's private backbone to another physical host, and resumes execution seamlessly.
-* The guest OS, active network sockets, and attached Persistent Disks remain completely uninterrupted without reboots.
+
+- GCP's hypervisor freezes the VM's execution for milliseconds, transfers memory pages across Google's private backbone to another physical host, and resumes execution seamlessly.
+- The guest OS, active network sockets, and attached Persistent Disks remain completely uninterrupted without reboots.
 
 ### 4. OS Login & Shielded VMs
 
-* **Legacy Metadata SSH Keys (Insecure):** Project-wide SSH public keys stored in metadata allow anyone with project-level access to SSH into any VM as root.
-* **OS Login (Modern Standard):**
-  * Replaces metadata keys with IAM permissions: `roles/compute.osLogin` (standard user) or `roles/compute.osAdminLogin` (sudoer).
-  * Automatically provisions POSIX accounts from Google Workspace profiles and integrates with multi-factor authentication (MFA/2FA).
-* **Shielded VMs:** Employs virtual Trusted Platform Module (vTPM) and Secure Boot to verify bootloader integrity against rootkits.
+- **Legacy Metadata SSH Keys (Insecure):** Project-wide SSH public keys stored in metadata allow anyone with project-level access to SSH into any VM as root.
+- **OS Login (Modern Standard):**
+  - Replaces metadata keys with IAM permissions: `roles/compute.osLogin` (standard user) or `roles/compute.osAdminLogin` (sudoer).
+  - Automatically provisions POSIX accounts from Google Workspace profiles and integrates with multi-factor authentication (MFA/2FA).
+- **Shielded VMs:** Employs virtual Trusted Platform Module (vTPM) and Secure Boot to verify bootloader integrity against rootkits.
 
 ---
 
@@ -137,41 +138,43 @@ gcloud compute instance-groups managed set-autoscaling prod-api-mig \
 
 ## Quotas & Limits
 
-| Parameter | Default Limit | Notes |
-| :--- | :--- | :--- |
-| **CPUs per region** | 24–100 vCPUs (new projects) | Easily increased via Quota Request console |
-| **Spot vCPUs per region** | Separate quota from standard | Request increase before launching large Spot fleets |
-| **Instances per MIG** | 1,000 per zonal MIG | Up to 2,000 per regional MIG |
-| **Preemption notice window** | 30 seconds | Handle via metadata shutdown scripts |
-| **Max disk size per instance** | 64 TB total across all disks | Hyperdisk or Persistent Disk |
+| Parameter                      | Default Limit                | Notes                                               |
+| :----------------------------- | :--------------------------- | :-------------------------------------------------- |
+| **CPUs per region**            | 24–100 vCPUs (new projects)  | Easily increased via Quota Request console          |
+| **Spot vCPUs per region**      | Separate quota from standard | Request increase before launching large Spot fleets |
+| **Instances per MIG**          | 1,000 per zonal MIG          | Up to 2,000 per regional MIG                        |
+| **Preemption notice window**   | 30 seconds                   | Handle via metadata shutdown scripts                |
+| **Max disk size per instance** | 64 TB total across all disks | Hyperdisk or Persistent Disk                        |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/compute
-* **Documentation:** https://cloud.google.com/compute/docs
-* **Machine Families Guide:** https://cloud.google.com/compute/docs/machine-types
-* **OS Login Overview:** https://cloud.google.com/compute/docs/oslogin
-* **Pricing:** https://cloud.google.com/compute/pricing
+- **Homepage:** https://cloud.google.com/compute
+- **Documentation:** https://cloud.google.com/compute/docs
+- **Machine Families Guide:** https://cloud.google.com/compute/docs/machine-types
+- **OS Login Overview:** https://cloud.google.com/compute/docs/oslogin
+- **Pricing:** https://cloud.google.com/compute/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Production Web Backend Cluster (On-Demand + CUD)
-* 6 instances of `e2-standard-4` (4 vCPU, 16 GB RAM) running 24/7 across 3 zones.
-* Base on-demand cost: 6 × ~$97.00 / month = $582.00 / month.
-* With a **3-Year Committed Use Discount (CUD)** for General Purpose Compute:
-  * 55% discount applied across all 24 vCPUs and 96 GB RAM.
-* **Effective Monthly Cost:** **~$261.90 / month** (Saving $320.10/mo).
+
+- 6 instances of `e2-standard-4` (4 vCPU, 16 GB RAM) running 24/7 across 3 zones.
+- Base on-demand cost: 6 × ~$97.00 / month = $582.00 / month.
+- With a **3-Year Committed Use Discount (CUD)** for General Purpose Compute:
+  - 55% discount applied across all 24 vCPUs and 96 GB RAM.
+- **Effective Monthly Cost:** **~$261.90 / month** (Saving $320.10/mo).
 
 ### Scenario 2: Batch Analytics Processing with Spot VMs
-* 50 worker instances using `c2-standard-8` (Compute-optimized: 8 vCPU, 32 GB RAM).
-* Workload runs for 8 hours every weekend (32 hours / month).
-* On-Demand rate: $0.3376 / hr × 50 × 32 hrs = $540.16.
-* Spot VM rate (~80% discount): $0.0675 / hr × 50 × 32 hrs = $108.00.
-* **Monthly Savings:** **$432.16** per month.
+
+- 50 worker instances using `c2-standard-8` (Compute-optimized: 8 vCPU, 32 GB RAM).
+- Workload runs for 8 hours every weekend (32 hours / month).
+- On-Demand rate: $0.3376 / hr × 50 × 32 hrs = $540.16.
+- Spot VM rate (~80% discount): $0.0675 / hr × 50 × 32 hrs = $108.00.
+- **Monthly Savings:** **$432.16** per month.
 
 ---
 

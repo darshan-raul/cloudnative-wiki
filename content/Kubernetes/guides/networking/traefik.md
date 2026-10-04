@@ -12,17 +12,17 @@ Traefik is a **modern reverse proxy and load balancer** that integrates natively
 
 ## Why Traefik
 
-| Feature | Traefik | NGINX | HAProxy |
-|---------|---------|-------|---------|
-| **Auto-discovery** | ✅ (k8s, Docker, Consul) | ❌ manual config | ❌ manual config |
-| **Ingress support** | ✅ | ✅ | ✅ |
-| **Gateway API** | ✅ | ✅ (some) | ❌ |
-| **CRD** | IngressRoute | ❌ | ❌ |
-| **Let's Encrypt** | ✅ built-in | Manual | Manual |
-| **Dashboard** | ✅ | ❌ | ❌ |
-| **Metrics** | ✅ Prometheus | ✅ | ✅ |
-| **Configuration** | Labels, CRDs | ConfigMap | Config file |
-| **Performance** | Good | Excellent | Excellent |
+| Feature             | Traefik                  | NGINX            | HAProxy          |
+| ------------------- | ------------------------ | ---------------- | ---------------- |
+| **Auto-discovery**  | ✅ (k8s, Docker, Consul) | ❌ manual config | ❌ manual config |
+| **Ingress support** | ✅                       | ✅               | ✅               |
+| **Gateway API**     | ✅                       | ✅ (some)        | ❌               |
+| **CRD**             | IngressRoute             | ❌               | ❌               |
+| **Let's Encrypt**   | ✅ built-in              | Manual           | Manual           |
+| **Dashboard**       | ✅                       | ❌               | ❌               |
+| **Metrics**         | ✅ Prometheus            | ✅               | ✅               |
+| **Configuration**   | Labels, CRDs             | ConfigMap        | Config file      |
+| **Performance**     | Good                     | Excellent        | Excellent        |
 
 **Traefik shines when:** you have lots of services, want auto-discovery, want Gateway API, want a dashboard.
 
@@ -124,19 +124,19 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: app.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: my-app
-            port:
-              number: 80
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app
+                port:
+                  number: 80
   tls:
-  - hosts:
-    - app.example.com
+    - hosts:
+        - app.example.com
 ```
 
 ## The IngressRoute (CRD)
@@ -150,22 +150,23 @@ metadata:
   name: my-app
 spec:
   entryPoints:
-  - websecure
+    - websecure
   routes:
-  - match: Host(`app.example.com`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: my-app
-      port: 80
+    - match: Host(`app.example.com`) && PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: my-app
+          port: 80
   tls:
     certResolver: letsencrypt
     domains:
-    - main: example.com
-      sans:
-      - "*.example.com"
+      - main: example.com
+        sans:
+          - "*.example.com"
 ```
 
 **Why IngressRoute over Ingress:**
+
 - Multiple services per route
 - Middlewares per route
 - Weighted load balancing
@@ -181,17 +182,17 @@ metadata:
   name: my-app
 spec:
   entryPoints:
-  - websecure
+    - websecure
   routes:
-  - match: Host(`app.example.com`)
-    kind: Rule
-    services:
-    - name: my-app-v1
-      port: 80
-      weight: 90
-    - name: my-app-v2
-      port: 80
-      weight: 10   # canary
+    - match: Host(`app.example.com`)
+      kind: Rule
+      services:
+        - name: my-app-v1
+          port: 80
+          weight: 90
+        - name: my-app-v2
+          port: 80
+          weight: 10 # canary
   tls:
     certResolver: letsencrypt
 ```
@@ -223,13 +224,13 @@ metadata:
   name: my-app
 spec:
   routes:
-  - match: Host(`app.example.com`)
-    kind: Rule
-    services:
-    - name: my-app
-      port: 80
-    middlewares:
-    - name: rate-limit
+    - match: Host(`app.example.com`)
+      kind: Rule
+      services:
+        - name: my-app
+          port: 80
+      middlewares:
+        - name: rate-limit
 ```
 
 ### Authentication (Basic)
@@ -242,8 +243,8 @@ metadata:
 spec:
   basicAuth:
     users:
-    - admin:$apr1$xyz$...    # htpasswd hash
-    - alice:$apr1$abc$...
+      - admin:$apr1$xyz$... # htpasswd hash
+      - alice:$apr1$abc$...
   removeHeader: true
 ```
 
@@ -259,9 +260,9 @@ spec:
     address: http://oauth2-proxy.auth:4181/oauth2/auth
     trustForwardHeader: true
     authResponseHeaders:
-    - X-Forwarded-User
-    - X-Forwarded-Groups
-    - X-Forwarded-Email
+      - X-Forwarded-User
+      - X-Forwarded-Groups
+      - X-Forwarded-Email
 ```
 
 Use with oauth2-proxy or Pomerium for OIDC.
@@ -276,10 +277,10 @@ metadata:
 spec:
   ipAllowList:
     sourceRange:
-    - 10.0.0.0/8
-    - 192.168.0.0/16
-    - 172.16.0.0/12
-    - 127.0.0.1/32
+      - 10.0.0.0/8
+      - 192.168.0.0/16
+      - 172.16.0.0/12
+      - 127.0.0.1/32
 ```
 
 ```yaml
@@ -290,8 +291,8 @@ metadata:
 spec:
   ipDenyList:
     sourceRange:
-    - 1.2.3.0/24
-    - 5.6.7.0/24
+      - 1.2.3.0/24
+      - 5.6.7.0/24
 ```
 
 ### Header manipulation
@@ -363,17 +364,17 @@ metadata:
   name: my-app
 spec:
   parentRefs:
-  - name: my-gateway
+    - name: my-gateway
   hostnames:
-  - app.example.com
+    - app.example.com
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: my-app
-      port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: my-app
+          port: 80
 ```
 
 **Gateway API is the future of k8s ingress.** Traefik is one of the more mature implementations.
@@ -410,9 +411,9 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-    - http01:
-        ingress:
-          class: traefik
+      - http01:
+          ingress:
+            class: traefik
 ```
 
 cert-manager issues certs, Traefik serves them. More flexible.
@@ -435,18 +436,19 @@ metadata:
   name: traefik-dashboard
 spec:
   entryPoints:
-  - websecure
+    - websecure
   routes:
-  - match: Host(`traefik.example.com`)
-    kind: Rule
-    services:
-    - name: api@internal
-      kind: TraefikService
+    - match: Host(`traefik.example.com`)
+      kind: Rule
+      services:
+        - name: api@internal
+          kind: TraefikService
   tls:
     certResolver: letsencrypt
 ```
 
 The dashboard shows:
+
 - Active routers
 - Services
 - Middlewares
@@ -480,7 +482,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: traefik
   endpoints:
-  - port: metrics
+    - port: metrics
 ```
 
 ### Tracing
@@ -532,23 +534,23 @@ updateStrategy:
 # anti-affinity
 podAntiAffinity:
   preferredDuringSchedulingIgnoredDuringExecution:
-  - weight: 100
-    podAffinityTerm:
-      topologyKey: kubernetes.io/hostname
-      labelSelector:
-        matchLabels:
-          app.kubernetes.io/name: traefik
+    - weight: 100
+      podAffinityTerm:
+        topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: traefik
 ```
 
 ```yaml
 # topology spread
 topologySpreadConstraints:
-- maxSkew: 1
-  topologyKey: topology.kubernetes.io/zone
-  whenUnsatisfiable: ScheduleAnyway
-  labelSelector:
-    matchLabels:
-      app.kubernetes.io/name: traefik
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
 ```
 
 ## Common patterns
@@ -562,13 +564,13 @@ metadata:
   name: my-app
 spec:
   entryPoints:
-  - websecure
+    - websecure
   routes:
-  - match: Host(`app.example.com`)
-    kind: Rule
-    services:
-    - name: my-app-blue
-      port: 80
+    - match: Host(`app.example.com`)
+      kind: Rule
+      services:
+        - name: my-app-blue
+          port: 80
   tls:
     certResolver: letsencrypt
 ```
@@ -584,18 +586,18 @@ metadata:
   name: my-app
 spec:
   routes:
-  - match: Host(`app.example.com`)
-    kind: Rule
-    services:
-    - name: my-app
-      port: 80
-    strategy: RoundRobin
-    sticky:
-      cookie:
-        name: my-app-stickiness
-        secure: true
-        httpOnly: true
-        sameSite: lax
+    - match: Host(`app.example.com`)
+      kind: Rule
+      services:
+        - name: my-app
+          port: 80
+      strategy: RoundRobin
+      sticky:
+        cookie:
+          name: my-app-stickiness
+          secure: true
+          httpOnly: true
+          sameSite: lax
 ```
 
 ### Mirror (shadow traffic)
@@ -607,14 +609,14 @@ metadata:
   name: my-app
 spec:
   routes:
-  - match: Host(`app.example.com`)
-    kind: Rule
-    services:
-    - name: my-app-v1
-      port: 80
-    - name: my-app-v2
-      port: 80
-      mirror: true   # mirror to v2, response discarded
+    - match: Host(`app.example.com`)
+      kind: Rule
+      services:
+        - name: my-app-v1
+          port: 80
+        - name: my-app-v2
+          port: 80
+          mirror: true # mirror to v2, response discarded
 ```
 
 ### Path-based routing
@@ -626,16 +628,16 @@ metadata:
   name: monorouter
 spec:
   routes:
-  - match: Host(`app.example.com`) && PathPrefix(`/api`)
-    kind: Rule
-    services:
-    - name: api
-      port: 80
-  - match: Host(`app.example.com`) && PathPrefix(`/web`)
-    kind: Rule
-    services:
-    - name: web
-      port: 80
+    - match: Host(`app.example.com`) && PathPrefix(`/api`)
+      kind: Rule
+      services:
+        - name: api
+          port: 80
+    - match: Host(`app.example.com`) && PathPrefix(`/web`)
+      kind: Rule
+      services:
+        - name: web
+          port: 80
 ```
 
 ## Migration from NGINX
@@ -652,16 +654,16 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: app.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: my-app
-            port:
-              number: 80
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app
+                port:
+                  number: 80
 ```
 
 ```yaml
@@ -672,21 +674,22 @@ metadata:
   name: my-app
 spec:
   entryPoints:
-  - websecure
+    - websecure
   routes:
-  - match: Host(`app.example.com`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: my-app
-      port: 80
-    middlewares:
-    - name: cors
-    - name: strip-prefix
+    - match: Host(`app.example.com`) && PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: my-app
+          port: 80
+      middlewares:
+        - name: cors
+        - name: strip-prefix
   tls:
     certResolver: letsencrypt
 ```
 
 **Differences:**
+
 - Traefik uses CRDs (IngressRoute), not just Ingress
 - Middlewares are first-class (not annotations)
 - TLS is per-route, not per-Ingress
@@ -694,20 +697,20 @@ spec:
 
 ## Common gotchas
 
-* **IngressRoute vs Ingress:** Traefik supports both, but IngressRoute is more powerful.
-* **Path matching syntax differs** between Ingress and IngressRoute. IngressRoute uses Traefik's match syntax.
-* **The dashboard is a security risk** if exposed. Use auth.
-* **Custom headers can break things** if you override X-Forwarded-* badly.
-* **Sticky sessions are simple but** don't survive pod restarts. For real session management, use Redis.
-* **ACME storage is a single file.** If the Traefik pod restarts and storage isn't persistent, you reissue certs.
-* **Rate limiting is per Traefik instance** unless you use Redis backend. For multi-replica, use Redis.
-* **The `websecure` entrypoint requires TLS** to be configured, or the route won't work.
-* **Traefik can be a SPOF** if not HA. Run 3+ replicas across zones.
-* **BackendRefs must exist** when the route is created. Race conditions during deploy.
+- **IngressRoute vs Ingress:** Traefik supports both, but IngressRoute is more powerful.
+- **Path matching syntax differs** between Ingress and IngressRoute. IngressRoute uses Traefik's match syntax.
+- **The dashboard is a security risk** if exposed. Use auth.
+- **Custom headers can break things** if you override X-Forwarded-\* badly.
+- **Sticky sessions are simple but** don't survive pod restarts. For real session management, use Redis.
+- **ACME storage is a single file.** If the Traefik pod restarts and storage isn't persistent, you reissue certs.
+- **Rate limiting is per Traefik instance** unless you use Redis backend. For multi-replica, use Redis.
+- **The `websecure` entrypoint requires TLS** to be configured, or the route won't work.
+- **Traefik can be a SPOF** if not HA. Run 3+ replicas across zones.
+- **BackendRefs must exist** when the route is created. Race conditions during deploy.
 
 ## See also
 
-* [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — alternative
-* [[Kubernetes/guides/networking/istio|istio]] — service mesh
-* [[Kubernetes/guides/troubleshooting/ingress-404|ingress-404]] — troubleshooting
-* [Traefik docs](https://doc.traefik.io/traefik/)
+- [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — alternative
+- [[Kubernetes/guides/networking/istio|istio]] — service mesh
+- [[Kubernetes/guides/troubleshooting/ingress-404|ingress-404]] — troubleshooting
+- [Traefik docs](https://doc.traefik.io/traefik/)

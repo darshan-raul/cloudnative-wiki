@@ -1,6 +1,13 @@
+---
+title: "Service Accounts"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Service Accounts — Kubernetes reference and architecture guide."
+---
+
 # Service Accounts
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/"_
 
 A **ServiceAccount (SA)** is the **identity a Pod runs as** when it talks to the apiserver. It's the workload-side counterpart to a human user: where a person has an OIDC identity, a Pod has a SA. This note covers the SA lifecycle, the token evolution (legacy → projected → bound), the automount / `default` SA footguns, and the operational patterns for binding SAs to RBAC. SAs are **namespaced**; each namespace has a `default` SA that the apiserver auto-mounts to every Pod that doesn't ask for a different one.
 
@@ -33,10 +40,10 @@ A **ServiceAccount (SA)** is the **identity a Pod runs as** when it talks to the
 
 A `ServiceAccount` is a **namespaced k8s resource** that:
 
-* Identifies a workload (a Pod) to the apiserver.
-* Carries a token credential (a JWT) for the apiserver to verify.
-* Optionally references **image pull Secrets** (for pulling from private registries).
-* Optionally references a **bound token volume** (the modern way to project a token into the Pod).
+- Identifies a workload (a Pod) to the apiserver.
+- Carries a token credential (a JWT) for the apiserver to verify.
+- Optionally references **image pull Secrets** (for pulling from private registries).
+- Optionally references a **bound token volume** (the modern way to project a token into the Pod).
 
 SAs are **not for humans**. A human's identity is from OIDC, a client cert, or a webhook. A SA is **for processes**.
 
@@ -48,11 +55,11 @@ kind: ServiceAccount
 metadata:
   name: my-app
   namespace: default
-automountServiceAccountToken: false    # optional: disable automount for this SA
-imagePullSecrets:                      # optional: pull secrets for this SA
-- name: my-registry-creds
-secrets:                               # legacy: long-lived token Secret (deprecated)
-- name: my-app-token-xyz
+automountServiceAccountToken: false # optional: disable automount for this SA
+imagePullSecrets: # optional: pull secrets for this SA
+  - name: my-registry-creds
+secrets: # legacy: long-lived token Secret (deprecated)
+  - name: my-app-token-xyz
 ```
 
 The `secrets` field is **legacy**. With bound tokens, the secret is created automatically by the apiserver only if `kubernetes.io/service-account-token` is the secret's type. New clusters don't create these.
@@ -63,8 +70,8 @@ The `imagePullSecrets` field is the standard way to give a Pod access to a priva
 
 Every namespace has a `default` SA. It's **created automatically** when the namespace is created. The `default` SA:
 
-* Has no RBAC bindings by default (in most clusters).
-* Is auto-mounted to every Pod that doesn't specify a different SA.
+- Has no RBAC bindings by default (in most clusters).
+- Is auto-mounted to every Pod that doesn't specify a different SA.
 
 ```bash
 # list the SAs in a namespace
@@ -81,8 +88,8 @@ A Pod without an explicit `serviceAccountName` uses `default`:
 spec:
   # serviceAccountName: default    # implicit
   containers:
-  - name: app
-    image: myapp:1.0
+    - name: app
+      image: myapp:1.0
 ```
 
 The `default` SA's automount is the source of the **"every Pod has a token"** behavior. **For Pods that don't talk to the apiserver, this is wasted and a small attack surface.** Disable it.
@@ -113,14 +120,14 @@ A custom SA is **just an identity** — it has no permissions by default. The pe
 
 A SA's "token" is a **JWT** (JSON Web Token) signed by the apiserver. The token's claims:
 
-* `iss` (issuer) — the apiserver's `--service-account-issuer` URL.
-* `sub` (subject) — `system:serviceaccount:<namespace>:<sa-name>`.
-* `aud` (audience) — the apiserver's `--api-audiences` (default `kubernetes`).
-* `exp` (expiry) — the token's expiration.
-* `iat` (issued at) — when the token was issued.
-* Other custom claims (e.g. bound token extensions).
+- `iss` (issuer) — the apiserver's `--service-account-issuer` URL.
+- `sub` (subject) — `system:serviceaccount:<namespace>:<sa-name>`.
+- `aud` (audience) — the apiserver's `--api-audiences` (default `kubernetes`).
+- `exp` (expiry) — the token's expiration.
+- `iat` (issued at) — when the token was issued.
+- Other custom claims (e.g. bound token extensions).
 
-A Pod reads the token from `/var/run/secrets/kubernetes.io/serviceaccount/token` and uses it in the `Authorization: Bearer *** header.
+A Pod reads the token from `/var/run/secrets/kubernetes.io/serviceaccount/token` and uses it in the `Authorization: Bearer \*\*\* header.
 
 The apiserver verifies the token:
 
@@ -134,7 +141,7 @@ The token is the Pod's **only** built-in credential. The Pod can also have addit
 
 ## 5. The Legacy Long-Lived Token (Deprecated)
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#manual-secret-management-for-serviceaccounts"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#manual-secret-management-for-serviceaccounts"_
 
 Pre-k8s 1.21, the standard was a **long-lived Secret**:
 
@@ -156,9 +163,9 @@ The token was **indefinite** (no `exp`). The Secret was mounted to the Pod.
 
 This was a security footgun:
 
-* A leaked token was **indefinitely usable** (until the Secret was manually deleted).
-* No rotation.
-* No audience binding.
+- A leaked token was **indefinitely usable** (until the Secret was manually deleted).
+- No rotation.
+- No audience binding.
 
 K8s 1.21+ deprecated the auto-creation of these Secrets. In k8s 1.24+, the auto-creation was removed. **New clusters don't create them.** For old clusters, you can disable the legacy token creation with the apiserver's `--service-account-extend-token-expiration=false` and `--api-audiences` flags.
 
@@ -166,7 +173,7 @@ For new clusters, **use bound tokens** (the next section).
 
 ## 6. Bound ServiceAccount Tokens (the modern way)
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#bound-service-account-tokens"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#bound-service-account-tokens"_
 
 A **bound token** is a short-lived, audience-scoped JWT. It's **bound to a specific Pod** (the pod's UID is in the token's claims).
 
@@ -179,20 +186,20 @@ metadata: { name: app }
 spec:
   serviceAccountName: my-app
   containers:
-  - name: app
-    image: app:1.0
-    volumeMounts:
-    - name: sa-token
-      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      readOnly: true
+    - name: app
+      image: app:1.0
+      volumeMounts:
+        - name: sa-token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
   volumes:
-  - name: sa-token
-    projected:
-      sources:
-      - serviceAccountToken:
-          path: token
-          audience: https://my-service.example.com
-          expirationSeconds: 3600
+    - name: sa-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              audience: https://my-service.example.com
+              expirationSeconds: 3600
 ```
 
 The kubelet requests a bound token from the apiserver. The token is mounted to the Pod at `/var/run/secrets/kubernetes.io/serviceaccount/token`. The kubelet **rotates** the token before it expires.
@@ -253,23 +260,23 @@ The projected volume sources are merged into a single directory:
 
 ```yaml
 volumes:
-- name: sa-token
-  projected:
-    sources:
-    - serviceAccountToken:
-        path: token
-        audience: https://vault.example.com
-        expirationSeconds: 3600
-    - configMap:
-        name: app-config
-        items:
-        - key: config.yaml
-          path: config.yaml
-    - secret:
-        name: app-secrets
-        items:
-        - key: password
-          path: password
+  - name: sa-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            path: token
+            audience: https://vault.example.com
+            expirationSeconds: 3600
+        - configMap:
+            name: app-config
+            items:
+              - key: config.yaml
+                path: config.yaml
+        - secret:
+            name: app-secrets
+            items:
+              - key: password
+                path: password
 ```
 
 The Pod sees:
@@ -291,7 +298,7 @@ If you want a different audience, you need an explicit projected volume. The aut
 
 ## 8. The TokenRequest API
 
-*"https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-request-v1/"*
+_"https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-request-v1/"_
 
 The kubelet requests a bound token via the **TokenRequest API**:
 
@@ -351,10 +358,10 @@ For **production**, 3600 (1 hour) is the default. For **high-security**, lower i
 
 The apiserver validates the token's `aud`:
 
-* The request's URL is `https://apiserver:6443/...`.
-* The apiserver's `--api-audiences` is `kubernetes`.
-* The token's `aud` includes `kubernetes`.
-* Match: the apiserver accepts.
+- The request's URL is `https://apiserver:6443/...`.
+- The apiserver's `--api-audiences` is `kubernetes`.
+- The token's `aud` includes `kubernetes`.
+- Match: the apiserver accepts.
 
 If the token's `aud` doesn't include `kubernetes`, the apiserver rejects with 401.
 
@@ -368,8 +375,8 @@ Disable at the **Pod level**:
 spec:
   automountServiceAccountToken: false
   containers:
-  - name: app
-    image: myapp:1.0
+    - name: app
+      image: myapp:1.0
 ```
 
 Disable at the **SA level** (applies to all Pods that use this SA):
@@ -389,18 +396,18 @@ For most apps that don't talk to the apiserver, set `automountServiceAccountToke
 
 ```yaml
 spec:
-  serviceAccountName: my-app    # use the my-app SA
+  serviceAccountName: my-app # use the my-app SA
   containers:
-  - name: app
-    image: myapp:1.0
+    - name: app
+      image: myapp:1.0
 ```
 
 If not set, the Pod uses the `default` SA. If the SA doesn't exist, the Pod is rejected (admission error).
 
 A Pod can only use **one** SA. For multi-Pod designs (e.g. an app + a sidecar that needs different permissions), the standard pattern is:
 
-* The app + sidecar in the same Pod, using the same SA.
-* The sidecar's permissions come from the SA's RBAC.
+- The app + sidecar in the same Pod, using the same SA.
+- The sidecar's permissions come from the SA's RBAC.
 
 If the sidecar needs different permissions, use **two SAs** and two Pods, or use **init containers** for the privileged work.
 
@@ -413,7 +420,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata: { name: my-app }
 imagePullSecrets:
-- name: my-registry-creds
+  - name: my-registry-creds
 ```
 
 The Pod's effective `imagePullSecrets` = Pod's `imagePullSecrets` + SA's `imagePullSecrets`. The merge is **additive** (both lists are used).
@@ -434,9 +441,9 @@ metadata:
   name: pod-reader
   namespace: default
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
 ---
 # RoleBinding: bind to my-app SA in default
 apiVersion: rbac.authorization.k8s.io/v1
@@ -445,9 +452,9 @@ metadata:
   name: my-app-pod-reader
   namespace: default
 subjects:
-- kind: ServiceAccount
-  name: my-app
-  namespace: default
+  - kind: ServiceAccount
+    name: my-app
+    namespace: default
 roleRef:
   kind: Role
   name: pod-reader
@@ -463,11 +470,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: ci-deploy
-  namespace: prod            # the namespace being granted access
+  namespace: prod # the namespace being granted access
 subjects:
-- kind: ServiceAccount
-  name: ci
-  namespace: ci              # the SA's namespace
+  - kind: ServiceAccount
+    name: ci
+    namespace: ci # the SA's namespace
 roleRef:
   kind: Role
   name: deploy
@@ -482,7 +489,7 @@ For AWS, GCP, Azure, the SA can be **linked to a cloud IAM identity**. This is t
 
 ### 14.1 IRSA (AWS)
 
-*"https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html"*
+_"https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html"_
 
 IRSA links a k8s SA to an AWS IAM role:
 
@@ -494,7 +501,7 @@ The Pod's process gets **temporary AWS credentials** for the IAM role. No static
 
 ### 14.2 GKE Workload Identity
 
-*"https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity"*
+_"https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity"_
 
 GKE Workload Identity links a k8s SA to a Google Cloud Service Account:
 
@@ -504,7 +511,7 @@ GKE Workload Identity links a k8s SA to a Google Cloud Service Account:
 
 ### 14.3 AKS Pod Identity / Workload Identity
 
-*"https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview"*
+_"https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview"_
 
 Similar pattern. The k8s SA is linked to an Azure Managed Identity, which has Azure RBAC permissions.
 
@@ -540,16 +547,16 @@ To rotate the SA signing key:
 
 After rotation:
 
-* New tokens are signed with the new key.
-* Old tokens are still verifiable (the old public key is still in `--service-account-key-file`).
-* Old tokens expire naturally (their lifetime is short, ~1h).
-* The old private key can be deleted after all old tokens have expired.
+- New tokens are signed with the new key.
+- Old tokens are still verifiable (the old public key is still in `--service-account-key-file`).
+- Old tokens expire naturally (their lifetime is short, ~1h).
+- The old private key can be deleted after all old tokens have expired.
 
 The rotation is **transparent** to consumers. The verifiers (the apiserver itself, external services) try each public key in the list.
 
 ## 17. The OIDC Discovery Endpoint
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#service-account-token-volume-projection"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#service-account-token-volume-projection"_
 
 The apiserver publishes an OIDC discovery endpoint:
 
@@ -589,18 +596,18 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: app-reader, namespace: default }
 rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  resourceNames: ["app-config"]    # only this ConfigMap
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["app-config"] # only this ConfigMap
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: app-reader, namespace: default }
 subjects:
-- kind: ServiceAccount
-  name: app
-  namespace: default
+  - kind: ServiceAccount
+    name: app
+    namespace: default
 roleRef:
   kind: Role
   name: app-reader
@@ -615,7 +622,7 @@ The `resourceNames` field is the trick — the Role is limited to one specific C
 apiVersion: v1
 kind: ServiceAccount
 metadata: { name: ci, namespace: ci }
-automountServiceAccountToken: false    # CI doesn't need an in-cluster token
+automountServiceAccountToken: false # CI doesn't need an in-cluster token
 ---
 apiVersion: v1
 kind: Secret
@@ -631,20 +638,20 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: ci-deploy, namespace: prod }
 rules:
-- apiGroups: ["apps"]
-  resources: ["deployments"]
-  verbs: ["get", "list", "watch", "update", "patch"]
-- apiGroups: [""]
-  resources: ["pods", "services", "configmaps"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: ci-deploy, namespace: prod }
 subjects:
-- kind: ServiceAccount
-  name: ci
-  namespace: ci
+  - kind: ServiceAccount
+    name: ci
+    namespace: ci
 roleRef:
   kind: Role
   name: ci-deploy
@@ -799,8 +806,8 @@ kubectl create sa <sa-name> -n <ns>
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|AuthN/AuthZ]] — the bigger picture
-* [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — what the SA can do
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — encrypting the SA's data
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
-* [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]] — AWS-specific
+- [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|AuthN/AuthZ]] — the bigger picture
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — what the SA can do
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — encrypting the SA's data
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+- [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]] — AWS-specific

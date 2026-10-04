@@ -68,16 +68,16 @@ Applied via Indexer ILM policy in `security-audit-logs` index template.
 
 ## Phases at a Glance
 
-| Phase | Name | Duration | Owner |
-|-------|------|----------|-------|
-| 0 | Foundation | Week 1-2 | Security Eng |
-| 1 | Existing Stack Cleanup | Week 2-3 | Security Eng |
-| 2 | Distributed Deployment | Week 3-5 | Security Eng |
-| 3 | Multi-Org CloudTrail | Week 4-6 | Security Eng |
-| 4 | Agent Deployment | Week 5-8 | Infra Eng |
-| 5 | n8n + Planio IR | Week 7-9 | Security Eng |
-| 6 | Detection as Code | Week 8-12 | Security Eng |
-| 7 | Production Hardening | Week 10-12 | All |
+| Phase | Name                   | Duration   | Owner        |
+| ----- | ---------------------- | ---------- | ------------ |
+| 0     | Foundation             | Week 1-2   | Security Eng |
+| 1     | Existing Stack Cleanup | Week 2-3   | Security Eng |
+| 2     | Distributed Deployment | Week 3-5   | Security Eng |
+| 3     | Multi-Org CloudTrail   | Week 4-6   | Security Eng |
+| 4     | Agent Deployment       | Week 5-8   | Infra Eng    |
+| 5     | n8n + Planio IR        | Week 7-9   | Security Eng |
+| 6     | Detection as Code      | Week 8-12  | Security Eng |
+| 7     | Production Hardening   | Week 10-12 | All          |
 
 ---
 
@@ -119,6 +119,7 @@ orgs:
 ### 0.2 — SSL/TLS Infrastructure
 
 **Internal certs** (for agent ↔ manager, inter-node communication):
+
 ```bash
 # On any Linux machine with openssl
 mkdir -p /opt/wazuh/ssl/{ca,manager,agent}
@@ -148,6 +149,7 @@ cat manager/manager-node1.crt ca/ca.crt > manager/manager-node1-bundle.crt
 ```
 
 **External certs** (for dashboard — use Let's Encrypt):
+
 ```bash
 # On dashboard node
 apt install certbot nginx
@@ -167,6 +169,7 @@ certbot certonly --nginx -d wazuh.internal.yourdomain.com
 4. **Note**: Client Secret → store in AWS Secrets Manager: `wazuh/keycloak-client-secret`
 
 Wazuh dashboard will authenticate via:
+
 ```
 https://wazuh.internal.yourdomain.com/_oauth?realm=wazuh-security
 ```
@@ -199,6 +202,7 @@ Public Subnet (NATGW) ← Private Subnet (Wazuh nodes)
 ```
 
 Security groups required:
+
 - **Wazuh Manager SG**: TCP 1514/1515 (agents), TCP 55000 (API), UDP 514 (syslog) — from agent networks only
 - **Wazuh Indexer SG**: TCP 9200/9300 — from manager and dashboard subnets only
 - **Wazuh Dashboard SG**: TCP 443 (HTTPS) — from corporate network only
@@ -373,13 +377,13 @@ curl -k -u admin:password https://localhost:55000/manager/status?pretty
 
 ### 2.1 — New Node Specifications
 
-| Component | Instance | EBS | Purpose |
-|-----------|----------|-----|---------|
-| Indexer-1 | t3.xlarge | 100GB gp3 (3000 IOPS) | Search + storage |
-| Indexer-2 | t3.xlarge | 100GB gp3 | Search + storage |
-| Indexer-3 | t3.xlarge | 100GB gp3 | Search + storage |
-| Dashboard-1 | t3.large | 50GB gp3 | Visualization |
-| Manager-2 | t3.large | 50GB gp3 | Failover manager |
+| Component   | Instance  | EBS                   | Purpose          |
+| ----------- | --------- | --------------------- | ---------------- |
+| Indexer-1   | t3.xlarge | 100GB gp3 (3000 IOPS) | Search + storage |
+| Indexer-2   | t3.xlarge | 100GB gp3             | Search + storage |
+| Indexer-3   | t3.xlarge | 100GB gp3             | Search + storage |
+| Dashboard-1 | t3.large  | 50GB gp3              | Visualization    |
+| Manager-2   | t3.large  | 50GB gp3              | Failover manager |
 
 **Why gp3 3000 IOPS**: Indexer is I/O heavy during writes and searches. t3.xlarge provides burstable 6750 IOPS — enough for 2GB/day.
 
@@ -428,17 +432,17 @@ aws elbv2 create-listener \
 ```yaml
 # /etc/wazuh-indexer/opensearch.yml — Indexer node config
 network.host: 0.0.0.0
-node.name: indexer-1           # increment for node-2, node-3
-node.roles: [data, ingest]   # all nodes are data nodes
+node.name: indexer-1 # increment for node-2, node-3
+node.roles: [data, ingest] # all nodes are data nodes
 cluster.name: wazuh-cluster
 cluster.initial_master_nodes:
   - indexer-1
   - indexer-2
   - indexer-3
 discovery.seed_hosts:
-  - 10.0.1.30   # indexer-1
-  - 10.0.1.31   # indexer-2
-  - 10.0.1.32   # indexer-3
+  - 10.0.1.30 # indexer-1
+  - 10.0.1.31 # indexer-2
+  - 10.0.1.32 # indexer-3
 plugins.security.enabled: true
 plugins.security.ssl.transport.enabled: true
 plugins.security.ssl.transport.pemkey_filepath: /etc/ssl/private/wazuh-indexer.key
@@ -450,13 +454,14 @@ plugins.security.ssl.http.pemcert_filepath: /etc/ssl/certs/wazuh-indexer.crt
 plugins.security.ssl.http.pemcas_filepath: /etc/ssl/certs/root-ca.crt
 plugins.security.authcz.admin_dn:
   - "CN=admin,O=COMPANY,OU=Security"
-opensearch.java.opts: -Xms4g -Xmx4g   # 50% of RAM
+opensearch.java.opts: -Xms4g -Xmx4g # 50% of RAM
 action.auto_create_index: false
 indices.fielddata.cache.size: 15%
 indices.memory.index_buffer_size: 20%
 ```
 
 **Start indexer**:
+
 ```bash
 systemctl enable wazuh-indexer
 systemctl start wazuh-indexer
@@ -602,6 +607,7 @@ server {
 ### 2.7 — Keycloak OIDC Integration with Dashboard
 
 In Wazuh Dashboard → Settings → Security → OpenSearch Security:
+
 1. Go to OpenSearch Dashboard security settings
 2. Enable OIDC
 3. Configure:
@@ -610,6 +616,7 @@ In Wazuh Dashboard → Settings → Security → OpenSearch Security:
    - Discover URL: `https://keycloak.internal/auth/realms/wazuh-security/.well-known/openid-configuration`
 
 Apply via securityadmin script:
+
 ```bash
 cd /usr/share/wazuh-indexer/plugins/opensearch-security/tools
 ./securityadmin.sh \
@@ -626,6 +633,7 @@ cd /usr/share/wazuh-indexer/plugins/opensearch-security/tools
 ### 2.8 — Manager Cluster (2 Managers)
 
 On Manager-2, join the cluster:
+
 ```bash
 # /var/ossec/etc/ossec.conf on manager-2
 <ossec_config>
@@ -655,9 +663,10 @@ systemctl restart wazuh-manager
 
 ### 3.1 — Per-Org IAM Role Setup (CloudFormation)
 
-> See: [[Security/siem/wazuh/production-plan/cloudformation/iam-roles.yaml]]
+> See: [cloudformation/iam-roles.yaml](./cloudformation/iam-roles.yaml)
 
 Each org account needs:
+
 1. `WazuhCrossAccountRead` IAM role in the CloudTrail account
 2. Trust policy allowing Wazuh Security Tooling Account to assume it
 
@@ -707,7 +716,7 @@ On both managers, add to `ossec.conf`:
 
 ### 3.3 — CloudTrail Decoders
 
-> See: [[Security/siem/wazuh/production-plan/configs/cloudtrail-decoders.xml]]
+> See: [configs/cloudtrail-decoders.xml](./configs/cloudtrail-decoders.xml)
 
 Wazuh ships built-in CloudTrail decoders (rule ID 80000-80999). Add custom decoders for multi-org enrichment:
 
@@ -833,14 +842,15 @@ curl -k -u admin:password "https://localhost:55000/alerts?q=rule.groups:cloudtra
 
 Group agents by org and criticality for targeted rule application:
 
-| Group | Purpose | Agents |
-|-------|---------|--------|
-| `linux-prod` | Production Linux servers | ~120 |
-| `linux-dev` | Dev/test Linux | ~30 |
-| `windows-prod` | Production Windows servers | ~40 |
-| `windows-dev` | Dev/test Windows | ~10 |
+| Group          | Purpose                    | Agents |
+| -------------- | -------------------------- | ------ |
+| `linux-prod`   | Production Linux servers   | ~120   |
+| `linux-dev`    | Dev/test Linux             | ~30    |
+| `windows-prod` | Production Windows servers | ~40    |
+| `windows-dev`  | Dev/test Windows           | ~10    |
 
 Configure groups in ossec.conf:
+
 ```xml
 <agent-config>
   <agent-group>linux-prod</agent-group>
@@ -853,7 +863,7 @@ Configure groups in ossec.conf:
 
 ### 4.2 — Linux Agent Deployment (Ansible)
 
-> See: [[Security/siem/wazuh/production-plan/ansible/linux-agent.yml]]
+> See: [ansible/linux-agent.yml](./ansible/linux-agent.yml)
 
 ```bash
 # ansible playbook for Linux agents
@@ -865,7 +875,7 @@ ansible linux_servers -m systemd -a "name=wazuh-agent state=restarted" -b
 
 ### 4.3 — Windows Agent Deployment (SSM)
 
-> See: [[Security/siem/wazuh/production-plan/ansible/windows-agent-ssm.json]]
+> See: [ansible/windows-agent-ssm.json](./ansible/windows-agent-ssm.json)
 
 ```bash
 # Create SSM Command Document for Windows agent install
@@ -971,9 +981,10 @@ volumes:
 
 ### 5.2 — n8n Workflow: Wazuh → Enrich → Route → Planio/Slack
 
-> See: [[Security/siem/wazuh/production-plan/n8n/wazuh-alert-workflow.json]]
+> See: [n8n/wazuh-alert-workflow.json](./n8n/wazuh-alert-workflow.json)
 
 Workflow logic:
+
 ```
 Webhook (POST /webhook/wazuh-alerts)
   │
@@ -1031,6 +1042,7 @@ return {
 ```
 
 Then use AWS CLI node in n8n to call:
+
 ```bash
 aws ec2 authorize-security-group-ingress \
   --group-id sg-0123456789abcdef0 \
@@ -1045,21 +1057,21 @@ aws ec2 authorize-security-group-ingress \
 
 ### 6.1 — Full CloudTrail Rule Set
 
-> See: [[Security/siem/wazuh/production-plan/configs/cloudtrail-rules.xml]]
+> See: [configs/cloudtrail-rules.xml](./configs/cloudtrail-rules.xml)
 
-| Category | MITRE | Rule IDs |
-|----------|-------|----------|
+| Category             | MITRE        | Rule IDs                      |
+| -------------------- | ------------ | ----------------------------- |
 | Privilege Escalation | T1098, T0859 | 100103, 100104, 100500-100509 |
-| Lateral Movement | T1021 | 100510-100519 |
-| Credential Access | T1552 | 100520-100529 |
-| Defense Evasion | T1070 | 100530-100539 |
-| Persistence | T1053, T1106 | 100540-100549 |
-| Exfiltration | T1047 | 100550-100559 |
-| Impact | T0899 | 100560-100569 |
+| Lateral Movement     | T1021        | 100510-100519                 |
+| Credential Access    | T1552        | 100520-100529                 |
+| Defense Evasion      | T1070        | 100530-100539                 |
+| Persistence          | T1053, T1106 | 100540-100549                 |
+| Exfiltration         | T1047        | 100550-100559                 |
+| Impact               | T0899        | 100560-100569                 |
 
 ### 6.2 — Linux Detection Rules
 
-> See: [[Security/siem/wazuh/production-plan/configs/linux-rules.xml]]
+> See: [configs/linux-rules.xml](./configs/linux-rules.xml)
 
 ```
 T1070.002 (Log deletion)        → rule 100306
@@ -1081,34 +1093,53 @@ T1055 (Process injection)       → rule 100603
 
 ```javascript
 // n8n Code: Weekly threat hunting report
-const wazuhApi = 'https://wazuh.internal:55000';
-const creds = Buffer.from('admin:<password>').toString('base64');
+const wazuhApi = "https://wazuh.internal:55000";
+const creds = Buffer.from("admin:<password>").toString("base64");
 
 const queries = [
-  { name: 'New IAM Users (7d)', q: 'eventName:CreateUser', level: 6 },
-  { name: 'Failed Console Logins (24h)', q: 'eventName:ConsoleLogin AND consoleLogin:failure', level: 8 },
-  { name: 'S3 Public Access', q: 'eventName:PutBucketAcl AND (ALLUSERS OR authenticated-read)', level: 10 },
-  { name: 'Admin Policy Changes', q: 'eventName:AttachUserPolicy AND AdministratorAccess', level: 10 },
-  { name: 'SSM Session Starts', q: 'eventName:StartSession', level: 7 },
-  { name: 'Linux Failed SSH (brute force)', q: 'program_name:sshd AND action:failure', level: 6 },
+  { name: "New IAM Users (7d)", q: "eventName:CreateUser", level: 6 },
+  {
+    name: "Failed Console Logins (24h)",
+    q: "eventName:ConsoleLogin AND consoleLogin:failure",
+    level: 8,
+  },
+  {
+    name: "S3 Public Access",
+    q: "eventName:PutBucketAcl AND (ALLUSERS OR authenticated-read)",
+    level: 10,
+  },
+  {
+    name: "Admin Policy Changes",
+    q: "eventName:AttachUserPolicy AND AdministratorAccess",
+    level: 10,
+  },
+  { name: "SSM Session Starts", q: "eventName:StartSession", level: 7 },
+  {
+    name: "Linux Failed SSH (brute force)",
+    q: "program_name:sshd AND action:failure",
+    level: 6,
+  },
 ];
 
 const results = [];
 for (const q of queries) {
-  const res = await fetch(`${wazuhApi}/alerts?q=${encodeURIComponent(q.q)}&from=now-7d&limit=5`, {
-    headers: { 'Authorization': `Basic ${creds}` }
-  });
+  const res = await fetch(
+    `${wazuhApi}/alerts?q=${encodeURIComponent(q.q)}&from=now-7d&limit=5`,
+    {
+      headers: { Authorization: `Basic ${creds}` },
+    },
+  );
   const data = await res.json();
   results.push({ ...q, count: data.total, sample: data.data });
 }
 
-const summary = results.map(r =>
-  `• *${r.name}*: ${r.count} alert${r.count !== 1 ? 's' : ''}`
-).join('\n');
+const summary = results
+  .map((r) => `• *${r.name}*: ${r.count} alert${r.count !== 1 ? "s" : ""}`)
+  .join("\n");
 
 return {
   report: `*Weekly Threat Hunt Summary*\n\n${summary}`,
-  detail: results
+  detail: results,
 };
 ```
 
@@ -1150,15 +1181,15 @@ curl -k -u admin:password -X PUT "https://indexer-1:9200/_slm/policy/daily-wazuh
 
 ### 7.3 — Runbook Checklist
 
-| Check | Command |
-|-------|---------|
-| Manager cluster health | `/var/ossec/bin/cluster_control -l` |
-| Indexer cluster health | `curl -k -u admin:password https://indexer:9200/_cluster/health?pretty` |
-| Agent connectivity | `/var/ossec/bin/agent_control -ls` |
-| CloudTrail ingestion | `/var/ossec/bin/wazuh-control info \| grep aws` |
-| n8n workflow errors | Check n8n workflow error history |
-| Index disk usage | `curl -k -u admin:password https://indexer:9200/_cat/allocation?v` |
-| Alert backlog | `curl -k -u admin:password https://indexer:9200/_tasks?actions=wazuh-indexer` |
+| Check                  | Command                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------- |
+| Manager cluster health | `/var/ossec/bin/cluster_control -l`                                           |
+| Indexer cluster health | `curl -k -u admin:password https://indexer:9200/_cluster/health?pretty`       |
+| Agent connectivity     | `/var/ossec/bin/agent_control -ls`                                            |
+| CloudTrail ingestion   | `/var/ossec/bin/wazuh-control info \| grep aws`                               |
+| n8n workflow errors    | Check n8n workflow error history                                              |
+| Index disk usage       | `curl -k -u admin:password https://indexer:9200/_cat/allocation?v`            |
+| Alert backlog          | `curl -k -u admin:password https://indexer:9200/_tasks?actions=wazuh-indexer` |
 
 ---
 
@@ -1167,6 +1198,7 @@ curl -k -u admin:password -X PUT "https://indexer-1:9200/_slm/policy/daily-wazuh
 Before any of the above: **fill in your org manifest** (Phase 0.1).
 
 The org manifest determines everything:
+
 - How many `<bucket>` blocks go into ossec.conf
 - How many CloudFormation IAM role templates to generate
 - Which accounts need the cross-account role
@@ -1189,14 +1221,14 @@ orgs:
 
 ## Related Artifacts
 
-| Artifact | Path |
-|----------|------|
-| CloudFormation IAM roles | [[Security/siem/wazuh/production-plan/cloudformation/iam-roles.yaml]] |
-| Terraform infra (NLB, EC2s) | [[Security/siem/wazuh/production-plan/terraform/main.tf]] |
-| ossec.conf (full config) | [[Security/siem/wazuh/production-plan/configs/ossec.conf]] |
-| CloudTrail rules | [[Security/siem/wazuh/production-plan/configs/cloudtrail-rules.xml]] |
-| Linux detection rules | [[Security/siem/wazuh/production-plan/configs/linux-rules.xml]] |
-| Ansible Linux agent | [[Security/siem/wazuh/production-plan/ansible/linux-agent.yml]] |
-| SSM Windows agent doc | [[Security/siem/wazuh/production-plan/ansible/windows-agent-ssm.json]] |
-| n8n workflow JSON | [[Security/siem/wazuh/production-plan/n8n/wazuh-alert-workflow.json]] |
-| Indexer ILM policy | [[Security/siem/wazuh/production-plan/configs/ilm-policy.json]] |
+| Artifact                    | Path                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| CloudFormation IAM roles    | [iam-roles.yaml](./cloudformation/iam-roles.yaml)            |
+| Terraform infra (NLB, EC2s) | [main.tf](./terraform/main.tf)                               |
+| ossec.conf (full config)    | [ossec.conf](./configs/ossec.conf)                           |
+| CloudTrail rules            | [cloudtrail-rules.xml](./configs/cloudtrail-rules.xml)       |
+| Linux detection rules       | [linux-rules.xml](./configs/linux-rules.xml)                 |
+| Ansible Linux agent         | [linux-agent.yml](./ansible/linux-agent.yml)                 |
+| SSM Windows agent doc       | [windows-agent-ssm.json](./ansible/windows-agent-ssm.json)   |
+| n8n workflow JSON           | [wazuh-alert-workflow.json](./n8n/wazuh-alert-workflow.json) |
+| Indexer ILM policy          | [ilm-policy.json](./configs/ilm-policy.json)                 |

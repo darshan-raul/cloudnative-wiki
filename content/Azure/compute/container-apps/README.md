@@ -67,6 +67,7 @@ Under the hood, Azure Container Apps abstracts an entire Kubernetes and service 
 ## 2. Ingress & Traffic Splitting Mechanics
 
 ACA provides native Layer 7 routing via managed Envoy proxies:
+
 - **Ingress Modes:**
   - `External`: Publicly routable endpoint with automatic TLS certificate provisioning.
   - `Internal`: Accessible only within the ACA environment or from within the peered Azure Virtual Network.
@@ -185,16 +186,16 @@ az containerapp ingress traffic set \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Consumption Plan Limit | Dedicated Workload Profile |
-| :--- | :--- | :--- |
-| **Max Cores per App** | 4.0 vCPU | Up to 32 vCPU per replica |
-| **Max Memory per App**| 8.0 GiB | Up to 256 GiB per replica |
-| **Min Replicas** | 0 (Scale to zero) | 0 to any arbitrary number |
-| **Max Replicas per App** | 30 replicas | Up to 300 replicas |
-| **Subnet Size Required**| `/23` minimum (512 IPs) | `/23` minimum |
-| **Concurrent Active Revisions** | 100 per app | 100 per app |
-| **Startup Probe Timeout** | 240 seconds | 240 seconds |
-| **Storage Mounts** | Azure Files (SMB / NFS) | Azure Files, ephemeral local storage |
+| Parameter / Dimension           | Consumption Plan Limit  | Dedicated Workload Profile           |
+| :------------------------------ | :---------------------- | :----------------------------------- |
+| **Max Cores per App**           | 4.0 vCPU                | Up to 32 vCPU per replica            |
+| **Max Memory per App**          | 8.0 GiB                 | Up to 256 GiB per replica            |
+| **Min Replicas**                | 0 (Scale to zero)       | 0 to any arbitrary number            |
+| **Max Replicas per App**        | 30 replicas             | Up to 300 replicas                   |
+| **Subnet Size Required**        | `/23` minimum (512 IPs) | `/23` minimum                        |
+| **Concurrent Active Revisions** | 100 per app             | 100 per app                          |
+| **Startup Probe Timeout**       | 240 seconds             | 240 seconds                          |
+| **Storage Mounts**              | Azure Files (SMB / NFS) | Azure Files, ephemeral local storage |
 
 ---
 
@@ -211,6 +212,7 @@ az containerapp ingress traffic set \
 ## 6. Realistic Pricing Scenarios
 
 Azure Container Apps Consumption pricing is charged per second:
+
 1. **vCPU Usage:** $0.000024 per vCPU-second.
 2. **Memory Usage:** $0.000003 per GiB-second.
 3. **HTTP Requests:** $0.40 per million requests (first 2 million requests/month are free).

@@ -14,6 +14,7 @@ Performance testing validates that a system meets its non-functional requirement
 ## Types of Performance Tests
 
 ### 1. Load Testing
+
 Normal expected load — verify system handles peak comfortably.
 
 ```
@@ -23,6 +24,7 @@ Goal: "Does it work at normal load?"
 ```
 
 ### 2. Stress Testing
+
 Push beyond normal load to find the breaking point.
 
 ```
@@ -32,6 +34,7 @@ Goal: "Where does it break, and how does it fail?"
 ```
 
 ### 3. Spike Testing
+
 Sudden, sharp increase in traffic.
 
 ```
@@ -41,6 +44,7 @@ Goal: "Can the system handle sudden traffic surges?"
 ```
 
 ### 4. Soak Testing (Endurance Testing)
+
 Sustained load over hours to detect memory leaks, log rotation, DB connection pool exhaustion.
 
 ```
@@ -50,6 +54,7 @@ Goal: "Does it hold up over time?"
 ```
 
 ### 5. Chaos / Resilience Testing
+
 Deliberately break things to validate observability and recovery.
 
 ```
@@ -61,15 +66,15 @@ Goal: "Can we detect and recover from failures automatically?"
 
 ## Key Metrics
 
-| Metric | What It Is | Target Example |
-|--------|-----------|----------------|
-| **Throughput** | Requests/sec the system handles | 1,000 req/sec |
-| **Latency (p50)** | Median response time |< 50ms |
-| **Latency (p95)** | 95th percentile |< 200ms |
-| **Latency (p99)** | 99th percentile | < 500ms |
-| **Error rate** | % of requests returning 5xx |< 0.1% |
-| **Saturation** | How full are the resources? | CPU < 70%, DB connections < 80% |
-| **RPS per instance** | Requests/sec per server | Profile to find limits |
+| Metric               | What It Is                      | Target Example                  |
+| -------------------- | ------------------------------- | ------------------------------- |
+| **Throughput**       | Requests/sec the system handles | 1,000 req/sec                   |
+| **Latency (p50)**    | Median response time            | < 50ms                          |
+| **Latency (p95)**    | 95th percentile                 | < 200ms                         |
+| **Latency (p99)**    | 99th percentile                 | < 500ms                         |
+| **Error rate**       | % of requests returning 5xx     | < 0.1%                          |
+| **Saturation**       | How full are the resources?     | CPU < 70%, DB connections < 80% |
+| **RPS per instance** | Requests/sec per server         | Profile to find limits          |
 
 ---
 
@@ -94,24 +99,24 @@ p99 = 99th value = ~500ms  ← "1% of requests are slower than this"
 
 ```javascript
 // script.js
-import http from 'k6/http';
-import { check, sleep } from 'k6';
+import http from "k6/http";
+import { check, sleep } from "k6";
 
 export const options = {
   stages: [
-    { duration: '2m', target: 100 },   // ramp up
-    { duration: '5m', target: 100 },  // steady state
-    { duration: '2m', target: 0 },    // ramp down
+    { duration: "2m", target: 100 }, // ramp up
+    { duration: "5m", target: 100 }, // steady state
+    { duration: "2m", target: 0 }, // ramp down
   ],
   thresholds: {
-    http_req_duration: ['p95<500'], // p95 < 500ms
-    http_req_failed: ['rate<0.01'],    // error rate < 1%
+    http_req_duration: ["p95<500"], // p95 < 500ms
+    http_req_failed: ["rate<0.01"], // error rate < 1%
   },
 };
 
 export default function () {
-  const res = http.get('https://api.example.com/health');
-  check(res, { 'status is 200': (r) => r.status === 200 });
+  const res = http.get("https://api.example.com/health");
+  check(res, { "status is 200": (r) => r.status === 200 });
   sleep(1);
 }
 ```
@@ -193,10 +198,10 @@ Conclusion: system saturates at ~50k req/sec
 ```javascript
 // k6-load-test.js
 export const options = {
-  stages: [{ duration: '2m', target: 100 }],
+  stages: [{ duration: "2m", target: 100 }],
   thresholds: {
-    http_req_duration: ['p95<500'],
-    http_req_failed: ['rate<0.01'],
+    http_req_duration: ["p95<500"],
+    http_req_failed: ["rate<0.01"],
   },
 };
 ```
@@ -205,15 +210,15 @@ export const options = {
 
 ## Common Performance Problems
 
-| Problem | Symptom | Fix |
-|---------|---------|-----|
+| Problem                       | Symptom                        | Fix                                  |
+| ----------------------------- | ------------------------------ | ------------------------------------ |
 | DB connection pool exhaustion | Connection timeouts under load | Increase pool size, add read replica |
-| N+1 queries | Latency spikes, DB CPU spike | Eager load, query optimization |
-| Memory leak | Throughput drops over time | Heap profiling, restart policy |
-| GC pauses | p99 latency spikes | Reduce allocations, tune GC |
-| Cold start | First request very slow | Pre-warming, keep-alive |
-| No connection pooling | High latency per request | Reuse connections (HTTP keep-alive) |
-| Synchronous I/O in hot path | Low throughput | Async I/O, batching |
+| N+1 queries                   | Latency spikes, DB CPU spike   | Eager load, query optimization       |
+| Memory leak                   | Throughput drops over time     | Heap profiling, restart policy       |
+| GC pauses                     | p99 latency spikes             | Reduce allocations, tune GC          |
+| Cold start                    | First request very slow        | Pre-warming, keep-alive              |
+| No connection pooling         | High latency per request       | Reuse connections (HTTP keep-alive)  |
+| Synchronous I/O in hot path   | Low throughput                 | Async I/O, batching                  |
 
 ---
 

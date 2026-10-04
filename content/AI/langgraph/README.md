@@ -13,6 +13,7 @@ LangGraph adds **cycles**, **branching**, **persistence**, and
 **human-in-the-loop**.
 
 You need LangGraph when:
+
 - An agent must loop until a condition is met (tool calls, retries)
 - A workflow needs human approval before destructive actions
 - State must survive across requests (checkpointers)
@@ -23,13 +24,13 @@ You need LangGraph when:
 If you've worked through [[AI/langchain/README|LangChain]], these
 concepts carry over directly:
 
-| LangChain | LangGraph |
-|---|---|
-| `ChatOpenAI` | same |
-| `@tool` | same |
-| `ChatPromptTemplate` | same |
-| `Runnable` | the `StateGraph` is a `Runnable` |
-| `FakeListChatModel` | same |
+| LangChain            | LangGraph                        |
+| -------------------- | -------------------------------- |
+| `ChatOpenAI`         | same                             |
+| `@tool`              | same                             |
+| `ChatPromptTemplate` | same                             |
+| `Runnable`           | the `StateGraph` is a `Runnable` |
+| `FakeListChatModel`  | same                             |
 
 LangGraph takes the same building blocks and adds a graph execution
 model on top.
@@ -48,20 +49,20 @@ model on top.
 
 Work through these files in order. Each builds on the previous:
 
-| # | File | What you learn |
-|---|---|---|
-| 1 | [[01-mental-model|01-mental-model]] | The four concepts, the agent loop, why cycles need LangGraph |
-| 2 | [[02-state-and-reducers|02-state-and-reducers]] | `TypedDict` state, `add_messages`, custom reducers |
-| 3 | [[03-nodes-and-edges|03-nodes-and-edges]] | `add_node`, `add_edge`, conditional routing, `Send` |
-| 4 | [[04-tools-and-routing|04-tools-and-routing]] | `ToolNode`, `tools_condition`, `bind_tools` |
-| 5 | [[05-command-and-interrupts|05-command-and-interrupts]] | `Command`, `interrupt()`, `Command(resume=...)` |
-| 6 | [[06-subgraphs|06-subgraphs]] | Subgraphs, `Send` fan-out/fan-in |
-| 7 | [[07-streaming|07-streaming]] | `stream_mode="messages"`, `astream_events` |
-| 8 | [[08-checkpointers|08-checkpointers]] | `MemorySaver`, `SqliteSaver`, `PostgresSaver` |
-| 9 | [[09-memory-store|09-memory-store]] | `InMemoryStore`, `PostgresStore`, cross-thread memory |
-| 10 | [[10-human-in-the-loop|10-human-in-the-loop]] | `interrupt()` + approval UI, resume |
-| 11 | [[11-production|11-production]] | Compilation, recursion limits, error handling, deployment |
-| 12 | [[12-testing|12-testing]] | `FakeListChatModel`, graph assertions, no-network |
+| #   | File                        | What you learn              |
+| --- | --------------------------- | --------------------------- | ------------------------------------------------------------ |
+| 1   | [[01-mental-model           | 01-mental-model]]           | The four concepts, the agent loop, why cycles need LangGraph |
+| 2   | [[02-state-and-reducers     | 02-state-and-reducers]]     | `TypedDict` state, `add_messages`, custom reducers           |
+| 3   | [[03-nodes-and-edges        | 03-nodes-and-edges]]        | `add_node`, `add_edge`, conditional routing, `Send`          |
+| 4   | [[04-tools-and-routing      | 04-tools-and-routing]]      | `ToolNode`, `tools_condition`, `bind_tools`                  |
+| 5   | [[05-command-and-interrupts | 05-command-and-interrupts]] | `Command`, `interrupt()`, `Command(resume=...)`              |
+| 6   | [[06-subgraphs              | 06-subgraphs]]              | Subgraphs, `Send` fan-out/fan-in                             |
+| 7   | [[07-streaming              | 07-streaming]]              | `stream_mode="messages"`, `astream_events`                   |
+| 8   | [[08-checkpointers          | 08-checkpointers]]          | `MemorySaver`, `SqliteSaver`, `PostgresSaver`                |
+| 9   | [[09-memory-store           | 09-memory-store]]           | `InMemoryStore`, `PostgresStore`, cross-thread memory        |
+| 10  | [[10-human-in-the-loop      | 10-human-in-the-loop]]      | `interrupt()` + approval UI, resume                          |
+| 11  | [[11-production             | 11-production]]             | Compilation, recursion limits, error handling, deployment    |
+| 12  | [[12-testing                | 12-testing]]                | `FakeListChatModel`, graph assertions, no-network            |
 
 ## Quick start
 

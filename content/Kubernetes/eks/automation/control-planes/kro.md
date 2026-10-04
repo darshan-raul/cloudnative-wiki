@@ -38,24 +38,24 @@ spec:
     plural: webservers
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        properties:
-          spec:
-            type: object
-            properties:
-              replicas:
-                type: integer
-                default: 2
-              image:
-                type: string
-              port:
-                type: integer
-                default: 80
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                  default: 2
+                image:
+                  type: string
+                port:
+                  type: integer
+                  default: 80
 ```
 
 ## Create WebServer Resource

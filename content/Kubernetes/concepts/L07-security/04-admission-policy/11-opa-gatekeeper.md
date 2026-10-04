@@ -1,6 +1,13 @@
+---
+title: "OPA and Gatekeeper"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "OPA and Gatekeeper — Kubernetes reference and architecture guide."
+---
+
 # OPA and Gatekeeper
 
-*"https://www.openpolicyagent.org/ | https://open-policy-agent.github.io/gatekeeper/"*
+_"https://www.openpolicyagent.org/ | https://open-policy-agent.github.io/gatekeeper/"_
 
 OPA (Open Policy Agent) is a **policy engine** that decouples policy from code. It evaluates policies written in **Rego** (a DSL) against inputs (typically JSON), and returns decisions. **Gatekeeper** is the k8s-specific implementation of OPA — it runs as a validating (and optionally mutating) admission webhook, evaluates Rego policies against k8s objects, and rejects (or warns about) non-compliant objects. OPA / Gatekeeper is one of the two major policy engines in the k8s ecosystem (the other being Kyverno).
 
@@ -43,15 +50,15 @@ In k8s, the input is a k8s object (Pod, Deployment, etc.), the policy is "must c
 
 If policy is in the application code:
 
-* Every change requires a code change.
-* The team that owns the app is the only one that can review / change.
-* Policy is per-app, not cluster-wide.
+- Every change requires a code change.
+- The team that owns the app is the only one that can review / change.
+- Policy is per-app, not cluster-wide.
 
 If policy is in a policy engine:
 
-* Policy is declarative, not imperative.
-* Multiple apps can share the same policy.
-* The platform team can own policy without owning the apps.
+- Policy is declarative, not imperative.
+- Multiple apps can share the same policy.
+- The platform team can own policy without owning the apps.
 
 OPA's design: policy is data, not code. Rego is the language; OPA is the evaluator. You can ship the same Rego package to multiple enforcement points (k8s admission, API gateway, CI checks, etc.).
 
@@ -71,8 +78,8 @@ The "decision" is whatever the policy returns. For Gatekeeper, it's `allowed: tr
 
 ### 2.1 OPA vs Gatekeeper
 
-* **OPA** — the engine. Generic. Can be embedded in any system. Has its own HTTP API.
-* **Gatekeeper** — the k8s implementation. Runs as a webhook. Uses OPA under the hood (or a recent fork, see Conftest below).
+- **OPA** — the engine. Generic. Can be embedded in any system. Has its own HTTP API.
+- **Gatekeeper** — the k8s implementation. Runs as a webhook. Uses OPA under the hood (or a recent fork, see Conftest below).
 
 Gatekeeper is the deployment; OPA is the engine.
 
@@ -111,12 +118,12 @@ deny[msg] {
 
 The structure:
 
-* `package` — the namespace for the rule.
-* `deny[msg]` — a **set of denial messages**. If the set is non-empty, the request is denied.
-* `input.request.kind.kind == "Pod"` — an expression. If true, the rule continues.
-* `container := input.request.object.spec.containers[_]` — a variable. The `_` is a wildcard for array index.
-* `not startswith(...)` — negation. The rule applies if the image is NOT in the approved registry.
-* `msg := ...` — set the message.
+- `package` — the namespace for the rule.
+- `deny[msg]` — a **set of denial messages**. If the set is non-empty, the request is denied.
+- `input.request.kind.kind == "Pod"` — an expression. If true, the rule continues.
+- `container := input.request.object.spec.containers[_]` — a variable. The `_` is a wildcard for array index.
+- `not startswith(...)` — negation. The rule applies if the image is NOT in the approved registry.
+- `msg := ...` — set the message.
 
 The rule produces a denial message for every container with a bad image. If the set is empty, the request is allowed.
 
@@ -206,12 +213,12 @@ In Gatekeeper, this is the **"external data" provider** pattern. The Gatekeeper 
 
 Gatekeeper is composed of:
 
-* **`gatekeeper-controller-manager`** — the control plane. Watches for ConstraintTemplates and Constraints, configures the webhook, audits existing objects.
-* **`gatekeeper-audit`** (in v3.7+) — runs periodically to check existing objects against the policies. Reports violations.
-* **The admission webhook** — called by the apiserver for every request, evaluates policies.
-* **Mutating webhook** (in v3.7+) — can mutate objects (e.g. add labels).
-* **ConstraintTemplate** — a CRD that defines a parameterized policy.
-* **Constraint** — an instance of a ConstraintTemplate with specific values.
+- **`gatekeeper-controller-manager`** — the control plane. Watches for ConstraintTemplates and Constraints, configures the webhook, audits existing objects.
+- **`gatekeeper-audit`** (in v3.7+) — runs periodically to check existing objects against the policies. Reports violations.
+- **The admission webhook** — called by the apiserver for every request, evaluates policies.
+- **Mutating webhook** (in v3.7+) — can mutate objects (e.g. add labels).
+- **ConstraintTemplate** — a CRD that defines a parameterized policy.
+- **Constraint** — an instance of a ConstraintTemplate with specific values.
 
 The architecture:
 
@@ -251,21 +258,21 @@ spec:
               type: array
               items: { type: string }
   targets:
-  - target: admission.k8s.gatekeeper.sh
-    rego: |
-      package k8sapprovedregistry
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sapprovedregistry
 
-      violation[{"msg": msg, "details": {}}] {
-          container := input.review.object.spec.containers[_]
-          not startswith(container.image, input.parameters.registries[_])
-          msg := sprintf("image '%v' is not from an approved registry", [container.image])
-      }
+        violation[{"msg": msg, "details": {}}] {
+            container := input.review.object.spec.containers[_]
+            not startswith(container.image, input.parameters.registries[_])
+            msg := sprintf("image '%v' is not from an approved registry", [container.image])
+        }
 ```
 
 The template:
 
-* Defines a CRD `K8sApprovedRegistry` with a `registries` parameter.
-* The Rego policy uses `input.parameters.registries` (the values from the constraint).
+- Defines a CRD `K8sApprovedRegistry` with a `registries` parameter.
+- The Rego policy uses `input.parameters.registries` (the values from the constraint).
 
 ### 5.2 A Constraint (instance)
 
@@ -276,17 +283,17 @@ metadata: { name: must-come-from-ecr }
 spec:
   match:
     kinds: [{ apiGroups: [""], kinds: ["Pod"] }]
-    namespaces: ["prod", "staging"]   # optional
+    namespaces: ["prod", "staging"] # optional
   parameters:
     registries:
-    - "123456789.dkr.ecr.us-east-1.amazonaws.com/"
-    - "gcr.io/my-project/"
+      - "123456789.dkr.ecr.us-east-1.amazonaws.com/"
+      - "gcr.io/my-project/"
 ```
 
 The constraint:
 
-* Matches Pods in `prod` and `staging`.
-* The `parameters.registries` is passed to the Rego as `input.parameters.registries`.
+- Matches Pods in `prod` and `staging`.
+- The `parameters.registries` is passed to the Rego as `input.parameters.registries`.
 
 Gatekeeper combines the template + constraint to produce the final Rego. The result is the policy that's evaluated.
 
@@ -311,17 +318,17 @@ spec:
               type: array
               items: { type: object }
   targets:
-  - target: admission.k8s.gatekeeper.sh
-    rego: |
-      package k8srequiredlabels
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8srequiredlabels
 
-      violation[{"msg": msg, "details": {}}] {
-          provided := {label | input.review.object.metadata.labels[label]}
-          required := {label | label := input.parameters.labels[_].key}
-          missing := required - provided
-          count(missing) > 0
-          msg := sprintf("missing labels: %v", [missing])
-      }
+        violation[{"msg": msg, "details": {}}] {
+            provided := {label | input.review.object.metadata.labels[label]}
+            required := {label | label := input.parameters.labels[_].key}
+            missing := required - provided
+            count(missing) > 0
+            msg := sprintf("missing labels: %v", [missing])
+        }
 ```
 
 ### 6.2 The constraint
@@ -335,8 +342,8 @@ spec:
     kinds: [{ apiGroups: [""], kinds: ["Pod"] }]
   parameters:
     labels:
-    - key: team
-      allowedRegex: "^(frontend|backend|platform)$"
+      - key: team
+        allowedRegex: "^(frontend|backend|platform)$"
 ```
 
 Wait, that's a slightly different pattern. Let me redo with the team-only check:
@@ -371,16 +378,16 @@ apiVersion: constraints.gatekeeper.sh/v1beta1
 kind: K8sApprovedRegistry
 metadata: { name: must-come-from-ecr }
 spec:
-  enforcementAction: dryrun     # "warn" / "dryrun" / "deny"
-  match: {...}
-  parameters: {...}
+  enforcementAction: dryrun # "warn" / "dryrun" / "deny"
+  match: { ... }
+  parameters: { ... }
 ```
 
 The `enforcementAction` field:
 
-* `deny` (default) — reject non-compliant objects at admission.
-* `dryrun` — allow, but record a violation in the audit log.
-* `warn` — allow, but warn the user via the admission response.
+- `deny` (default) — reject non-compliant objects at admission.
+- `dryrun` — allow, but record a violation in the audit log.
+- `warn` — allow, but warn the user via the admission response.
 
 `dryrun` is the standard "I'm rolling out a new policy, let me see what's already broken" mode.
 
@@ -405,11 +412,11 @@ Mutating webhooks are riskier than validating. A bug in the mutator can corrupt 
 
 OPA is generic. It can be used for:
 
-* **API gateway authorization** — OPA at the gateway, evaluates "can this user call this endpoint".
-* **Microservice authorization** — the app calls OPA at request time: "can this user access this resource?"
-* **Terraform validation** — Conftest (OPA) in CI, runs Rego against `.tf` files.
-* **SSH / sudo authorization** — OPA at the authn layer.
-* **Kafka authorization** — OPA at the broker, evaluates "can this client read this topic?"
+- **API gateway authorization** — OPA at the gateway, evaluates "can this user call this endpoint".
+- **Microservice authorization** — the app calls OPA at request time: "can this user access this resource?"
+- **Terraform validation** — Conftest (OPA) in CI, runs Rego against `.tf` files.
+- **SSH / sudo authorization** — OPA at the authn layer.
+- **Kafka authorization** — OPA at the broker, evaluates "can this client read this topic?"
 
 For k8s, Gatekeeper is the deployment. For everything else, OPA is the engine.
 
@@ -417,20 +424,20 @@ For k8s, Gatekeeper is the deployment. For everything else, OPA is the engine.
 
 CEL (Common Expression Language) is the alternative to Rego, supported natively by k8s (no OPA needed).
 
-| | Rego | CEL |
-|---|---|---|
-| **Used in** | OPA / Gatekeeper | k8s native (1.30+), Kyverno |
-| **Standard** | OPA's DSL | Google's CEL (used in CEL-Go) |
-| **Engine** | OPA (separate binary) | Built into the apiserver |
-| **Performance** | Slower (separate process) | Faster (in-process) |
-| **Expressiveness** | High (logic programming) | Medium (expression language) |
-| **Familiarity** | Rego-specific | More familiar to most developers |
+|                    | Rego                      | CEL                              |
+| ------------------ | ------------------------- | -------------------------------- |
+| **Used in**        | OPA / Gatekeeper          | k8s native (1.30+), Kyverno      |
+| **Standard**       | OPA's DSL                 | Google's CEL (used in CEL-Go)    |
+| **Engine**         | OPA (separate binary)     | Built into the apiserver         |
+| **Performance**    | Slower (separate process) | Faster (in-process)              |
+| **Expressiveness** | High (logic programming)  | Medium (expression language)     |
+| **Familiarity**    | Rego-specific             | More familiar to most developers |
 
 The decision:
 
-* **Use Rego** if you want to share policies across systems (k8s, API gateway, CI, etc.) — OPA is the lingua franca.
-* **Use CEL** if you're k8s-only and want the simplest deployment — no extra pods.
-* **Use Kyverno** if you want k8s-native (no separate language) and YAML-style policies.
+- **Use Rego** if you want to share policies across systems (k8s, API gateway, CI, etc.) — OPA is the lingua franca.
+- **Use CEL** if you're k8s-only and want the simplest deployment — no extra pods.
+- **Use Kyverno** if you want k8s-native (no separate language) and YAML-style policies.
 
 ## 11. Performance and Caching
 
@@ -450,23 +457,23 @@ curl localhost:8888/metrics
 
 Key metrics:
 
-* `gatekeeper_admission_requests_total` — total admission requests.
-* `gatekeeper_admission_response_time_seconds` — response time.
-* `gatekeeper_violations_total` — number of policy violations.
+- `gatekeeper_admission_requests_total` — total admission requests.
+- `gatekeeper_admission_response_time_seconds` — response time.
+- `gatekeeper_violations_total` — number of policy violations.
 
 ### 11.3 The slow policy
 
 A policy that's slow:
 
-* Has a large iteration (e.g. over all containers, all env vars, all volumes).
-* Calls out to external data.
-* Has expensive string operations.
+- Has a large iteration (e.g. over all containers, all env vars, all volumes).
+- Calls out to external data.
+- Has expensive string operations.
 
 To speed up:
 
-* Limit the constraint's `match` to specific resources / namespaces.
-* Use the `match` to skip irrelevant requests.
-* Avoid external data calls.
+- Limit the constraint's `match` to specific resources / namespaces.
+- Use the `match` to skip irrelevant requests.
+- Avoid external data calls.
 
 ## 12. Common Policy Patterns
 
@@ -657,7 +664,7 @@ curl localhost:8888/metrics | grep response_time
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — the alternative to OPA / Gatekeeper
-* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — how Gatekeeper fits in
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the built-in alternative for basic checks
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — one of the most common policy targets
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — the alternative to OPA / Gatekeeper
+- [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — how Gatekeeper fits in
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the built-in alternative for basic checks
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — one of the most common policy targets

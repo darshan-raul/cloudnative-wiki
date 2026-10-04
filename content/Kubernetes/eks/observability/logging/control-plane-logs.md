@@ -13,13 +13,13 @@ EKS provides audit logs for the Kubernetes control plane components.
 
 ## Log Types
 
-| Log Type | Description |
-|----------|-------------|
-| API Server (api) | All Kubernetes API requests |
-| Audit (audit) | Audit logs from API server |
-| Authenticator (authenticator) | IAM Authenticator for EKS |
-| Controller Manager (controllerManager) | Controller manager |
-| Scheduler (scheduler) | Scheduler decisions |
+| Log Type                               | Description                 |
+| -------------------------------------- | --------------------------- |
+| API Server (api)                       | All Kubernetes API requests |
+| Audit (audit)                          | Audit logs from API server  |
+| Authenticator (authenticator)          | IAM Authenticator for EKS   |
+| Controller Manager (controllerManager) | Controller manager          |
+| Scheduler (scheduler)                  | Scheduler decisions         |
 
 ## Enable Logging
 
@@ -55,6 +55,7 @@ aws logs insights-query \
 ## CloudWatch Logs Insights Examples
 
 ### Failed authentication attempts
+
 ```
 fields @timestamp, @message
 | filter @message like /authentication.*failed/i
@@ -63,6 +64,7 @@ fields @timestamp, @message
 ```
 
 ### API server errors
+
 ```
 fields @timestamp, @message
 | filter responseStatus.code >= 500
@@ -70,6 +72,7 @@ fields @timestamp, @message
 ```
 
 ### Pod scheduling decisions
+
 ```
 fields @timestamp, @message
 | filter @message like /pod.*scheduled|scheduler.*filter/i

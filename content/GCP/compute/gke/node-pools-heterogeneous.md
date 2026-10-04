@@ -62,6 +62,7 @@ GKE uses Kubernetes admission and scheduling primitives to ensure that pods exec
 ### Local NVMe SSD Scratch Arrays
 
 Compute Engine instances can attach physical local NVMe SSDs (375 GB per partition) that deliver millions of IOPS with sub-millisecond latencies:
+
 - **Ephemeral Storage RAID:** GKE can format and strip multiple local SSDs into a single high-performance `ext4` or `xfs` RAID 0 volume.
 - Workloads mount this high-speed disk using `emptyDir: { medium: Memory }` or by requesting ephemeral storage backed by the local SSD.
 
@@ -144,34 +145,34 @@ spec:
     spec:
       # 1. Toleration to bypass the GPU node taint
       tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Equal"
-        value: "present"
-        effect: "NoSchedule"
+        - key: "nvidia.com/gpu"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
       # 2. Node Affinity to force placement onto the GPU node pool
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: "workload"
-                operator: "In"
-                values:
-                - "ai-inference"
+              - matchExpressions:
+                  - key: "workload"
+                    operator: "In"
+                    values:
+                      - "ai-inference"
       containers:
-      - name: vllm
-        image: vllm/vllm-openai:latest
-        resources:
-          limits:
-            nvidia.com/gpu: "1"
-            cpu: "12"
-            memory: "48Gi"
-          requests:
-            nvidia.com/gpu: "1"
-            cpu: "8"
-            memory: "32Gi"
-        ports:
-        - containerPort: 8000
+        - name: vllm
+          image: vllm/vllm-openai:latest
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              cpu: "12"
+              memory: "48Gi"
+            requests:
+              nvidia.com/gpu: "1"
+              cpu: "8"
+              memory: "32Gi"
+          ports:
+            - containerPort: 8000
 ```
 
 Apply deployment:
@@ -184,15 +185,15 @@ kubectl apply -f vllm-inference.yaml
 
 ## 4. Hardware Sizing & Accelerator Matrix
 
-| Node Pool Category | Recommended GCE Machine Series | Typical vCPU / RAM | Specialized Capability |
-| :--- | :--- | :--- | :--- |
-| **Cost-Optimized Microservices** | `t2a-standard` (Arm64) | 4-16 vCPUs / 16-64 GiB | 40% price-performance boost on Go/Node/Java |
-| **Compute-Intensive APIs** | `c3-standard` (Sapphire Rapids)| 4-44 vCPUs / 16-176 GiB| DDR5 RAM, Intel AMX, ultra-fast P99 |
-| **In-Memory Caches & DBs** | `n2-highmem` or `m1-megamem` | 16-96 vCPUs / 128-1433 GiB | Multi-terabyte in-memory caching |
-| **Fast I/O & Streaming** | `c2-standard` + Local NVMe SSD | 8-30 vCPUs / 32-120 GiB | Physical PCIe Gen4 NVMe arrays (millions IOPS) |
-| **AI Inference** | `g2-standard` (NVIDIA L4) | 4-96 vCPUs / 16-384 GiB | FP8 precision, optimized for vLLM & Triton |
-| **AI Large Training** | `a3-highgpu` (NVIDIA H100) | 208 vCPUs / 1872 GiB | 8x H100 80GB GPUs, 3.2 Tbps GPUDirect RDMA |
-| **Cloud TPU Slices** | `ct5lp` (Cloud TPU v5e) | Sliced chip topologies | Cost-efficient Gemini/JAX/PyTorch training |
+| Node Pool Category               | Recommended GCE Machine Series  | Typical vCPU / RAM         | Specialized Capability                         |
+| :------------------------------- | :------------------------------ | :------------------------- | :--------------------------------------------- |
+| **Cost-Optimized Microservices** | `t2a-standard` (Arm64)          | 4-16 vCPUs / 16-64 GiB     | 40% price-performance boost on Go/Node/Java    |
+| **Compute-Intensive APIs**       | `c3-standard` (Sapphire Rapids) | 4-44 vCPUs / 16-176 GiB    | DDR5 RAM, Intel AMX, ultra-fast P99            |
+| **In-Memory Caches & DBs**       | `n2-highmem` or `m1-megamem`    | 16-96 vCPUs / 128-1433 GiB | Multi-terabyte in-memory caching               |
+| **Fast I/O & Streaming**         | `c2-standard` + Local NVMe SSD  | 8-30 vCPUs / 32-120 GiB    | Physical PCIe Gen4 NVMe arrays (millions IOPS) |
+| **AI Inference**                 | `g2-standard` (NVIDIA L4)       | 4-96 vCPUs / 16-384 GiB    | FP8 precision, optimized for vLLM & Triton     |
+| **AI Large Training**            | `a3-highgpu` (NVIDIA H100)      | 208 vCPUs / 1872 GiB       | 8x H100 80GB GPUs, 3.2 Tbps GPUDirect RDMA     |
+| **Cloud TPU Slices**             | `ct5lp` (Cloud TPU v5e)         | Sliced chip topologies     | Cost-efficient Gemini/JAX/PyTorch training     |
 
 ---
 
@@ -209,6 +210,7 @@ kubectl apply -f vllm-inference.yaml
 ## 6. Realistic Pricing Scenarios
 
 Heterogeneous node pools allow aggressive optimization by segregating cheap compute from expensive hardware:
+
 - **T2A Arm64 (8 vCPU / 32 GiB):** ~$0.308 per hour.
 - **N2 Standard (8 vCPU / 32 GiB):** ~$0.388 per hour.
 - **G2 Standard with 1x NVIDIA L4 GPU:** ~$0.842 per hour.

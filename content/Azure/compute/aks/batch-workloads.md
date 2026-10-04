@@ -58,14 +58,18 @@ Standard Kubernetes schedules pods immediately upon creation; if cluster resourc
 ## 2. Core Batch Engineering Constructs
 
 ### 1. The Kubernetes IndexedJob API
+
 For parallel embarrassingly parallel batch computations (e.g., processing 1,000 video chunks or 500 shard files), standard Jobs assign identical environment variables to all pods. The modern **`IndexedJob`** assigns an immutable, unique sequential index (`0` to `N-1`) via the environment variable `JOB_COMPLETION_INDEX` to each pod:
+
 - Pod 0 processes `chunk-000.mp4`
 - Pod 1 processes `chunk-001.mp4`
 - Pod $N-1$ processes `chunk-(N-1).mp4`
 - If Pod 42 fails due to a Spot VM preemption, Kubernetes restarts **only Pod 42**, preserving the completed execution of the remaining 499 pods.
 
 ### 2. Kueue: Gang Scheduling vs. Deadlocks
+
 In multi-node distributed AI training or MPI jobs:
+
 - If Job A requests 8 GPUs and Job B requests 8 GPUs on a cluster with only 8 GPUs total, native Kubernetes might schedule 4 pods of Job A and 4 pods of Job B. Neither job can proceed, resulting in a **hardware deadlock**.
 - Kueue prevents this by enforcing **All-or-Nothing gang scheduling**: a job is held in the queue until all 8 GPUs are simultaneously available.
 
@@ -104,16 +108,16 @@ metadata:
 spec:
   namespaceSelector: {} # Monitors all namespaces
   resourceGroups:
-  - coveredResources: ["cpu", "memory"]
-    flavors:
-    - name: default-spot-flavor
-      resources:
-      - name: "cpu"
-        nominalQuota: "200"
-        borrowingLimit: "100"
-      - name: "memory"
-        nominalQuota: "800Gi"
-        borrowingLimit: "400Gi"
+    - coveredResources: ["cpu", "memory"]
+      flavors:
+        - name: default-spot-flavor
+          resources:
+            - name: "cpu"
+              nominalQuota: "200"
+              borrowingLimit: "100"
+            - name: "memory"
+              nominalQuota: "800Gi"
+              borrowingLimit: "400Gi"
 ---
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: LocalQueue
@@ -155,34 +159,34 @@ spec:
     spec:
       restartPolicy: OnFailure
       tolerations:
-      - key: "kubernetes.azure.com/scalesetpriority"
-        operator: "Equal"
-        value: "spot"
-        effect: "NoSchedule"
+        - key: "kubernetes.azure.com/scalesetpriority"
+          operator: "Equal"
+          value: "spot"
+          effect: "NoSchedule"
       containers:
-      - name: variant-caller
-        image: mcr.microsoft.com/oss/azure/azure-cli:latest
-        command: ["/bin/bash", "-c"]
-        args:
-        - |
-          echo "Processing shard index: ${JOB_COMPLETION_INDEX}"
-          # Pull chunk from Azure Blob Storage using the pod index
-          az storage blob download \
-            --account-name genstorageprod \
-            --container-name raw-reads \
-            --name "chromosome_${JOB_COMPLETION_INDEX}.bam" \
-            --file "chromosome.bam" \
-            --auth-mode login
-          # Execute processing
-          sleep 60
-          echo "Completed shard ${JOB_COMPLETION_INDEX} successfully."
-        resources:
-          requests:
-            cpu: "2"
-            memory: "4Gi"
-          limits:
-            cpu: "2"
-            memory: "4Gi"
+        - name: variant-caller
+          image: mcr.microsoft.com/oss/azure/azure-cli:latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "Processing shard index: ${JOB_COMPLETION_INDEX}"
+              # Pull chunk from Azure Blob Storage using the pod index
+              az storage blob download \
+                --account-name genstorageprod \
+                --container-name raw-reads \
+                --name "chromosome_${JOB_COMPLETION_INDEX}.bam" \
+                --file "chromosome.bam" \
+                --auth-mode login
+              # Execute processing
+              sleep 60
+              echo "Completed shard ${JOB_COMPLETION_INDEX} successfully."
+          resources:
+            requests:
+              cpu: "2"
+              memory: "4Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
 ```
 
 Apply Job:
@@ -195,13 +199,13 @@ kubectl apply -f parallel-indexed-job.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter | Limit / Specification | Production Context |
-| :--- | :--- | :--- |
-| **Max Completions (Job API)** | **100,000 Completions** | Scale limit for single IndexedJob manifest |
-| **Max Parallelism** | **10,000 Pods** | Bounded by cluster IPAM and node quotas |
-| **Job History Limits** | Default: 3 successful, 1 failed | Prune old jobs to prevent API server etcd bloat |
-| **Kueue Admission Latency** | **< 100 milliseconds** | Evaluates queue depth in real time |
-| **Spot Eviction Grace Window** | **30 Seconds** | Flush progress to Azure Blob Storage before SIGKILL |
+| Parameter                      | Limit / Specification           | Production Context                                  |
+| :----------------------------- | :------------------------------ | :-------------------------------------------------- |
+| **Max Completions (Job API)**  | **100,000 Completions**         | Scale limit for single IndexedJob manifest          |
+| **Max Parallelism**            | **10,000 Pods**                 | Bounded by cluster IPAM and node quotas             |
+| **Job History Limits**         | Default: 3 successful, 1 failed | Prune old jobs to prevent API server etcd bloat     |
+| **Kueue Admission Latency**    | **< 100 milliseconds**          | Evaluates queue depth in real time                  |
+| **Spot Eviction Grace Window** | **30 Seconds**                  | Flush progress to Azure Blob Storage before SIGKILL |
 
 ---
 
@@ -226,7 +230,7 @@ kubectl apply -f parallel-indexed-job.yaml
   - Standard On-Demand Rate: 7 nodes × $0.768/hr × 90 hrs = **$483.84**
   - Spot Discount (~80% Savings): 7 nodes × $0.1536/hr × 90 hrs = **$96.77**
   - Azure Blob Storage Egress/Ingress (Internal VNet): **$0.00**
-- **Total Monthly Processing Cost:** **$96.77 / month** *(Delivering over $380/month in net savings).*
+- **Total Monthly Processing Cost:** **$96.77 / month** _(Delivering over $380/month in net savings)._
 
 ### Scenario B: Multi-Department Financial Simulation (Kueue Fair-Share)
 

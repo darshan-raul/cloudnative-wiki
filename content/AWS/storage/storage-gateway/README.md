@@ -14,12 +14,12 @@ Storage Gateway connects on-premises storage to AWS cloud storage. It runs as a 
 
 ## Gateway Types
 
-| Type | Protocol | Use Case | Backend |
-|------|----------|---------|---------|
-| File Gateway | NFS/SMB | File storage, backup | S3 |
-| Volume Gateway (Cached) | iSCSI | Block storage, SAN replacement | S3 (with local cache) |
-| Volume Gateway (Stored) | iSCSI | Full block backup, DR | S3 (all data in cloud) |
-| Tape Gateway | iSCSI/VTL | Tape-based backup to cloud | S3/Glacier |
+| Type                    | Protocol  | Use Case                       | Backend                |
+| ----------------------- | --------- | ------------------------------ | ---------------------- |
+| File Gateway            | NFS/SMB   | File storage, backup           | S3                     |
+| Volume Gateway (Cached) | iSCSI     | Block storage, SAN replacement | S3 (with local cache)  |
+| Volume Gateway (Stored) | iSCSI     | Full block backup, DR          | S3 (all data in cloud) |
+| Tape Gateway            | iSCSI/VTL | Tape-based backup to cloud     | S3/Glacier             |
 
 ## File Gateway
 
@@ -226,6 +226,7 @@ aws cloudwatch get-metric-statistics \
 ```
 
 Key metrics:
+
 - `ReadBytes` / `WriteBytes` — throughput
 - `CloudBytesUploaded` / `CloudBytesDownloaded` — data transfer
 - `CacheHitPercent` — cache hit ratio (Cached Volume Gateway)
@@ -235,9 +236,9 @@ Key metrics:
 
 Data transfer from on-premises to S3 via Storage Gateway:
 
-| Direction | Cost |
-|-----------|------|
-| Upload (on-prem → S3) | $0.02-0.09/GB |
+| Direction               | Cost          |
+| ----------------------- | ------------- |
+| Upload (on-prem → S3)   | $0.02-0.09/GB |
 | Download (S3 → on-prem) | $0.02-0.09/GB |
 
 For 10TB/month upload: 10TB × 1024GB × $0.02 = $205/month.

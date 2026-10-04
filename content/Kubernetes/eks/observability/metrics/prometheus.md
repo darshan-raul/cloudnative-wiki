@@ -68,16 +68,19 @@ helm install grafana grafana/grafana \
 ## Useful Prometheus Queries
 
 ### Pod CPU usage
+
 ```
 sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)
 ```
 
 ### Memory utilization
+
 ```
 sum(container_memory_working_set_bytes) by (pod) / sum(container_spec_memory_limit_bytes) by (pod) * 100
 ```
 
 ### Request rate
+
 ```
 sum(rate(http_requests_total[5m])) by (service)
 ```

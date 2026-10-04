@@ -13,15 +13,15 @@ Progressive delivery = **deploy to a subset of users, observe, gradually expand*
 
 ## The strategies at a glance
 
-| Strategy | Traffic split | Rollback speed | Complexity | Best for |
-|----------|---------------|----------------|------------|----------|
-| **Recreate** | 0/100 → 100/0 | Slow (full restart) | Low | Dev only |
-| **Rolling update** | Gradual | Slow (drain) | Low | Stateless services |
-| **Canary** | 1% → 5% → 25% → 100% | Fast (route back) | Medium | Risky changes |
-| **Blue-green** | 0/100 → 100/0 (atomic) | Instant (route back) | Medium | Schema changes |
-| **A/B** | Header-based split | Fast (route back) | Medium-High | UX experiments |
-| **Shadow** | 100% (live) + 100% (canary, no response) | N/A (no impact) | High | Performance testing |
-| **Feature flags** | 100% (with code toggle) | Instant (toggle) | Low-Medium | Continuous deploy |
+| Strategy           | Traffic split                            | Rollback speed       | Complexity  | Best for            |
+| ------------------ | ---------------------------------------- | -------------------- | ----------- | ------------------- |
+| **Recreate**       | 0/100 → 100/0                            | Slow (full restart)  | Low         | Dev only            |
+| **Rolling update** | Gradual                                  | Slow (drain)         | Low         | Stateless services  |
+| **Canary**         | 1% → 5% → 25% → 100%                     | Fast (route back)    | Medium      | Risky changes       |
+| **Blue-green**     | 0/100 → 100/0 (atomic)                   | Instant (route back) | Medium      | Schema changes      |
+| **A/B**            | Header-based split                       | Fast (route back)    | Medium-High | UX experiments      |
+| **Shadow**         | 100% (live) + 100% (canary, no response) | N/A (no impact)      | High        | Performance testing |
+| **Feature flags**  | 100% (with code toggle)                  | Instant (toggle)     | Low-Medium  | Continuous deploy   |
 
 ## 1. Recreate
 
@@ -40,8 +40,8 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 25%       # can have 25% more pods during rollout
-      maxUnavailable: 0   # zero downtime
+      maxSurge: 25% # can have 25% more pods during rollout
+      maxUnavailable: 0 # zero downtime
 ```
 
 One at a time (or batches), replace old with new. Default in Deployments. Works for stateless services with backward-compatible changes.
@@ -60,13 +60,13 @@ spec:
   strategy:
     canary:
       steps:
-      - setWeight: 1      # 1% canary
-      - pause: {duration: 5m}
-      - setWeight: 10
-      - pause: {duration: 10m}
-      - setWeight: 50
-      - pause: {duration: 10m}
-      - setWeight: 100
+        - setWeight: 1 # 1% canary
+        - pause: { duration: 5m }
+        - setWeight: 10
+        - pause: { duration: 10m }
+        - setWeight: 50
+        - pause: { duration: 10m }
+        - setWeight: 100
       canaryService: my-app-canary
       stableService: my-app-stable
 ```
@@ -91,11 +91,12 @@ spec:
     blueGreen:
       activeService: my-app-active
       previewService: my-app-preview
-      autoPromotionEnabled: false   # manual promotion
+      autoPromotionEnabled: false # manual promotion
       previewReplicaCount: 100%
 ```
 
 **Two Services:**
+
 - `my-app-preview` → new (green) version
 - `my-app-active` → current (blue) version
 
@@ -110,6 +111,7 @@ spec:
 **Cons:** 2x resources during deploy, requires careful Service management.
 
 **Variations:**
+
 - **Blue-green + smoke tests:** run tests against preview, only promote on success
 - **Blue-green + canary:** run preview with internal users, promote to all
 
@@ -125,17 +127,17 @@ metadata:
   name: my-app
 spec:
   http:
-  - match:
-    - headers:
-        x-experiment:
-          exact: "new-checkout"
-    route:
-    - destination:
-        host: my-app-v2
-  - route:
-    - destination:
-        host: my-app-v1
-      weight: 100
+    - match:
+        - headers:
+            x-experiment:
+              exact: "new-checkout"
+      route:
+        - destination:
+            host: my-app-v2
+    - route:
+        - destination:
+            host: my-app-v1
+          weight: 100
 ```
 
 **Users with `X-Experiment: new-checkout` header get v2. Others get v1.**
@@ -147,6 +149,7 @@ spec:
 **Cons:** requires mesh/ingress with header routing, analysis is complex.
 
 **Common patterns:**
+
 - **Internal users** get canary (`X-Employee: true`)
 - **Beta opt-in** users get canary (`X-Beta: true`)
 - **Geographic** split (by IP / country)
@@ -164,15 +167,15 @@ metadata:
   name: my-app
 spec:
   http:
-  - route:
-    - destination:
-        host: my-app-v1
-      weight: 100
-    - destination:
+    - route:
+        - destination:
+            host: my-app-v1
+          weight: 100
+        - destination:
+            host: my-app-v2
+          weight: 100 # also gets all traffic
+      mirror:
         host: my-app-v2
-      weight: 100    # also gets all traffic
-    mirror:
-      host: my-app-v2
 ```
 
 **Wait, this is broken.** Mirror sends a copy to v2, response is discarded. v1 still returns the real response.
@@ -181,12 +184,12 @@ spec:
 # correct mirror
 spec:
   http:
-  - route:
-    - destination:
-        host: my-app-v1
-    mirror:
-      host: my-app-v2
-      # 100% of v1's traffic is mirrored to v2
+    - route:
+        - destination:
+            host: my-app-v1
+      mirror:
+        host: my-app-v2
+        # 100% of v1's traffic is mirrored to v2
 ```
 
 **When to use:** testing new version with production load, performance testing, validating behavior change.
@@ -209,6 +212,7 @@ else:
 ```
 
 **Tools:**
+
 - **LaunchDarkly** — commercial
 - **Unleash** — open source, self-hosted
 - **Flagsmith** — open source + commercial
@@ -315,16 +319,16 @@ Each region has its own risk profile. A canary in one region is half the risk.
 
 ## Common gotchas
 
-* **Mixed versions during a rollout** can have issues. The new code expects a new schema, but old code reads it. Plan for backward compat.
-* **DB migrations** are the trickiest part. Run the migration BEFORE the rollout, or use expand-contract (add column, deploy code, remove column).
-* **Connection pools / caches** can have stale state. Roll the cache, restart the pool.
-* **Logs and metrics** need to be tagged by version. Use a label.
-* **Traces** must propagate across versions. Use W3C trace context.
-* **Background workers** (cron, queues) need careful rollout. A worker that started on v1 might still be running on v1 after v2 deploys.
-* **Stateful services** (DBs) can't do canary easily. Use blue-green or feature flags.
-* **WebSockets / long-lived connections** are tricky. New connections get the new version, old stay on old.
-* **The "long tail" of canary metrics** is real. Some metrics only show bad behavior after 1 hour, not 5 minutes.
-* **Regional differences** matter. A canary in us-east-1 might pass while failing in ap-southeast-1 (different latency, different users).
+- **Mixed versions during a rollout** can have issues. The new code expects a new schema, but old code reads it. Plan for backward compat.
+- **DB migrations** are the trickiest part. Run the migration BEFORE the rollout, or use expand-contract (add column, deploy code, remove column).
+- **Connection pools / caches** can have stale state. Roll the cache, restart the pool.
+- **Logs and metrics** need to be tagged by version. Use a label.
+- **Traces** must propagate across versions. Use W3C trace context.
+- **Background workers** (cron, queues) need careful rollout. A worker that started on v1 might still be running on v1 after v2 deploys.
+- **Stateful services** (DBs) can't do canary easily. Use blue-green or feature flags.
+- **WebSockets / long-lived connections** are tricky. New connections get the new version, old stay on old.
+- **The "long tail" of canary metrics** is real. Some metrics only show bad behavior after 1 hour, not 5 minutes.
+- **Regional differences** matter. A canary in us-east-1 might pass while failing in ap-southeast-1 (different latency, different users).
 
 ## A worked example
 
@@ -341,6 +345,7 @@ Each region has its own risk profile. A canary in one region is half the risk.
 7. **Full rollout** to 100%
 
 **Metrics watched:**
+
 - Conversion rate (purchase / visit)
 - Cart abandonment rate
 - Error rate
@@ -366,11 +371,13 @@ T+4:  3 v2 pods
 ```
 
 **The good:**
+
 - Built into Deployment, no extra tooling
 - Resource-efficient (just enough extra pods)
 - No mesh or ingress changes
 
 **The bad:**
+
 - Mixed versions during rollout (can corrupt data with breaking changes)
 - Hard to monitor (which version did this request go to?)
 - Slow rollback (~minutes)
@@ -391,11 +398,13 @@ T+10: v1 gets 0%, v2 gets 100%   (after final check)
 ```
 
 **The good:**
+
 - Real user traffic, real metrics
 - Can stop early (small % affected)
 - L7 routing (Istio, Linkerd, ingress) for true % splitting
 
 **The bad:**
+
 - Some users get the bad version
 - Requires L7 infrastructure
 - Metrics need to be per-version (extra labeling)
@@ -416,11 +425,13 @@ T+10: v1 (blue) scaled down (after cooldown)
 ```
 
 **The good:**
+
 - Instant rollback (switch back to blue)
 - New version can be tested in production (preview service)
 - No mixed versions in production
 
 **The bad:**
+
 - 2x resources during deploy
 - Two Services to manage
 - DB migration timing is critical (old code can break new schema)
@@ -438,11 +449,13 @@ T+10: v1 (blue) scaled down (after cooldown)
 A/B is for **learning**, not just deploying. Two versions live indefinitely, and the route is split by user attribute.
 
 **The good:**
+
 - Real user feedback on UX changes
 - Statistical comparison
 - Can run for weeks
 
 **The bad:**
+
 - Requires user attribution (cookie, user ID)
 - Two versions always running (resource cost)
 - Analysis is complex (need statistics)
@@ -450,6 +463,7 @@ A/B is for **learning**, not just deploying. Two versions live indefinitely, and
 **When to use:** UX changes, business experiments, feature adoption testing.
 
 **A/B test design:**
+
 - Hypothesis: "new checkout increases conversion by 5%"
 - Control: 50% of users, current checkout
 - Treatment: 50% of users, new checkout
@@ -461,16 +475,19 @@ A/B is for **learning**, not just deploying. Two versions live indefinitely, and
 Shadow sends real traffic to a new version without affecting the response. The new version "sees" the traffic, but its response is discarded.
 
 **The good:**
+
 - No user impact
 - Real production load (best test possible)
 - Performance validation
 
 **The bad:**
+
 - The shadow can still have side effects (DB writes, emails, etc.)
 - Requires careful isolation
 - Doesn't validate UX (response isn't returned)
 
 **Critical isolation pattern:** the shadow service must not have side effects. Either:
+
 - App code has a "shadow mode" that disables side effects
 - Service mesh drops side-effect calls
 - The shadow uses a different database (or mocked)
@@ -482,12 +499,14 @@ Shadow sends real traffic to a new version without affecting the response. The n
 Feature flags decouple deploy from release. Code is deployed but feature is hidden.
 
 **The good:**
+
 - Instant toggle (roll back in milliseconds)
 - Per-user targeting
 - Trunk-based development friendly
 - Can A/B test without service mesh
 
 **The bad:**
+
 - Code complexity (every feature has a flag)
 - Flag debt (forgotten flags)
 - App-level, not infra-level
@@ -495,6 +514,7 @@ Feature flags decouple deploy from release. Code is deployed but feature is hidd
 **When to use:** every deploy. Flags for risky features, ops killswitches, experiments.
 
 **Flag lifecycle:**
+
 1. **Create:** flag added to code, off by default
 2. **Enable:** flag on for internal/beta
 3. **Roll out:** flag on for % of users
@@ -506,6 +526,7 @@ Feature flags decouple deploy from release. Code is deployed but feature is hidd
 ## The expansion automation
 
 For canary, the roll-out can be:
+
 - **Manual:** engineer watches metrics, promotes when ready
 - **Scheduled:** 1% at 10am, 10% at 11am, 100% at noon
 - **Metric-driven:** promote when error rate < X, latency < Y
@@ -517,27 +538,27 @@ For canary, the roll-out can be:
 # argo-rollouts analysis
 - analysis:
     templates:
-    - templateName: success-rate
+      - templateName: success-rate
     args:
-    - name: service-name
-      value: my-app
+      - name: service-name
+        value: my-app
 ```
 
 The analysis queries Prometheus (or other), compares against thresholds, decides.
 
 ## The "promote or abort" decision
 
-| Signal | Action |
-|--------|--------|
-| Error rate spike > 5% | **Abort** |
-| Error rate 2-5% higher than stable | **Pause, investigate** |
-| Error rate 1-2% higher | **Watch, continue if trending down** |
-| Error rate same or lower | **Continue** |
-| Latency spike > 50% | **Abort** |
-| Latency 20-50% higher | **Pause, investigate** |
-| Conversion drops > 10% | **Abort** |
-| Conversion drops 5-10% | **Pause, investigate** |
-| No signal | **Continue if scheduled, pause if not** |
+| Signal                             | Action                                  |
+| ---------------------------------- | --------------------------------------- |
+| Error rate spike > 5%              | **Abort**                               |
+| Error rate 2-5% higher than stable | **Pause, investigate**                  |
+| Error rate 1-2% higher             | **Watch, continue if trending down**    |
+| Error rate same or lower           | **Continue**                            |
+| Latency spike > 50%                | **Abort**                               |
+| Latency 20-50% higher              | **Pause, investigate**                  |
+| Conversion drops > 10%             | **Abort**                               |
+| Conversion drops 5-10%             | **Pause, investigate**                  |
+| No signal                          | **Continue if scheduled, pause if not** |
 
 **Default to abort.** False positives (unnecessary aborts) are cheap. False negatives (missed issues) are expensive.
 
@@ -545,13 +566,13 @@ The analysis queries Prometheus (or other), compares against thresholds, decides
 
 How many users are affected by a canary issue?
 
-| Stage | % users | ~Affected (1M users) |
-|-------|---------|---------------------|
-| 1% canary | 10,000 | 1 hour, 10k users |
-| 5% canary | 50,000 | 1 hour, 50k users |
-| 10% canary | 100,000 | 1 hour, 100k users |
-| 50% canary | 500,000 | 1 hour, 500k users |
-| 100% | 1,000,000 | 1 hour, all users |
+| Stage      | % users   | ~Affected (1M users) |
+| ---------- | --------- | -------------------- |
+| 1% canary  | 10,000    | 1 hour, 10k users    |
+| 5% canary  | 50,000    | 1 hour, 50k users    |
+| 10% canary | 100,000   | 1 hour, 100k users   |
+| 50% canary | 500,000   | 1 hour, 500k users   |
+| 100%       | 1,000,000 | 1 hour, all users    |
 
 If a canary issue is detected at 5%, blast radius is 50k. Detected at 100%, blast radius is 1M.
 
@@ -559,7 +580,7 @@ If a canary issue is detected at 5%, blast radius is 50k. Detected at 100%, blas
 
 ## See also
 
-* [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — the implementation
-* [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — the controller model
-* [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing the system
-* [Progressive Delivery book](https://www.progressive-delivery.com/) (free)
+- [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — the implementation
+- [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — the controller model
+- [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing the system
+- [Progressive Delivery book](https://www.progressive-delivery.com/) (free)

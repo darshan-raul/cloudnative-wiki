@@ -17,6 +17,7 @@ User namespaces isolate the UID/GID mappings between host and container. Inside 
 Without user namespaces, a container running as UID 0 inside the container IS UID 0 on the host. That's a security risk — a container escape could mean host root.
 
 With user namespaces:
+
 - Inside the container: UID 0 (root)
 - On the host: UID 100000 (or whatever the mapping says)
 
@@ -44,6 +45,7 @@ echo "0 100000 1" > /proc/self/gid_map
 ```
 
 Format of `uid_map` and `gid_map`:
+
 ```
 ID-inside-namespace   ID-on-host   count
 ```
@@ -124,6 +126,7 @@ The mapping is **per-namespace-level**, not global. Container UID 0 maps through
 ## CAP_SETUID and CAP_SETGID
 
 To create a user namespace and set mappings, the process needs:
+
 - `CAP_SETUID` — to set uid_map
 - `CAP_SETGID` — to set gid_map
 
@@ -148,18 +151,19 @@ setpriv --no-new-privs curl https://example.com
 
 ## Rootless Docker vs Rootless Podman
 
-| Feature              | Rootless Docker           | Rootless Podman            |
-|---------------------|--------------------------|----------------------------|
-| User namespace      | Requires setup (newuidmap) | Automatic by default        |
-| daemon              | dockerd still runs as root | daemonless (no daemon)    |
-| Network namespace   | Still needs root for some  | Uses slirp4netns/netns    |
-| Storage             | fuse-overlayfs recommended | fuse-overlayfs automatic  |
+| Feature           | Rootless Docker            | Rootless Podman          |
+| ----------------- | -------------------------- | ------------------------ |
+| User namespace    | Requires setup (newuidmap) | Automatic by default     |
+| daemon            | dockerd still runs as root | daemonless (no daemon)   |
+| Network namespace | Still needs root for some  | Uses slirp4netns/netns   |
+| Storage           | fuse-overlayfs recommended | fuse-overlayfs automatic |
 
 Podman is designed rootless-first. Docker rootless requires more manual configuration.
 
 ## Security Considerations
 
 User namespaces reduce but don't eliminate container escape risk:
+
 - A namespace UID 0 is still mapped to a real UID — that UID might have **some** capabilities
 - The mapped UID range in `/etc/subuid` should be **dedicated** (not overlapping with real users)
 - Some syscalls are still restricted even in a user namespace (`mount`, `sys_admin`)

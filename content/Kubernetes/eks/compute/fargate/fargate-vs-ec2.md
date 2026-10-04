@@ -9,15 +9,15 @@ description: Comparing AWS Fargate vs EC2 for EKS workloads
 
 ## Quick Comparison
 
-| Aspect | Fargate | EC2 (MNG) |
-|--------|---------|-----------|
-| Management | Fully managed | Partially managed |
-| Pricing | Per-pod vCPU/memory | EC2 instance hours |
-| Scaling | Automatic per pod | Node group scaling |
-| GPU support | No | Yes |
-| EBS support | No | Yes |
-| SSH access | No | Yes |
-| Spot instances | No | Yes |
+| Aspect         | Fargate             | EC2 (MNG)          |
+| -------------- | ------------------- | ------------------ |
+| Management     | Fully managed       | Partially managed  |
+| Pricing        | Per-pod vCPU/memory | EC2 instance hours |
+| Scaling        | Automatic per pod   | Node group scaling |
+| GPU support    | No                  | Yes                |
+| EBS support    | No                  | Yes                |
+| SSH access     | No                  | Yes                |
+| Spot instances | No                  | Yes                |
 
 ## When to Use Fargate
 

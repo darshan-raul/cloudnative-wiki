@@ -69,12 +69,14 @@ Every log entry generated across Google Cloud passes through the centralized **L
 ### Log Analytics with BigQuery
 
 Traditional log searching relies on text/regex filters. Cloud Logging provides **Log Analytics**, transforming log buckets into SQL-queryable analytics warehouses:
+
 - **BigQuery Linked Datasets:** You can link a Log Bucket to BigQuery without copying data. Cloud Logging exposes a read-only BigQuery schema view directly over the bucket's underlying Capacitor storage.
 - **SQL Analysis:** SREs and security analysts can execute standard ANSI SQL queries across billions of log records, joining logs against relational tables (e.g., querying order logs joined with customer master tables).
 
 ### Log-Based Metrics
 
 Cloud Logging allows extracting numerical time-series metrics from log streams in real time as they pass through the Log Router:
+
 - **Counter Metrics:** Increments a time-series counter every time a log matches a specific filter (e.g., count of `severity=ERROR` or HTTP `status=502`).
 - **Distribution Metrics:** Extracts numerical values from JSON payloads (e.g., latency in ms, payload size in bytes) and records them into distribution histograms with configurable bucket boundaries. These metrics can trigger alerts in Cloud Monitoring.
 
@@ -149,6 +151,7 @@ gcloud logging metrics create payment-processing-duration \
 ### 5. Query Logs with Cloud Logging CLI & SQL
 
 Query via standard filter:
+
 ```bash
 gcloud logging read \
     'resource.type="cloud_run_revision" AND severity>=ERROR AND timestamp >= "2026-09-06T00:00:00Z"' \
@@ -158,6 +161,7 @@ gcloud logging read \
 ```
 
 Query via SQL using BigQuery linked dataset:
+
 ```sql
 SELECT
   timestamp,
@@ -180,16 +184,16 @@ LIMIT 100;
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Limit | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Single Log Entry Size** | 256 KB | Truncated if exceeding 256 KB |
-| **Log Router Write Throughput** | 10 MB/s per project | Auto-scalable to hundreds of MB/s upon request |
-| **Log Buckets per Project** | 100 buckets per region | Organize by classification (audit, app, security) |
-| **Log Retention Range** | 1 day to 3,650 days (10 yrs) | `_Default` is 30 days; `_Required` is 400 days (fixed) |
-| **Exclusion Filters per Sink** | 50 exclusion filters | Combine patterns using boolean `OR` expressions |
-| **Log Sinks per Project** | 200 sinks | Use organization/folder sinks for bulk forwarding |
-| **Log-Based Counter Metrics** | 500 per project | Use regex / JSON extractors carefully |
-| **Log-Based Distribution Metrics**| 100 per project | Custom histogram boundaries consume time-series slots |
+| Parameter / Dimension              | Default Limit                | Engineering Guidance                                   |
+| :--------------------------------- | :--------------------------- | :----------------------------------------------------- |
+| **Max Single Log Entry Size**      | 256 KB                       | Truncated if exceeding 256 KB                          |
+| **Log Router Write Throughput**    | 10 MB/s per project          | Auto-scalable to hundreds of MB/s upon request         |
+| **Log Buckets per Project**        | 100 buckets per region       | Organize by classification (audit, app, security)      |
+| **Log Retention Range**            | 1 day to 3,650 days (10 yrs) | `_Default` is 30 days; `_Required` is 400 days (fixed) |
+| **Exclusion Filters per Sink**     | 50 exclusion filters         | Combine patterns using boolean `OR` expressions        |
+| **Log Sinks per Project**          | 200 sinks                    | Use organization/folder sinks for bulk forwarding      |
+| **Log-Based Counter Metrics**      | 500 per project              | Use regex / JSON extractors carefully                  |
+| **Log-Based Distribution Metrics** | 100 per project              | Custom histogram boundaries consume time-series slots  |
 
 ---
 
@@ -206,6 +210,7 @@ LIMIT 100;
 ## 6. Realistic Pricing Scenarios
 
 Cloud Logging pricing is based on:
+
 1. **Log Ingestion:**
    - First 50 GiB per project per month: **Free**.
    - Additional ingestion: **$0.50 per GiB**.

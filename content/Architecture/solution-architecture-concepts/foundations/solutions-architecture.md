@@ -1,49 +1,75 @@
-# Solutions Architecture
+---
+title: Solution Architecture Foundations & Non-Functional Requirements
+description: The role of a Solution Architect — translating business requirements into technical systems, navigating constraints, evaluating technology, and mastering NFRs
+tags:
+  - architecture
+  - solutions-architecture
+  - nfr
+  - system-design
+---
 
-Solution architecture is the building blocks of solution development in the organization. It helps to create a successful solution in a complex organization, where product development has dependencies on multiple groups
+# Solution Architecture Foundations & Non-Functional Requirements
 
-Solution architecture not only considers the requirements of the business, but also handles critical, non-functional requirements such as scalability, high availability, maintainability, performance, security, and so on.
+A **Solution Architect** bridges the gap between enterprise business problems and scalable, resilient technology implementations. They analyze functional business requirements, define and enforce non-functional requirements (NFRs), navigate organizational constraints, and produce Architecture Decision Records (ADRs).
 
+```mermaid
+flowchart TD
+    Biz[Business Vision & Goals] --> Requirements[Functional & Non-Functional Requirements]
 
+    subgraph Solution Architecture Discovery
+        Requirements --> Constraints[Analyze Constraints:<br/>Budget, Latency, Regulatory, Team Skills]
+        Constraints --> PoC[Evaluate Technologies & Build Prototypes / PoC]
+        PoC --> ADR[Architecture Decision Records - ADR]
+    end
 
-A solution architect is a person who is **responsible for** <mark style="color:purple;">designing solution architecture by collaborating across stakeholders</mark>.&#x20;
+    ADR --> Delivery[Target Architecture Implementation]
+    Delivery --> Review[Production Health & Evolution]
+```
 
-The solution architect **analyzes the functional requirement and defines a non-functional requirement in order to cover all aspects** of the solution and avoid any surprises.
+---
 
-**Each solution has multiple constraints** such as cost, budget, timeline, regulatory, and so on, and the **solution architect considers them, while also creating the design and making technology selection.**
+## 1. Core Responsibilities of a Solution Architect
 
-The solution architect **develops a proof of concept and prototype in order to evaluate various technology platforms, and then chooses the best strategy for solution implementation**
+1. **Requirement Translation:** Deconstructing fuzzy business goals into concrete technical specifications.
+2. **Constraint Navigation:** Balancing trade-offs across cost, timeline, team technical maturity, and compliance standards (HIPAA, GDPR, SOC 2).
+3. **Build vs Buy Evaluation:** Deciding whether to adopt managed cloud SaaS, deploy open-source components, or develop proprietary internal systems.
+4. **Risk De-risking:** Creating Proof-of-Concepts (PoCs) to discover scalability bottlenecks and integration friction early.
 
-<figure><img src="../.gitbook/assets/image (66).png" alt=""><figcaption></figcaption></figure>
+---
 
-The initial design of a solution architecture may be conceived at a very early stage during the pre-sales cycle, such as the request for proposal (RFP) or the request for information (RFI) and is followed by the creation of a prototype or proof of concept, in order to discover any solution risk.&#x20;
+## 2. Non-Functional Requirements (NFRs) Architecture
 
-Solution architect also identifies whether to build a solution or to source it. It helps to identify technology selection, while also keeping an organization's critical security and compliance requirements in mind.&#x20;
+While functional requirements describe _what_ a system does, non-functional requirements define _how well_ the system performs under load, stress, and operational failure.
 
-**There could be two primary situations for creating a solution architecture:**&#x20;
+```mermaid
+mindmap
+  root((Core NFRs))
+    Reliability
+      Fault Tolerance
+      Disaster Recovery
+      Mean Time to Recovery (MTTR)
+    Scalability
+      Horizontal Scaling
+      Database Sharding
+      Stateless Microservices
+    Security
+      Zero-Trust
+      Encryption at Rest & Transit
+      Role-Based Access Control
+    Performance
+      p99 Latency SLAs
+      Throughput (TPS)
+      Edge Caching
+    Cost Optimization
+      Resource Right-Sizing
+      Reserved / Spot Capacity
+      FinOps Guardrails
+```
 
-* First, enhancing technology for an existing application, which may include hardware refresh or software re-architecting&#x20;
-* Second, to create a new solution from scratch, where you get more flexibility to choose the best fit of technology to address a business requirement
-
-**In the absence of solution architecture, there is a chance that:**
-
-* software development could fail
-* projects can&#x20;
-  * get delayed,&#x20;
-  * get over budget,&#x20;
-  * and not deliver enough functionalities.
-
-> A single problem can have multiple solutions, and each solution has its constraints.
-
-A good solution architecture addresses the depth of different tools and technologies by investigating all possible architectural strategies, based on the mixed-use case, techniques, tools, and code reuse, <mark style="color:red;">**which comes from years of experience.**</mark>
-
-
-
-### Non functional requirements:
-
-
-
-<figure><img src="../.gitbook/assets/image (224).png" alt=""><figcaption></figcaption></figure>
-
-
-
+| NFR Category                   | Core Architectural Strategy                                                   | Detailed Guide                                                                                                                            |
+| :----------------------------- | :---------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Availability & Reliability** | Multi-AZ redundancy, active-active failover, circuit breakers                 | [[non-functional-requirements/availability\|Availability]] & [[non-functional-requirements/reliability\|Reliability]]                     |
+| **Scalability**                | Horizontal Pod Autoscaling (HPA), database read-replicas, asynchronous queues | [[non-functional-requirements/scalability\|Scalability]] & [[non-functional-requirements/scaling\|Scaling Patterns]]                      |
+| **Performance**                | In-memory caching (Redis), CDN edge termination, database indexing            | [[non-functional-requirements/performance\|Performance]] & [[non-functional-requirements/back-of-the-envelope-calculations\|Estimations]] |
+| **Security & Compliance**      | Defense-in-depth, TLS 1.3, least privilege IAM, audit telemetry               | [[non-functional-requirements/security\|Security Architecture]]                                                                           |
+| **Disaster Recovery**          | RTO/RPO tiering, automated backups, multi-region replication                  | [[non-functional-requirements/disaster-recovery\|Disaster Recovery]]                                                                      |

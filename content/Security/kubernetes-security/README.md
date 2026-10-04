@@ -27,14 +27,14 @@ Security for Kubernetes clusters — from RBAC and network policies to secrets m
 
 ## Key Security Controls
 
-| Layer | Control | Tool/Feature |
-|-------|---------|--------------|
-| API Server | RBAC | Role, ClusterRole, RoleBinding |
-| Network | Segmentation | NetworkPolicy |
-| Pod | Runtime security | PodSecurityStandards, SecurityContext |
-| Data | Secrets encryption | Sealed Secrets, Vault |
-| Images | Vulnerability scanning | Trivy, Grype |
-| Admission | Policy enforcement | OPA Gatekeeper, Kyverno |
+| Layer      | Control                | Tool/Feature                          |
+| ---------- | ---------------------- | ------------------------------------- |
+| API Server | RBAC                   | Role, ClusterRole, RoleBinding        |
+| Network    | Segmentation           | NetworkPolicy                         |
+| Pod        | Runtime security       | PodSecurityStandards, SecurityContext |
+| Data       | Secrets encryption     | Sealed Secrets, Vault                 |
+| Images     | Vulnerability scanning | Trivy, Grype                          |
+| Admission  | Policy enforcement     | OPA Gatekeeper, Kyverno               |
 
 ## Your EKS Environment
 
@@ -60,13 +60,14 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
 ```
 
 ## Existing Vault Content
 
 Your vault already has extensive K8s security content:
+
 - `Kubernetes/eks/security/` — EKS-specific security
 - `Kubernetes/concepts/security.md` — K8s security concepts
 - `Kubernetes/guides/README.md` — Image security

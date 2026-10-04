@@ -53,13 +53,13 @@ Operating distributed systems on Azure Kubernetes Service (AKS) requires complet
 
 The legacy `ContainerLog` schema stores raw unstructured text, duplicating container name, image, and pod ID metadata on every single log entry line, leading to massive billing bloat. **ContainerLogV2** structures and optimizes log payloads:
 
-| Dimension | Legacy `ContainerLog` Schema | Modern `ContainerLogV2` Schema |
-| :--- | :--- | :--- |
-| **Log Format** | Raw string with duplicate metadata columns | **Consolidated JSON with dedicated LogSource**|
-| **Ingestion Volume** | Baseline (100%) | **Reduced by 50% to 70%** |
-| **Pod / Container Metadata**| Repeated per row | Compact normalized fields |
-| **Log Splitting** | Chunks split across arbitrary lines | Preserves unbroken log entry integrity |
-| **KQL Query Performance** | Slower string parsing | **Significantly faster indexing & querying** |
+| Dimension                    | Legacy `ContainerLog` Schema               | Modern `ContainerLogV2` Schema                 |
+| :--------------------------- | :----------------------------------------- | :--------------------------------------------- |
+| **Log Format**               | Raw string with duplicate metadata columns | **Consolidated JSON with dedicated LogSource** |
+| **Ingestion Volume**         | Baseline (100%)                            | **Reduced by 50% to 70%**                      |
+| **Pod / Container Metadata** | Repeated per row                           | Compact normalized fields                      |
+| **Log Splitting**            | Chunks split across arbitrary lines        | Preserves unbroken log entry integrity         |
+| **KQL Query Performance**    | Slower string parsing                      | **Significantly faster indexing & querying**   |
 
 ---
 
@@ -146,13 +146,13 @@ ContainerLogV2
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter | Metric / Platform Limit | Production Impact |
-| :--- | :--- | :--- |
-| **Prometheus Metric Retention** | **18 Months** | Included free in Azure Monitor Workspace |
-| **Default Scrape Interval** | **30 seconds** | Configurable down to 10 seconds via PodAnnotations |
-| **Log Analytics Ingestion Limit**| **Up to 500 TB / day** | Unconstrained enterprise log capacity |
-| **Default Log Retention** | **30 Days** | Configurable up to 730 days (2 years) |
-| **Prometheus Scraping Cap** | **Up to 5,000,000 samples/sec** | Scales to 100+ node clusters seamlessly |
+| Parameter                         | Metric / Platform Limit         | Production Impact                                  |
+| :-------------------------------- | :------------------------------ | :------------------------------------------------- |
+| **Prometheus Metric Retention**   | **18 Months**                   | Included free in Azure Monitor Workspace           |
+| **Default Scrape Interval**       | **30 seconds**                  | Configurable down to 10 seconds via PodAnnotations |
+| **Log Analytics Ingestion Limit** | **Up to 500 TB / day**          | Unconstrained enterprise log capacity              |
+| **Default Log Retention**         | **30 Days**                     | Configurable up to 730 days (2 years)              |
+| **Prometheus Scraping Cap**       | **Up to 5,000,000 samples/sec** | Scales to 100+ node clusters seamlessly            |
 
 ---
 
@@ -172,9 +172,9 @@ ContainerLogV2
 - **Cluster Profile:**
   - 50x `Standard_D8ds_v5` nodes generating 500 GB of raw logs daily.
 - **Cost Comparison: Legacy ContainerLog vs. ContainerLogV2:**
-  - *Legacy ContainerLog:* 500 GB/day × 30 days = 15,000 GB/month × $2.30/GB = **$34,500 / month**.
-  - *ContainerLogV2 (60% payload reduction):* 200 GB/day × 30 days = 6,000 GB/month × $2.30/GB = **$13,800 / month**.
-- **Monthly Savings:** **$20,700 / month** *(Achieved simply by activating ContainerLogV2).*
+  - _Legacy ContainerLog:_ 500 GB/day × 30 days = 15,000 GB/month × $2.30/GB = **$34,500 / month**.
+  - _ContainerLogV2 (60% payload reduction):_ 200 GB/day × 30 days = 6,000 GB/month × $2.30/GB = **$13,800 / month**.
+- **Monthly Savings:** **$20,700 / month** _(Achieved simply by activating ContainerLogV2)._
 
 ### Scenario B: Cloud-Native Metrics with Azure Managed Prometheus & Grafana
 

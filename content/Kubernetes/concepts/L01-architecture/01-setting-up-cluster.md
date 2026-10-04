@@ -1,6 +1,13 @@
+---
+title: "Setting up a Cluster"
+tags: ["kubernetes", "k8s-concepts", "architecture"]
+date: 2026-09-06
+description: "Setting up a Cluster — Kubernetes reference and architecture guide."
+---
+
 # Setting up a Cluster
 
-*"https://kubernetes.io/docs/setup/"*
+_"https://kubernetes.io/docs/setup/"_
 
 Every Kubernetes cluster is the same in concept — control plane + nodes + workloads — but the **how you stand one up** varies wildly depending on whether you're hacking on a laptop, learning, or running a production fleet. This note maps out the options, the trade-offs, and the gotchas of each, so you can pick the right tool for the job.
 
@@ -61,6 +68,7 @@ k3d cluster delete mycluster
 ```
 
 **Why k3d over the alternatives:**
+
 - k3s is a single ~70 MB binary with everything bundled (including a default CNI, Flannel, and local storage provisioner)
 - Multi-node clusters are first-class (k3d runs agents in separate containers)
 - `k3d --registry-create` lets you stand up a local registry next to the cluster — great for testing image builds
@@ -89,6 +97,7 @@ EOF
 ```
 
 **Why kind over k3d:**
+
 - Closer to "real" k8s (uses kubeadm, kubelet, real containerd)
 - Better for testing k8s upgrades, multi-master, weird CNIs
 - Slower to start (~30-60s for a multi-node cluster)
@@ -107,12 +116,14 @@ minikube addons enable metrics-server
 ```
 
 **Why minikube:**
+
 - Most polished single-node experience
 - Built-in addons (dashboard, ingress, metrics-server, etc.)
 - VM drivers work on macOS/Windows where Docker Desktop has caveats
 - Falls back to bare-metal on Linux
 
 **Why not minikube for multi-node:**
+
 - Multi-node minikube is a separate thing (uses `kubeadm` under the hood) and feels like a second-class citizen
 - Slower iteration than k3d/kind
 
@@ -168,6 +179,7 @@ init → (you install a CNI) → kubectl works → join nodes → use the cluste
 ```
 
 **kubeadm gotchas:**
+
 - **It does NOT install a CNI.** You must install one after init, or the cluster is non-functional (CoreDNS stays Pending). This is by design — CNI is a separate ecosystem.
 - **The control-plane node has a taint** (`node-role.kubernetes.io/control-plane:NoSchedule`) that prevents workloads from running on it. Remove it for single-node dev: `kubectl taint nodes --all node-role.kubernetes.io/control-plane-`
 - **The kubeconfig in `/etc/kubernetes/admin.conf` is the cluster-admin key.** Treat it like a root password. Don't put it in git.
@@ -187,12 +199,14 @@ ansible-playbook -i inventory/mycluster/hosts.ini cluster.yml
 ```
 
 **Why kubespray:**
+
 - The "boring infrastructure" is solved: OS tuning, kernel modules, container runtime, load balancer
 - Supports many distros, CNIs, runtimes
 - Reproducible (Ansible is declarative)
 - Battle-tested
 
 **Why not kubespray:**
+
 - Heavyweight (Ansible, Python, a long role tree)
 - If you're on a cloud, use the cloud's managed offering
 - Upgrade tooling is separate (`upgrade-cluster.yml`)
@@ -209,14 +223,14 @@ A tutorial that has you stand up a cluster by hand. You SSH into each node, gene
 
 The cloud provider runs the control plane. You bring (or they manage) the nodes. Trade-offs:
 
-| | EKS | GKE | AKS |
-|---|---|---|---|
-| Control plane cost | $0.10/hr per cluster | Free | Free |
-| Node cost | You pay for EC2 | You pay for Compute Engine | You pay for VMs |
-| Default CNI | AWS VPC CNI (real VPC IPs) | GKE Dataplane V2 (Cilium-based) | Azure CNI (overlay or VNet) |
-| Multi-cluster | EKS Anywhere, EKS Connector | Anthos, GKE Enterprise | Arc-enabled Kubernetes |
-| Auto-upgrade | Manual / opt-in auto | Opt-in auto (very good) | Opt-in auto |
-| Default add-ons | vpc-cni, coredns, kube-proxy, ebs-csi | gcp-pd-csi, gke-metadata-server | azure-cni, coredns, azuredisk-csi |
+|                    | EKS                                   | GKE                             | AKS                               |
+| ------------------ | ------------------------------------- | ------------------------------- | --------------------------------- |
+| Control plane cost | $0.10/hr per cluster                  | Free                            | Free                              |
+| Node cost          | You pay for EC2                       | You pay for Compute Engine      | You pay for VMs                   |
+| Default CNI        | AWS VPC CNI (real VPC IPs)            | GKE Dataplane V2 (Cilium-based) | Azure CNI (overlay or VNet)       |
+| Multi-cluster      | EKS Anywhere, EKS Connector           | Anthos, GKE Enterprise          | Arc-enabled Kubernetes            |
+| Auto-upgrade       | Manual / opt-in auto                  | Opt-in auto (very good)         | Opt-in auto                       |
+| Default add-ons    | vpc-cni, coredns, kube-proxy, ebs-csi | gcp-pd-csi, gke-metadata-server | azure-cni, coredns, azuredisk-csi |
 
 For a full EKS deep-dive, see [[Kubernetes/eks/README|EKS]].
 
@@ -251,12 +265,14 @@ spec:
 ```
 
 **Why CAPI:**
+
 - GitOps for clusters
 - Day-2 operations (upgrade, scale) are declarative
 - Provider-agnostic (AWS, GCP, Azure, vSphere, bare metal, OpenStack)
 - The "CAPI provider for X" handles all the cloud-specific bits
 
 **Why not CAPI:**
+
 - Steep learning curve
 - You now have a "management cluster" that runs CAPI
 - Mature but still v1beta
@@ -268,33 +284,33 @@ For most teams, **start with managed k8s + a Helm-chart-based add-on story.** Re
 
 A bare cluster (even managed) doesn't have:
 
-* **CNI** — pod networking (managed clusters usually default this)
-* **CoreDNS** — service discovery (kube-system default)
-* **metrics-server** — for `kubectl top` and HPA
-* **An ingress controller** — nginx, traefik, etc.
-* **A storage class** — for dynamic PVC provisioning
-* **cert-manager** — if you want TLS automation
-* **A logging / metrics stack** — Prometheus, Grafana, Loki, etc.
-* **An image pull secret** — for private registries
-* **Pod Security Standards** — labels on your namespaces
-* **A backup tool** — Velero for resources, etcd snapshot for the cluster itself
+- **CNI** — pod networking (managed clusters usually default this)
+- **CoreDNS** — service discovery (kube-system default)
+- **metrics-server** — for `kubectl top` and HPA
+- **An ingress controller** — nginx, traefik, etc.
+- **A storage class** — for dynamic PVC provisioning
+- **cert-manager** — if you want TLS automation
+- **A logging / metrics stack** — Prometheus, Grafana, Loki, etc.
+- **An image pull secret** — for private registries
+- **Pod Security Standards** — labels on your namespaces
+- **A backup tool** — Velero for resources, etcd snapshot for the cluster itself
 
 The path from "I have a cluster" to "I have a production cluster" is 80% installing and configuring the ecosystem, not 20% standing up the control plane.
 
 ## Gotchas (cross-cutting)
 
-* **"Local k8s" rarely matches production.** Single-node, default CNI, no ingress, no autoscaling, no PSP/PSS — dev clusters lie to you. Test on something that resembles prod before shipping.
-* **kubectl version skew.** kubectl should be within ±1 minor version of the control plane. `kubectl version --client` vs `kubectl version` (server) tells you.
-* **CNI choice is sticky.** Migrating CNIs is a "rebuild the cluster" event. Pick carefully.
-* **etcd backups are non-optional.** `etcdctl snapshot save` on a schedule, off-cluster. The day you need it, you need it bad.
-* **Token signing keys rotate.** Long-lived tokens (the default `default` ServiceAccount token) get rotated by the apiserver. Bound ServiceAccount tokens (k8s 1.21+) are short-lived by design.
-* **Cluster names in kubeconfig matter.** If you have 3 dev clusters, name them. `kubectl config rename-context` after `kind create cluster` to make it human-readable.
-* **`--insecure-skip-tls-verify` in a kubeconfig is a smell.** Sometimes you need it for a quick fix, but never commit it.
+- **"Local k8s" rarely matches production.** Single-node, default CNI, no ingress, no autoscaling, no PSP/PSS — dev clusters lie to you. Test on something that resembles prod before shipping.
+- **kubectl version skew.** kubectl should be within ±1 minor version of the control plane. `kubectl version --client` vs `kubectl version` (server) tells you.
+- **CNI choice is sticky.** Migrating CNIs is a "rebuild the cluster" event. Pick carefully.
+- **etcd backups are non-optional.** `etcdctl snapshot save` on a schedule, off-cluster. The day you need it, you need it bad.
+- **Token signing keys rotate.** Long-lived tokens (the default `default` ServiceAccount token) get rotated by the apiserver. Bound ServiceAccount tokens (k8s 1.21+) are short-lived by design.
+- **Cluster names in kubeconfig matter.** If you have 3 dev clusters, name them. `kubectl config rename-context` after `kind create cluster` to make it human-readable.
+- **`--insecure-skip-tls-verify` in a kubeconfig is a smell.** Sometimes you need it for a quick fix, but never commit it.
 
 ## See also
 
-* [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — what runs on every node to give Pods IPs
-* [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — the cluster's source of truth, and how to back it up
-* [[Kubernetes/eks/README|EKS]] — AWS-managed k8s
-* [[Kubernetes/guides/non-functional/upgrade-strategy|Cluster API Guide]] — declarative cluster management
-* [[Kubernetes/concepts/L01-architecture/04-local-deployment|Local Deployment]] — detailed local-cluster comparison
+- [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — what runs on every node to give Pods IPs
+- [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — the cluster's source of truth, and how to back it up
+- [[Kubernetes/eks/README|EKS]] — AWS-managed k8s
+- [[Kubernetes/guides/non-functional/upgrade-strategy|Cluster API Guide]] — declarative cluster management
+- [[Kubernetes/concepts/L01-architecture/04-local-deployment|Local Deployment]] — detailed local-cluster comparison

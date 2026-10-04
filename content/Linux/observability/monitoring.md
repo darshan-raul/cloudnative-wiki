@@ -29,20 +29,20 @@ PID   USER  PR  NI  VIRT  RES  SHR  S  %CPU %MEM   TIME+  COMMAND
 
 ### Interactive Commands in top
 
-| Key   | Action                               |
-|-------|--------------------------------------|
-| `k`   | Kill process (enter PID, signal)    |
-| `r`   | Renice (change priority)              |
-| `1`   | Toggle per-CPU view                 |
-| `c`   | Show full command line               |
-| `M`   | Sort by %MEM                        |
-| `P`   | Sort by %CPU (default)              |
-| `T`   | Sort by TIME+                       |
-| `t`   | Toggle CPU bar                      |
-| `m`   | Toggle MEM bar                      |
-| `f`   | Add/remove columns                 |
-| `W`   | Save top config to ~/.toprc          |
-| `q`   | Quit                                |
+| Key | Action                           |
+| --- | -------------------------------- |
+| `k` | Kill process (enter PID, signal) |
+| `r` | Renice (change priority)         |
+| `1` | Toggle per-CPU view              |
+| `c` | Show full command line           |
+| `M` | Sort by %MEM                     |
+| `P` | Sort by %CPU (default)           |
+| `T` | Sort by TIME+                    |
+| `t` | Toggle CPU bar                   |
+| `m` | Toggle MEM bar                   |
+| `f` | Add/remove columns               |
+| `W` | Save top config to ~/.toprc      |
+| `q` | Quit                             |
 
 ## htop — Better top
 

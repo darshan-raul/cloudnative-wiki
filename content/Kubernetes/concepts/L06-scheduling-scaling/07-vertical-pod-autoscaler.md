@@ -1,6 +1,13 @@
+---
+title: "Vertical Pod Autoscaler (VPA)"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Vertical Pod Autoscaler (VPA) — Kubernetes reference and architecture guide."
+---
+
 # Vertical Pod Autoscaler (VPA)
 
-*"https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler"*
+_"https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler"_
 
 The Vertical Pod Autoscaler (VPA) **adjusts the CPU and memory `requests` and `limits` of containers** in a Deployment, StatefulSet, ReplicaSet, DaemonSet, or Job, based on observed historical usage. It solves the "you have no idea what to set" problem — most teams either over-provision (wasting money) or under-provision (OOM-kills). VPA in `recommend` mode watches and tells you; in `Auto` mode it acts.
 
@@ -27,9 +34,9 @@ The Vertical Pod Autoscaler (VPA) **adjusts the CPU and memory `requests` and `l
 
 Setting resource requests is one of the hardest things in k8s. Three failure modes are common:
 
-* **No requests at all** — BestEffort Pods. First to be evicted under pressure. Can't HPA on resource metrics. Most common rookie mistake.
-* **Wildly over-provisioned requests** — "I'll set 4 cores and 8 GB to be safe." Wastes money, packs fewer Pods per node, makes the cluster feel expensive.
-* **Wildly under-provisioned requests** — "I'll set 50m and 64Mi." OOM-kills in production. The app actually needs 1 core and 1 GB.
+- **No requests at all** — BestEffort Pods. First to be evicted under pressure. Can't HPA on resource metrics. Most common rookie mistake.
+- **Wildly over-provisioned requests** — "I'll set 4 cores and 8 GB to be safe." Wastes money, packs fewer Pods per node, makes the cluster feel expensive.
+- **Wildly under-provisioned requests** — "I'll set 50m and 64Mi." OOM-kills in production. The app actually needs 1 core and 1 GB.
 
 VPA observes real usage over a window and **computes the right value**. You can either take the recommendation (mode `Off`) or have it act on it (`Auto`, `Initial`).
 
@@ -61,7 +68,7 @@ spec:
     kind: Deployment
     name: web
   updatePolicy:
-    updateMode: Auto     # Off | Initial | Auto
+    updateMode: Auto # Off | Initial | Auto
 ```
 
 ### 2.1 `Off` — Recommend only
@@ -72,23 +79,23 @@ VPA computes recommendations and writes them to the VPA object's `status.recomme
 status:
   recommendation:
     containerRecommendations:
-    - containerName: app
-      lowerBound:
-        cpu: 100m
-        memory: 256Mi
-      target:
-        cpu: 250m
-        memory: 512Mi
-      upperBound:
-        cpu: 500m
-        memory: 1Gi
+      - containerName: app
+        lowerBound:
+          cpu: 100m
+          memory: 256Mi
+        target:
+          cpu: 250m
+          memory: 512Mi
+        upperBound:
+          cpu: 500m
+          memory: 1Gi
 ```
 
 Three numbers per resource:
 
-* **`lowerBound`** — minimum safe value. If the app uses less, it's wasteful.
-* **`target`** — what VPA thinks the app actually needs (95th percentile of usage).
-* **`upperBound`** — maximum VPA will ever set. Above this, the app is probably broken (memory leak, runaway CPU).
+- **`lowerBound`** — minimum safe value. If the app uses less, it's wasteful.
+- **`target`** — what VPA thinks the app actually needs (95th percentile of usage).
+- **`upperBound`** — maximum VPA will ever set. Above this, the app is probably broken (memory leak, runaway CPU).
 
 ### 2.2 `Initial` — Set at creation only
 
@@ -162,26 +169,26 @@ spec:
     updateMode: Auto
   resourcePolicy:
     containerPolicies:
-    - containerName: '*'           # applies to all containers
-      minAllowed:
-        cpu: 50m
-        memory: 64Mi
-      maxAllowed:
-        cpu: "2"
-        memory: 4Gi
-      controlledResources:
-      - cpu
-      - memory
-      - ephemeral-storage           # optional, off by default
-    - containerName: 'sidecar'     # overrides for a specific container
-      mode: "Off"                  # don't manage this container
+      - containerName: "*" # applies to all containers
+        minAllowed:
+          cpu: 50m
+          memory: 64Mi
+        maxAllowed:
+          cpu: "2"
+          memory: 4Gi
+        controlledResources:
+          - cpu
+          - memory
+          - ephemeral-storage # optional, off by default
+      - containerName: "sidecar" # overrides for a specific container
+        mode: "Off" # don't manage this container
 ```
 
 This tells VPA:
 
-* Watch the `web` Deployment.
-* For all containers (`*`): keep CPU between 50m and 2, memory between 64Mi and 4Gi. Set both.
-* For the `sidecar` container: don't manage it (e.g. it's a logging sidecar with a known fixed size).
+- Watch the `web` Deployment.
+- For all containers (`*`): keep CPU between 50m and 2, memory between 64Mi and 4Gi. Set both.
+- For the `sidecar` container: don't manage it (e.g. it's a logging sidecar with a known fixed size).
 
 ## 5. The Three Recommenders in Detail
 
@@ -191,9 +198,9 @@ The recommender's job is to pick `lowerBound`, `target`, `upperBound` for each r
 
 The default target is the **95th percentile of usage** over the window. Why 95th and not mean?
 
-* The mean is dragged down by idle periods. Setting requests to the mean means OOM during the 5% of busy moments.
-* The 99th percentile is conservative — wastes capacity.
-* The 95th is the standard compromise.
+- The mean is dragged down by idle periods. Setting requests to the mean means OOM during the 5% of busy moments.
+- The 99th percentile is conservative — wastes capacity.
+- The 95th is the standard compromise.
 
 The computation is per-container, per-resource. If a container has had 3 replicas over the window, VPA pools their data.
 
@@ -209,8 +216,8 @@ The upper bound is the **maximum VPA will ever set**. It's typically the highest
 
 VPA also computes a **confidence** metric for each recommendation:
 
-* **High** — plenty of data, recommendation is reliable.
-* **Low** — sparse data, recommendation may be off.
+- **High** — plenty of data, recommendation is reliable.
+- **Low** — sparse data, recommendation may be off.
 
 The confidence is reflected in the VPA's `status.conditions`. **In Low confidence, VPA may skip resizing** (in Auto mode) to avoid bad recommendations.
 
@@ -220,25 +227,25 @@ The confidence is reflected in the VPA's `status.conditions`. **In Low confidenc
 spec:
   resourcePolicy:
     containerPolicies:
-    - containerName: '*'
-      minAllowed:
-        cpu: 50m
-        memory: 64Mi
-      maxAllowed:
-        cpu: "2"
-        memory: 4Gi
-      controlledResources:
-      - cpu
-      - memory
-      mode: Auto
-    - containerName: 'sidecar'
-      mode: "Off"                    # don't touch this container
-    - containerName: 'gpu-worker'
-      minAllowed:
-        nvidia.com/gpu: 1            # extended resources
-      maxAllowed:
-        nvidia.com/gpu: 1
-      controlledResources: []        # no CPU/memory, only GPU
+      - containerName: "*"
+        minAllowed:
+          cpu: 50m
+          memory: 64Mi
+        maxAllowed:
+          cpu: "2"
+          memory: 4Gi
+        controlledResources:
+          - cpu
+          - memory
+        mode: Auto
+      - containerName: "sidecar"
+        mode: "Off" # don't touch this container
+      - containerName: "gpu-worker"
+        minAllowed:
+          nvidia.com/gpu: 1 # extended resources
+        maxAllowed:
+          nvidia.com/gpu: 1
+        controlledResources: [] # no CPU/memory, only GPU
 ```
 
 ### 6.1 `minAllowed` and `maxAllowed`
@@ -251,9 +258,9 @@ Which resources VPA manages. Default: CPU and memory. Add `ephemeral-storage` to
 
 ```yaml
 controlledResources:
-- cpu
-- memory
-- ephemeral-storage
+  - cpu
+  - memory
+  - ephemeral-storage
 ```
 
 ### 6.3 `mode: "Off"` per-container
@@ -261,7 +268,7 @@ controlledResources:
 Useful for sidecars (logging, metrics, mesh) that have a known fixed size. VPA doesn't touch them.
 
 ```yaml
-- containerName: 'istio-proxy'
+- containerName: "istio-proxy"
   mode: "Off"
 ```
 
@@ -280,9 +287,9 @@ The eviction is gentle (respects `terminationGracePeriodSeconds`). The Pod's con
 
 ### 7.1 Timing
 
-* The recommender updates recommendations every **1 minute** (configurable).
-* The updater checks for mismatched Pods every **1 minute** (configurable).
-* The admission webhook sets requests on every Pod creation.
+- The recommender updates recommendations every **1 minute** (configurable).
+- The updater checks for mismatched Pods every **1 minute** (configurable).
+- The admission webhook sets requests on every Pod creation.
 
 So the latency from "metric spike" to "Pod resized" is **2-5 minutes** typically. **VPA is not real-time.** It's a slow, conservative resizer.
 
@@ -298,9 +305,9 @@ This is the most-asked question about VPA. **The answer: don't use both on the s
 
 ### 8.1 Why not
 
-* **HPA on CPU** scales replicas based on `cpu_utilization = actual_cpu / requests_cpu`.
-* **VPA on CPU** changes `requests_cpu`.
-* If both are running, HPA sees `actual_cpu / new_requests_cpu` go down (because VPA raised requests), thinks it scaled too much, scales down. VPA sees fewer replicas, recomputes, etc. The two fight.
+- **HPA on CPU** scales replicas based on `cpu_utilization = actual_cpu / requests_cpu`.
+- **VPA on CPU** changes `requests_cpu`.
+- If both are running, HPA sees `actual_cpu / new_requests_cpu` go down (because VPA raised requests), thinks it scaled too much, scales down. VPA sees fewer replicas, recomputes, etc. The two fight.
 
 ### 8.2 The safe patterns
 
@@ -316,12 +323,12 @@ spec:
   minReplicas: 2
   maxReplicas: 20
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 60
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
 ---
 # VPA: tune memory only
 apiVersion: autoscaling.k8s.io/v1
@@ -332,11 +339,11 @@ spec:
   updatePolicy: { updateMode: Auto }
   resourcePolicy:
     containerPolicies:
-    - containerName: '*'
-      controlledResources:
-      - memory                  # only memory, leave CPU alone
-      minAllowed: { memory: 256Mi }
-      maxAllowed: { memory: 4Gi }
+      - containerName: "*"
+        controlledResources:
+          - memory # only memory, leave CPU alone
+        minAllowed: { memory: 256Mi }
+        maxAllowed: { memory: 4Gi }
 ```
 
 **Pattern 2: VPA in `Initial` mode, HPA on custom metric.**
@@ -351,8 +358,8 @@ spec:
   updatePolicy: { updateMode: Initial }
   resourcePolicy:
     containerPolicies:
-    - containerName: '*'
-      controlledResources: [cpu, memory]
+      - containerName: "*"
+        controlledResources: [cpu, memory]
 ---
 # HPA: scale on a custom metric (e.g. queue depth)
 apiVersion: autoscaling/v2
@@ -363,12 +370,12 @@ spec:
   minReplicas: 2
   maxReplicas: 100
   metrics:
-  - type: Pods
-    pods:
-      metric: { name: queue_depth }
-      target:
-        type: AverageValue
-        averageValue: "10"
+    - type: Pods
+      pods:
+        metric: { name: queue_depth }
+        target:
+          type: AverageValue
+          averageValue: "10"
 ```
 
 HPA scales on a metric VPA doesn't touch. **No conflict.**
@@ -417,15 +424,15 @@ VPA needs historical data to recommend. **A new Deployment has no data.** VPA re
 
 For brand-new Deployments, you have two options:
 
-* Set `requests` manually based on app docs.
-* Use `updateMode: Initial` — VPA sets the request on the first Pod from limited data.
+- Set `requests` manually based on app docs.
+- Use `updateMode: Initial` — VPA sets the request on the first Pod from limited data.
 
 ### 10.3 Vertical scaling and QoS
 
 VPA changing `requests` may change the Pod's QoS class:
 
-* `requests == limits` (Guaranteed) before, `requests != limits` (Burstable) after.
-* The reverse can also happen.
+- `requests == limits` (Guaranteed) before, `requests != limits` (Burstable) after.
+- The reverse can also happen.
 
 QoS affects eviction order under node pressure. **VPA can move a Pod from "Guaranteed, last to evict" to "Burstable, evict before BestEffort" without warning.** This is a real footgun.
 
@@ -449,9 +456,9 @@ The classic question: "Can I use VPA on my database StatefulSet?"
 
 Why:
 
-* StatefulSets have stable identities. Restarting a Pod to apply a new memory limit can disrupt a database that's mid-transaction.
-* StatefulSet PVCs are tied to Pod identities. If the Pod is recreated with different requests, the new Pod binds to the same PVC, but the resize happens during restart.
-* Database apps (Postgres, MySQL) have warmup phases. Restarting them is expensive.
+- StatefulSets have stable identities. Restarting a Pod to apply a new memory limit can disrupt a database that's mid-transaction.
+- StatefulSet PVCs are tied to Pod identities. If the Pod is recreated with different requests, the new Pod binds to the same PVC, but the resize happens during restart.
+- Database apps (Postgres, MySQL) have warmup phases. Restarting them is expensive.
 
 The pattern:
 
@@ -483,20 +490,20 @@ kubectl -n kube-system logs -l app=vpa-recommender --tail=100
 
 ### 12.2 The "VPA not recommending" cases
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `status.recommendation: <none>` | No data yet (new Deployment) | Wait, or set initial requests manually |
-| `status.recommendation` frozen | Recommender down | Check recommender logs |
-| Recommendation has no `lowerBound` | `minAllowed` blocked it | Adjust `minAllowed` |
-| Recommendation hits `maxAllowed` | App is using more than `maxAllowed` | App probably has a leak; investigate before raising max |
+| Symptom                            | Cause                               | Fix                                                     |
+| ---------------------------------- | ----------------------------------- | ------------------------------------------------------- |
+| `status.recommendation: <none>`    | No data yet (new Deployment)        | Wait, or set initial requests manually                  |
+| `status.recommendation` frozen     | Recommender down                    | Check recommender logs                                  |
+| Recommendation has no `lowerBound` | `minAllowed` blocked it             | Adjust `minAllowed`                                     |
+| Recommendation hits `maxAllowed`   | App is using more than `maxAllowed` | App probably has a leak; investigate before raising max |
 
 ### 12.3 The "VPA not resizing" cases (Auto mode)
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| Pods have old requests after a day | Updater is down | Check updater logs |
+| Symptom                            | Cause                    | Fix                    |
+| ---------------------------------- | ------------------------ | ---------------------- |
+| Pods have old requests after a day | Updater is down          | Check updater logs     |
 | Pods resize but restart constantly | App can't handle restart | Use `Off` or `Initial` |
-| Pods not resizing because of PDB | PDB blocks eviction | Adjust PDB or replicas |
+| Pods not resizing because of PDB   | PDB blocks eviction      | Adjust PDB or replicas |
 
 ### 12.4 The webhook outage
 
@@ -515,27 +522,27 @@ Fix: restart the webhook, or temporarily set `updateMode: Off` on the affected V
 
 ### 13.1 The right time to use VPA
 
-* **You don't know the right requests.** New service, no profiling, no historical data. Run VPA in `Off` mode, get recommendations, apply them.
-* **You have a memory leak you're hunting.** VPA's `lowerBound` tells you the value that would have avoided OOM. Compare to actual usage — if there's a big gap, you have a leak.
-* **You have a heterogeneous workload.** Different microservices with different needs. VPA per-Deployment.
-* **You're over-provisioned and want to right-size.** VPA can save 30-50% on memory by tightening requests.
+- **You don't know the right requests.** New service, no profiling, no historical data. Run VPA in `Off` mode, get recommendations, apply them.
+- **You have a memory leak you're hunting.** VPA's `lowerBound` tells you the value that would have avoided OOM. Compare to actual usage — if there's a big gap, you have a leak.
+- **You have a heterogeneous workload.** Different microservices with different needs. VPA per-Deployment.
+- **You're over-provisioned and want to right-size.** VPA can save 30-50% on memory by tightening requests.
 
 ### 13.2 The right mode
 
-| Mode | Use when |
-|---|---|
-| `Off` | You want recommendations but no automation. The safe starting point. |
-| `Initial` | You want right-sized requests for new Pods, but no restart risk for live ones. Good for stateful. |
-| `Auto` | Stateless services where restarts are cheap and the app handles them gracefully. Most common in production. |
+| Mode      | Use when                                                                                                    |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| `Off`     | You want recommendations but no automation. The safe starting point.                                        |
+| `Initial` | You want right-sized requests for new Pods, but no restart risk for live ones. Good for stateful.           |
+| `Auto`    | Stateless services where restarts are cheap and the app handles them gracefully. Most common in production. |
 
 ### 13.3 The right metric set
 
-| Set | Use when |
-|---|---|
-| `cpu, memory` | Default. Most apps. |
-| `cpu` only | App has a known fixed memory footprint (JVM with `-Xmx`, native binary). |
-| `memory` only | CPU is bursty / uninteresting; only memory matters (some batch jobs). |
-| `cpu, memory, ephemeral-storage` | App writes a lot to disk (logs, caches). |
+| Set                              | Use when                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| `cpu, memory`                    | Default. Most apps.                                                      |
+| `cpu` only                       | App has a known fixed memory footprint (JVM with `-Xmx`, native binary). |
+| `memory` only                    | CPU is bursty / uninteresting; only memory matters (some batch jobs).    |
+| `cpu, memory, ephemeral-storage` | App writes a lot to disk (logs, caches).                                 |
 
 ## 14. Gotchas and Common Mistakes
 
@@ -589,7 +596,7 @@ Fix: restart the webhook, or temporarily set `updateMode: Off` on the affected V
 
 24. **VPA's recommender doesn't know about HPA scale-down events.** A Pod that's been scaled up by HPA is still in the recommender's data.
 
-25. **VPA doesn't tell you *why* a recommendation is what it is.** You get a number, not an explanation. For "why is memory spiking on Mondays", you need separate observability.
+25. **VPA doesn't tell you _why_ a recommendation is what it is.** You get a number, not an explanation. For "why is memory spiking on Mondays", you need separate observability.
 
 26. **VPA + PDB + `minReplicas: 1` HPA is a deadlock.** HPA keeps the Deployment at 1 Pod. PDB says minAvailable: 1. VPA can't evict. The Pod never resizes.
 
@@ -603,8 +610,8 @@ Fix: restart the webhook, or temporarily set `updateMode: Off` on the affected V
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — what VPA tunes
-* [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — the horizontal counterpart
-* [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
-* [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — node autoscaling
-* [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level constraints VPA interacts with
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — what VPA tunes
+- [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — the horizontal counterpart
+- [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
+- [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — node autoscaling
+- [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level constraints VPA interacts with

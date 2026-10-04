@@ -76,15 +76,15 @@ metadata:
   name: app-with-efs
 spec:
   containers:
-  - name: app
-    image: nginx
-    volumeMounts:
-    - mountPath: /shared-data
-      name: efs-volume
+    - name: app
+      image: nginx
+      volumeMounts:
+        - mountPath: /shared-data
+          name: efs-volume
   volumes:
-  - name: efs-volume
-    persistentVolumeClaim:
-      claimName: efs-claim
+    - name: efs-volume
+      persistentVolumeClaim:
+        claimName: efs-claim
 ```
 
 ## Access Points

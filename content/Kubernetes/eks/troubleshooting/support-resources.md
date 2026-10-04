@@ -9,12 +9,12 @@ description: EKS support resources and where to get help
 
 ## AWS Support Plans
 
-| Plan | Support Channels | Response Time |
-|------|-----------------|---------------|
-| Basic | Documentation, Forums, CloudTrail | N/A |
-| Developer | Email | 12 hours |
-| Business | Phone, Chat, TAM | 1 hour (critical) |
-| Enterprise | Dedicated TAM, Concierge | 15 min (critical) |
+| Plan       | Support Channels                  | Response Time     |
+| ---------- | --------------------------------- | ----------------- |
+| Basic      | Documentation, Forums, CloudTrail | N/A               |
+| Developer  | Email                             | 12 hours          |
+| Business   | Phone, Chat, TAM                  | 1 hour (critical) |
+| Enterprise | Dedicated TAM, Concierge          | 15 min (critical) |
 
 ## Documentation
 
@@ -26,6 +26,7 @@ description: EKS support resources and where to get help
 ## AWS re:Post
 
 Free community support:
+
 - [AWS re:Post - EKS](https://repost.aws/topics/T27ZZ2YVR8W5J/amazon-eks)
 - Search for known issues
 - Post questions
@@ -45,6 +46,7 @@ Free community support:
 ## Premium Support Resources
 
 ### TAM (Technical Account Manager)
+
 - Proactive guidance
 - Architecture reviews
 - Direct escalation
@@ -77,13 +79,13 @@ aws health describe-events-for-organization
 
 ## Useful Tools
 
-| Tool | Purpose |
-|------|---------|
-| eksctl | Cluster management |
-| kubectl | Kubernetes CLI |
-| AWS CLI | AWS API |
-| CloudWatch | Logs and metrics |
-| AWS Config | Resource tracking |
+| Tool       | Purpose            |
+| ---------- | ------------------ |
+| eksctl     | Cluster management |
+| kubectl    | Kubernetes CLI     |
+| AWS CLI    | AWS API            |
+| CloudWatch | Logs and metrics   |
+| AWS Config | Resource tracking  |
 
 ## References
 

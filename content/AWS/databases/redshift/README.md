@@ -47,23 +47,25 @@ Redshift is a petabyte-scale data warehouse based on PostgreSQL. It uses columna
 
 RA3 nodes use managed storage — separate compute from storage:
 
-| Node | vCPU | S3 Storage | Managed Storage Cost |
-|------|------|-----------|---------------------|
-| ra3.xlplus | 4 | Local NVMe | $0.024/GB/month |
-| ra3.4xlarge | 12 | Local NVMe | $0.024/GB/month |
-| ra3.16xlarge | 48 | Local NVMe | $0.024/GB/month |
+| Node         | vCPU | S3 Storage | Managed Storage Cost |
+| ------------ | ---- | ---------- | -------------------- |
+| ra3.xlplus   | 4    | Local NVMe | $0.024/GB/month      |
+| ra3.4xlarge  | 12   | Local NVMe | $0.024/GB/month      |
+| ra3.16xlarge | 48   | Local NVMe | $0.024/GB/month      |
 
 Use RA3 when you need to scale storage independently from compute.
 
 ### Dense Storage (DS2) — Previous Gen
 
 HDD-based, for very large cold data:
+
 - ds2.xlarge (4 vCPU, 2TB HDD)
 - ds2.8xlarge (36 vCPU, 16TB HDD)
 
 ### Dense Compute (DC2) — Previous Gen
 
 SSD-based, for high-performance:
+
 - dc1.large (4 vCPU, 0.16TB SSD)
 - dc2.8xlarge (32 vCPU, 1TB SSD)
 
@@ -137,6 +139,7 @@ SORTKEY(sale_date);  -- Orders by date
 ```
 
 Types:
+
 - **Compound** — standard, first column used most
 - **Interleaved** — equal weight to all columns (higher maintenance overhead)
 
@@ -292,25 +295,25 @@ aws redshift resize-cluster \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| ra3.xlplus | $0.288/hr |
-| ra3.4xlarge | $1.728/hr |
-| Spectrum | $5.00/TB scanned |
-| Backup | $0.023/GB/month |
-| Data transfer | $0.02-0.09/GB |
+| Component     | Cost             |
+| ------------- | ---------------- |
+| ra3.xlplus    | $0.288/hr        |
+| ra3.4xlarge   | $1.728/hr        |
+| Spectrum      | $5.00/TB scanned |
+| Backup        | $0.023/GB/month  |
+| Data transfer | $0.02-0.09/GB    |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max nodes | 128 |
-| Max table size | 16 PB (with RA3) |
-| Max databases per cluster | 10 |
-| Max schemas per database | 100 |
-| Max tables per database | 98,304 |
-| Max views per database | 100 |
-| Max concurrent queries | 50 (with concurrency scaling) |
+| Resource                  | Limit                         |
+| ------------------------- | ----------------------------- |
+| Max nodes                 | 128                           |
+| Max table size            | 16 PB (with RA3)              |
+| Max databases per cluster | 10                            |
+| Max schemas per database  | 100                           |
+| Max tables per database   | 98,304                        |
+| Max views per database    | 100                           |
+| Max concurrent queries    | 50 (with concurrency scaling) |
 
 ## References
 

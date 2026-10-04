@@ -101,19 +101,19 @@ metadata:
   namespace: team-a
 spec:
   limits:
-  - type: Container
-    default:
-      cpu: 1
-      memory: 1Gi
-    defaultRequest:
-      cpu: 100m
-      memory: 128Mi
-    max:
-      cpu: 4
-      memory: 8Gi
-    min:
-      cpu: 50m
-      memory: 64Mi
+    - type: Container
+      default:
+        cpu: 1
+        memory: 1Gi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: 4
+        memory: 8Gi
+      min:
+        cpu: 50m
+        memory: 64Mi
 ```
 
 ```yaml
@@ -136,18 +136,18 @@ spec:
   podSelector: {}
   policyTypes: [Egress]
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: kube-system
-      podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    ports:
-    - port: 53
-      protocol: UDP
-    - port: 53
-      protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -160,10 +160,10 @@ spec:
       app: web
   policyTypes: [Ingress]
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
 ```
 
 ```yaml
@@ -174,18 +174,19 @@ metadata:
   name: team-a-developers
   namespace: team-a
 subjects:
-- kind: Group
-  name: team-a-developers
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: team-a-developers
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
-  name: edit   # can do most things in this namespace
+  name: edit # can do most things in this namespace
   apiGroup: rbac.authorization.k8s.io
 ```
 
 ### What the tenant cannot do
 
 With the above policies, team-a cannot:
+
 - Use more than 100 CPU / 200Gi memory
 - Run pods without CPU/memory limits
 - Have more than 100 pods, 50 PVCs, etc.
@@ -208,6 +209,7 @@ With the above policies, team-a cannot:
 - Cluster-scoped RBAC
 
 The platform team does NOT own:
+
 - Tenant's Deployments
 - Tenant's app code
 - Tenant's day-2 operations (deployments, scaling within quota)
@@ -289,6 +291,7 @@ vcluster delete my-vcluster
 Strongest isolation, highest cost. Each tenant (or group of tenants) has their own cluster.
 
 **When to use:**
+
 - Compliance mandates (PCI-DSS Level 1, FedRAMP High)
 - Untrusted tenants (third-party workloads)
 - Different lifecycle needs (different k8s versions, different cloud)
@@ -373,26 +376,26 @@ metadata:
   name: team-a
 spec:
   owners:
-  - name: alice
-    kind: User
+    - name: alice
+      kind: User
   namespaceQuota: 5
   nodeSelector:
     matchLabels:
       tenant: team-a
   networkPolicies:
-  - ingress:
-    - from:
-      - podSelector: {}
+    - ingress:
+        - from:
+            - podSelector: {}
   limitRanges:
-  - limits:
-    - type: Container
-      default:
-        cpu: 1
-        memory: 1Gi
+    - limits:
+        - type: Container
+          default:
+            cpu: 1
+            memory: 1Gi
   resourceQuotas:
-  - hard:
-      requests.cpu: "10"
-      requests.memory: 20Gi
+    - hard:
+        requests.cpu: "10"
+        requests.memory: 20Gi
 ```
 
 ### Per-tenant cost tracking
@@ -408,6 +411,7 @@ metadata:
 ```
 
 Tools:
+
 - **Kubecost** — per-namespace, per-label cost
 - **OpenCost** — CNCF, open source
 - **Cloud-native billing** — per-tag, per-account
@@ -423,6 +427,7 @@ Each tenant should see only their workloads. Multi-tenant monitoring is hard:
 ### Per-tenant ingress
 
 Two patterns:
+
 1. **Shared ingress** with `host: tenant-a.example.com` rules
 2. **Per-tenant ingress controller** (heavier, more isolated)
 
@@ -431,10 +436,12 @@ For most cases, shared ingress is fine. Use NetworkPolicy to prevent tenant-to-t
 ## Per-tenant DNS
 
 Internal DNS for tenant services:
+
 - `tenant-a.api.cluster.local` (with `ndots:5`, this resolves)
 - Cross-tenant: `tenant-b.api.cluster.local` (blocked by NetworkPolicy)
 
 For external:
+
 - `tenant-a.example.com`, `tenant-b.example.com` (separate certs)
 
 ## Tenant data isolation
@@ -449,6 +456,7 @@ Beyond the cluster, ensure tenant data is isolated:
 ## Service mesh for multi-tenant
 
 A service mesh (Istio, Linkerd) adds:
+
 - **mTLS** between all pods (default-deny at network level)
 - **AuthorizationPolicy** for fine-grained access control
 - **Telemetry** per workload
@@ -462,10 +470,10 @@ metadata:
   namespace: team-a
 spec:
   rules:
-  - from:
-    - source:
-        principals:
-        - cluster.local/ns/team-a/sa/*
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/team-a/sa/*
 ```
 
 **Mesh cost:** operational complexity. Istio in particular is heavy. Linkerd is lighter. Cilium is the modern alternative.
@@ -487,9 +495,9 @@ metadata:
   name: alice-admin
   namespace: team-a
 subjects:
-- kind: User
-  name: alice@example.com
-  apiGroup: rbac.authorization.k8s.io
+  - kind: User
+    name: alice@example.com
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
   name: admin
@@ -502,9 +510,9 @@ Most clusters use SSO (OIDC) and map groups to roles:
 
 ```yaml
 subjects:
-- kind: Group
-  name: team-a-developers
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: team-a-developers
+    apiGroup: rbac.authorization.k8s.io
 ```
 
 The IdP (Okta, Azure AD, etc.) controls group membership.
@@ -539,21 +547,21 @@ For very noisy tenants, isolate to dedicated nodes (taint nodes, add toleration 
 
 ## Common gotchas
 
-* **NetworkPolicy doesn't apply if the CNI doesn't enforce it.** Flannel doesn't. Use Calico, Cilium, or Weave.
-* **ResourceQuota and LimitRange are namespace-scoped.** They don't apply across namespaces.
-* **A `default` ServiceAccount has wide permissions in some setups.** Bind to a more restrictive SA per namespace.
-* **The cluster-admin role is cluster-wide.** Don't bind it to tenant users.
-* **The `system:` group is special.** Don't let tenants use those names.
-* **PodSecurityStandards is namespace-level.** Apply per-tenant.
-* **A tenant can DOS the apiserver.** The apiserver is shared. Rate-limit requests per ServiceAccount.
-* **The `kube-system` namespace is sensitive.** Lock down RBAC for it.
-* **CRDs are cluster-wide.** A bad CRD can affect all tenants. Be careful with who can create CRDs.
-* **Webhook configurations are global.** A misconfigured admission webhook can break the cluster for everyone.
-* **Resource pressure is shared.** A noisy tenant can starve the cluster. Use quotas.
-* **DNS is shared.** A tenant can use a lot of DNS. Use NodeLocal DNSCache or split DNS for very large clusters.
-* **`hostPath` volumes bypass NetworkPolicy isolation.** A pod with `hostPath: /` can read all node data. Disallow in policy.
-* **The image cache is shared.** A tenant pulling a huge image fills the cache. Use a registry mirror with rate limiting.
-* **Logs are shared (typically).** Use filters in the logging pipeline to keep tenant data separate.
+- **NetworkPolicy doesn't apply if the CNI doesn't enforce it.** Flannel doesn't. Use Calico, Cilium, or Weave.
+- **ResourceQuota and LimitRange are namespace-scoped.** They don't apply across namespaces.
+- **A `default` ServiceAccount has wide permissions in some setups.** Bind to a more restrictive SA per namespace.
+- **The cluster-admin role is cluster-wide.** Don't bind it to tenant users.
+- **The `system:` group is special.** Don't let tenants use those names.
+- **PodSecurityStandards is namespace-level.** Apply per-tenant.
+- **A tenant can DOS the apiserver.** The apiserver is shared. Rate-limit requests per ServiceAccount.
+- **The `kube-system` namespace is sensitive.** Lock down RBAC for it.
+- **CRDs are cluster-wide.** A bad CRD can affect all tenants. Be careful with who can create CRDs.
+- **Webhook configurations are global.** A misconfigured admission webhook can break the cluster for everyone.
+- **Resource pressure is shared.** A noisy tenant can starve the cluster. Use quotas.
+- **DNS is shared.** A tenant can use a lot of DNS. Use NodeLocal DNSCache or split DNS for very large clusters.
+- **`hostPath` volumes bypass NetworkPolicy isolation.** A pod with `hostPath: /` can read all node data. Disallow in policy.
+- **The image cache is shared.** A tenant pulling a huge image fills the cache. Use a registry mirror with rate limiting.
+- **Logs are shared (typically).** Use filters in the logging pipeline to keep tenant data separate.
 
 ## A worked example
 
@@ -595,7 +603,7 @@ For very noisy tenants, isolate to dedicated nodes (taint nodes, add toleration 
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — security NFRs
-* [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — fleet patterns
-* [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth
-* [[Kubernetes/concepts/L01-architecture/03-namespaces|namespaces]] — how namespaces work
+- [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — security NFRs
+- [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — fleet patterns
+- [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth
+- [[Kubernetes/concepts/L01-architecture/03-namespaces|namespaces]] — how namespaces work

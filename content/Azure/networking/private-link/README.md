@@ -65,14 +65,14 @@ Private Link decouples the physical hosting of the PaaS service from its network
 
 Understanding the architectural distinction is critical for network security compliance:
 
-| Dimension | Service Endpoints (`Microsoft.Storage`) | Private Endpoints (Azure Private Link) |
-| :--- | :--- | :--- |
-| **IP Address Representation** | Public IP of the PaaS service (routes over Azure backbone) | **Private RFC 1918 IP** inside your private subnet |
-| **Data Exfiltration Risk** | **High:** Workloads can reach *any* storage account globally over the endpoint | **Zero:** Endpoint is strictly pinned to *one specific resource ID* |
-| **On-Premises Transit** | **Not supported:** Cannot route from on-prem over ExpressRoute/VPN | **Fully supported:** Routable from on-prem across ExpressRoute/VPN |
-| **VNet Peering Transit** | Non-transitive | Routable across peered VNets and Virtual WAN |
-| **Network Security Groups (NSG)**| NSG rules apply to outgoing traffic | NSG rules apply directly to the Private Endpoint NIC |
-| **Pricing** | Free (Included in VNet) | Hourly endpoint fee + inbound/outbound data processing |
+| Dimension                         | Service Endpoints (`Microsoft.Storage`)                                        | Private Endpoints (Azure Private Link)                              |
+| :-------------------------------- | :----------------------------------------------------------------------------- | :------------------------------------------------------------------ |
+| **IP Address Representation**     | Public IP of the PaaS service (routes over Azure backbone)                     | **Private RFC 1918 IP** inside your private subnet                  |
+| **Data Exfiltration Risk**        | **High:** Workloads can reach _any_ storage account globally over the endpoint | **Zero:** Endpoint is strictly pinned to _one specific resource ID_ |
+| **On-Premises Transit**           | **Not supported:** Cannot route from on-prem over ExpressRoute/VPN             | **Fully supported:** Routable from on-prem across ExpressRoute/VPN  |
+| **VNet Peering Transit**          | Non-transitive                                                                 | Routable across peered VNets and Virtual WAN                        |
+| **Network Security Groups (NSG)** | NSG rules apply to outgoing traffic                                            | NSG rules apply directly to the Private Endpoint NIC                |
+| **Pricing**                       | Free (Included in VNet)                                                        | Hourly endpoint fee + inbound/outbound data processing              |
 
 ---
 
@@ -154,14 +154,14 @@ curl -I https://stfinancedataprod01.blob.core.windows.net
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Private Endpoints per VNet** | 1,000 endpoints | Dedicated subnet `/24` supports 250 endpoints |
-| **Private Endpoints per Resource** | 100 endpoints | Useful for multi-VNet direct attachment |
-| **Throughput per Private Endpoint**| Up to 100 Gbps | Backed by Azure accelerated networking |
-| **Private DNS Zone VNet Links** | 1,000 links per zone | Link central hub DNS zone to all spoke VNets |
-| **Private DNS Records per Zone** | 25,000 records | Use automated DNS Zone Groups |
-| **Network Security Group Support** | Enabled via subnet property | Supported via `PrivateEndpointNetworkPolicies=Enabled` |
+| Parameter / Dimension               | Default Quota               | Engineering Guidance                                   |
+| :---------------------------------- | :-------------------------- | :----------------------------------------------------- |
+| **Private Endpoints per VNet**      | 1,000 endpoints             | Dedicated subnet `/24` supports 250 endpoints          |
+| **Private Endpoints per Resource**  | 100 endpoints               | Useful for multi-VNet direct attachment                |
+| **Throughput per Private Endpoint** | Up to 100 Gbps              | Backed by Azure accelerated networking                 |
+| **Private DNS Zone VNet Links**     | 1,000 links per zone        | Link central hub DNS zone to all spoke VNets           |
+| **Private DNS Records per Zone**    | 25,000 records              | Use automated DNS Zone Groups                          |
+| **Network Security Group Support**  | Enabled via subnet property | Supported via `PrivateEndpointNetworkPolicies=Enabled` |
 
 ---
 
@@ -178,6 +178,7 @@ curl -I https://stfinancedataprod01.blob.core.windows.net
 ## 6. Realistic Pricing Scenarios
 
 Azure Private Link pricing is composed of:
+
 1. **Private Endpoint Inbound/Outbound Duration:** ~$0.01 per endpoint per hour (~$7.30/month per endpoint).
 2. **Data Processing:**
    - Inbound data processed: $0.01 per GB.

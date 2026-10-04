@@ -9,14 +9,14 @@ Here's when you should use each approach:
 
 **Pointer Receiver (`func (e *structname) functionName()`)**:
 
-* Use this approach when you want the method to be able to modify the struct value directly. This is typically the preferred way to define methods for structs, especially if the struct is relatively large or contains reference types like slices or maps.
-* By using a pointer receiver, you avoid creating a copy of the struct value, which can be more efficient for large structs or structs containing reference types.
+- Use this approach when you want the method to be able to modify the struct value directly. This is typically the preferred way to define methods for structs, especially if the struct is relatively large or contains reference types like slices or maps.
+- By using a pointer receiver, you avoid creating a copy of the struct value, which can be more efficient for large structs or structs containing reference types.
 
 **Value Receiver (`func (e structname) functionName()`)**:
 
-* Use this approach when your method does not need to modify the original struct value.
-* Value receivers are generally used for smaller or immutable structs, where creating a copy of the struct value is relatively inexpensive.
-* Value receivers can also be used when you want to define a method that returns a new instance of the struct with some modifications, rather than modifying the original instance.
+- Use this approach when your method does not need to modify the original struct value.
+- Value receivers are generally used for smaller or immutable structs, where creating a copy of the struct value is relatively inexpensive.
+- Value receivers can also be used when you want to define a method that returns a new instance of the struct with some modifications, rather than modifying the original instance.
 
 In general, it's a good practice to use pointer receivers for methods that modify the struct value, and value receivers for methods that don't modify the struct value but only read or perform calculations based on its data.
 

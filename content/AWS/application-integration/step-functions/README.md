@@ -14,14 +14,14 @@ Step Functions orchestrate multi-step workflows as state machines. Each step in 
 
 ## Standard vs Express
 
-| Feature | Standard Workflow | Express Workflow |
-|---------|-----------------|-----------------|
-| Duration | Up to 1 year | Up to 5 minutes |
-| Execution rate | 1,200/min (default) | 100,000/min |
-| State types | All | All (except Activity) |
-| Execution history | Full history in CloudWatch | Limited (async only) |
-| Price | $0.025/1K state transitions | $1.00/million executions + $0.000016/execution-minute |
-| Use case | Long-running, human approval, audit | High-volume, event-driven, Lambda |
+| Feature           | Standard Workflow                   | Express Workflow                                      |
+| ----------------- | ----------------------------------- | ----------------------------------------------------- |
+| Duration          | Up to 1 year                        | Up to 5 minutes                                       |
+| Execution rate    | 1,200/min (default)                 | 100,000/min                                           |
+| State types       | All                                 | All (except Activity)                                 |
+| Execution history | Full history in CloudWatch          | Limited (async only)                                  |
+| Price             | $0.025/1K state transitions         | $1.00/million executions + $0.000016/execution-minute |
+| Use case          | Long-running, human approval, audit | High-volume, event-driven, Lambda                     |
 
 ## State Machine Definition
 
@@ -271,14 +271,14 @@ while True:
         activityArn='arn:aws:states:us-east-1:123456789012:activity:my-activity',
         workerName='worker-1'
     )
-    
+
     if task:
         # Process task
         result = process(task['Input'])
-        
+
         # Send heartbeat (if long-running)
         activities.send_task_heartbeat(taskToken=task['taskToken'])
-        
+
         # Complete
         activities.send_task_success(
             taskToken=task['taskToken'],
@@ -288,11 +288,11 @@ while True:
 
 ## Pricing
 
-| Type | Cost |
-|------|------|
-| Standard (state transitions) | $0.025/1K transitions |
-| Express (executions) | $1.00/million + $0.000016/exec-min |
-| Express (synchronous) | $0.50/million + $0.000016/exec-min |
+| Type                         | Cost                               |
+| ---------------------------- | ---------------------------------- |
+| Standard (state transitions) | $0.025/1K transitions              |
+| Express (executions)         | $1.00/million + $0.000016/exec-min |
+| Express (synchronous)        | $0.50/million + $0.000016/exec-min |
 
 ## References
 

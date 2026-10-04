@@ -18,6 +18,7 @@ Producer → Firehose Stream → Buffer (configurable) → Transform (optional) 
 ```
 
 **Buffering:** Firehose buffers incoming records and delivers them in batches. The buffer size and interval are configurable:
+
 - **Buffer size:** 1MB-128MB (depending on destination)
 - **Buffer interval:** 60-900 seconds
 
@@ -36,13 +37,13 @@ The most common destination. Firehose writes data to S3 as compressed objects.
   "Destination": "S3",
   "S3Configuration": {
     "BucketARN": "arn:aws:s3:::my-bucket",
-    "Prefix": "firehose/raw/",      // Optional prefix per delivery
+    "Prefix": "firehose/raw/", // Optional prefix per delivery
     "ErrorOutputPrefix": "errors/", // Where to write failed records
     "BufferingHints": {
       "SizeInMBs": 10,
       "IntervalInSeconds": 300
     },
-    "CompressionFormat": "GZIP",     // GZIP, ZIP, Snappy, Parquet, NotCompressed
+    "CompressionFormat": "GZIP", // GZIP, ZIP, Snappy, Parquet, NotCompressed
     "EncryptionConfiguration": {
       "NoEncryptionConfig": "EncryptionDisabled"
     }
@@ -61,6 +62,7 @@ Firehose → S3 (staging) → COPY into Redshift
 ```
 
 The COPY command is triggered automatically when Firehose delivers to the staging S3 bucket. This means:
+
 - A separate Redshift cluster must be accessible from the Firehose VPC endpoint
 - Staging bucket must be in the same region as Redshift
 - COPY adds latency — data isn't in Redshift until after the COPY completes (usually within a few minutes of Firehose delivery)
@@ -89,7 +91,7 @@ def lambda_handler(event, context):
     for record in event['records']:
         # Parse the incoming record
         data = json.loads(record['data'])
-        
+
         # Transform: add timestamp, normalize fields
         transformed = {
             'event_time': data['timestamp'],
@@ -98,17 +100,18 @@ def lambda_handler(event, context):
             'properties': data.get('properties', {}),
             'processed_at': datetime.utcnow().isoformat()
         }
-        
+
         output.append({
             'record_id': record['recordId'],
             'data': json.dumps(transformed).encode('utf-8'),
             'result': 'Ok'  # or 'Dropped' or 'ProcessingFailed'
         })
-    
+
     return {'records': output}
 ```
 
 **Transformation flow:**
+
 1. Records accumulate in Firehose buffer
 2. Firehose invokes your Lambda with a batch of records
 3. Lambda transforms each record and returns the result
@@ -120,15 +123,16 @@ def lambda_handler(event, context):
 
 ### S3 Destination Buffering
 
-| Buffer Size | Buffer Interval | Use When |
-|------------|-----------------|----------|
-| 1MB | 60s | Low-latency requirements, small payloads |
-| 5MB | 300s | Balanced latency/cost for most analytics workloads |
-| 128MB | 900s | Large payloads, cost-optimized for infrequent delivery |
+| Buffer Size | Buffer Interval | Use When                                               |
+| ----------- | --------------- | ------------------------------------------------------ |
+| 1MB         | 60s             | Low-latency requirements, small payloads               |
+| 5MB         | 300s            | Balanced latency/cost for most analytics workloads     |
+| 128MB       | 900s            | Large payloads, cost-optimized for infrequent delivery |
 
 ### Redshift Buffering
 
 Redshift COPY performs best with larger batches. Recommended:
+
 - Buffer size: 64MB or higher
 - Buffer interval: 300-600 seconds
 - This reduces the number of COPY commands and improves Redshift query performance
@@ -140,10 +144,12 @@ GZIP is the default and most compatible. Snappy provides better performance with
 ## Delivery Failures and Retries
 
 Firehose retries delivery for up to a configurable timeout period (default: 3,600 seconds). After timeout:
+
 1. Data is written to the S3 error prefix you configured
 2. CloudWatch metric `Firehose.DeliveryToS3.DataFreshness` shows how old data in the buffer is
 
 **Common failure causes:**
+
 - Lambda transformation failures (invalid JSON output)
 - Redshift cluster unavailable
 - Elasticsearch domain throttling
@@ -151,13 +157,13 @@ Firehose retries delivery for up to a configurable timeout period (default: 3,60
 
 ## vs Kinesis Data Streams
 
-| | Data Streams | Data Firehose |
-|--|-------------|--------------|
-| Consumer model | You build consumer apps | Fully managed delivery |
-| Scaling | Manual shard management | Automatic (auto-scales) |
-| Latency | Sub-second (real-time) | Near-real-time (buffered, 1-5 min) |
-| Replay | Yes (configurable start position) | No (no replay capability) |
-| Use when | You need real-time consumers | You just need data delivered to storage |
+|                | Data Streams                      | Data Firehose                           |
+| -------------- | --------------------------------- | --------------------------------------- |
+| Consumer model | You build consumer apps           | Fully managed delivery                  |
+| Scaling        | Manual shard management           | Automatic (auto-scales)                 |
+| Latency        | Sub-second (real-time)            | Near-real-time (buffered, 1-5 min)      |
+| Replay         | Yes (configurable start position) | No (no replay capability)               |
+| Use when       | You need real-time consumers      | You just need data delivered to storage |
 
 **Typical architecture:** Data Streams for real-time processing → Firehose for durable delivery to storage. Or use Firehose alone if you just need data delivered to S3/S3+Redshift without real-time processing.
 

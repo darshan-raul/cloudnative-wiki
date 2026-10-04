@@ -22,12 +22,12 @@ VPC Lattice provides a service mesh solution for EKS with automatic load balanci
 
 ## Service Mesh Comparison
 
-| Feature | VPC Lattice | Istio/Linkerd |
-|---------|-------------|---------------|
-| Management | Fully managed | Self-managed |
-| mTLS | Automatic | Manual/config |
-| Cost | Pay per use | Infrastructure |
-| Complexity | Low | High |
+| Feature    | VPC Lattice   | Istio/Linkerd  |
+| ---------- | ------------- | -------------- |
+| Management | Fully managed | Self-managed   |
+| mTLS       | Automatic     | Manual/config  |
+| Cost       | Pay per use   | Infrastructure |
+| Complexity | Low           | High           |
 
 ## Create a Service
 

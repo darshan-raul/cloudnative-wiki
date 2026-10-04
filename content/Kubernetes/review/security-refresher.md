@@ -34,6 +34,7 @@ Kubernetes evaluates RBAC at the API request level using three components:
 ```
 
 ### Golden Rules:
+
 - **Never use wildcard verbs (`*`) in production:** Grant only the exact verbs needed.
 - **Never grant `escalate` or `bind` to untrusted identities:** An attacker can use `bind` to grant themselves `cluster-admin`.
 - **Disable automatic token mounts:** Set `automountServiceAccountToken: false` on ServiceAccounts unless the workload actively communicates with the Kubernetes API.
@@ -44,13 +45,14 @@ Kubernetes evaluates RBAC at the API request level using three components:
 
 Kubernetes provides built-in admission standards via namespace labels:
 
-| Profile | Target Environment | Key Restrictions |
-| :--- | :--- | :--- |
-| **`privileged`** | Infrastructure / CNI | No restrictions; allows full host root and capabilities. |
-| **`baseline`** | Standard apps | Prevents host namespaces, host ports, and privileged execution. |
+| Profile          | Target Environment      | Key Restrictions                                                                                                                        |
+| :--------------- | :---------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| **`privileged`** | Infrastructure / CNI    | No restrictions; allows full host root and capabilities.                                                                                |
+| **`baseline`**   | Standard apps           | Prevents host namespaces, host ports, and privileged execution.                                                                         |
 | **`restricted`** | **Production Baseline** | Enforces non-root (`runAsNonRoot: true`), read-only root filesystem, drops `ALL` Linux capabilities, enforces `RuntimeDefault` seccomp. |
 
 ### The Production `securityContext` Baseline:
+
 ```yaml
 securityContext:
   runAsNonRoot: true
@@ -72,6 +74,7 @@ securityContext:
 By default, Kubernetes networking is completely open: **every Pod can reach every other Pod and external IP**.
 
 ### Production Microsegmentation:
+
 Always enforce a **Default Deny** policy on every application namespace:
 
 ```yaml
@@ -88,6 +91,7 @@ spec:
 ```
 
 Then explicitly whitelist:
+
 1. **Ingress:** Allow inbound traffic on application ports from designated gateway/caller pods.
 2. **Egress:** Allow UDP/TCP port 53 to CoreDNS in `kube-system`, and specific database/API destination CIDRs.
 
@@ -96,6 +100,7 @@ Then explicitly whitelist:
 ## 4. Encryption at Rest (KMS v2)
 
 Kubernetes Secrets are merely base64-encoded strings by default—**not encrypted**. In production clusters, configure KMS v2 envelope encryption in `kube-apiserver`:
+
 - Data Encryption Keys (DEKs) encrypt Secrets locally.
 - A remote Key Management Service (AWS KMS, GCP KMS, Vault) encrypts DEKs using a Key Encryption Key (KEK).
 - Unencrypted secrets never touch etcd disk storage.

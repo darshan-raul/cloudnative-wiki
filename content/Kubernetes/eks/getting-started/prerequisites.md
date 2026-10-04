@@ -10,6 +10,7 @@ description: Required tools and IAM permissions for EKS
 ## Required Tools
 
 ### eksctl
+
 Official CLI for EKS cluster creation and management.
 
 ```bash
@@ -20,6 +21,7 @@ sudo mv /tmp/eksctl /usr/local/bin/
 ```
 
 ### kubectl
+
 Kubernetes CLI for interacting with clusters.
 
 ```bash
@@ -29,6 +31,7 @@ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stabl
 ```
 
 ### AWS CLI v2
+
 ```bash
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip

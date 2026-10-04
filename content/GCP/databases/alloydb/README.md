@@ -86,6 +86,7 @@ AlloyDB decouples compute and storage via an intelligent **Log Processing Servic
 ### Built-in Columnar Engine
 
 AlloyDB embeds an analytical columnar execution engine directly inside PostgreSQL:
+
 - **Automatic Columnar Caching:** When enabled (`alloydb.enable_columnar_engine = 'on'`), a machine-learning background daemon analyzes query history, identifies columns involved in aggregations/scans, and allocates up to a configured percentage of RAM (`alloydb.columnar_engine_size`) to hold columnar representations.
 - **Vectorized Execution:** Employs Single Instruction, Multiple Data (SIMD) instruction sets on modern Intel/AMD processors to perform parallel filtering, hashing, and aggregation directly in cache.
 - **Dynamic Summarization:** Maintains min/max block metadata, zone maps, and dictionary encodings to prune non-matching data partitions before scanning memory.
@@ -100,6 +101,7 @@ AlloyDB embeds an analytical columnar execution engine directly inside PostgreSQ
 ## 3. Production Deployment & Management CLI (`gcloud`)
 
 ### 1. Configure Private Services Access (PSA) Peering
+
 AlloyDB requires VPC private access via Service Networking.
 
 ```bash
@@ -196,16 +198,16 @@ chmod +x alloydb-auth-proxy
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension | Default / Maximum Limit | Notes / Operational Strategy |
-| :--- | :--- | :--- |
-| **Max Storage Capacity** | 128 TiB per cluster | Elastic auto-growth in 10 GB increments; no manual disk resizing |
-| **Max Compute Shape** | 128 vCPUs / 864 GiB RAM | Memory-optimized N2 machine series underneath |
-| **Read Pool Nodes** | Up to 20 nodes per read pool | Multiple read pools can be provisioned per cluster |
-| **Read Pools per Cluster** | 20 Read Pools | Segment analytical read traffic from OLTP reporting |
-| **Continuous Backup Window** | 1 to 35 days | Enables point-in-time recovery down to the exact second |
-| **Recovery Point Objective (RPO)**| **0 seconds** within region | Multi-zone synchronous quorum log replication |
-| **Recovery Time Objective (RTO)**| **< 60 seconds** | Automatic failover to healthy standby node without cold restart |
-| **PostgreSQL Extensions** | 60+ supported | Includes `pgvector`, `PostGIS`, `pg_stat_statements`, `hypopg` |
+| Dimension                          | Default / Maximum Limit      | Notes / Operational Strategy                                     |
+| :--------------------------------- | :--------------------------- | :--------------------------------------------------------------- |
+| **Max Storage Capacity**           | 128 TiB per cluster          | Elastic auto-growth in 10 GB increments; no manual disk resizing |
+| **Max Compute Shape**              | 128 vCPUs / 864 GiB RAM      | Memory-optimized N2 machine series underneath                    |
+| **Read Pool Nodes**                | Up to 20 nodes per read pool | Multiple read pools can be provisioned per cluster               |
+| **Read Pools per Cluster**         | 20 Read Pools                | Segment analytical read traffic from OLTP reporting              |
+| **Continuous Backup Window**       | 1 to 35 days                 | Enables point-in-time recovery down to the exact second          |
+| **Recovery Point Objective (RPO)** | **0 seconds** within region  | Multi-zone synchronous quorum log replication                    |
+| **Recovery Time Objective (RTO)**  | **< 60 seconds**             | Automatic failover to healthy standby node without cold restart  |
+| **PostgreSQL Extensions**          | 60+ supported                | Includes `pgvector`, `PostGIS`, `pg_stat_statements`, `hypopg`   |
 
 ---
 
@@ -222,6 +224,7 @@ chmod +x alloydb-auth-proxy
 ## 6. Realistic Pricing Scenarios
 
 AlloyDB pricing is based on:
+
 1. **Compute (vCPU + RAM):** Billed per vCPU hour. E.g., ~$0.069 per vCPU-hr (Regional HA) and ~$0.046 per vCPU-hr (Read Pool / Non-HA) in `us-central1`.
 2. **Storage:** $0.17 per GB-month of actual data stored (includes multi-zone replication automatically).
 3. **Backup Storage:** $0.08 per GB-month for backup storage exceeding the continuous recovery window.

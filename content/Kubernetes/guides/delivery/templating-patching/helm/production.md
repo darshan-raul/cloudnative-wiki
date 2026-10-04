@@ -203,7 +203,6 @@ environments:
       - environments/prod/values.yaml
 
 ---
-
 # environments/prod/values.yaml (can also be separate files)
 image:
   tag: v1.2.3
@@ -232,22 +231,22 @@ environments:
 releases:
   - name: myapp
     chart: ./charts/myapp
-    namespace: {{ .Environment.Name }}
+    namespace: { { .Environment.Name } }
     values:
       - values/{{ .Environment.Name }}/values.yaml
       - values/{{ .Environment.Name }}/secrets.yaml.gotpl
     secrets:
       - path: secrets/{{ .Environment.Name }}/secrets.yaml
-        encrypted: true  # if using helm-secrets
+        encrypted: true # if using helm-secrets
     missingFileHandler: Warn
 
   - name: redis
     chart: bitnami/redis
-    namespace: {{ .Environment.Name }}
+    namespace: { { .Environment.Name } }
     version: 18.x.x
     values:
       - values/{{ .Environment.Name }}/redis.yaml
-    installed: {{ .Environment.Name != "dev" }}  # Skip in dev
+    installed: { { .Environment.Name != "dev" } } # Skip in dev
 ```
 
 ### Multi-Cluster Helmfile
@@ -340,7 +339,7 @@ image:
 
 database:
   host: postgres.dev.example.com
-  password: changeme  # In prod, use encrypted value
+  password: changeme # In prod, use encrypted value
 
 apiKeys:
   stripe: ""
@@ -458,7 +457,7 @@ helm rollback myapp 3 --wait --timeout 5m
 releases:
   - name: myapp
     chart: ./charts/myapp
-    atomic: true  # Automatic rollback on failure
+    atomic: true # Automatic rollback on failure
     timeout: 5m
     wait: true
     cleanupOnFail: true
@@ -615,8 +614,18 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/config:
+          {
+            {
+              include (print $.Template.BasePath "/configmap.yaml") . | sha256sum,
+            },
+          }
+        checksum/secret:
+          {
+            {
+              include (print $.Template.BasePath "/secret.yaml") . | sha256sum,
+            },
+          }
 ```
 
 ### Always Roll Deployment
@@ -627,7 +636,7 @@ spec:
   template:
     metadata:
       annotations:
-        rollme: {{ randAlphaNum 5 | quote }}
+        rollme: { { randAlphaNum 5 | quote } }
 ```
 
 ## Production Checklist

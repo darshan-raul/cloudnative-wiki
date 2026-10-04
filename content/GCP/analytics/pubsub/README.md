@@ -96,6 +96,7 @@ Unlike Apache Kafka or AWS Kinesis where topics are partitioned across specific 
 ### Direct Ingestion Subscriptions (Zero-Code Pipelines)
 
 Pub/Sub supports direct managed export subscriptions without needing intermediary Cloud Run or Dataflow workers:
+
 - **BigQuery Subscription:** Streams incoming records directly into BigQuery tables with automatic schema detection and column matching.
 - **Cloud Storage Subscription:** Batches messages and writes output files directly to GCS buckets based on file size (e.g., 50 MB) or time interval (e.g., 5 minutes) in Text, Avro, or Parquet formats.
 
@@ -113,10 +114,10 @@ Create an Avro schema definition `user_event.avsc`:
   "name": "UserEvent",
   "namespace": "com.cloudnative.wiki",
   "fields": [
-    {"name": "eventId", "type": "string"},
-    {"name": "userId", "type": "string"},
-    {"name": "eventType", "type": "string"},
-    {"name": "timestamp", "type": "long"}
+    { "name": "eventId", "type": "string" },
+    { "name": "userId", "type": "string" },
+    { "name": "eventType", "type": "string" },
+    { "name": "timestamp", "type": "long" }
   ]
 }
 ```
@@ -211,16 +212,16 @@ gcloud pubsub subscriptions pull user-events-worker-sub \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Resource / Parameter | Default Quota | Maximum / Scalability Target |
-| :--- | :--- | :--- |
-| **Topic Publish Throughput** | 100 MB/s per region | Millions of MB/s via quota request |
-| **Ordering Key Throughput** | 1 MB/s (~1,000 msg/sec) | Hard boundary per single ordering key |
-| **Message Size Limit** | 10 MB per message | Strict platform limit (use claim-check pattern for larger) |
-| **Ack Deadline Range** | 10 seconds default | 10 seconds minimum to 600 seconds maximum |
-| **Message Retention** | 7 days default | 10 minutes minimum to 31 days maximum |
-| **Max Delivery Attempts (DLT)**| 5 default | 5 minimum to 100 maximum |
-| **Push Endpoint Timeout** | 10 seconds | Configurable up to 600 seconds |
-| **Subscriptions per Topic** | 10,000 subscriptions | Allows massive multi-tenant fan-out |
+| Resource / Parameter            | Default Quota           | Maximum / Scalability Target                               |
+| :------------------------------ | :---------------------- | :--------------------------------------------------------- |
+| **Topic Publish Throughput**    | 100 MB/s per region     | Millions of MB/s via quota request                         |
+| **Ordering Key Throughput**     | 1 MB/s (~1,000 msg/sec) | Hard boundary per single ordering key                      |
+| **Message Size Limit**          | 10 MB per message       | Strict platform limit (use claim-check pattern for larger) |
+| **Ack Deadline Range**          | 10 seconds default      | 10 seconds minimum to 600 seconds maximum                  |
+| **Message Retention**           | 7 days default          | 10 minutes minimum to 31 days maximum                      |
+| **Max Delivery Attempts (DLT)** | 5 default               | 5 minimum to 100 maximum                                   |
+| **Push Endpoint Timeout**       | 10 seconds              | Configurable up to 600 seconds                             |
+| **Subscriptions per Topic**     | 10,000 subscriptions    | Allows massive multi-tenant fan-out                        |
 
 ---
 
@@ -237,6 +238,7 @@ gcloud pubsub subscriptions pull user-events-worker-sub \
 ## 6. Realistic Pricing Scenarios
 
 Pub/Sub pricing is based primarily on:
+
 1. **Data Ingestion & Delivery:** $40 per TiB ($0.04 per GB) for standard throughput.
    - First 10 GiB per month is free.
 2. **Direct Push/Pull Egress:** Inter-region egress incurs standard GCP networking fees.

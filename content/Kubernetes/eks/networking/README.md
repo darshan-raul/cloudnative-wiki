@@ -14,13 +14,16 @@ EKS networking integrates with Amazon VPC for pod networking, with support for a
 ## Topics
 
 ### [[Kubernetes/eks/networking/vpc-cni/README|VPC CNI]]
+
 Amazon VPC Container Network Interface plugin
+
 - [[Kubernetes/eks/networking/vpc-cni/security-groups-for-pods|Security Groups for Pods]]
 - [[Kubernetes/eks/networking/vpc-cni/network-policies|Network Policies]]
 - [[Kubernetes/eks/networking/vpc-cni/custom-networking|Custom Networking]]
 - [[Kubernetes/eks/networking/vpc-cni/prefix-delegation|Prefix Delegation]]
 
 ### [[Kubernetes/eks/networking/vpc-lattice/README|VPC Lattice]]
+
 Service mesh and service networking for EKS
 
 ## Architecture
@@ -34,11 +37,11 @@ Pod --> ENI (Elastic Network Interface) --> VPC --> External
 
 ## Key Components
 
-| Component | Purpose |
-|-----------|---------|
-| VPC CNI | Pod networking within VPC |
-| kube-proxy | Service load balancing |
-| CoreDNS | Cluster DNS resolution |
+| Component         | Purpose                              |
+| ----------------- | ------------------------------------ |
+| VPC CNI           | Pod networking within VPC            |
+| kube-proxy        | Service load balancing               |
+| CoreDNS           | Cluster DNS resolution               |
 | AWS LB Controller | Ingress and Load Balancer management |
 
 ## References

@@ -14,6 +14,7 @@ description: Wazuh deployment modes - single-node for homelab, distributed for p
 All components on one server. Good for < 50 agents.
 
 **Hardware minimum:**
+
 - 4 CPU cores
 - 8 GB RAM
 - 50 GB SSD
@@ -121,6 +122,7 @@ systemctl start wazuh-indexer wazuh-manager wazuh-dashboard
 Separate nodes for scalability and resilience.
 
 **Recommended architecture:**
+
 - 3x Indexer nodes (cluster)
 - 2x Manager nodes (active-active load balanced)
 - 1-2x Dashboard nodes
@@ -373,6 +375,7 @@ ufw deny 9200/tcp   # Block indexer from external
 ### From Elastic Security
 
 Wazuh can receive Elastic Beats data via syslog:
+
 ```bash
 # Configure Filebeat to send to Wazuh
 filebeat.inputs:
@@ -384,6 +387,7 @@ filebeat.inputs:
 ### From Splunk
 
 Use Splunk forwarder to send to Wazuh:
+
 ```bash
 # outputs.conf on Splunk forwarder
 [tcpout]

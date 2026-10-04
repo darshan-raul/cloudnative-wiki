@@ -15,6 +15,7 @@
     ```
 
     This creates a 2048-bit RSA private key and stores it in the file `private.key`.
+
 2.  **Generate a Public Key:**
 
     Bash
@@ -24,6 +25,7 @@
     ```
 
     This extracts the corresponding public key from your private key and stores it in `public.key`.
+
 3.  **Create signature:**
 
     Bash
@@ -33,6 +35,7 @@
     ```
 
     This generates a hash and then signs it using the private key
+
 4.  **verify signature:**
 
     Bash
@@ -41,6 +44,3 @@
     openssl dgst -verify key.pub -keyform PEM -sha256 -signature data.zip.sign -binary data.zip
     Verified OK
     ```
-
-
-

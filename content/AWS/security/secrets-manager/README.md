@@ -55,11 +55,11 @@ import json
 def get_db_credentials():
     client = boto3.client('secretsmanager')
     response = client.get_secret_value(SecretId='prod/db-credentials')
-    
+
     # For JSON secrets, parse the string
     if 'SecretString' in response:
         return json.loads(response['SecretString'])
-    
+
     # For binary secrets
     return response['SecretBinary']
 
@@ -134,12 +134,12 @@ import os
 
 def handler(event, context):
     """Rotation Lambda for generic secrets."""
-    
+
     secret_arn = event['SecretId']
     step = event['Step']  # createSecret, setSecret, testSecret, finishSecret
-    
+
     client = boto3.client('secretsmanager')
-    
+
     if step == 'createSecret':
         # Generate new secret
         new_password = generate_password()
@@ -148,15 +148,15 @@ def handler(event, context):
             SecretString=json.dumps({'password': new_password}),
             VersionStages=['AWSPENDING']
         )
-    
+
     elif step == 'setSecret':
         # Apply new secret to the service (e.g., rotate API key)
         pass  # Custom logic here
-    
+
     elif step == 'testSecret':
         # Verify the new secret works
         pass  # Custom logic here
-    
+
     elif step == 'finishSecret':
         # Mark the new secret as current
         metadata = client.describe_secret(SecretId=secret_arn)
@@ -196,13 +196,13 @@ aws secretsmanager describe-secret --secret-id prod/db-credentials
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
       "Action": "secretsmanager:GetSecretValue",
       "Resource": "*"
     },
     {
       "Effect": "Deny",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:user/bob"},
+      "Principal": { "AWS": "arn:aws:iam::123456789012:user/bob" },
       "Action": "secretsmanager:GetSecretValue",
       "Resource": "arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/db-credentials"
     }
@@ -212,22 +212,22 @@ aws secretsmanager describe-secret --secret-id prod/db-credentials
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Secret storage | $0.40/month per secret |
-| API calls | $0.05 per 10,000 API calls |
-| Cross-region replication | $0.15/month per replica |
-| Rotation Lambda | Standard Lambda pricing |
+| Component                | Cost                       |
+| ------------------------ | -------------------------- |
+| Secret storage           | $0.40/month per secret     |
+| API calls                | $0.05 per 10,000 API calls |
+| Cross-region replication | $0.15/month per replica    |
+| Rotation Lambda          | Standard Lambda pricing    |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Secrets per region | 100,000 |
-| Secret size | 65,536 bytes |
-| Version history | 100 versions |
-| Labels per version | 20 |
-| API rate | 1000/second |
+| Resource           | Limit        |
+| ------------------ | ------------ |
+| Secrets per region | 100,000      |
+| Secret size        | 65,536 bytes |
+| Version history    | 100 versions |
+| Labels per version | 20           |
+| API rate           | 1000/second  |
 
 ## References
 

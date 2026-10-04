@@ -41,7 +41,7 @@ Files are processed in **lexicographic order**, later files override earlier one
 # /etc/netplan/01-config.yaml
 network:
   version: 2
-  renderer: networkd     # or: NetworkManager
+  renderer: networkd # or: NetworkManager
   ethernets:
     eth0:
       dhcp4: yes
@@ -69,7 +69,7 @@ network:
       dhcp4: false
       addresses:
         - 192.168.1.100/24
-      gateway4: 192.168.1.1               # deprecated, use routes:
+      gateway4: 192.168.1.1 # deprecated, use routes:
       # routes:
       #   - to: 0.0.0.0/0
       #     via: 192.168.1.1
@@ -137,7 +137,7 @@ network:
       routes:
         - to: 0.0.0.0/0
           via: 10.0.0.1
-          metric: 100                    # lower = preferred
+          metric: 100 # lower = preferred
         - to: 192.168.0.0/16
           via: 10.0.0.254
           metric: 200
@@ -177,7 +177,7 @@ network:
         addresses:
           - 8.8.8.8
       parameters:
-        mode: 802.3ad                    # LACP
+        mode: 802.3ad # LACP
         transmit-hash-policy: layer2
         mii-monitor-interval: 100ms
 ```

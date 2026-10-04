@@ -1,6 +1,13 @@
+---
+title: "Certificates"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Certificates — Kubernetes reference and architecture guide."
+---
+
 # Certificates
 
-*"https://kubernetes.io/docs/setup/best-practices/certificates/"*
+_"https://kubernetes.io/docs/setup/best-practices/certificates/"_
 
 Every TLS-protected connection in a k8s cluster is backed by an X.509 certificate. The cluster is a **PKI (Public Key Infrastructure)** with one or more CAs, multiple intermediate CAs, and dozens of leaf certs — apiserver, etcd, kubelet, controller-manager, scheduler, ServiceAccount tokens, webhook servers, ingresses. This note walks the **full cluster PKI**: what's signed, by which CA, with what lifetime, and how to debug it.
 
@@ -79,9 +86,9 @@ The **cluster CA** is the root of trust for most k8s components. Its cert is in 
 
 The cluster CA signs:
 
-* All control plane component certs.
-* All kubelet certs.
-* All client certs (for `kubectl`, controllers, etc.).
+- All control plane component certs.
+- All kubelet certs.
+- All client certs (for `kubectl`, controllers, etc.).
 
 For HA, the CA's key is **only on the first control plane node**. Subsequent control plane nodes have the cert but not the key. Certs are signed on the first node, distributed to others.
 
@@ -91,8 +98,8 @@ The **front-proxy CA** is for **API aggregation** — when extension apiservers 
 
 The front-proxy CA signs:
 
-* The apiserver's front-proxy-client cert.
-* Extension apiservers' certs (e.g. metrics-server's).
+- The apiserver's front-proxy-client cert.
+- Extension apiservers' certs (e.g. metrics-server's).
 
 The front-proxy CA is separate from the cluster CA. They have different trust chains.
 
@@ -108,8 +115,8 @@ The SA signing key is **rotated separately** from the cluster CA. Rotation is vi
 
 Some components have their own CAs:
 
-* **CSI driver** — the csi-sock has its own cert. CSI drivers (e.g. EBS, GCE PD) have their own CA hierarchy.
-* **Admission webhooks** — each webhook has its own cert. The apiserver has the CA bundle in the `ValidatingWebhookConfiguration` / `MutatingWebhookConfiguration`.
+- **CSI driver** — the csi-sock has its own cert. CSI drivers (e.g. EBS, GCE PD) have their own CA hierarchy.
+- **Admission webhooks** — each webhook has its own cert. The apiserver has the CA bundle in the `ValidatingWebhookConfiguration` / `MutatingWebhookConfiguration`.
 
 These are **application-level CAs**, not part of the cluster PKI. The cluster PKI signs the components; the application CAs sign the application-level integrations.
 
@@ -119,17 +126,17 @@ These are **application-level CAs**, not part of the cluster PKI. The cluster PK
 
 The apiserver has **multiple certs**:
 
-* **`apiserver.crt`** — the serving cert for `:6443`. Signed by the cluster CA. SAN includes `kubernetes`, `kubernetes.default`, `kubernetes.default.svc`, `kubernetes.default.svc.cluster.local`, and the apiserver's IPs / DNS names.
-* **`apiserver-etcd-client.crt`** — client cert for talking to etcd. Signed by the cluster CA.
-* **`apiserver-kubelet-client.crt`** — client cert for talking to kubelets. Signed by the cluster CA.
-* **`apiserver-front-proxy-client.crt`** — client cert for API aggregation. Signed by the front-proxy CA.
+- **`apiserver.crt`** — the serving cert for `:6443`. Signed by the cluster CA. SAN includes `kubernetes`, `kubernetes.default`, `kubernetes.default.svc`, `kubernetes.default.svc.cluster.local`, and the apiserver's IPs / DNS names.
+- **`apiserver-etcd-client.crt`** — client cert for talking to etcd. Signed by the cluster CA.
+- **`apiserver-kubelet-client.crt`** — client cert for talking to kubelets. Signed by the cluster CA.
+- **`apiserver-front-proxy-client.crt`** — client cert for API aggregation. Signed by the front-proxy CA.
 
 The serving cert's **SANs** are critical. The apiserver is reached by multiple names:
 
-* `kubernetes` (the in-cluster Service IP's name)
-* `kubernetes.default`, `kubernetes.default.svc`, `kubernetes.default.svc.cluster.local`
-* The apiserver's IP addresses
-* The DNS names (e.g. `ip-10-0-0-1.ec2.internal`)
+- `kubernetes` (the in-cluster Service IP's name)
+- `kubernetes.default`, `kubernetes.default.svc`, `kubernetes.default.svc.cluster.local`
+- The apiserver's IP addresses
+- The DNS names (e.g. `ip-10-0-0-1.ec2.internal`)
 
 A client connecting to `https://kubernetes.default.svc:6443` validates the SAN. If the SAN doesn't include `kubernetes.default.svc`, the connection fails.
 
@@ -137,9 +144,9 @@ A client connecting to `https://kubernetes.default.svc:6443` validates the SAN. 
 
 etcd has:
 
-* **`etcd-server.crt`** — the serving cert for `:2379`. Signed by the cluster CA. SAN includes the etcd member's DNS / IP.
-* **`etcd-peer.crt`** — the peer cert for `:2380`. Signed by the cluster CA. SAN includes the member's DNS / IP.
-* **`apiserver-etcd-client.crt`** — the apiserver's client cert (from the apiserver's side).
+- **`etcd-server.crt`** — the serving cert for `:2379`. Signed by the cluster CA. SAN includes the etcd member's DNS / IP.
+- **`etcd-peer.crt`** — the peer cert for `:2380`. Signed by the cluster CA. SAN includes the member's DNS / IP.
+- **`apiserver-etcd-client.crt`** — the apiserver's client cert (from the apiserver's side).
 
 The etcd members form a **cluster** using the peer certs. The apiserver connects using the apiserver's client cert.
 
@@ -147,8 +154,8 @@ The etcd members form a **cluster** using the peer certs. The apiserver connects
 
 Both have a single client cert:
 
-* **`controller-manager.crt`** — for talking to the apiserver.
-* **`scheduler.crt`** — for talking to the apiserver.
+- **`controller-manager.crt`** — for talking to the apiserver.
+- **`scheduler.crt`** — for talking to the apiserver.
 
 These are client certs (no serving role). They identify the component to the apiserver.
 
@@ -156,8 +163,8 @@ These are client certs (no serving role). They identify the component to the api
 
 Each kubelet has:
 
-* **`kubelet.crt`** — the serving cert for `:10250`. Signed by the cluster CA (or rotated via CSR, see section 11).
-* **`kubelet-client.crt`** — the client cert for talking to the apiserver.
+- **`kubelet.crt`** — the serving cert for `:10250`. Signed by the cluster CA (or rotated via CSR, see section 11).
+- **`kubelet-client.crt`** — the client cert for talking to the apiserver.
 
 The serving cert's **SAN** includes the node's DNS / IP. The client cert identifies the kubelet to the apiserver (via the `system:nodes` group, by convention).
 
@@ -181,20 +188,20 @@ The front-proxy CA's cert is mounted in the extension apiserver's trust store. T
 
 ## 6. The ServiceAccount Signing Key
 
-*"https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection"*
+_"https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection"_
 
 The apiserver uses the **SA signing key** to sign SA JWTs. The key is in:
 
-* `/etc/kubernetes/pki/sa.key` — the **private** key. Only on control plane nodes.
-* `/etc/kubernetes/pki/sa.pub` — the **public** key. Distributed to consumers (e.g. the apiserver, API aggregators).
+- `/etc/kubernetes/pki/sa.key` — the **private** key. Only on control plane nodes.
+- `/etc/kubernetes/pki/sa.pub` — the **public** key. Distributed to consumers (e.g. the apiserver, API aggregators).
 
 The apiserver signs SA tokens with `sa.key`. Consumers verify with `sa.pub`.
 
 For **bound tokens** (k8s 1.21+), the signing is part of the **OIDC discovery** flow:
 
-* The apiserver publishes an OIDC discovery doc at `https://<apiserver>/.well-known/openid-configuration`.
-* The JWKS endpoint is at `https://<apiserver>/openid/v1/jwks`.
-* The `sa.pub` is the key in the JWKS.
+- The apiserver publishes an OIDC discovery doc at `https://<apiserver>/.well-known/openid-configuration`.
+- The JWKS endpoint is at `https://<apiserver>/openid/v1/jwks`.
+- The `sa.pub` is the key in the JWKS.
 
 A consumer (Vault, an external service) verifies the token by:
 
@@ -249,8 +256,8 @@ The cert is a **leaf cert** signed by the cluster CA. The SAN includes the apise
 
 Clients (kubectl, kubelets, controllers) trust the cert because they have the cluster CA in their trust store:
 
-* **`/var/run/secrets/kubernetes.io/serviceaccount/ca.crt`** — for in-cluster clients.
-* **`~/.kube/config`** — for `kubectl` (the `certificate-authority-data` field).
+- **`/var/run/secrets/kubernetes.io/serviceaccount/ca.crt`** — for in-cluster clients.
+- **`~/.kube/config`** — for `kubectl` (the `certificate-authority-data` field).
 
 The TLS handshake:
 
@@ -278,8 +285,8 @@ The extension apiserver has this CA in its trust store. When the apiserver (as f
 
 If `--requestheader-client-ca-file` is misconfigured:
 
-* API aggregation fails.
-* Extension apiservers (metrics-server, etc.) don't work.
+- API aggregation fails.
+- Extension apiservers (metrics-server, etc.) don't work.
 
 The flag is distinct from `--client-ca-file`. They have different trust chains.
 
@@ -289,9 +296,9 @@ The flag is distinct from `--client-ca-file`. They have different trust chains.
 
 `kubeadm` sets:
 
-* **CA certs** — 10 years.
-* **Leaf certs (apiserver, etcd, kubelet)** — 1 year.
-* **SA signing key** — long-lived (rotated manually).
+- **CA certs** — 10 years.
+- **Leaf certs (apiserver, etcd, kubelet)** — 1 year.
+- **SA signing key** — long-lived (rotated manually).
 
 A 1-year leaf cert is **rotated automatically** by `kubeadm` 30 days before expiry (configurable via `--feature-gates=RotateKubeletServerCertificate=true` and the `--rotate-certificates` flag on the kubelet).
 
@@ -302,9 +309,9 @@ For a control plane cert:
 1. The cert is about to expire (within 30 days).
 2. `kubeadm certs check-expiration` reports it.
 3. `kubeadm certs renew all` rotates:
-   * Generates a new cert with the same SAN, same key size.
-   * Writes the new cert/key to `/etc/kubernetes/pki/`.
-   * Updates the static pod manifest (for control plane components).
+   - Generates a new cert with the same SAN, same key size.
+   - Writes the new cert/key to `/etc/kubernetes/pki/`.
+   - Updates the static pod manifest (for control plane components).
 4. The kubelet sees the new manifest and restarts the apiserver.
 5. The new cert is in use.
 
@@ -382,10 +389,10 @@ kubeadm init phase certs ca
 
 For **Vault**:
 
-* Vault is the CA.
-* Vault issues certs to the cluster components.
-* The certs are short-lived (e.g. 24h).
-* The cert-manager-vault issuer issues them.
+- Vault is the CA.
+- Vault issues certs to the cluster components.
+- The certs are short-lived (e.g. 24h).
+- The cert-manager-vault issuer issues them.
 
 ## 13. CSI Driver and Webhook Certs
 
@@ -395,8 +402,8 @@ CSI drivers have their own certs. The driver runs as a DaemonSet (typically), ex
 
 The driver has:
 
-* A **server cert** (for the gRPC server over the Unix socket or a TCP port).
-* A **client cert** (for the driver to call the apiserver, if needed).
+- A **server cert** (for the gRPC server over the Unix socket or a TCP port).
+- A **client cert** (for the driver to call the apiserver, if needed).
 
 The certs are typically **self-signed** and rotated by the CSI driver. The kubelet trusts the cert via the `csiDriver` registration.
 
@@ -404,27 +411,27 @@ For **TCP-listening CSI drivers**, the cert must be valid for the driver's DNS /
 
 ### 13.2 Admission webhook certs
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/"_
 
 Admission webhooks (OPA, Kyverno, Vault agent, etc.) have their own certs. The apiserver calls the webhook over HTTPS.
 
 The webhook has:
 
-* A **server cert** (for the webhook's HTTPS endpoint).
-* A **CA bundle** in the webhook config (so the apiserver trusts the webhook).
+- A **server cert** (for the webhook's HTTPS endpoint).
+- A **CA bundle** in the webhook config (so the apiserver trusts the webhook).
 
 ```yaml
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata: { name: my-policy }
 webhooks:
-- name: validate.example.com
-  clientConfig:
-    service:
-      name: my-webhook
-      namespace: my-ns
-      path: /validate
-    caBundle: <base64-encoded CA cert>
+  - name: validate.example.com
+    clientConfig:
+      service:
+        name: my-webhook
+        namespace: my-ns
+        path: /validate
+      caBundle: <base64-encoded CA cert>
 ```
 
 The `caBundle` is the CA that signed the webhook's serving cert. The apiserver uses it to validate the TLS handshake.
@@ -441,19 +448,19 @@ kind: Ingress
 metadata: { name: my-ingress }
 spec:
   tls:
-  - hosts:
-    - my-app.example.com
-    secretName: my-app-tls   # the Secret with the cert
+    - hosts:
+        - my-app.example.com
+      secretName: my-app-tls # the Secret with the cert
   rules:
-  - host: my-app.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: my-app
-            port: { number: 80 }
+    - host: my-app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-app
+                port: { number: 80 }
 ```
 
 The Secret has:
@@ -704,8 +711,8 @@ kubectl exec <pod> -- date
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the transport layer
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — encrypting the data on disk
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet config
-* [[Kubernetes/concepts/L01-architecture/06-what-happens-when|Control Plane Architecture]] — the components and request flow
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the transport layer
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — encrypting the data on disk
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet config
+- [[Kubernetes/concepts/L01-architecture/06-what-happens-when|Control Plane Architecture]] — the components and request flow

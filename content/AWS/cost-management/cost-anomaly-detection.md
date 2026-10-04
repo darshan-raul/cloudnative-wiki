@@ -15,6 +15,7 @@ It's a free service available in Cost Explorer for Business and Enterprise suppo
 ## How It Works
 
 AWS trains ML models on your historical spend patterns across:
+
 - Service-level spend (EC2, S3, RDS, etc.)
 - Linked account spend
 - Region-level spend
@@ -27,11 +28,13 @@ The model learns what "normal" looks like for your account. When spend deviates 
 ## Anomaly Alerts
 
 When an anomaly is detected, you receive:
+
 - **Anomaly alert:** Which service/account/region has unusual spend
 - **Root cause estimate:** AWS's ML estimate of what drove the spike
 - **Cost impact:** How much the anomaly added above normal
 
 **Alert example:**
+
 ```
 Anomaly Detected: Amazon EC2
 Estimated monthly impact: $2,400 above normal
@@ -43,10 +46,12 @@ Account(s) affected: 123456789012 (production)
 ## Alert Subscriptions
 
 Subscribe to anomaly alerts via:
+
 - **Email:** Simple alert to a specific address
 - **SNS:** Integrates with Slack, Teams, PagerDuty
 
 **Slack integration (via SNS → Lambda):**
+
 ```python
 # Lambda triggered by SNS anomaly alert
 # Formats the alert into a Slack message with:
@@ -57,6 +62,7 @@ Subscribe to anomaly alerts via:
 ```
 
 **ChatOps setup:**
+
 ```
 Cost Anomaly Detection → SNS Topic → Lambda → Slack #cost-alerts channel
 ```
@@ -72,6 +78,7 @@ When an anomaly alert fires:
 5. **Identify the root cause** — was it planned (product launch) or unplanned (misconfigured automation)?
 
 **Common causes:**
+
 - New environment spun up and left running
 - Auto Scaling scaling up unexpectedly
 - Lambda function hitting a cold start storm
@@ -81,23 +88,25 @@ When an anomaly alert fires:
 
 ## Anomaly Detection vs Budgets
 
-| | Cost Anomaly Detection | Cost Budgets |
-|--|----------------------|-------------|
-| Trigger | Unexpected spend spike | Planned threshold |
-| Latency | Near real-time | 24-48 hours |
-| What it detects | Unexpected changes | Over-budget situations |
-| Action | Alert only | Alert + optional automation |
+|                 | Cost Anomaly Detection | Cost Budgets                |
+| --------------- | ---------------------- | --------------------------- |
+| Trigger         | Unexpected spend spike | Planned threshold           |
+| Latency         | Near real-time         | 24-48 hours                 |
+| What it detects | Unexpected changes     | Over-budget situations      |
+| Action          | Alert only             | Alert + optional automation |
 
 **Use both:** Anomaly detection catches surprises. Budgets catch gradual over-consumption that might not trigger an anomaly.
 
 ## Coverage and Responsiveness
 
 Anomaly detection monitors:
+
 - All services across all linked accounts
 - Spend by account, region, and service
 - Anomalies down to the linked account level
 
 **What it doesn't detect:**
+
 - Gradual cost growth (e.g., storage growing 5% per month as data accumulates)
 - Small anomalies below the sensitivity threshold
 - Anomalies in very new accounts (not enough history for ML model)

@@ -66,14 +66,14 @@ aws ssm send-command \
 
 SSM Documents define the commands or scripts to run. AWS provides pre-built documents:
 
-| Document | Use |
-|----------|-----|
-| AWS-RunShellScript | Run shell commands on Linux |
-| AWS-RunPowerShellScript | Run PowerShell on Windows |
-| AWS-RunScript | Run any shell/PowerShell |
-| AWS-UpdateSSMAgent | Update SSM Agent |
-| AWS-RunPatchBaseline | Run patch baseline |
-| AWS-RestartInstance | Reboot instance |
+| Document                | Use                         |
+| ----------------------- | --------------------------- |
+| AWS-RunShellScript      | Run shell commands on Linux |
+| AWS-RunPowerShellScript | Run PowerShell on Windows   |
+| AWS-RunScript           | Run any shell/PowerShell    |
+| AWS-UpdateSSMAgent      | Update SSM Agent            |
+| AWS-RunPatchBaseline    | Run patch baseline          |
+| AWS-RestartInstance     | Reboot instance             |
 
 ### Command Output
 
@@ -98,6 +98,7 @@ aws ssm start-session --target i-xxxxx
 ```
 
 Benefits:
+
 - **No SSH port 22** — no inbound access needed
 - **No bastion hosts** — reduces attack surface
 - **Full session logging** — logs to CloudWatch Logs or S3

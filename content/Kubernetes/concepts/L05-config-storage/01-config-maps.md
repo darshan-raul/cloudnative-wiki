@@ -1,6 +1,13 @@
+---
+title: "ConfigMaps"
+tags: ["kubernetes", "k8s-concepts", "storage"]
+date: 2026-09-06
+description: "ConfigMaps — Kubernetes reference and architecture guide."
+---
+
 # ConfigMaps
 
-*"https://kubernetes.io/docs/concepts/configuration/configmap/"*
+_"https://kubernetes.io/docs/concepts/configuration/configmap/"_
 
 A ConfigMap is a **key-value store for configuration data** that you can inject into containers as environment variables, files in a volume, or command-line arguments. It's the standard way to separate configuration from container images.
 
@@ -81,16 +88,16 @@ binaryData:
 
 ```yaml
 env:
-- name: ENV
-  valueFrom:
-    configMapKeyRef:
-      name: web-config
-      key: ENV
-- name: LOG_LEVEL
-  valueFrom:
-    configMapKeyRef:
-      name: web-config
-      key: LOG_LEVEL
+  - name: ENV
+    valueFrom:
+      configMapKeyRef:
+        name: web-config
+        key: ENV
+  - name: LOG_LEVEL
+    valueFrom:
+      configMapKeyRef:
+        name: web-config
+        key: LOG_LEVEL
 ```
 
 This injects `ENV=production` and `LOG_LEVEL=info` as environment variables.
@@ -99,8 +106,8 @@ This injects `ENV=production` and `LOG_LEVEL=info` as environment variables.
 
 ```yaml
 envFrom:
-- configMapRef:
-    name: web-config
+  - configMapRef:
+      name: web-config
 ```
 
 All keys from `web-config` become environment variables. Fast to write, but you lose control over which vars are injected.
@@ -109,12 +116,12 @@ All keys from `web-config` become environment variables. Fast to write, but you 
 
 ```yaml
 volumes:
-- name: config
-  configMap:
-    name: web-config
+  - name: config
+    configMap:
+      name: web-config
 volumeMounts:
-- name: config
-  mountPath: /etc/config
+  - name: config
+    mountPath: /etc/config
 ```
 
 This creates files in `/etc/config/`:
@@ -131,16 +138,16 @@ The app reads these as files. Useful for config files (nginx.conf, app.propertie
 
 ```yaml
 volumes:
-- name: nginx-conf
-  configMap:
-    name: nginx-config
-    items:
-    - key: nginx.conf
-      path: default.conf
+  - name: nginx-conf
+    configMap:
+      name: nginx-config
+      items:
+        - key: nginx.conf
+          path: default.conf
 volumeMounts:
-- name: nginx-conf
-  mountPath: /etc/nginx/conf.d
-  readOnly: true
+  - name: nginx-conf
+    mountPath: /etc/nginx/conf.d
+    readOnly: true
 ```
 
 This mounts `nginx.conf` from the ConfigMap as `/etc/nginx/conf.d/default.conf`.
@@ -148,10 +155,10 @@ This mounts `nginx.conf` from the ConfigMap as `/etc/nginx/conf.d/default.conf`.
 ### As command-line arguments
 
 ```yaml
-command: ['/app/server']
+command: ["/app/server"]
 args:
-- '$(ENV)'
-- '$(LOG_LEVEL)'
+  - "$(ENV)"
+  - "$(LOG_LEVEL)"
 ```
 
 The env var substitution happens before the command runs. Note the `$(VAR)` syntax (not `$VAR`).
@@ -160,9 +167,9 @@ The env var substitution happens before the command runs. Note the `$(VAR)` synt
 
 ```yaml
 volumeMounts:
-- name: config
-  mountPath: /etc/config
-  subPath: ENV          # WRONG — won't get updates
+  - name: config
+    mountPath: /etc/config
+    subPath: ENV # WRONG — won't get updates
 ```
 
 `subPath` **breaks ConfigMap updates**. When you use `subPath`, the file is copied at Pod startup, not symlinked. Subsequent ConfigMap changes are not reflected.
@@ -200,10 +207,10 @@ kubectl get configmap my-config -o json | wc -c
 
 For large data, use:
 
-* **Secrets** — also 1 MiB, but encrypted at rest
-* **A volume from a Secret** — same limit, but encrypted
-* **An external config store** (S3, etcd, Consul) — no k8s limit
-* **A ConfigMap with a reference to a URL** — not built-in, but some tools do this
+- **Secrets** — also 1 MiB, but encrypted at rest
+- **A volume from a Secret** — same limit, but encrypted
+- **An external config store** (S3, etcd, Consul) — no k8s limit
+- **A ConfigMap with a reference to a URL** — not built-in, but some tools do this
 
 ## Immutable ConfigMaps
 
@@ -221,9 +228,9 @@ immutable: true
 
 Immutable ConfigMaps:
 
-* Cannot be updated or deleted (unless you remove the `immutable` field first)
-* The API server skips watching for changes (slight performance benefit)
-* Are safe for `subPath` (since they never change)
+- Cannot be updated or deleted (unless you remove the `immutable` field first)
+- The API server skips watching for changes (slight performance benefit)
+- Are safe for `subPath` (since they never change)
 
 Use immutable ConfigMaps for configuration that really doesn't change (feature flags, environment names, etc.).
 
@@ -252,10 +259,10 @@ metadata:
   name: web-config-reader
   namespace: default
 rules:
-- apiGroups: [""]
-  resources: [configmaps]
-  verbs: [get, list]
-  resourceNames: [web-config]   # can only read this specific ConfigMap
+  - apiGroups: [""]
+    resources: [configmaps]
+    verbs: [get, list]
+    resourceNames: [web-config] # can only read this specific ConfigMap
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -263,9 +270,9 @@ metadata:
   name: web-config-reader
   namespace: default
 subjects:
-- kind: ServiceAccount
-  name: web-app
-  namespace: production
+  - kind: ServiceAccount
+    name: web-app
+    namespace: production
 roleRef:
   kind: Role
   name: web-config-reader
@@ -316,16 +323,16 @@ kubectl create configmap nginx-conf --from-file=nginx.conf=./nginx.conf
 
 ```yaml
 volumes:
-- name: nginx-conf
-  configMap:
-    name: nginx-conf
-    items:
-    - key: nginx.conf
-      path: default.conf
+  - name: nginx-conf
+    configMap:
+      name: nginx-conf
+      items:
+        - key: nginx.conf
+          path: default.conf
 volumeMounts:
-- name: nginx-conf
-  mountPath: /etc/nginx/conf.d
-  readOnly: true
+  - name: nginx-conf
+    mountPath: /etc/nginx/conf.d
+    readOnly: true
 ```
 
 ### Feature flags
@@ -354,13 +361,13 @@ Credentials go in a Secret, not a ConfigMap. Non-sensitive connection info goes 
 
 ## ConfigMap vs Secret
 
-| | ConfigMap | Secret |
-|---|---|---|
-| Encryption at rest | No | Yes (at rest in etcd) |
-| Encoding | Plain text (or base64 in `binaryData`) | Base64 (or more with encryption providers) |
-| Use case | Non-sensitive config | Credentials, certificates, tokens |
-| Size limit | 1 MiB | 1 MiB |
-| Same consumption | env vars, volumes | env vars, volumes |
+|                    | ConfigMap                              | Secret                                     |
+| ------------------ | -------------------------------------- | ------------------------------------------ |
+| Encryption at rest | No                                     | Yes (at rest in etcd)                      |
+| Encoding           | Plain text (or base64 in `binaryData`) | Base64 (or more with encryption providers) |
+| Use case           | Non-sensitive config                   | Credentials, certificates, tokens          |
+| Size limit         | 1 MiB                                  | 1 MiB                                      |
+| Same consumption   | env vars, volumes                      | env vars, volumes                          |
 
 **A Secret is not truly secure** — it's base64-encoded, not encrypted, in etcd. For real secrets, use an external secrets manager (HashiCorp Vault, AWS Secrets Manager, etc.) with a CSI driver or operator.
 
@@ -372,6 +379,6 @@ Workaround: bake the config into the file on disk (e.g. via an init script), or 
 
 ## See also
 
-* [[Kubernetes/concepts/L05-config-storage/02-secrets|Secrets]] — for sensitive data
-* [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — how ConfigMaps are consumed in Pod specs
-* [[Kubernetes/concepts/L05-config-storage/08-resource-quota|Resource Quotas]] — namespace-level limits on ConfigMaps
+- [[Kubernetes/concepts/L05-config-storage/02-secrets|Secrets]] — for sensitive data
+- [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — how ConfigMaps are consumed in Pod specs
+- [[Kubernetes/concepts/L05-config-storage/08-resource-quota|Resource Quotas]] — namespace-level limits on ConfigMaps

@@ -24,6 +24,7 @@ Every workload controller—Deployments, StatefulSets, DaemonSets, Jobs, and Cro
 ## 2. Prerequisites
 
 Before studying Pods, you should be familiar with:
+
 - **Linux Containers:** Basic understanding of container images, runtimes, and processes.
 - **Cluster Architecture:** How the API server, scheduler, and node kubelet interact ([[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]]).
 - **Kubernetes Object Anatomy:** Declarative manifests with `apiVersion`, `kind`, `metadata`, and `spec` ([[Kubernetes/concepts/L02-objects/00-README|L02 — Objects]]).
@@ -42,14 +43,14 @@ Before studying Pods, you should be familiar with:
 
 ## 4. Five-Minute Refresher
 
-| Concept | What it is | Key Rule / Behavior |
-| :--- | :--- | :--- |
-| **Pod** | Atomic unit of deployment | Wraps 1+ tightly-coupled containers scheduled together on the same node. |
-| **Network Sharing** | Single network namespace | All containers in a Pod share one IP and communicate over `localhost`. |
-| **Storage Sharing** | Shared volume mounts | Multiple containers in a Pod can mount the same Volume for shared file access. |
-| **Lifecycle Phase** | High-level status | `Pending` → `Running` → `Succeeded` / `Failed`. |
-| **Granular Conditions** | Precise readiness state | `PodScheduled`, `Initialized`, `ContainersReady`, `Ready`. |
-| **Bare Pod** | Unmanaged Pod | **Never self-heals!** If a node dies, unmanaged Pods are deleted and never rescheduled. |
+| Concept                 | What it is                | Key Rule / Behavior                                                                     |
+| :---------------------- | :------------------------ | :-------------------------------------------------------------------------------------- |
+| **Pod**                 | Atomic unit of deployment | Wraps 1+ tightly-coupled containers scheduled together on the same node.                |
+| **Network Sharing**     | Single network namespace  | All containers in a Pod share one IP and communicate over `localhost`.                  |
+| **Storage Sharing**     | Shared volume mounts      | Multiple containers in a Pod can mount the same Volume for shared file access.          |
+| **Lifecycle Phase**     | High-level status         | `Pending` → `Running` → `Succeeded` / `Failed`.                                         |
+| **Granular Conditions** | Precise readiness state   | `PodScheduled`, `Initialized`, `ContainersReady`, `Ready`.                              |
+| **Bare Pod**            | Unmanaged Pod             | **Never self-heals!** If a node dies, unmanaged Pods are deleted and never rescheduled. |
 
 ---
 
@@ -142,13 +143,16 @@ spec:
 ## 7. How It Works Under the Hood
 
 ### 1. The Pause Container & Shared Namespaces
+
 When the kubelet receives a Pod assignment from `kube-scheduler`, it calls the Container Runtime (e.g., `containerd`) via the CRI to create a **Pod Sandbox**.
+
 - The runtime spins up an internal **pause container** (`registry.k8s.io/pause`).
 - The pause container holds the Linux `net`, `ipc`, and `uts` kernel namespaces open.
 - Application containers are then launched, joining those existing namespaces. This is why containers in the same Pod can reach each other via `localhost` and share ports.
 - For deep field-level schemas and namespace flags, see [[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|01-pods-deep-dive]].
 
 ### 2. Pod Phases vs Pod Conditions
+
 - **`status.phase`** is a coarse summary (`Pending`, `Running`, `Succeeded`, `Failed`, `Unknown`).
 - **`status.conditions`** provide the exact operational truth:
   - `PodScheduled`: The scheduler successfully bound the Pod to a node.
@@ -157,6 +161,7 @@ When the kubelet receives a Pod assignment from `kube-scheduler`, it calls the C
   - `Ready`: The Pod is healthy and ready to receive Service traffic.
 
 ### 3. Graceful Termination Timeline
+
 When a Pod is deleted (`kubectl delete pod` or during rolling updates), Kubernetes initiates a zero-downtime termination sequence:
 
 ```mermaid
@@ -188,7 +193,9 @@ sequenceDiagram
 ## 8. Production Considerations
 
 ### Why Bare Pods Are an Anti-Pattern
+
 A **bare Pod** is a Pod created directly via `kind: Pod` without a controller.
+
 - If a worker node crashes or is drained, Kubernetes **will not reschedule** a bare Pod.
 - You cannot perform rolling updates or rollbacks.
 - **Production Rule:** Always deploy Pods using controllers:
@@ -198,32 +205,36 @@ A **bare Pod** is a Pod created directly via `kind: Pod` without a controller.
   - Use **Jobs / CronJobs** for batch tasks ([[Kubernetes/concepts/L03-workloads/06-job|06-job]]).
 
 ### Native Sidecar Containers (Kubernetes v1.29+ / v1.37 Baseline)
+
 Historically, sidecars were ordinary containers with non-deterministic startup order. In modern Kubernetes, define helper sidecars inside `initContainers` with `restartPolicy: Always`:
+
 - Starts **before** application containers.
 - Kubelet waits for its startup probe before proceeding.
 - Survives until the Pod terminates.
 - Detailed reference: [[Kubernetes/concepts/L03-workloads/08-init-containers|08-init-containers]].
 
 ### In-Place Pod Resize (GA in Kubernetes v1.37)
+
 Prior to recent versions, changing CPU or memory required restarting the Pod. With the `InPlacePodVerticalScaling` feature GA in v1.37, you can patch container resources without restarting the underlying container process.
 
 ---
 
 ## 9. Failure Modes and Debugging
 
-| Symptom | Root Cause | Primary Diagnostic Command |
-| :--- | :--- | :--- |
-| **`ImagePullBackOff`** | Typo in image name, tag does not exist, or private registry credentials missing. | `kubectl describe pod <name>` (inspect `Events`) |
-| **`CrashLoopBackOff`** | Container entrypoint exits with non-zero code shortly after starting. | `kubectl logs <name> --previous` |
-| **`Pending`** | No node fits resource requests, node tainted, or required PVC unbound. | `kubectl describe pod <name>` (look at `FailedScheduling`) |
-| **`OOMKilled`** (Exit 137) | Container exceeded its memory limit (`limits.memory`). Linux kernel killed the process. | `kubectl get pod <name> -o yaml \| grep -A 5 lastState` |
-| **Stuck `Terminating`** | `preStop` hook hangs, or process ignores `SIGTERM` and storage unmount is delayed. | `kubectl describe pod <name>` (check unmount events) |
+| Symptom                    | Root Cause                                                                              | Primary Diagnostic Command                                 |
+| :------------------------- | :-------------------------------------------------------------------------------------- | :--------------------------------------------------------- |
+| **`ImagePullBackOff`**     | Typo in image name, tag does not exist, or private registry credentials missing.        | `kubectl describe pod <name>` (inspect `Events`)           |
+| **`CrashLoopBackOff`**     | Container entrypoint exits with non-zero code shortly after starting.                   | `kubectl logs <name> --previous`                           |
+| **`Pending`**              | No node fits resource requests, node tainted, or required PVC unbound.                  | `kubectl describe pod <name>` (look at `FailedScheduling`) |
+| **`OOMKilled`** (Exit 137) | Container exceeded its memory limit (`limits.memory`). Linux kernel killed the process. | `kubectl get pod <name> -o yaml \| grep -A 5 lastState`    |
+| **Stuck `Terminating`**    | `preStop` hook hangs, or process ignores `SIGTERM` and storage unmount is delayed.      | `kubectl describe pod <name>` (check unmount events)       |
 
 ---
 
 ## 10. Hands-on Exercise
 
 ### Goal:
+
 Deploy a standalone Pod with a graceful termination delay and observe the termination lifecycle in action.
 
 ### Step 1: Deploy a Pod with a `preStop` Hook

@@ -10,9 +10,9 @@ The `reflect` package in Go provides functionality for inspecting and manipulati
 
 **Key Concepts:**
 
-* **Types and Kinds:** Types are the high-level data types (e.g., `int`, `struct`), while kinds are the specific kinds of types (e.g., `Int`, `Struct`).
-* **Values:** The actual data stored in the variable or field.
-* **Type and Value Representation:** The `reflect` package uses `Type` and `Value` to represent and interact with types and values at runtime.
+- **Types and Kinds:** Types are the high-level data types (e.g., `int`, `struct`), while kinds are the specific kinds of types (e.g., `Int`, `Struct`).
+- **Values:** The actual data stored in the variable or field.
+- **Type and Value Representation:** The `reflect` package uses `Type` and `Value` to represent and interact with types and values at runtime.
 
 #### Key Types
 
@@ -51,6 +51,7 @@ fmt.Println(v) // Output: 0 (or whatever the value of x is)
     t := reflect.TypeOf(x)
     fmt.Println(t.Kind()) // Output: int
     ```
+
 2.  **Struct Fields:**
 
     ```go
@@ -66,6 +67,7 @@ fmt.Println(v) // Output: 0 (or whatever the value of x is)
         fmt.Println(field.Name, field.Type)
     }
     ```
+
 3.  **Getting and Setting Values:**
 
     ```go
@@ -76,6 +78,7 @@ fmt.Println(v) // Output: 0 (or whatever the value of x is)
     v.SetInt(20)
     fmt.Println(x) // Output: 20
     ```
+
 4.  **Invoking Functions:**
 
     ```go
@@ -92,8 +95,7 @@ fmt.Println(v) // Output: 0 (or whatever the value of x is)
 #### Advanced Usage
 
 1.  **Dynamic Type Creation:**
-
-    * You can create types dynamically using `reflect`.
+    - You can create types dynamically using `reflect`.
 
     ```go
     type MyStruct struct {
@@ -106,9 +108,9 @@ fmt.Println(v) // Output: 0 (or whatever the value of x is)
     v.FieldByName("Age").SetInt(30)
     fmt.Println(v.Interface()) // Output: {Alice 30}
     ```
-2.  **Type Assertion and Conversion:**
 
-    * Using `reflect`, you can perform type assertions and conversions at runtime.
+2.  **Type Assertion and Conversion:**
+    - Using `reflect`, you can perform type assertions and conversions at runtime.
 
     ```go
     var x interface{} = 10
@@ -117,9 +119,9 @@ fmt.Println(v) // Output: 0 (or whatever the value of x is)
         fmt.Println(v.Int()) // Output: 10
     }
     ```
-3.  **Tag Extraction:**
 
-    * Extracting struct field tags.
+3.  **Tag Extraction:**
+    - Extracting struct field tags.
 
     ```go
     type User struct {
@@ -174,11 +176,11 @@ func main() {
 #### Limitations and Considerations
 
 1. **Performance:**
-   * Reflection is generally slower than direct operations due to the overhead of type and value inspection at runtime.
+   - Reflection is generally slower than direct operations due to the overhead of type and value inspection at runtime.
 2. **Safety:**
-   * Reflective code can be harder to understand and maintain. It’s also more prone to runtime errors if not handled carefully.
+   - Reflective code can be harder to understand and maintain. It’s also more prone to runtime errors if not handled carefully.
 3. **Complexity:**
-   * Using reflection adds complexity to your code, so it should be used judiciously.
+   - Using reflection adds complexity to your code, so it should be used judiciously.
 
 #### Conclusion
 

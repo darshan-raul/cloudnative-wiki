@@ -1,6 +1,13 @@
+---
+title: "Scheduler Internals (Kube-Scheduler, Plugins, Profiles)"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Scheduler Internals (Kube-Scheduler, Plugins, Profiles) — Kubernetes reference and architecture guide."
+---
+
 # Scheduler Internals (Kube-Scheduler, Plugins, Profiles)
 
-*"https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/"*
+_"https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/"_
 
 The kube-scheduler is the **default scheduler** for Kubernetes. It runs as a single Deployment (or HA, with leader election) in `kube-system`, and decides which node every Pod runs on. The scheduling decision is made by a **plugin framework** — a set of "filter" and "score" plugins that the scheduler runs in order. This note covers the internals: how the framework works, the default plugins, and how to customize it.
 
@@ -40,10 +47,10 @@ The scheduler doesn't run the Pod — it just sets the field. The kubelet on the
 
 ### 1.1 What the scheduler does NOT do
 
-* **Re-schedule Pods.** A scheduled Pod stays on its node unless evicted.
-* **Rebalance.** The scheduler doesn't migrate Pods to balance the cluster.
-* **Predict future load.** The scheduler makes decisions based on the current state of the cluster.
-* **Talk to nodes directly.** It only talks to the apiserver. Nodes register themselves; the scheduler doesn't ping them.
+- **Re-schedule Pods.** A scheduled Pod stays on its node unless evicted.
+- **Rebalance.** The scheduler doesn't migrate Pods to balance the cluster.
+- **Predict future load.** The scheduler makes decisions based on the current state of the cluster.
+- **Talk to nodes directly.** It only talks to the apiserver. Nodes register themselves; the scheduler doesn't ping them.
 
 ## 2. The Scheduling Cycle
 
@@ -112,21 +119,21 @@ The framework is a **plugin pipeline**. Each extension point runs a set of plugi
 
 ### 3.1 The extension points
 
-| Extension | What runs | Plugins (defaults) |
-|---|---|---|
-| `PreEnqueue` | Before the Pod is added to the queue | (none) |
-| `Enqueue` | When the Pod is added to the queue | (none) |
-| `PreFilter` | Before filtering, can short-circuit | `NodeResourcesFit`, `NodeAffinity`, `PodTopologySpread`, `InterPodAffinity`, `VolumeBinding` |
-| `Filter` | Drops nodes that can't run the Pod | `NodeUnschedulable`, `NodeName`, `NodeAffinity`, `NodeResourcesFit`, `NodePorts`, `NodeVolumeLimits`, `TaintToleration`, `EBSLimits`, `GCEPDLimits`, `AzureDiskLimits`, `CinderLimits`, `MaxCSIVolumeCountPerNode`, `MaxEBSVolumeCountPerNode`, `MaxGCEPDVolumeCountPerNode`, `MaxAzureDiskVolumeCountPerNode`, `MaxCinderVolumeCountPerNode`, `PodTopologySpread`, `InterPodAffinity`, `VolumeBinding`, `VolumeRestrictions` |
-| `PostFilter` | After filter, if no nodes remain | `DefaultPreemption` |
-| `PreScore` | Before scoring | `NodeAffinity`, `PodTopologySpread`, `InterPodAffinity` |
-| `Score` | Rank remaining nodes | `NodeResourcesFit`, `NodeAffinity`, `TaintToleration`, `ImageLocality`, `InterPodAffinity`, `NodeResourcesBalancedAllocation`, `NodeResourcesLeastAllocated`, `PodTopologySpread`, `TaintToleration` |
-| `NormalizeScore` | Combine scores | (built-in) |
-| `Reserve` | Reserve resources on the chosen node | `VolumeBinding` |
-| `Permit` | Wait for external approval | (default: always permit) |
-| `PreBind` | Before binding | `VolumeBinding` |
-| `Bind` | Set the Pod's nodeName | `DefaultBinder` (built-in) |
-| `PostBind` | After binding | (default: no-op) |
+| Extension        | What runs                            | Plugins (defaults)                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PreEnqueue`     | Before the Pod is added to the queue | (none)                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `Enqueue`        | When the Pod is added to the queue   | (none)                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `PreFilter`      | Before filtering, can short-circuit  | `NodeResourcesFit`, `NodeAffinity`, `PodTopologySpread`, `InterPodAffinity`, `VolumeBinding`                                                                                                                                                                                                                                                                                                                                  |
+| `Filter`         | Drops nodes that can't run the Pod   | `NodeUnschedulable`, `NodeName`, `NodeAffinity`, `NodeResourcesFit`, `NodePorts`, `NodeVolumeLimits`, `TaintToleration`, `EBSLimits`, `GCEPDLimits`, `AzureDiskLimits`, `CinderLimits`, `MaxCSIVolumeCountPerNode`, `MaxEBSVolumeCountPerNode`, `MaxGCEPDVolumeCountPerNode`, `MaxAzureDiskVolumeCountPerNode`, `MaxCinderVolumeCountPerNode`, `PodTopologySpread`, `InterPodAffinity`, `VolumeBinding`, `VolumeRestrictions` |
+| `PostFilter`     | After filter, if no nodes remain     | `DefaultPreemption`                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `PreScore`       | Before scoring                       | `NodeAffinity`, `PodTopologySpread`, `InterPodAffinity`                                                                                                                                                                                                                                                                                                                                                                       |
+| `Score`          | Rank remaining nodes                 | `NodeResourcesFit`, `NodeAffinity`, `TaintToleration`, `ImageLocality`, `InterPodAffinity`, `NodeResourcesBalancedAllocation`, `NodeResourcesLeastAllocated`, `PodTopologySpread`, `TaintToleration`                                                                                                                                                                                                                          |
+| `NormalizeScore` | Combine scores                       | (built-in)                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `Reserve`        | Reserve resources on the chosen node | `VolumeBinding`                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `Permit`         | Wait for external approval           | (default: always permit)                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `PreBind`        | Before binding                       | `VolumeBinding`                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `Bind`           | Set the Pod's nodeName               | `DefaultBinder` (built-in)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `PostBind`       | After binding                        | (default: no-op)                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 This is a lot. The key plugins to know are in the next sections.
 
@@ -137,6 +144,7 @@ This is a lot. The key plugins to know are in the next sections.
 **Filter:** drops nodes that don't have enough CPU / memory / extended resources for the Pod's `requests`.
 
 **Score:** ranks nodes by how well their resources fit the Pod. Three scoring strategies:
+
 - `LeastAllocated` (default) — prefers nodes with the most free resources. Spreads load.
 - `MostAllocated` — prefers nodes with the least free resources. Packs tight (good for bin-packing).
 - `RequestedToCapacityRatio` — uses a custom ratio. Advanced.
@@ -207,16 +215,16 @@ A **profile** is a named configuration of plugins. You can have multiple profile
 apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 profiles:
-- schedulerName: default-scheduler
-  plugins:
-    score:
-      disabled:
-      - name: NodeResourcesBalancedAllocation
-- schedulerName: system-scheduler
-  plugins:
-    score:
-      enabled:
-      - name: NodeResourcesMostAllocated   # pack tight
+  - schedulerName: default-scheduler
+    plugins:
+      score:
+        disabled:
+          - name: NodeResourcesBalancedAllocation
+  - schedulerName: system-scheduler
+    plugins:
+      score:
+        enabled:
+          - name: NodeResourcesMostAllocated # pack tight
 ```
 
 Pods use the profile via `spec.schedulerName`:
@@ -234,9 +242,9 @@ The Pod is scheduled by the `system-scheduler` profile, which scores by `NodeRes
 
 ### 5.1 Multiple profiles use case
 
-* **System vs user Pods** — system Pods (kube-proxy, CNI) get a tight-packing profile, user Pods get a spread profile.
-* **Batch vs interactive** — batch jobs get a bin-packing profile (pack tight), interactive get a spread profile.
-* **Different priority tiers** — high-priority Pods get a profile that tries harder to schedule (e.g. less restrictive filters).
+- **System vs user Pods** — system Pods (kube-proxy, CNI) get a tight-packing profile, user Pods get a spread profile.
+- **Batch vs interactive** — batch jobs get a bin-packing profile (pack tight), interactive get a spread profile.
+- **Different priority tiers** — high-priority Pods get a profile that tries harder to schedule (e.g. less restrictive filters).
 
 The profiles are **per-scheduler-pod-binding**. Pods with `schedulerName: X` are scheduled by profile X. The default (no `schedulerName`) uses the profile named `default-scheduler`.
 
@@ -261,6 +269,7 @@ The most powerful extension points, but also the most complex. Most users don't 
 The `Permit` extension point is special. By default, every Pod is permitted. You can add a `Permit` plugin (or an external scheduler webhook) that says "wait" — the scheduler holds the Pod in a "waiting" state until the permit is granted.
 
 This is used for:
+
 - **Co-scheduling** (a group of Pods must be scheduled together).
 - **Quota** (a Pod must wait until a quota is approved).
 - **Custom validation** (a Pod must be checked before binding).
@@ -269,11 +278,11 @@ This is used for:
 apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 profiles:
-- schedulerName: default-scheduler
-  plugins:
-    permit:
-      enabled:
-      - name: MyCustomPermitPlugin
+  - schedulerName: default-scheduler
+    plugins:
+      permit:
+        enabled:
+          - name: MyCustomPermitPlugin
 ```
 
 ### 6.5 The scheduler extender (out-of-tree)
@@ -284,14 +293,14 @@ For custom logic that doesn't require recompiling the scheduler, you can use a *
 apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 extenders:
-- urlPrefix: "http://my-extender.default.svc:8080"
-  filterVerb: predicate
-  prioritizeVerb: prioritizer
-  bindingVerb: bind
-  weight: 1
-  managedResources:
-  - name: "example.com/foo"
-    ignoredByScheduler: true
+  - urlPrefix: "http://my-extender.default.svc:8080"
+    filterVerb: predicate
+    prioritizeVerb: prioritizer
+    bindingVerb: bind
+    weight: 1
+    managedResources:
+      - name: "example.com/foo"
+        ignoredByScheduler: true
 ```
 
 The scheduler calls the extender's `predicate` (filter) and `prioritizer` (score) endpoints for each Pod. **The scheduler extender is deprecated** in favor of the scheduling framework's plugin API, but it's still supported for back-compat.
@@ -304,26 +313,27 @@ The most-called plugin. It checks the Pod's `requests` against each node's `allo
 apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 profiles:
-- schedulerName: default-scheduler
-  pluginConfig:
-  - name: NodeResourcesFit
-    args:
-      apiVersion: kubescheduler.config.k8s.io/v1beta3
-      kind: NodeResourcesFitArgs
-      scoringStrategy:
-        type: LeastAllocated     # default
-        resources:
-        - name: cpu
-          weight: 1
-        - name: memory
-          weight: 1
-        # ignoredResources are not scored (but are still filtered)
-        # ignoredResourceGroups are not scored
+  - schedulerName: default-scheduler
+    pluginConfig:
+      - name: NodeResourcesFit
+        args:
+          apiVersion: kubescheduler.config.k8s.io/v1beta3
+          kind: NodeResourcesFitArgs
+          scoringStrategy:
+            type: LeastAllocated # default
+            resources:
+              - name: cpu
+                weight: 1
+              - name: memory
+                weight: 1
+            # ignoredResources are not scored (but are still filtered)
+            # ignoredResourceGroups are not scored
 ```
 
 ### 7.1 The filter logic
 
 For each node:
+
 1. Sum the node's `allocatable.cpu` (or memory, etc.).
 2. Subtract the sum of `requests` of all Pods on the node.
 3. Compare to the new Pod's `requests`.
@@ -349,8 +359,8 @@ The `NodeResourcesFit` plugin also handles **extended resources** (GPU, FPGA, et
 
 ```yaml
 resources:
-- name: nvidia.com/gpu
-  weight: 5    # weight higher than CPU/memory — GPU fit is critical
+  - name: nvidia.com/gpu
+    weight: 5 # weight higher than CPU/memory — GPU fit is critical
 ```
 
 If a Pod requests 1 GPU and a node has 0, the node is dropped (filter). If a node has 4 GPUs, the score is high.
@@ -377,9 +387,9 @@ See [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] for 
 
 The `topologyKey` is the label used to group nodes. Common:
 
-* `kubernetes.io/hostname` — each node is its own domain.
-* `topology.kubernetes.io/zone` — each zone is a domain.
-* `topology.kubernetes.io/region` — each region is a domain.
+- `kubernetes.io/hostname` — each node is its own domain.
+- `topology.kubernetes.io/zone` — each zone is a domain.
+- `topology.kubernetes.io/region` — each region is a domain.
 
 The `maxSkew: 1` means "the most-loaded domain has at most 1 more Pod than the average". The algorithm:
 
@@ -402,7 +412,7 @@ For each domain D:
 2. For each candidate node, counts how many Pods matching the affinity label are on the node.
 3. Filters or scores based on the count.
 
-**This is O(n*m)** — for every Pod, every node, every existing Pod. The scheduler caches Pod state, but the cache is invalidated frequently. **At 1000+ nodes and 10,000+ Pods, the scheduler gets slow.** This is why `topologySpreadConstraints` is recommended for "spread evenly" use cases — it's much more efficient.
+**This is O(n\*m)** — for every Pod, every node, every existing Pod. The scheduler caches Pod state, but the cache is invalidated frequently. **At 1000+ nodes and 10,000+ Pods, the scheduler gets slow.** This is why `topologySpreadConstraints` is recommended for "spread evenly" use cases — it's much more efficient.
 
 ## 11. The `VolumeBinding` Plugin
 
@@ -451,16 +461,16 @@ For simpler custom logic, use a scheduler webhook. The scheduler calls your HTTP
 apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 extenders:
-- urlPrefix: "http://my-scheduler-webhook.default.svc:8080"
-  filterVerb: predicate
-  prioritizeVerb: prioritizer
-  weight: 1
+  - urlPrefix: "http://my-scheduler-webhook.default.svc:8080"
+    filterVerb: predicate
+    prioritizeVerb: prioritizer
+    weight: 1
 ```
 
 The webhook implements:
 
-* `POST /predicate` — return whether a node can run the Pod.
-* `POST /prioritizer` — return a score for the node.
+- `POST /predicate` — return whether a node can run the Pod.
+- `POST /prioritizer` — return a score for the node.
 
 The scheduler calls these for every node, for every Pod. The webhook becomes a hot path. **Make it fast.**
 
@@ -472,9 +482,9 @@ The scheduler's main cost is the **filter phase**. For a Pod with many affinity 
 
 Typical numbers:
 
-* 100 nodes, 1,000 Pods: filter takes ~100ms per Pod.
-* 1,000 nodes, 10,000 Pods: filter takes ~1s per Pod.
-* 10,000 nodes, 100,000 Pods: filter takes ~10s per Pod. **Problematic.**
+- 100 nodes, 1,000 Pods: filter takes ~100ms per Pod.
+- 1,000 nodes, 10,000 Pods: filter takes ~1s per Pod.
+- 10,000 nodes, 100,000 Pods: filter takes ~10s per Pod. **Problematic.**
 
 The scheduler parallelizes filter and score across nodes (the default is 16 goroutines). With 1,000 nodes, the filter is 1000/16 ≈ 63 batches.
 
@@ -490,8 +500,8 @@ If the cache is stale (e.g. cluster has churn), the scheduler may make suboptima
 apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 profiles:
-- schedulerName: default-scheduler
-  percentageOfNodesToScore: 50    # score only 50% of nodes after filter
+  - schedulerName: default-scheduler
+    percentageOfNodesToScore: 50 # score only 50% of nodes after filter
 ```
 
 `percentageOfNodesToScore` is a key tuning knob. By default, the scheduler scores **all** nodes that pass the filter. With 1,000 nodes and 1,000 pending Pods, that's 1,000,000 score calls. Setting `percentageOfNodesToScore: 50` makes the scheduler pick a random 50% of nodes and score only those. **The best node is in the 50% with high probability, but the scheduler is 2x faster.**
@@ -557,10 +567,10 @@ curl localhost:10259/metrics
 
 Key metrics:
 
-* `scheduler_pending_pods` — Pods waiting to be scheduled.
-* `scheduler_schedule_attempts_total` — total scheduling attempts.
-* `scheduler_scheduling_algorithm_duration_seconds` — time spent in filter + score.
-* `scheduler_e2e_scheduling_duration_seconds` — total time from Pod creation to binding.
+- `scheduler_pending_pods` — Pods waiting to be scheduled.
+- `scheduler_schedule_attempts_total` — total scheduling attempts.
+- `scheduler_scheduling_algorithm_duration_seconds` — time spent in filter + score.
+- `scheduler_e2e_scheduling_duration_seconds` — total time from Pod creation to binding.
 
 If `scheduler_e2e_scheduling_duration_seconds` is high, the scheduler is slow. Look at `scheduler_scheduling_algorithm_duration_seconds` to see if it's filter or score.
 
@@ -620,7 +630,7 @@ If `scheduler_e2e_scheduling_duration_seconds` is high, the scheduler is slow. L
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the YAML-level primitives
-* [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — the preemption algorithm
-* [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] — holding Pods back from scheduling
-* [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — the VolumeBinding plugin's interaction with storage
+- [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the YAML-level primitives
+- [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — the preemption algorithm
+- [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] — holding Pods back from scheduling
+- [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — the VolumeBinding plugin's interaction with storage

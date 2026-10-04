@@ -31,14 +31,14 @@ Result:        matches steady state?  →  no action needed
 
 ## The chaos maturity model
 
-| Level | Practice |
-|-------|----------|
-| 0 — Manual | Ad-hoc, no automation |
-| 1 — Scripted | Bash scripts, run on demand |
-| 2 — Scheduled | Cron, runs at fixed times |
-| 3 — Tooled | Chaos Mesh, Litmus, Gremlin, etc. |
-| 4 — Continuous | Always running, in production |
-| 5 — Game days | Quarterly team exercises |
+| Level          | Practice                          |
+| -------------- | --------------------------------- |
+| 0 — Manual     | Ad-hoc, no automation             |
+| 1 — Scripted   | Bash scripts, run on demand       |
+| 2 — Scheduled  | Cron, runs at fixed times         |
+| 3 — Tooled     | Chaos Mesh, Litmus, Gremlin, etc. |
+| 4 — Continuous | Always running, in production     |
+| 5 — Game days  | Quarterly team exercises          |
 
 Most teams are at 1-3. **Continuous chaos in production** is a Netflix-grade practice. Start with game days and tooled experiments.
 
@@ -304,12 +304,12 @@ helm install gremlin gremlin/gremlin \
 
 ### Litmus vs Chaos Mesh vs Gremlin
 
-| Tool | Cost | Pre-built exp | UI | Production use |
-|------|------|---------------|-----|---------------|
-| **Chaos Mesh** | Free | Many | Web UI | Yes |
-| **Litmus** | Free | Many | Web UI | Yes |
-| **Gremlin** | $$$ | Many | Web UI | Yes |
-| **Steadybit** | $$$ | Many | Web UI | Yes |
+| Tool           | Cost | Pre-built exp | UI     | Production use |
+| -------------- | ---- | ------------- | ------ | -------------- |
+| **Chaos Mesh** | Free | Many          | Web UI | Yes            |
+| **Litmus**     | Free | Many          | Web UI | Yes            |
+| **Gremlin**    | $$$  | Many          | Web UI | Yes            |
+| **Steadybit**  | $$$  | Many          | Web UI | Yes            |
 
 For most teams, **Chaos Mesh** is the right balance. Free, comprehensive, well-maintained.
 
@@ -341,7 +341,7 @@ kind: Schedule
 metadata:
   name: weekly-pod-kill
 spec:
-  schedule: "0 14 * * 1"   # every Monday 2pm
+  schedule: "0 14 * * 1" # every Monday 2pm
   type: PodChaos
   historyLimit: 5
   concurrencyPolicy: Forbid
@@ -375,16 +375,16 @@ If the experiment breaks the steady state, the alert fires, the experiment shoul
 
 Start small. Expand as you gain confidence.
 
-| Phase | Experiment | Blast radius |
-|-------|------------|--------------|
-| 1 | Kill 1 pod of non-critical service | 1 pod, 1 service |
-| 2 | Kill 1 pod of critical service | 1 pod, but monitoring on it |
-| 3 | Drain 1 node | 1 node, but only in staging |
-| 4 | Network partition between 2 services | 2 services, in staging |
-| 5 | Kill all pods in a Deployment (one at a time) | 1 Deployment, in staging |
-| 6 | Drain a node in production | 1 node, with monitoring |
-| 7 | Zone failure simulation | 1 zone, with traffic shifting |
-| 8 | Region failure simulation | 1 region, with DR invocation |
+| Phase | Experiment                                    | Blast radius                  |
+| ----- | --------------------------------------------- | ----------------------------- |
+| 1     | Kill 1 pod of non-critical service            | 1 pod, 1 service              |
+| 2     | Kill 1 pod of critical service                | 1 pod, but monitoring on it   |
+| 3     | Drain 1 node                                  | 1 node, but only in staging   |
+| 4     | Network partition between 2 services          | 2 services, in staging        |
+| 5     | Kill all pods in a Deployment (one at a time) | 1 Deployment, in staging      |
+| 6     | Drain a node in production                    | 1 node, with monitoring       |
+| 7     | Zone failure simulation                       | 1 zone, with traffic shifting |
+| 8     | Region failure simulation                     | 1 region, with DR invocation  |
 
 **Always have a rollback plan.** If the experiment goes sideways, how do you recover in 5 minutes?
 
@@ -392,15 +392,15 @@ Start small. Expand as you gain confidence.
 
 Some good starting hypotheses:
 
-| Experiment | Hypothesis |
-|------------|------------|
-| Kill 1 pod | "Replicas reduce to 4, no error rate spike, no data loss." |
-| Kill all pods of a service | "Service comes back within 2 min, error rate spike <5%, no cascading failures." |
-| Add 500ms latency between services | "P99 latency increases by 500ms, error rate stays the same, timeouts trigger correctly." |
-| Drain a node | "Pods reschedule to other nodes within 5 min, no PDB violations." |
-| Network partition between 2 services | "Circuit breaker triggers, calls fail fast, system recovers when partition heals." |
-| OOMKill a pod | "Pod restarts with same memory, OOM kill is recorded, no cascading OOMs." |
-| CPU stress to 100% | "Pod is throttled, no others affected (CPU limits work), throttling visible in metrics." |
+| Experiment                           | Hypothesis                                                                               |
+| ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Kill 1 pod                           | "Replicas reduce to 4, no error rate spike, no data loss."                               |
+| Kill all pods of a service           | "Service comes back within 2 min, error rate spike <5%, no cascading failures."          |
+| Add 500ms latency between services   | "P99 latency increases by 500ms, error rate stays the same, timeouts trigger correctly." |
+| Drain a node                         | "Pods reschedule to other nodes within 5 min, no PDB violations."                        |
+| Network partition between 2 services | "Circuit breaker triggers, calls fail fast, system recovers when partition heals."       |
+| OOMKill a pod                        | "Pod restarts with same memory, OOM kill is recorded, no cascading OOMs."                |
+| CPU stress to 100%                   | "Pod is throttled, no others affected (CPU limits work), throttling visible in metrics." |
 
 Each hypothesis should be **specific** and **measurable**.
 
@@ -416,16 +416,16 @@ In production, chaos experiments blend with real failures. Three ways to tell:
 
 ## Common gotchas
 
-* **Chaos in production requires buy-in.** SRE, engineering, leadership. Don't surprise people.
-* **Steady state must be measurable.** If you can't measure it, chaos is theater.
-* **The first experiment always reveals something.** Be ready to learn and fix.
-* **Don't run experiments on critical services without monitoring.** Always have observability before breaking things.
-* **Network partitions are hard to clean up.** Some chaos tools leave iptables rules behind. Verify the cleanup.
-* **The "stop" button is critical.** Have someone who can abort all experiments in seconds.
-* **Game days require prep.** Walk through the experiments mentally before running them.
-* **Some experiments require permissions you don't have.** Killing kubelet, restarting etcd — you might not have SSH access in production. Use chaos tools that work via the k8s API.
-* **Chaos Mesh / Litmus / Gremlin have their own blast radius.** Their pods have permissions to do harmful things. Restrict with RBAC.
-* **Continuous chaos in production is advanced.** Start with game days, automate slowly.
+- **Chaos in production requires buy-in.** SRE, engineering, leadership. Don't surprise people.
+- **Steady state must be measurable.** If you can't measure it, chaos is theater.
+- **The first experiment always reveals something.** Be ready to learn and fix.
+- **Don't run experiments on critical services without monitoring.** Always have observability before breaking things.
+- **Network partitions are hard to clean up.** Some chaos tools leave iptables rules behind. Verify the cleanup.
+- **The "stop" button is critical.** Have someone who can abort all experiments in seconds.
+- **Game days require prep.** Walk through the experiments mentally before running them.
+- **Some experiments require permissions you don't have.** Killing kubelet, restarting etcd — you might not have SSH access in production. Use chaos tools that work via the k8s API.
+- **Chaos Mesh / Litmus / Gremlin have their own blast radius.** Their pods have permissions to do harmful things. Restrict with RBAC.
+- **Continuous chaos in production is advanced.** Start with game days, automate slowly.
 
 ## A worked example
 
@@ -434,6 +434,7 @@ In production, chaos experiments blend with real failures. Three ways to tell:
 **Hypothesis:** "If the payment gateway returns in 2s instead of 100ms, the checkout service times out after 1s, returns a 503 to the user, and recovers when the latency is removed."
 
 **Setup:**
+
 1. Define steady state: P99 latency <500ms, error rate <0.1%, no failed transactions
 2. Install chaos-mesh in staging
 3. Run NetworkChaos to add 2s latency to payment-gateway traffic
@@ -494,16 +495,16 @@ T+12min: Latency 100ms, errors 0.05%   (recovered)
 
 **Always start small.** A chaos experiment that takes down a critical service is not a learning experience — it's an outage.
 
-| Blast radius | When to use |
-|--------------|-------------|
-| **1 pod, non-critical** | First day of chaos |
-| **1 pod, critical** | After 5+ non-critical experiments |
-| **1 node, dev** | After 10+ pod experiments |
-| **1 node, prod** | After 5+ node experiments in dev |
-| **All pods of a service** | After 20+ pod experiments |
-| **Network partition** | After node experiments |
-| **Zone failure** | Game day, multiple teams observing |
-| **Region failure** | Once a year, full team |
+| Blast radius              | When to use                        |
+| ------------------------- | ---------------------------------- |
+| **1 pod, non-critical**   | First day of chaos                 |
+| **1 pod, critical**       | After 5+ non-critical experiments  |
+| **1 node, dev**           | After 10+ pod experiments          |
+| **1 node, prod**          | After 5+ node experiments in dev   |
+| **All pods of a service** | After 20+ pod experiments          |
+| **Network partition**     | After node experiments             |
+| **Zone failure**          | Game day, multiple teams observing |
+| **Region failure**        | Once a year, full team             |
 
 ## The chaos experiment template
 
@@ -680,20 +681,24 @@ After every experiment, write up what you learned:
 
 ```markdown
 # Experiment: Kill 1 web pod
+
 Date: 2024-01-15
 Hypothesis: Service stays healthy with 4 backends
 
 ## What we observed
+
 - 4 backends within 8s (expected 10s) ✓
 - Error rate: 0.5% spike for 5s, returned to 0.05% (expected <0.1%) ✓
 - No data loss ✓
 
 ## What surprised us
+
 - Readiness probe was 30s, not the 10s we thought
 - PDB was not configured (was set to 0 from a previous test)
 - HPA was at minReplicas=2, but only because we set it manually
 
 ## Action items
+
 - [ ] Fix readiness probe interval (now 10s)
 - [ ] Set PDB minAvailable=2 (was 0)
 - [ ] Verify HPA minReplicas in production manifest
@@ -714,7 +719,7 @@ Once you're running continuous chaos, you'll have an experiment fire at 3am. **M
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/high-availability|high-availability]] — what to test
-* [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — broader failure modes
-* [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — real-world failure
-* [Principles of Chaos](https://principlesofchaos.org/)
+- [[Kubernetes/guides/non-functional/high-availability|high-availability]] — what to test
+- [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — broader failure modes
+- [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — real-world failure
+- [Principles of Chaos](https://principlesofchaos.org/)

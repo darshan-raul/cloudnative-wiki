@@ -7,6 +7,7 @@ title: Expand-Contract Pattern
 The expand-contract pattern (also called parallel change or never break the contract) is a technique for safely evolving a shared API or database schema without downtime. The key principle: **a consumer of your API or schema should never experience an error due to a change you made**.
 
 The name describes the two phases:
+
 - **Expand** — add new capability (new column, new field, new endpoint) that doesn't break existing consumers
 - **Contract** — remove old capability after all consumers have migrated away
 
@@ -68,6 +69,7 @@ ALTER TABLE users ADD COLUMN phone VARCHAR(20);
 ```
 
 **Key rules during expand:**
+
 - New fields are always nullable or optional
 - New endpoints are additive (never break existing endpoints)
 - Never require new fields in requests
@@ -200,8 +202,9 @@ This requires **multiple deployment cycles**. Each cycle must be independently d
 ## Rules for Expand-Contract
 
 1. **Never remove something in the same release that adds its replacement**
- - Spread changes across multiple deployments
-   - Each deployment must be independently safe
+
+- Spread changes across multiple deployments
+  - Each deployment must be independently safe
 
 2. **Never require new fields in requests**
    - New request fields = optional
@@ -222,12 +225,12 @@ This requires **multiple deployment cycles**. Each cycle must be independently d
 
 ## Expand-Contract vs Feature Flags
 
-| Scenario | Pattern | Notes |
-|---|---|---|
-| Database schema evolution | Expand-contract | Requires multi-deployment cycle |
-| API field addition | Expand-contract | Old clients ignore new field |
-| Behavior change (pricing logic) | Feature flag | Gate without schema change |
-| New service replacing old | Strangler fig | Incremental routing |
+| Scenario                        | Pattern         | Notes                           |
+| ------------------------------- | --------------- | ------------------------------- |
+| Database schema evolution       | Expand-contract | Requires multi-deployment cycle |
+| API field addition              | Expand-contract | Old clients ignore new field    |
+| Behavior change (pricing logic) | Feature flag    | Gate without schema change      |
+| New service replacing old       | Strangler fig   | Incremental routing             |
 
 ## Expand-Contract for Microservices
 

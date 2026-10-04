@@ -75,14 +75,14 @@ The GKE Compute Persistent Disk CSI Driver translates standard Kubernetes `Persi
 
 GKE supports diverse block storage tiers tailored for specific I/O profiles:
 
-| Storage Tier | GCE Disk Type | Max IOPS / Volume | Max Throughput | Recommended Workload |
-| :--- | :--- | :--- | :--- | :--- |
-| **Standard Persistent Disk** | `pd-standard` (HDD) | Up to 7,500 | 1,200 MB/s | Cold logs, bulk backup targets |
-| **Balanced Persistent Disk** | `pd-balanced` (SSD) | Up to 80,000 | 1,200 MB/s | General microservices, web apps |
-| **SSD Persistent Disk** | `pd-ssd` (SSD) | Up to 100,000 | 1,200 MB/s | Standard OLTP databases |
-| **Hyperdisk Balanced** | `hyperdisk-balanced` | Up to 500,000 | 3,000 MB/s | High-performance enterprise DBs |
-| **Hyperdisk Extreme** | `hyperdisk-extreme` | Up to 500,000 | 5,000 MB/s | Mission-critical SAP HANA, Oracle |
-| **Regional Persistent Disk** | `pd-ssd` (Regional) | Up to 100,000 | 1,200 MB/s | Synchronous zero-data-loss failover |
+| Storage Tier                 | GCE Disk Type        | Max IOPS / Volume | Max Throughput | Recommended Workload                |
+| :--------------------------- | :------------------- | :---------------- | :------------- | :---------------------------------- |
+| **Standard Persistent Disk** | `pd-standard` (HDD)  | Up to 7,500       | 1,200 MB/s     | Cold logs, bulk backup targets      |
+| **Balanced Persistent Disk** | `pd-balanced` (SSD)  | Up to 80,000      | 1,200 MB/s     | General microservices, web apps     |
+| **SSD Persistent Disk**      | `pd-ssd` (SSD)       | Up to 100,000     | 1,200 MB/s     | Standard OLTP databases             |
+| **Hyperdisk Balanced**       | `hyperdisk-balanced` | Up to 500,000     | 3,000 MB/s     | High-performance enterprise DBs     |
+| **Hyperdisk Extreme**        | `hyperdisk-extreme`  | Up to 500,000     | 5,000 MB/s     | Mission-critical SAP HANA, Oracle   |
+| **Regional Persistent Disk** | `pd-ssd` (Regional)  | Up to 100,000     | 1,200 MB/s     | Synchronous zero-data-loss failover |
 
 ---
 
@@ -121,7 +121,8 @@ Apply StorageClass:
 ```bash
 kubectl apply -f hyperdisk-storageclass.yaml
 ```
-*(Note: `volumeBindingMode: WaitForFirstConsumer` is mandatory; it prevents GKE from provisioning a disk in Zone A when the pod might later be scheduled in Zone B).*
+
+_(Note: `volumeBindingMode: WaitForFirstConsumer` is mandatory; it prevents GKE from provisioning a disk in Zone A when the pod might later be scheduled in Zone B)._
 
 ### 3. Deploy StatefulSet with PersistentVolumeClaim
 
@@ -145,22 +146,22 @@ spec:
         app: postgres
     spec:
       containers:
-      - name: postgres
-        image: postgres:16-alpine
-        ports:
-        - containerPort: 5432
-        volumeMounts:
-        - name: pgdata
-          mountPath: /var/lib/postgresql/data
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
   volumeClaimTemplates:
-  - metadata:
-      name: pgdata
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: hyperdisk-balanced-encrypted
-      resources:
-        requests:
-          storage: 250Gi
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: hyperdisk-balanced-encrypted
+        resources:
+          requests:
+            storage: 250Gi
 ```
 
 Apply StatefulSet:
@@ -181,7 +182,8 @@ kubectl patch pvc pgdata-postgres-db-0 -n database \
 # Verify underlying GCE disk expansion and file system resize
 kubectl get pvc pgdata-postgres-db-0 -n database -w
 ```
-*(The GKE CSI driver calls GCE APIs to resize the block volume, and then dynamically resizes the `ext4/xfs` filesystem inside the running container without unmounting).*
+
+_(The GKE CSI driver calls GCE APIs to resize the block volume, and then dynamically resizes the `ext4/xfs` filesystem inside the running container without unmounting)._
 
 ### 5. Create Point-in-Time Kubernetes VolumeSnapshot
 
@@ -212,14 +214,14 @@ kubectl get volumesnapshot postgres-db-backup-01 -n database
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Limit | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Disks per GCE VM** | 128 disks per node | Depends on machine shape (e.g., N2 supports 128) |
-| **Max Storage per VM** | 257 TiB total attached | Total attached disk storage across all pods on 1 node |
-| **Volume Resizing** | Expansion only | Volumes cannot be shrunk; allocate conservatively |
-| **Regional PD Zones** | Exactly 2 zones | Synchronous replication with zero data loss |
-| **VolumeSnapshot Retention**| Backed by GCS | Persists independently of PVC lifecycle |
-| **Access Modes** | `ReadWriteOnce` (RWO) | For `ReadWriteMany` (RWX), use Filestore or GCS FUSE |
+| Parameter / Dimension        | Standard Limit         | Engineering Guidance                                  |
+| :--------------------------- | :--------------------- | :---------------------------------------------------- |
+| **Max Disks per GCE VM**     | 128 disks per node     | Depends on machine shape (e.g., N2 supports 128)      |
+| **Max Storage per VM**       | 257 TiB total attached | Total attached disk storage across all pods on 1 node |
+| **Volume Resizing**          | Expansion only         | Volumes cannot be shrunk; allocate conservatively     |
+| **Regional PD Zones**        | Exactly 2 zones        | Synchronous replication with zero data loss           |
+| **VolumeSnapshot Retention** | Backed by GCS          | Persists independently of PVC lifecycle               |
+| **Access Modes**             | `ReadWriteOnce` (RWO)  | For `ReadWriteMany` (RWX), use Filestore or GCS FUSE  |
 
 ---
 
@@ -236,6 +238,7 @@ kubectl get volumesnapshot postgres-db-backup-01 -n database
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **Standard SSD (`pd-ssd`):** $0.17 per GB-month.
 2. **Balanced PD (`pd-balanced`):** $0.10 per GB-month.
 3. **Hyperdisk Balanced:** $0.08 per GB-month + $0.005 per provisioned IOPS + $0.04 per provisioned MB/s.

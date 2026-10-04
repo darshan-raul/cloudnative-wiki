@@ -7,7 +7,7 @@ description: Understanding why Kubernetes historically disabled swap, modern cgr
 
 # Need for swapoff
 
-*"https://kubernetes.io/docs/concepts/architecture/nodes/"*
+_"https://kubernetes.io/docs/concepts/architecture/nodes/"_
 
 A node with swap enabled **cannot join a Kubernetes cluster** by default. The kubelet refuses to start with `--fail-swap-on=true` (the default since k8s 1.8). This is a deliberate design choice with a long, slightly controversial history. This note explains the why, the how, and the recent changes.
 
@@ -52,10 +52,10 @@ The cgroup memory limit is enforced at the cgroup level, but **swap is global** 
 
 Without accurate memory accounting:
 
-* **Liveness probes** can't reliably detect OOM situations
-* **Resource limits** become best-effort
-* **The scheduler** can no longer guarantee that a node has enough "real" memory for a Pod's requests
-* **Node-level OOMs** become unpredictable — the kernel kills whatever, not the right thing
+- **Liveness probes** can't reliably detect OOM situations
+- **Resource limits** become best-effort
+- **The scheduler** can no longer guarantee that a node has enough "real" memory for a Pod's requests
+- **Node-level OOMs** become unpredictable — the kernel kills whatever, not the right thing
 
 The Kubernetes SIG-Node decision was: **swap is dangerous for k8s's memory model, refuse to run with it.** Better to fail loudly than to silently misbehave.
 
@@ -63,23 +63,24 @@ The Kubernetes SIG-Node decision was: **swap is dangerous for k8s's memory model
 
 The "no swap" rule has been controversial:
 
-* **OS people** (especially on smaller devices) think swap is essential. A Raspberry Pi with 1GB RAM benefits hugely from 2GB swap.
-* **k8s people** want predictable memory accounting.
-* **Container runtime people** (containerd, CRI-O) wanted to support both.
+- **OS people** (especially on smaller devices) think swap is essential. A Raspberry Pi with 1GB RAM benefits hugely from 2GB swap.
+- **k8s people** want predictable memory accounting.
+- **Container runtime people** (containerd, CRI-O) wanted to support both.
 
 ### k8s 1.22 — NodeSwap status Beta
 
 In k8s 1.22, support for swap was added **as a beta feature**. The kubelet gained:
 
-* `--feature-gates=NodeSwap=on` (default off, became default off in 1.28)
-* `--fail-swap-on` (default true) — when false, kubelet starts even with swap enabled
-* Memory accounting that takes swap into account
+- `--feature-gates=NodeSwap=on` (default off, became default off in 1.28)
+- `--fail-swap-on` (default true) — when false, kubelet starts even with swap enabled
+- Memory accounting that takes swap into account
 
 ### Modern Kubernetes (v1.28–v1.37): `NodeSwap` on cgroup v2
 
 On modern Linux distributions running **cgroup v2**, Kubernetes supports running with swap enabled via the `NodeSwap` feature. However, **kubelet will still refuse to start with swap enabled by default** unless explicitly configured.
 
 To allow swap memory on a node:
+
 1. The node **must run cgroup v2** (in Kubernetes v1.37+, kubelet hard-fails on cgroup v1 by default).
 2. The administrator must explicitly set `failSwapOn: false` in `KubeletConfiguration`.
 3. The administrator must configure `memorySwap.swapBehavior`:
@@ -123,21 +124,22 @@ You have two options:
 # workloads with small requests.
 spec:
   containers:
-  - name: app
-    resources:
-      requests:
-        memory: 64Mi
-      limits:
-        memory: 128Mi
+    - name: app
+      resources:
+        requests:
+          memory: 64Mi
+        limits:
+          memory: 128Mi
 ```
 
 **Option B: enable swap and use k8s 1.28+ NodeSwap**
 
 Requires:
-* cgroup-v2 (modern Linux)
-* k8s 1.28+
-* `memory.swap.max` set in the cgroup to limit swap usage
-* Understanding that `limits.memory` now includes swap
+
+- cgroup-v2 (modern Linux)
+- k8s 1.28+
+- `memory.swap.max` set in the cgroup to limit swap usage
+- Understanding that `limits.memory` now includes swap
 
 This is the right answer for edge / IoT but requires care.
 
@@ -191,17 +193,17 @@ If you're running k3s on a Pi with swap, you can either disable swap (recommende
 
 ## Gotchas
 
-* **`free -h` shows 0 swap but the kubelet still complains.** The kernel is still configured to allow swap; just no swap file is in use. `swapoff -a` plus a `sed` of `/etc/fstab` is the proper fix.
-* **The cgroup v1 vs v2 distinction matters.** On cgroup-v1 systems, swap accounting is broken. On cgroup-v2, it's not. Modern distros (Ubuntu 22.04+, RHEL 9+, Debian 12+) default to cgroup-v2. Older distros need configuration.
-* **Cloud VMs sometimes have swap on a separate volume.** Disabling it requires editing `/etc/fstab` and unmounting the swap volume, not just `swapoff -a`.
-* **Minikube in a VM doesn't have swap.** minikube's default VM doesn't enable swap. No problem.
-* **Docker Desktop's k8s doesn't have swap.** Same deal.
-* **K3s on a Raspberry Pi often has swap on by default.** Raspbian enables a swap file. If you want to run "real k8s" on a Pi, disable the swap file. If you want k3s to tolerate it, fine.
-* **The `--fail-swap-on=false` workaround causes silent OOMs.** A Pod that exceeds its limit may swap instead of being killed, masking the issue until the system is so swapped that everything slows to a crawl. Not a free lunch.
+- **`free -h` shows 0 swap but the kubelet still complains.** The kernel is still configured to allow swap; just no swap file is in use. `swapoff -a` plus a `sed` of `/etc/fstab` is the proper fix.
+- **The cgroup v1 vs v2 distinction matters.** On cgroup-v1 systems, swap accounting is broken. On cgroup-v2, it's not. Modern distros (Ubuntu 22.04+, RHEL 9+, Debian 12+) default to cgroup-v2. Older distros need configuration.
+- **Cloud VMs sometimes have swap on a separate volume.** Disabling it requires editing `/etc/fstab` and unmounting the swap volume, not just `swapoff -a`.
+- **Minikube in a VM doesn't have swap.** minikube's default VM doesn't enable swap. No problem.
+- **Docker Desktop's k8s doesn't have swap.** Same deal.
+- **K3s on a Raspberry Pi often has swap on by default.** Raspbian enables a swap file. If you want to run "real k8s" on a Pi, disable the swap file. If you want k3s to tolerate it, fine.
+- **The `--fail-swap-on=false` workaround causes silent OOMs.** A Pod that exceeds its limit may swap instead of being killed, masking the issue until the system is so swapped that everything slows to a crawl. Not a free lunch.
 
 ## What to remember
 
-* **Production nodes have swap disabled.** Period. Don't argue.
-* **k8s 1.28+ supports swap on cgroup-v2** as a beta feature, but it's still opt-in for most operators.
-* **Edge / IoT with constrained memory** is the legitimate use case for swap-on-k8s.
-* **If your kubelet won't start, check swap first.** It's the most common cause of the "kubelet fails to start" error in a fresh install.
+- **Production nodes have swap disabled.** Period. Don't argue.
+- **k8s 1.28+ supports swap on cgroup-v2** as a beta feature, but it's still opt-in for most operators.
+- **Edge / IoT with constrained memory** is the legitimate use case for swap-on-k8s.
+- **If your kubelet won't start, check swap first.** It's the most common cause of the "kubelet fails to start" error in a fresh install.

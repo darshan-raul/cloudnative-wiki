@@ -35,17 +35,17 @@ metadata:
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: check-label
-    match:
-      resources:
-        kinds:
-        - Pod
-    validate:
-      message: "Label 'app' is required"
-      pattern:
-        metadata:
-          labels:
-            app: "?*"
+    - name: check-label
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Label 'app' is required"
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
 ```
 
 ### Restrict image registries
@@ -58,17 +58,17 @@ metadata:
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: require-allowed-registry
-    match:
-      resources:
-        kinds:
-        - Pod
-    validate:
-      message: "Only approved registries allowed"
-      pattern:
-        spec:
-          containers:
-          - image: "!*registry.example.com*"
+    - name: require-allowed-registry
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Only approved registries allowed"
+        pattern:
+          spec:
+            containers:
+              - image: "!*registry.example.com*"
 ```
 
 ### Mutate pods for security
@@ -81,17 +81,17 @@ metadata:
 spec:
   mutation:
     rules:
-    - name: add-runasnonroot
-      match:
-        resources:
-          kinds:
-          - Pod
-      mutate:
-        patchStrategicMerge:
-          spec:
-            securityContext:
-              runAsNonRoot: true
-              runAsUser: 10000
+      - name: add-runasnonroot
+        match:
+          resources:
+            kinds:
+              - Pod
+        mutate:
+          patchStrategicMerge:
+            spec:
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 10000
 ```
 
 ## Policy Reports

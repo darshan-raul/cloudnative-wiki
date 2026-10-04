@@ -12,21 +12,22 @@ SMS is the older AWS lift-and-shift service for replicating VMware VMs to AWS. *
 
 ## SMS vs MGN
 
-| Feature | SMS | MGN |
-|---------|-----|-----|
-| Status | Deprecated, maintenance mode | Active development |
-| Continuous replication | Yes | Yes |
-| Test launch | No | Yes |
-| Wave management | No | Yes |
-| VMware support | Yes | Yes |
-| Hyper-V support | No | Yes |
-| Physical servers | No | Yes |
-| Agent-based | Yes | Yes |
-| Cutover modes | Direct only | Test + Final |
+| Feature                | SMS                          | MGN                |
+| ---------------------- | ---------------------------- | ------------------ |
+| Status                 | Deprecated, maintenance mode | Active development |
+| Continuous replication | Yes                          | Yes                |
+| Test launch            | No                           | Yes                |
+| Wave management        | No                           | Yes                |
+| VMware support         | Yes                          | Yes                |
+| Hyper-V support        | No                           | Yes                |
+| Physical servers       | No                           | Yes                |
+| Agent-based            | Yes                          | Yes                |
+| Cutover modes          | Direct only                  | Test + Final       |
 
 ## Why Use MGN Instead
 
 MGN is the modern replacement and has significant advantages:
+
 - **Test launch:** Validate before cutover without affecting production
 - **Wave management:** Coordinate multi-server cutovers
 - **Better replication performance:** Optimized agent communication
@@ -90,10 +91,12 @@ SMS supported only VMware and required creating an SMS connector (a VM appliance
 You have two options:
 
 **Option A: Continue with SMS** (not recommended)
+
 - SMS still works, but no new features or fixes
 - If you hit issues, AWS support may suggest migrating to MGN anyway
 
 **Option B: Migrate to MGN** (recommended)
+
 1. Keep SMS running (don't interrupt replication)
 2. Install MGN agent on the same VMs
 3. MGN will register as new source servers and start replicating

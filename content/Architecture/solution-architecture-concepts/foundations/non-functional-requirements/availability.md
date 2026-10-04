@@ -10,12 +10,12 @@ Availability is the percentage of time a system is operational and accessible. F
 
 Availability is expressed as a percentage of uptime per year:
 
-| Availability | Downtime/year | Downtime/month | Downtime/week |
-|---|---|---|---|
-| 99% ("two nines") | 3.65 days | 7.31 hours | 1.69 hours |
-| 99.9% ("three nines") | 8.76 hours | 43.83 min | 10.08 min |
-| 99.99% ("four nines") | 52.60 min | 4.38 min | 1.01 min |
-| 99.999% ("five nines") | 5.26 min | 26.30 sec | 6.05 sec |
+| Availability           | Downtime/year | Downtime/month | Downtime/week |
+| ---------------------- | ------------- | -------------- | ------------- |
+| 99% ("two nines")      | 3.65 days     | 7.31 hours     | 1.69 hours    |
+| 99.9% ("three nines")  | 8.76 hours    | 43.83 min      | 10.08 min     |
+| 99.99% ("four nines")  | 52.60 min     | 4.38 min       | 1.01 min      |
+| 99.999% ("five nines") | 5.26 min      | 26.30 sec      | 6.05 sec      |
 
 > **ELI5:** Each "nine" costs roughly 90% of the downtime of the previous level. Going from 99% to 99.9% saves you 3 days of downtime per year. Going from 99.9% to 99.99% saves you 8 hours. The cost to achieve the last nine is usually10x the cost of the first.
 
@@ -111,6 +111,7 @@ Protect the system from overload. See [[rate-limiting|Rate Limiting]] for implem
 **Unplanned** — failures (hardware, software, network). Mitigated by redundancy, monitoring, and incident response.
 
 **Planned** — deployments, maintenance. Mitigated by:
+
 - Rolling deployments (zero-downtime updates)
 - Blue-green deployments (instant rollback capability)
 - Feature flags (disable features without redeploying)

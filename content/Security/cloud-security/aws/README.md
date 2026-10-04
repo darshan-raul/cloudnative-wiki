@@ -11,14 +11,14 @@ AWS-native security services and your multi-account monitoring setup.
 
 ## Core Services
 
-| Service | Purpose | Your Use |
-|---------|---------|----------|
-| **Security Hub** | Centralize findings across AWS services | Aggregates GuardDuty, Config, Inspector |
-| **GuardDuty** | Threat detection (malware, cryptomining, credential access) | Your 40+ account org |
-| **CloudTrail** | API activity audit log | Agentless → S3 → Wazuh |
-| **Config** | Resource inventory and compliance | SCP evaluation |
-| **Inspector** | Vulnerability scanning (EC2, ECR, lambda) | Part of Security Hub |
-| **IAM Access Analyzer** | Find externally accessible resources | Regular audits |
+| Service                 | Purpose                                                     | Your Use                                |
+| ----------------------- | ----------------------------------------------------------- | --------------------------------------- |
+| **Security Hub**        | Centralize findings across AWS services                     | Aggregates GuardDuty, Config, Inspector |
+| **GuardDuty**           | Threat detection (malware, cryptomining, credential access) | Your 40+ account org                    |
+| **CloudTrail**          | API activity audit log                                      | Agentless → S3 → Wazuh                  |
+| **Config**              | Resource inventory and compliance                           | SCP evaluation                          |
+| **Inspector**           | Vulnerability scanning (EC2, ECR, lambda)                   | Part of Security Hub                    |
+| **IAM Access Analyzer** | Find externally accessible resources                        | Regular audits                          |
 
 ## Multi-Account Architecture
 
@@ -42,15 +42,17 @@ SCPs enforce guardrails at the organizational level:
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "DenyPublicAccessToS3",
-    "Effect": "Deny",
-    "Action": ["s3:*"],
-    "Resource": ["arn:aws:s3:::*"],
-    "Condition": {
-      "Bool": {"aws:ViaAWSService": "false"}
+  "Statement": [
+    {
+      "Sid": "DenyPublicAccessToS3",
+      "Effect": "Deny",
+      "Action": ["s3:*"],
+      "Resource": ["arn:aws:s3:::*"],
+      "Condition": {
+        "Bool": { "aws:ViaAWSService": "false" }
+      }
     }
-  }]
+  ]
 }
 ```
 

@@ -13,12 +13,12 @@ tags:
 
 These are two different systems:
 
-| | Checkpointer | Memory Store |
-|---|---|---|
-| Scope | Per `thread_id` | Cross-thread (global) |
-| Lifetime | One conversation | Long-term (forever) |
-| What it saves | Full graph state | Key-value pairs per namespace |
-| Use for | Conversation history | User preferences, learned facts |
+|               | Checkpointer         | Memory Store                    |
+| ------------- | -------------------- | ------------------------------- |
+| Scope         | Per `thread_id`      | Cross-thread (global)           |
+| Lifetime      | One conversation     | Long-term (forever)             |
+| What it saves | Full graph state     | Key-value pairs per namespace   |
+| Use for       | Conversation history | User preferences, learned facts |
 
 Think of checkpointers as session storage and memory stores as
 long-term knowledge storage.

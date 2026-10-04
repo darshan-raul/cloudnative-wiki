@@ -237,22 +237,22 @@ events.put_rule(
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Custom events published | $1.00/million |
-| Schema discovery (per schema) | $0.10/hour |
-| Event replay | $0.10/GB |
-| Cross-account events | Same as custom events |
+| Component                     | Cost                  |
+| ----------------------------- | --------------------- |
+| Custom events published       | $1.00/million         |
+| Schema discovery (per schema) | $0.10/hour            |
+| Event replay                  | $0.10/GB              |
+| Cross-account events          | Same as custom events |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Rules per event bus | 100 |
-| Event buses per region | 100 |
-| Targets per rule | 5 (can request increase) |
-| Event size | 256KB |
-| Archive retention | Up to 90 days |
+| Resource               | Limit                    |
+| ---------------------- | ------------------------ |
+| Rules per event bus    | 100                      |
+| Event buses per region | 100                      |
+| Targets per rule       | 5 (can request increase) |
+| Event size             | 256KB                    |
+| Archive retention      | Up to 90 days            |
 
 ## References
 

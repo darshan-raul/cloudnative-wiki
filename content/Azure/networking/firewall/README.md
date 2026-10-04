@@ -67,16 +67,16 @@ Azure Firewall deploys inside a dedicated, non-routable subnet named `AzureFirew
 
 ## 2. SKU Comparison: Basic vs Standard vs Premium
 
-| Feature / Capability | Basic Tier | Standard Tier | Premium Tier |
-| :--- | :--- | :--- | :--- |
-| **Target Workload** | Small/Medium Business (< 250 Mbps) | Enterprise L3-L7 Spoke Routing | High-Security / Banking / PCI-DSS |
-| **Max Throughput** | 250 Mbps | Up to 30 Gbps | Up to 100 Gbps |
-| **L3-L7 Filtering** | Yes (FQDNs only) | Yes (FQDNs only) | Yes (FQDNs + Full URLs) |
-| **Threat Intelligence** | Alert only | Alert and Deny | Alert and Deny |
-| **TLS Inspection** | No | No | **Yes (Outbound & East-West)** |
-| **IDPS** | No | No | **Yes (67,000+ signatures)** |
-| **Web Categories** | No | Yes (FQDNs) | **Yes (Full URLs)** |
-| **Availability SLA** | 99.95% (Single AZ) | 99.99% (Multi-AZ) | 99.99% (Multi-AZ) |
+| Feature / Capability    | Basic Tier                         | Standard Tier                  | Premium Tier                      |
+| :---------------------- | :--------------------------------- | :----------------------------- | :-------------------------------- |
+| **Target Workload**     | Small/Medium Business (< 250 Mbps) | Enterprise L3-L7 Spoke Routing | High-Security / Banking / PCI-DSS |
+| **Max Throughput**      | 250 Mbps                           | Up to 30 Gbps                  | Up to 100 Gbps                    |
+| **L3-L7 Filtering**     | Yes (FQDNs only)                   | Yes (FQDNs only)               | Yes (FQDNs + Full URLs)           |
+| **Threat Intelligence** | Alert only                         | Alert and Deny                 | Alert and Deny                    |
+| **TLS Inspection**      | No                                 | No                             | **Yes (Outbound & East-West)**    |
+| **IDPS**                | No                                 | No                             | **Yes (67,000+ signatures)**      |
+| **Web Categories**      | No                                 | Yes (FQDNs)                    | **Yes (Full URLs)**               |
+| **Availability SLA**    | 99.95% (Single AZ)                 | 99.99% (Multi-AZ)              | 99.99% (Multi-AZ)                 |
 
 ---
 
@@ -216,15 +216,15 @@ az network route-table route create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Quota / Limit | Operational Guidance |
-| :--- | :--- | :--- |
-| **Max Throughput** | Up to 100 Gbps (Premium) | Auto-scales in 1 Gbps / 500 Mbps steps |
-| **Subnet Size Required** | `/26` minimum (64 IPs) | Cannot be resized after firewall deployment |
-| **Max Public IPs for SNAT** | 250 public IP addresses | Each IP provides 64,960 SNAT ports |
-| **Rule Collection Groups** | 60 per policy | Order priorities in increments of 100 |
-| **Max Rules per Policy** | 10,000 rules | Consolidate IP ranges with IP Groups |
-| **TLS Inspection CA Key** | Azure Key Vault managed | Requires Enterprise Intermediate CA cert |
-| **SLA Guarantee** | **99.99%** with 3 Availability Zones | Spans 3 physical zones within the region |
+| Parameter / Dimension       | Standard Quota / Limit               | Operational Guidance                        |
+| :-------------------------- | :----------------------------------- | :------------------------------------------ |
+| **Max Throughput**          | Up to 100 Gbps (Premium)             | Auto-scales in 1 Gbps / 500 Mbps steps      |
+| **Subnet Size Required**    | `/26` minimum (64 IPs)               | Cannot be resized after firewall deployment |
+| **Max Public IPs for SNAT** | 250 public IP addresses              | Each IP provides 64,960 SNAT ports          |
+| **Rule Collection Groups**  | 60 per policy                        | Order priorities in increments of 100       |
+| **Max Rules per Policy**    | 10,000 rules                         | Consolidate IP ranges with IP Groups        |
+| **TLS Inspection CA Key**   | Azure Key Vault managed              | Requires Enterprise Intermediate CA cert    |
+| **SLA Guarantee**           | **99.99%** with 3 Availability Zones | Spans 3 physical zones within the region    |
 
 ---
 
@@ -241,6 +241,7 @@ az network route-table route create \
 ## 6. Realistic Pricing Scenarios
 
 Azure Firewall pricing is based on:
+
 1. **Base Deployment Fee:**
    - Standard: ~$1.25 per hour (~$912.50/month).
    - Premium: ~$1.75 per hour (~$1,277.50/month).

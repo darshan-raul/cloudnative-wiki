@@ -31,14 +31,14 @@ ECS Cluster (ec2 or fargate)
 
 ### Key Terms
 
-| Term | Description |
-|------|-------------|
-| Cluster | Logical grouping of container instances |
-| Task Definition | Blueprint for a task (container configs) |
-| Task | Running instance of a task definition |
-| Service | Maintains N running tasks (like a ReplicaSet) |
-| Container Instance | EC2 instance with ECS Agent |
-| Task Role | IAM role for a task's containers |
+| Term               | Description                                   |
+| ------------------ | --------------------------------------------- |
+| Cluster            | Logical grouping of container instances       |
+| Task Definition    | Blueprint for a task (container configs)      |
+| Task               | Running instance of a task definition         |
+| Service            | Maintains N running tasks (like a ReplicaSet) |
+| Container Instance | EC2 instance with ECS Agent                   |
+| Task Role          | IAM role for a task's containers              |
 
 ## Launch Types
 
@@ -86,7 +86,7 @@ AWS manages the underlying infrastructure. You specify CPU/memory and ECS handle
     {
       "name": "nginx",
       "image": "nginx:1.25",
-      "portMappings": [{"containerPort": 80, "protocol": "tcp"}],
+      "portMappings": [{ "containerPort": 80, "protocol": "tcp" }],
       "essential": true,
       "logConfiguration": {
         "logDriver": "awslogs",
@@ -100,11 +100,11 @@ AWS manages the underlying infrastructure. You specify CPU/memory and ECS handle
     {
       "name": "app",
       "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest",
-      "portMappings": [{"containerPort": 8080}],
+      "portMappings": [{ "containerPort": 8080 }],
       "essential": true,
-      "dependsOn": [{"containerName": "nginx", "condition": "HEALTHY"}],
+      "dependsOn": [{ "containerName": "nginx", "condition": "HEALTHY" }],
       "environment": [
-        {"name": "DATABASE_URL", "value": "postgres://db:5432/app"}
+        { "name": "DATABASE_URL", "value": "postgres://db:5432/app" }
       ]
     }
   ],
@@ -166,11 +166,13 @@ aws ecs create-service \
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": ["s3:GetObject", "dynamodb:GetItem"],
-    "Resource": "*"
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "dynamodb:GetItem"],
+      "Resource": "*"
+    }
+  ]
 }
 ```
 
@@ -194,16 +196,18 @@ The EC2 instance profile needs `ecsAgent` permissions:
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "ecs:DeregisterContainerInstance",
-      "ecs:RegisterContainerInstance",
-      "ecs:UpdateContainerInstances",
-      "ecs:Poll"
-    ],
-    "Resource": "*"
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:DeregisterContainerInstance",
+        "ecs:RegisterContainerInstance",
+        "ecs:UpdateContainerInstances",
+        "ecs:Poll"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 ```
 
@@ -249,6 +253,7 @@ aws application-autoscaling put-scaling-policy \
 ```
 
 View logs:
+
 ```bash
 aws logs describe-log-groups --log-group-name /ecs/my-app
 aws logs filter-log-events --log-group-name /ecs/my-app --filter-pattern "ERROR"
@@ -297,14 +302,14 @@ aws ecs update-service \
 
 ## Comparing ECS and EKS
 
-| | ECS | EKS |
-|--|--|--|
-| Control plane | Managed (AWS) | Managed Kubernetes API |
-| Worker nodes | EC2 or Fargate | EC2 or Fargate |
-| YAML format | Task definitions (JSON) | Kubernetes manifests |
-| Ingress | ALB (native integration) | ALB/Ingress (extra config) |
-| IAM for workloads | Task Role (simple) | IRSA (Kubernetes RBAC + IAM) |
-| Use if | Simpler, AWS-native | Already know Kubernetes |
+|                   | ECS                      | EKS                          |
+| ----------------- | ------------------------ | ---------------------------- |
+| Control plane     | Managed (AWS)            | Managed Kubernetes API       |
+| Worker nodes      | EC2 or Fargate           | EC2 or Fargate               |
+| YAML format       | Task definitions (JSON)  | Kubernetes manifests         |
+| Ingress           | ALB (native integration) | ALB/Ingress (extra config)   |
+| IAM for workloads | Task Role (simple)       | IRSA (Kubernetes RBAC + IAM) |
+| Use if            | Simpler, AWS-native      | Already know Kubernetes      |
 
 ## References
 

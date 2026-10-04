@@ -48,23 +48,29 @@ description: Wazuh open-source SIEM and XDR platform - architecture, deployment,
 ## Core Components
 
 ### Indexer
+
 Search and analytics engine storing all security events. Single-node or cluster (3 nodes recommended for production). Supports index lifecycle management (ILM) for data retention.
 
 ### Dashboard
+
 Kibana-based UI for security dashboards, alerts visualization, and configuration. Connect via reverse proxy (nginx/apache) with SSL termination.
 
 ### Manager
+
 Central log analysis engine. Collects, parses, and analyzes logs from agents and agentless sources. Applies rules and generates alerts.
 
 ### Agents
+
 Lightweight endpoint software for Linux, Windows, macOS, and Solaris. Provides file integrity monitoring (FIM), rootkit detection, registry monitoring (Windows), and log collection.
 
 ### Agentless
+
 Direct log collection from systems without installing an agent — via SSH, syslog, or API integrations. Used for network devices, cloud services (AWS CloudTrail, GuardDuty), and legacy systems.
 
 ## Deployment Modes
 
 ### Single-Node (Homelab)
+
 All-in-one deployment for testing and small environments.
 
 ```bash
@@ -106,17 +112,21 @@ services:
 ```
 
 ### Distributed (Production)
+
 Separate nodes for indexer, manager, and dashboard. Scale horizontally for multi-account AWS orgs.
 
 **Recommended minimum:**
+
 - 3x Indexer nodes (cluster)
 - 2x Manager nodes (active-passive)
 - 1x Dashboard node (or 2x for HA)
 
 ### Cloud (Wazuh Cloud)
+
 Managed SaaS option — no infrastructure management. Good for teams wanting managed SIEM without self-hosting.
 
 ### Kubernetes
+
 Helm chart available for cloud-native deployments. Use persistent volumes for indexer data.
 
 ```bash
@@ -165,17 +175,16 @@ AWS Org
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "s3:GetObject",
-      "s3:ListBucket"
-    ],
-    "Resource": [
-      "arn:aws:s3:::my-org-cloudtrail-logs/*",
-      "arn:aws:s3:::my-org-cloudtrail-logs"
-    ]
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::my-org-cloudtrail-logs/*",
+        "arn:aws:s3:::my-org-cloudtrail-logs"
+      ]
+    }
+  ]
 }
 ```
 
@@ -213,16 +222,26 @@ spec:
       initContainers:
         - name: init
           image: busybox
-          command: ['sh', '-c', 'wget https://packages.wazuh.com/4.x/yum5/wazuh-agent-4.12.0-1.x86_64.rpm -O /tmp/wazuh-agent.rpm']
+          command:
+            [
+              "sh",
+              "-c",
+              "wget https://packages.wazuh.com/4.x/yum5/wazuh-agent-4.12.0-1.x86_64.rpm -O /tmp/wazuh-agent.rpm",
+            ]
       containers:
         - name: wazuh
           image: amazonlinux:2
-          command: ['sh', '-c', 'yum install -y /tmp/wazuh-agent.rpm && /var/ossec/bin/wazuh-control start']
+          command:
+            [
+              "sh",
+              "-c",
+              "yum install -y /tmp/wazuh-agent.rpm && /var/ossec/bin/wazuh-control start",
+            ]
           securityContext:
-            privileged: true  # Required for syscalls
+            privileged: true # Required for syscalls
           env:
             - name: WAZUH_MANAGER
-              value: "10.0.1.100"  # Wazuh manager IP
+              value: "10.0.1.100" # Wazuh manager IP
 ```
 
 ### IRSA for Wazuh Agent (EKS)
@@ -281,18 +300,19 @@ IR team investigates
 
 ## Agents vs Agentless
 
-| Feature | Agent | Agentless |
-|---------|-------|-----------|
-| Platform | Linux, Windows, macOS | Any (SSH/syslog/API) |
-| Data collected | Logs, FIM, registry, syscalls | Log files, JSON, API |
-| Deployment complexity | Medium | Low |
-| CloudTrail | No (needs agent on EC2) | Yes (S3 polling) |
-| Real-time | Yes (syscall) | No (polling) |
-| Resource usage | ~1-2% CPU | Minimal |
+| Feature               | Agent                         | Agentless            |
+| --------------------- | ----------------------------- | -------------------- |
+| Platform              | Linux, Windows, macOS         | Any (SSH/syslog/API) |
+| Data collected        | Logs, FIM, registry, syscalls | Log files, JSON, API |
+| Deployment complexity | Medium                        | Low                  |
+| CloudTrail            | No (needs agent on EC2)       | Yes (S3 polling)     |
+| Real-time             | Yes (syscall)                 | No (polling)         |
+| Resource usage        | ~1-2% CPU                     | Minimal              |
 
 ## Why Wazuh (vs Elastic Security, Splunk)
 
 **Advantages:**
+
 - Open source, no licensing cost
 - Native AWS CloudTrail, GuardDuty support (agentless)
 - Built-in active response (block IP)
@@ -300,27 +320,28 @@ IR team investigates
 - Your existing n8n + Planio workflow integration
 
 **Considerations:**
+
 - Elastic has better performance at scale (10B+ events/day)
 - Splunk has better enterprise features (SPL, ES)
 - Wazuh is best for 1000-5000 agents, moderate log volume
 
 ## Performance Sizing
 
-| Agents | Daily Log Volume | Indexer Nodes | Manager Nodes |
-|--------|-----------------|---------------|---------------|
-| < 100 | < 1GB/day | 1 (4CPU, 8GB RAM) | 1 |
-| 100-500 | 1-10GB/day | 3 (4CPU, 16GB RAM) | 2 |
-| 500-2000 | 10-50GB/day | 3 (8CPU, 32GB RAM) | 2 |
-| 2000+ | 50GB+/day | 5+ (custom) | 3+ |
+| Agents   | Daily Log Volume | Indexer Nodes      | Manager Nodes |
+| -------- | ---------------- | ------------------ | ------------- |
+| < 100    | < 1GB/day        | 1 (4CPU, 8GB RAM)  | 1             |
+| 100-500  | 1-10GB/day       | 3 (4CPU, 16GB RAM) | 2             |
+| 500-2000 | 10-50GB/day      | 3 (8CPU, 32GB RAM) | 2             |
+| 2000+    | 50GB+/day        | 5+ (custom)        | 3+            |
 
 ## Data Retention
 
-| Tier | Duration | Use Case |
-|------|----------|----------|
-| Hot | 7 days | Real-time alerts, dashboards |
-| Warm | 30 days | Investigation, medium-term alerts |
-| Cold | 90 days | Compliance, forensics |
-| Frozen | 1 year+ | Long-term audit (custom) |
+| Tier   | Duration | Use Case                          |
+| ------ | -------- | --------------------------------- |
+| Hot    | 7 days   | Real-time alerts, dashboards      |
+| Warm   | 30 days  | Investigation, medium-term alerts |
+| Cold   | 90 days  | Compliance, forensics             |
+| Frozen | 1 year+  | Long-term audit (custom)          |
 
 Configure in indexer ILM policies.
 

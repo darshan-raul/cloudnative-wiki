@@ -1,7 +1,14 @@
+---
+title: "Explicit is better than implicit"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Explicit is better than implicit — Kubernetes reference and architecture guide."
+---
+
 ## Kubernetes NetworkPolicy — Complete Reference
 
 > "[https://kubernetes.io/docs/concepts/services-networking/network-policies/](https://kubernetes.io/docs/concepts/services-networking/network-policies/)"
-> 
+>
 > A NetworkPolicy is a **firewall rule for Pods**. It specifies which Pods can talk to which other Pods, on which ports. Without any NetworkPolicy in a namespace, all Pods can talk to all other Pods — the default is "allow all".
 
 ### Table of Contents
@@ -85,13 +92,13 @@ At least one policy selects Pod X  →  Pod X: deny by default, allow listed
 
 `policyTypes` declares which directions a policy governs. Its behavior is subtle:
 
-|Declared|Has `ingress` block?|Has `egress` block?|Behavior|
-|---|---|---|---|
-|Not set|No|No|API rejects the resource (invalid)|
-|Not set|Yes|No|Implies `[Ingress]`|
-|Not set|No|Yes|Implied `[Egress]`|
-|Not set|Yes|Yes|Implies `[Ingress, Egress]`|
-|`[]` (empty)|Any|Any|**Explicitly no types** — policy has zero effect|
+| Declared     | Has `ingress` block? | Has `egress` block? | Behavior                                         |
+| ------------ | -------------------- | ------------------- | ------------------------------------------------ |
+| Not set      | No                   | No                  | API rejects the resource (invalid)               |
+| Not set      | Yes                  | No                  | Implies `[Ingress]`                              |
+| Not set      | No                   | Yes                 | Implied `[Egress]`                               |
+| Not set      | Yes                  | Yes                 | Implies `[Ingress, Egress]`                      |
+| `[]` (empty) | Any                  | Any                 | **Explicitly no types** — policy has zero effect |
 
 **Best practice:** Always set `policyTypes` explicitly. Relying on implicit inference makes policies harder to reason about during audits.
 
@@ -148,11 +155,11 @@ The selector system has three primitives, and understanding how they interact is
 
 #### 2.1 The Three Selectors
 
-|Selector|What it matches|Scope|
-|---|---|---|
-|`podSelector`|Pods by their labels|Within the policy's namespace|
-|`namespaceSelector`|Namespaces by their labels|All namespaces|
-|`ipBlock`|CIDR ranges of IPs|External or internal CIDRs|
+| Selector            | What it matches            | Scope                         |
+| ------------------- | -------------------------- | ----------------------------- |
+| `podSelector`       | Pods by their labels       | Within the policy's namespace |
+| `namespaceSelector` | Namespaces by their labels | All namespaces                |
+| `ipBlock`           | CIDR ranges of IPs         | External or internal CIDRs    |
 
 #### 2.2 Selector Composition: AND within a block, OR across blocks
 
@@ -1276,17 +1283,17 @@ spec:
 
 NetworkPolicy enforcement is entirely the CNI's responsibility. A CNI that doesn't implement it will silently ignore NetworkPolicy resources.
 
-|CNI|Ingress|Egress|L7 / FQDN|Notes|
-|---|---|---|---|---|
-|**Calico**|✅|✅|✅ (Tiered policies)|Full support. Use GlobalNetworkPolicy for cluster-wide rules.|
-|**Cilium**|✅|✅|✅ (native)|Best L7 support. FQDN-based policies natively.|
-|**Weave Net**|✅|✅|❌|Full L3/L4 support. No L7.|
-|**Flannel**|❌|❌|❌|Does not support NetworkPolicy.|
-|**AWS VPC CNI**|❌|❌|❌|No native support. Use Calico or VPC CNI Policy Controller.|
-|**GKE (default)**|⚠️|⚠️|❌|Requires "Network Policy" to be enabled at cluster creation. Uses Calico under the hood.|
-|**AKS (default)**|⚠️|⚠️|❌|Requires "Network Policy" option (Calico or Azure).|
-|**EKS (default)**|⚠️|⚠️|❌|Requires Calico to be installed separately.|
-|**kind (default)**|❌|❌|❌|Default kind CNI (bridge) doesn't support it. Use Calico for kind.|
+| CNI                | Ingress | Egress | L7 / FQDN            | Notes                                                                                    |
+| ------------------ | ------- | ------ | -------------------- | ---------------------------------------------------------------------------------------- |
+| **Calico**         | ✅      | ✅     | ✅ (Tiered policies) | Full support. Use GlobalNetworkPolicy for cluster-wide rules.                            |
+| **Cilium**         | ✅      | ✅     | ✅ (native)          | Best L7 support. FQDN-based policies natively.                                           |
+| **Weave Net**      | ✅      | ✅     | ❌                   | Full L3/L4 support. No L7.                                                               |
+| **Flannel**        | ❌      | ❌     | ❌                   | Does not support NetworkPolicy.                                                          |
+| **AWS VPC CNI**    | ❌      | ❌     | ❌                   | No native support. Use Calico or VPC CNI Policy Controller.                              |
+| **GKE (default)**  | ⚠️      | ⚠️     | ❌                   | Requires "Network Policy" to be enabled at cluster creation. Uses Calico under the hood. |
+| **AKS (default)**  | ⚠️      | ⚠️     | ❌                   | Requires "Network Policy" option (Calico or Azure).                                      |
+| **EKS (default)**  | ⚠️      | ⚠️     | ❌                   | Requires Calico to be installed separately.                                              |
+| **kind (default)** | ❌      | ❌     | ❌                   | Default kind CNI (bridge) doesn't support it. Use Calico for kind.                       |
 
 #### Verifying Your CNI Supports NetworkPolicy
 
@@ -1492,17 +1499,17 @@ Connection blocked?
 
 #### 9.2 Common Symptom → Cause Mapping
 
-|Symptom|Likely Cause|
-|---|---|
-|Pod can't resolve Service names|Missing DNS egress rule (kube-system UDP:53)|
-|Pod can't reach the internet|Missing egress rule with `ipBlock: 0.0.0.0/0` or NAT configuration|
-|Prometheus can't scrape metrics|Missing ingress rule on target pod for monitoring namespace|
-|StatefulSet pods can't talk to each other|Missing peer-to-peer egress/ingress rules|
-|App works locally but not via LoadBalancer|Missing ingress rule for `podSelector: {}` or external CIDR|
-|Policy applied but traffic still flows|CNI doesn't support NetworkPolicy (Flannel, default kind CNI)|
-|Connection refused after applying policy|Policy blocks the connection; verify from/to selectors|
-|"Connection timed out" after applying policy|Policy blocks the connection; check egress + DNS|
-|API server calls fail|Missing egress rule to kube-system:443|
+| Symptom                                      | Likely Cause                                                       |
+| -------------------------------------------- | ------------------------------------------------------------------ |
+| Pod can't resolve Service names              | Missing DNS egress rule (kube-system UDP:53)                       |
+| Pod can't reach the internet                 | Missing egress rule with `ipBlock: 0.0.0.0/0` or NAT configuration |
+| Prometheus can't scrape metrics              | Missing ingress rule on target pod for monitoring namespace        |
+| StatefulSet pods can't talk to each other    | Missing peer-to-peer egress/ingress rules                          |
+| App works locally but not via LoadBalancer   | Missing ingress rule for `podSelector: {}` or external CIDR        |
+| Policy applied but traffic still flows       | CNI doesn't support NetworkPolicy (Flannel, default kind CNI)      |
+| Connection refused after applying policy     | Policy blocks the connection; verify from/to selectors             |
+| "Connection timed out" after applying policy | Policy blocks the connection; check egress + DNS                   |
+| API server calls fail                        | Missing egress rule to kube-system:443                             |
 
 #### 9.3 Diagnostic Commands
 
@@ -1779,19 +1786,19 @@ spec:
 
 #### 11.4 NetworkPolicy vs. Kubernetes Network Policies (Cilium vs. Calico)
 
-|Feature|Standard k8s|Calico|Cilium|
-|---|---|---|---|
-|Ingress / Egress|✅|✅|✅|
-|podSelector / namespaceSelector|✅|✅|✅|
-|ipBlock|✅|✅|✅|
-|Port ranges (endPort)|✅|✅|✅|
-|SCTP|✅|✅|✅|
-|L7 rules|❌|⚠️ (Tiered policies)|✅ (native)|
-|FQDN-based policies|❌|⚠️ (DNS policy)|✅ (native)|
-|Global cluster-wide policy|❌|✅ (GlobalNetworkPolicy)|⚠️ (CiliumClusterwideNetworkPolicy)|
-|Policy prioritization|❌|✅|✅|
-|Before/after action ordering|❌|✅|✅|
-|Policy audit logging|❌|✅|✅|
+| Feature                         | Standard k8s | Calico                   | Cilium                              |
+| ------------------------------- | ------------ | ------------------------ | ----------------------------------- |
+| Ingress / Egress                | ✅           | ✅                       | ✅                                  |
+| podSelector / namespaceSelector | ✅           | ✅                       | ✅                                  |
+| ipBlock                         | ✅           | ✅                       | ✅                                  |
+| Port ranges (endPort)           | ✅           | ✅                       | ✅                                  |
+| SCTP                            | ✅           | ✅                       | ✅                                  |
+| L7 rules                        | ❌           | ⚠️ (Tiered policies)     | ✅ (native)                         |
+| FQDN-based policies             | ❌           | ⚠️ (DNS policy)          | ✅ (native)                         |
+| Global cluster-wide policy      | ❌           | ✅ (GlobalNetworkPolicy) | ⚠️ (CiliumClusterwideNetworkPolicy) |
+| Policy prioritization           | ❌           | ✅                       | ✅                                  |
+| Before/after action ordering    | ❌           | ✅                       | ✅                                  |
+| Policy audit logging            | ❌           | ✅                       | ✅                                  |
 
 ### 12. Zero-Trust Checklist
 
@@ -1834,14 +1841,14 @@ When hardening a namespace with NetworkPolicy, work through this checklist:
 
 ### Cross-Reference
 
-| Related Topic            | Link                                                             |
-| ------------------------ | ---------------------------------------------------------------- |
+| Related Topic            | Link                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------- | ---------------------- |
 | Security Context (L0/L1) | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context]]`       |
 | Pod Security Standards   | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards]]` |
-| Service Mesh (L7)        | `[[Kubernetes/concepts/networking/06-service-mesh]]`             |
-| DNS in Kubernetes        | `[[Kubernetes/concepts/networking/04-dns]]`                      |
-| Calico NetworkPolicy     | `[[Kubernetes/concepts/networking/cni-calico]]`                  |
-| Cilium NetworkPolicy     | `[[Kubernetes/concepts/networking/cni-cilium]]`                  |
+| Service Mesh (L7)        | `[[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls                  | mTLS & Service Mesh]]` |
+| DNS in Kubernetes        | `[[Kubernetes/concepts/L04-services-networking/03-dns                                   | DNS in Kubernetes]]`   |
+| Calico NetworkPolicy     | `[[Kubernetes/concepts/L04-services-networking/06-cni                                   | CNI & Calico]]`        |
+| Cilium NetworkPolicy     | `[[Kubernetes/concepts/L04-services-networking/06-cni                                   | CNI & Cilium]]`        |
 
 ==**Services do not come into the picture at all.**== This is one of the most common mental traps in Kubernetes. NetworkPolicies **completely ignore Services**—they look right through them and apply rules directly to the underlying **Pods** via their IP addresses.
 
@@ -1854,11 +1861,8 @@ Here is a breakdown of how this works architecturally, why it behaves this way, 
 To understand why NetworkPolicies ignore Services, you have to look at how a packet travels through Kubernetes:
 
 1. **The Request:** Pod A sends a packet to a Service's ClusterIP (e.g., `10.96.0.10:80`).
-    
 2. **The Translation (kube-proxy):** Before the packet even leaves the Node or hits the network wire, `kube-proxy` (using iptables or IPVS) intercepts it. It performs **DNAT** (Destination Network Address Translation), swapping out the Service's ClusterIP for the actual IP of a target Pod (e.g., `10.244.1.45:8080`).
-    
 3. **The Enforcement (CNI):** The CNI network plugin evaluates your NetworkPolicy **after** this translation has already occurred.
-    
 
 Because the packet's destination has already been rewritten to a Pod IP by the time the CNI sees it, the NetworkPolicy engine only cares about Pod labels, not Service names or Service IPs.
 

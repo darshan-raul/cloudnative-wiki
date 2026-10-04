@@ -194,12 +194,12 @@ masking real bugs.
 These all return new `Runnable` objects without mutating the
 original:
 
-| Method | What it does | Common use |
-|---|---|---|
-| `bind(**kwargs)` | Set per-call kwargs (model params, tools) | `stop`, `temperature`, `tools` |
-| `with_config(config)` | Set `RunnableConfig` for every invocation | tags, metadata, callbacks |
-| `with_retry(...)` | Wrap with retry logic | Transient errors (429, timeout) |
-| `with_fallbacks([...])` | Wrap with fallback model | Provider outage, model swap |
+| Method                  | What it does                              | Common use                      |
+| ----------------------- | ----------------------------------------- | ------------------------------- |
+| `bind(**kwargs)`        | Set per-call kwargs (model params, tools) | `stop`, `temperature`, `tools`  |
+| `with_config(config)`   | Set `RunnableConfig` for every invocation | tags, metadata, callbacks       |
+| `with_retry(...)`       | Wrap with retry logic                     | Transient errors (429, timeout) |
+| `with_fallbacks([...])` | Wrap with fallback model                  | Provider outage, model swap     |
 
 Stack them:
 
@@ -277,16 +277,16 @@ Each event is a dict:
 
 ### Event taxonomy
 
-| Event | Emitted by | `data` content |
-|---|---|---|
-| `on_chat_model_start` | Chat model begins | `input` (the messages) |
-| `on_chat_model_stream` | Model emits a chunk | `chunk` (AIMessageChunk) |
-| `on_chat_model_end` | Model done | `output` (AIMessage) |
-| `on_chain_start/end/stream` | RunnableSequence | `input`/`output`/`chunk` |
-| `on_tool_start` | Tool begins | `input` (the args) |
-| `on_tool_end` | Tool completes | `output` (the result) |
-| `on_retriever_start/end` | Retriever | `input`/`output` |
-| `on_error` | Something errored | `error` |
+| Event                       | Emitted by          | `data` content           |
+| --------------------------- | ------------------- | ------------------------ |
+| `on_chat_model_start`       | Chat model begins   | `input` (the messages)   |
+| `on_chat_model_stream`      | Model emits a chunk | `chunk` (AIMessageChunk) |
+| `on_chat_model_end`         | Model done          | `output` (AIMessage)     |
+| `on_chain_start/end/stream` | RunnableSequence    | `input`/`output`/`chunk` |
+| `on_tool_start`             | Tool begins         | `input` (the args)       |
+| `on_tool_end`               | Tool completes      | `output` (the result)    |
+| `on_retriever_start/end`    | Retriever           | `input`/`output`         |
+| `on_error`                  | Something errored   | `error`                  |
 
 ### Filtering events
 
@@ -306,11 +306,11 @@ async for event in chain.astream_events(
 
 ### `stream` vs `astream` vs `astream_events`
 
-| Method | Returns | Use when |
-|---|---|---|
-| `stream(input)` | Iterator[Output] | You want chunks of the final output |
-| `astream(input)` | AsyncIterator[Output] | Same, but async |
-| `astream_events(input, version="v2")` | AsyncIterator[Event] | You want lifecycle events (tool calls, tokens, errors) |
+| Method                                | Returns               | Use when                                               |
+| ------------------------------------- | --------------------- | ------------------------------------------------------ |
+| `stream(input)`                       | Iterator[Output]      | You want chunks of the final output                    |
+| `astream(input)`                      | AsyncIterator[Output] | Same, but async                                        |
+| `astream_events(input, version="v2")` | AsyncIterator[Event]  | You want lifecycle events (tool calls, tokens, errors) |
 
 For a chat UI that needs both tokens and tool calls, use
 `astream_events`. For a simple streaming text response, use

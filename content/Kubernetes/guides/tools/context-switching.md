@@ -6,7 +6,7 @@ tags:
   - kubeconfig
 ---
 
-*Sources: [kubeconfig docs](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/), [kubectx](https://github.com/ahmetb/kubectx)*
+_Sources: [kubeconfig docs](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/), [kubectx](https://github.com/ahmetb/kubectx)_
 
 Working with one cluster is easy. Working with **multiple clusters** is where `kubectl` starts to hurt — and where the right kubeconfig discipline pays off.
 
@@ -17,50 +17,51 @@ A **kubeconfig** is a YAML file that defines clusters, users, and contexts:
 ```yaml
 apiVersion: v1
 kind: Config
-current-context: prod-eks-admin     # ← which one is "active"
+current-context: prod-eks-admin # ← which one is "active"
 clusters:
-- name: prod-eks
-  cluster:
-    server: https://api.prod.eks.example.com
-    certificate-authority-data: <base64>
-- name: staging-eks
-  cluster:
-    server: https://api.staging.eks.example.com
-    certificate-authority-data: <base64>
-- name: dev-minikube
-  cluster:
-    server: https://192.168.49.2:8443
-    insecure-skip-tls-verify: true
+  - name: prod-eks
+    cluster:
+      server: https://api.prod.eks.example.com
+      certificate-authority-data: <base64>
+  - name: staging-eks
+    cluster:
+      server: https://api.staging.eks.example.com
+      certificate-authority-data: <base64>
+  - name: dev-minikube
+    cluster:
+      server: https://192.168.49.2:8443
+      insecure-skip-tls-verify: true
 users:
-- name: prod-admin
-  user:
-    exec:                           # pluggable auth (aws-iam-authenticator, etc.)
-      apiVersion: client.authentication.k8s.io/v1
-      command: aws
-      args: [eks, get-token, --cluster-name, prod]
-- name: dev-local
-  user:
-    client-certificate-data: <base64>
-    client-key-data: <base64>
+  - name: prod-admin
+    user:
+      exec: # pluggable auth (aws-iam-authenticator, etc.)
+        apiVersion: client.authentication.k8s.io/v1
+        command: aws
+        args: [eks, get-token, --cluster-name, prod]
+  - name: dev-local
+    user:
+      client-certificate-data: <base64>
+      client-key-data: <base64>
 contexts:
-- name: prod-eks-admin
-  context:
-    cluster: prod-eks
-    user: prod-admin
-    namespace: web                  # default namespace for this context
-- name: staging-eks-admin
-  context:
-    cluster: staging-eks
-    user: prod-admin                # same user, different cluster
-    namespace: web
-- name: dev-minikube
-  context:
-    cluster: dev-minikube
-    user: dev-local
-    namespace: default
+  - name: prod-eks-admin
+    context:
+      cluster: prod-eks
+      user: prod-admin
+      namespace: web # default namespace for this context
+  - name: staging-eks-admin
+    context:
+      cluster: staging-eks
+      user: prod-admin # same user, different cluster
+      namespace: web
+  - name: dev-minikube
+    context:
+      cluster: dev-minikube
+      user: dev-local
+      namespace: default
 ```
 
 Three layers:
+
 - **Cluster** — where the apiserver is, and how to verify its identity
 - **User** — who you are, and how to prove it
 - **Context** — cluster + user + default namespace, named so you can switch
@@ -193,15 +194,15 @@ If you have 50+ clusters, you don't `kubectl` into each one — you operate them
 
 ## Common gotchas
 
-* **Context name is just a label** — it doesn't have to match the cluster name. Pick names that say **what + where** (`prod-eks-admin` > `prod`).
-* **Merging kubeconfigs** is positional and appends. If the same context name exists in two files, the **last one wins**.
-* **Certs expire.** A kubeconfig that worked yesterday might fail today. Symptom: `Unable to connect to the server: x509: certificate has expired or is not yet valid`. Re-run `aws eks update-kubeconfig` or whichever tool generated it.
-* **Tokens expire fast.** EKS/GKE/AKS all use short-lived tokens (15min-12hr). Your kubeconfig has an `exec` block that re-fetches them on each call. If that `exec` is slow, your `kubectl` calls are slow.
-* **`kubectl config view` redacts secrets by default** — you see `<set to the value of the ...>` instead of the actual cert/token. Use `--raw` (carefully).
-* **The `current-context` is a single pointer.** You can't have two contexts "active" at once. If you need to copy a secret from cluster A to cluster B, that's two `kubectl` calls with different kubeconfigs — you can't pipe them unless you do `KUBECONFIG=...` per call.
-* **Don't commit kubeconfigs to git** — they contain credentials. The `~/.kube/config` pattern is fine, but if you have a shared cluster config, use a secrets manager (Vault, sealed-secrets) and `direnv` to inject.
-* **Plugins like `aws-iam-authenticator` need to be on `$PATH`** of whatever shell runs `kubectl`. Watch out for this in CI — `kubectl` won't fail until you actually use it.
-* **`kubectl` caches** — but only the auth response, not the cluster state. State is always fresh.
+- **Context name is just a label** — it doesn't have to match the cluster name. Pick names that say **what + where** (`prod-eks-admin` > `prod`).
+- **Merging kubeconfigs** is positional and appends. If the same context name exists in two files, the **last one wins**.
+- **Certs expire.** A kubeconfig that worked yesterday might fail today. Symptom: `Unable to connect to the server: x509: certificate has expired or is not yet valid`. Re-run `aws eks update-kubeconfig` or whichever tool generated it.
+- **Tokens expire fast.** EKS/GKE/AKS all use short-lived tokens (15min-12hr). Your kubeconfig has an `exec` block that re-fetches them on each call. If that `exec` is slow, your `kubectl` calls are slow.
+- **`kubectl config view` redacts secrets by default** — you see `<set to the value of the ...>` instead of the actual cert/token. Use `--raw` (carefully).
+- **The `current-context` is a single pointer.** You can't have two contexts "active" at once. If you need to copy a secret from cluster A to cluster B, that's two `kubectl` calls with different kubeconfigs — you can't pipe them unless you do `KUBECONFIG=...` per call.
+- **Don't commit kubeconfigs to git** — they contain credentials. The `~/.kube/config` pattern is fine, but if you have a shared cluster config, use a secrets manager (Vault, sealed-secrets) and `direnv` to inject.
+- **Plugins like `aws-iam-authenticator` need to be on `$PATH`** of whatever shell runs `kubectl`. Watch out for this in CI — `kubectl` won't fail until you actually use it.
+- **`kubectl` caches** — but only the auth response, not the cluster state. State is always fresh.
 
 ## Per-context default namespace
 
@@ -217,20 +218,20 @@ kubectl config set-context --current --namespace=default
 
 Why this matters:
 
-* Most production traffic is in a specific namespace (not `default`). Setting it per-context saves typing and prevents accidents.
-* `default` is dangerous — many tools deploy there by default, and you don't want your `kubectl delete` to accidentally hit cluster-wide resources.
-* For SREs doing incident response: set a context with the incident namespace baked in.
+- Most production traffic is in a specific namespace (not `default`). Setting it per-context saves typing and prevents accidents.
+- `default` is dangerous — many tools deploy there by default, and you don't want your `kubectl delete` to accidentally hit cluster-wide resources.
+- For SREs doing incident response: set a context with the incident namespace baked in.
 
 ## Security: keeping kubeconfigs safe
 
 A kubeconfig is essentially a credential file. Treat it accordingly.
 
-* **File mode `600`:** `chmod 600 ~/.kube/config`
-* **Never commit to git.** Add `*.kubeconfig` to `.gitignore`. Don't even put it in a private repo — that doesn't count as access control.
-* **Use short-lived credentials.** EKS/IRSA, GKE Workload Identity, AAD Pod Identity — all give you 15min-12hr tokens, not permanent certs.
-* **Audit periodically:** `kubectl auth can-i --list -n kube-system --as=<your-user>` — see what you can do.
-* **Don't run `kubectl proxy` on a shared host** — it exposes the apiserver on `localhost:8001`. If the host is reachable, the apiserver is reachable.
-* **Use distinct contexts per cluster, not per user.** Cluster admin in prod ≠ cluster admin in dev. The context name should encode **where**; the user/role should encode **who**.
+- **File mode `600`:** `chmod 600 ~/.kube/config`
+- **Never commit to git.** Add `*.kubeconfig` to `.gitignore`. Don't even put it in a private repo — that doesn't count as access control.
+- **Use short-lived credentials.** EKS/IRSA, GKE Workload Identity, AAD Pod Identity — all give you 15min-12hr tokens, not permanent certs.
+- **Audit periodically:** `kubectl auth can-i --list -n kube-system --as=<your-user>` — see what you can do.
+- **Don't run `kubectl proxy` on a shared host** — it exposes the apiserver on `localhost:8001`. If the host is reachable, the apiserver is reachable.
+- **Use distinct contexts per cluster, not per user.** Cluster admin in prod ≠ cluster admin in dev. The context name should encode **where**; the user/role should encode **who**.
 
 ## Multi-context commands
 
@@ -275,8 +276,8 @@ If `cluster-info` returns `connection refused` or a TLS error, the issue is netw
 
 ## See also
 
-* [[Kubernetes/guides/tools/kubectl|kubectl]] — the CLI
-* [[Kubernetes/guides/tools/k9s|k9s]] — context switching inside a TUI
-* [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — fleet management at scale
-* [kubectx](https://github.com/ahmetb/kubectx) — fast context switcher
-* [kubeconfig reference](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — the CLI
+- [[Kubernetes/guides/tools/k9s|k9s]] — context switching inside a TUI
+- [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — fleet management at scale
+- [kubectx](https://github.com/ahmetb/kubectx) — fast context switcher
+- [kubeconfig reference](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/)

@@ -23,6 +23,7 @@ EMR Cluster (1 master node + N core/task nodes)
 ```
 
 **Instance types:**
+
 - **Master node:** Coordinates cluster operations. Typically m5.xlarge or larger depending on workload.
 - **Core nodes:** Store data in HDFS and run YARN containers. These are the primary compute workhorses.
 - **Task nodes:** Pure compute, no HDFS. Added for burst capacity during job runs, removed after completion.
@@ -38,10 +39,13 @@ EMR Cluster (1 master node + N core/task nodes)
   "InstanceFleetType": "MASTER",
   "TargetSpotCapacity": 1,
   "InstanceTypeConfigs": [
-    {"InstanceType": "m5.xlarge", "WeightedCapacity": 1}
+    { "InstanceType": "m5.xlarge", "WeightedCapacity": 1 }
   ],
   "LaunchSpecifications": {
-    "SpotSpecification": {"TimeoutDurationMinutes": 10, "AllocationStrategy": "lowest-price"}
+    "SpotSpecification": {
+      "TimeoutDurationMinutes": 10,
+      "AllocationStrategy": "lowest-price"
+    }
   }
 }
 ```
@@ -50,16 +54,16 @@ EMR Cluster (1 master node + N core/task nodes)
 
 EMR installs a set of applications based on the release version:
 
-| Application | Purpose |
-|-------------|---------|
-| Hadoop | Distributed processing framework |
-| Spark | In-memory distributed processing |
-| Hive | SQL-like query (HiveQL) |
-| Hue | Web UI for cluster management |
-| Presto | Interactive SQL queries |
-| Zeppelin | Notebooks for Spark/SQL |
-| Ganglia | Cluster monitoring |
-| Zeppelin | Notebook interface |
+| Application | Purpose                          |
+| ----------- | -------------------------------- |
+| Hadoop      | Distributed processing framework |
+| Spark       | In-memory distributed processing |
+| Hive        | SQL-like query (HiveQL)          |
+| Hue         | Web UI for cluster management    |
+| Presto      | Interactive SQL queries          |
+| Zeppelin    | Notebooks for Spark/SQL          |
+| Ganglia     | Cluster monitoring               |
+| Zeppelin    | Notebook interface               |
 
 **EMR 7.x (latest):** Apache Spark 3.5, Hive 3.1, Presto 0.280+
 
@@ -101,6 +105,7 @@ aws emr add-steps \
 ```
 
 **ActionOnFailure options:**
+
 - `CONTINUE`: Continue to next step even if this one fails
 - `TERMINATE_CLUSTER`: Stop the cluster on failure
 - `CANCEL_AND_WAIT`: Cancel remaining steps but keep cluster running
@@ -177,18 +182,19 @@ EMR auto scaling adjusts the number of core and task nodes based on YARN metrics
 ```
 
 **Core nodes vs task nodes in scaling:**
+
 - Core nodes can be added AND removed by scaling
 - Task nodes are pure scaling nodes — added during scale-up, removed during scale-down, never hold HDFS data
 
 ## Instance Types for EMR
 
-| Workload | Instance Type | Notes |
-|----------|---------------|-------|
-| General Spark | r5, r6 (memory optimized) | Large executors need memory |
-| HDFS storage | d3 (dense storage) | High local disk for HDFS |
-| Presto interactive | c5, c6 (compute optimized) | Fast CPU for ad-hoc queries |
-| Kafka | i3 (high I/O) | NVMe for high-throughput streaming |
-| Machine Learning | p4, g5 (GPU) | Spark ML training |
+| Workload           | Instance Type              | Notes                              |
+| ------------------ | -------------------------- | ---------------------------------- |
+| General Spark      | r5, r6 (memory optimized)  | Large executors need memory        |
+| HDFS storage       | d3 (dense storage)         | High local disk for HDFS           |
+| Presto interactive | c5, c6 (compute optimized) | Fast CPU for ad-hoc queries        |
+| Kafka              | i3 (high I/O)              | NVMe for high-throughput streaming |
+| Machine Learning   | p4, g5 (GPU)               | Spark ML training                  |
 
 ## EMR Studio
 
@@ -201,12 +207,14 @@ EMR Studio provides managed Jupyter notebooks connected to EMR clusters. You cre
 ### IAM Roles
 
 EMR needs an IAM role (`EMR_DefaultRole`) for cluster operations. Additional roles for:
+
 - `EMR_EC2_DefaultInstanceProfile`: EC2 instances in the cluster
 - `EMR_AutoScaling_DefaultRole`: Auto scaling operations
 
 ### Kerberos Authentication
 
 For enterprise security, configure Kerberos:
+
 - Create a Kerberos realm (AWS Directory Service or your own)
 - Enable Kerberos on cluster creation
 - All users authenticate before running jobs

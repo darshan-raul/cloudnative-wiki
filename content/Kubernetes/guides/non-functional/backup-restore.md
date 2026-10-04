@@ -78,7 +78,7 @@ metadata:
   name: etcd-backup
   namespace: kube-system
 spec:
-  schedule: "0 2 * * *"   # daily at 2am
+  schedule: "0 2 * * *" # daily at 2am
   successfulJobsHistoryLimit: 7
   failedJobsHistoryLimit: 3
   jobTemplate:
@@ -87,51 +87,51 @@ spec:
         spec:
           serviceAccountName: etcd-backup-sa
           containers:
-          - name: etcd-backup
-            image: k8s.gcr.io/etcd:3.5.7
-            command:
-            - /bin/sh
-            - -c
-            - |
-              set -e
-              ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-$(date +%Y%m%d-%H%M).db \
-                --endpoints=https://127.0.0.1:2379 \
-                --cacert=/etc/kubernetes/pki/etcd/ca.crt \
-                --cert=/etc/kubernetes/pki/etcd/server.crt \
-                --key=/etc/kubernetes/pki/etcd/server.key
-              # upload to S3
-              aws s3 cp /backup/etcd-$(date +%Y%m%d-%H%M).db s3://my-etcd-backups/
-              # cleanup local
-              rm -f /backup/etcd-$(date +%Y%m%d-%H%M).db
-            volumeMounts:
-            - name: etcd-certs
-              mountPath: /etc/kubernetes/pki/etcd
-              readOnly: true
-            - name: backup
-              mountPath: /backup
+            - name: etcd-backup
+              image: k8s.gcr.io/etcd:3.5.7
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-$(date +%Y%m%d-%H%M).db \
+                    --endpoints=https://127.0.0.1:2379 \
+                    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+                    --cert=/etc/kubernetes/pki/etcd/server.crt \
+                    --key=/etc/kubernetes/pki/etcd/server.key
+                  # upload to S3
+                  aws s3 cp /backup/etcd-$(date +%Y%m%d-%H%M).db s3://my-etcd-backups/
+                  # cleanup local
+                  rm -f /backup/etcd-$(date +%Y%m%d-%H%M).db
+              volumeMounts:
+                - name: etcd-certs
+                  mountPath: /etc/kubernetes/pki/etcd
+                  readOnly: true
+                - name: backup
+                  mountPath: /backup
           restartPolicy: OnFailure
           volumes:
-          - name: etcd-certs
-            hostPath:
-              path: /etc/kubernetes/pki/etcd
-              type: Directory
-          - name: backup
-            hostPath:
-              path: /var/backups/etcd
-              type: DirectoryOrCreate
+            - name: etcd-certs
+              hostPath:
+                path: /etc/kubernetes/pki/etcd
+                type: Directory
+            - name: backup
+              hostPath:
+                path: /var/backups/etcd
+                type: DirectoryOrCreate
 ```
 
 **Important:** schedule backups when the cluster is quiet (early morning).
 
 ### etcd backup gotchas
 
-* **etcd v3 vs v2.** Use `ETCDCTL_API=3` always. v2 is deprecated.
-* **The etcd pod's filesystem** has the data dir. You can't just `cp` it; you need a consistent snapshot.
-* **Encryption at rest.** etcd can encrypt data, but the key must be backed up separately.
-* **Cross-region etcd** (3 nodes in 3 AZs) — back up from any one of them.
-* **Backup size.** etcd snapshots are small (KBs-MBs for most clusters).
-* **Backup duration.** A snapshot is fast (seconds), even for large etcds.
-* **Backup verification.** A snapshot that can't be restored is useless. Verify with `etcdctl snapshot status`.
+- **etcd v3 vs v2.** Use `ETCDCTL_API=3` always. v2 is deprecated.
+- **The etcd pod's filesystem** has the data dir. You can't just `cp` it; you need a consistent snapshot.
+- **Encryption at rest.** etcd can encrypt data, but the key must be backed up separately.
+- **Cross-region etcd** (3 nodes in 3 AZs) — back up from any one of them.
+- **Backup size.** etcd snapshots are small (KBs-MBs for most clusters).
+- **Backup duration.** A snapshot is fast (seconds), even for large etcds.
+- **Backup verification.** A snapshot that can't be restored is useless. Verify with `etcdctl snapshot status`.
 
 ### Verify an etcd snapshot
 
@@ -245,12 +245,12 @@ velero restore create --from-backup daily-full-2024-01-15-020000 \
 
 ### Velero gotchas
 
-* **CSI snapshots vs Restic.** Restic does file-level, slower for big PVs. CSI snapshots are block-level, faster, but require CSI driver support.
-* **CRDs are backed up** by default, but **not the operators/controllers that manage them.** Restoring a CRD without its operator leaves the CRD in a "stuck" state.
-* **Velero restores to a specific namespace by default.** Use `--include-namespaces '*'` to restore all.
-* **PVs are restored with the same StorageClass.** If the StorageClass doesn't exist in the target cluster, restore fails.
-* **Velero doesn't back up application data** in external systems (RDS, S3, etc.). Those are separate.
-* **Velero's metadata is in etcd** (Backup, Restore objects). If you restore etcd, the Velero CRDs come back too.
+- **CSI snapshots vs Restic.** Restic does file-level, slower for big PVs. CSI snapshots are block-level, faster, but require CSI driver support.
+- **CRDs are backed up** by default, but **not the operators/controllers that manage them.** Restoring a CRD without its operator leaves the CRD in a "stuck" state.
+- **Velero restores to a specific namespace by default.** Use `--include-namespaces '*'` to restore all.
+- **PVs are restored with the same StorageClass.** If the StorageClass doesn't exist in the target cluster, restore fails.
+- **Velero doesn't back up application data** in external systems (RDS, S3, etc.). Those are separate.
+- **Velero's metadata is in etcd** (Backup, Restore objects). If you restore etcd, the Velero CRDs come back too.
 
 ## PV backups
 
@@ -310,7 +310,7 @@ metadata:
   name: myapp-with-csi
 spec:
   includedNamespaces: [myapp]
-  snapshotMoveData: false   # if CSI snapshots are supported
+  snapshotMoveData: false # if CSI snapshots are supported
   csiSnapshotTimeout: 10m
 ```
 
@@ -417,6 +417,7 @@ etcdctl member remove <dead-member-id>
 ### Scenario 5: lost the entire cluster
 
 For self-managed:
+
 1. **Re-provision the cluster** (kubeadm init)
 2. **Restore etcd** from snapshot
 3. **Reinstall add-ons** (CNI, ingress, cert-manager, etc.)
@@ -424,6 +425,7 @@ For self-managed:
 5. **Verify** everything
 
 For cloud-managed:
+
 1. **Re-create the cluster** (terraform, eksctl, gcloud, etc.)
 2. **Velero restore** for namespace contents
 3. **Reinstall add-ons**
@@ -513,20 +515,20 @@ kubectl get all -A
 
 ## Common gotchas
 
-* **Velero doesn't back up CRDs that are in-cluster but defined by operators.** If you uninstall the operator and reinstall, the CRDs are gone.
-* **etcd snapshot doesn't include the encryption key.** Back up the key separately.
-* **Restic backups are slow for large PVs.** A 1TB PV can take hours.
-* **CSI snapshots are bound to the cloud.** Can't restore to on-prem without conversion.
-* **Restoring to a different k8s version** can break things. Test compatibility.
-* **Velero's `Backup` objects are in etcd.** If you restore etcd, they come back. Useful, but can clutter.
-* **The backup process is a workload.** It needs resources, scheduling, monitoring. Not "set and forget."
-* **A snapshot during heavy write load can be slow or inconsistent.** Schedule for off-peak.
-* **The restore target cluster needs the same IAM/cloud permissions.** Velero can't snapshot PVs without the right IAM.
-* **Schedule backup retention policies** with care. Some teams lose data because lifecycle policies deleted backups.
+- **Velero doesn't back up CRDs that are in-cluster but defined by operators.** If you uninstall the operator and reinstall, the CRDs are gone.
+- **etcd snapshot doesn't include the encryption key.** Back up the key separately.
+- **Restic backups are slow for large PVs.** A 1TB PV can take hours.
+- **CSI snapshots are bound to the cloud.** Can't restore to on-prem without conversion.
+- **Restoring to a different k8s version** can break things. Test compatibility.
+- **Velero's `Backup` objects are in etcd.** If you restore etcd, they come back. Useful, but can clutter.
+- **The backup process is a workload.** It needs resources, scheduling, monitoring. Not "set and forget."
+- **A snapshot during heavy write load can be slow or inconsistent.** Schedule for off-peak.
+- **The restore target cluster needs the same IAM/cloud permissions.** Velero can't snapshot PVs without the right IAM.
+- **Schedule backup retention policies** with care. Some teams lose data because lifecycle policies deleted backups.
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — the bigger picture
-* [[Kubernetes/guides/non-functional/upgrade-strategy|upgrade-strategy]] — backup before upgrade
-* [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — encrypting backups
-* [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — per-tenant restore
+- [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — the bigger picture
+- [[Kubernetes/guides/non-functional/upgrade-strategy|upgrade-strategy]] — backup before upgrade
+- [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — encrypting backups
+- [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — per-tenant restore

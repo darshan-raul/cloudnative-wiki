@@ -56,6 +56,7 @@ Go order service → Python invoice service via HTTP. OTel Agent sidecar. SigNoz
 ### Go — Order Service (uninstrumented)
 
 `order-service/main.go`
+
 ```go
 package main
 
@@ -123,6 +124,7 @@ func main() {
 ### Python — Invoice Service (uninstrumented)
 
 `invoice-service/app.py`
+
 ```python
 import json
 import logging
@@ -174,6 +176,7 @@ if __name__ == "__main__":
 ### K8s Deployments (uninstrumented)
 
 `k8s/base.yaml`
+
 ```yaml
 ---
 apiVersion: v1
@@ -303,10 +306,10 @@ kubectl port-forward -n signoz svc/signoz-frontend 3000:3301
 
 The OTLP receiver endpoint inside the cluster:
 
-| Signal | Endpoint | Port |
-|--------|----------|------|
+| Signal                  | Endpoint                                         | Port            |
+| ----------------------- | ------------------------------------------------ | --------------- |
 | Traces + Metrics + Logs | `signoz-otel-collector.signoz.svc.cluster.local` | **4317** (gRPC) |
-| HTTP/JSON | `signoz-otel-collector.signoz.svc.cluster.local` | **4318** (HTTP) |
+| HTTP/JSON               | `signoz-otel-collector.signoz.svc.cluster.local` | **4318** (HTTP) |
 
 Use `4317` (gRPC) for production. SigNoz accepts all three signals on the same OTLP endpoint.
 
@@ -328,6 +331,7 @@ Each node runs an OTel Agent. The agent receives OTLP from local pods, then forw
 ### OTel Agent ConfigMap
 
 `k8s/otel-agent-cm.yaml`
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -371,6 +375,7 @@ data:
 ### OTel Agent DaemonSet
 
 `k8s/otel-agent-ds.yaml`
+
 ```yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -457,6 +462,7 @@ go get go.opentelemetry.io/otel \
 ### Instrumented Go Code
 
 `order-service/main.go`
+
 ```go
 package main
 
@@ -773,7 +779,7 @@ env:
   - name: OTEL_EXPORTER_OTLP_ENDPOINT
     value: "$(NODE_IP):4317"
   - name: OTEL_EXPORTER_OTLP_ENDPOINT_BACKUP
-    value: "localhost:4317"   # local dev fallback
+    value: "localhost:4317" # local dev fallback
 ```
 
 ---
@@ -805,6 +811,7 @@ opentelemetry-instrumentation-logging==0.48b0
 ### Instrumented Python Code
 
 `invoice-service/app.py`
+
 ```python
 import json
 import logging
@@ -985,6 +992,7 @@ if __name__ == "__main__":
 ### Go Order Service with OTel Agent Sidecar
 
 `k8s/order-service-instrumented.yaml`
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -1046,7 +1054,7 @@ spec:
                 fieldRef:
                   fieldPath: status.hostIP
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "localhost:4317"   # agent sidecar on same node
+              value: "localhost:4317" # agent sidecar on same node
           resources:
             limits:
               cpu: 500m
@@ -1103,6 +1111,7 @@ data:
 ### Python Invoice Service with OTel Agent Sidecar
 
 `k8s/invoice-service-instrumented.yaml`
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -1187,6 +1196,7 @@ done
 ### In SigNoz UI — What to Look For
 
 **Traces tab:**
+
 - Service map showing `order-service` connected to `invoice-service`
 - A trace for `ORD-001` should show:
   - `handle Orders POST` (root span, order-service)
@@ -1195,6 +1205,7 @@ done
 - Click any span to see attributes: `order.id`, `order.amount`, `http.status_code`, `invoice.status`
 
 **Metrics tab:**
+
 - `orders_processed_total` — counter, shows 11 total
 - `order_processing_duration_ms` — histogram of latency per order
 - `invoices_generated_total` — counter in invoice-service, shows 11
@@ -1202,11 +1213,13 @@ done
 - `invoice_amount_usd_total` — histogram of invoice amounts
 
 **Logs tab:**
+
 - All `log.Info` calls from both services
 - Click a span → correlated logs from that trace_id
 - Fields visible: `trace_id`, `span_id`, `service.name`, `order_id`
 
 **Application tab:**
+
 - Service health → latency heatmaps, error rates
 
 ---
@@ -1230,25 +1243,25 @@ The `otelhttp.Client` in Go automatically injects the `traceparent` header into 
 
 ### Custom Metrics Defined
 
-| Metric | Service | Type | Dimensions | Description |
-|--------|---------|------|------------|-------------|
-| `orders_processed_total` | Go | Counter | `customer_tier` | Total orders placed |
-| `order_processing_duration_ms` | Go | Histogram | `method`, `path` | E2E order processing latency |
-| `order_amount_usd` | Go | Observable Gauge | — | Live view of current order amount |
-| `invoices_generated_total` | Python | Counter | `customer_tier` | Total invoices created |
-| `invoice_generation_duration_ms` | Python | Histogram | `path` | Invoice gen latency |
-| `invoice_amount_usd_total` | Python | Histogram | `currency` | Invoice amounts processed |
+| Metric                           | Service | Type             | Dimensions       | Description                       |
+| -------------------------------- | ------- | ---------------- | ---------------- | --------------------------------- |
+| `orders_processed_total`         | Go      | Counter          | `customer_tier`  | Total orders placed               |
+| `order_processing_duration_ms`   | Go      | Histogram        | `method`, `path` | E2E order processing latency      |
+| `order_amount_usd`               | Go      | Observable Gauge | —                | Live view of current order amount |
+| `invoices_generated_total`       | Python  | Counter          | `customer_tier`  | Total invoices created            |
+| `invoice_generation_duration_ms` | Python  | Histogram        | `path`           | Invoice gen latency               |
+| `invoice_amount_usd_total`       | Python  | Histogram        | `currency`       | Invoice amounts processed         |
 
 ### Auto vs Manual Instrumentation
 
-| What | Auto | Manual |
-|------|------|--------|
-| HTTP ingress spans | `otelhttp.Handler` wraps mux | `tracer.Start()` around handler |
-| HTTP egress spans | `otelhttp.Client` auto-injects headers | `tracer.Start()` + otelhttp client |
-| DB/rpc/client spans | auto-instrumentation packages | explicit `tracer.Start()` |
-| Metrics (SDK metrics) | auto if using auto-instr packages | `meter.CreateCounter/Histogram` |
-| Resource attrs | auto-injection (pod name, ns, etc.) | `resource.New()` with explicit attrs |
-| Context propagation | handled by otelhttp | `propagator.Inject/Extract` |
+| What                  | Auto                                   | Manual                               |
+| --------------------- | -------------------------------------- | ------------------------------------ |
+| HTTP ingress spans    | `otelhttp.Handler` wraps mux           | `tracer.Start()` around handler      |
+| HTTP egress spans     | `otelhttp.Client` auto-injects headers | `tracer.Start()` + otelhttp client   |
+| DB/rpc/client spans   | auto-instrumentation packages          | explicit `tracer.Start()`            |
+| Metrics (SDK metrics) | auto if using auto-instr packages      | `meter.CreateCounter/Histogram`      |
+| Resource attrs        | auto-injection (pod name, ns, etc.)    | `resource.New()` with explicit attrs |
+| Context propagation   | handled by otelhttp                    | `propagator.Inject/Extract`          |
 
 In this exercise we used **manual spans** for the core order/invoice logic (explicit child span naming, custom attributes) AND **auto-instrumented HTTP** via `otelhttp` (wraps mux + client automatically). This is the recommended hybrid approach.
 

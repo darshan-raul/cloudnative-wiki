@@ -32,15 +32,15 @@ Need to run a web app/container?
 
 ## App Runner vs Others
 
-| Feature | App Runner | ECS Fargate | Lambda |
-|---------|------------|-------------|--------|
-| Container support | Yes | Yes | No (zip/Image) |
-| Serverless | Yes (pay-per-use) | Yes (pay-per-use) | Yes (pay-per-request) |
-| Autoscaling | Built-in | Manual | Automatic |
-| HTTPS | Automatic | Manual (ALB) | API Gateway |
-| Long-running | Yes | Yes | Max 15 min |
-| Custom networking | VPC | VPC | VPC |
-| Cost (small app) | ~$15/month | ~$25/month | ~$0/month (low traffic) |
+| Feature           | App Runner        | ECS Fargate       | Lambda                  |
+| ----------------- | ----------------- | ----------------- | ----------------------- |
+| Container support | Yes               | Yes               | No (zip/Image)          |
+| Serverless        | Yes (pay-per-use) | Yes (pay-per-use) | Yes (pay-per-request)   |
+| Autoscaling       | Built-in          | Manual            | Automatic               |
+| HTTPS             | Automatic         | Manual (ALB)      | API Gateway             |
+| Long-running      | Yes               | Yes               | Max 15 min              |
+| Custom networking | VPC               | VPC               | VPC                     |
+| Cost (small app)  | ~$15/month        | ~$25/month        | ~$0/month (low traffic) |
 
 ## Creating from Container Image
 
@@ -192,31 +192,33 @@ aws apprunner describe-service --service-arn arn:aws:apprunner:...
 
 ## Pricing
 
-| Resource | Cost |
-|----------|------|
-| vCPU (per hour) | $0.05/vCPU-hour |
-| Memory (per hour) | $0.006/GB-hour |
-| Build (optional) | $0.005/vCPU-minute |
-| Active connections | Free |
+| Resource           | Cost               |
+| ------------------ | ------------------ |
+| vCPU (per hour)    | $0.05/vCPU-hour    |
+| Memory (per hour)  | $0.006/GB-hour     |
+| Build (optional)   | $0.005/vCPU-minute |
+| Active connections | Free               |
 
 **Example:** 2 vCPU, 4GB instance, 1 instance running 24/7:
+
 - vCPU: 2 × $0.05 × 24 × 30 = $72/month
 - Memory: 4 × $0.006 × 24 × 30 = $17.28/month
 - Total: ~$89/month
 
 With auto-scaling (2 instances average, burst to 5):
+
 - Average: ~$89/month
 - With burst: $89 × 2.5 = ~$220/month
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Concurrent instances | 25 |
-| vCPU per instance | 1-4 |
-| Memory per instance | 2-8 GB |
-| Request timeout | 15 seconds |
-| Deployment timeout | 30 minutes |
+| Resource             | Limit      |
+| -------------------- | ---------- |
+| Concurrent instances | 25         |
+| vCPU per instance    | 1-4        |
+| Memory per instance  | 2-8 GB     |
+| Request timeout      | 15 seconds |
+| Deployment timeout   | 30 minutes |
 
 ## References
 

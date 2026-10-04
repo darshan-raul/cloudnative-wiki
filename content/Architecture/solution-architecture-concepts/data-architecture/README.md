@@ -14,12 +14,14 @@ Data architecture covers **how data is stored, accessed, and flows** through a s
 ## What's Here
 
 ### Data Formats
+
 - [[bson]] — Binary JSON, MongoDB's data format
 - [[base64-encoding]] — Encoding binary data as ASCII text
 - [[hashing]] — Hash functions for integrity, lookup, and cryptography
 - [[cdn]] — Content delivery networks and caching strategies
 
 ### Databases
+
 - [[databases/README]] — Database selection guide
 - [[databases/postgres/README]] — PostgreSQL deep dive
 - [[databases/mongodb/README]] — MongoDB deep dive
@@ -33,27 +35,27 @@ Data architecture covers **how data is stored, accessed, and flows** through a s
 
 ## Database Selection
 
-| Use Case | Database Type | Examples |
-|----------|-------------|----------|
-| Financial transactions | Relational (ACID) | PostgreSQL, MySQL |
-| Flexible schema | Document | MongoDB, CouchDB |
-| High-volume time series | Time-series | InfluxDB, TimescaleDB |
-| Key-value cache | In-memory | Redis, Memcached |
-| Graph relationships | Graph | Neo4j |
-| Search | Search engine | Elasticsearch, OpenSearch |
-| Wide-column | Column-family | Cassandra, DynamoDB |
+| Use Case                | Database Type     | Examples                  |
+| ----------------------- | ----------------- | ------------------------- |
+| Financial transactions  | Relational (ACID) | PostgreSQL, MySQL         |
+| Flexible schema         | Document          | MongoDB, CouchDB          |
+| High-volume time series | Time-series       | InfluxDB, TimescaleDB     |
+| Key-value cache         | In-memory         | Redis, Memcached          |
+| Graph relationships     | Graph             | Neo4j                     |
+| Search                  | Search engine     | Elasticsearch, OpenSearch |
+| Wide-column             | Column-family     | Cassandra, DynamoDB       |
 
 ---
 
 ## Quick Links
 
-| Topic | Key Question |
-|-------|--------------|
-| [[databases/normalization]] | Should I normalize or denormalize my schema? |
-| [[databases/indexing]] | How do I design indexes for performance? |
-| [[databases/opm-or-not-to-orm]] | Should I use an ORM or raw SQL? |
-| [[cdn]] | When should I use a CDN? |
-| [[hashing]] | What hashing algorithm for what purpose? |
+| Topic                           | Key Question                                 |
+| ------------------------------- | -------------------------------------------- |
+| [[databases/normalization]]     | Should I normalize or denormalize my schema? |
+| [[databases/indexing]]          | How do I design indexes for performance?     |
+| [[databases/opm-or-not-to-orm]] | Should I use an ORM or raw SQL?              |
+| [[cdn]]                         | When should I use a CDN?                     |
+| [[hashing]]                     | What hashing algorithm for what purpose?     |
 
 ---
 

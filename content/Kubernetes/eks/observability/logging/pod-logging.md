@@ -45,9 +45,9 @@ metadata:
   name: my-app
 spec:
   containers:
-  - name: app
-    image: my-app
-    # Write to stdout/stderr (Fluent Bit captures automatically)
+    - name: app
+      image: my-app
+      # Write to stdout/stderr (Fluent Bit captures automatically)
 ```
 
 ## Structured Logging
@@ -75,11 +75,11 @@ aws logs insights-query \
 
 ## Log Aggregation Comparison
 
-| Solution | Storage | Query | Cost |
-|----------|---------|-------|------|
+| Solution                | Storage         | Query               | Cost              |
+| ----------------------- | --------------- | ------------------- | ----------------- |
 | Fluent Bit + CloudWatch | CloudWatch Logs | CloudWatch Insights | Pay per ingestion |
-| Fluent Bit + OpenSearch | OpenSearch | OpenSearch DSL | EC2 + storage |
-| Loki | Object storage | LogQL | Storage + EC2 |
+| Fluent Bit + OpenSearch | OpenSearch      | OpenSearch DSL      | EC2 + storage     |
+| Loki                    | Object storage  | LogQL               | Storage + EC2     |
 
 ## References
 

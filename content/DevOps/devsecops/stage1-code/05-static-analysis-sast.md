@@ -13,12 +13,12 @@ SAST scans source code for vulnerability patterns without executing the program.
 
 By the end of this module you should be able to:
 
-  - Explain what SAST detects and what it cannot
-  - Pick a SAST tool for a given language and team size
-  - Integrate SAST into pre-commit, PR, and nightly cadences
-  - Tune a SAST rule set to <10% false-positive rate
-  - Read a SAST finding and decide on fix-vs-suppress in under 5 minutes
-  - Build a developer-experience loop that surfaces findings in the IDE
+- Explain what SAST detects and what it cannot
+- Pick a SAST tool for a given language and team size
+- Integrate SAST into pre-commit, PR, and nightly cadences
+- Tune a SAST rule set to <10% false-positive rate
+- Read a SAST finding and decide on fix-vs-suppress in under 5 minutes
+- Build a developer-experience loop that surfaces findings in the IDE
 
 ## 1. What SAST Actually Does
 
@@ -27,29 +27,31 @@ SAST tools parse source code into an abstract syntax tree (AST) or intermediate 
 Two classes of detection:
 
 ### Pattern Matchers
+
 Look for syntactic patterns that match known bug classes. Fast, low false-positive rate, but miss variants.
 
-  - `eval(userInput)` → command injection
-  - `innerHTML = userInput` → XSS
-  - `md5(password)` → weak crypto
-  - `subprocess.run(shell=True, ...)` → shell injection
+- `eval(userInput)` → command injection
+- `innerHTML = userInput` → XSS
+- `md5(password)` → weak crypto
+- `subprocess.run(shell=True, ...)` → shell injection
 
 ### Dataflow Analyzers
+
 Trace values from source to sink. Slower, more false positives, but catch the variants.
 
-  - User input → string concat → SQL query → sink (SQLi)
-  - File path → open() → sink (path traversal)
-  - Crypto key → reuse across requests → sink (key reuse bug)
+- User input → string concat → SQL query → sink (SQLi)
+- File path → open() → sink (path traversal)
+- Crypto key → reuse across requests → sink (key reuse bug)
 
 Most modern tools (Semgrep, CodeQL) combine both.
 
 ### What SAST Does Not Do
 
-  - Does not see runtime-only behavior (reflection, dynamic dispatch, framework magic)
-  - Does not understand business logic ("can user A read user B's data" — that's authz, covered in M15)
-  - Does not detect dependency vulns — that's SCA, M07
-  - Does not detect secrets in code — that's M06
-  - Does not test the running app — that's DAST, beyond stage 1
+- Does not see runtime-only behavior (reflection, dynamic dispatch, framework magic)
+- Does not understand business logic ("can user A read user B's data" — that's authz, covered in M15)
+- Does not detect dependency vulns — that's SCA, M07
+- Does not detect secrets in code — that's M06
+- Does not test the running app — that's DAST, beyond stage 1
 
 If you find a tool that claims to do all five, it does none of them well.
 
@@ -59,41 +61,41 @@ If you find a tool that claims to do all five, it does none of them well.
 
 Open-source, polyglot, rule-as-code (YAML). Fast (sub-second per file on small repos). Easy to write custom rules. The default recommendation for most teams.
 
-  - Languages: 30+ (Python, Go, JS/TS, Java, Ruby, C#, PHP, Kotlin, Swift, Rust, etc.)
-  - Engine: open-source `semgrep` CLI + commercial `semgrep app` for managed scans
-  - Strength: rule writing is trivial; community ruleset (`p/default`, `p/security-audit`, `p/owasp-top-ten`)
-  - Pricing: open-source free; commercial per-developer
+- Languages: 30+ (Python, Go, JS/TS, Java, Ruby, C#, PHP, Kotlin, Swift, Rust, etc.)
+- Engine: open-source `semgrep` CLI + commercial `semgrep app` for managed scans
+- Strength: rule writing is trivial; community ruleset (`p/default`, `p/security-audit`, `p/owasp-top-ten`)
+- Pricing: open-source free; commercial per-developer
 
 ### CodeQL
 
 GitHub-owned, free for public repos, paid for private (GitHub Advanced Security). Best-in-class for deep dataflow. Steeper learning curve for custom queries.
 
-  - Languages: Go, JS/TS, Java, C/C++, C#, Python, Ruby, Kotlin, Swift
-  - Engine: semantic analysis of full compiled program
-  - Strength: catches variants pattern matchers miss; query language is a real DSL
-  - Pricing: free for public OSS; paid for private
+- Languages: Go, JS/TS, Java, C/C++, C#, Python, Ruby, Kotlin, Swift
+- Engine: semantic analysis of full compiled program
+- Strength: catches variants pattern matchers miss; query language is a real DSL
+- Pricing: free for public OSS; paid for private
 
 ### SonarQube / SonarCloud
 
 Long-established, opinionated dashboard, "quality gates" as a first-class concept. Good for organizations that want a single pane of glass.
 
-  - Languages: 25+
-  - Engine: AST + dataflow + custom rules
-  - Strength: integration with IDE, PR decoration, quality gate enforcement
-  - Pricing: Community (free, self-hosted), Developer ($), Enterprise ($$$)
+- Languages: 25+
+- Engine: AST + dataflow + custom rules
+- Strength: integration with IDE, PR decoration, quality gate enforcement
+- Pricing: Community (free, self-hosted), Developer ($), Enterprise ($$$)
 
 ### Language-Specific Tools
 
 Worth running alongside the general-purpose tool:
 
-| Language | Tool         | Detects                          |
-| -------- | ------------ | -------------------------------- |
-| Python   | Bandit       | Hardcoded passwords, weak crypto, exec |
-| Go       | Gosec        | SQLi, weak rand, command injection |
-| Java     | SpotBugs + find-sec-bugs | Injection, crypto, deserialization |
-| JS/TS    | ESLint security plugins    | XSS, prototype pollution, unsafe-regex |
-| Rust     | cargo-audit  | Known CVEs in crates             |
-| Terraform | tfsec / Checkov | Misconfigurations, public S3  |
+| Language  | Tool                     | Detects                                |
+| --------- | ------------------------ | -------------------------------------- |
+| Python    | Bandit                   | Hardcoded passwords, weak crypto, exec |
+| Go        | Gosec                    | SQLi, weak rand, command injection     |
+| Java      | SpotBugs + find-sec-bugs | Injection, crypto, deserialization     |
+| JS/TS     | ESLint security plugins  | XSS, prototype pollution, unsafe-regex |
+| Rust      | cargo-audit              | Known CVEs in crates                   |
+| Terraform | tfsec / Checkov          | Misconfigurations, public S3           |
 
 Run one general-purpose tool + one language-specific tool. Do not stack four; the noise compounds.
 
@@ -116,30 +118,30 @@ This is the single highest-impact change. A finding in the editor is fixed in se
 
 ### Pre-Commit Gate
 
-Run a *small* rule set on pre-commit. The rule set is intentionally narrow: only the highest-confidence, fastest checks.
+Run a _small_ rule set on pre-commit. The rule set is intentionally narrow: only the highest-confidence, fastest checks.
 
-  - Semgrep `--config p/security-audit --severity ERROR --error`
-  - Bandit for Python: `-lll` (low/medium/high all reported as error)
-  - Gosec for Go: `-severity=high -confidence=high`
+- Semgrep `--config p/security-audit --severity ERROR --error`
+- Bandit for Python: `-lll` (low/medium/high all reported as error)
+- Gosec for Go: `-severity=high -confidence=high`
 
 Fail the commit. Do not allow `--no-verify` except for emergencies (and audit those).
 
 ### PR Gate
 
-Run the *full* rule set. This is the canonical scan that gates the merge.
+Run the _full_ rule set. This is the canonical scan that gates the merge.
 
-  - Semgrep with `--config p/default p/security-audit p/owasp-top-ten`
-  - All findings reported; high/critical fail the check
-  - PR comment posted automatically with the finding, location, suggested fix
-  - Suppression via `# nosemgrep: <rule-id> -- <reason>` with required comment
+- Semgrep with `--config p/default p/security-audit p/owasp-top-ten`
+- All findings reported; high/critical fail the check
+- PR comment posted automatically with the finding, location, suggested fix
+- Suppression via `# nosemgrep: <rule-id> -- <reason>` with required comment
 
 ### Nightly Deep Scan
 
 CodeQL on a full repository scan. Catches interprocedural issues the PR-time scan misses because the PR is one diff, not the whole codebase.
 
-  - Schedule: 02:00 UTC, single-threaded, full repo
-  - Output: SARIF file, uploaded to GitHub code scanning
-  - New findings page on-call; existing findings auto-tracked
+- Schedule: 02:00 UTC, single-threaded, full repo
+- Output: SARIF file, uploaded to GitHub code scanning
+- New findings page on-call; existing findings auto-tracked
 
 ## 4. False Positive Tuning
 
@@ -160,23 +162,24 @@ SAST rule sets come with thousands of rules out of the box. Most are not relevan
 
 ### Suppression Discipline
 
-  - Suppress in source with a comment + reason + ticket ID
-  - Suppress at the tool level only for whole-rule disables
-  - Re-review suppressions every 6 months
-  - Track suppression count as a metric; rising suppression = a tuning problem
+- Suppress in source with a comment + reason + ticket ID
+- Suppress at the tool level only for whole-rule disables
+- Re-review suppressions every 6 months
+- Track suppression count as a metric; rising suppression = a tuning problem
 
 ### Common Sources of False Positives
 
-  - Framework-provided escaping that the tool does not understand
-  - Test files that intentionally contain malicious-looking strings
-  - Generated code (proto, OpenAPI clients)
-  - Dead code paths that the tool flags
+- Framework-provided escaping that the tool does not understand
+- Test files that intentionally contain malicious-looking strings
+- Generated code (proto, OpenAPI clients)
+- Dead code paths that the tool flags
 
 For each, there is a clean fix:
-  - Add framework-specific rules to the tool's config
-  - Exclude test directories: `exclude: ['**/test/**', '**/tests/**']`
-  - Exclude generated: `exclude: ['**/gen/**', '**/proto/**']`
-  - Delete the dead code, then re-scan
+
+- Add framework-specific rules to the tool's config
+- Exclude test directories: `exclude: ['**/test/**', '**/tests/**']`
+- Exclude generated: `exclude: ['**/gen/**', '**/proto/**']`
+- Delete the dead code, then re-scan
 
 ## 5. Reading a SAST Finding
 
@@ -195,17 +198,17 @@ src/api/users.py:42
 
 What to do in 5 minutes:
 
-  1. Open the file at the line. Is the data path actually user-controllable?
-  2. If yes, fix per the tool's suggestion. Add a unit test that catches the regression.
-  3. If no, suppress with reason. Re-run the scan. Verify it is gone.
-  4. File a follow-up if the same rule fires 5+ times — the rule may need to be customized for your framework.
+1. Open the file at the line. Is the data path actually user-controllable?
+2. If yes, fix per the tool's suggestion. Add a unit test that catches the regression.
+3. If no, suppress with reason. Re-run the scan. Verify it is gone.
+4. File a follow-up if the same rule fires 5+ times — the rule may need to be customized for your framework.
 
 ## 6. Custom Rules
 
 The killer feature of Semgrep and CodeQL is custom rules for your codebase's specific patterns. Two cases drive custom rules:
 
-  - **Banned pattern** — your team has decided against a particular library or approach. Write a rule that fires when it is used.
-  - **Domain-specific sink** — your codebase has a custom function that calls into a dangerous primitive. Write a rule that flags untrusted input reaching it.
+- **Banned pattern** — your team has decided against a particular library or approach. Write a rule that fires when it is used.
+- **Domain-specific sink** — your codebase has a custom function that calls into a dangerous primitive. Write a rule that flags untrusted input reaching it.
 
 ### Example: Ban `pickle.loads` on External Data
 
@@ -269,45 +272,45 @@ All three return non-zero on findings at the configured severity. The merge is b
 
 Track these in a weekly security review:
 
-| Metric | Target | Why it matters |
-| ------ | ------ | -------------- |
-| Mean time to fix (MTTF) for new findings | <7 days for high/critical | Flow health |
-| Findings per 1k LoC | <0.5 high/critical | Code health |
-| Suppression ratio (suppressed / total) | <30% | Rule-set health |
-| PRs with new findings | <20% of PRs | Developer adoption |
-| IDE plugin installs | >80% of engineers | Feedback loop |
-| Nightly scan time | <60 min | Cost of deep scan |
+| Metric                                   | Target                    | Why it matters     |
+| ---------------------------------------- | ------------------------- | ------------------ |
+| Mean time to fix (MTTF) for new findings | <7 days for high/critical | Flow health        |
+| Findings per 1k LoC                      | <0.5 high/critical        | Code health        |
+| Suppression ratio (suppressed / total)   | <30%                      | Rule-set health    |
+| PRs with new findings                    | <20% of PRs               | Developer adoption |
+| IDE plugin installs                      | >80% of engineers         | Feedback loop      |
+| Nightly scan time                        | <60 min                   | Cost of deep scan  |
 
 If MTTF drifts up, the rule set is probably mis-tuned. If suppression ratio drifts up, the rule set is probably too broad. The two metrics together tell you whether to add rules or remove them.
 
 ## 9. SAST Anti-Patterns
 
-| Anti-pattern | Symptom | Fix |
-| ------------ | ------- | --- |
-| Run on master only | Findings arrive after merge | Run on every PR; gate the merge |
-| Treat all findings equal | High noise, devs ignore | Severity tiers, fail only on high/critical |
-| No IDE plugin | Findings felt as "not my problem" | Mandate plugin install via MDM |
-| "We have SAST" with no suppression policy | 4000-finding backlog | Triage sprint, fix or suppress each |
-| Disable noisy rules globally | Critical findings pass through | Suppress per-finding, not per-rule |
-| Run every 4 hours | Misses PR-time feedback | PR-time fast scan + nightly deep scan |
+| Anti-pattern                              | Symptom                           | Fix                                        |
+| ----------------------------------------- | --------------------------------- | ------------------------------------------ |
+| Run on master only                        | Findings arrive after merge       | Run on every PR; gate the merge            |
+| Treat all findings equal                  | High noise, devs ignore           | Severity tiers, fail only on high/critical |
+| No IDE plugin                             | Findings felt as "not my problem" | Mandate plugin install via MDM             |
+| "We have SAST" with no suppression policy | 4000-finding backlog              | Triage sprint, fix or suppress each        |
+| Disable noisy rules globally              | Critical findings pass through    | Suppress per-finding, not per-rule         |
+| Run every 4 hours                         | Misses PR-time feedback           | PR-time fast scan + nightly deep scan      |
 
 ## 10. SAST and the Wider Pipeline
 
 SAST catches one class of issue. The pipeline needs the other classes too:
 
-  - **Secrets in code** — M06
-  - **Vulnerable dependencies** — M07 (SCA)
-  - **Insecure build artifacts** — M08/M09
-  - **Insecure infrastructure** — M10
-  - **Misconfigured deploys** — M15
+- **Secrets in code** — M06
+- **Vulnerable dependencies** — M07 (SCA)
+- **Insecure build artifacts** — M08/M09
+- **Insecure infrastructure** — M10
+- **Misconfigured deploys** — M15
 
 SAST is the first line, not the only line.
 
 ## 11. Self-Check
 
-  1. Pick a recent vulnerability from your bug tracker. Would SAST have caught it pre-commit? If not, write a custom rule that would.
-  2. What's your current SAST rule set? Count active rules vs. firing rules. If the ratio is <50%, you have a tuning problem.
-  3. Do your developers have the IDE plugin installed? If you don't know, that's the answer.
+1. Pick a recent vulnerability from your bug tracker. Would SAST have caught it pre-commit? If not, write a custom rule that would.
+2. What's your current SAST rule set? Count active rules vs. firing rules. If the ratio is <50%, you have a tuning problem.
+3. Do your developers have the IDE plugin installed? If you don't know, that's the answer.
 
 ## 12. SAST for AI-Generated Code
 
@@ -316,15 +319,16 @@ A specific 2024–2026 reality: a growing share of code is written by AI assista
 ### What AI Code Gets Wrong
 
 Empirically, AI-generated code is more likely to contain:
-  - String-concatenated SQL queries
-  - `eval`-style dynamic execution
-  - Insecure deserialization (pickle, eval, YAML load)
-  - Hardcoded placeholder credentials that survive to prod
-  - Disabling of safety features in the interest of "making it work"
+
+- String-concatenated SQL queries
+- `eval`-style dynamic execution
+- Insecure deserialization (pickle, eval, YAML load)
+- Hardcoded placeholder credentials that survive to prod
+- Disabling of safety features in the interest of "making it work"
 
 ### How SAST Catches It
 
-The patterns are *the same* patterns SAST has always caught. The frequency is higher. The implication: SAST must run on every PR, with the IDE plugin enabled, so the AI's output is checked as it is generated, not after.
+The patterns are _the same_ patterns SAST has always caught. The frequency is higher. The implication: SAST must run on every PR, with the IDE plugin enabled, so the AI's output is checked as it is generated, not after.
 
 ### The IDE-Plugin-Plus-PR-Gate Pattern
 
@@ -347,7 +351,7 @@ The patterns are *the same* patterns SAST has always caught. The frequency is hi
   Pass / fail
 ```
 
-The IDE plugin is the *first* gate. The CI SAST is the *last*. Both are needed because the AI sometimes generates code that looks fine in the editor but fails the CI scan (e.g., dep is fine in isolation but conflicts with the rest of the codebase).
+The IDE plugin is the _first_ gate. The CI SAST is the _last_. Both are needed because the AI sometimes generates code that looks fine in the editor but fails the CI scan (e.g., dep is fine in isolation but conflicts with the rest of the codebase).
 
 ## 13. SAST for Polyglot Repos
 
@@ -392,10 +396,10 @@ This catches most patterns across most languages. Add a language-specific tool o
 
 Every SAST rule has a false-positive cost. The discipline:
 
-  - **Each rule has a target FP rate** (e.g., <5% per week)
-  - **Tune or disable rules above the target**
-  - **Track the FP rate over time**
-  - **Investigate spikes** (a rule that goes from 5% to 30% FP needs a code change or a configuration change)
+- **Each rule has a target FP rate** (e.g., <5% per week)
+- **Tune or disable rules above the target**
+- **Track the FP rate over time**
+- **Investigate spikes** (a rule that goes from 5% to 30% FP needs a code change or a configuration change)
 
 ```yaml
 # .semgrep.yml
@@ -414,11 +418,12 @@ A rule with no owner is a rule that gets ignored. A rule with an owner is a rule
 ## 15. SAST and the Audit Trail
 
 Every SAST finding produces an audit record:
-  - The rule that fired
-  - The file and line
-  - The CWE / OWASP category
-  - The severity
-  - The fix status (fixed, suppressed, accepted)
+
+- The rule that fired
+- The file and line
+- The CWE / OWASP category
+- The severity
+- The fix status (fixed, suppressed, accepted)
 
 For SOC 2 / ISO 27001 audits (M18), the SAST report is the evidence for "vulnerability detection" (CC7.1) and "secure coding" (A.8.28).
 
@@ -446,25 +451,26 @@ A clean classification tells you which control failed and which fix to apply.
 
 The major vendors and their strengths:
 
-| Vendor | Strength | Best for |
-| ------ | -------- | -------- |
-| Semgrep | Open, fast, polyglot, custom rules | Default for most teams |
-| CodeQL | Deep dataflow, GitHub-native | Deep analysis on GitHub |
-| SonarQube | Single pane, quality gates | Enterprises with one platform |
-| Snyk Code | Fix-recommendations, IDE | Snyk shops |
-| Checkmarx | Enterprise, OWASP-top-10 focus | Large regulated orgs |
-| Veracode | SaaS, language breadth | Enterprise, multi-language |
+| Vendor    | Strength                           | Best for                      |
+| --------- | ---------------------------------- | ----------------------------- |
+| Semgrep   | Open, fast, polyglot, custom rules | Default for most teams        |
+| CodeQL    | Deep dataflow, GitHub-native       | Deep analysis on GitHub       |
+| SonarQube | Single pane, quality gates         | Enterprises with one platform |
+| Snyk Code | Fix-recommendations, IDE           | Snyk shops                    |
+| Checkmarx | Enterprise, OWASP-top-10 focus     | Large regulated orgs          |
+| Veracode  | SaaS, language breadth             | Enterprise, multi-language    |
 
 Migration between tools is mostly mechanical:
-  - Map rules (most vendors publish their rule → CWE mappings)
-  - Run new and old in parallel for 1–2 weeks
-  - Compare findings
-  - Cut over when the new tool is tuned
+
+- Map rules (most vendors publish their rule → CWE mappings)
+- Run new and old in parallel for 1–2 weeks
+- Compare findings
+- Cut over when the new tool is tuned
 
 ## Related
 
-  - [[DevOps/devsecops/stage0-foundations/01-devsecops-mindset|M01: DevSecOps Mindset]]
-  - [[DevOps/devsecops/stage1-code/06-secrets-detection|M06: Secrets Detection]]
-  - [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning|M07: SCA & Dependency Scanning]]
-  - [[DevOps/devsecops/stage1-code/08-sbom-generation|M08: SBOM Generation]]
-  - [[DevOps/devsecops/stage1-code/README|Stage 1 — Code]]
+- [[DevOps/devsecops/stage0-foundations/01-devsecops-mindset|M01: DevSecOps Mindset]]
+- [[DevOps/devsecops/stage1-code/06-secrets-detection|M06: Secrets Detection]]
+- [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning|M07: SCA & Dependency Scanning]]
+- [[DevOps/devsecops/stage1-code/08-sbom-generation|M08: SBOM Generation]]
+- [[DevOps/devsecops/stage1-code/README|Stage 1 — Code]]

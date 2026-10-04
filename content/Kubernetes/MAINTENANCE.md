@@ -25,6 +25,7 @@ flowchart LR
 ## 1. Upstream Release Cadence
 
 Kubernetes releases minor versions approximately three times per year:
+
 - **Spring Release (x.y.0):** Typically mid-April
 - **Summer Release (x.y.0):** Typically late August
 - **Winter Release (x.y.0):** Typically early December
@@ -82,13 +83,13 @@ kind delete cluster --name kind-k8s-labs
 
 ### Pinned Artifacts & Versions Matrix
 
-| Component | Pinned Version / Digest | Upstream Source |
-| :--- | :--- | :--- |
-| **Kubernetes Baseline** | `v1.32.x` – `v1.37.x` | `registry.k8s.io` |
-| **kind** | `v0.27.0+` | `sigs.k8s.io/kind` |
-| **Canonical Workload** | `ghcr.io/stefanprodan/podinfo:6.7.1` | Stefan Prodan / Podinfo |
-| **Gateway API CRDs** | `v1.2.1+` (Standard channel) | `sigs.k8s.io/gateway-api` |
-| **Metrics Server** | `v0.7.2+` | `sigs.k8s.io/metrics-server` |
+| Component               | Pinned Version / Digest              | Upstream Source              |
+| :---------------------- | :----------------------------------- | :--------------------------- |
+| **Kubernetes Baseline** | `v1.32.x` – `v1.37.x`                | `registry.k8s.io`            |
+| **kind**                | `v0.27.0+`                           | `sigs.k8s.io/kind`           |
+| **Canonical Workload**  | `ghcr.io/stefanprodan/podinfo:6.7.1` | Stefan Prodan / Podinfo      |
+| **Gateway API CRDs**    | `v1.2.1+` (Standard channel)         | `sigs.k8s.io/gateway-api`    |
+| **Metrics Server**      | `v0.7.2+`                            | `sigs.k8s.io/metrics-server` |
 
 ---
 
@@ -99,12 +100,14 @@ To prevent drift, broken links, and malformed frontmatter, the repository includ
 ### Content Checker: `scripts/check-k8s-content.mjs`
 
 Run the content checker via:
+
 ```bash
 npm run check:k8s
 ```
 
 The script executes three critical validations across every Markdown file in `content/Kubernetes/`:
-1. **Broken Wikilink Verification:** Parses all `[[wikilinks]]` and validates that the target file exists or is registered in an `aliases` array. Prevents 404 dead ends in the Quartz site.
+
+1. **Broken Wikilink Verification:** Parses all internal wikilinks and validates that the target file exists or is registered in an `aliases` array. Prevents 404 dead ends in the Quartz site.
 2. **Broken Markdown Tables:** Flags tables with unescaped pipes or double-pipe artifacts (`||`) that break GFM rendering.
 3. **Ghost Files:** Flags 0-byte or corrupted empty Markdown files.
 4. **Frontmatter Audit:** Tracks presence of YAML frontmatter (`title`, `tags`, `date`, `description`).

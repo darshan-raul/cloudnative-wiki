@@ -59,12 +59,12 @@ deb http://security.ubuntu.com/ubuntu jammy-security main restricted universe mu
 
 ### Components
 
-| Component    | Meaning                                              |
-|-------------|------------------------------------------------------|
-| main        | Free software supported by Ubuntu                    |
-| restricted  | Proprietary drivers, etc.                           |
-| universe   | Community-maintained free software                  |
-| multiverse | Restricted by copyright/legal                        |
+| Component  | Meaning                            |
+| ---------- | ---------------------------------- |
+| main       | Free software supported by Ubuntu  |
+| restricted | Proprietary drivers, etc.          |
+| universe   | Community-maintained free software |
+| multiverse | Restricted by copyright/legal      |
 
 ### deb-src lines
 

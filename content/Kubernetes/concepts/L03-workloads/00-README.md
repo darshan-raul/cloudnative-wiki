@@ -23,19 +23,19 @@ Workloads are the **kinds of things you put in a cluster**. Each kind is a contr
 
 ## Notes in this level
 
-| Note | Status | What's in it |
-|------|--------|--------------|
-| [[Kubernetes/concepts/L03-workloads/01-pods\|Pods]] | ✅ | The unit of scheduling — networking, lifecycle, init/multi-container, probes, resources, security context, QoS, static pods |
-| [[Kubernetes/concepts/L03-workloads/02-replicaset\|ReplicaSet]] | ✅ | Reconciler model, selector system, pod adoption, Deployment relationship, when to use a bare RS |
-| [[Kubernetes/concepts/L03-workloads/03-deployments\|Deployments]] | ✅ | Deployment → ReplicaSet → Pod layering, rollout strategies, rollbacks, pause/resume, progress deadline |
-| [[Kubernetes/concepts/L03-workloads/04-statefulsets\|StatefulSets]] | ✅ | Stable network IDs, ordered scaling, persistent storage per replica, update strategies, when to use |
-| [[Kubernetes/concepts/L03-workloads/05-daemonset\|DaemonSet]] | ✅ | One Pod per (selected) node — node selection, taints/tolerations, update strategies, resource budgets |
-| [[Kubernetes/concepts/L03-workloads/06-job\|Job]] | ✅ | Run-to-completion, completions/parallelism/backoffLimit, completion modes (Indexed/NonIndexed), patterns |
-| [[Kubernetes/concepts/L03-workloads/07-cronjob\|CronJob]] | ✅ | Cron syntax, time zones, concurrency policies, startingDeadlineSeconds, suspend/resume, vs Argo/Airflow |
-| [[Kubernetes/concepts/L03-workloads/08-init-containers\|Init Containers]] | ✅ | Sequential setup, patterns (wait, migrate, fetch), resource interaction, native sidecars (k8s 1.29+) |
-| [[Kubernetes/concepts/L03-workloads/09-multi-container-pods\|Multi-Container Pods]] | ✅ | Sidecar / ambassador / adapter patterns, inter-container communication, lifecycle ordering, when NOT to use |
-| [[Kubernetes/concepts/L03-workloads/10-probes\|Probes]] | ✅ | Liveness / readiness / startup deep-dive, handlers, tunables, the "no external deps" rule, anti-patterns |
-| [[Kubernetes/concepts/L03-workloads/11-static-pods\|Static Pods]] | ✅ | Kubelet-managed Pods, control plane pattern, use cases |
+| Note                                                                                | Status | What's in it                                                                                                                |
+| ----------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| [[Kubernetes/concepts/L03-workloads/01-pods\|Pods]]                                 | ✅     | The unit of scheduling — networking, lifecycle, init/multi-container, probes, resources, security context, QoS, static pods |
+| [[Kubernetes/concepts/L03-workloads/02-replicaset\|ReplicaSet]]                     | ✅     | Reconciler model, selector system, pod adoption, Deployment relationship, when to use a bare RS                             |
+| [[Kubernetes/concepts/L03-workloads/03-deployments\|Deployments]]                   | ✅     | Deployment → ReplicaSet → Pod layering, rollout strategies, rollbacks, pause/resume, progress deadline                      |
+| [[Kubernetes/concepts/L03-workloads/04-statefulsets\|StatefulSets]]                 | ✅     | Stable network IDs, ordered scaling, persistent storage per replica, update strategies, when to use                         |
+| [[Kubernetes/concepts/L03-workloads/05-daemonset\|DaemonSet]]                       | ✅     | One Pod per (selected) node — node selection, taints/tolerations, update strategies, resource budgets                       |
+| [[Kubernetes/concepts/L03-workloads/06-job\|Job]]                                   | ✅     | Run-to-completion, completions/parallelism/backoffLimit, completion modes (Indexed/NonIndexed), patterns                    |
+| [[Kubernetes/concepts/L03-workloads/07-cronjob\|CronJob]]                           | ✅     | Cron syntax, time zones, concurrency policies, startingDeadlineSeconds, suspend/resume, vs Argo/Airflow                     |
+| [[Kubernetes/concepts/L03-workloads/08-init-containers\|Init Containers]]           | ✅     | Sequential setup, patterns (wait, migrate, fetch), resource interaction, native sidecars (k8s 1.29+)                        |
+| [[Kubernetes/concepts/L03-workloads/09-multi-container-pods\|Multi-Container Pods]] | ✅     | Sidecar / ambassador / adapter patterns, inter-container communication, lifecycle ordering, when NOT to use                 |
+| [[Kubernetes/concepts/L03-workloads/10-probes\|Probes]]                             | ✅     | Liveness / readiness / startup deep-dive, handlers, tunables, the "no external deps" rule, anti-patterns                    |
+| [[Kubernetes/concepts/L03-workloads/11-static-pods\|Static Pods]]                   | ✅     | Kubelet-managed Pods, control plane pattern, use cases                                                                      |
 
 ## Suggested reading order
 
@@ -51,4 +51,4 @@ Workloads are the **kinds of things you put in a cluster**. Each kind is a contr
 
 ## Where to go next
 
-→ [[Kubernetes/concepts/L04-services-networking|L04 — Services & Networking]]: once you have Pods running, you need a way to reach them.
+→ [[Kubernetes/concepts/L04-services-networking/00-README|L04 — Services & Networking]]: once you have Pods running, you need a way to reach them.

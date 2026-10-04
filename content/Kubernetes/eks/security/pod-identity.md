@@ -49,20 +49,20 @@ EKS Pod Identity provides a simpler alternative to IRSA for assigning IAM permis
 
 ### Agent Details
 
-| Property | Value |
-|----------|-------|
-| Deployment type | DaemonSet (one per node) |
-| Listen address | `169.254.170.23` (IPv4), `[fd00:ec2::23]` (IPv6) |
-| Ports | 80, 2703 |
-| Memory | ~50MB |
-| CPU | Low (background) |
+| Property        | Value                                            |
+| --------------- | ------------------------------------------------ |
+| Deployment type | DaemonSet (one per node)                         |
+| Listen address  | `169.254.170.23` (IPv4), `[fd00:ec2::23]` (IPv6) |
+| Ports           | 80, 2703                                         |
+| Memory          | ~50MB                                            |
+| CPU             | Low (background)                                 |
 
 ### Port Usage
 
-| Port | Purpose |
-|------|---------|
-| 80 | HTTP server for credential requests |
-| 2703 | gRPC for internal communication |
+| Port | Purpose                             |
+| ---- | ----------------------------------- |
+| 80   | HTTP server for credential requests |
+| 2703 | gRPC for internal communication     |
 
 ### IPv6 Configuration
 
@@ -176,16 +176,16 @@ spec:
     spec:
       serviceAccountName: my-app
       containers:
-      - name: app
-        image: my-app:latest
+        - name: app
+          image: my-app:latest
 ```
 
 ### Environment Variables Set by Agent
 
-| Variable | Value |
-|----------|-------|
-| `AWS_ROLE_ARN` | The role ARN from association |
-| `AWS_WEB_IDENTITY_TOKEN_FILE` | Path to token (if supported) |
+| Variable                             | Value                                        |
+| ------------------------------------ | -------------------------------------------- |
+| `AWS_ROLE_ARN`                       | The role ARN from association                |
+| `AWS_WEB_IDENTITY_TOKEN_FILE`        | Path to token (if supported)                 |
 | `AWS_CONTAINER_CREDENTIALS_FULL_URI` | `http://169.254.170.23/latest/meta-data/...` |
 
 **Note:** The agent sets these in the container, not the service account.
@@ -247,22 +247,22 @@ aws eks delete-pod-identity-association \
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Associations per cluster | 5,000 |
-| Service accounts per association | 1 |
-| Roles per association | 1 |
-| Regions | All EKS regions |
+| Resource                         | Limit           |
+| -------------------------------- | --------------- |
+| Associations per cluster         | 5,000           |
+| Service accounts per association | 1               |
+| Roles per association            | 1               |
+| Regions                          | All EKS regions |
 
 ## Eventual Consistency
 
 Pod Identity associations are **eventually consistent**:
 
-| Operation | Propagation Time |
-|-----------|------------------|
-| Create | Seconds to minutes |
-| Update | Seconds to minutes |
-| Delete | Seconds to minutes |
+| Operation | Propagation Time   |
+| --------- | ------------------ |
+| Create    | Seconds to minutes |
+| Update    | Seconds to minutes |
+| Delete    | Seconds to minutes |
 
 **Implication:** Avoid creating/updating associations in high-availability code paths.
 
@@ -313,22 +313,23 @@ kubectl set env daemonset/aws-node -n kube-system \
 
 ## Comparison with IRSA
 
-| Aspect | IRSA | Pod Identity |
-|--------|------|--------------|
-| **Setup Complexity** | Higher (OIDC provider) | Lower (EKS API only) |
-| **OIDC Provider** | Required | Not needed |
-| **Trust Policy** | Per-cluster OIDC principal | `pods.eks.amazonaws.com` |
-| **Cross-cluster reuse** | Separate IAM roles | Same role works everywhere |
-| **Credential flow** | Each SDK calls STS | One call per node, cached |
-| **Key rotation** | 7-day (EKS managed) | Managed by EKS |
-| **CloudTrail events** | STS AssumeRoleWithWebIdentity | STS AssumeRole (EKS Auth) |
-| **Agent required** | No | Yes (DaemonSet) |
-| **Region availability** | All EKS regions | All EKS regions |
-| **Limits** | None specific | 5,000 associations/cluster |
+| Aspect                  | IRSA                          | Pod Identity               |
+| ----------------------- | ----------------------------- | -------------------------- |
+| **Setup Complexity**    | Higher (OIDC provider)        | Lower (EKS API only)       |
+| **OIDC Provider**       | Required                      | Not needed                 |
+| **Trust Policy**        | Per-cluster OIDC principal    | `pods.eks.amazonaws.com`   |
+| **Cross-cluster reuse** | Separate IAM roles            | Same role works everywhere |
+| **Credential flow**     | Each SDK calls STS            | One call per node, cached  |
+| **Key rotation**        | 7-day (EKS managed)           | Managed by EKS             |
+| **CloudTrail events**   | STS AssumeRoleWithWebIdentity | STS AssumeRole (EKS Auth)  |
+| **Agent required**      | No                            | Yes (DaemonSet)            |
+| **Region availability** | All EKS regions               | All EKS regions            |
+| **Limits**              | None specific                 | 5,000 associations/cluster |
 
 ### Trust Policy Comparison
 
 **IRSA:**
+
 ```json
 {
   "Principal": {
@@ -343,6 +344,7 @@ kubectl set env daemonset/aws-node -n kube-system \
 ```
 
 **Pod Identity:**
+
 ```json
 {
   "Principal": {
@@ -354,6 +356,7 @@ kubectl set env daemonset/aws-node -n kube-system \
 ### SDK Call Comparison
 
 **IRSA (per-pod):**
+
 ```
 Pod A: SDK → STS AssumeRoleWithWebIdentity → IAM → Temp Creds
 Pod B: SDK → STS AssumeRoleWithWebIdentity → IAM → Temp Creds
@@ -361,6 +364,7 @@ Pod C: SDK → STS AssumeRoleWithWebIdentity → IAM → Temp Creds
 ```
 
 **Pod Identity (per-node):**
+
 ```
 Node 1 (Pod A, Pod B): SDK → Pod Identity Agent → EKS Auth → Temp Creds (cached)
 Node 2 (Pod C): SDK → Pod Identity Agent → EKS Auth → Temp Creds (cached)
@@ -393,6 +397,7 @@ kubectl annotate sa my-app eks.amazonaws.com/role-arn-
 ### Step 3: Update IAM Trust Policy
 
 **IRSA trust (can be removed after migration):**
+
 ```json
 {
   "Condition": {
@@ -404,6 +409,7 @@ kubectl annotate sa my-app eks.amazonaws.com/role-arn-
 ```
 
 **Pod Identity trust (add):**
+
 ```json
 {
   "Effect": "Allow",
@@ -524,14 +530,14 @@ kubectl exec -it my-app -- aws configure list
 
 ## When to Choose Pod Identity over IRSA
 
-| Scenario | Recommended |
-|----------|-------------|
-| New project | Pod Identity |
+| Scenario                            | Recommended  |
+| ----------------------------------- | ------------ |
+| New project                         | Pod Identity |
 | Multi-cluster with same permissions | Pod Identity |
-| Simple AWS access needs | Pod Identity |
-| Complex OIDC requirements | IRSA |
-| External OIDC client (non-AWS SDK) | IRSA |
-| Existing IRSA working well | Keep IRSA |
+| Simple AWS access needs             | Pod Identity |
+| Complex OIDC requirements           | IRSA         |
+| External OIDC client (non-AWS SDK)  | IRSA         |
+| Existing IRSA working well          | Keep IRSA    |
 
 ## References
 

@@ -172,6 +172,7 @@ type=PATH msg=audit(1717600000.123:456): item=0 name="/etc/shadow" inode=65432 d
 ```
 
 Key fields:
+
 - `type`: SYSCALL (main event), PATH (file), EXECVE (exec args), USER_AUTH (authentication)
 - `arch=c000003e`: x86_64 syscall
 - `syscall=257`: openat (syscall number)

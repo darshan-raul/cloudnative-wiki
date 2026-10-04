@@ -10,6 +10,7 @@ description: Creating EKS clusters using eksctl, Terraform, and AWS Console
 ## Using eksctl (Recommended)
 
 ### Basic Cluster
+
 ```bash
 eksctl create cluster \
   --name my-cluster \
@@ -18,6 +19,7 @@ eksctl create cluster \
 ```
 
 ### Cluster with Managed Node Group
+
 ```bash
 eksctl create cluster \
   --name my-cluster \
@@ -31,6 +33,7 @@ eksctl create cluster \
 ```
 
 ### Cluster with Fargate
+
 ```bash
 eksctl create cluster \
   --name my-cluster \
@@ -39,6 +42,7 @@ eksctl create cluster \
 ```
 
 ### Cluster with Karpenter
+
 ```bash
 eksctl create cluster \
   --name my-cluster \
@@ -85,13 +89,15 @@ module "eks" {
 ## Cluster Configuration Options
 
 ### Endpoint Access
-| Type | Control Plane | Worker Nodes |
-|------|---------------|--------------|
-| Public | Public endpoint | Same VPC |
-| Private | Private endpoint only | Private subnets |
-| Public & Private | Both endpoints | Private subnets |
+
+| Type             | Control Plane         | Worker Nodes    |
+| ---------------- | --------------------- | --------------- |
+| Public           | Public endpoint       | Same VPC        |
+| Private          | Private endpoint only | Private subnets |
+| Public & Private | Both endpoints        | Private subnets |
 
 ### Networking Considerations
+
 - At least 2 subnets in different AZs
 - Subnets must have DNS hostnames enabled
 - Consider NAT Gateway costs for private-only clusters

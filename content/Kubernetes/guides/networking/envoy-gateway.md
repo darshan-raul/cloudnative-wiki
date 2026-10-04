@@ -16,6 +16,7 @@ Envoy Gateway simplifies configuring Envoy Proxy by implementing and extending t
 An API gateway is a centralized entry point for managing, securing, and routing requests to backend services. It handles cross-cutting concerns like authentication, rate limiting, and protocol translation, so individual services don't have to.
 
 **Key capabilities:**
+
 - Traffic management (routing, load balancing, retries, circuit breaking)
 - Security (mTLS, JWT authentication, OIDC, API keys)
 - Rate limiting (global and local)
@@ -309,25 +310,26 @@ envoy-gateway serve --config envoy-gateway.yaml
 
 ### Envoy Gateway Control Plane
 
-| Service | Address | Port |
-|---------|---------|------|
-| Xds EnvoyProxy Server | 0.0.0.0 | 18000 |
-| Xds RateLimit Server | 0.0.0.0 | 18001 |
-| Admin Server | 127.0.0.1 | 19000 |
-| Metrics Server | 0.0.0.0 | 19001 |
+| Service               | Address   | Port  |
+| --------------------- | --------- | ----- |
+| Xds EnvoyProxy Server | 0.0.0.0   | 18000 |
+| Xds RateLimit Server  | 0.0.0.0   | 18001 |
+| Admin Server          | 127.0.0.1 | 19000 |
+| Metrics Server        | 0.0.0.0   | 19001 |
 
 ### Envoy Proxy Data Plane
 
-| Service | Address | Port |
-|---------|---------|------|
-| Admin Server | 127.0.0.1 | 19000 |
-| Stats | 0.0.0.0 | 19001 |
-| Shutdown Manager | 0.0.0.0 | 19002 |
-| Readiness | 0.0.0.0 | 19003 |
+| Service          | Address   | Port  |
+| ---------------- | --------- | ----- |
+| Admin Server     | 127.0.0.1 | 19000 |
+| Stats            | 0.0.0.0   | 19001 |
+| Shutdown Manager | 0.0.0.0   | 19002 |
+| Readiness        | 0.0.0.0   | 19003 |
 
 ## Integrations
 
 Envoy Gateway integrates with:
+
 - **Argo CD** - GitOps deployment
 - **Flux CD** - GitOps deployment
 - **cert-manager** - Automated TLS certificate management
@@ -434,25 +436,26 @@ spec:
     matchLabels:
       app.kubernetes.io/name: envoy-gateway
   securityGroups:
-    - sg-xxxxxxxx  # Security group allowing control plane traffic
+    - sg-xxxxxxxx # Security group allowing control plane traffic
 ```
 
 ### Subnet Requirements
 
 Ensure subnets have sufficient IP capacity:
+
 - Envoy Gateway control plane: 2-3 pods typically
 - Each Envoy proxy: 1 IP per configured listener
 - Plan for HTTPRoute backend expansions
 
 ## Gateway API vs AWS Load Balancer Controller
 
-| Aspect | Envoy Gateway | AWS LB Controller |
-|--------|--------------|-------------------|
-| **API Model** | Gateway API (native K8s) | AWS Load Balancer Controller (Ingress/NLB) |
-| **Traffic Type** | L7 HTTP/HTTPS/gRPC | L4 NLB, L7 ALB |
-| **Config Style** | Declarative Gateway/HTTPRoute | Ingress annotations |
-| **Feature Scope** | API gateway (auth, rate-limit, routing) | Cloud integration (WAF, health checks) |
-| **Cloud Awareness** | No | Yes (subnet selection, CC/SG) |
+| Aspect              | Envoy Gateway                           | AWS LB Controller                          |
+| ------------------- | --------------------------------------- | ------------------------------------------ |
+| **API Model**       | Gateway API (native K8s)                | AWS Load Balancer Controller (Ingress/NLB) |
+| **Traffic Type**    | L7 HTTP/HTTPS/gRPC                      | L4 NLB, L7 ALB                             |
+| **Config Style**    | Declarative Gateway/HTTPRoute           | Ingress annotations                        |
+| **Feature Scope**   | API gateway (auth, rate-limit, routing) | Cloud integration (WAF, health checks)     |
+| **Cloud Awareness** | No                                      | Yes (subnet selection, CC/SG)              |
 
 ### When to Use Envoy Gateway on EKS
 
@@ -508,7 +511,7 @@ spec:
             # cert-manager creates this
   addresses:
     - type: LoadBalancer
-      value: internal  # For internal-facing gateway
+      value: internal # For internal-facing gateway
 ```
 
 ### HTTPRoute with Service Export (Multi-Cluster)
@@ -611,17 +614,17 @@ spec:
 
 ## Comparison: Envoy Gateway vs Ingress Controllers on EKS
 
-| Feature | Envoy Gateway | NGINX Ingress | AWS ALB Ingress |
-|---------|--------------|---------------|-----------------|
-| **Standard API** | Gateway API (CRD) | NGINX-specific | AWS-specific |
-| **JWT Auth** | Native (SecurityPolicy) | Via annotation | Via AWS Cognito |
-| **Rate Limiting** | Global + Local | Global only | Via AWS WAF |
-| **Circuit Breaking** | Yes | Yes | Limited |
-| **mTLS** | Yes | Yes | Via AWS ACM |
-| **gRPC** | Native | Via grpc_pass | Via ALB rules |
-| **Multi-cluster** | Yes (GMC) | No | No |
-| **EKS Integration** | Via IRSA | Via IRSA | Native |
-| **Learning Curve** | Moderate | Low | Moderate |
+| Feature              | Envoy Gateway           | NGINX Ingress  | AWS ALB Ingress |
+| -------------------- | ----------------------- | -------------- | --------------- |
+| **Standard API**     | Gateway API (CRD)       | NGINX-specific | AWS-specific    |
+| **JWT Auth**         | Native (SecurityPolicy) | Via annotation | Via AWS Cognito |
+| **Rate Limiting**    | Global + Local          | Global only    | Via AWS WAF     |
+| **Circuit Breaking** | Yes                     | Yes            | Limited         |
+| **mTLS**             | Yes                     | Yes            | Via AWS ACM     |
+| **gRPC**             | Native                  | Via grpc_pass  | Via ALB rules   |
+| **Multi-cluster**    | Yes (GMC)               | No             | No              |
+| **EKS Integration**  | Via IRSA                | Via IRSA       | Native          |
+| **Learning Curve**   | Moderate                | Low            | Moderate        |
 
 ## Egctl for EKS
 

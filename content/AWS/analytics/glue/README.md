@@ -100,6 +100,7 @@ glue.create_crawler(
 ```
 
 **Crawler behavior:**
+
 1. Connects to the data source
 2. Infers schema by sampling files (first 10MB or 10 files, whichever is first)
 3. Determines partition structure (e.g., `year=2024/month=06/`)
@@ -123,22 +124,22 @@ from io import StringIO
 
 def handler(event, context):
     s3 = boto3.client('s3')
-    
+
     # Read CSV from S3
     obj = s3.get_object(Bucket='my-bucket', Key='sales/data.csv')
     df = pd.read_csv(obj['Body'])
-    
+
     # Transform: filter, aggregate
     df['sale_date'] = pd.to_datetime(df['sale_date'])
     monthly = df.groupby(df['sale_date'].dt.to_period('M')).agg({
         'amount': 'sum',
         'sale_id': 'count'
     }).reset_index()
-    
+
     # Write to S3
     output = monthly.to_csv(index=False)
     s3.put_object(Bucket='my-bucket', Key='sales/summary/monthly.csv', Body=output)
-    
+
     return {'status': 'done'}
 ```
 
@@ -190,12 +191,14 @@ df = spark.read.format('parquet') \
 ```
 
 **Bookmark behavior:**
+
 - Works with S3 sources, JDBC sources
 - Tracks the highest timestamp or file key processed
 - On next run, filters out already-processed data
 - Can be reset if you need to re-process from scratch
 
 **Bookmark options:**
+
 - `jobBookmarkKeys`: Custom keys for bookmark tracking (e.g., partition columns)
 - `jobBookmarkKeysSortOrder`: ASC or DESC for bookmark key ordering
 
@@ -204,6 +207,7 @@ df = spark.read.format('parquet') \
 Glue Studio provides a visual interface for building ETL jobs. You drag and drop transformers, configure sources and destinations, and Glue generates the underlying PySpark code.
 
 **Visual job flow:**
+
 ```
 S3 (source) → Filter → Transform → S3 (destination)
               ↓
@@ -213,6 +217,7 @@ S3 (source) → Filter → Transform → S3 (destination)
 ```
 
 Glue Studio is useful for:
+
 - Non-programmers building ETL pipelines
 - Quick prototyping before writing production code
 - Visual debugging of job logic
@@ -243,6 +248,7 @@ glue.create_trigger(
 ```
 
 **Workflows handle:**
+
 - Sequential dependencies (crawler → ETL → validation)
 - Parallel job execution
 - Event-based triggers (S3 object arrival, CloudWatch schedule)
@@ -301,6 +307,7 @@ client.create_schema(
 - **Serverless:** Glue Serverless runs jobs without provisioning DPUs — charged per second based on data processed
 
 **Cost tips:**
+
 - Use Python Shell jobs for simple transformations (CSV parsing, filtering)
 - Use Glue bookmarks to avoid re-processing data
 - Set job timeout to avoid runaway jobs

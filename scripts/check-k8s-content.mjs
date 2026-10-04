@@ -31,7 +31,7 @@ for (const file of allFiles) {
   const rel = path.relative(CONTENT_DIR, file).replace(/\.md$/, "");
   exactRelativeSet.add(rel);
   slugSet.add(rel.toLowerCase());
-  
+
   const base = path.basename(file, ".md");
   if (!fileBasenameSet.has(base)) {
     fileBasenameSet.set(base, []);
@@ -45,16 +45,24 @@ for (const file of allFiles) {
       const end = raw.indexOf("\n---", 3);
       if (end !== -1) {
         const fm = raw.slice(3, end);
-        const aliasMatch = fm.match(/aliases\s*:\s*\[(.*?)\]/) || fm.match(/aliases\s*:\s*\n((?:\s*-\s*[^\n]+\n?)+)/);
+        const aliasMatch =
+          fm.match(/aliases\s*:\s*\[(.*?)\]/) ||
+          fm.match(/aliases\s*:\s*\n((?:\s*-\s*[^\n]+\n?)+)/);
         if (aliasMatch) {
           if (aliasMatch[1].includes("-")) {
-            const list = aliasMatch[1].split("\n").map(s => s.replace(/^\s*-\s*/, "").trim()).filter(Boolean);
+            const list = aliasMatch[1]
+              .split("\n")
+              .map((s) => s.replace(/^\s*-\s*/, "").trim())
+              .filter(Boolean);
             for (const a of list) {
               exactRelativeSet.add(a);
               slugSet.add(a.toLowerCase());
             }
           } else {
-            const list = aliasMatch[1].split(",").map(s => s.trim().replace(/^['"]|['"]$/g, "")).filter(Boolean);
+            const list = aliasMatch[1]
+              .split(",")
+              .map((s) => s.trim().replace(/^['"]|['"]$/g, ""))
+              .filter(Boolean);
             for (const a of list) {
               exactRelativeSet.add(a);
               slugSet.add(a.toLowerCase());
@@ -92,7 +100,10 @@ function resolveWikilink(link, sourceRelPath) {
   // 2. Relative to current file's directory
   const currentDir = path.dirname(sourceRelPath);
   const relativeFromCurrent = path.normalize(path.join(currentDir, cleanLink));
-  if (exactRelativeSet.has(relativeFromCurrent) || slugSet.has(relativeFromCurrent.toLowerCase())) {
+  if (
+    exactRelativeSet.has(relativeFromCurrent) ||
+    slugSet.has(relativeFromCurrent.toLowerCase())
+  ) {
     return true;
   }
 
@@ -113,7 +124,7 @@ function resolveWikilink(link, sourceRelPath) {
 
 // Scan all Kubernetes files for issues
 const issues = [];
-const k8sFiles = allFiles.filter(f => f.startsWith(K8S_DIR));
+const k8sFiles = allFiles.filter((f) => f.startsWith(K8S_DIR));
 
 for (const file of k8sFiles) {
   const relPath = path.relative(CONTENT_DIR, file);
@@ -122,7 +133,11 @@ for (const file of k8sFiles) {
 
   // 1. Empty file
   if (stats.size === 0 || content.trim().length === 0) {
-    issues.push({ file: relPath, type: "EMPTY_FILE", message: "File is completely empty (0 bytes)" });
+    issues.push({
+      file: relPath,
+      type: "EMPTY_FILE",
+      message: "File is completely empty (0 bytes)",
+    });
     continue;
   }
 
@@ -130,11 +145,19 @@ for (const file of k8sFiles) {
   const hasFrontmatter = content.startsWith("---");
   let frontmatterObj = {};
   if (!hasFrontmatter) {
-    issues.push({ file: relPath, type: "MISSING_FRONTMATTER", message: "Missing frontmatter '---' at start of file" });
+    issues.push({
+      file: relPath,
+      type: "MISSING_FRONTMATTER",
+      message: "Missing frontmatter '---' at start of file",
+    });
   } else {
     const secondDelim = content.indexOf("\n---", 3);
     if (secondDelim === -1) {
-      issues.push({ file: relPath, type: "MALFORMED_FRONTMATTER", message: "Frontmatter closing '---' not found" });
+      issues.push({
+        file: relPath,
+        type: "MALFORMED_FRONTMATTER",
+        message: "Frontmatter closing '---' not found",
+      });
     } else {
       const fmLines = content.slice(3, secondDelim).split("\n");
       for (const line of fmLines) {
@@ -144,7 +167,11 @@ for (const file of k8sFiles) {
         }
       }
       if (!frontmatterObj.title) {
-        issues.push({ file: relPath, type: "MISSING_TITLE", message: "Frontmatter missing 'title'" });
+        issues.push({
+          file: relPath,
+          type: "MISSING_TITLE",
+          message: "Frontmatter missing 'title'",
+        });
       }
     }
   }
@@ -156,15 +183,24 @@ for (const file of k8sFiles) {
 
   // 3. H1 check (ignore if draft)
   const lines = content.split("\n");
-  const hasH1 = lines.some(l => /^#\s+[^#]/.test(l));
+  const hasH1 = lines.some((l) => /^#\s+[^#]/.test(l));
   if (!hasH1 && !frontmatterObj.draft) {
-    issues.push({ file: relPath, type: "MISSING_H1", message: "Page has no top-level H1 (# Heading)" });
+    issues.push({
+      file: relPath,
+      type: "MISSING_H1",
+      message: "Page has no top-level H1 (# Heading)",
+    });
   }
 
   // 4. Table check: lines starting with ||
   lines.forEach((l, idx) => {
     if (l.trim().startsWith("||")) {
-      issues.push({ file: relPath, line: idx + 1, type: "MALFORMED_TABLE", message: `Malformed table row starting with '||': ${l.trim().slice(0, 40)}` });
+      issues.push({
+        file: relPath,
+        line: idx + 1,
+        type: "MALFORMED_TABLE",
+        message: `Malformed table row starting with '||': ${l.trim().slice(0, 40)}`,
+      });
     }
   });
 
@@ -180,17 +216,36 @@ for (const file of k8sFiles) {
 
     const resolved = resolveWikilink(rawTarget, relPath);
     if (resolved === false) {
-      issues.push({ file: relPath, type: "BROKEN_LINK", message: `Broken wikilink target: [[${rawTarget}]]` });
+      issues.push({
+        file: relPath,
+        type: "BROKEN_LINK",
+        message: `Broken wikilink target: [[${rawTarget}]]`,
+      });
     } else if (resolved === "directory") {
-      issues.push({ file: relPath, type: "DIRECTORY_LINK", message: `Wikilink points to directory instead of markdown page: [[${rawTarget}]]` });
+      issues.push({
+        file: relPath,
+        type: "DIRECTORY_LINK",
+        message: `Wikilink points to directory instead of markdown page: [[${rawTarget}]]`,
+      });
     }
   }
 }
 
-const criticalTypes = new Set(["EMPTY_FILE", "MALFORMED_FRONTMATTER", "BROKEN_LINK", "DIRECTORY_LINK", "MALFORMED_TABLE", "MISSING_H1"]);
+const criticalTypes = new Set([
+  "EMPTY_FILE",
+  "MALFORMED_FRONTMATTER",
+  "BROKEN_LINK",
+  "DIRECTORY_LINK",
+  "MALFORMED_TABLE",
+  "MISSING_H1",
+]);
 const isStrict = process.argv.includes("--strict");
-const criticalIssues = issues.filter(i => isStrict || criticalTypes.has(i.type));
-const warningIssues = issues.filter(i => !isStrict && !criticalTypes.has(i.type));
+const criticalIssues = issues.filter(
+  (i) => isStrict || criticalTypes.has(i.type),
+);
+const warningIssues = issues.filter(
+  (i) => !isStrict && !criticalTypes.has(i.type),
+);
 
 // Report
 console.log(`\n=== Kubernetes Content Validation Report ===`);
@@ -205,7 +260,9 @@ for (const issue of issues) {
 
 for (const [type, count] of Object.entries(issuesByType)) {
   const isCrit = criticalTypes.has(type);
-  console.log(`- ${type}: ${count} ${isCrit ? "❌ (critical)" : "⚠️ (warning/pending)"}`);
+  console.log(
+    `- ${type}: ${count} ${isCrit ? "❌ (critical)" : "⚠️ (warning/pending)"}`,
+  );
 }
 
 if (criticalIssues.length > 0) {
@@ -231,4 +288,3 @@ if (criticalIssues.length > 0) {
   console.log("\nAll critical Kubernetes structural validations passed! ✅");
   process.exit(0);
 }
-

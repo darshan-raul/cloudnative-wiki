@@ -34,12 +34,12 @@ Each layer buys time and reduces blast radius.
 **Authentication** — who are you? (identity verification)
 **Authorization** — what can you do? (access control after authentication)
 
-| Pattern | When to use | Risk |
-|---|---|---|
-| **RBAC** (Role-Based Access Control) | Simple permission hierarchies | Role explosion in complex Orgs |
-| **ABAC** (Attribute-Based Access Control) | Fine-grained, dynamic policies | Complex policy evaluation |
-| **Zero Trust** | Every request verified, no implicit trust | Higher latency, complexity |
-| **最小权限 (PoLP)** | Default-deny posture | Requires precise permission scoping |
+| Pattern                                   | When to use                               | Risk                                |
+| ----------------------------------------- | ----------------------------------------- | ----------------------------------- |
+| **RBAC** (Role-Based Access Control)      | Simple permission hierarchies             | Role explosion in complex Orgs      |
+| **ABAC** (Attribute-Based Access Control) | Fine-grained, dynamic policies            | Complex policy evaluation           |
+| **Zero Trust**                            | Every request verified, no implicit trust | Higher latency, complexity          |
+| **最小权限 (PoLP)**                       | Default-deny posture                      | Requires precise permission scoping |
 
 See [[authentication/README|Authentication]] for JWT, OAuth2, OIDC, SAML patterns.
 
@@ -62,16 +62,19 @@ Data Subnet:    Databases, Redis, Internal APIs
 ### Encryption
 
 **In transit:**
+
 - TLS 1.2+ for all external connections
 - mTLS (mutual TLS) for service-to-service authentication
 - Certificate pinning for mobile apps
 
 **At rest:**
+
 - Database-level encryption (AWS RDS encryption, Azure SQL TDE)
 - Disk encryption (LUKS, AWS EBS encryption)
 - Application-level encryption for sensitive fields (PII, credentials)
 
 **Key management:**
+
 - Cloud KMS (AWS KMS, GCP Cloud KMS, Azure Key Vault) — centralized key lifecycle
 - Never store encryption keys alongside encrypted data
 - Key rotation strategy (automatic vs manual, rotation period)
@@ -96,11 +99,11 @@ For every architecture, ask:
 
 A simple threat model table:
 
-| Asset | Threat | Vector | Control | Residual Risk |
-|---|---|---|---|---|
-| User DB | SQL injection | Web app | Input validation, parameterized queries | Low |
-| API keys | Key exposure | Git repos | Secret scanning, Vault | Medium |
-| Customer PII | Data breach | Compromised DB | Encryption at rest, IAM, network isolation | Medium |
+| Asset        | Threat        | Vector         | Control                                    | Residual Risk |
+| ------------ | ------------- | -------------- | ------------------------------------------ | ------------- |
+| User DB      | SQL injection | Web app        | Input validation, parameterized queries    | Low           |
+| API keys     | Key exposure  | Git repos      | Secret scanning, Vault                     | Medium        |
+| Customer PII | Data breach   | Compromised DB | Encryption at rest, IAM, network isolation | Medium        |
 
 ## Compliance Implications
 

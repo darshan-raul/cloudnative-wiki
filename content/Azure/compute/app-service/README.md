@@ -184,14 +184,14 @@ az webapp config access-restriction add \
 
 ## 4. Quotas, SKUs, and Performance Limits
 
-| SKU Tier | vCPU / RAM Options | Max Instances (Scale Out) | Deployment Slots | VNet Integration |
-| :--- | :--- | :--- | :--- | :--- |
-| **Basic (B1-B3)** | 1-4 vCPU / 1.75 - 7 GiB | 3 instances | 0 slots | Supported |
-| **Standard (S1-S3)** | 1-4 vCPU / 1.75 - 7 GiB | 10 instances | 5 slots | Supported |
-| **Premium v3 (P1v3-P3v3)**| 2-32 vCPU / 8 - 128 GiB | 30 instances (up to 100) | 20 slots | Supported |
-| **Isolated v2 (ASEv3)** | 2-32 vCPU / 8 - 128 GiB | 200 instances | 200 slots | Native VNet injection |
-| **Outbound SNAT Limit** | 128 ports per instance | Mitigate via NAT Gateway or VNet integration |
-| **File Storage Quota** | 250 GB (Pv3) / 1 TB (ASEv3)| Mounted SMB/NFS share shared across instances |
+| SKU Tier                   | vCPU / RAM Options          | Max Instances (Scale Out)                     | Deployment Slots | VNet Integration      |
+| :------------------------- | :-------------------------- | :-------------------------------------------- | :--------------- | :-------------------- |
+| **Basic (B1-B3)**          | 1-4 vCPU / 1.75 - 7 GiB     | 3 instances                                   | 0 slots          | Supported             |
+| **Standard (S1-S3)**       | 1-4 vCPU / 1.75 - 7 GiB     | 10 instances                                  | 5 slots          | Supported             |
+| **Premium v3 (P1v3-P3v3)** | 2-32 vCPU / 8 - 128 GiB     | 30 instances (up to 100)                      | 20 slots         | Supported             |
+| **Isolated v2 (ASEv3)**    | 2-32 vCPU / 8 - 128 GiB     | 200 instances                                 | 200 slots        | Native VNet injection |
+| **Outbound SNAT Limit**    | 128 ports per instance      | Mitigate via NAT Gateway or VNet integration  |
+| **File Storage Quota**     | 250 GB (Pv3) / 1 TB (ASEv3) | Mounted SMB/NFS share shared across instances |
 
 ---
 
@@ -208,6 +208,7 @@ az webapp config access-restriction add \
 ## 6. Realistic Pricing Scenarios
 
 App Service pricing is billed per hour for the **App Service Plan**, regardless of how many web apps are deployed on that plan:
+
 1. **P1v3 (Linux):** 2 vCPU, 8 GiB RAM = ~$0.155 per hour (~$113.15/month).
 2. **P2v3 (Linux):** 4 vCPU, 16 GiB RAM = ~$0.310 per hour (~$226.30/month).
 3. **Deployment Slots:** Incur **$0 additional platform charge**; they consume CPU and memory from the host App Service Plan.

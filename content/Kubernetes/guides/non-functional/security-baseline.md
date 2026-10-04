@@ -159,8 +159,8 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   # no rules = nothing allowed
 ---
 # allow DNS
@@ -172,20 +172,20 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: kube-system
-      podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    ports:
-    - port: 53
-      protocol: UDP
-    - port: 53
-      protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
 ---
 # allow ingress from the ingress controller
 apiVersion: networking.k8s.io/v1
@@ -198,15 +198,15 @@ spec:
     matchLabels:
       app: web
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: ingress-nginx
-    ports:
-    - port: 8080
-      protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8080
+          protocol: TCP
 ```
 
 ### Service mesh for mTLS
@@ -223,7 +223,7 @@ metadata:
   namespace: my-app
 spec:
   mtls:
-    mode: STRICT    # require mTLS for all pods in namespace
+    mode: STRICT # require mTLS for all pods in namespace
 ```
 
 **When to use mTLS:**
@@ -255,7 +255,7 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-  - app.example.com
+    - app.example.com
 ```
 
 ```yaml
@@ -269,31 +269,31 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   tls:
-  - hosts:
-    - app.example.com
-    secretName: app-tls
+    - hosts:
+        - app.example.com
+      secretName: app-tls
   rules:
-  - host: app.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: web
-            port:
-              number: 80
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80
 ```
 
 ## Workload security (Pod Security Standards)
 
 The modern baseline is the **Pod Security Standards** (PSS) — three levels: `privileged`, `baseline`, `restricted`.
 
-| Level | What's allowed |
-|-------|----------------|
-| `privileged` | Anything (escape hatch) |
-| `baseline` | Minimal restrictions, prevents known privilege escalations |
-| `restricted` | Hardened, current best practices |
+| Level        | What's allowed                                             |
+| ------------ | ---------------------------------------------------------- |
+| `privileged` | Anything (escape hatch)                                    |
+| `baseline`   | Minimal restrictions, prevents known privilege escalations |
+| `restricted` | Hardened, current best practices                           |
 
 **Production target: `restricted`.**
 
@@ -339,27 +339,27 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   containers:
-  - name: web
-    image: myorg/web:v1
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-        - ALL
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 500m
-        memory: 512Mi
-    volumeMounts:
-    - name: tmp
-      mountPath: /tmp
+    - name: web
+      image: myorg/web:v1
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
   volumes:
-  - name: tmp
-    emptyDir: {}
+    - name: tmp
+      emptyDir: {}
 ```
 
 **Audit mode** is great for adoption — it shows what would be blocked, without blocking:
@@ -378,7 +378,7 @@ Start in audit, see what fails, fix, then enforce.
 ```yaml
 securityContext:
   seccompProfile:
-    type: RuntimeDefault    # or "Localhost" for custom profiles
+    type: RuntimeDefault # or "Localhost" for custom profiles
 ```
 
 **AppArmor** is more powerful but Linux-only. K8s supports it via annotations:
@@ -454,6 +454,7 @@ FROM cgr.dev/chainguard/static:latest
 ```
 
 **Distroless** and **Chainguard** are purpose-built for security:
+
 - No shell, no package manager
 - No CVEs (Chainguard rebuilds daily)
 - Run as non-root
@@ -477,6 +478,7 @@ The digest is the actual content hash. Tags are mutable.
 ### Don't put secrets in environment variables
 
 Plain env vars are visible in:
+
 - `kubectl describe pod`
 - `kubectl logs` (if the app logs env vars)
 - Container runtime debug
@@ -486,15 +488,15 @@ Plain env vars are visible in:
 
 ```yaml
 volumes:
-- name: db-creds
-  secret:
-    secretName: db-credentials
-containers:
-- name: web
-  volumeMounts:
   - name: db-creds
-    mountPath: /etc/db
-    readOnly: true
+    secret:
+      secretName: db-credentials
+containers:
+  - name: web
+    volumeMounts:
+      - name: db-creds
+        mountPath: /etc/db
+        readOnly: true
 # the file is at /etc/db/password
 ```
 
@@ -511,13 +513,13 @@ apiVersion: apiserver.config.k8s.io/v1
 kind: EncryptionConfiguration
 resources:
   - resources:
-    - secrets
+      - secrets
     providers:
-    - aescbc:
-        keys:
-        - name: key1
-          secret: <base64-encoded-32-byte-key>
-    - identity: {}
+      - aescbc:
+          keys:
+            - name: key1
+              secret: <base64-encoded-32-byte-key>
+      - identity: {}
 ```
 
 **Rotate the key regularly.** Old keys are kept for decryption of existing data; new keys are used for encryption.
@@ -525,6 +527,7 @@ resources:
 ### External secret stores
 
 Don't store secrets in k8s at all. Use:
+
 - **HashiCorp Vault** — pull secrets at runtime
 - **AWS Secrets Manager / SSM Parameter Store** — with ESO (External Secrets Operator)
 - **GCP Secret Manager** — with ESO
@@ -542,12 +545,12 @@ spec:
     name: vault-backend
     kind: ClusterSecretStore
   target:
-    name: db-credentials   # k8s Secret to create
+    name: db-credentials # k8s Secret to create
   data:
-  - secretKey: password
-    remoteRef:
-      key: secret/data/db
-      property: password
+    - secretKey: password
+      remoteRef:
+        key: secret/data/db
+        property: password
 ```
 
 The k8s Secret is auto-generated from Vault. Rotate in Vault, k8s Secret updates, pods restart (or hot-reload).
@@ -572,13 +575,13 @@ The apiserver's audit log is the source of truth for "who did what." Enable it.
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-- level: Metadata
-  namespaces: ["prod", "staging"]
-- level: Request
-  verbs: ["create", "update", "patch", "delete"]
-  resources:
-  - group: ""
-    resources: ["pods", "services", "secrets", "configmaps"]
+  - level: Metadata
+    namespaces: ["prod", "staging"]
+  - level: Request
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: ""
+        resources: ["pods", "services", "secrets", "configmaps"]
 ```
 
 **Send to a SIEM (Splunk, Elasticsearch, Datadog) for analysis.**
@@ -586,6 +589,7 @@ rules:
 ### Runtime detection with Falco
 
 Falco (CNCF) detects anomalous runtime behavior:
+
 - Shell spawned in container
 - Sensitive file accessed
 - Outbound connection to suspicious IP
@@ -640,21 +644,21 @@ metadata:
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: check-limits
-    match:
-      any:
-      - resources:
-          kinds:
-          - Pod
-    validate:
-      message: "All containers must have CPU and memory limits."
-      pattern:
-        spec:
-          containers:
+    - name: check-limits
+      match:
+        any:
           - resources:
-              limits:
-                memory: "?*"
-                cpu: "?*"
+              kinds:
+                - Pod
+      validate:
+        message: "All containers must have CPU and memory limits."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits:
+                    memory: "?*"
+                    cpu: "?*"
 ```
 
 **Example: block privileged containers**
@@ -667,19 +671,19 @@ metadata:
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: deny-privileged
-    match:
-      any:
-      - resources:
-          kinds:
-          - Pod
-    validate:
-      message: "Privileged containers are not allowed."
-      pattern:
-        spec:
-          containers:
-          - securityContext:
-              privileged: "false|nil"
+    - name: deny-privileged
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: "Privileged containers are not allowed."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  privileged: "false|nil"
 ```
 
 ## Compliance frameworks
@@ -715,18 +719,18 @@ For a production cluster:
 
 ## Common gotchas
 
-* **PSS `restricted` breaks some apps.** Audit first, fix, then enforce. The "fix" usually involves a few lines in the pod spec.
-* **NetworkPolicy doesn't apply if the CNI doesn't support it.** Flannel and basic Calico don't enforce. Use Calico, Cilium, or Weave for production.
-* **`hostPath` volumes bypass many security controls.** Avoid them in production.
-* **Service account tokens are auto-mounted by default.** Disable for pods that don't need them (`automountServiceAccountToken: false`).
-* **The default ServiceAccount has wide permissions in some clusters.** Bind to a less-privileged SA, or use a "default deny" SA.
-* **Reading a secret requires RBAC.** If a pod's ServiceAccount can't `get` the secret, the volume mount fails.
-* **Don't disable `automountServiceAccountToken` cluster-wide.** Some workloads need it (kube-system pods, etc.).
-* **Admission policies are enforced only on creation/update.** If you change a policy, existing resources aren't re-validated. Run an audit job.
-* **Image scanning finds existing CVEs.** A scan today doesn't fix a CVE in an image already deployed. Re-build and re-deploy.
-* **Defense in depth, not defense in one.** A single layer (NetworkPolicy, RBAC, PSS) isn't enough.
-* **Don't put secrets in `kubectl describe pod` output.** They're shown. Don't let screenshots leak.
-* **Cloud metadata service can be exploited.** SSRF attacks on the metadata endpoint (169.254.169.254) can leak IAM creds. Use network policies to block pod access to the metadata service.
+- **PSS `restricted` breaks some apps.** Audit first, fix, then enforce. The "fix" usually involves a few lines in the pod spec.
+- **NetworkPolicy doesn't apply if the CNI doesn't support it.** Flannel and basic Calico don't enforce. Use Calico, Cilium, or Weave for production.
+- **`hostPath` volumes bypass many security controls.** Avoid them in production.
+- **Service account tokens are auto-mounted by default.** Disable for pods that don't need them (`automountServiceAccountToken: false`).
+- **The default ServiceAccount has wide permissions in some clusters.** Bind to a less-privileged SA, or use a "default deny" SA.
+- **Reading a secret requires RBAC.** If a pod's ServiceAccount can't `get` the secret, the volume mount fails.
+- **Don't disable `automountServiceAccountToken` cluster-wide.** Some workloads need it (kube-system pods, etc.).
+- **Admission policies are enforced only on creation/update.** If you change a policy, existing resources aren't re-validated. Run an audit job.
+- **Image scanning finds existing CVEs.** A scan today doesn't fix a CVE in an image already deployed. Re-build and re-deploy.
+- **Defense in depth, not defense in one.** A single layer (NetworkPolicy, RBAC, PSS) isn't enough.
+- **Don't put secrets in `kubectl describe pod` output.** They're shown. Don't let screenshots leak.
+- **Cloud metadata service can be exploited.** SSRF attacks on the metadata endpoint (169.254.169.254) can leak IAM creds. Use network policies to block pod access to the metadata service.
 
 ## A worked example
 
@@ -783,7 +787,7 @@ After rolling this out, the next CVE gets caught at admission or in CI, not in p
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — cluster auth
-* [[Kubernetes/concepts/L07-security|L07-security]] — concept-level security notes
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when PSS is too strict
-* [[Kubernetes/guides/delivery/ci-cd-integration|ci-cd-integration]] — image scanning in CI
+- [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — cluster auth
+- [[Kubernetes/concepts/L07-security/00-README|L07-security]] — concept-level security notes
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when PSS is too strict
+- [[Kubernetes/guides/delivery/ci-cd-integration|ci-cd-integration]] — image scanning in CI

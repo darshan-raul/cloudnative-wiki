@@ -45,13 +45,13 @@ SequenceToken: 495623726896828886...
 
 Control how long logs are kept:
 
-| Retention | Cost Implication |
-|-----------|-----------------|
-| 1 day | Lowest storage cost |
-| 30 days | Common for most applications |
-| 90 days | For compliance requirements |
-| 1 year | Long-term retention |
-| Forever | Most expensive |
+| Retention | Cost Implication             |
+| --------- | ---------------------------- |
+| 1 day     | Lowest storage cost          |
+| 30 days   | Common for most applications |
+| 90 days   | For compliance requirements  |
+| 1 year    | Long-term retention          |
+| Forever   | Most expensive               |
 
 ```bash
 aws logs put-retention-policy \
@@ -190,15 +190,15 @@ CloudWatch Logs Live Tail provides real-time streaming of log events in the Cons
 
 ## Integrating with Other AWS Services
 
-| Service | How It Integrates with Logs |
-|---------|----------------------------|
-| Lambda | Lambda automatically logs to /aws/lambda/{function-name} |
-| ECS | Container logs via awslogs driver |
-| EC2 | CloudWatch Agent (syslog, application logs) |
-| VPC Flow Logs | Export to CloudWatch Logs |
-| CloudTrail | CloudTrail logs written to CloudWatch Logs |
-| RDS | Export logs to CloudWatch (MySQL, PostgreSQL, Aurora) |
-| API Gateway | Access logs and execution logs |
+| Service       | How It Integrates with Logs                              |
+| ------------- | -------------------------------------------------------- |
+| Lambda        | Lambda automatically logs to /aws/lambda/{function-name} |
+| ECS           | Container logs via awslogs driver                        |
+| EC2           | CloudWatch Agent (syslog, application logs)              |
+| VPC Flow Logs | Export to CloudWatch Logs                                |
+| CloudTrail    | CloudTrail logs written to CloudWatch Logs               |
+| RDS           | Export logs to CloudWatch (MySQL, PostgreSQL, Aurora)    |
+| API Gateway   | Access logs and execution logs                           |
 
 ### ECS Container Logging
 
@@ -217,14 +217,14 @@ CloudWatch Logs Live Tail provides real-time streaming of log events in the Cons
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Log groups per account | 10,000 |
-| Log streams per log group | Unlimited (performance degrades above 50,000) |
-| Log events per PutLogEvents call | 1MB (max 10,000 events) |
-| Log event size | 256KB (max 26,000 bytes per log event) |
-| Retention policy range | 1 day to 10 years |
-| Subscription filters per log group | 3 (can request increase) |
+| Resource                           | Limit                                         |
+| ---------------------------------- | --------------------------------------------- |
+| Log groups per account             | 10,000                                        |
+| Log streams per log group          | Unlimited (performance degrades above 50,000) |
+| Log events per PutLogEvents call   | 1MB (max 10,000 events)                       |
+| Log event size                     | 256KB (max 26,000 bytes per log event)        |
+| Retention policy range             | 1 day to 10 years                             |
+| Subscription filters per log group | 3 (can request increase)                      |
 
 ## References
 

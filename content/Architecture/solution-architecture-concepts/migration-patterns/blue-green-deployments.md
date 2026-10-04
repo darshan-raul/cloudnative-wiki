@@ -27,6 +27,7 @@ Rollback:
 ## Infrastructure Requirements
 
 Blue-green requires:
+
 - **Two identical environments** — same compute, same database, same configuration
 - **Shared database** — both environments point to the same data store (no separate DB per environment)
 - **Load balancer or DNS switch** — ability to redirect all traffic instantly
@@ -44,6 +45,7 @@ If phone column doesn't exist yet → v2 code breaks
 ```
 
 Solutions:
+
 - **Expand-contract pattern** — add column as nullable first, deploy v2, backfill, drop old column
 - **Feature flags** — v2 code paths are gated until schema is ready
 - **Database migration tooling** — migrations run before switch, both code versions tolerate the schema
@@ -80,6 +82,7 @@ kubectl patch service api -p '{"spec":{"selector":{"version":"blue"}}}'
 ```
 
 Rollback is instantaneous because:
+
 - Blue environment still exists (at0 replicas, but the pods/images are preserved)
 - Database state is unchanged (blue and green share the same DB)
 - No data migration to reverse
@@ -167,20 +170,21 @@ spec:
 ```
 
 Benefits:
+
 - Catch issues with 1% of traffic before full rollout
 - Monitor error rates, latency on small subset
 - Rollback only affects small percentage
 
 ## When to Use Blue-Green
 
-| Use case | Blue-green appropriate? |
-|---|---|
-| Stateless application (no DB) | Yes, straightforward |
-| Shared database, schema-compatible | Yes, with expand-contract |
-| Separate database per environment | Complex, consider other patterns |
-| Frequent small deployments | High infrastructure cost, consider rolling |
-| Database migrations (large) | Consider feature flags instead |
-| State services (Redis, sessions) | Session state sync required |
+| Use case                           | Blue-green appropriate?                    |
+| ---------------------------------- | ------------------------------------------ |
+| Stateless application (no DB)      | Yes, straightforward                       |
+| Shared database, schema-compatible | Yes, with expand-contract                  |
+| Separate database per environment  | Complex, consider other patterns           |
+| Frequent small deployments         | High infrastructure cost, consider rolling |
+| Database migrations (large)        | Consider feature flags instead             |
+| State services (Redis, sessions)   | Session state sync required                |
 
 ## Advantages
 

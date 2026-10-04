@@ -52,14 +52,14 @@ Storing sensitive configuration data (database credentials, API keys, private TL
 
 ## 2. Secrets Store CSI vs. Native Kubernetes Secrets
 
-| Dimension | Native Kubernetes Secrets | Azure Key Vault Secrets Store CSI Driver |
-| :--- | :--- | :--- |
-| **Storage Substrate** | Persisted in `etcd` (Base64 encoded) | **In-memory (`tmpfs`) volume mount only** |
-| **Hardware Backing** | None (Software database) | **FIPS 140-2 Level 2 / Level 3 Hardware HSM** |
-| **Centralized Governance** | Distributed across multiple clusters | **Single enterprise-wide Azure Key Vault** |
-| **Audit Logging** | Kubernetes API audit logs | **Full Azure Monitor diagnostic audit logs** |
-| **Secret Auto-Rotation** | Manual rollout / External scripts | **Automated polling with live file refresh** |
-| **Access Control** | Kubernetes RBAC (Namespace scope) | **Azure RBAC (Granular Key Vault Secrets User)** |
+| Dimension                  | Native Kubernetes Secrets            | Azure Key Vault Secrets Store CSI Driver         |
+| :------------------------- | :----------------------------------- | :----------------------------------------------- |
+| **Storage Substrate**      | Persisted in `etcd` (Base64 encoded) | **In-memory (`tmpfs`) volume mount only**        |
+| **Hardware Backing**       | None (Software database)             | **FIPS 140-2 Level 2 / Level 3 Hardware HSM**    |
+| **Centralized Governance** | Distributed across multiple clusters | **Single enterprise-wide Azure Key Vault**       |
+| **Audit Logging**          | Kubernetes API audit logs            | **Full Azure Monitor diagnostic audit logs**     |
+| **Secret Auto-Rotation**   | Manual rollout / External scripts    | **Automated polling with live file refresh**     |
+| **Access Control**         | Kubernetes RBAC (Namespace scope)    | **Azure RBAC (Granular Key Vault Secrets User)** |
 
 ---
 
@@ -123,13 +123,13 @@ spec:
           objectType: cert
   # Optional: Automatically create and sync a native Kubernetes Secret for ENV variable injection
   secretObjects:
-  - secretName: payments-synced-secret
-    type: Opaque
-    data:
-    - objectName: DatabasePassword
-      key: DB_PASSWORD
-    - objectName: StripeApiKey
-      key: STRIPE_KEY
+    - secretName: payments-synced-secret
+      type: Opaque
+      data:
+        - objectName: DatabasePassword
+          key: DB_PASSWORD
+        - objectName: StripeApiKey
+          key: STRIPE_KEY
 ```
 
 ### 4. Mount Key Vault Secrets into Application Pod
@@ -155,27 +155,27 @@ spec:
     spec:
       serviceAccountName: payments-sa
       containers:
-      - name: api
-        image: mcr.microsoft.com/dotnet/samples:aspnetapp
-        # Access secret via environment variable synced from Key Vault
-        env:
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: payments-synced-secret
-              key: DB_PASSWORD
-        # Mount secret files directly into in-memory tmpfs
-        volumeMounts:
-        - name: secrets-store-inline
-          mountPath: "/mnt/secrets/vault"
-          readOnly: true
+        - name: api
+          image: mcr.microsoft.com/dotnet/samples:aspnetapp
+          # Access secret via environment variable synced from Key Vault
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: payments-synced-secret
+                  key: DB_PASSWORD
+          # Mount secret files directly into in-memory tmpfs
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets/vault"
+              readOnly: true
       volumes:
-      - name: secrets-store-inline
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: "azure-kv-payments-spc"
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-kv-payments-spc"
 ```
 
 Apply manifests:
@@ -189,13 +189,13 @@ kubectl apply -f payments-app-deployment.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter / Feature | Platform Limit | Production Rule |
-| :--- | :--- | :--- |
-| **Key Vault API Rate Limit** | **4,000 requests per 10s** | Poll interval must be tuned to avoid throttling |
-| **Default Secret Rotation Interval**| **2 minutes** | Configurable via `--rotation-poll-interval` |
-| **Max Objects per SecretProviderClass**| Up to **100 Secrets/Keys** | Group related microservice secrets together |
-| **Mount Latency Overhead** | **100–300 milliseconds** | Incurred strictly during container cold start |
-| **Memory Consumption** | In-memory `tmpfs` | Secrets consume minuscule RAM (kilobytes) |
+| Parameter / Feature                     | Platform Limit             | Production Rule                                 |
+| :-------------------------------------- | :------------------------- | :---------------------------------------------- |
+| **Key Vault API Rate Limit**            | **4,000 requests per 10s** | Poll interval must be tuned to avoid throttling |
+| **Default Secret Rotation Interval**    | **2 minutes**              | Configurable via `--rotation-poll-interval`     |
+| **Max Objects per SecretProviderClass** | Up to **100 Secrets/Keys** | Group related microservice secrets together     |
+| **Mount Latency Overhead**              | **100–300 milliseconds**   | Incurred strictly during container cold start   |
+| **Memory Consumption**                  | In-memory `tmpfs`          | Secrets consume minuscule RAM (kilobytes)       |
 
 ---
 
@@ -221,7 +221,7 @@ kubectl apply -f payments-app-deployment.yaml
   - Azure Key Vault Base: **$0.00**.
   - Key Vault Secret Operations: 50,000 operations × $0.03 per 10,000 = **$0.15**
   - Managed Identity Operations: **$0.00**.
-- **Total Monthly Cost:** **$0.15 / month** *(Achieving enterprise bank-grade secret security for under a dollar).*
+- **Total Monthly Cost:** **$0.15 / month** _(Achieving enterprise bank-grade secret security for under a dollar)._
 
 ### Scenario B: Payment Gateway with Hardware Security Module (Managed HSM)
 

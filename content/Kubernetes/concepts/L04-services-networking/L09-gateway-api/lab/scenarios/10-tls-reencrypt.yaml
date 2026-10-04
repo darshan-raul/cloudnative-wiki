@@ -42,8 +42,8 @@ metadata:
 spec:
   secretName: reencrypt-backend-tls
   dnsNames:
-  - reencrypt-internal.app.svc.cluster.local
-  - reencrypt.example.com
+    - reencrypt-internal.app.svc.cluster.local
+    - reencrypt.example.com
   issuerRef: { name: selfsigned, kind: Issuer }
 ---
 # CA cert for the backend, in a ConfigMap so BackendTLSPolicy can use it
@@ -76,17 +76,17 @@ spec:
     metadata: { labels: { app: reencrypt-target } }
     spec:
       containers:
-      - name: reencrypt-target
-        image: nginx:1.27-alpine
-        ports: [{ containerPort: 8443 }]
-        volumeMounts:
-        - { name: tls,  mountPath: /etc/nginx/ssl, readOnly: true }
-        - { name: conf, mountPath: /etc/nginx/conf.d, readOnly: true }
+        - name: reencrypt-target
+          image: nginx:1.27-alpine
+          ports: [{ containerPort: 8443 }]
+          volumeMounts:
+            - { name: tls, mountPath: /etc/nginx/ssl, readOnly: true }
+            - { name: conf, mountPath: /etc/nginx/conf.d, readOnly: true }
       volumes:
-      - name: tls
-        secret: { secretName: reencrypt-backend-tls }
-      - name: conf
-        configMap: { name: reencrypt-nginx-conf }
+        - name: tls
+          secret: { secretName: reencrypt-backend-tls }
+        - name: conf
+          configMap: { name: reencrypt-nginx-conf }
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -111,8 +111,8 @@ metadata:
 spec:
   selector: { app: reencrypt-target }
   ports:
-  - port: 443
-    targetPort: 8443
+    - port: 443
+      targetPort: 8443
 ---
 # Upstream mTLS: gateway verifies backend cert
 apiVersion: gateway.networking.k8s.io/v1
@@ -122,14 +122,14 @@ metadata:
   namespace: app
 spec:
   targetRefs:
-  - group: ""
-    kind: Service
-    name: reencrypt-target
+    - group: ""
+      kind: Service
+      name: reencrypt-target
   tls:
     caCertificateRefs:
-    - group: ""
-      kind: ConfigMap
-      name: reencrypt-ca
+      - group: ""
+        kind: ConfigMap
+        name: reencrypt-ca
     hostname: reencrypt-internal.app.svc.cluster.local
     mode: Require
 ---
@@ -144,16 +144,16 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: https
-    port: 443
-    protocol: HTTPS
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - kind: Secret
-        name: reencrypt-edge-tls
-    allowedRoutes:
-      namespaces: { from: All }
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: reencrypt-edge-tls
+      allowedRoutes:
+        namespaces: { from: All }
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -162,15 +162,15 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg-tls-reencrypt
-    namespace: infra
+    - name: eg-tls-reencrypt
+      namespace: infra
   hostnames: ["reencrypt.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: reencrypt-target
-      port: 443
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: reencrypt-target
+          port: 443
 ---
 apiVersion: v1
 kind: Service
@@ -183,7 +183,7 @@ spec:
     app.kubernetes.io/name: eg-tls-reencrypt
     gateway.envoyproxy.io/owning-gateway-name: eg-tls-reencrypt
   ports:
-  - name: https
-    port: 443
-    targetPort: 8443
-    nodePort: 30001
+    - name: https
+      port: 443
+      targetPort: 8443
+      nodePort: 30001

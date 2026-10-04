@@ -8,19 +8,19 @@ tags:
 
 # Kubernetes Guides
 
-Practical, day-2 k8s content. **Concepts** explain *what* and *why* — **Guides** explain *how*: how to use the tools, how to recover from breakage, how to operate against non-functional requirements, and how to ship code to production.
+Practical, day-2 k8s content. **Concepts** explain _what_ and _why_ — **Guides** explain _how_: how to use the tools, how to recover from breakage, how to operate against non-functional requirements, and how to ship code to production.
 
 If you're new to k8s, read [[Kubernetes/concepts/00-hub|Concepts]] first.
 
 ## The five sections
 
-| Section | What it covers | Status |
-|---------|----------------|--------|
-| **[[Kubernetes/guides/tools/index\|tools]]** | CLI / TUI / debugging UIs (kubectl, k9s, Lens, multi-cluster workflows) | 🟢 Complete |
-| **[[Kubernetes/guides/troubleshooting/index\|troubleshooting]]** | Symptom-driven playbooks for pods, networking, nodes, and storage outages | 🟢 Complete |
-| **[[Kubernetes/guides/non-functional/index\|non-functional]]** | NFRs: scale, cost, HA, performance, security baseline, backup, upgrades, multi-tenancy | 🟢 Complete |
-| **[[Kubernetes/guides/delivery/index\|delivery]]** | How code reaches prod: GitOps, Helm masterclass, Kustomize, Argo CD, Argo Rollouts | 🟢 Complete |
-| **[[Kubernetes/guides/networking/index\|networking]]** | Gateway API, Envoy Gateway, Traefik, Istio, Linkerd, and service mesh comparison | 🟢 Complete |
+| Section                                                          | What it covers                                                                         | Status      |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ----------- |
+| **[[Kubernetes/guides/tools/index\|tools]]**                     | CLI / TUI / debugging UIs (kubectl, k9s, Lens, multi-cluster workflows)                | 🟢 Complete |
+| **[[Kubernetes/guides/troubleshooting/index\|troubleshooting]]** | Symptom-driven playbooks for pods, networking, nodes, and storage outages              | 🟢 Complete |
+| **[[Kubernetes/guides/non-functional/index\|non-functional]]**   | NFRs: scale, cost, HA, performance, security baseline, backup, upgrades, multi-tenancy | 🟢 Complete |
+| **[[Kubernetes/guides/delivery/index\|delivery]]**               | How code reaches prod: GitOps, Helm masterclass, Kustomize, Argo CD, Argo Rollouts     | 🟢 Complete |
+| **[[Kubernetes/guides/networking/index\|networking]]**           | Gateway API, Envoy Gateway, Traefik, Istio, Linkerd, and service mesh comparison       | 🟢 Complete |
 
 ## Section summaries
 

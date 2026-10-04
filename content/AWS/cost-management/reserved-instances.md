@@ -12,18 +12,19 @@ Reserved Instances (RI) let you reserve EC2, RDS, ElastiCache, Redshift, or othe
 
 ## RI vs On-Demand
 
-| Factor | On-Demand | Reserved Instance |
-|--------|-----------|-------------------|
-| Price | Full rate | Up to 72% discount |
-| Commitment | None | 1 or 3 years |
-| Capacity | Not reserved | Reserved (zonal RI) |
-| Billing | Per second (Linux) | Per second (Linux, no upfront) |
+| Factor     | On-Demand          | Reserved Instance              |
+| ---------- | ------------------ | ------------------------------ |
+| Price      | Full rate          | Up to 72% discount             |
+| Commitment | None               | 1 or 3 years                   |
+| Capacity   | Not reserved       | Reserved (zonal RI)            |
+| Billing    | Per second (Linux) | Per second (Linux, no upfront) |
 
 ## RI Types
 
 ### Standard RI
 
 The original RI type. Reserved for a specific instance configuration:
+
 - Instance family (e.g., m6i, c6i)
 - Instance size (e.g., large, xlarge) — with size flexibility within the AZ
 - Region or specific AZ
@@ -38,17 +39,18 @@ The original RI type. Reserved for a specific instance configuration:
 Can be exchanged for different instance types, families, or operating systems within the same instance family group. Lower discount ceiling (~60%) but maximum flexibility.
 
 Use Convertible when:
+
 - You might switch from Intel to AMD or Graviton
 - You might resize instances as needs change
 - You want RI-level discount but aren't certain of exact requirements
 
 ## Payment Options
 
-| Option | Upfront | Effective Discount |
-|--------|---------|-------------------|
-| No Upfront | $0 | ~40-60% |
-| Partial Upfront | ~50% | ~60-70% |
-| All Upfront | 100% | up to 72% |
+| Option          | Upfront | Effective Discount |
+| --------------- | ------- | ------------------ |
+| No Upfront      | $0      | ~40-60%            |
+| Partial Upfront | ~50%    | ~60-70%            |
+| All Upfront     | 100%    | up to 72%          |
 
 All Upfront with 3-year term gives the maximum discount. Partial/No Upfront with 1-year is the minimum commitment option.
 
@@ -75,6 +77,7 @@ If you have 10 RIs:
 ## Services Covered by RI
 
 RI pricing is available for:
+
 - EC2 (all instance families)
 - RDS (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server)
 - ElastiCache (Redis, Memcached)
@@ -87,6 +90,7 @@ RI pricing is available for:
 ## RI Marketplace
 
 Unused RI capacity can be sold on the RI Marketplace. Requirements:
+
 - At least 30 days remaining on the term
 - No more than 3 years total remaining
 - Account must be in good standing

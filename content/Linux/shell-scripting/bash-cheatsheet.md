@@ -84,6 +84,7 @@ IFS=$'\n\t'
 ```
 
 Put at the top of every script. Explanation:
+
 - `set -e` — exit immediately if a command fails
 - `set -u` — treat unset variables as an error
 - `set -o pipefail` — fail entire pipeline if any command fails
@@ -95,11 +96,11 @@ Put at the top of every script. Explanation:
 echo {A,B}.js
 ```
 
-| Expression | Same as |
-|------------|---------|
-| `{A,B}` | `A B` |
-| `{A,B}.js` | `A.js B.js` |
-| `{1..5}` | `1 2 3 4 5` |
+| Expression        | Same as       |
+| ----------------- | ------------- |
+| `{A,B}`           | `A B`         |
+| `{A,B}.js`        | `A.js B.js`   |
+| `{1..5}`          | `1 2 3 4 5`   |
 | `{{1..3},{7..9}}` | `1 2 3 7 8 9` |
 
 ## Parameter Expansions
@@ -173,18 +174,18 @@ echo ${!pointer}
 
 ### Substitution
 
-| Expression | Description |
-|------------|-------------|
-| `${foo%suffix}` | Remove suffix |
-| `${foo#prefix}` | Remove prefix |
-| `${foo%%suffix}` | Remove long suffix (greedy) |
-| `${foo/%suffix}` | Remove long suffix |
-| `${foo##prefix}` | Remove long prefix (greedy) |
-| `${foo/#prefix}` | Remove long prefix |
-| `${foo/from/to}` | Replace first match |
-| `${foo//from/to}` | Replace all |
-| `${foo/%from/to}` | Replace suffix |
-| `${foo/#from/to}` | Replace prefix |
+| Expression        | Description                 |
+| ----------------- | --------------------------- |
+| `${foo%suffix}`   | Remove suffix               |
+| `${foo#prefix}`   | Remove prefix               |
+| `${foo%%suffix}`  | Remove long suffix (greedy) |
+| `${foo/%suffix}`  | Remove long suffix          |
+| `${foo##prefix}`  | Remove long prefix (greedy) |
+| `${foo/#prefix}`  | Remove long prefix          |
+| `${foo/from/to}`  | Replace first match         |
+| `${foo//from/to}` | Replace all                 |
+| `${foo/%from/to}` | Replace suffix              |
+| `${foo/#from/to}` | Replace prefix              |
 
 ### Length
 
@@ -218,10 +219,10 @@ comment
 
 ## Substrings
 
-| Expression | Description |
-|------------|-------------|
-| `${foo:0:3}` | Substring (position, length) |
-| `${foo:(-3):3}` | Substring from the right |
+| Expression      | Description                  |
+| --------------- | ---------------------------- |
+| `${foo:0:3}`    | Substring (position, length) |
+| `${foo:(-3):3}` | Substring from the right     |
 
 ## Loops
 

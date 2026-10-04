@@ -50,6 +50,7 @@ In production Kubernetes environments, a single homogeneous worker node pool can
 ## 2. Core Architectural Components
 
 ### 1. System Node Pools vs. User Node Pools
+
 - **System Node Pool:**
   - Dedicated strictly to running cluster-critical control pods (`CoreDNS`, `konnectivity-agent`, `metrics-server`).
   - Microsoft enforces a minimum of 1 node (3 nodes across 3 AZs strongly recommended in production).
@@ -60,7 +61,9 @@ In production Kubernetes environments, a single homogeneous worker node pool can
   - Support arbitrary VM families (Compute-optimized F-series, Memory-optimized E-series, GPU-accelerated NC-series).
 
 ### 2. Ephemeral OS Disks: NVMe vs. VM Cache
+
 Traditional AKS nodes boot from a remote Azure Managed Disk (Persistent OS Disk), incurring network IOPS bottlenecks, 5–10 minute re-imaging delays, and monthly disk storage fees.
+
 - **Ephemeral OS Disks:**
   - The node's operating system is written directly to the host VM's local physical NVMe or SSD cache.
   - **Performance:** Line-speed disk I/O with near-zero latency, enabling nodes to re-image and autoscale in **under 45 seconds**.
@@ -70,6 +73,7 @@ Traditional AKS nodes boot from a remote Azure Managed Disk (Persistent OS Disk)
     - `NvmeDisk`: Placed on high-speed physical NVMe drives (available on modern L-series and v5 NVMe shapes).
 
 ### 3. Operating System: Azure Linux 3 vs. Ubuntu
+
 - **Ubuntu 22.04:** Broad ecosystem compatibility, standard general-purpose distribution.
 - **Azure Linux 3 (formerly CBL-Mariner):**
   - Microsoft's enterprise-grade, security-hardened Linux distribution engineered specifically for AKS container hosts.
@@ -161,13 +165,13 @@ az aks nodepool add \
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Architectural Parameter | Platform Limit | Production Rule |
-| :--- | :--- | :--- |
-| **Max Node Pools per Cluster**| **100 Node Pools** | Segregate by workload type (General, In-Memory, GPU, Spot)|
-| **Min System Node Pool Size**| **1 Node** | Minimum 3 nodes across 3 AZs required for production HA |
-| **Ephemeral OS Min VM Size** | **Standard_D4ds_v5** | VM cache must exceed requested OS disk size (e.g., ≥ 64 GB) |
-| **Spot Node Eviction Notice** | **30 Seconds** | Azure Scheduled Events API alerts host prior to reclamation |
-| **Max Pods per Node Pool** | **250 Pods** | Configurable via `--max-pods` flag |
+| Architectural Parameter        | Platform Limit       | Production Rule                                             |
+| :----------------------------- | :------------------- | :---------------------------------------------------------- |
+| **Max Node Pools per Cluster** | **100 Node Pools**   | Segregate by workload type (General, In-Memory, GPU, Spot)  |
+| **Min System Node Pool Size**  | **1 Node**           | Minimum 3 nodes across 3 AZs required for production HA     |
+| **Ephemeral OS Min VM Size**   | **Standard_D4ds_v5** | VM cache must exceed requested OS disk size (e.g., ≥ 64 GB) |
+| **Spot Node Eviction Notice**  | **30 Seconds**       | Azure Scheduled Events API alerts host prior to reclamation |
+| **Max Pods per Node Pool**     | **250 Pods**         | Configurable via `--max-pods` flag                          |
 
 ---
 
@@ -186,13 +190,13 @@ az aks nodepool add \
 
 - **Configuration:** 30 nodes using `Standard_D8ds_v5` (8 vCPU, 32 GiB RAM).
 - **Storage Cost Comparison:**
-  - *Option 1 (Traditional Managed OS Disks):* 30 nodes × 128 GiB Premium SSD (P10 disk @ $19.71/mo) = **$591.30 / month in storage waste**.
-  - *Option 2 (Ephemeral OS Disks on Local Cache):* **$0.00 storage cost**.
+  - _Option 1 (Traditional Managed OS Disks):_ 30 nodes × 128 GiB Premium SSD (P10 disk @ $19.71/mo) = **$591.30 / month in storage waste**.
+  - _Option 2 (Ephemeral OS Disks on Local Cache):_ **$0.00 storage cost**.
 - **Monthly Compute Spend:**
   - Compute Nodes: 30 × $0.384/hr × 730 hrs = **$8,409.60**
   - OS Disks: **$0.00**
   - Control Plane Fee: **$73.00**
-- **Total Monthly Spend:** **$8,482.60 / month** *(Directly saving $7,000+ annually on disk fees alone).*
+- **Total Monthly Spend:** **$8,482.60 / month** _(Directly saving $7,000+ annually on disk fees alone)._
 
 ### Scenario B: Nightly Batch Processing on Spot Pools (Scale to Zero)
 
@@ -203,7 +207,7 @@ az aks nodepool add \
   - System Pool (24/7): 3 × $0.192/hr × 730 hrs = **$420.48**
   - Spot Batch Nodes (120 hrs/mo): 20 × $0.1536/hr × 120 hrs = **$368.64**
   - Standard Control Plane: **$73.00**
-- **Total Monthly Spend:** **$862.12 / month** *(Compared to $1,900+ on full-price On-Demand).*
+- **Total Monthly Spend:** **$862.12 / month** _(Compared to $1,900+ on full-price On-Demand)._
 
 ---
 
@@ -213,4 +217,4 @@ az aks nodepool add \
 2. **Ephemeral OS Disk Provisioning Failures on Resized VMs:** If an existing node pool is resized to a different VM SKU with a smaller temporary disk cache than the configured `--node-osdisk-size`, Azure rejects the operation with `OperationNotAllowed: Ephemeral disk size exceeds VM cache size`. Always check Azure VM specs to verify `MaxResourceVolumeMB` or `CachedDiskBytes` before configuring OS disk size.
 3. **Spot Eviction Handling with Azure Scheduled Events:** When Azure needs Spot capacity back, it provides only a **30-second warning** via the Azure Instance Metadata Service (IMDS). Standard Kubernetes drain operations take longer than 30 seconds. Deploy the **Azure Node Termination Handler (or AKS Spot Node Drainer)** to intercept IMDS preemption events, issue immediate `cordon`, and send `SIGTERM` signals before Azure violently powers off the VM.
 4. **Arm64 Architecture Node Pool Scheduling Conflicts:** Deploying Ampere Altra Arm-based VM shapes (e.g., `Standard_D8ps_v5`) provides extraordinary price-performance. However, if microservices are built solely for `linux/amd64`, pods scheduled onto Arm nodes will fail with `CrashLoopBackOff (exec format error)`. Ensure your CI/CD builds multi-arch container images (`docker buildx`) and declare `nodeSelector: kubernetes.io/arch: arm64` explicitly.
-5. **System Node Pool Cannot Be Deleted While Active:** An AKS cluster must always possess at least one operational System Node Pool. Attempting to run `az aks nodepool delete --name systempool` will fail with an error. To migrate system pods to a new VM shape, you must create a *second* System Node Pool (`--mode System`), wait for all core add-ons to migrate, and only then delete the original pool.
+5. **System Node Pool Cannot Be Deleted While Active:** An AKS cluster must always possess at least one operational System Node Pool. Attempting to run `az aks nodepool delete --name systempool` will fail with an error. To migrate system pods to a new VM shape, you must create a _second_ System Node Pool (`--mode System`), wait for all core add-ons to migrate, and only then delete the original pool.

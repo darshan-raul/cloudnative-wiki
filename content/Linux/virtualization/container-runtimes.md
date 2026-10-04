@@ -161,6 +161,7 @@ With shim:
 ```
 
 The shim:
+
 - Is the parent of the container process (wait()s on it)
 - Stays alive even if containerd dies
 - Exposes a FD-based API for containerd to talk to the running container

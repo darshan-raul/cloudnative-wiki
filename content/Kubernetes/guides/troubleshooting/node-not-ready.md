@@ -31,6 +31,7 @@ Conditions:
 ```
 
 Pods on `node-2`:
+
 - Still running, but new pods won't schedule there
 - Service endpoints for those pods may be removed if their readiness probes fail
 - Pods that try to reach out may fail if networking is broken
@@ -119,20 +120,24 @@ $ /usr/bin/kubelet --version
 **Common sub-causes:**
 
 1. **kubelet can't read its config.**
+
    ```bash
    $ journalctl -u kubelet --tail=50
    failed to load kubelet config file /var/lib/kubelet/config.yaml:
      open /var/lib/kubelet/config.yaml: permission denied
    ```
+
    Fix: `chown` the file, or run as the right user.
 
 2. **kubelet config has a typo.**
+
    ```bash
    failed to parse kubelet flags: invalid value "127.0.0.1" for flag -port:
      port must be a number between 1 and 65535
    ```
 
 3. **Container runtime is dead.** kubelet needs containerd/CRI-O. If that's dead, kubelet can't run pods.
+
    ```bash
    $ systemctl status containerd
    ● containerd.service - containerd container runtime
@@ -140,10 +145,12 @@ $ /usr/bin/kubelet --version
    ```
 
 4. **The kubelet service is disabled.** After a reboot, the kubelet doesn't auto-start.
+
    ```bash
    $ systemctl is-enabled kubelet
    disabled
    ```
+
    Fix: `systemctl enable kubelet`.
 
 5. **kubelet version mismatch with apiserver.** If kubelet is on v1.28 and apiserver is on v1.30, you can get a skew violation.
@@ -198,19 +205,23 @@ $ traceroute <apiserver-ip>
 **Common sub-causes:**
 
 1. **TLS cert expired.** The kubelet's client cert is good for 1 year. After that, it can't auth.
+
    ```bash
    $ journalctl -u kubelet | grep -i "x509"
    x509: certificate has expired or is not yet valid
    ```
+
    Fix: re-issue the cert. With managed clusters (EKS, GKE, AKS), the cloud handles this. With kubeadm, run `kubeadm cert renew`.
 
 2. **Network partition.** Node can't reach the apiserver due to firewall, security group, or routing.
+
    ```bash
    $ nc -zv <apiserver> 6443
    nc: connect to <apiserver> port 6443 (tcp) timed out
    ```
 
 3. **Wrong apiserver endpoint.** The kubelet was bootstrapped with the wrong `--kubeconfig` or `--api-servers` flag.
+
    ```yaml
    # /var/lib/kubelet/config.yaml
    apiVersion: kubelet.config.k8s.io/v1beta1
@@ -220,6 +231,7 @@ $ traceroute <apiserver-ip>
    ```
 
 4. **DNS broken on the node.** The apiserver endpoint is a DNS name, and the node can't resolve it.
+
    ```bash
    $ nslookup <apiserver-dns-name>
    # fails
@@ -266,23 +278,28 @@ $ crictl ps
 **Common sub-causes:**
 
 1. **Container runtime is slow or stuck.** PLEG relies on the CRI to list containers. If CRI is slow (high load, kernel issues), PLEG can't keep up.
+
    ```bash
    $ time crictl ps
    real    4m30s   <-- should be milliseconds
    ```
 
 2. **Too many containers on the node.** PLEG relists all containers; with 1000+ containers, it can take longer than the relist period (default 1m for PLEG, 10s for relist).
+
    ```bash
    $ crictl ps | wc -l
    1500
    ```
+
    Fix: reduce pods per node (kubelet's `--max-pods`).
 
 3. **Syscall issues.** PLEG uses inotify; if the inotify limits are hit, PLEG fails.
+
    ```bash
    $ cat /proc/sys/fs/inotify/max_user_watches
    8192   <-- too low for many pods
    ```
+
    Fix: increase `fs.inotify.max_user_watches` in `/etc/sysctl.d/`.
 
 4. **Kernel bugs.** Rare, but specific kernel versions have PLEG issues. Check the kernel logs.
@@ -330,23 +347,29 @@ $ journalctl --disk-usage
 **Common sub-causes:**
 
 1. **Container images filling up.** Every image ever pulled is still on disk (until garbage collected).
+
    ```bash
    $ crictl images | wc -l
    500
    ```
+
    Fix: `crictl rmi --prune` to clean unused images.
 
 2. **Container logs filling up.** A pod with verbose logging will fill the disk fast.
+
    ```bash
    $ du -sh /var/log/pods/
    50G
    ```
+
    Fix: set log rotation, reduce log verbosity.
 
 3. **Ephemeral storage used by pods.** If pods write to `/tmp` or their working dir, that uses node disk.
+
    ```bash
    $ du -sh /var/lib/kubelet/pods/
    ```
+
    Fix: set `ephemeral-storage` limits on pods.
 
 4. **Logs not rotated.** kubelet doesn't rotate system logs automatically.
@@ -395,21 +418,26 @@ $ kubectl top pods -A --sort-by=memory | head
 **Common sub-causes:**
 
 1. **Pods using more memory than they requested.** Even if requests match, the actual usage can spike.
+
    ```bash
    $ kubectl describe pod <name> | grep -A 3 "Limits"
    Limits:
      memory: 512Mi
    # but the pod is using 2Gi
    ```
+
    Fix: increase the limit (or fix the leak).
 
 2. **System daemons using memory.** kubelet, kube-proxy, CNI agent, OS daemons.
+
    ```bash
    $ ps aux --sort=-%mem | grep -E "kubelet|kube-proxy|cilium|calico"
    ```
+
    Fix: increase node size, or reduce system reserved.
 
 3. **Kernel cache pressure.** Linux uses free memory for page cache. If memory is tight, the kernel can reclaim page cache, but if there's hard pressure, it OOMs.
+
    ```bash
    $ cat /proc/meminfo | grep -E "MemAvailable|SwapCached"
    # MemAvailable near 0 = pressure
@@ -479,6 +507,7 @@ $ ip link
 **Common sub-causes:**
 
 1. **CNI pod not running on the node.** Cilium/calico/whatever crashed.
+
    ```bash
    $ kubectl get pods -n kube-system -l k8s-app=cilium -o wide
    cilium-1    1/1   Running   0   ...   node-1
@@ -562,28 +591,28 @@ If the node is gone for good, `kubectl delete node node-2` to clean up.
 
 ## The fix menu
 
-| Symptom | First action |
-|---------|--------------|
-| `KubeletNotReady` | SSH to node, `systemctl status kubelet`, `journalctl -u kubelet` |
-| `PLEG is not healthy` | Check container runtime, `crictl ps` |
-| `DiskPressure` | `df -h`, clean up images and logs |
-| `MemoryPressure` | `free -h`, `kubectl top pods` |
-| `NetworkUnavailable` | Check CNI pod, `ip route` |
-| Cert expired | `kubeadm cert renew` (or cloud-managed) |
-| Clock skew | Restart NTP/chrony |
+| Symptom               | First action                                                     |
+| --------------------- | ---------------------------------------------------------------- |
+| `KubeletNotReady`     | SSH to node, `systemctl status kubelet`, `journalctl -u kubelet` |
+| `PLEG is not healthy` | Check container runtime, `crictl ps`                             |
+| `DiskPressure`        | `df -h`, clean up images and logs                                |
+| `MemoryPressure`      | `free -h`, `kubectl top pods`                                    |
+| `NetworkUnavailable`  | Check CNI pod, `ip route`                                        |
+| Cert expired          | `kubeadm cert renew` (or cloud-managed)                          |
+| Clock skew            | Restart NTP/chrony                                               |
 
 ## Common gotchas
 
-* **The node-controller evicts pods 5 minutes after the node goes NotReady.** You have a 5-minute window to fix the issue before pods get rescheduled.
-* **Pods on a NotReady node still consume resources** (CPU, memory on the node). But they're not in the Service endpoints if readiness fails, so no traffic.
-* **A node marked NotReady is still "there"** — the kubelet might be running but unable to communicate. Don't immediately delete the node; investigate.
-* **Some node conditions are normal during startup.** A new node might briefly show `DiskPressure=True` while images are being pulled. Wait a minute and re-check.
-* **Draining a node before maintenance is the right pattern** — `kubectl drain` marks it unschedulable and evicts pods gracefully. Don't just `kubectl delete node`.
-* **NotReady != unschedulable.** A NotReady node is unhealthy. An unschedulable (cordoned) node is healthy but excluded. `kubectl uncordon` only works on the latter.
-* **The kubelet can be running but the kubeconfig can be wrong.** The process is up, the socket is listening, but it can't register with the apiserver. Check the kubelet logs, not just the process status.
-* **Custom node conditions** — operators can set custom conditions (e.g., GPU operator sets a `GPUHealthy` condition). These can mark a node NotReady if their custom logic fails.
-* **`kubectl get nodes` shows the apiserver's view, not the kubelet's view.** If the node can run pods but can't reach the apiserver, it looks NotReady even though it's fine.
-* **Restarting kubelet is usually safe but disruptive.** The kubelet restarts the container runtime connection, which can cause brief pod disruption. Don't do it during peak traffic.
+- **The node-controller evicts pods 5 minutes after the node goes NotReady.** You have a 5-minute window to fix the issue before pods get rescheduled.
+- **Pods on a NotReady node still consume resources** (CPU, memory on the node). But they're not in the Service endpoints if readiness fails, so no traffic.
+- **A node marked NotReady is still "there"** — the kubelet might be running but unable to communicate. Don't immediately delete the node; investigate.
+- **Some node conditions are normal during startup.** A new node might briefly show `DiskPressure=True` while images are being pulled. Wait a minute and re-check.
+- **Draining a node before maintenance is the right pattern** — `kubectl drain` marks it unschedulable and evicts pods gracefully. Don't just `kubectl delete node`.
+- **NotReady != unschedulable.** A NotReady node is unhealthy. An unschedulable (cordoned) node is healthy but excluded. `kubectl uncordon` only works on the latter.
+- **The kubelet can be running but the kubeconfig can be wrong.** The process is up, the socket is listening, but it can't register with the apiserver. Check the kubelet logs, not just the process status.
+- **Custom node conditions** — operators can set custom conditions (e.g., GPU operator sets a `GPUHealthy` condition). These can mark a node NotReady if their custom logic fails.
+- **`kubectl get nodes` shows the apiserver's view, not the kubelet's view.** If the node can run pods but can't reach the apiserver, it looks NotReady even though it's fine.
+- **Restarting kubelet is usually safe but disruptive.** The kubelet restarts the container runtime connection, which can cause brief pod disruption. Don't do it during peak traffic.
 
 ## A worked example
 
@@ -641,6 +670,6 @@ node-2    Ready    <none>                 30d    v1.29.0
 
 ## See also
 
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when pods are the problem
-* [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — when pods can't schedule
-* [[Kubernetes/guides/non-functional/high-availability|high-availability]] — preventing node failures
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when pods are the problem
+- [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — when pods can't schedule
+- [[Kubernetes/guides/non-functional/high-availability|high-availability]] — preventing node failures

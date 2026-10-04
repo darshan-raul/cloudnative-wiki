@@ -20,13 +20,13 @@ In a gossip protocol, each node periodically exchanges information with a random
 There are two main types of gossip protocols:
 
 1. **Information Dissemination Protocols**:
-   * Used to spread information or "rumors" across the network.
-   * Nodes periodically exchange data with random peers to flood the network.
-   * Examples: Event dissemination, background data dissemination.
+   - Used to spread information or "rumors" across the network.
+   - Nodes periodically exchange data with random peers to flood the network.
+   - Examples: Event dissemination, background data dissemination.
 2. **Aggregation Protocols**:
-   * Used to compute network-wide aggregates (e.g., sum, average, min, max).
-   * Nodes exchange information with peers to converge on the final aggregate value.
-   * Examples: Computing the largest value, arranging nodes in a sorted order.
+   - Used to compute network-wide aggregates (e.g., sum, average, min, max).
+   - Nodes exchange information with peers to converge on the final aggregate value.
+   - Examples: Computing the largest value, arranging nodes in a sorted order.
 
 ### How Gossip Protocols Work
 
@@ -41,11 +41,11 @@ Over time, this process ensures that all nodes in the network converge to a cons
 
 Gossip protocols are widely used in various distributed systems, including:
 
-* **Database Replication**: Gossip is used to replicate data across multiple nodes, ensuring consistency and fault tolerance.
-* **Monitoring and Failure Detection**: Gossip is used to detect node failures and propagate status updates.
-* **Peer-to-Peer Networks**: Gossip is used to discover new peers and disseminate content in P2P networks like BitTorrent.
-* **Blockchain Networks**: Gossip is used to broadcast transactions and block information in cryptocurrencies like Bitcoin.
-* **Distributed Caching**: Gossip is used to maintain cache coherence in distributed caching systems.
+- **Database Replication**: Gossip is used to replicate data across multiple nodes, ensuring consistency and fault tolerance.
+- **Monitoring and Failure Detection**: Gossip is used to detect node failures and propagate status updates.
+- **Peer-to-Peer Networks**: Gossip is used to discover new peers and disseminate content in P2P networks like BitTorrent.
+- **Blockchain Networks**: Gossip is used to broadcast transactions and block information in cryptocurrencies like Bitcoin.
+- **Distributed Caching**: Gossip is used to maintain cache coherence in distributed caching systems.
 
 In summary, the gossip protocol is a fundamental communication mechanism in distributed systems, providing a scalable, fault-tolerant, and decentralized way to share information across a network of nodes.
 

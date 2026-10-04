@@ -44,6 +44,7 @@ starts from the initial state every time. Conversation history is
 lost after each call.
 
 With a checkpointer:
+
 - **Conversation continuity** — the agent remembers what was said
   earlier in the session
 - **Crash recovery** — if the server restarts mid-conversation,
@@ -56,11 +57,11 @@ With a checkpointer:
 
 ## The checkpointer classes
 
-| Class | Backend | When to use |
-|---|---|---|
-| `MemorySaver` | RAM | Dev, single-process |
-| `SqliteSaver` | SQLite file | Single-process, persistent |
-| `PostgresSaver` | PostgreSQL | Multi-host, production |
+| Class           | Backend     | When to use                |
+| --------------- | ----------- | -------------------------- |
+| `MemorySaver`   | RAM         | Dev, single-process        |
+| `SqliteSaver`   | SQLite file | Single-process, persistent |
+| `PostgresSaver` | PostgreSQL  | Multi-host, production     |
 
 ### `MemorySaver` — dev and testing
 
@@ -132,6 +133,7 @@ for checkpoint in history:
 
 `get_state_history` returns an iterator of checkpoints in reverse
 order (most recent first). Useful for:
+
 - Debugging — see exactly what happened at each step
 - Undo — replay from an earlier checkpoint
 - Audit — trace the conversation path

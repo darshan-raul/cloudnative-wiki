@@ -8,6 +8,7 @@ description: Heroku's methodology for building cloud-native SaaS applications
 # 12-Factor App
 
 A methodology for building **Software-as-a-Service (SaaS)** applications that are:
+
 - **Portable** across cloud providers
 - **Scalable** without significant re-architecture
 - **Deployable** in CI/CD pipelines
@@ -31,6 +32,7 @@ git checkout main
 ```
 
 ### 2. Dependencies — Explicitly declare and isolate
+
 Never rely on system-wide packages. Use a lockfile.
 
 ```bash
@@ -45,6 +47,7 @@ go mod tidy
 ```
 
 ### 3. Config — Store config in the environment
+
 Credentials and env-specific settings belong in env vars, **never in code**.
 
 ```python
@@ -56,6 +59,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 ```
 
 ### 4. Backing Services — Treat as attached resources
+
 Databases, queues, caches — all are **attached resources** via config, not hardcoded URLs.
 
 ```python
@@ -64,13 +68,16 @@ REDIS_URL = os.getenv("REDIS_URL")  # points to local or cloud
 ```
 
 ### 5. Build, Release, Run — Strict separation
+
 ```
 Build →  Release →  Run
  .tar    + config   process
 ```
+
 Never modify code at runtime. A release is **immutable**.
 
 ### 6. Processes — Stateless, no shared state
+
 Any needed state goes to a backing service (Redis, DB, S3).
 
 ```python
@@ -82,6 +89,7 @@ cache = redis.get(f"user:{user_id}")
 ```
 
 ### 7. Port Binding — Self-contained, no runtime injection
+
 The app **exports HTTP as a service** — no embedded web servers injected at deploy time.
 
 ```python
@@ -91,6 +99,7 @@ app = FastAPI()
 ```
 
 ### 8. Concurrency — Scale out via process model
+
 Don't scale up (bigger VM). Scale out (more processes).
 
 ```yaml
@@ -105,6 +114,7 @@ services:
 ```
 
 ### 9. Disposability — Fast startup, graceful shutdown
+
 Apps must start in seconds and handle SIGTERM gracefully.
 
 ```python
@@ -119,15 +129,17 @@ signal.signal(signal.SIGTERM, graceful_shutdown)
 ```
 
 ### 10. Dev/Prod Parity — Keep dev and prod similar
+
 The gap between dev and prod is where most breakage happens.
 
-| Gap | Fix |
-|-----|-----|
+| Gap                 | Fix                   |
+| ------------------- | --------------------- |
 | Different languages | Use Docker containers |
-| Different DB | Use Testcontainers |
-| Different env vars | Use `.env` files |
+| Different DB        | Use Testcontainers    |
+| Different env vars  | Use `.env` files      |
 
 ### 11. Logs — Treat as event streams
+
 Don't write to files. Emit to stdout — let the execution environment capture.
 
 ```python
@@ -139,6 +151,7 @@ logging.basicConfig(stream=sys.stdout)
 ```
 
 ### 12. Admin Processes — Run admin/maintenance as one-off processes
+
 Same environment, same codebase as foreground processes.
 
 ```bash
@@ -152,20 +165,20 @@ kubectl run migration \
 
 ## Quick Reference
 
-| Factor | Key Point |
-|--------|-----------|
-| Codebase |1 repo → N deployments |
-| Dependencies | Lockfile + isolation |
-| Config | Env vars, not code |
-| Backing Services | Attached via config |
-| Build/Release/Run | Immutable releases |
-| Processes | Stateless |
-| Port Binding | Self-contained |
-| Concurrency | Scale out (not up) |
-| Disposability | Fast + graceful shutdown |
-| Dev/Prod Parity | Minimize the gap |
-| Logs | stdout event stream |
-| Admin | Same env as app |
+| Factor            | Key Point                |
+| ----------------- | ------------------------ |
+| Codebase          | 1 repo → N deployments   |
+| Dependencies      | Lockfile + isolation     |
+| Config            | Env vars, not code       |
+| Backing Services  | Attached via config      |
+| Build/Release/Run | Immutable releases       |
+| Processes         | Stateless                |
+| Port Binding      | Self-contained           |
+| Concurrency       | Scale out (not up)       |
+| Disposability     | Fast + graceful shutdown |
+| Dev/Prod Parity   | Minimize the gap         |
+| Logs              | stdout event stream      |
+| Admin             | Same env as app          |
 
 ---
 
@@ -181,6 +194,7 @@ Can this app:
 □ Log to stdout for centralized collection?
 □ Treat all backing services as external config?
 ```
+
 If any answer is no — you have an architectural debt item for the ADR.
 
 > **Source:** [12factor.net](https://12factor.net)

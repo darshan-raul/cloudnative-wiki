@@ -13,27 +13,27 @@ Linux treats everything as a file — regular files, devices, sockets, and pipes
 
 ## File Descriptors
 
-| FD | Name              | Default Destination | Shell Symbol |
-|----|-------------------|---------------------|--------------|
-| 0  | Standard Input    | Keyboard            | -            |
-| 1  | Standard Output   | Terminal            | -            |
-| 2  | Standard Error    | Terminal            | -            |
+| FD  | Name            | Default Destination | Shell Symbol |
+| --- | --------------- | ------------------- | ------------ |
+| 0   | Standard Input  | Keyboard            | -            |
+| 1   | Standard Output | Terminal            | -            |
+| 2   | Standard Error  | Terminal            | -            |
 
 > **FD 0, 1, 2 are inherited from the parent.** The shell doesn't create them — `exec()` just passes them through. When you open a new file descriptor with `>` or `<`, the kernel assigns the next available number (3, 4, 5...).
 
 ## Basic Redirection
 
-| Operator   | Meaning                                              | Example                      |
-|------------|------------------------------------------------------|------------------------------|
-| `>`        | Redirect stdout, overwrite                           | `ls > file.txt`              |
-| `>>`       | Redirect stdout, append                             | `echo "x" >> file.txt`       |
-| `<`        | Redirect stdin from                                 | `wc -l < file.txt`           |
-| `2>`       | Redirect stderr, overwrite                           | `cmd 2> errors.txt`          |
-| `2>>`      | Redirect stderr, append                              | `cmd 2>> errors.log`         |
-| `&>`       | Redirect both stdout + stderr, overwrite            | `cmd &> output.txt`          |
-| `&>>`      | Redirect both stdout + stderr, append               | `cmd &>> output.txt`         |
-| `n>&m`     | Redirect FD `n` to the same target as FD `m`        | `2>&1` redirects 2 → 1       |
-| `n<&m`     | Redirect FD `n` from the same source as FD `m`      | `0<&5` redirects 0 → 5       |
+| Operator | Meaning                                        | Example                |
+| -------- | ---------------------------------------------- | ---------------------- |
+| `>`      | Redirect stdout, overwrite                     | `ls > file.txt`        |
+| `>>`     | Redirect stdout, append                        | `echo "x" >> file.txt` |
+| `<`      | Redirect stdin from                            | `wc -l < file.txt`     |
+| `2>`     | Redirect stderr, overwrite                     | `cmd 2> errors.txt`    |
+| `2>>`    | Redirect stderr, append                        | `cmd 2>> errors.log`   |
+| `&>`     | Redirect both stdout + stderr, overwrite       | `cmd &> output.txt`    |
+| `&>>`    | Redirect both stdout + stderr, append          | `cmd &>> output.txt`   |
+| `n>&m`   | Redirect FD `n` to the same target as FD `m`   | `2>&1` redirects 2 → 1 |
+| `n<&m`   | Redirect FD `n` from the same source as FD `m` | `0<&5` redirects 0 → 5 |
 
 ### Order Matters (Critical)
 

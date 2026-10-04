@@ -7,19 +7,19 @@ tags:
   - Dashboard
 ---
 
-*Source: [k8slens.dev](https://k8slens.dev/)*
+_Source: [k8slens.dev](https://k8slens.dev/)_
 
 Lens is a **desktop application** for managing multiple Kubernetes clusters. Think of it as `kubectl` with a real GUI, plus multi-cluster support, plus Helm chart management, plus a built-in terminal. It's the dashboard engineers reach for when `k9s` feels too low-level and the browser-based dashboards feel too heavy.
 
 ## Why Lens (and not k9s, Octant, Rancher)?
 
-| Tool | Strength | Weakness |
-|------|----------|----------|
-| **k9s** | Fast, terminal-native, scriptable | One cluster per window, no Helm UI |
-| **Lens** | Multi-cluster, full GUI, Helm UI, terminal built in | Desktop app, Electron-based |
-| **Octant** | Web-based, in-cluster | Per-cluster install, no fleet view |
-| **Rancher** | Full fleet management, RBAC | Heavy, more for ops than devs |
-| **Headlamp** | Web-based, in-cluster | Younger project |
+| Tool         | Strength                                            | Weakness                           |
+| ------------ | --------------------------------------------------- | ---------------------------------- |
+| **k9s**      | Fast, terminal-native, scriptable                   | One cluster per window, no Helm UI |
+| **Lens**     | Multi-cluster, full GUI, Helm UI, terminal built in | Desktop app, Electron-based        |
+| **Octant**   | Web-based, in-cluster                               | Per-cluster install, no fleet view |
+| **Rancher**  | Full fleet management, RBAC                         | Heavy, more for ops than devs      |
+| **Headlamp** | Web-based, in-cluster                               | Younger project                    |
 
 For a **developer working across 3-20 clusters**, Lens is the sweet spot. It runs locally as a desktop app, talks to clusters via your existing kubeconfig, and adds zero cluster-side state.
 
@@ -113,6 +113,7 @@ For "show me all the failed pods across all clusters" — use the **search/filte
 ### Pod logs with search
 
 Click a pod → Logs tab. Lens streams logs in real-time, with:
+
 - Search box (substring)
 - Color coding by container
 - Pause / resume
@@ -130,6 +131,7 @@ If the container is distroless/scratch (no shell), the terminal won't work — u
 ### Helm releases
 
 Helm → Releases shows every installed release. Click one:
+
 - See the rendered manifests
 - See the values used (with secrets redacted)
 - Rollback to a previous revision
@@ -180,61 +182,61 @@ For Helm releases: every revision is stored. Rollback is one click.
 
 ## Keyboard shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Cmd/Ctrl+K` | Quick search (resources, clusters) |
-| `Cmd/Ctrl+P` | Command palette |
-| `Cmd/Ctrl+Shift+P` | Reload view |
-| `Cmd/Ctrl+T` | Open terminal |
-| `Cmd/Ctrl+R` | Reload cluster state |
-| `/` | Filter current view |
-| `Esc` | Close drawer / cancel |
+| Shortcut           | Action                             |
+| ------------------ | ---------------------------------- |
+| `Cmd/Ctrl+K`       | Quick search (resources, clusters) |
+| `Cmd/Ctrl+P`       | Command palette                    |
+| `Cmd/Ctrl+Shift+P` | Reload view                        |
+| `Cmd/Ctrl+T`       | Open terminal                      |
+| `Cmd/Ctrl+R`       | Reload cluster state               |
+| `/`                | Filter current view                |
+| `Esc`              | Close drawer / cancel              |
 
 ## Gotchas
 
-* **Lens is local.** It doesn't run inside the cluster, doesn't store state, doesn't add RBAC. If your laptop dies, you lose nothing — just reconnect to the same kubeconfig.
-* **Lens is a viewer, not an editor.** Many things can be edited in Lens, but **your git repo is the source of truth**. If you're using GitOps (Argo CD, Flux), Lens edits fight the reconciler. Don't edit in Lens; edit in git.
-* **Electron app.** It uses memory — typically 200-500MB. Not great on a 4GB laptop. For low-spec machines, prefer `k9s`.
-* **Helm UI requires Helm installed locally.** If Lens can't find `helm` binary, the Helm view is empty.
-* **No offline mode.** Lens is online-only (it pulls updates, telemetry — disable in settings). Some compliance regimes require fully offline tools.
-* **Lens Metrics is opt-in.** Default installation has telemetry. Settings → Telemetry → off.
-* **Some CRDs render badly.** Lens ships generic renderers; complex CRDs (Argo Workflows, Crossplane) may show raw YAML only. Use the YAML view.
-* **Lens doesn't replace monitoring.** It's a UI for live state, not a metrics dashboard. Use Prometheus + Grafana for that.
-* **Lens doesn't replace RBAC.** Whatever you can do in `kubectl`, you can do in Lens. If you don't have `get secrets` permission, you can't see secrets in Lens. (You can see the names, but the data is redacted.)
+- **Lens is local.** It doesn't run inside the cluster, doesn't store state, doesn't add RBAC. If your laptop dies, you lose nothing — just reconnect to the same kubeconfig.
+- **Lens is a viewer, not an editor.** Many things can be edited in Lens, but **your git repo is the source of truth**. If you're using GitOps (Argo CD, Flux), Lens edits fight the reconciler. Don't edit in Lens; edit in git.
+- **Electron app.** It uses memory — typically 200-500MB. Not great on a 4GB laptop. For low-spec machines, prefer `k9s`.
+- **Helm UI requires Helm installed locally.** If Lens can't find `helm` binary, the Helm view is empty.
+- **No offline mode.** Lens is online-only (it pulls updates, telemetry — disable in settings). Some compliance regimes require fully offline tools.
+- **Lens Metrics is opt-in.** Default installation has telemetry. Settings → Telemetry → off.
+- **Some CRDs render badly.** Lens ships generic renderers; complex CRDs (Argo Workflows, Crossplane) may show raw YAML only. Use the YAML view.
+- **Lens doesn't replace monitoring.** It's a UI for live state, not a metrics dashboard. Use Prometheus + Grafana for that.
+- **Lens doesn't replace RBAC.** Whatever you can do in `kubectl`, you can do in Lens. If you don't have `get secrets` permission, you can't see secrets in Lens. (You can see the names, but the data is redacted.)
 
 ## When to use Lens vs. alternatives
 
-| Scenario | Best tool |
-|----------|-----------|
-| One cluster, daily ops | `k9s` (lighter) |
-| 3-20 clusters, frequent context switch | **Lens** |
-| 50+ clusters, fleet management | Rancher / Anthos / ACM |
-| Web-based, no desktop install | Octant / Headlamp |
-| CI/CD debugging | `kubectl` directly |
-| Strict compliance, no telemetry | `kubectl` + scripts |
+| Scenario                               | Best tool              |
+| -------------------------------------- | ---------------------- |
+| One cluster, daily ops                 | `k9s` (lighter)        |
+| 3-20 clusters, frequent context switch | **Lens**               |
+| 50+ clusters, fleet management         | Rancher / Anthos / ACM |
+| Web-based, no desktop install          | Octant / Headlamp      |
+| CI/CD debugging                        | `kubectl` directly     |
+| Strict compliance, no telemetry        | `kubectl` + scripts    |
 
 ## Tips and tricks
 
-* **Pin your favorite clusters.** The "star" icon in the cluster catalog adds a cluster to your top bar. With 20+ contexts, this is essential.
-* **Use the search aggressively.** Top-bar search is fuzzy and covers resources, namespaces, even CRDs. Type `web` → see all resources containing "web" in the current cluster.
-* **Watch mode.** Right-click a pod → "Watch" — Lens polls every 2s and shows the resource state. Like `kubectl get -w` but in the GUI.
-* **Export logs.** Click a pod → Logs → "..." → "Download" → saves the full log to a file. Useful for incidents.
-* **Resource quotas at a glance.** Namespace view → "Quotas" tab → see CPU/memory/object count vs limit. Surfaces "you have 1000 ConfigMaps in this namespace" warnings.
-* **The Helm "Show Notes" button.** For an installed chart, "Show Notes" shows the chart's NOTES.txt (often includes post-install instructions like "get the URL from this command").
-* **Cluster icons.** Customize the cluster icon in the catalog. Pure cosmetic but useful for visual ID when you have many clusters.
+- **Pin your favorite clusters.** The "star" icon in the cluster catalog adds a cluster to your top bar. With 20+ contexts, this is essential.
+- **Use the search aggressively.** Top-bar search is fuzzy and covers resources, namespaces, even CRDs. Type `web` → see all resources containing "web" in the current cluster.
+- **Watch mode.** Right-click a pod → "Watch" — Lens polls every 2s and shows the resource state. Like `kubectl get -w` but in the GUI.
+- **Export logs.** Click a pod → Logs → "..." → "Download" → saves the full log to a file. Useful for incidents.
+- **Resource quotas at a glance.** Namespace view → "Quotas" tab → see CPU/memory/object count vs limit. Surfaces "you have 1000 ConfigMaps in this namespace" warnings.
+- **The Helm "Show Notes" button.** For an installed chart, "Show Notes" shows the chart's NOTES.txt (often includes post-install instructions like "get the URL from this command").
+- **Cluster icons.** Customize the cluster icon in the catalog. Pure cosmetic but useful for visual ID when you have many clusters.
 
 ## Security and privacy
 
-* **Lens doesn't bypass RBAC.** Whatever the apiserver authorizes, Lens can see. If you have `get` on a resource, Lens shows it.
-* **Secrets are partially redacted.** Lens shows secret names but not values (unless you have explicit access and click "reveal"). Even then, the values are marked as sensitive in the UI.
-* **No state sent to Lens servers** in default config. The app talks to your apiserver, not to lensapp.com. **But** the app does check for updates on launch — block that at the network layer if you need to.
-* **Disable telemetry:** Settings → Telemetry → "Send anonymous usage data" → off.
-* **Your kubeconfig stays local.** Lens never uploads it.
+- **Lens doesn't bypass RBAC.** Whatever the apiserver authorizes, Lens can see. If you have `get` on a resource, Lens shows it.
+- **Secrets are partially redacted.** Lens shows secret names but not values (unless you have explicit access and click "reveal"). Even then, the values are marked as sensitive in the UI.
+- **No state sent to Lens servers** in default config. The app talks to your apiserver, not to lensapp.com. **But** the app does check for updates on launch — block that at the network layer if you need to.
+- **Disable telemetry:** Settings → Telemetry → "Send anonymous usage data" → off.
+- **Your kubeconfig stays local.** Lens never uploads it.
 
 ## See also
 
-* [[Kubernetes/guides/tools/kubectl|kubectl]] — the CLI under the hood
-* [[Kubernetes/guides/tools/k9s|k9s]] — terminal UI alternative
-* [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig management
-* [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — fleet patterns
-* [Lens docs](https://docs.k8slens.dev/)
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — the CLI under the hood
+- [[Kubernetes/guides/tools/k9s|k9s]] — terminal UI alternative
+- [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig management
+- [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — fleet patterns
+- [Lens docs](https://docs.k8slens.dev/)

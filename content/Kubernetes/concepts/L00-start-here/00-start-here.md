@@ -15,7 +15,7 @@ The Kubernetes concepts section is a **top-down learning path** — 10 levels, e
 
 **Google open-sourced the Kubernetes project in 2014.** The name comes from Greek, meaning "helmsman" or "pilot". The "K8s" abbreviation counts the 8 letters between K and s.
 
-**The mental model in one sentence:** *you describe the desired state, Kubernetes continuously drives the actual state to match.*
+**The mental model in one sentence:** _you describe the desired state, Kubernetes continuously drives the actual state to match._
 
 That's it. Everything in this section is the details of how that loop works, who participates, and what tools you can build on top.
 
@@ -43,13 +43,13 @@ That's it. Everything in this section is the details of how that loop works, who
 
 You should be comfortable with these **before** starting L01:
 
-| Topic | Why it matters |
-|-------|----------------|
-| **Linux command line** | You'll be SSHing into nodes, reading logs, running `kubectl` constantly |
-| **Containers (Docker / OCI)** | Pods run containers — know what an image, layer, and registry are |
-| **YAML syntax** | Every Kubernetes manifest is YAML; you need to read and write it fluently |
-| **Networking basics (IP, port, DNS, TLS)** | L04 is unreadable without this |
-| **A vague idea of what an API is** | The Kubernetes API is the product; "I know what a REST API is" is enough |
+| Topic                                      | Why it matters                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| **Linux command line**                     | You'll be SSHing into nodes, reading logs, running `kubectl` constantly   |
+| **Containers (Docker / OCI)**              | Pods run containers — know what an image, layer, and registry are         |
+| **YAML syntax**                            | Every Kubernetes manifest is YAML; you need to read and write it fluently |
+| **Networking basics (IP, port, DNS, TLS)** | L04 is unreadable without this                                            |
+| **A vague idea of what an API is**         | The Kubernetes API is the product; "I know what a REST API is" is enough  |
 
 Helpful but not required: distributed systems basics, an etcd primer, a programming language (Go, Python) for the L09 advanced topics.
 
@@ -87,4 +87,4 @@ The numbered subfolders are universal Kubernetes. AWS-specific notes (EKS, Karpe
 
 ## Where to go next
 
-→ [[Kubernetes/concepts/L01-architecture|L01 — Architecture]]: learn what runs inside a cluster and where.
+→ [[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]]: learn what runs inside a cluster and where.

@@ -25,10 +25,10 @@ spec:
         app: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx
-        ports:
-        - containerPort: 80
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 80
 ```
 
 ```bash
@@ -48,8 +48,8 @@ spec:
   selector:
     app: nginx
   ports:
-  - port: 80
-    targetPort: 80
+    - port: 80
+      targetPort: 80
 ```
 
 ```bash
@@ -72,15 +72,15 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
 spec:
   rules:
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: nginx
-            port:
-              number: 80
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
 ```
 
 ## Verify Deployment

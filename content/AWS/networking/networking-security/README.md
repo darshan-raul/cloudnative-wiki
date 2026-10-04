@@ -21,6 +21,7 @@ AWS WAF is a web application firewall that filters HTTP/S traffic at CloudFront,
 ### What WAF Filters
 
 WAF operates on Layer 7 (HTTP/HTTPS) attributes:
+
 - Request URI path
 - Query string parameters
 - HTTP headers (User-Agent, Host, Cookie)
@@ -40,6 +41,7 @@ Action: block
 ```
 
 **Group Rules:** AWS-managed rule groups (pre-configured):
+
 - **AWS Managed Rules** — Common threats (OWASP Top 10, SQLi, XSS, etc.)
 - **IP Reputation Lists** — Known malicious IPs (第三方 feeds)
 - **Bot Control** — Identify and block bots, scrapers
@@ -75,6 +77,7 @@ Web ACL (attached to ALB)
 ### Logging and Monitoring
 
 WAF logs are sent to CloudWatch Logs or S3. Monitor:
+
 - Blocked requests (attack attempts blocked)
 - Allowed requests (should be legitimate)
 - Sampled requests (for debugging)
@@ -86,6 +89,7 @@ AWS Shield is DDoS protection at Layers 3, 4, and 7.
 ### Shield Standard (Free)
 
 Automatically included with CloudFront, Route 53, and ELB. Protects against:
+
 - **SYN/ACK floods** (Layer 4)
 - **UDP reflection attacks** (Layer 3)
 - **HTTP/S floods** (Layer 7, basic mitigation)
@@ -95,6 +99,7 @@ Standard protection is always-on and requires no configuration.
 ### Shield Advanced ($3,000/month)
 
 Enhanced DDoS protection with:
+
 - **Always-on Layer 3/4 DDoS mitigation** (full spectrum attack protection)
 - **24/7 AWS DDoS Response Team (DRT)** — they can help configure WAF rules during an attack
 - **Cost protection** — AWS absorbs elastic scaling costs during DDoS attacks (up to $30,000/month for qualifying charges)
@@ -139,13 +144,13 @@ Private Subnet (EC2)
 
 ### When to Use Network Firewall vs Security Groups
 
-| | Network Firewall | Security Groups |
-|--|--|--|
-| Scope | VPC-level (cross-subnet traffic) | Instance-level (per-ENI) |
-| Protocol | All (TCP, UDP, ICMP, application-layer) | TCP, UDP, ICMP only |
-| Inspection depth | Full packet payload (with Suricata) | Header only |
-| IDS/IPS | Yes (with Suricata rules) | No |
-| Centralized | Yes (per VPC) | Per instance |
+|                  | Network Firewall                        | Security Groups          |
+| ---------------- | --------------------------------------- | ------------------------ |
+| Scope            | VPC-level (cross-subnet traffic)        | Instance-level (per-ENI) |
+| Protocol         | All (TCP, UDP, ICMP, application-layer) | TCP, UDP, ICMP only      |
+| Inspection depth | Full packet payload (with Suricata)     | Header only              |
+| IDS/IPS          | Yes (with Suricata rules)               | No                       |
+| Centralized      | Yes (per VPC)                           | Per instance             |
 
 ## VPC Flow Logs
 
@@ -169,11 +174,11 @@ The `action` field shows ACCEPT (allowed by SG/NACL) or REJECT (blocked by SG/NA
 
 ### Flow Log Destinations
 
-| Destination | Real-time | Cost |
-|------------|-----------|------|
-| S3 | No (10-15min delay) | $0.01/GB |
-| CloudWatch Logs | Near real-time | $0.50/GB ingested |
-| Kinesis Data Firehose | Near real-time | $0.029/GB |
+| Destination           | Real-time           | Cost              |
+| --------------------- | ------------------- | ----------------- |
+| S3                    | No (10-15min delay) | $0.01/GB          |
+| CloudWatch Logs       | Near real-time      | $0.50/GB ingested |
+| Kinesis Data Firehose | Near real-time      | $0.029/GB         |
 
 ### Flow Log Analysis with Athena
 
@@ -219,15 +224,15 @@ RDS (database, private subnet) ← Security Groups + NACLs
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| WAF Web ACLs per account | 100 |
-| Rules per Web ACL | 50 |
-| Rate-based rules per Web ACL | 10 |
-| Shield Advanced protectors | 100 |
-| Network Firewall firewalls per VPC | 1 |
-| Firewall policies per account | 50 |
-| Stateful rule groups per policy | 10 |
+| Resource                           | Limit |
+| ---------------------------------- | ----- |
+| WAF Web ACLs per account           | 100   |
+| Rules per Web ACL                  | 50    |
+| Rate-based rules per Web ACL       | 10    |
+| Shield Advanced protectors         | 100   |
+| Network Firewall firewalls per VPC | 1     |
+| Firewall policies per account      | 50    |
+| Stateful rule groups per policy    | 10    |
 
 ## References
 

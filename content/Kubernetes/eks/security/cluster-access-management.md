@@ -36,12 +36,12 @@ aws eks associate-access-policy \
 
 ## Access Policies
 
-| Policy | Description |
-|--------|-------------|
-| AmazonEKSClusterAdmin | Full cluster access |
-| AmazonEKSAdminView | Read-only cluster access |
-| AmazonEKSEdit | Developer access (default) |
-| AmazonEKSView | Read-only namespaces |
+| Policy                | Description                |
+| --------------------- | -------------------------- |
+| AmazonEKSClusterAdmin | Full cluster access        |
+| AmazonEKSAdminView    | Read-only cluster access   |
+| AmazonEKSEdit         | Developer access (default) |
+| AmazonEKSView         | Read-only namespaces       |
 
 ## Configure Kubernetes Access
 
@@ -52,9 +52,9 @@ kind: ClusterRoleBinding
 metadata:
   name: my-user-admin
 subjects:
-- kind: User
-  name: my-user
-  apiGroup: rbac.authorization.k8s.io
+  - kind: User
+    name: my-user
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
   name: cluster-admin

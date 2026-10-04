@@ -9,21 +9,21 @@ tags:
 
 # Multi-Cluster Management
 
-*Sources: [Kubernetes Federation v2 (KubeFed)](https://github.com/kubernetes-retired/contrib/tree/master/federation), [Cluster API](https://cluster-api.sigs.k8s.io/), [Rancher](https://ranchermanager.docs.rancher.com/), [Lens](https://k8slens.dev/)*
+_Sources: [Kubernetes Federation v2 (KubeFed)](https://github.com/kubernetes-retired/contrib/tree/master/federation), [Cluster API](https://cluster-api.sigs.k8s.io/), [Rancher](https://ranchermanager.docs.rancher.com/), [Lens](https://k8slens.dev/)_
 
 Operating 1 cluster is ops. Operating 10+ is a different discipline. This note covers the **patterns, tools, and gotchas** of fleet-scale Kubernetes.
 
 ## The shapes of "multi-cluster"
 
-| Pattern | What it solves | Example |
-|---------|---------------|---------|
-| **Multi-region HA** | Survive a region going down | GKE multi-cluster ingress, EKS Anywhere stretched |
-| **Multi-cloud** | Avoid vendor lock-in, regional latency | Anthos, Azure Arc, Rancher |
-| **Per-environment** | dev / staging / prod isolated | Standard EKS/GKE/AKS |
-| **Per-tenant** | SaaS multi-tenancy at infra layer | vCluster, Cluster API tenants |
-| **Per-team** | Team-owned cluster boundaries | Hub-and-spoke with cluster admin per team |
-| **Burst / spillover** | Overflow traffic from primary | Karmada, KubeFed, Clusterpedia |
-| **Edge** | Many small clusters at the edge | K3s, KubeEdge, K0s |
+| Pattern               | What it solves                         | Example                                           |
+| --------------------- | -------------------------------------- | ------------------------------------------------- |
+| **Multi-region HA**   | Survive a region going down            | GKE multi-cluster ingress, EKS Anywhere stretched |
+| **Multi-cloud**       | Avoid vendor lock-in, regional latency | Anthos, Azure Arc, Rancher                        |
+| **Per-environment**   | dev / staging / prod isolated          | Standard EKS/GKE/AKS                              |
+| **Per-tenant**        | SaaS multi-tenancy at infra layer      | vCluster, Cluster API tenants                     |
+| **Per-team**          | Team-owned cluster boundaries          | Hub-and-spoke with cluster admin per team         |
+| **Burst / spillover** | Overflow traffic from primary          | Karmada, KubeFed, Clusterpedia                    |
+| **Edge**              | Many small clusters at the edge        | K3s, KubeEdge, K0s                                |
 
 The patterns combine. A typical enterprise has **multi-region + multi-env + per-team** all at once.
 
@@ -67,6 +67,7 @@ done
 ```
 
 Tools that help:
+
 - `kubectx` / `kubens` — fast context switch
 - `kubectl` + `krew` plugins — `kubectl get-all`, `kubectl ns`
 - `fzf` — fuzzy context pick
@@ -127,6 +128,7 @@ CAPI is the de-facto way to **declaratively manage cluster lifecycle** — provi
 ```
 
 Key CRDs:
+
 - **Cluster** — the target cluster
 - **MachineDeployment** — group of worker nodes, scalable like a Deployment
 - **Machine** — single node
@@ -149,6 +151,7 @@ spec:
 ```
 
 CAPI + a provider (CAPA/CAPZ/CAPV for AWS/Azure/vSphere) gives you:
+
 - GitOps-managed cluster lifecycle
 - Consistent upgrades across many clusters
 - Auto-replace unhealthy nodes
@@ -176,6 +179,7 @@ Single-cluster GitOps is easy. Multi-cluster GitOps is where it gets interesting
 ```
 
 Patterns:
+
 - **Same repo, different paths** — each cluster syncs a different subdir
 - **Same repo, different values** — Kustomize overlays per cluster
 - **AppSets** (Argo CD) — generate many apps from a template, parameterized per cluster
@@ -187,17 +191,18 @@ For 50+ clusters, AppSets or a hub-spoke model becomes essential. Hand-managing 
 
 Pod-to-Pod across clusters doesn't work out of the box — different clusters have non-routable Pod CIDRs.
 
-| Tool | Pattern | Notes |
-|------|---------|-------|
-| **Submariner** | L3 VPN between clusters | Mature, but heavyweight |
-| **Skupper** | L7 app-level bridge | Per-app, not cluster-wide |
-| **Cilium ClusterMesh** | eBPF, mesh between Cilium-managed clusters | Fast, requires Cilium |
-| **Istio multi-cluster** | Mesh across clusters, active-active or primary-remote | Requires Istio on both sides |
-| **Linkerd multi-cluster** | Mirror/headless service mirroring | Simpler than Istio |
-| **Cluster API networking** | CNI-backed if all clusters on same VPC | AWS VPC peering, Azure vnet peering |
-| **Cloud-native** | GKE multi-cluster ingress, EKS Anywhere, AKS connected | Cloud-specific, vendor-tied |
+| Tool                       | Pattern                                                | Notes                               |
+| -------------------------- | ------------------------------------------------------ | ----------------------------------- |
+| **Submariner**             | L3 VPN between clusters                                | Mature, but heavyweight             |
+| **Skupper**                | L7 app-level bridge                                    | Per-app, not cluster-wide           |
+| **Cilium ClusterMesh**     | eBPF, mesh between Cilium-managed clusters             | Fast, requires Cilium               |
+| **Istio multi-cluster**    | Mesh across clusters, active-active or primary-remote  | Requires Istio on both sides        |
+| **Linkerd multi-cluster**  | Mirror/headless service mirroring                      | Simpler than Istio                  |
+| **Cluster API networking** | CNI-backed if all clusters on same VPC                 | AWS VPC peering, Azure vnet peering |
+| **Cloud-native**           | GKE multi-cluster ingress, EKS Anywhere, AKS connected | Cloud-specific, vendor-tied         |
 
 Pick the simplest one that works:
+
 - Same VPC/VNet + same CNI → native pod-to-pod via peering
 - Different VPCs / different clouds → service mesh (Istio/Linkerd)
 - Edge / disconnected → Submariner or ClusterMesh
@@ -236,6 +241,7 @@ You don't log into 50 Grafanas. The standard pattern:
 ```
 
 Either:
+
 - **Push:** cluster Proms remote_write to central Thanos/Mimir
 - **Pull:** central Prom federates from cluster Proms (deprecated, slow)
 - **Agent-based:** OpenTelemetry Collector in each cluster ships to central
@@ -255,26 +261,27 @@ A multi-cluster cluster should be:
 
 ## Common gotchas
 
-* **Clock skew** — OIDC tokens and TLS certs assume clocks are within 5 minutes. Different regions drift. Run `chrony` / `ntp` on every node.
-* **DNS leakage** — `kube-dns` in cluster A might resolve external names differently than cluster B's `kube-dns`. Be explicit about which DNS you mean.
-* **Image registry** — multi-cluster usually means multi-region. Pull from the same registry (ECR cross-region, Harbor replicated, etc.) — don't have clusters pulling from `docker.io` over a slow link.
-* **Cost duplication** — control planes × N clusters adds up. Consider per-team clusters vs shared clusters with namespaces.
-* **Stale clusters** — clusters you forgot about. Tag them, expire them, prune them.
-* **RBAC drift** — `kubectl apply` per cluster, and they drift apart. Use Fleet policies or GitOps.
-* **Resource quotas** — set per-cluster quotas. One runaway namespace can take down a shared cluster.
-* **Backup blast radius** — back up every cluster, including the "dev" ones you forgot exist. Restore drill quarterly.
-* **Cross-cluster PVs** — if your app has a PV in cluster A, and you fail over to cluster B, the data isn't there. Use replicated storage (Ceph, Rook, S3 CSI driver) or `VolumeSnapshots` + cross-region restore.
-* **CNI lock-in** — switching CNIs is hard. Pick once, standardize.
+- **Clock skew** — OIDC tokens and TLS certs assume clocks are within 5 minutes. Different regions drift. Run `chrony` / `ntp` on every node.
+- **DNS leakage** — `kube-dns` in cluster A might resolve external names differently than cluster B's `kube-dns`. Be explicit about which DNS you mean.
+- **Image registry** — multi-cluster usually means multi-region. Pull from the same registry (ECR cross-region, Harbor replicated, etc.) — don't have clusters pulling from `docker.io` over a slow link.
+- **Cost duplication** — control planes × N clusters adds up. Consider per-team clusters vs shared clusters with namespaces.
+- **Stale clusters** — clusters you forgot about. Tag them, expire them, prune them.
+- **RBAC drift** — `kubectl apply` per cluster, and they drift apart. Use Fleet policies or GitOps.
+- **Resource quotas** — set per-cluster quotas. One runaway namespace can take down a shared cluster.
+- **Backup blast radius** — back up every cluster, including the "dev" ones you forgot exist. Restore drill quarterly.
+- **Cross-cluster PVs** — if your app has a PV in cluster A, and you fail over to cluster B, the data isn't there. Use replicated storage (Ceph, Rook, S3 CSI driver) or `VolumeSnapshots` + cross-region restore.
+- **CNI lock-in** — switching CNIs is hard. Pick once, standardize.
 
 ## When NOT to multi-cluster
 
 Sometimes "multi-cluster" is the wrong answer. Consider:
 
-* **Multi-tenancy via namespaces** — same cluster, isolation via NetworkPolicy + RBAC + ResourceQuotas. Simpler.
-* **vCluster** — virtual k8s clusters per tenant, all running in one physical cluster. Each tenant gets their own control plane (cheap to run) but shares the worker nodes.
-* **Namespaced GitOps** — Argo CD with `Applications` per namespace, not per cluster.
+- **Multi-tenancy via namespaces** — same cluster, isolation via NetworkPolicy + RBAC + ResourceQuotas. Simpler.
+- **vCluster** — virtual k8s clusters per tenant, all running in one physical cluster. Each tenant gets their own control plane (cheap to run) but shares the worker nodes.
+- **Namespaced GitOps** — Argo CD with `Applications` per namespace, not per cluster.
 
 Rule of thumb: **multi-cluster is expensive.** Each cluster is ~$70-300/month minimum (control plane + nodes), and operational complexity grows nonlinearly. Only split when:
+
 - Compliance requires it (data residency, isolation)
 - Blast radius demands it (one prod issue can't take down everything)
 - Tenants demand it (true separation, not just RBAC)
@@ -282,9 +289,9 @@ Rule of thumb: **multi-cluster is expensive.** Each cluster is ~$70-300/month mi
 
 ## See also
 
-* [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig patterns
-* [[Kubernetes/guides/tools/kubectl|kubectl]] — the underlying CLI
-* [[Kubernetes/guides/tools/k9s|k9s]] — single-cluster TUI
-* [[Kubernetes/guides/tools/lens|lens]] — multi-cluster dashboard
-* [[Kubernetes/guides/delivery/gitops/argo-cd/README|argo-cd]] — multi-cluster GitOps
-* [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — alternatives to multi-cluster
+- [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig patterns
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — the underlying CLI
+- [[Kubernetes/guides/tools/k9s|k9s]] — single-cluster TUI
+- [[Kubernetes/guides/tools/lens|lens]] — multi-cluster dashboard
+- [[Kubernetes/guides/delivery/gitops/argo-cd/README|argo-cd]] — multi-cluster GitOps
+- [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — alternatives to multi-cluster

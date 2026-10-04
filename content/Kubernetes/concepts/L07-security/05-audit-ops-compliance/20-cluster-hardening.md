@@ -1,6 +1,13 @@
+---
+title: "Cluster Hardening (Control Plane, apiserver flags, etcd)"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Cluster Hardening (Control Plane, apiserver flags, etcd) — Kubernetes reference and architecture guide."
+---
+
 # Cluster Hardening (Control Plane, apiserver flags, etcd)
 
-*"https://kubernetes.io/docs/tasks/administer-cluster/securing-a-cluster/"*
+_"https://kubernetes.io/docs/tasks/administer-cluster/securing-a-cluster/"_
 
 **Cluster hardening** is the practice of **securing the k8s control plane** — the apiserver, etcd, kubelet, controller-manager, scheduler, and the network around them. It's the **defense in depth** of the cluster: even if a workload is compromised, the cluster itself should be hard to take down. This note covers the apiserver flags, etcd access, control plane lockdown, and the operational patterns that go with them.
 
@@ -32,20 +39,20 @@ The control plane components are the **highest-value target** in a cluster. Comp
 
 The attack surface:
 
-* **apiserver** — every request goes through it. The network endpoint, the authn/authz logic, admission, etc.
-* **etcd** — the data store. Direct access reads all data.
-* **kubelet** — on every node. Each kubelet can be a foothold to the node.
-* **controller-manager, scheduler** — the controllers. Compromising these can disrupt the cluster.
-* **Network paths** — the apiserver's network, the etcd peer network, the kubelet-to-apiserver path.
+- **apiserver** — every request goes through it. The network endpoint, the authn/authz logic, admission, etc.
+- **etcd** — the data store. Direct access reads all data.
+- **kubelet** — on every node. Each kubelet can be a foothold to the node.
+- **controller-manager, scheduler** — the controllers. Compromising these can disrupt the cluster.
+- **Network paths** — the apiserver's network, the etcd peer network, the kubelet-to-apiserver path.
 
 The defenses:
 
-* **Authn / authz** at the apiserver.
-* **mTLS** between components.
-* **Network segmentation** — control plane on a private network.
-* **Audit logging** of all requests.
-* **Encryption at rest** for etcd.
-* **Least privilege** for the components.
+- **Authn / authz** at the apiserver.
+- **mTLS** between components.
+- **Network segmentation** — control plane on a private network.
+- **Audit logging** of all requests.
+- **Encryption at rest** for etcd.
+- **Least privilege** for the components.
 
 ## 2. The apiserver Flags — Authentication
 
@@ -145,14 +152,14 @@ The plugins to enable / disable. See [[Kubernetes/concepts/L07-security/04-admis
 
 The standard set (in addition to defaults):
 
-* `NodeRestriction` — restrict kubelets to their own Node.
-* `PodSecurity` — enforce PSS.
-* `ServiceAccount` — default SA injection.
-* `LimitRanger` — apply LimitRange.
-* `ResourceQuota` — enforce quota.
-* `DefaultStorageClass` — set default StorageClass.
-* `DefaultTolerationSeconds` — set default not-ready toleration.
-* `MutatingAdmissionWebhook`, `ValidatingAdmissionWebhook` — for OPA / Kyverno.
+- `NodeRestriction` — restrict kubelets to their own Node.
+- `PodSecurity` — enforce PSS.
+- `ServiceAccount` — default SA injection.
+- `LimitRanger` — apply LimitRange.
+- `ResourceQuota` — enforce quota.
+- `DefaultStorageClass` — set default StorageClass.
+- `DefaultTolerationSeconds` — set default not-ready toleration.
+- `MutatingAdmissionWebhook`, `ValidatingAdmissionWebhook` — for OPA / Kyverno.
 
 ### 4.1 The `--admission-control-config-file`
 
@@ -241,20 +248,20 @@ etcd is the **data store**. Compromising etcd is a cluster compromise.
 
 ### 9.2 The etcd access rules
 
-* **No public access** — etcd is on a private network. The only clients are the apiserver and operator tools.
-* **mTLS** — both directions. Client cert auth is required.
-* **No shell on the etcd host** — limit the attack surface.
-* **Encrypted backups** — etcdctl snapshot save produces a backup file. Encrypt it.
-* **Encryption at rest** — see [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]].
+- **No public access** — etcd is on a private network. The only clients are the apiserver and operator tools.
+- **mTLS** — both directions. Client cert auth is required.
+- **No shell on the etcd host** — limit the attack surface.
+- **Encrypted backups** — etcdctl snapshot save produces a backup file. Encrypt it.
+- **Encryption at rest** — see [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]].
 
 ### 9.3 The etcd storage
 
 etcd stores data on disk. The disk should be:
 
-* **Encrypted at rest** — full disk encryption (LUKS, cloud provider's disk encryption).
-* **High-performance SSD** — etcd is sensitive to latency.
-* **Separate from other data** — dedicated disk for etcd's `data-dir`.
-* **Backed up** — regular snapshots, stored off-cluster, encrypted.
+- **Encrypted at rest** — full disk encryption (LUKS, cloud provider's disk encryption).
+- **High-performance SSD** — etcd is sensitive to latency.
+- **Separate from other data** — dedicated disk for etcd's `data-dir`.
+- **Backed up** — regular snapshots, stored off-cluster, encrypted.
 
 ## 10. kubelet Hardening
 
@@ -270,18 +277,18 @@ authentication:
   anonymous:
     enabled: false
   webhook:
-    enabled: true                # use the apiserver for auth
+    enabled: true # use the apiserver for auth
   x509:
     clientCAFile: /etc/kubernetes/pki/ca.crt
 authorization:
   mode: Webhook
-readOnlyPort: 0                  # disable the read-only port (deprecated, dangerous)
+readOnlyPort: 0 # disable the read-only port (deprecated, dangerous)
 protectKernelDefaults: true
 tlsCertFile: /var/lib/kubelet/pki/kubelet.crt
 tlsPrivateKeyFile: /var/lib/kubelet/pki/kubelet.key
-rotateCertificates: true         # auto-rotate serving cert
+rotateCertificates: true # auto-rotate serving cert
 serverTLSBootstrap: true
-seccompDefault: true             # default seccomp profile
+seccompDefault: true # default seccomp profile
 ```
 
 ### 10.2 The kubelet's `readOnlyPort`
@@ -290,9 +297,9 @@ seccompDefault: true             # default seccomp profile
 
 ### 10.3 The kubelet's authentication
 
-* **`anonymous: enabled: false`** — disable anonymous access.
-* **`webhook: enabled: true`** — use the apiserver for auth (the kubelet asks the apiserver "is this caller authorized?"). This way, RBAC applies to kubelet's API.
-* **`x509: clientCAFile`** — the CA for verifying client certs.
+- **`anonymous: enabled: false`** — disable anonymous access.
+- **`webhook: enabled: true`** — use the apiserver for auth (the kubelet asks the apiserver "is this caller authorized?"). This way, RBAC applies to kubelet's API.
+- **`x509: clientCAFile`** — the CA for verifying client certs.
 
 ### 10.4 The kubelet's authorization
 
@@ -300,9 +307,9 @@ seccompDefault: true             # default seccomp profile
 
 ### 10.5 The kubelet's TLS
 
-* **`tlsCertFile`, `tlsPrivateKeyFile`** — the kubelet's serving cert (for `https://<node>:10250`).
-* **`rotateCertificates: true`** — auto-rotate via the apiserver's CSR API.
-* **`serverTLSBootstrap: true`** — request a cert from the apiserver on startup.
+- **`tlsCertFile`, `tlsPrivateKeyFile`** — the kubelet's serving cert (for `https://<node>:10250`).
+- **`rotateCertificates: true`** — auto-rotate via the apiserver's CSR API.
+- **`serverTLSBootstrap: true`** — request a cert from the apiserver on startup.
 
 ### 10.6 The kubelet's `seccompDefault`
 
@@ -340,17 +347,17 @@ The apiserver's network exposure is critical.
 
 ### 12.1 The standard
 
-* **The apiserver is on a private network** — not directly accessible from the internet.
-* **A load balancer** fronts the apiserver. The LB is in a public subnet (or has a public IP).
-* **The kubelets and controllers** connect to the apiserver via the private network.
+- **The apiserver is on a private network** — not directly accessible from the internet.
+- **A load balancer** fronts the apiserver. The LB is in a public subnet (or has a public IP).
+- **The kubelets and controllers** connect to the apiserver via the private network.
 
 For cloud-managed clusters (EKS, GKE, AKS), the cloud provider manages this.
 
 For self-managed:
 
-* **Two subnets** — public (the LB) and private (the apiserver).
-* **The LB is the only public endpoint.**
-* **The apiserver's port (6443) is open to the private subnet only.**
+- **Two subnets** — public (the LB) and private (the apiserver).
+- **The LB is the only public endpoint.**
+- **The apiserver's port (6443) is open to the private subnet only.**
 
 ### 12.2 The `--bind-address`
 
@@ -366,10 +373,10 @@ For **maximum hardening**, bind to a specific interface:
 
 The apiserver's authn is only as strong as the **edge**:
 
-* **Cloud LB with mTLS** — the LB terminates TLS, re-encrypts to the apiserver. The client cert is verified at the LB.
-* **Bastion / VPN** — for SSH to control plane nodes. **Never expose the control plane via SSH to the internet**.
-* **kubectl access** — the user's kubeconfig is the credential. Treat it like a root password.
-* **OIDC with MFA** — for human users. Multi-factor at the IdP.
+- **Cloud LB with mTLS** — the LB terminates TLS, re-encrypts to the apiserver. The client cert is verified at the LB.
+- **Bastion / VPN** — for SSH to control plane nodes. **Never expose the control plane via SSH to the internet**.
+- **kubectl access** — the user's kubeconfig is the credential. Treat it like a root password.
+- **OIDC with MFA** — for human users. Multi-factor at the IdP.
 
 The **network perimeter** is the first line of defense. The **apiserver's authn** is the second. Both must be strong.
 
@@ -377,8 +384,8 @@ The **network perimeter** is the first line of defense. The **apiserver's authn*
 
 For etcd encryption, the choice:
 
-* **`aescbc` / `secretbox`** — local keys in the config file. **No external dependency**. But the key is in the file, and the file is on the apiserver's host.
-* **KMS (AWS / GCP / Azure / Vault)** — the key is in the cloud's HSM. **Production-grade**, but adds a network dependency.
+- **`aescbc` / `secretbox`** — local keys in the config file. **No external dependency**. But the key is in the file, and the file is on the apiserver's host.
+- **KMS (AWS / GCP / Azure / Vault)** — the key is in the cloud's HSM. **Production-grade**, but adds a network dependency.
 
 For **production**, KMS is the standard. The performance cost is small (with caching), and the security gain is large (the key never leaves the cloud's HSM).
 
@@ -388,22 +395,22 @@ For **dev / test**, `aescbc` is fine. The key can be regenerated easily.
 
 When you run a k8s security audit (with kube-bench, kube-hunter, etc.), the common findings are:
 
-| Finding | Severity | Fix |
-|---|---|---|
-| `anonymous-auth: true` | HIGH | `--anonymous-auth=false` |
-| `readOnlyPort: 10255` enabled | HIGH | `readOnlyPort: 0` |
-| `--profiling: true` | MEDIUM | `--profiling=false` |
-| `ABAC` authorizer enabled | HIGH | Remove `ABAC`, use `RBAC` |
-| `--tls-min-version: VersionTLS10` | MEDIUM | `--tls-min-version=VersionTLS12` |
-| Secrets not encrypted at rest | MEDIUM | Add `EncryptionConfiguration` |
-| `hostPID: true` in app Pods | MEDIUM | Use PSS `restricted` |
-| NetworkPolicy: default-allow | MEDIUM | Add default-deny |
-| Audit log not shipped off-cluster | LOW | Ship to a SIEM |
-| kubelet `--read-only-port` enabled | HIGH | `readOnlyPort: 0` |
-| `:latest` images in production | MEDIUM | Use versioned tags |
-| `privileged: true` containers | HIGH | Remove or justify |
-| `imagePullPolicy: Always` for versioned | LOW | Use `IfNotPresent` |
-| No `PodSecurity` admission | MEDIUM | Enable PSS |
+| Finding                                 | Severity | Fix                              |
+| --------------------------------------- | -------- | -------------------------------- |
+| `anonymous-auth: true`                  | HIGH     | `--anonymous-auth=false`         |
+| `readOnlyPort: 10255` enabled           | HIGH     | `readOnlyPort: 0`                |
+| `--profiling: true`                     | MEDIUM   | `--profiling=false`              |
+| `ABAC` authorizer enabled               | HIGH     | Remove `ABAC`, use `RBAC`        |
+| `--tls-min-version: VersionTLS10`       | MEDIUM   | `--tls-min-version=VersionTLS12` |
+| Secrets not encrypted at rest           | MEDIUM   | Add `EncryptionConfiguration`    |
+| `hostPID: true` in app Pods             | MEDIUM   | Use PSS `restricted`             |
+| NetworkPolicy: default-allow            | MEDIUM   | Add default-deny                 |
+| Audit log not shipped off-cluster       | LOW      | Ship to a SIEM                   |
+| kubelet `--read-only-port` enabled      | HIGH     | `readOnlyPort: 0`                |
+| `:latest` images in production          | MEDIUM   | Use versioned tags               |
+| `privileged: true` containers           | HIGH     | Remove or justify                |
+| `imagePullPolicy: Always` for versioned | LOW      | Use `IfNotPresent`               |
+| No `PodSecurity` admission              | MEDIUM   | Enable PSS                       |
 
 The standard for "production-grade" is: **none of the high / medium findings are present**.
 
@@ -537,8 +544,8 @@ kubectl get node <node> -o yaml
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet and node-level
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — the encryption deep-dive
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what's logged
-* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — the admission layer
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — NIST / CIS / OWASP
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet and node-level
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — the encryption deep-dive
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what's logged
+- [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — the admission layer
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — NIST / CIS / OWASP

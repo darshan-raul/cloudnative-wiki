@@ -30,11 +30,11 @@ Inspector scans:
 
 ## Inspector vs GuardDuty vs Macie
 
-| Service | What it Detects | How |
-|---------|-----------------|-----|
+| Service   | What it Detects                                                     | How                           |
+| --------- | ------------------------------------------------------------------- | ----------------------------- |
 | GuardDuty | Threats (compromised credentials, crypto mining, data exfiltration) | ML on CloudTrail/DNS/VPC Flow |
-| Inspector | Vulnerabilities (CVEs, missing patches, network exposure) | Agent + network probes |
-| Macie | Sensitive data exposure (PII, credentials in S3) | ML on S3 data classification |
+| Inspector | Vulnerabilities (CVEs, missing patches, network exposure)           | Agent + network probes        |
+| Macie     | Sensitive data exposure (PII, credentials in S3)                    | ML on S3 data classification  |
 
 ## Enabling Inspector
 
@@ -127,12 +127,12 @@ aws inspector2 describe-findings \
       "awsEc2Instance": {
         "amiId": "ami-xxxxx",
         "instanceId": "i-xxxxx",
-        "tags": {"Name": "web-server-01"}
+        "tags": { "Name": "web-server-01" }
       }
     }
   },
   "vulnerability": {
-    "cvss": [{"version": "V3", "score": 7.5, "baseScore": 7.5}],
+    "cvss": [{ "version": "V3", "score": 7.5, "baseScore": 7.5 }],
     "relatedVulnerabilities": ["CVE-2023-44487"],
     "packageVulnerabilityDetails": {
       "packagePath": "lib/httpd",
@@ -152,7 +152,7 @@ aws inspector2 describe-findings \
   "severity": "MEDIUM",
   "description": "EC2 instance i-xxxxx has port 22 (SSH) accessible from 0.0.0.0/0",
   "networkReachability": {
-    "openPortRange": {"begin": 22, "end": 22},
+    "openPortRange": { "begin": 22, "end": 22 },
     "protocol": "TCP",
     "source": "0.0.0.0/0"
   }
@@ -197,23 +197,23 @@ aws inspector2 list-findings \
 
 ## Pricing
 
-| Resource Type | Cost |
-|---------------|------|
-| EC2 instance (per month) | $0.06 per instance |
-| ECR image (per month) | $0.09 per image |
+| Resource Type               | Cost               |
+| --------------------------- | ------------------ |
+| EC2 instance (per month)    | $0.06 per instance |
+| ECR image (per month)       | $0.09 per image    |
 | Lambda function (per month) | $0.06 per function |
-| Lambda layer (per month) | $0.006 per layer |
+| Lambda layer (per month)    | $0.006 per layer   |
 
 First 500 resources/month are free.
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| EC2 instances per account | Unlimited |
-| ECR images per registry | 10,000 |
-| Assessment runs (v1) | 500 per template |
-| Concurrent scans | 500 (EC2), unlimited (ECR/Lambda) |
+| Resource                  | Limit                             |
+| ------------------------- | --------------------------------- |
+| EC2 instances per account | Unlimited                         |
+| ECR images per registry   | 10,000                            |
+| Assessment runs (v1)      | 500 per template                  |
+| Concurrent scans          | 500 (EC2), unlimited (ECR/Lambda) |
 
 ## References
 

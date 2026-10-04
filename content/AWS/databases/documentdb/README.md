@@ -26,8 +26,8 @@ DocumentDB is a managed document database compatible with MongoDB 4.0/5.0/7.0 AP
   },
   "email": "alice@example.com",
   "orders": [
-    {"order_id": "order-001", "total": 99.99},
-    {"order_id": "order-002", "total": 149.99}
+    { "order_id": "order-001", "total": 99.99 },
+    { "order_id": "order-002", "total": 149.99 }
   ],
   "created_at": "2024-01-15T10:30:00Z"
 }
@@ -101,29 +101,31 @@ user = collection.find_one({"name": "Alice"})
 // Find top customers by total order amount
 db.orders.aggregate([
   { $unwind: "$items" },
-  { $group: {
+  {
+    $group: {
       _id: "$customer_id",
-      total_spent: { $sum: "$items.price" }
-  }},
+      total_spent: { $sum: "$items.price" },
+    },
+  },
   { $sort: { total_spent: -1 } },
-  { $limit: 10 }
-])
+  { $limit: 10 },
+]);
 ```
 
 ## Indexes
 
 ```javascript
 // Create index on email field
-db.users.createIndex({ "email": 1 }, { unique: true })
+db.users.createIndex({ email: 1 }, { unique: true });
 
 // Create compound index
-db.orders.createIndex({ "customer_id": 1, "created_at": -1 })
+db.orders.createIndex({ customer_id: 1, created_at: -1 });
 
 // Create text index for search
-db.products.createIndex({ "description": "text" })
+db.products.createIndex({ description: "text" });
 
 // List indexes
-db.users.getIndexes()
+db.users.getIndexes();
 ```
 
 ## Change Streams
@@ -132,17 +134,15 @@ Track real-time changes (like DynamoDB Streams):
 
 ```javascript
 // Open change stream
-const change_stream = db.users.watch(
-  [],
-  { fullDocument: "updateLookup" }
-);
+const change_stream = db.users.watch([], { fullDocument: "updateLookup" });
 
-change_stream.on('change', (change) => {
+change_stream.on("change", (change) => {
   console.log(change);
 });
 ```
 
 Use cases:
+
 - Triggers (update related data on change)
 - CDC (change data capture to Kinesis)
 - Real-time notifications
@@ -157,23 +157,20 @@ const session = client.startSession();
 
 session.startTransaction({
   readConcern: { level: "snapshot" },
-  writeConcern: { w: "majority" }
+  writeConcern: { w: "majority" },
 });
 
 try {
-  const db1 = client.db('app');
-  const db2 = client.db('audit');
+  const db1 = client.db("app");
+  const db2 = client.db("audit");
 
-  await db1.collection('accounts').updateOne(
-    { _id: 1 },
-    { $inc: { balance: -100 } },
-    { session }
-  );
+  await db1
+    .collection("accounts")
+    .updateOne({ _id: 1 }, { $inc: { balance: -100 } }, { session });
 
-  await db2.collection('transactions').insertOne(
-    { from: 1, to: 2, amount: 100 },
-    { session }
-  );
+  await db2
+    .collection("transactions")
+    .insertOne({ from: 1, to: 2, amount: 100 }, { session });
 
   await session.commitTransaction();
 } catch (e) {
@@ -200,7 +197,7 @@ aws docdb modify-db-cluster-parameter-group \
 
 ```javascript
 // Shard collection by user_id
-sh.shardCollection("app.orders", { "user_id": "hashed" })
+sh.shardCollection("app.orders", { user_id: "hashed" });
 ```
 
 ## Backup and Restore
@@ -246,36 +243,36 @@ aws cloudwatch get-metric-statistics \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| db.r6g.large | $0.096/hr (~$69/month) |
-| db.r6g.xlarge | $0.192/hr (~$138/month) |
-| Storage | $0.10/GB/month |
-| I/O | $0.20 per million requests |
-| Backup | $0.02/GB/month |
+| Component     | Cost                       |
+| ------------- | -------------------------- |
+| db.r6g.large  | $0.096/hr (~$69/month)     |
+| db.r6g.xlarge | $0.192/hr (~$138/month)    |
+| Storage       | $0.10/GB/month             |
+| I/O           | $0.20 per million requests |
+| Backup        | $0.02/GB/month             |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max storage | 64 TB |
-| Max instances per cluster | 1 primary + 14 replicas |
-| Max databases | 640 |
-| Max collections per database | Unlimited |
-| Max document size | 16 MB |
+| Resource                     | Limit                   |
+| ---------------------------- | ----------------------- |
+| Max storage                  | 64 TB                   |
+| Max instances per cluster    | 1 primary + 14 replicas |
+| Max databases                | 640                     |
+| Max collections per database | Unlimited               |
+| Max document size            | 16 MB                   |
 
 ## MongoDB vs DocumentDB Compatibility
 
-| Feature | MongoDB | DocumentDB |
-|---------|---------|-----------|
-| API | Native | MongoDB 4.0/5.0/7.0 |
-| Change streams | Yes | Yes |
-| Multi-document transactions | Yes | Yes |
-| Sharding | Yes | Yes (via cluster parameters) |
-| $lookup (joins) | Yes | No (use $graphLookup for limited cases) |
-| Geospatial indexes | Yes | Limited |
-| Text search | Yes | Yes (basic) |
-| Atlas-specific features | No | No |
+| Feature                     | MongoDB | DocumentDB                              |
+| --------------------------- | ------- | --------------------------------------- |
+| API                         | Native  | MongoDB 4.0/5.0/7.0                     |
+| Change streams              | Yes     | Yes                                     |
+| Multi-document transactions | Yes     | Yes                                     |
+| Sharding                    | Yes     | Yes (via cluster parameters)            |
+| $lookup (joins)             | Yes     | No (use $graphLookup for limited cases) |
+| Geospatial indexes          | Yes     | Limited                                 |
+| Text search                 | Yes     | Yes (basic)                             |
+| Atlas-specific features     | No      | No                                      |
 
 ## References
 

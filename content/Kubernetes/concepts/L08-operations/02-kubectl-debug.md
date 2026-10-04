@@ -178,14 +178,14 @@ kubectl get pods -A -o wide --sort-by=.spec.nodeName
 
 ## Gotchas
 
-* **`kubectl logs` doesn't follow across restarts by default.** Add `--previous` to see the logs of the previous container instance. Useful when a container is crashlooping.
-* **Multi-container Pods need `-c` to pick a container.** Without it, you get an error like "log is ambiguous".
-* **`kubectl exec` requires the container to have the binary you're running** (bash, sh, etc.). Alpine-based images often don't have bash. Try `sh`.
-* **Ephemeral debug containers require `--feature-gates=EphemeralContainers=true`** on older clusters. k8s 1.23+ has it on by default.
-* **metrics-server must be installed** for `kubectl top` to work. Managed clusters usually have it; kubeadm clusters often don't.
-* **`kubectl describe` truncates the events list.** For the full list, use `kubectl get events`.
-* **`kubectl get pod` shows the Pod, not its containers.** If a container is failing but the Pod is "Running", you're not seeing the right level of detail. Use `-o yaml` or `describe`.
-* **`kubectl auth can-i` is what the API server thinks you can do.** It's not a security boundary; it's a way to debug RBAC.
+- **`kubectl logs` doesn't follow across restarts by default.** Add `--previous` to see the logs of the previous container instance. Useful when a container is crashlooping.
+- **Multi-container Pods need `-c` to pick a container.** Without it, you get an error like "log is ambiguous".
+- **`kubectl exec` requires the container to have the binary you're running** (bash, sh, etc.). Alpine-based images often don't have bash. Try `sh`.
+- **Ephemeral debug containers require `--feature-gates=EphemeralContainers=true`** on older clusters. k8s 1.23+ has it on by default.
+- **metrics-server must be installed** for `kubectl top` to work. Managed clusters usually have it; kubeadm clusters often don't.
+- **`kubectl describe` truncates the events list.** For the full list, use `kubectl get events`.
+- **`kubectl get pod` shows the Pod, not its containers.** If a container is failing but the Pod is "Running", you're not seeing the right level of detail. Use `-o yaml` or `describe`.
+- **`kubectl auth can-i` is what the API server thinks you can do.** It's not a security boundary; it's a way to debug RBAC.
 
 ## When all else fails
 

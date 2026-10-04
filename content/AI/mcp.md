@@ -2,8 +2,6 @@
 
 "https://www.youtube.com/watch?v=5B__zNXrFmg"
 
-
-
 "https://www.youtube.com/watch?v=DosHnyq78xY"
 
 **Model Context Protocol (MCP): Complete Overview**
@@ -12,18 +10,19 @@ The **Model Context Protocol (MCP)** is an open standard developed by Anthropic 
 
 ### Key Concepts and Architecture
 
-* **Client-Server Model:**
-  * **Host:** The application the user interacts with (e.g., Claude Desktop, IDEs, custom agents).
-  * **Client:** Lives within the host, manages a 1:1 connection to a specific MCP server.
-  * **Server:** Exposes tools, resources, and prompts to the AI model via a standard API[1](https://www.philschmid.de/mcp-introduction)[3](https://www.keyvalue.systems/blog/mcp-explained-the-model-context-protocol-thats-powering-smarter-ai/)[4](https://auth0.com/blog/an-introduction-to-mcp-and-authorization/).
-*   **Core MCP Primitives:**
+- **Client-Server Model:**
+  - **Host:** The application the user interacts with (e.g., Claude Desktop, IDEs, custom agents).
+  - **Client:** Lives within the host, manages a 1:1 connection to a specific MCP server.
+  - **Server:** Exposes tools, resources, and prompts to the AI model via a standard API[1](https://www.philschmid.de/mcp-introduction)[3](https://www.keyvalue.systems/blog/mcp-explained-the-model-context-protocol-thats-powering-smarter-ai/)[4](https://auth0.com/blog/an-introduction-to-mcp-and-authorization/).
+- **Core MCP Primitives:**
 
-    | Primitive | Control                | Description                                       | Example Use                  |
-    | --------- | ---------------------- | ------------------------------------------------- | ---------------------------- |
-    | Prompts   | User-controlled        | Interactive templates invoked by user choice      | Slash commands, menu options |
-    | Resources | Application-controlled | Contextual data managed by the client application | File contents, API responses |
-    | Tools     | Model-controlled       | Functions exposed to the LLM to take actions      | API calls, data updates      |
-* **Lifecycle:**
+  | Primitive | Control                | Description                                       | Example Use                  |
+  | --------- | ---------------------- | ------------------------------------------------- | ---------------------------- |
+  | Prompts   | User-controlled        | Interactive templates invoked by user choice      | Slash commands, menu options |
+  | Resources | Application-controlled | Contextual data managed by the client application | File contents, API responses |
+  | Tools     | Model-controlled       | Functions exposed to the LLM to take actions      | API calls, data updates      |
+
+- **Lifecycle:**
   1. **Initialization:** Host creates MCP clients, which handshake with servers to exchange capabilities[1](https://www.philschmid.de/mcp-introduction)[4](https://auth0.com/blog/an-introduction-to-mcp-and-authorization/).
   2. **Discovery:** Clients query servers for available tools, resources, and prompts[1](https://www.philschmid.de/mcp-introduction)[4](https://auth0.com/blog/an-introduction-to-mcp-and-authorization/).
   3. **Invocation:** LLM (via the host) requests tool/resource/prompt execution[1](https://www.philschmid.de/mcp-introduction)[4](https://auth0.com/blog/an-introduction-to-mcp-and-authorization/).
@@ -31,11 +30,11 @@ The **Model Context Protocol (MCP)** is an open standard developed by Anthropic 
 
 ### Applications of MCP
 
-* **Desktop Assistants:** Securely access system tools and files (e.g., Claude Desktop).
-* **Enterprise Automation:** Integrate with internal CRMs, knowledge bases, or proprietary databases.
-* **Multi-tool Agent Workflows:** Coordinate actions across multiple tools (e.g., document lookup + messaging).
-* **Natural Language Data Access:** Bridge LLMs with structured databases for plain-language queries.
-* **Software Development:** IDEs and coding platforms use MCP to give coding assistants real-time project context[2](https://en.wikipedia.org/wiki/Model_Context_Protocol).
+- **Desktop Assistants:** Securely access system tools and files (e.g., Claude Desktop).
+- **Enterprise Automation:** Integrate with internal CRMs, knowledge bases, or proprietary databases.
+- **Multi-tool Agent Workflows:** Coordinate actions across multiple tools (e.g., document lookup + messaging).
+- **Natural Language Data Access:** Bridge LLMs with structured databases for plain-language queries.
+- **Software Development:** IDEs and coding platforms use MCP to give coding assistants real-time project context[2](https://en.wikipedia.org/wiki/Model_Context_Protocol).
 
 ### Python-Based Example: Building an MCP Server
 
@@ -51,7 +50,7 @@ pip install mcp
 
 ### 2. Prepare the Database
 
-* Download or create a `community.db` SQLite database with a `chatters` table containing columns `name` and `messages`.
+- Download or create a `community.db` SQLite database with a `chatters` table containing columns `name` and `messages`.
 
 ### 3. Write the MCP Server
 
@@ -86,18 +85,16 @@ if __name__ == '__main__':
 
 ### Summary of How It Works
 
-* **MCP Host** (e.g., Claude Desktop) connects to your MCP server.
-* **LLM** receives a user prompt (e.g., "Show me the top chatters").
-* **Host** detects the relevant tool (`get_top_chatters`) and invokes it via the MCP client.
-* **Server** executes the tool, fetches data, and returns results.
-* **LLM** incorporates the fresh data into its response to the user.
+- **MCP Host** (e.g., Claude Desktop) connects to your MCP server.
+- **LLM** receives a user prompt (e.g., "Show me the top chatters").
+- **Host** detects the relevant tool (`get_top_chatters`) and invokes it via the MCP client.
+- **Server** executes the tool, fetches data, and returns results.
+- **LLM** incorporates the fresh data into its response to the user.
 
 **MCP** thus enables **secure, modular, and standardized integration** between AI models and external systems, dramatically simplifying how AI applications interact with the world beyond their initial training data
 
-
-
 1. [https://www.philschmid.de/mcp-introduction](https://www.philschmid.de/mcp-introduction)
-2. [https://en.wikipedia.org/wiki/Model\_Context\_Protocol](https://en.wikipedia.org/wiki/Model_Context_Protocol)
+2. [https://en.wikipedia.org/wiki/Model_Context_Protocol](https://en.wikipedia.org/wiki/Model_Context_Protocol)
 3. [https://www.keyvalue.systems/blog/mcp-explained-the-model-context-protocol-thats-powering-smarter-ai/](https://www.keyvalue.systems/blog/mcp-explained-the-model-context-protocol-thats-powering-smarter-ai/)
 4. [https://auth0.com/blog/an-introduction-to-mcp-and-authorization/](https://auth0.com/blog/an-introduction-to-mcp-and-authorization/)
 5. [https://github.com/ruslanmv/Simple-MCP-Server-with-Python](https://github.com/ruslanmv/Simple-MCP-Server-with-Python)

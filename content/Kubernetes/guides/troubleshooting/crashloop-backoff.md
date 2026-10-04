@@ -134,6 +134,7 @@ $ kubectl describe pod web-1 | grep -A 5 "Last State"
 ```
 
 Common exit codes:
+
 - `1` — generic application error
 - `2` — misuse of shell builtins (often: missing argument, bad flag)
 - `126` — command found but not executable (file permission issue)
@@ -149,24 +150,30 @@ Common exit codes:
 **Most common sub-causes:**
 
 1. **Missing environment variable** — your app reads `DATABASE_URL` from env, env isn't set, app fails.
+
    ```bash
    $ kubectl logs web-1
    KeyError: 'DATABASE_URL'
    ```
+
    Fix: set the env var in the spec, or in a ConfigMap/Secret that's mounted.
 
 2. **Bad config** — `config.yaml` has a typo, or points to a non-existent endpoint.
+
    ```bash
    $ kubectl logs web-1
    failed to load config: open /etc/web/config.yaml: no such file or directory
    ```
+
    Fix: check the ConfigMap, check the volume mount path.
 
 3. **Missing dependency** — app expects a sidecar (Redis, postgres) that isn't there.
+
    ```bash
    $ kubectl logs web-1
    dial tcp 10.96.0.42:5432: connect: connection refused
    ```
+
    Fix: add the dependency, or wait for it (init container, init script).
 
 4. **Code bug** — unhandled edge case, race condition, panic.
@@ -219,6 +226,7 @@ docker inspect myorg/web:v2 | jq '.[0].Architecture'    # should be amd64 or arm
 **Common sub-causes:**
 
 1. **Wrong entrypoint** — Dockerfile's `ENTRYPOINT` doesn't exist in the image.
+
    ```dockerfile
    # bad
    COPY server /app/server
@@ -227,6 +235,7 @@ docker inspect myorg/web:v2 | jq '.[0].Architecture'    # should be amd64 or arm
    ```
 
 2. **Wrong architecture** — built on M1 Mac (arm64), deploying to Linux x86 cluster.
+
    ```bash
    # rebuild with explicit platform
    docker buildx build --platform linux/amd64 -t myorg/web:v2 .
@@ -235,10 +244,12 @@ docker inspect myorg/web:v2 | jq '.[0].Architecture'    # should be amd64 or arm
    ```
 
 3. **Wrong base image** — `FROM alpine:3.20` doesn't have `glibc` and your Go binary needs it.
+
    ```bash
    $ kubectl logs web-1
    /app/server: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.34' not found
    ```
+
    Fix: use `FROM ubuntu:22.04` or a static binary.
 
 4. **Shell script not executable** — `ENTRYPOINT ["./run.sh"]` but the file isn't `chmod +x`'d.
@@ -290,25 +301,28 @@ kubectl describe pod web-1 | grep -A 3 "Warning"
 **Common sub-causes:**
 
 1. **ConfigMap doesn't exist** — typo in `configMapRef.name`.
+
    ```yaml
    volumes:
-   - name: config
-     configMap:
-       name: web-config   # if this doesn't exist, pod hangs at "ContainerCreating"
+     - name: config
+       configMap:
+         name: web-config # if this doesn't exist, pod hangs at "ContainerCreating"
    ```
 
 2. **Key doesn't exist in ConfigMap** — `configMapRef.items[].key` references a key that's not in the ConfigMap.
+
    ```yaml
    volumes:
-   - name: config
-     configMap:
-       name: web-config
-       items:
-       - key: config.yaml    # if this key isn't in web-config, mount fails
-         path: config.yaml
+     - name: config
+       configMap:
+         name: web-config
+         items:
+           - key: config.yaml # if this key isn't in web-config, mount fails
+             path: config.yaml
    ```
 
 3. **Secret decryption failed** — encrypted Secret (Sealed Secrets, ESO, KMS) failed to decrypt.
+
    ```bash
    $ kubectl describe pod web-1
    Warning  FailedMount  30s  kubelet  MountVolume.SetUp failed for volume "secret-vol" :
@@ -382,14 +396,17 @@ kubectl get pod web-1 -o jsonpath='{.spec.containers[0].resources}' | jq .
 **Common sub-causes:**
 
 1. **Memory limit too low.** App legitimately needs more.
+
    ```yaml
    resources:
      limits:
-       memory: 256Mi   # too low
+       memory: 256Mi # too low
    ```
+
    Fix: increase the limit (or fix the leak).
 
 2. **JVM heap not configured for the limit.** JVMs default to 1/4 of host memory for `-Xmx`. If your container limit is 1Gi, the JVM may try to use 1/4 of node memory (e.g. 16Gi on a 64Gi node), exceeding the cgroup limit → OOMKill.
+
    ```bash
    # fix: set -Xmx explicitly to a value below the limit
    env:
@@ -398,17 +415,21 @@ kubectl get pod web-1 -o jsonpath='{.spec.containers[0].resources}' | jq .
    ```
 
 3. **Memory leak.** App allocates more and more over time, eventually hits the limit.
+
    ```bash
    # watch memory grow
    watch -n 1 'kubectl top pod web-1'
    ```
+
    Fix: profile the app, find the leak.
 
 4. **CPU throttling.** Not a crash, but can look like one. App becomes so slow it can't respond to liveness probes.
+
    ```bash
    # check throttling (Prometheus)
    rate(container_cpu_cfs_throttled_seconds_total[5m])
    ```
+
    Fix: raise the CPU limit (or remove the limit entirely if you have node-level isolation).
 
 5. **Ephemeral storage limit.** Container writes to `/tmp` or its working dir until it hits the limit.
@@ -463,6 +484,7 @@ kubectl describe pvc data -n my-ns
 **Common sub-causes:**
 
 1. **StorageClass doesn't exist.** `spec.storageClassName: gp3-encrypted` but the cluster only has `gp2`.
+
    ```bash
    kubectl get sc
    # NAME            PROVISIONER
@@ -471,6 +493,7 @@ kubectl describe pvc data -n my-ns
    ```
 
 2. **No matching PV (for static provisioning).** PVC asks for 100Gi, only 50Gi PVs available.
+
    ```bash
    kubectl get pv
    # NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS
@@ -478,15 +501,17 @@ kubectl describe pvc data -n my-ns
    ```
 
 3. **ReadWriteOnce on a multi-node deployment.** RWX volumes required for multi-pod, but you asked for RWO.
+
    ```yaml
    apiVersion: v1
    kind: PersistentVolumeClaim
    spec:
      accessModes:
-     - ReadWriteOnce    # but the Deployment has 3 replicas
+       - ReadWriteOnce # but the Deployment has 3 replicas
    ```
 
 4. **Volume mount path is read-only.** You mount a ConfigMap to `/etc/config`, and the app tries to write to it.
+
    ```bash
    $ kubectl logs web-1
    failed to write /etc/config/state.json: read-only file system
@@ -495,12 +520,12 @@ kubectl describe pvc data -n my-ns
 5. **subPath collision.** Two containers mount different things to the same path, or you mount to `/` and the container has its own content there.
    ```yaml
    volumeMounts:
-   - name: config
-     mountPath: /app/config.yaml
-     subPath: config.yaml    # good — single file mount
-   # vs
-   - name: config
-     mountPath: /app        # bad — overwrites everything in /app
+     - name: config
+       mountPath: /app/config.yaml
+       subPath: config.yaml # good — single file mount
+     # vs
+     - name: config
+       mountPath: /app # bad — overwrites everything in /app
    ```
 
 ## 6. Liveness probe
@@ -542,35 +567,43 @@ kubectl exec -it web-1 -- curl -s http://localhost:8080/health
 **Common sub-causes:**
 
 1. **`initialDelaySeconds` is too low.** App takes 30s to start; probe checks at 10s.
+
    ```yaml
    livenessProbe:
-     initialDelaySeconds: 10    # too low for slow-starting apps
+     initialDelaySeconds: 10 # too low for slow-starting apps
      periodSeconds: 10
    ```
+
    Fix: increase `initialDelaySeconds`, **or** use a `startupProbe` to give the app a window to start.
 
 2. **Probe checks a too-strict endpoint.** App returns 200 on `/health` only when fully ready; probe checks `/health` during startup when it returns 503.
+
    ```yaml
    livenessProbe:
      httpGet:
-       path: /health    # too strict — try /ready vs /health
+       path: /health # too strict — try /ready vs /health
        port: 8080
    ```
+
    Fix: have a dedicated `/alive` endpoint that's permissive; `/ready` for readiness.
 
 3. **`failureThreshold` is too low.** One failure kills the pod. Network blip → probe fails → pod killed.
+
    ```yaml
    livenessProbe:
-     failureThreshold: 1   # one failure = death
+     failureThreshold: 1 # one failure = death
      periodSeconds: 10
    ```
+
    Fix: `failureThreshold: 3` (3 consecutive failures).
 
 4. **Probe is too slow.** Probe itself takes longer than `timeoutSeconds`, always times out.
+
    ```yaml
    livenessProbe:
-     timeoutSeconds: 1   # probe takes 5s
+     timeoutSeconds: 1 # probe takes 5s
    ```
+
    Fix: increase `timeoutSeconds` or speed up the probe.
 
 5. **App is genuinely unhealthy.** Probe correctly reports the app is broken.
@@ -584,13 +617,13 @@ startupProbe:
     path: /health
     port: 8080
   periodSeconds: 5
-  failureThreshold: 30    # 30 * 5s = 150s for the app to start
+  failureThreshold: 30 # 30 * 5s = 150s for the app to start
 livenessProbe:
   httpGet:
     path: /health
     port: 8080
   periodSeconds: 10
-  failureThreshold: 3     # after startup, kill after 3 failures
+  failureThreshold: 3 # after startup, kill after 3 failures
 ```
 
 `startupProbe` gives the app a generous window to start, then liveness takes over. The kubelet only checks liveness once `startupProbe` succeeds.
@@ -670,15 +703,15 @@ If the pod runs on node-2 but not node-1, the issue is node-1 (kernel, disk, net
 
 ## Common gotchas
 
-* **`kubectl logs` is empty.** The container wrote to stderr, or never started. Try `kubectl logs --previous`. If still empty, it's an image problem (image didn't start, no logs to read).
-* **The error is in the application, not k8s.** CrashLoopBackOff is just a state. The actual error is in the app. Logs are the only place to find it.
-* **Restart policy is `Never`.** For `Job`s and `Pod`s with `restartPolicy: Never`, the pod won't restart — it just shows `Error`. CrashLoopBackOff is a `restartPolicy: Always` thing.
-* **Init containers fail separately.** A pod with init containers that fail shows `Init:Error` or `Init:CrashLoopBackOff`, not the regular `CrashLoopBackOff`. The diagnosis is the same; the location is different.
-* **The probe is fine; the app is the problem.** Don't keep tweaking the probe to make the symptoms go away. Fix the app.
-* **`initContainers` are the silent killer.** A failing init container makes the pod sit in `Init:Error`. Use `kubectl describe pod` to see the init container's status.
-* **Sidecar containers (k8s 1.28+)** have a different lifecycle — they restart independently. A failing sidecar can be a `CrashLoopBackOff` even if the main container is fine.
-* **Container `restartCount` is the truth.** The `RESTARTS` column in `kubectl get pods` is the container's restart count. If it's climbing, the container is being killed. If it's stable, the pod is in a non-restart state.
-* **Don't set `restartPolicy: Always` on a `Job`.** Jobs use `restartPolicy: OnFailure` or `Never`. Using `Always` makes the Job controller treat the pod as a long-running workload, breaking the Job.
+- **`kubectl logs` is empty.** The container wrote to stderr, or never started. Try `kubectl logs --previous`. If still empty, it's an image problem (image didn't start, no logs to read).
+- **The error is in the application, not k8s.** CrashLoopBackOff is just a state. The actual error is in the app. Logs are the only place to find it.
+- **Restart policy is `Never`.** For `Job`s and `Pod`s with `restartPolicy: Never`, the pod won't restart — it just shows `Error`. CrashLoopBackOff is a `restartPolicy: Always` thing.
+- **Init containers fail separately.** A pod with init containers that fail shows `Init:Error` or `Init:CrashLoopBackOff`, not the regular `CrashLoopBackOff`. The diagnosis is the same; the location is different.
+- **The probe is fine; the app is the problem.** Don't keep tweaking the probe to make the symptoms go away. Fix the app.
+- **`initContainers` are the silent killer.** A failing init container makes the pod sit in `Init:Error`. Use `kubectl describe pod` to see the init container's status.
+- **Sidecar containers (k8s 1.28+)** have a different lifecycle — they restart independently. A failing sidecar can be a `CrashLoopBackOff` even if the main container is fine.
+- **Container `restartCount` is the truth.** The `RESTARTS` column in `kubectl get pods` is the container's restart count. If it's climbing, the container is being killed. If it's stable, the pod is in a non-restart state.
+- **Don't set `restartPolicy: Always` on a `Job`.** Jobs use `restartPolicy: OnFailure` or `Never`. Using `Always` makes the Job controller treat the pod as a long-running workload, breaking the Job.
 
 ## A worked example
 
@@ -723,9 +756,9 @@ The web pod was "crashing" but the root cause was upstream — postgres wasn't r
 
 ## See also
 
-* [[Kubernetes/guides/tools/kubectl|kubectl]] — the commands you need
-* [[Kubernetes/guides/tools/k9s|k9s]] — fast visual diagnosis
-* [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — pods that won't schedule
-* [[Kubernetes/guides/troubleshooting/image-pull|image-pull]] — image pull failures
-* [[Kubernetes/guides/troubleshooting/service-unreachable|service-unreachable]] — networking issues
-* [[Kubernetes/guides/troubleshooting/dns-resolution|dns-resolution]] — name resolution failures
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — the commands you need
+- [[Kubernetes/guides/tools/k9s|k9s]] — fast visual diagnosis
+- [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — pods that won't schedule
+- [[Kubernetes/guides/troubleshooting/image-pull|image-pull]] — image pull failures
+- [[Kubernetes/guides/troubleshooting/service-unreachable|service-unreachable]] — networking issues
+- [[Kubernetes/guides/troubleshooting/dns-resolution|dns-resolution]] — name resolution failures

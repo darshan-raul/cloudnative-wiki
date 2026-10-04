@@ -52,11 +52,13 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 ### Issue: Pod stuck in Pending with "Failed to allocate IP"
 
 **Symptoms**:
+
 ```
 Warning  FailedScheduling  2m (x3 over 5m)  default-scheduler  0/3 nodes are available: 1 Insufficient pods.
 ```
 
 **Diagnosis**:
+
 ```bash
 # Check if node has reached pod limit
 kubectl get nodes <node-name> -o jsonpath='{.status.capacity.pods}' && \
@@ -73,14 +75,15 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 
 **Causes and Solutions**:
 
-| Cause | Solution |
-|-------|----------|
-| Node at max pod capacity | Increase `MAX_PODS` or use larger instance type |
-| Subnet IP exhaustion | Use custom networking to expand IP pool |
-| ENI attachment limit reached | Use prefix delegation to increase pod density |
-| EC2 API throttling | Increase WARM_IP_TARGET, reduce pod churn |
+| Cause                        | Solution                                        |
+| ---------------------------- | ----------------------------------------------- |
+| Node at max pod capacity     | Increase `MAX_PODS` or use larger instance type |
+| Subnet IP exhaustion         | Use custom networking to expand IP pool         |
+| ENI attachment limit reached | Use prefix delegation to increase pod density   |
+| EC2 API throttling           | Increase WARM_IP_TARGET, reduce pod churn       |
 
 **Fix - Check max pods formula**:
+
 ```bash
 # Calculate max pods for instance type
 # Formula: (ENIs × (IPs_per_ENI - 1)) + 2
@@ -92,6 +95,7 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 **Symptoms**: Pod starts but cannot reach internet or other services.
 
 **Diagnosis**:
+
 ```bash
 # Check pod can get external IP
 kubectl exec -it <pod-name> -- curl -s ifconfig.me
@@ -111,14 +115,15 @@ iptables -t nat -L -n | head -20
 
 **Common Causes**:
 
-| Cause | Check | Fix |
-|-------|-------|-----|
-| SNAT not configured | `iptables -t nat -L POSTROUTING` | Set `externalSNAT=false` |
-| Security group blocking | Check SG rules | Add rules for pod traffic |
-| Route missing | `ip route` | Ensure subnet has route |
-| VPC endpoints not accessible | From node | Check privateLink endpoints |
+| Cause                        | Check                            | Fix                         |
+| ---------------------------- | -------------------------------- | --------------------------- |
+| SNAT not configured          | `iptables -t nat -L POSTROUTING` | Set `externalSNAT=false`    |
+| Security group blocking      | Check SG rules                   | Add rules for pod traffic   |
+| Route missing                | `ip route`                       | Ensure subnet has route     |
+| VPC endpoints not accessible | From node                        | Check privateLink endpoints |
 
 **Verify SNAT Configuration**:
+
 ```bash
 # Check if SNAT is working
 kubectl exec -it <pod-name> -- wget -O- ifconfig.me
@@ -132,13 +137,14 @@ iptables -t nat -L POSTROUTING -v | grep -i cnivpn
 **Symptoms**: ALB/NLB target shows unhealthy, or connections timeout.
 
 **Diagnosis**:
+
 ```bash
 # Check target group health
 aws elbv2 describe-target-health \
   --target-group-arn arn:aws:elasticloadbalancing:...
 
 # Check pod security groups
-kubectl get pods -o jsonpath='{.items[*].spec.securityContext}' 
+kubectl get pods -o jsonpath='{.items[*].spec.securityContext}'
 
 # Check if using Local external traffic policy
 kubectl get svc <svc-name> -o jsonpath='{.spec.externalTrafficPolicy}'
@@ -146,14 +152,15 @@ kubectl get svc <svc-name> -o jsonpath='{.spec.externalTrafficPolicy}'
 
 **Common Causes**:
 
-| Cause | Solution |
-|-------|----------|
-| Security group on pods blocking health checks | Add inbound rule for health checks |
-| externalTrafficPolicy=Cluster | Change to Local if preserving source IP needed |
-| NodePort not working with SGP | Use NLB with IP targets |
-| Health check port mismatch | Verify containerPort matches |
+| Cause                                         | Solution                                       |
+| --------------------------------------------- | ---------------------------------------------- |
+| Security group on pods blocking health checks | Add inbound rule for health checks             |
+| externalTrafficPolicy=Cluster                 | Change to Local if preserving source IP needed |
+| NodePort not working with SGP                 | Use NLB with IP targets                        |
+| Health check port mismatch                    | Verify containerPort matches                   |
 
 **Fix - Security Group for Pods Health Check**:
+
 ```yaml
 apiVersion: vpcresources.k8s.aws/v1beta1
 kind: SecurityGroupPolicy
@@ -166,7 +173,7 @@ spec:
   securityGroups:
     groupIds:
       - sg-xxxxxxxx
-      - sg-lb-healthcheck  # Allow 80/tcp from VPC CIDR
+      - sg-lb-healthcheck # Allow 80/tcp from VPC CIDR
 ```
 
 ### Issue: High pod startup latency
@@ -174,6 +181,7 @@ spec:
 **Symptoms**: Pods take 30+ seconds to get IP and become ready.
 
 **Diagnosis**:
+
 ```bash
 # Time pod creation
 time kubectl apply -f test-pod.yaml
@@ -188,20 +196,21 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 
 **Solutions**:
 
-| Cause | Fix |
-|-------|-----|
-| Low WARM_IP_TARGET | Increase to 5-10 |
-| No MINIMUM_IP_TARGET | Set to expected pod density |
-| EC2 API throttling | Review and increase targets |
-| Node in different AZ than ENIConfig | Ensure AZ match |
+| Cause                               | Fix                         |
+| ----------------------------------- | --------------------------- |
+| Low WARM_IP_TARGET                  | Increase to 5-10            |
+| No MINIMUM_IP_TARGET                | Set to expected pod density |
+| EC2 API throttling                  | Review and increase targets |
+| Node in different AZ than ENIConfig | Ensure AZ match             |
 
 **Recommended Settings for Fast Pod Launch**:
+
 ```yaml
 env:
-- name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
-  value: "30"
-- name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
-  value: "5"
+  - name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
+    value: "30"
+  - name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
+    value: "5"
 ```
 
 ### Issue: IP addresses exhausted in subnet
@@ -209,6 +218,7 @@ env:
 **Symptoms**: Cannot create new ENIs or assign IPs to pods.
 
 **Diagnosis**:
+
 ```bash
 # Check available IPs in subnet
 aws ec2 describe-subnets \
@@ -222,6 +232,7 @@ aws ec2 describe-network-interfaces \
 ```
 
 **Solutions**:
+
 1. Use custom networking to use different subnet
 2. Expand VPC CIDR
 3. Use prefix delegation to maximize IPs per ENI
@@ -232,6 +243,7 @@ aws ec2 describe-network-interfaces \
 **Symptoms**: Pods not getting branch ENI, SGP not applying.
 
 **Diagnosis**:
+
 ```bash
 # Check if ENABLE_POD_ENI is set
 kubectl exec -n kube-system aws-node-xxxx -- \
@@ -249,14 +261,15 @@ kubectl get securitygrouppolicies -A
 
 **Common Issues**:
 
-| Issue | Check | Fix |
-|-------|-------|-----|
-| Node not Nitro | Instance type | Use Nitro instance |
-| VPC CNI too old | Version | Upgrade to v1.7.0+ |
+| Issue               | Check                                                        | Fix                              |
+| ------------------- | ------------------------------------------------------------ | -------------------------------- |
+| Node not Nitro      | Instance type                                                | Use Nitro instance               |
+| VPC CNI too old     | Version                                                      | Upgrade to v1.7.0+               |
 | SGP CRD not created | `kubectl get crd securitygrouppolicies.vpcresources.k8s.aws` | Install vpc-cni with SGP support |
-| Rate limiting | Controller logs | Reduce pod churn rate |
+| Rate limiting       | Controller logs                                              | Reduce pod churn rate            |
 
 **Verify SGP Configuration**:
+
 ```bash
 # Get pod's security groups
 kubectl get pod <pod-name> -o jsonpath='{.metadata.annotations.vpc\.amazonaws\.com/securityGroups}'
@@ -272,6 +285,7 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 **Symptoms**: Log entries showing "ThrottlingException", slow pod allocation.
 
 **Diagnosis**:
+
 ```bash
 # Check for throttle errors in logs
 kubectl logs -n kube-system aws-node-xxxx -c aws-node --tail=500 | grep -i throttle
@@ -283,13 +297,14 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 
 **Solutions**:
 
-| Setting | Current | Recommended |
-|---------|---------|-------------|
-| WARM_IP_TARGET | 1 | 5-10 |
-| MINIMUM_IP_TARGET | unset | Pod density per node |
-| WARM_ENI_TARGET | 1 | 1 (keep at 1) |
+| Setting           | Current | Recommended          |
+| ----------------- | ------- | -------------------- |
+| WARM_IP_TARGET    | 1       | 5-10                 |
+| MINIMUM_IP_TARGET | unset   | Pod density per node |
+| WARM_ENI_TARGET   | 1       | 1 (keep at 1)        |
 
 **Best Practice for Throttling**:
+
 ```bash
 # Use MINIMUM_IP_TARGET to pre-allocate (reduces API calls)
 kubectl set env daemonset/aws-node -n kube-system \
@@ -314,11 +329,11 @@ kubectl exec -it <pod-with-policy> -- wget -O- --timeout=2 http://<blocked-pod-i
 
 ### Common Network Policy Issues
 
-| Issue | Symptom | Fix |
-|-------|---------|-----|
-| Default deny not applied | All traffic allowed | Add default deny policy |
-| DNS blocked | Pod can't resolve names | Add DNS egress rule |
-| Policy not matching pods | Traffic still allowed | Check podSelector labels |
+| Issue                    | Symptom                 | Fix                      |
+| ------------------------ | ----------------------- | ------------------------ |
+| Default deny not applied | All traffic allowed     | Add default deny policy  |
+| DNS blocked              | Pod can't resolve names | Add DNS egress rule      |
+| Policy not matching pods | Traffic still allowed   | Check podSelector labels |
 
 ## Log Analysis
 
@@ -352,6 +367,7 @@ kubectl debug node/<node-name> -it --image=amazon/aws-eks-node-agent:latest -- /
 ```
 
 Output includes:
+
 - ENI and IP configuration
 - iptables rules
 - Network namespace configuration
@@ -359,14 +375,14 @@ Output includes:
 
 ## Health Check Matrix
 
-| Check | Command | Expected |
-|-------|---------|----------|
-| aws-node pod running | `kubectl get po -n kube-system -l k8s-app=aws-node` | All pods Running |
-| ENIs attached | `aws ec2 describe-nics` | Expected count |
-| IPAM state | `cat /var/run/aws-node/ipam.json` | Valid JSON |
-| Trunk attached (SGP) | Node label `vpc.amazonaws.com/has-trunk-attached=true` | true |
-| Branch ENIs | `describe-nics --filter InterfaceType=branch` | Per-pod count |
-| No leaked ENIs | `describe-nics` | No ENIs without active attachment |
+| Check                | Command                                                | Expected                          |
+| -------------------- | ------------------------------------------------------ | --------------------------------- |
+| aws-node pod running | `kubectl get po -n kube-system -l k8s-app=aws-node`    | All pods Running                  |
+| ENIs attached        | `aws ec2 describe-nics`                                | Expected count                    |
+| IPAM state           | `cat /var/run/aws-node/ipam.json`                      | Valid JSON                        |
+| Trunk attached (SGP) | Node label `vpc.amazonaws.com/has-trunk-attached=true` | true                              |
+| Branch ENIs          | `describe-nics --filter InterfaceType=branch`          | Per-pod count                     |
+| No leaked ENIs       | `describe-nics`                                        | No ENIs without active attachment |
 
 ## References
 

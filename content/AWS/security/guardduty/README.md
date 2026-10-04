@@ -28,11 +28,11 @@ GuardDuty analyzes:
 
 ### Severity Levels
 
-| Severity | Score | Example |
-|----------|-------|---------|
-| HIGH | 7.0-8.9 | Cryptocurrency mining, data exfiltration |
-| MEDIUM | 4.0-6.9 | Compromised IAM user, unusual API call |
-| LOW | 1.0-3.9 | Policy change, root login |
+| Severity | Score   | Example                                  |
+| -------- | ------- | ---------------------------------------- |
+| HIGH     | 7.0-8.9 | Cryptocurrency mining, data exfiltration |
+| MEDIUM   | 4.0-6.9 | Compromised IAM user, unusual API call   |
+| LOW      | 1.0-3.9 | Policy change, root login                |
 
 ### Finding Types
 
@@ -68,11 +68,13 @@ Cryptocurrency:
   },
   "Title": "Root user sign-in from a new IP address.",
   "Description": "A root user console login from a new IP address was detected.",
-  "Resources": [{
-    "AccountId": "123456789012",
-    "Type": "AwsIamUser",
-    "IamUserArn": "arn:aws:iam::123456789012:root"
-  }],
+  "Resources": [
+    {
+      "AccountId": "123456789012",
+      "Type": "AwsIamUser",
+      "IamUserArn": "arn:aws:iam::123456789012:root"
+    }
+  ],
   "Service": {
     "Action": {
       "ConsoleLoginAction": {
@@ -82,8 +84,8 @@ Cryptocurrency:
     "Actor": {
       "RemoteIpDetails": {
         "IpAddressV4": "203.0.113.10",
-        "Country": {"Name": "Russia"},
-        "City": {"Name": "Moscow"}
+        "Country": { "Name": "Russia" },
+        "City": { "Name": "Moscow" }
       }
     },
     "LastSeen": "2024-01-15T10:30:00Z"
@@ -171,10 +173,10 @@ def lambda_handler(event, context):
     finding = event['detail']
     finding_type = finding['type']
     actor_ip = finding['service']['actor']['remoteIpDetails']['ipAddressV4']
-    
+
     # Block IP in security group
     ec2 = boto3.client('ec2')
-    
+
     # Create SG rule to block
     ec2.authorize_security_group_ingress(
         GroupId='sg-xxxxx',
@@ -183,7 +185,7 @@ def lambda_handler(event, context):
         ToPort=443,
         CidrIp=f"{actor_ip}/32"
     )
-    
+
     # Notify security team
     sns = boto3.client('sns')
     sns.publish(
@@ -233,23 +235,23 @@ aws cloudwatch get-metric-statistics \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
+| Component                  | Cost                              |
+| -------------------------- | --------------------------------- |
 | CloudTrail events analyzed | Free (10M events/month free tier) |
-| DNS Logs | $0.60/million DNS queries |
-| VPC Flow Logs | $0.75/million flow log entries |
-| S3 Data Events | $1.00/million S3 events |
-| EKS Audit Logs | $1.00/million EKS audit events |
-| Malware Protection (EC2) | $1.00/GB scanned |
+| DNS Logs                   | $0.60/million DNS queries         |
+| VPC Flow Logs              | $0.75/million flow log entries    |
+| S3 Data Events             | $1.00/million S3 events           |
+| EKS Audit Logs             | $1.00/million EKS audit events    |
+| Malware Protection (EC2)   | $1.00/GB scanned                  |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Detectors | 1 per region |
-| Findings | 1000 per page (list), 50 per batch (get) |
-| IP sets | 100 per detector |
-| Threat lists | 30 (for threat purposes) |
+| Resource     | Limit                                    |
+| ------------ | ---------------------------------------- |
+| Detectors    | 1 per region                             |
+| Findings     | 1000 per page (list), 50 per batch (get) |
+| IP sets      | 100 per detector                         |
+| Threat lists | 30 (for threat purposes)                 |
 
 ## References
 

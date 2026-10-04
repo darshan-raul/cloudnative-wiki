@@ -44,13 +44,13 @@ EKS provides a managed Kubernetes control plane. You manage worker nodes (EC2 or
 
 EKS provides managed versions of core Kubernetes components:
 
-| Add-on | Purpose | Managed by |
-|--------|---------|-----------|
-| kube-proxy | Pod networking | EKS |
-| CoreDNS | Service discovery | EKS |
-| VPC CNI | Pod networking (ENI) | EKS |
-| kube-proxy | Network rules | EKS |
-| AWS Load Balancer Controller | ALB/NLB ingress | You |
+| Add-on                       | Purpose              | Managed by |
+| ---------------------------- | -------------------- | ---------- |
+| kube-proxy                   | Pod networking       | EKS        |
+| CoreDNS                      | Service discovery    | EKS        |
+| VPC CNI                      | Pod networking (ENI) | EKS        |
+| kube-proxy                   | Network rules        | EKS        |
+| AWS Load Balancer Controller | ALB/NLB ingress      | You        |
 
 ## Creating a Cluster
 
@@ -185,13 +185,13 @@ spec:
     spec:
       serviceAccountName: my-app
       containers:
-      - name: my-app
-        image: my-app:latest
-        env:
-        - name: AWS_WEB_IDENTITY_TOKEN_FILE
-          value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
-        - name: AWS_ROLE_ARN
-          value: arn:aws:iam::123456789012:role/my-app-role
+        - name: my-app
+          image: my-app:latest
+          env:
+            - name: AWS_WEB_IDENTITY_TOKEN_FILE
+              value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+            - name: AWS_ROLE_ARN
+              value: arn:aws:iam::123456789012:role/my-app-role
 ```
 
 IRSA creates and manages OIDC identity providers in your cluster.
@@ -217,17 +217,17 @@ spec:
         app: my-webapp
     spec:
       containers:
-      - name: my-webapp
-        image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-webapp:latest
-        ports:
-        - containerPort: 8080
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        - name: my-webapp
+          image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-webapp:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
@@ -239,8 +239,8 @@ spec:
   selector:
     app: my-webapp
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ```
 
 ```bash
@@ -269,15 +269,15 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
 spec:
   rules:
-  - http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: my-webapp
-            port:
-              number: 80
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: my-webapp
+                port:
+                  number: 80
 ```
 
 ## Auto Scaling
@@ -327,6 +327,7 @@ EOF
 ### Security Groups for Nodes
 
 Nodes need SG rules for:
+
 - Port 443 (control plane → node)
 - Port 10250 (kubelet API)
 - Port 8472 (VXLAN for pod networking, CNI)

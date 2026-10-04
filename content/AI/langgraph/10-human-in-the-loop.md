@@ -16,6 +16,7 @@ Some tool calls are destructive or irreversible:
 For these, you need a human to approve before execution.
 
 The HITL flow:
+
 1. Graph calls a tool
 2. Before executing, the graph **pauses** and returns control
 3. The human inspects the proposed action

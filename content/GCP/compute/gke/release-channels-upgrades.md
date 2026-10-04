@@ -53,13 +53,13 @@ Release Channels subscribe your cluster to a specific cadence of curated, Google
 
 ### Channel Comparison Matrix
 
-| Dimension | Rapid Channel | Regular Channel | Stable Channel | Extended Support |
-| :--- | :--- | :--- | :--- | :--- |
-| **Release Delay** | ~2 to 4 weeks | ~2 to 3 months | ~5 to 6 months | N/A (End of standard life) |
-| **Upgrade Frequency**| Frequent (weekly/bi-weekly)| Bi-weekly / Monthly | Monthly / Quarterly | Critical security patches only |
-| **Cadence Target** | Early dev / Sandbox | Production clusters | Risk-averse core banking | Legacy enterprise migrations |
-| **Kubernetes Lifecycle**| 14 months standard | 14 months standard | 14 months standard | **Up to 24 months total** |
-| **Pricing** | Standard ($0.10/hr) | Standard ($0.10/hr) | Standard ($0.10/hr) | **+$0.50/hr ($365/month)** |
+| Dimension                | Rapid Channel               | Regular Channel     | Stable Channel           | Extended Support               |
+| :----------------------- | :-------------------------- | :------------------ | :----------------------- | :----------------------------- |
+| **Release Delay**        | ~2 to 4 weeks               | ~2 to 3 months      | ~5 to 6 months           | N/A (End of standard life)     |
+| **Upgrade Frequency**    | Frequent (weekly/bi-weekly) | Bi-weekly / Monthly | Monthly / Quarterly      | Critical security patches only |
+| **Cadence Target**       | Early dev / Sandbox         | Production clusters | Risk-averse core banking | Legacy enterprise migrations   |
+| **Kubernetes Lifecycle** | 14 months standard          | 14 months standard  | 14 months standard       | **Up to 24 months total**      |
+| **Pricing**              | Standard ($0.10/hr)         | Standard ($0.10/hr) | Standard ($0.10/hr)      | **+$0.50/hr ($365/month)**     |
 
 ---
 
@@ -89,19 +89,20 @@ When upgrading worker node pools to match a new master version, GKE offers two d
 
 ### Deep Strategy Comparison
 
-| Feature | Surge Upgrades (`maxSurge` / `maxUnavailable`) | Blue-Green Upgrades |
-| :--- | :--- | :--- |
-| **Compute Overhead** | Configurable (e.g., 1 extra node) | **Doubles node pool size** temporarily |
-| **Rollback Capability** | Expensive; requires upgrading backwards | **Instant zero-cost rollback** during soak |
-| **Soak Testing** | None (Immediate sequential rollover) | **Configurable soak phase** (1 hour to 48 hours) |
-| **Disruption Risk** | Moderate; pods migrate multiple times | Low; pods migrate once to pre-warmed nodes |
-| **Best Used For** | Stateless dev/staging clusters | **Tier-1 stateful & mission-critical production** |
+| Feature                 | Surge Upgrades (`maxSurge` / `maxUnavailable`) | Blue-Green Upgrades                               |
+| :---------------------- | :--------------------------------------------- | :------------------------------------------------ |
+| **Compute Overhead**    | Configurable (e.g., 1 extra node)              | **Doubles node pool size** temporarily            |
+| **Rollback Capability** | Expensive; requires upgrading backwards        | **Instant zero-cost rollback** during soak        |
+| **Soak Testing**        | None (Immediate sequential rollover)           | **Configurable soak phase** (1 hour to 48 hours)  |
+| **Disruption Risk**     | Moderate; pods migrate multiple times          | Low; pods migrate once to pre-warmed nodes        |
+| **Best Used For**       | Stateless dev/staging clusters                 | **Tier-1 stateful & mission-critical production** |
 
 ---
 
 ## 3. PodDisruptionBudgets (PDB) & Safe Draining
 
 During any node upgrade, the GKE upgrade controller executes a `kubectl drain` on the node. To prevent the upgrade controller from draining all replicas of a microservice at the same time:
+
 - **PodDisruptionBudget (PDB):** Enforces the minimum number of healthy pods that must remain operational at all times.
 - If a PDB would be violated (e.g., `minAvailable: 80%` and only 1 pod exists), the GKE drain controller pauses and waits until replacement pods are healthy in another node before terminating the existing node.
 
@@ -135,7 +136,8 @@ gcloud container node-pools create prod-worker-pool \
     --node-pool-soak-duration=3600s \
     --project=core-infrastructure-prod
 ```
-*(Note: `--node-pool-soak-duration=3600s` forces GKE to hold the upgrade for 1 hour after workloads migrate to the Green pool, allowing SREs to run smoke tests before deleting Blue).*
+
+_(Note: `--node-pool-soak-duration=3600s` forces GKE to hold the upgrade for 1 hour after workloads migrate to the Green pool, allowing SREs to run smoke tests before deleting Blue)._
 
 ### 2. Manually Trigger a Node Pool Upgrade
 
@@ -190,13 +192,13 @@ gcloud container node-pools update standard-pool \
 
 ## 5. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Quota / Limit | Operational Guidance |
-| :--- | :--- | :--- |
-| **Max Soak Duration** | Up to 7 days (604,800s) | Recommended production standard: 1 to 4 hours |
-| **Max Drain Timeout** | 1 hour (3,600s) per node | Configurable via `--drain-timeout` |
-| **Blue-Green Node Quota** | Requires 2x VM and IP quota | Subnet must have enough IPs for both Blue & Green nodes |
-| **Extended Support Duration**| 10 additional months | Available for minor versions after regular EOL |
-| **Version Skew Policy** | Kubelet within 2 minor versions | Node version cannot be newer than master version |
+| Parameter / Dimension         | Standard Quota / Limit          | Operational Guidance                                    |
+| :---------------------------- | :------------------------------ | :------------------------------------------------------ |
+| **Max Soak Duration**         | Up to 7 days (604,800s)         | Recommended production standard: 1 to 4 hours           |
+| **Max Drain Timeout**         | 1 hour (3,600s) per node        | Configurable via `--drain-timeout`                      |
+| **Blue-Green Node Quota**     | Requires 2x VM and IP quota     | Subnet must have enough IPs for both Blue & Green nodes |
+| **Extended Support Duration** | 10 additional months            | Available for minor versions after regular EOL          |
+| **Version Skew Policy**       | Kubelet within 2 minor versions | Node version cannot be newer than master version        |
 
 ---
 
@@ -213,6 +215,7 @@ gcloud container node-pools update standard-pool \
 ## 7. Realistic Pricing Scenarios
 
 Upgrade pricing components:
+
 1. **Surge Upgrades:** Incremental compute charge for the temporary surge nodes during the rolling window (typically 1 to 2 hours of extra VM billing = ~$1.00).
 2. **Blue-Green Upgrades:** Doubles compute and disk cost for the duration of the drain and soak phase.
 3. **Extended Support:** An additional flat fee of **$0.50 per cluster-hour** ($365/month) once a cluster version crosses beyond 14 months of age.

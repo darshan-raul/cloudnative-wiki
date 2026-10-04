@@ -9,11 +9,13 @@ title: Arch Linux Philosophy & Foundation
 Unlike versioned distributions (Ubuntu, Fedora) that ship discrete releases, Arch is a **rolling release** — the system is always up-to-date. There's no concept of "Ubuntu 22.04" or "Fedora 39". You install once and continuously receive updates via `pacman -Syu`.
 
 **Advantages:**
+
 - Always running latest software (kernel, gcc, python, etc.)
 - No planned dist-upgrades — no "do-release-upgrade" moments
 - Lower isolation between system and application layers
 
 **Disadvantages:**
+
 - Updates can introduce breakage (mitigated by reading news archlinux.org/news)
 - Requires regular maintenance; can't "set and forget"
 - Not suitable for systems requiring ABI stability (some production servers)
@@ -21,6 +23,7 @@ Unlike versioned distributions (Ubuntu, Fedora) that ship discrete releases, Arc
 ## KISS Principle
 
 Arch Linux adheres to the **KISS principle** (Keep It Simple, Stupid):
+
 - Ship minimal base system; users add what they need
 - Configuration files are hand-edited (no GUIs for core system)
 - No opinionated defaults — you build your system from the ground up
@@ -29,6 +32,7 @@ Arch Linux adheres to the **KISS principle** (Keep It Simple, Stupid):
 ## The Arch Wiki
 
 The **[Arch Wiki](https://wiki.archlinux.org)** is considered the best Linux documentation on the internet. It covers:
+
 - Installation guides for every DE/WM
 - Hardware setup (NVIDIA, audio, printing, etc.)
 - Security hardening
@@ -39,15 +43,16 @@ The **[Arch Wiki](https://wiki.archlinux.org)** is considered the best Linux doc
 
 ## Derivatives Comparison
 
-| Distribution | Base | Target User | Key Feature |
-|-------------|------|-------------|--------------|
-| **Arch Linux** | — | Intermediate/advanced | Pure rolling, DIY |
-| **Manjaro** | Arch | Beginner-friendly | User-friendly installer, LTS kernels, out-of-the-box hardware detection |
-| **EndeavourOS** | Arch | Intermediate | Cassini online installer, Arch without the CLI friction |
-| **Garuda Linux** | Arch | Power users | Gaming/creative pre-configured, Chaotic-AUR default |
-| **ArcoLinux** | Arch | Learners | Learning-oriented, provides ISO variants for different WM experiences |
+| Distribution     | Base | Target User           | Key Feature                                                             |
+| ---------------- | ---- | --------------------- | ----------------------------------------------------------------------- |
+| **Arch Linux**   | —    | Intermediate/advanced | Pure rolling, DIY                                                       |
+| **Manjaro**      | Arch | Beginner-friendly     | User-friendly installer, LTS kernels, out-of-the-box hardware detection |
+| **EndeavourOS**  | Arch | Intermediate          | Cassini online installer, Arch without the CLI friction                 |
+| **Garuda Linux** | Arch | Power users           | Gaming/creative pre-configured, Chaotic-AUR default                     |
+| **ArcoLinux**    | Arch | Learners              | Learning-oriented, provides ISO variants for different WM experiences   |
 
 ### Manjaro Specifics
+
 - **OBS** (Open Build Service): Manjaro builds its own packages, holds updates for ~2 weeks to test
 - **Pamac** GUI package manager as default (also supports AUR)
 - **MHI** (Manjaro Hardware Detection) for driver installation
@@ -83,14 +88,14 @@ pacman -Qdt                  # List orphans (no longer required)
 
 ### Repositories
 
-| Repository | Content | Enabled by |
-|-----------|---------|------------|
-| **core** | Bootloader, kernel, core tools (pacman, glibc) | Default |
-| **extra** | GUI apps, server software | Default |
-| **community** | Packages from AUR that graduated | Default |
-| **multilib** | 32-bit libs for Wine/Steam | `[multilib]` enabled |
-| **testing** | Untested updates | Disabled by default |
-| **community-testing** | Community packages being tested | Disabled by default |
+| Repository            | Content                                        | Enabled by           |
+| --------------------- | ---------------------------------------------- | -------------------- |
+| **core**              | Bootloader, kernel, core tools (pacman, glibc) | Default              |
+| **extra**             | GUI apps, server software                      | Default              |
+| **community**         | Packages from AUR that graduated               | Default              |
+| **multilib**          | 32-bit libs for Wine/Steam                     | `[multilib]` enabled |
+| **testing**           | Untested updates                               | Disabled by default  |
+| **community-testing** | Community packages being tested                | Disabled by default  |
 
 ```bash
 # /etc/pacman.conf
@@ -166,7 +171,9 @@ Server = https://mirror.example.com/$repo/os/$arch
 ```
 
 ### Manjaro's Mirrors
+
 Manjaro uses its own mirrors plus Arch's. Managed via:
+
 ```bash
 # GUI
 pamac preferences -> Mirrors
@@ -178,6 +185,7 @@ sudo pacman-mirrors -c Germany,France --no-git
 ## System News
 
 Always read [archlinux.org/news](https://archlinux.org/news) before a big upgrade. Key announcements:
+
 - Kernel ABI changes requiring initramfs rebuild
 - Package removals from repos
 - Security vulnerabilities requiring immediate action

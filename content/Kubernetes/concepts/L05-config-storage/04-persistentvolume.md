@@ -7,7 +7,7 @@ description: Deep dive into Kubernetes PersistentVolumes — cluster storage pri
 
 # PersistentVolume (PV)
 
-*"https://kubernetes.io/docs/concepts/storage/persistent-volumes/"*
+_"https://kubernetes.io/docs/concepts/storage/persistent-volumes/"_
 
 A PersistentVolume (PV) is a **piece of storage in the cluster** that has been provisioned by an administrator or dynamically by a StorageClass. It's a cluster-level resource (not namespaced) — like a node, it represents physical or virtual infrastructure.
 
@@ -34,9 +34,9 @@ A PersistentVolume (PV) is a **piece of storage in the cluster** that has been p
 
 The k8s storage model has **two** objects for a reason: to separate "how storage is provided" (PV) from "how it's consumed" (PVC). This separation lets:
 
-* **Admins** define storage offerings (PVs from a pool, or StorageClasses that create them on demand).
-* **Users** request storage (PVCs) without knowing the details.
-* **The system** match requests to offerings (binding).
+- **Admins** define storage offerings (PVs from a pool, or StorageClasses that create them on demand).
+- **Users** request storage (PVCs) without knowing the details.
+- **The system** match requests to offerings (binding).
 
 ```
 ┌────────────┐         ┌────────────┐         ┌────────────┐
@@ -55,19 +55,19 @@ A Pod doesn't bind to a PV directly. The Pod (or the controller managing the Pod
 
 ### 1.1 Why two objects?
 
-* **Decoupling** — the admin doesn't know which Pods will use the storage. The user doesn't know which backend it ends up on.
-* **Reuse** — a PV can be reused across PVCs (with reclaim).
-* **Abstraction** — the user requests "50 GiB of RWO storage from the gp3 class". The system figures out the rest.
-* **Namespacing** — PVCs are namespaced, PVs are cluster-scoped. This matches the ownership model: storage is a cluster resource, claims are per-namespace.
+- **Decoupling** — the admin doesn't know which Pods will use the storage. The user doesn't know which backend it ends up on.
+- **Reuse** — a PV can be reused across PVCs (with reclaim).
+- **Abstraction** — the user requests "50 GiB of RWO storage from the gp3 class". The system figures out the rest.
+- **Namespacing** — PVCs are namespaced, PVs are cluster-scoped. This matches the ownership model: storage is a cluster resource, claims are per-namespace.
 
 ### 1.2 The two provisioning models
 
-| | Static | Dynamic |
-|---|---|---|
-| Who creates the PV | Admin | StorageClass + provisioner |
-| When the PV is created | Before the PVC | When the PVC is created |
-| How the user requests | PVC matches a pre-existing PV | PVC with `storageClassName` |
-| Production use | Legacy / on-prem | **The default in modern clusters** |
+|                        | Static                        | Dynamic                            |
+| ---------------------- | ----------------------------- | ---------------------------------- |
+| Who creates the PV     | Admin                         | StorageClass + provisioner         |
+| When the PV is created | Before the PVC                | When the PVC is created            |
+| How the user requests  | PVC matches a pre-existing PV | PVC with `storageClassName`        |
+| Production use         | Legacy / on-prem              | **The default in modern clusters** |
 
 In static provisioning, the admin pre-creates PVs (often by hand, often from a fixed pool). In dynamic provisioning, the cluster creates PVs on demand via a StorageClass.
 
@@ -109,8 +109,8 @@ Bound PVs are **immutable in certain fields** (see section 11).
 
 The PVC has been deleted, but the PV has not been reused or deleted. The PV's `persistentVolumeReclaimPolicy` determines what happens next:
 
-* **`Retain`** — the PV stays in `Released`. The admin must manually clean up the underlying storage and either reuse the PV (by deleting and recreating the claim) or remove it.
-* **`Delete`** — the underlying storage is deleted by the CSI driver. The PV object is also deleted.
+- **`Retain`** — the PV stays in `Released`. The admin must manually clean up the underlying storage and either reuse the PV (by deleting and recreating the claim) or remove it.
+- **`Delete`** — the underlying storage is deleted by the CSI driver. The PV object is also deleted.
 
 ### 2.4 Failed
 
@@ -139,19 +139,19 @@ kind: PersistentVolume
 metadata:
   name: pv-1
   labels:
-    tier: gold              # used for PV selector matching
+    tier: gold # used for PV selector matching
   annotations:
-    pv.kubernetes.io/provisioned-by: ebs.csi.aws.com   # set by dynamic provisioner
+    pv.kubernetes.io/provisioned-by: ebs.csi.aws.com # set by dynamic provisioner
 spec:
   capacity:
     storage: 100Gi
-  volumeMode: Filesystem   # or "Block"
+  volumeMode: Filesystem # or "Block"
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: gold
   mountOptions:
-  - debug
+    - debug
   # one of: (CSI / NFS / hostPath / iSCSI / ... — see 3.1)
   csi:
     driver: ebs.csi.aws.com
@@ -168,7 +168,7 @@ spec:
   # hostPath:
   #   path: /data/pv-1
   #   type: Directory
-  claimRef:                  # set by the system when bound
+  claimRef: # set by the system when bound
     apiVersion: v1
     kind: PersistentVolumeClaim
     name: my-claim
@@ -180,19 +180,19 @@ spec:
 
 The PV can be backed by:
 
-* `csi` — Container Storage Interface (most common in production)
-* `nfs` — legacy, deprecated
-* `hostPath` — dev only
-* `iscsi` — iSCSI target
-* `fc` — Fibre Channel
-* `glusterfs` — GlusterFS
-* `rbd` — Ceph RBD
-* `cephfs` — CephFS
-* `azureFile`, `azureDisk` — Azure storage (in-tree, removed in 1.26+)
-* `awsElasticBlockStore` — AWS EBS (in-tree, removed in 1.26+)
-* `gcePersistentDisk` — GCE PD (in-tree, removed in 1.26+)
-* `local` — local node storage (different model, see below)
-* `flexVolume` — deprecated, removed in 1.26+
+- `csi` — Container Storage Interface (most common in production)
+- `nfs` — legacy, deprecated
+- `hostPath` — dev only
+- `iscsi` — iSCSI target
+- `fc` — Fibre Channel
+- `glusterfs` — GlusterFS
+- `rbd` — Ceph RBD
+- `cephfs` — CephFS
+- `azureFile`, `azureDisk` — Azure storage (in-tree, removed in 1.26+)
+- `awsElasticBlockStore` — AWS EBS (in-tree, removed in 1.26+)
+- `gcePersistentDisk` — GCE PD (in-tree, removed in 1.26+)
+- `local` — local node storage (different model, see below)
+- `flexVolume` — deprecated, removed in 1.26+
 
 ### 3.2 The `claimRef` field
 
@@ -200,12 +200,12 @@ Set automatically by the system when a PVC binds to the PV. Prevents the PV from
 
 ## 4. Access Modes in Detail
 
-| Mode | Abbreviation | Description |
-|---|---|---|
-| `ReadWriteOnce` | RWO | Mounted read-write by a single node |
-| `ReadOnlyMany` | ROX | Mounted read-only by many nodes |
-| `ReadWriteMany` | RWX | Mounted read-write by many nodes |
-| `ReadWriteOncePod` | RWOP | Mounted read-write by a single Pod (k8s 1.22+) |
+| Mode               | Abbreviation | Description                                    |
+| ------------------ | ------------ | ---------------------------------------------- |
+| `ReadWriteOnce`    | RWO          | Mounted read-write by a single node            |
+| `ReadOnlyMany`     | ROX          | Mounted read-only by many nodes                |
+| `ReadWriteMany`    | RWX          | Mounted read-write by many nodes               |
+| `ReadWriteOncePod` | RWOP         | Mounted read-write by a single Pod (k8s 1.22+) |
 
 ### 4.1 ReadWriteOnce (RWO)
 
@@ -219,19 +219,19 @@ This works for most databases (Postgres, MySQL, MongoDB) — the database runs o
 
 Many nodes can mount the volume read-only. Used for:
 
-* **Shared content** — read-only data that all Pods need (configs, models, static assets).
-* **Multi-replica reads** — when all replicas should see the same data.
+- **Shared content** — read-only data that all Pods need (configs, models, static assets).
+- **Multi-replica reads** — when all replicas should see the same data.
 
 ### 4.3 ReadWriteMany (RWX)
 
 Many nodes can mount the volume read-write. The hardest mode to support. Backends:
 
-* **NFS** — the original RWX backend.
-* **AWS EFS** — RWX, AWS's managed NFS-like service.
-* **Azure Files** — RWX.
-* **CephFS** — RWX.
-* **GlusterFS** — RWX.
-* **Some CSI drivers** (NetApp, Pure, etc.) — RWX.
+- **NFS** — the original RWX backend.
+- **AWS EFS** — RWX, AWS's managed NFS-like service.
+- **Azure Files** — RWX.
+- **CephFS** — RWX.
+- **GlusterFS** — RWX.
+- **Some CSI drivers** (NetApp, Pure, etc.) — RWX.
 
 **EBS does NOT support RWX.** This is a frequent mistake. If you need RWX on AWS, use EFS (or a third-party driver).
 
@@ -249,35 +249,35 @@ A PVC can request a specific access mode, and it binds to a PV that supports **a
 
 The exact matching rules:
 
-| PVC requests | PV supports | Match? |
-|---|---|---|
-| RWO | RWO | ✅ |
-| RWO | ROX | ❌ (ROX is read-only) |
-| RWO | RWX | ✅ (PV supports more than PVC needs) |
-| RWX | RWO | ❌ (PV doesn't support RWX) |
-| RWX | RWX | ✅ |
-| ROX | ROX | ✅ |
-| ROX | RWO | ✅ (ROX is a subset of RWO) |
+| PVC requests | PV supports | Match?                               |
+| ------------ | ----------- | ------------------------------------ |
+| RWO          | RWO         | ✅                                   |
+| RWO          | ROX         | ❌ (ROX is read-only)                |
+| RWO          | RWX         | ✅ (PV supports more than PVC needs) |
+| RWX          | RWO         | ❌ (PV doesn't support RWX)          |
+| RWX          | RWX         | ✅                                   |
+| ROX          | ROX         | ✅                                   |
+| ROX          | RWO         | ✅ (ROX is a subset of RWO)          |
 
 Wait, the last row is correct: RWO is more permissive than ROX (RWO is read-write, which can be used as read-only). A RWO PV can satisfy a ROX request.
 
 **The full matrix:**
 
 | PVC \ PV | RWO | ROX | RWX | RWOP |
-|---|---|---|---|---|
-| RWO | ✅ | ❌ | ✅ | ❌ |
-| ROX | ✅ | ✅ | ✅ | ❌ |
-| RWX | ❌ | ❌ | ✅ | ❌ |
-| RWOP | ❌ | ❌ | ❌ | ✅ |
+| -------- | --- | --- | --- | ---- |
+| RWO      | ✅  | ❌  | ✅  | ❌   |
+| ROX      | ✅  | ✅  | ✅  | ❌   |
+| RWX      | ❌  | ❌  | ✅  | ❌   |
+| RWOP     | ❌  | ❌  | ❌  | ✅   |
 
 Wait, that's not quite right. Let me redo it more carefully. The rule is: the PV's accessModes must be a **superset** of the PVC's request.
 
 | PVC \ PV | RWO | ROX | RWX | RWOP |
-|---|---|---|---|---|
-| RWO | ✅ | ❌ | ✅ | ❌ |
-| ROX | ✅ | ✅ | ✅ | ❌ |
-| RWX | ❌ | ❌ | ✅ | ❌ |
-| RWOP | ❌ | ❌ | ❌ | ✅ |
+| -------- | --- | --- | --- | ---- |
+| RWO      | ✅  | ❌  | ✅  | ❌   |
+| ROX      | ✅  | ✅  | ✅  | ❌   |
+| RWX      | ❌  | ❌  | ✅  | ❌   |
+| RWOP     | ❌  | ❌  | ❌  | ✅   |
 
 Yes, that's right. RWO PV matches RWO or ROX PVC. RWX PV matches RWO, ROX, or RWX PVC. RWOP PV only matches RWOP PVC.
 
@@ -285,11 +285,11 @@ Yes, that's right. RWO PV matches RWO or ROX PVC. RWX PV matches RWO, ROX, or RW
 
 ## 5. Reclaim Policies in Detail
 
-| Policy | Default for | Behavior |
-|---|---|---|
-| `Retain` | Manually-created PVs | Keep the data, leave the PV in `Released` state. Admin cleans up manually. |
-| `Delete` | Dynamically-provisioned PVs | Delete the underlying storage asset AND the PV object. |
-| `Recycle` | n/a | **Deprecated.** Do not use. |
+| Policy    | Default for                 | Behavior                                                                   |
+| --------- | --------------------------- | -------------------------------------------------------------------------- |
+| `Retain`  | Manually-created PVs        | Keep the data, leave the PV in `Released` state. Admin cleans up manually. |
+| `Delete`  | Dynamically-provisioned PVs | Delete the underlying storage asset AND the PV object.                     |
+| `Recycle` | n/a                         | **Deprecated.** Do not use.                                                |
 
 ### 5.1 Retain
 
@@ -328,7 +328,7 @@ kind: StorageClass
 metadata:
   name: gold
 provisioner: ebs.csi.aws.com
-reclaimPolicy: Delete    # default for dynamic PVs
+reclaimPolicy: Delete # default for dynamic PVs
 parameters:
   type: io2
   iopsPerGB: "50"
@@ -355,7 +355,7 @@ spec:
   capacity:
     storage: 100Gi
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: gold
   csi:
@@ -374,7 +374,7 @@ metadata:
   namespace: prod
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: gold
   resources:
     requests:
@@ -395,7 +395,7 @@ metadata:
   namespace: prod
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: gp3
   resources:
     requests:
@@ -417,7 +417,7 @@ spec:
   capacity:
     storage: 100Gi
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
   storageClassName: gp3
   csi:
@@ -457,8 +457,8 @@ The volume is **exposed as a raw block device** (`/dev/sdb` or similar). The Pod
 
 ```yaml
 volumeMounts:
-- name: data
-  devicePath: /dev/xvda   # not mountPath — it's a device
+  - name: data
+    devicePath: /dev/xvda # not mountPath — it's a device
 ```
 
 **Block volumes can't be mounted as filesystems** (and vice versa). The PVC and the volume mount must match.
@@ -492,9 +492,9 @@ The PV's `capacity` is updated, and the underlying volume is resized by the CSI 
 
 Conditions for online expansion:
 
-* The StorageClass has `allowVolumeExpansion: true`.
-* The CSI driver supports expansion.
-* The volume is in a state that allows expansion (not in use, or the driver supports in-use expansion).
+- The StorageClass has `allowVolumeExpansion: true`.
+- The CSI driver supports expansion.
+- The volume is in a state that allows expansion (not in use, or the driver supports in-use expansion).
 
 ### 9.2 Capacity limits
 
@@ -510,9 +510,9 @@ Pending ──── (PV matched) ────► Bound
 
 The PVC stays `Pending` until:
 
-* A matching PV is found (static).
-* The StorageClass's provisioner creates one (dynamic).
-* The bind is delayed for some reason (WaitForFirstConsumer).
+- A matching PV is found (static).
+- The StorageClass's provisioner creates one (dynamic).
+- The bind is delayed for some reason (WaitForFirstConsumer).
 
 ### 10.1 WaitForFirstConsumer
 
@@ -541,12 +541,12 @@ kind: PersistentVolumeClaim
 metadata:
   name: my-claim
 spec:
-  storageClassName: ""     # opt out of dynamic provisioning
+  storageClassName: "" # opt out of dynamic provisioning
   selector:
     matchLabels:
       tier: gold
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 100Gi
@@ -558,9 +558,9 @@ This binds to a PV with the label `tier: gold`, if one exists. If no matching PV
 
 Once a PV is bound, certain fields are **immutable**:
 
-* `accessModes`
-* `storageClassName`
-* `volumeMode`
+- `accessModes`
+- `storageClassName`
+- `volumeMode`
 
 The reason: changing these would mean re-mounting the volume on every node, which is risky for a running app. To change them, you'd need to:
 
@@ -570,10 +570,10 @@ The reason: changing these would mean re-mounting the volume on every node, whic
 
 The PV itself can usually be modified to:
 
-* `persistentVolumeReclaimPolicy` (with restrictions — see 5.4)
-* `capacity` (via expansion)
-* `mountOptions` (with restrictions)
-* `labels` / `annotations`
+- `persistentVolumeReclaimPolicy` (with restrictions — see 5.4)
+- `capacity` (via expansion)
+- `mountOptions` (with restrictions)
+- `labels` / `annotations`
 
 ### 11.1 The `claimRef` protection
 
@@ -603,9 +603,9 @@ spec:
     matchLabels:
       tier: gold
     matchExpressions:
-    - key: environment
-      operator: In
-      values: [production, staging]
+      - key: environment
+        operator: In
+        values: [production, staging]
 ```
 
 The PVC binds to a PV whose labels match **both** `matchLabels` and `matchExpressions`.
@@ -624,11 +624,11 @@ A common mistake: setting `storageClassName: ""` on a PVC hoping to bind to a PV
 ```yaml
 # PV with no storageClassName
 spec:
-  storageClassName: ""     # empty string
+  storageClassName: "" # empty string
 ---
 # PVC with no storageClassName
 spec:
-  storageClassName: ""     # empty string
+  storageClassName: "" # empty string
 ```
 
 If the PV has `storageClassName: ""` and the PVC has no `storageClassName` field at all, they don't match (one is empty string, the other is unset). **Set both explicitly.**
@@ -661,13 +661,13 @@ kubectl -n kube-system logs -l <csi-driver-label> --tail=100
 
 ### 13.2 The "PV stuck" cases
 
-| Status | Cause | Fix |
-|---|---|---|
-| `Available` forever | No matching PVC | Create a PVC with matching accessModes, storageClassName, and capacity |
-| `Bound` (good) | Working | — |
-| `Released` | PVC deleted, PV not yet reused | Depends on reclaim policy. Retain: manual cleanup. Delete: PV will be removed. |
-| `Failed` | Provisioning or release failed | Check CSI driver logs. Usually a permission / capacity issue. |
-| `Pending` (PVC) | No matching PV, no provisioner, wrong zone, quota | See "PVC stuck" checklist |
+| Status              | Cause                                             | Fix                                                                            |
+| ------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `Available` forever | No matching PVC                                   | Create a PVC with matching accessModes, storageClassName, and capacity         |
+| `Bound` (good)      | Working                                           | —                                                                              |
+| `Released`          | PVC deleted, PV not yet reused                    | Depends on reclaim policy. Retain: manual cleanup. Delete: PV will be removed. |
+| `Failed`            | Provisioning or release failed                    | Check CSI driver logs. Usually a permission / capacity issue.                  |
+| `Pending` (PVC)     | No matching PV, no provisioner, wrong zone, quota | See "PVC stuck" checklist                                                      |
 
 ### 13.3 The "rebind a Released PV" flow
 
@@ -763,7 +763,7 @@ This binds the existing PV to the new PVC. Useful for recovering data from a Rel
 
 ## See also
 
-* [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — the volume types, including PVCs
-* [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API
-* [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
-* [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — the volume types, including PVCs
+- [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API
+- [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
+- [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model

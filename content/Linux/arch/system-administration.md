@@ -39,6 +39,7 @@ systemctl --failed
 Located in `/usr/lib/systemd/system/` (packages) and `/etc/systemd/system/` (local overrides).
 
 **Service unit example** (`/etc/systemd/system/myservice.service`):
+
 ```ini
 [Unit]
 Description=My Application
@@ -57,6 +58,7 @@ WantedBy=multi-user.target
 ```
 
 **Timer unit** (cron replacement):
+
 ```ini
 [Unit]
 Description=Daily backup
@@ -71,13 +73,13 @@ WantedBy=timers.target
 
 ### Targets (Runlevels)
 
-| Target | Purpose |
-|--------|---------|
-| `poweroff.target` | System halt |
-| `rescue.target` | Single user mode |
-| `multi-user.target` | CLI multi-user |
-| `graphical.target` | GUI multi-user |
-| `reboot.target` | Reboot |
+| Target              | Purpose          |
+| ------------------- | ---------------- |
+| `poweroff.target`   | System halt      |
+| `rescue.target`     | Single user mode |
+| `multi-user.target` | CLI multi-user   |
+| `graphical.target`  | GUI multi-user   |
+| `reboot.target`     | Reboot           |
 
 ```bash
 # Change default target
@@ -258,18 +260,18 @@ NoUpgrade = etc/pacman.conf
 
 Key hooks:
 
-| Hook | Purpose |
-|------|---------|
-| `base` | Core utilities |
-| `udev` | Dynamic device loading |
-| `autodetect` | Skip unused modules |
-| `keyboard` | Keyboard support (for LUKS at boot) |
-| `keymap` | Load keymap |
-| `encrypt` | LUKS decryption |
-| `lvm2` | LVM activation |
-| `resume` | Hibernation resume |
-| `filesystems` | Root mount |
-| `fsck` | Filesystem check |
+| Hook          | Purpose                             |
+| ------------- | ----------------------------------- |
+| `base`        | Core utilities                      |
+| `udev`        | Dynamic device loading              |
+| `autodetect`  | Skip unused modules                 |
+| `keyboard`    | Keyboard support (for LUKS at boot) |
+| `keymap`      | Load keymap                         |
+| `encrypt`     | LUKS decryption                     |
+| `lvm2`        | LVM activation                      |
+| `resume`      | Hibernation resume                  |
+| `filesystems` | Root mount                          |
+| `fsck`        | Filesystem check                    |
 
 ```bash
 # Generate with custom preset

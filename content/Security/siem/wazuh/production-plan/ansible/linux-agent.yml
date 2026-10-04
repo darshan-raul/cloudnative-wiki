@@ -19,11 +19,11 @@
   become: true
   vars:
     wazuh_version: "4.12.0"
-    wazuh_manager: "wazuh-agent-nlb.internal"  # NLB DNS name (TCP 1514)
-    wazuh_manager_api: "wazuh-manager-api.internal"  # Wazuh API (HTTPS 55000)
+    wazuh_manager: "wazuh-agent-nlb.internal" # NLB DNS name (TCP 1514)
+    wazuh_manager_api: "wazuh-manager-api.internal" # Wazuh API (HTTPS 55000)
     wazuh_agent_os: "linux"
     wazuh_manager_port: "1514"
-    wazuh_enrollment_password: ""  # Set via --extra-vars or vault
+    wazuh_enrollment_password: "" # Set via --extra-vars or vault
 
   pre_tasks:
     - name: Validate required variables
@@ -87,7 +87,7 @@
       lineinfile:
         path: /var/ossec/etc/ossec.conf
         regexp: '^(\s*)<address>'
-        line: '    <address>{{ wazuh_manager }}</address>'
+        line: "    <address>{{ wazuh_manager }}</address>"
         backup: yes
       notify: Restart Wazuh Agent
 
@@ -95,7 +95,7 @@
       lineinfile:
         path: /var/ossec/etc/ossec.conf
         regexp: '^(\s*)<server_password>'
-        line: '    <server_password>{{ wazuh_enrollment_password }}</server_password>'
+        line: "    <server_password>{{ wazuh_enrollment_password }}</server_password>"
         backup: yes
       when: wazuh_enrollment_password | length > 0
       notify: Restart Wazuh Agent

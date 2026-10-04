@@ -8,7 +8,7 @@ description: Symmetric vs asymmetric, hashing, HMAC, RSA, ECDSA, EdDSA — the c
 
 # 0.1 — Cryptographic Building Blocks for Identity
 
-> **Goal:** Before you can read a JWT spec, debug a "signature invalid" error, or pick between RS256 and EdDSA, you need the cryptographic alphabet. This module covers the minimum viable cryptography for identity work — enough to *understand* what's happening, not enough to design a new cipher (don't do that anyway).
+> **Goal:** Before you can read a JWT spec, debug a "signature invalid" error, or pick between RS256 and EdDSA, you need the cryptographic alphabet. This module covers the minimum viable cryptography for identity work — enough to _understand_ what's happening, not enough to design a new cipher (don't do that anyway).
 
 > **Prerequisites:** basic Linux CLI, comfortable reading JSON. No crypto background required.
 
@@ -35,15 +35,15 @@ description: Symmetric vs asymmetric, hashing, HMAC, RSA, ECDSA, EdDSA — the c
 
 Cryptography in identity systems does exactly **three jobs**:
 
-| Job | What it answers | Example |
-|-----|-----------------|---------|
-| **Integrity** | "Has this message been tampered with?" | JWT signature, TLS MAC |
-| **Authenticity** | "Did this message really come from who it claims?" | JWT signature, TLS cert |
-| **Confidentiality** | "Can anyone else read this?" | TLS encryption, JWE |
+| Job                 | What it answers                                    | Example                 |
+| ------------------- | -------------------------------------------------- | ----------------------- |
+| **Integrity**       | "Has this message been tampered with?"             | JWT signature, TLS MAC  |
+| **Authenticity**    | "Did this message really come from who it claims?" | JWT signature, TLS cert |
+| **Confidentiality** | "Can anyone else read this?"                       | TLS encryption, JWE     |
 
 **Hashing** is the foundation for integrity. **HMAC** adds a shared secret. **Digital signatures** swap the shared secret for a public/private key pair. **Encryption** (which we cover only briefly here) is the confidentiality layer.
 
-> **The single most important thing to internalize early:** *encoding is not encryption*. Base64 is encoding — it's a public, reversible representation. AES is encryption — it requires a key. JWTs are **signed**, not encrypted, by default (we'll cover JWE in [[../stage1/05-jose-family|Stage 1.5]]).
+> **The single most important thing to internalize early:** _encoding is not encryption_. Base64 is encoding — it's a public, reversible representation. AES is encryption — it requires a key. JWTs are **signed**, not encrypted, by default (we'll cover JWE in [[../stage1/05-jose-family|Stage 1.5]]).
 
 ```
 What JWT actually gives you:
@@ -59,7 +59,7 @@ A signed JWT is a postcard, not a sealed letter.
 
 ## 2. Hashing — One-Way Fingerprints
 
-A **hash function** takes any input and produces a fixed-size output. The output is called a *digest* or *fingerprint*. Good hash functions have three properties:
+A **hash function** takes any input and produces a fixed-size output. The output is called a _digest_ or _fingerprint_. Good hash functions have three properties:
 
 1. **Deterministic** — same input always produces the same output
 2. **Avalanche** — changing one bit of input changes ~50% of output bits
@@ -80,17 +80,18 @@ SHA-256: 7d38b5cd25c91e8a4c4e0e8c0e8c0e8c0e8c0e8c0e8c0e8c0e8c0e8c0e8c0e8
 
 **Common hash functions you'll see in auth:**
 
-| Algorithm | Output size | Status | Use in auth |
-|-----------|-------------|--------|-------------|
-| MD5 | 128 bits | **Broken** | Don't use. Ever. (Legacy certs, file checksums only) |
-| SHA-1 | 160 bits | **Broken** | Don't use. (Git still uses SHA-1 for object IDs, but it shouldn't) |
-| SHA-256 | 256 bits | **Standard** | JWT (none of the JWS algorithms use bare SHA-256 — they wrap it) |
-| SHA-384 | 384 bits | **Standard** | JWT (HS384, RS384) |
-| SHA-512 | 512 bits | **Standard** | JWT (HS512, RS512) |
-| SHA-3 (Keccak) | 224/256/384/512 | **Standard** | Emerging — preferred for new designs |
-| BLAKE2 / BLAKE3 | 256/512 | **Fast, secure** | Used in some modern protocols |
+| Algorithm       | Output size     | Status           | Use in auth                                                        |
+| --------------- | --------------- | ---------------- | ------------------------------------------------------------------ |
+| MD5             | 128 bits        | **Broken**       | Don't use. Ever. (Legacy certs, file checksums only)               |
+| SHA-1           | 160 bits        | **Broken**       | Don't use. (Git still uses SHA-1 for object IDs, but it shouldn't) |
+| SHA-256         | 256 bits        | **Standard**     | JWT (none of the JWS algorithms use bare SHA-256 — they wrap it)   |
+| SHA-384         | 384 bits        | **Standard**     | JWT (HS384, RS384)                                                 |
+| SHA-512         | 512 bits        | **Standard**     | JWT (HS512, RS512)                                                 |
+| SHA-3 (Keccak)  | 224/256/384/512 | **Standard**     | Emerging — preferred for new designs                               |
+| BLAKE2 / BLAKE3 | 256/512         | **Fast, secure** | Used in some modern protocols                                      |
 
 **Why MD5 and SHA-1 are dead for security:**
+
 - **MD5 collisions** (two different inputs producing the same hash) can be generated in seconds on a laptop. It's been broken since 2004.
 - **SHA-1 collisions** (SHAttered attack, 2017) cost ~$110K in compute. Theoretically broken, practically still expensive — but the writing's on the wall.
 
@@ -131,14 +132,14 @@ Both Alice and Bob know K. Eve knows nothing.
 
 **Common symmetric algorithms:**
 
-| Algorithm | Key size | Block size | Notes |
-|-----------|----------|------------|-------|
-| AES-128 | 128 bits | 128 bits | Fast, secure, ubiquitous |
-| AES-256 | 256 bits | 128 bits | Higher security margin, slightly slower |
-| ChaCha20 | 256 bits | stream cipher | Faster than AES on CPUs without AES-NI |
-| 3DES | 168 bits | 64 bits | **Deprecated** — slow, 64-bit block is too small |
+| Algorithm | Key size | Block size    | Notes                                            |
+| --------- | -------- | ------------- | ------------------------------------------------ |
+| AES-128   | 128 bits | 128 bits      | Fast, secure, ubiquitous                         |
+| AES-256   | 256 bits | 128 bits      | Higher security margin, slightly slower          |
+| ChaCha20  | 256 bits | stream cipher | Faster than AES on CPUs without AES-NI           |
+| 3DES      | 168 bits | 64 bits       | **Deprecated** — slow, 64-bit block is too small |
 
-**The key distribution problem:** if Alice and Bob need to talk, they need a shared key. But how do they get it to each other securely? This is the problem asymmetric crypto solves (Section 4), and the reason TLS uses *both* — asymmetric to exchange a symmetric key, symmetric for the bulk of the traffic.
+**The key distribution problem:** if Alice and Bob need to talk, they need a shared key. But how do they get it to each other securely? This is the problem asymmetric crypto solves (Section 4), and the reason TLS uses _both_ — asymmetric to exchange a symmetric key, symmetric for the bulk of the traffic.
 
 **For identity/auth specifically:** symmetric crypto is used inside **HMAC** (Section 5) and inside **TLS** (after the handshake). You almost never see raw symmetric encryption in identity protocols — that's the asymmetric layer's job.
 
@@ -152,7 +153,7 @@ TLS handshake in 30 seconds:
   6. Server decrypts with private key
   7. Both sides derive the same symmetric session keys from pre-master
   8. All further traffic uses symmetric crypto (AES-GCM, ChaCha20)
-  
+
   Asymmetric crypto is expensive. Symmetric crypto is cheap.
   TLS uses both, for exactly this reason.
 ```
@@ -167,12 +168,12 @@ TLS handshake in 30 seconds:
 Two things you can do with a key pair:
   ENCRYPTION:    public key encrypts, private key decrypts
                  (anyone can send you a secret; only you can read it)
-  
+
   SIGNING:       private key signs, public key verifies
                  (only you can sign; anyone can verify)
 ```
 
-Notice the symmetry: encryption uses the *other person's* public key; signing uses *your own* private key. This trips up a lot of beginners. Memorize it:
+Notice the symmetry: encryption uses the _other person's_ public key; signing uses _your own_ private key. This trips up a lot of beginners. Memorize it:
 
 ```
 To encrypt FOR Alice:  use Alice's PUBLIC key
@@ -184,25 +185,25 @@ To verify Alice's sig: use Alice's PUBLIC key
 
 ### The three asymmetric families you'll meet
 
-| Family | Key sizes (security equivalent) | Speed | Key/sig size | Notes |
-|--------|--------------------------------|-------|--------------|-------|
-| **RSA** | 2048, 3072, 4096 bits | Slow keygen, fast sign/verify | Big keys, big signatures | The old workhorse. Compatible with everything. |
-| **ECDSA** | 256, 384, 521 bits | Fast | Small keys, small signatures | P-256, P-384, P-521 curves. NIST standardized. |
-| **EdDSA** | 256, 456 bits | Very fast | Tiny keys, tiny signatures | Ed25519 (signing), Ed448. No random nonce needed. **Modern default.** |
-| **Post-quantum** | varies | varies | large | Kyber, Dilithium, Falcon. New (2024+), early adoption. |
+| Family           | Key sizes (security equivalent) | Speed                         | Key/sig size                 | Notes                                                                 |
+| ---------------- | ------------------------------- | ----------------------------- | ---------------------------- | --------------------------------------------------------------------- |
+| **RSA**          | 2048, 3072, 4096 bits           | Slow keygen, fast sign/verify | Big keys, big signatures     | The old workhorse. Compatible with everything.                        |
+| **ECDSA**        | 256, 384, 521 bits              | Fast                          | Small keys, small signatures | P-256, P-384, P-521 curves. NIST standardized.                        |
+| **EdDSA**        | 256, 456 bits                   | Very fast                     | Tiny keys, tiny signatures   | Ed25519 (signing), Ed448. No random nonce needed. **Modern default.** |
+| **Post-quantum** | varies                          | varies                        | large                        | Kyber, Dilithium, Falcon. New (2024+), early adoption.                |
 
 **For identity/auth in 2026:** EdDSA (Ed25519) is the modern default for new systems. RS256 is still the universal fallback because every library on Earth supports it. ES256 is in between.
 
 ```
 Why you should care about key/sig size:
-  
+
   RS256:  2048-bit key, 256-byte signature
   ES256:  256-bit key,  64-byte signature
   EdDSA:  256-bit key,  64-byte signature
-  
+
   If you're verifying 10,000 JWTs/sec at the edge, the size matters.
   If you're verifying 10/sec on a backend, it doesn't.
-  
+
   ES256 and EdDSA give you 32x smaller keys than RS256 with
   the same security level. That's why they're winning.
 ```
@@ -210,6 +211,7 @@ Why you should care about key/sig size:
 ### How RSA works (the 2-minute version)
 
 You don't need to know the math. You need to know:
+
 - **Key generation** picks two large primes, multiplies them, derives the public/private pair from the result
 - **Signing** = compute `signature = message^d mod n` (with private exponent `d`)
 - **Verification** = check if `signature^e mod n == message_hash` (with public exponent `e`)
@@ -298,7 +300,7 @@ A **digital signature** is HMAC's asymmetric cousin. Instead of a shared secret,
 ```
 SIGN:
   signature = sign(private_key, message)
-  
+
 VERIFY:
   valid = verify(public_key, message, signature)
 ```
@@ -312,7 +314,7 @@ Symmetric (HMAC):
   - Issuer and verifier MUST share the same secret
   - If the secret leaks at the verifier, attacker can forge tokens
   - Cheaper, smaller signatures
-  
+
 Asymmetric (signatures):
   - Issuer signs with private key (only they have it)
   - Verifier needs ONLY the public key
@@ -341,20 +343,20 @@ RS256 flow (asymmetric):
 
 This is the matrix you'll reference every time you choose a JWT algorithm. Memorize it.
 
-| Algorithm | Type | Key size | Signature size | Sign speed | Verify speed | Use it when |
-|-----------|------|----------|----------------|------------|--------------|-------------|
-| **HS256** | HMAC + SHA-256 | 256+ bits | 32 bytes | Fast | Fast | Single service, never crosses a trust boundary |
-| **HS384** | HMAC + SHA-384 | 384+ bits | 48 bytes | Fast | Fast | Same as HS256, paranoia mode |
-| **HS512** | HMAC + SHA-512 | 512+ bits | 64 bytes | Fast | Fast | Same as HS256, more paranoia |
-| **RS256** | RSA + SHA-256 | 2048+ bits | 256 bytes | Slow | Slow | Universal compatibility, legacy interop |
-| **RS384** | RSA + SHA-384 | 2048+ bits | 256 bytes | Slow | Slow | Same as RS256, paranoia mode |
-| **RS512** | RSA + SHA-512 | 2048+ bits | 256 bytes | Slow | Slow | Same as RS256, more paranoia |
-| **ES256** | ECDSA + SHA-256 (P-256) | 256 bits | 64 bytes | Fast | Fast | Modern default, smaller than RS256 |
-| **ES384** | ECDSA + SHA-384 (P-384) | 384 bits | 96 bytes | Fast | Fast | Same as ES256, paranoia mode |
-| **ES512** | ECDSA + SHA-512 (P-521) | 521 bits | 132 bytes | Fast | Fast | Same as ES256, more paranoia |
-| **PS256** | RSA-PSS + SHA-256 | 2048+ bits | 256 bytes | Slow | Slow | When you need RSA + better padding than PKCS#1 v1.5 |
-| **EdDSA** | Ed25519 | 256 bits | 64 bytes | Very fast | Very fast | **New systems. This is the default for 2026.** |
-| **none** | (no signature) | N/A | N/A | N/A | N/A | **NEVER ACCEPT THIS. EVER.** |
+| Algorithm | Type                    | Key size   | Signature size | Sign speed | Verify speed | Use it when                                         |
+| --------- | ----------------------- | ---------- | -------------- | ---------- | ------------ | --------------------------------------------------- |
+| **HS256** | HMAC + SHA-256          | 256+ bits  | 32 bytes       | Fast       | Fast         | Single service, never crosses a trust boundary      |
+| **HS384** | HMAC + SHA-384          | 384+ bits  | 48 bytes       | Fast       | Fast         | Same as HS256, paranoia mode                        |
+| **HS512** | HMAC + SHA-512          | 512+ bits  | 64 bytes       | Fast       | Fast         | Same as HS256, more paranoia                        |
+| **RS256** | RSA + SHA-256           | 2048+ bits | 256 bytes      | Slow       | Slow         | Universal compatibility, legacy interop             |
+| **RS384** | RSA + SHA-384           | 2048+ bits | 256 bytes      | Slow       | Slow         | Same as RS256, paranoia mode                        |
+| **RS512** | RSA + SHA-512           | 2048+ bits | 256 bytes      | Slow       | Slow         | Same as RS256, more paranoia                        |
+| **ES256** | ECDSA + SHA-256 (P-256) | 256 bits   | 64 bytes       | Fast       | Fast         | Modern default, smaller than RS256                  |
+| **ES384** | ECDSA + SHA-384 (P-384) | 384 bits   | 96 bytes       | Fast       | Fast         | Same as ES256, paranoia mode                        |
+| **ES512** | ECDSA + SHA-512 (P-521) | 521 bits   | 132 bytes      | Fast       | Fast         | Same as ES256, more paranoia                        |
+| **PS256** | RSA-PSS + SHA-256       | 2048+ bits | 256 bytes      | Slow       | Slow         | When you need RSA + better padding than PKCS#1 v1.5 |
+| **EdDSA** | Ed25519                 | 256 bits   | 64 bytes       | Very fast  | Very fast    | **New systems. This is the default for 2026.**      |
+| **none**  | (no signature)          | N/A        | N/A            | N/A        | N/A          | **NEVER ACCEPT THIS. EVER.**                        |
 
 ### The "alg=none" attack — why this row exists
 
@@ -405,7 +407,7 @@ Benchmark: 10,000 JWT verifications
   EdDSA:   0.15s   ← tiny keys, fast verify
   ES256:   0.25s
   RS256:   2.5s    ← 10-20x slower than ES256/EdDSA
-  
+
 If you're verifying tokens in a hot path, this matters.
 If you're verifying one token per user session, it doesn't.
 ```
@@ -416,12 +418,12 @@ If you're verifying one token per user session, it doesn't.
 
 ### NIST security levels (2020+ guidelines)
 
-| Security level | Symmetric equivalent | RSA | ECDSA | EdDSA | Use when |
-|----------------|---------------------|-----|-------|-------|----------|
-| 112-bit | 3DES (legacy) | 2048 bits | P-224 (avoid) | Ed448 | Legacy interop, minimum bar |
-| 128-bit | AES-128 | 3072 bits | P-256 | Ed25519 | **Standard for new systems** |
-| 192-bit | AES-192 | 7680 bits | P-384 | (none standard) | High-value, long-term |
-| 256-bit | AES-256 | 15360 bits | P-521 | (none standard) | Paranoid / classified |
+| Security level | Symmetric equivalent | RSA        | ECDSA         | EdDSA           | Use when                     |
+| -------------- | -------------------- | ---------- | ------------- | --------------- | ---------------------------- |
+| 112-bit        | 3DES (legacy)        | 2048 bits  | P-224 (avoid) | Ed448           | Legacy interop, minimum bar  |
+| 128-bit        | AES-128              | 3072 bits  | P-256         | Ed25519         | **Standard for new systems** |
+| 192-bit        | AES-192              | 7680 bits  | P-384         | (none standard) | High-value, long-term        |
+| 256-bit        | AES-256              | 15360 bits | P-521         | (none standard) | Paranoid / classified        |
 
 **128-bit security is the right target for new systems in 2026.** That's P-256 (ES256) or Ed25519 (EdDSA) or RSA-3072. Anything weaker is below current best practice.
 
@@ -453,18 +455,20 @@ openssl genpkey -algorithm Ed25519 -out ed.pem
 ## 9. DevOps Analogy: The Mailbox
 
 Imagine an office building with a row of mailboxes. Each mailbox has:
+
 - A **slot** anyone can drop mail into (this is your **public key**)
 - A **lock** only the owner can open (this is your **private key**)
 
-| Crypto operation | Mailbox equivalent |
-|------------------|--------------------|
-| **Hashing a message** | A unique tracking number printed on the envelope. Anyone can read it, no one can forge it. |
-| **HMAC with shared secret** | A wax seal. The sender and receiver share the same seal stamp. If the seal is intact, it's from someone with the seal. |
-| **Encryption with public key** | Anyone can drop a sealed letter into your slot. Only you can open it (private key). |
-| **Signing with private key** | You put your unique wax seal on a letter. Anyone can verify the seal is yours, but only you can apply it. |
-| **TLS handshake** | A courier shows ID, you verify it's really FedEx (cert chain), FedEx gives you a one-time combo for a lockbox, all future deliveries use the combo. |
+| Crypto operation               | Mailbox equivalent                                                                                                                                  |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hashing a message**          | A unique tracking number printed on the envelope. Anyone can read it, no one can forge it.                                                          |
+| **HMAC with shared secret**    | A wax seal. The sender and receiver share the same seal stamp. If the seal is intact, it's from someone with the seal.                              |
+| **Encryption with public key** | Anyone can drop a sealed letter into your slot. Only you can open it (private key).                                                                 |
+| **Signing with private key**   | You put your unique wax seal on a letter. Anyone can verify the seal is yours, but only you can apply it.                                           |
+| **TLS handshake**              | A courier shows ID, you verify it's really FedEx (cert chain), FedEx gives you a one-time combo for a lockbox, all future deliveries use the combo. |
 
 **The TL;DR for sysadmins:**
+
 - **Hashing** = checksum, but cryptographic
 - **HMAC** = checksum + secret, both sides share the secret
 - **Signing** = checksum + secret, but only one side has the secret (the signer)
@@ -479,6 +483,7 @@ If you understand `sha256sum file.iso` (integrity check) and `gpg --verify file.
 The cryptographic primitives are sound. The implementations are where things break. Here are the attacks you'll see in the wild.
 
 ### A1. `alg=none` (already covered)
+
 Don't accept tokens where the `alg` header is `"none"`. Don't accept tokens where the `alg` is one your service didn't issue. **Allowlist, don't denylist.**
 
 ### A2. Algorithm confusion (HS256 vs RS256)
@@ -592,22 +597,27 @@ Every year, a security firm publishes a "Don't Roll Your Own Crypto" paper full 
 These are ordered roughly easiest → hardest. Do them in order.
 
 ### Exercise 1: Hash a file
+
 ```bash
 echo "hello world" > /tmp/hello.txt
 sha256sum /tmp/hello.txt
 ```
+
 Change one character, re-hash. Confirm the output is completely different. That's the avalanche property.
 
 ### Exercise 2: Generate a strong key
+
 ```python
 import secrets
 key = secrets.token_bytes(32)
 print(f"HS256 key (hex): {key.hex()}")
 print(f"HS256 key length: {len(key)*8} bits")
 ```
+
 What happens if you change `32` to `16`? To `8`? What's the trade-off?
 
 ### Exercise 3: HMAC sign and verify
+
 ```python
 import hmac, hashlib
 
@@ -627,9 +637,11 @@ msg_tampered = b"user=alice&action=delete&resource=ALL-DATA"
 expected_tampered = hmac.new(key, msg_tampered, hashlib.sha256).hexdigest()
 print(f"Tampered valid: {hmac.compare_digest(sig, expected_tampered)}")
 ```
+
 Expected: last line prints `False`.
 
 ### Exercise 4: Generate all four key types
+
 ```bash
 # RSA
 openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out rsa.pem
@@ -648,6 +660,7 @@ ls -la *.pem *.pub
 ```
 
 ### Exercise 5: The `alg=none` attack (and the fix)
+
 ```python
 import base64, json, hmac, hashlib
 
@@ -692,13 +705,17 @@ print(f"Safe validator accepts forged:  {safe_verify(forged)}")     # False
 ```
 
 ### Exercise 6: Read the source of one crypto library
+
 Pick `python-jose` or `jose` (Node) or `golang-jwt/jwt`. Find the code that handles the `alg` header. Confirm it has an algorithm allowlist. (If it doesn't, find a better library — and submit a CVE.)
 
 ### Exercise 7: Calculate the security level of your current keys
+
 Look at your production keys (if you have any — this is a thought exercise). What algorithm? What key size? Per NIST 2020, what's the effective symmetric security level? Is it >= 128 bits? If not, plan a migration.
 
 ### Exercise 8: Design a JWT algorithm choice for a new system
+
 Pick one of these scenarios and justify your choice in 1-2 paragraphs:
+
 - (a) Internal microservice auth, all services in your VPC, you control the issuer
 - (b) Public API with 1000+ third-party developers verifying your tokens
 - (c) Banking app, FAPI 2.0 compliance required
@@ -713,6 +730,7 @@ You now have the alphabet. Next we put it together into the most-used token form
 → [[../stage1/01-jwt-anatomy|Stage 1.1 — JWT Anatomy: Header.Payload.Signature]]
 
 **Before you move on, verify you can answer these without looking back:**
+
 1. What's the difference between HS256 and RS256? When do you pick each?
 2. Why is `alg=none` dangerous? What's the fix?
 3. What's ECDSA nonce reuse, and why does EdDSA not have this problem?

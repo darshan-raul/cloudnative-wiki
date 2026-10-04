@@ -27,15 +27,15 @@ spec:
     metadata: { labels: { app: extauthz } }
     spec:
       containers:
-      - name: extauthz
-        image: mendhak/http-https-echo:32
-        # The echo service's /status endpoint returns whatever you ask.
-        # We just need a stub that returns 200 for "alice" and 403 for "mallory".
-        # In real life, replace with OPA/Cerbos/your authz service.
-        env:
-        - name: HTTP_ECHO_PREFIX_STATUS_CODE
-          value: "200"
-        ports: [{ containerPort: 8080 }]
+        - name: extauthz
+          image: mendhak/http-https-echo:32
+          # The echo service's /status endpoint returns whatever you ask.
+          # We just need a stub that returns 200 for "alice" and 403 for "mallory".
+          # In real life, replace with OPA/Cerbos/your authz service.
+          env:
+            - name: HTTP_ECHO_PREFIX_STATUS_CODE
+              value: "200"
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -45,8 +45,8 @@ metadata:
 spec:
   selector: { app: extauthz }
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -61,10 +61,10 @@ spec:
     metadata: { labels: { app: extauth-target } }
     spec:
       containers:
-      - name: extauth-target
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "extauth: ok" }]
-        ports: [{ containerPort: 8080 }]
+        - name: extauth-target
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "extauth: ok" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -74,8 +74,8 @@ metadata:
 spec:
   selector: { app: extauth-target }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
@@ -84,9 +84,9 @@ metadata:
   namespace: app
 spec:
   targetRefs:
-  - group: gateway.networking.k8s.io
-    kind: HTTPRoute
-    name: extauth
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: extauth
   extAuth:
     http:
       backendRef:
@@ -94,9 +94,9 @@ spec:
         kind: Service
         name: extauthz
         port: 8080
-      path: /status/200    # echo service's "always 200" endpoint
+      path: /status/200 # echo service's "always 200" endpoint
       headersToForward:
-      - "X-User"
+        - "X-User"
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -105,12 +105,12 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg
-    namespace: infra
+    - name: eg
+      namespace: infra
   hostnames: ["extauth.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: extauth-target
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: extauth-target
+          port: 80

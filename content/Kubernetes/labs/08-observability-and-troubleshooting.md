@@ -1,6 +1,15 @@
 ---
 title: "Lab 08 — Observability & Troubleshooting"
-tags: [kubernetes, labs, operations, troubleshooting, kubectl-debug, metrics, crashloopbackoff]
+tags:
+  [
+    kubernetes,
+    labs,
+    operations,
+    troubleshooting,
+    kubectl-debug,
+    metrics,
+    crashloopbackoff,
+  ]
 date: 2026-09-06
 description: Inspect cluster and container telemetry, attach ephemeral debug containers, diagnose CrashLoopBackOff panics, and analyze OOMKilled exit codes.
 ---
@@ -56,6 +65,7 @@ curl -s http://127.0.0.1:9898/metrics | grep -E "http_requests_total|process_cpu
 ```
 
 Notice:
+
 - `http_requests_total`: Counts incoming requests partitioned by HTTP method, status code, and path.
 - `process_cpu_seconds_total`: Real-time CPU time consumed by the Go runtime.
 
@@ -109,6 +119,7 @@ Notice that the original container **never restarted or dropped connections** wh
 What happens when an application panics and crashes repeatedly?
 
 ### Trigger the failure:
+
 `podinfo` includes a fault-injection endpoint (`POST /panic`) that triggers an unhandled Go runtime panic.
 
 Send the panic trigger:
@@ -118,11 +129,13 @@ curl -s -X POST http://127.0.0.1:9898/panic
 ```
 
 Stop the port-forward process:
+
 ```bash
 kill $PF_PID
 ```
 
 ### Observe the symptom:
+
 Watch the Pod status:
 
 ```bash
@@ -130,6 +143,7 @@ kubectl get pods -l app.kubernetes.io/name=podinfo
 ```
 
 **Observed output:**
+
 ```
 NAME                       READY   STATUS             RESTARTS      AGE
 podinfo-5b5c97bd5c-2p8xm   1/1     Running            0             25m
@@ -145,6 +159,7 @@ The Pod entered **`CrashLoopBackOff`** and its `RESTARTS` count increased.
 When facing a `CrashLoopBackOff`, apply the **Three-Step Incident Triage Rule**:
 
 ### Step 1: Read the PREVIOUS container logs
+
 Running `kubectl logs <pod>` often shows nothing or shows the new container trying to start. Always append **`--previous`** to read the logs from the container that crashed:
 
 ```bash
@@ -155,6 +170,7 @@ kubectl logs "$CRASHED_POD" --previous
 ```
 
 **Diagnostic log output:**
+
 ```
 panic: panic command received
 
@@ -175,6 +191,7 @@ kubectl get pod "$CRASHED_POD" -o jsonpath='{.status.containerStatuses[0].lastSt
 ```
 
 **Expected JSON:**
+
 ```json
 {
   "exitCode": 2,
@@ -185,6 +202,7 @@ kubectl get pod "$CRASHED_POD" -o jsonpath='{.status.containerStatuses[0].lastSt
 ```
 
 ### Exit Code Cheat Sheet:
+
 - **Exit Code `0`**: Clean exit. If in a Deployment, the container exited when it should have run forever.
 - **Exit Code `1` or `2`**: Application error / unhandled exception / panic.
 - **Exit Code `137` (`128 + 9`)**: Terminated by `SIGKILL`. Look for **`OOMKilled: true`** indicating the container hit its memory limit, or an expired `terminationGracePeriodSeconds`.

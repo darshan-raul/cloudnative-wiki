@@ -1,6 +1,17 @@
 ---
 title: "M09: Container Image Scanning & Hardening"
-tags: [devsecops, stage2, build, containers, docker, distroless, trivy, grype, hardening]
+tags:
+  [
+    devsecops,
+    stage2,
+    build,
+    containers,
+    docker,
+    distroless,
+    trivy,
+    grype,
+    hardening,
+  ]
 date: 2026-06-16
 description: "Module 9 of 20 — building and scanning container images. Multi-stage builds, distroless/minimal bases, non-root users, image scan gates, and the diff between the developer Dockerfile and the production image."
 ---
@@ -13,12 +24,12 @@ The container image is the unit of deployment. Every vulnerability in the image 
 
 By the end of this module you should be able to:
 
-  - Build a hardened image (distroless, non-root, no shell) using a multi-stage build
-  - Run an image scan (Trivy, Grype) and interpret the findings by layer
-  - Set an image-scan policy that fails the build on critical CVEs
-  - Distinguish OS-package vulns from application-dependency vulns
-  - Implement a base-image update strategy
-  - Map CIS Docker Benchmark controls onto a Dockerfile
+- Build a hardened image (distroless, non-root, no shell) using a multi-stage build
+- Run an image scan (Trivy, Grype) and interpret the findings by layer
+- Set an image-scan policy that fails the build on critical CVEs
+- Distinguish OS-package vulns from application-dependency vulns
+- Implement a base-image update strategy
+- Map CIS Docker Benchmark controls onto a Dockerfile
 
 ## 1. The Image Is a Dependency Graph
 
@@ -63,10 +74,11 @@ ENTRYPOINT ["/app"]
 ```
 
 What the runtime stage contains:
-  - The compiled binary
-  - CA certificates (from `gcr.io/distroless/static-debian12` base)
-  - `/etc/passwd` with a `nonroot` user
-  - Nothing else
+
+- The compiled binary
+- CA certificates (from `gcr.io/distroless/static-debian12` base)
+- `/etc/passwd` with a `nonroot` user
+- Nothing else
 
 Total image size: ~10 MB. Total packages: 0 (the runtime has no shell, no package manager).
 
@@ -79,15 +91,15 @@ Most secure                                                    Least secure
 scratch > distroless > alpine > debian-slim > debian > ubuntu > full distro
 ```
 
-| Base | Size | Vuln count (typical) | Use case |
-| ---- | ---- | -------------------- | -------- |
-| scratch | 0 MB | 0 | Static binaries (Go, Rust) |
-| distroless/static | ~2 MB | 0–2 | Go, Rust, C++ |
-| distroless/base | ~20 MB | 10–20 | JVM, Python with C extensions |
-| alpine | ~5 MB | 0–5 | Anything with a libc; watch for musl issues |
-| debian-slim | ~80 MB | 30–50 | When alpine/distroless is not viable |
-| debian | ~120 MB | 50–100 | Avoid |
-| ubuntu | ~300 MB | 100+ | Avoid for production |
+| Base              | Size    | Vuln count (typical) | Use case                                    |
+| ----------------- | ------- | -------------------- | ------------------------------------------- |
+| scratch           | 0 MB    | 0                    | Static binaries (Go, Rust)                  |
+| distroless/static | ~2 MB   | 0–2                  | Go, Rust, C++                               |
+| distroless/base   | ~20 MB  | 10–20                | JVM, Python with C extensions               |
+| alpine            | ~5 MB   | 0–5                  | Anything with a libc; watch for musl issues |
+| debian-slim       | ~80 MB  | 30–50                | When alpine/distroless is not viable        |
+| debian            | ~120 MB | 50–100               | Avoid                                       |
+| ubuntu            | ~300 MB | 100+                 | Avoid for production                        |
 
 Pick the smallest base that runs your app. The size is a proxy for attack surface; smaller is better.
 
@@ -165,11 +177,12 @@ trivy image registry.example.com/my-app:v1.2.3
 ```
 
 Output is grouped by:
-  - OS packages (apt/apk/dnf)
-  - Language packages (npm, pip, gem, jar)
-  - Misconfigurations (Dockerfile)
-  - Secrets (in image layers)
-  - License issues
+
+- OS packages (apt/apk/dnf)
+- Language packages (npm, pip, gem, jar)
+- Misconfigurations (Dockerfile)
+- Secrets (in image layers)
+- License issues
 
 ### Grype (Anchore)
 
@@ -217,9 +230,10 @@ CVE-2024-67890  libcurl4  8.4.0-1 → 8.5.0-1
 ```
 
 The actionable parts:
-  - The `pkgPath` tells you *why* the package is there (base image, runtime, your dep)
-  - The `Fix` line tells you what to do
-  - The `Severity` tells you whether to drop everything
+
+- The `pkgPath` tells you _why_ the package is there (base image, runtime, your dep)
+- The `Fix` line tells you what to do
+- The `Severity` tells you whether to drop everything
 
 For 80% of CVEs in a typical image, the fix is "bump the base image." Module M07's Renovate/Dependabot handles application deps; the base image is a separate concern.
 
@@ -241,14 +255,14 @@ Renovate can watch Docker Hub for new base image tags and open PRs.
 
 ```json5
 {
-  "packageRules": [
+  packageRules: [
     {
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["node", "python", "golang", "debian"],
-      "schedule": ["before 6am on monday"],
-      "automerge": true
-    }
-  ]
+      matchDatasources: ["docker"],
+      matchPackageNames: ["node", "python", "golang", "debian"],
+      schedule: ["before 6am on monday"],
+      automerge: true,
+    },
+  ],
 }
 ```
 
@@ -272,69 +286,72 @@ Source → Build → [Image scan] → [Sign] → [Registry] → [Admission scan]
 Three scan points, each with a different purpose:
 
 ### Build-Time Scan
+
 Catches vulns before the image is pushed. Fast feedback. Fails the build on critical; warns on high (or fails, depending on policy).
 
 ### Pre-Deploy Scan (Admission Controller)
+
 Re-scans the image at deploy time. Catches the case where a CVE was disclosed between build and deploy. Tools: Kyverno, Connaisseur, Ratify, Notary v2.
 
 ### Continuous Re-Scan
+
 Re-scans images in the registry on every vuln-DB update. Tools: Trivy Operator (K8s), Snyk, JFrog Xray.
 
 ## 8. CIS Docker Benchmark → Dockerfile
 
 The CIS Docker Benchmark is a 100+ item checklist. Most items are runtime (enforced by k8s/compose), not Dockerfile. The Dockerfile-relevant subset:
 
-| CIS ref | Control | Dockerfile pattern |
-| ------- | ------- | ------------------ |
-| 4.1 | Create a user for the container | `USER 10001` |
-| 4.2 | Use trusted base images | Pin to a digest, prefer distroless |
-| 4.3 | Do not install unnecessary packages | `apk add --no-cache <only-what-you-need>` |
-| 4.4 | Pin packages to specific versions | `apk add [email protected]` |
-| 4.5 | Remove setuid/setgid bits | `RUN find / -xdev -perm /6000 -type f -exec chmod a-s {} \;` |
-| 4.6 | Use COPY instead of ADD | `COPY` doesn't fetch URLs or extract tarballs |
-| 4.7 | Do not use `update` without `install` | `apt-get install -y` (no `apt-get update` alone) |
-| 4.8 | Use multi-stage builds | See above |
-| 4.9 | Do not store secrets in Dockerfile | Use BuildKit secrets, not ENV |
-| 4.10 | Use HEALTHCHECK | Add HEALTHCHECK |
+| CIS ref | Control                               | Dockerfile pattern                                           |
+| ------- | ------------------------------------- | ------------------------------------------------------------ |
+| 4.1     | Create a user for the container       | `USER 10001`                                                 |
+| 4.2     | Use trusted base images               | Pin to a digest, prefer distroless                           |
+| 4.3     | Do not install unnecessary packages   | `apk add --no-cache <only-what-you-need>`                    |
+| 4.4     | Pin packages to specific versions     | `apk add [email protected]`                                  |
+| 4.5     | Remove setuid/setgid bits             | `RUN find / -xdev -perm /6000 -type f -exec chmod a-s {} \;` |
+| 4.6     | Use COPY instead of ADD               | `COPY` doesn't fetch URLs or extract tarballs                |
+| 4.7     | Do not use `update` without `install` | `apt-get install -y` (no `apt-get update` alone)             |
+| 4.8     | Use multi-stage builds                | See above                                                    |
+| 4.9     | Do not store secrets in Dockerfile    | Use BuildKit secrets, not ENV                                |
+| 4.10    | Use HEALTHCHECK                       | Add HEALTHCHECK                                              |
 
 The other 90+ items are enforced at runtime (compose, k8s securityContext, pod security standards).
 
 ## 9. Image Provenance
 
-When you scan an image, you want to know *where it came from*. Provenance is the metadata that answers: which source commit, which build, which CI run.
+When you scan an image, you want to know _where it came from_. Provenance is the metadata that answers: which source commit, which build, which CI run.
 
-  - **SLSA Level 1** — provenance exists (build script recorded)
-  - **SLSA Level 2** — provenance is signed and verified (SLSA + Sigstore)
-  - **SLSA Level 3** — provenance is generated by a hardened build platform (e.g., GitHub Actions, Tekton Chains)
+- **SLSA Level 1** — provenance exists (build script recorded)
+- **SLSA Level 2** — provenance is signed and verified (SLSA + Sigstore)
+- **SLSA Level 3** — provenance is generated by a hardened build platform (e.g., GitHub Actions, Tekton Chains)
 
 Module M14 covers provenance in depth.
 
 ## 10. Image Scan Anti-Patterns
 
-| Anti-pattern | Symptom | Fix |
-| ------------ | ------- | --- |
-| Scan only on push | Misses new CVEs | Continuous re-scan |
-| Use the `latest` tag | Image mutates, scan results lie | Pin to a digest |
-| Allow criticals with no SLA | Vulns age out | SLA: critical in 7d, high in 30d |
-| "We'll fix it in the next sprint" (forever) | Backlog of 200 criticals | Track per-finding, not in aggregate |
-| Scan only the final image | Miss the build-time base | Scan the build stage too (multi-stage) |
-| Allow root in the Dockerfile | Compromise = root in container | `USER 10001` non-negotiable |
+| Anti-pattern                                | Symptom                         | Fix                                    |
+| ------------------------------------------- | ------------------------------- | -------------------------------------- |
+| Scan only on push                           | Misses new CVEs                 | Continuous re-scan                     |
+| Use the `latest` tag                        | Image mutates, scan results lie | Pin to a digest                        |
+| Allow criticals with no SLA                 | Vulns age out                   | SLA: critical in 7d, high in 30d       |
+| "We'll fix it in the next sprint" (forever) | Backlog of 200 criticals        | Track per-finding, not in aggregate    |
+| Scan only the final image                   | Miss the build-time base        | Scan the build stage too (multi-stage) |
+| Allow root in the Dockerfile                | Compromise = root in container  | `USER 10001` non-negotiable            |
 
 ## 11. The 1-Week Image Hardening Plan
 
-  - **Day 1** — Scan every production image with Trivy. Sort by critical count. Pick the worst.
-  - **Day 2** — Convert that image to multi-stage. Use distroless or alpine.
-  - **Day 3** — Add `USER 10001`. Add `HEALTHCHECK`. Drop capabilities in the runtime config.
-  - **Day 4** — Add image scan to the build pipeline. Fail on critical.
-  - **Day 5** — Pin the base image to a digest. Set up Renovate for base images.
-  - **Day 6** — Re-scan the new image. Document the CVE-count reduction.
-  - **Day 7** — Repeat for the next-worst image. By the end of the quarter, all images pass.
+- **Day 1** — Scan every production image with Trivy. Sort by critical count. Pick the worst.
+- **Day 2** — Convert that image to multi-stage. Use distroless or alpine.
+- **Day 3** — Add `USER 10001`. Add `HEALTHCHECK`. Drop capabilities in the runtime config.
+- **Day 4** — Add image scan to the build pipeline. Fail on critical.
+- **Day 5** — Pin the base image to a digest. Set up Renovate for base images.
+- **Day 6** — Re-scan the new image. Document the CVE-count reduction.
+- **Day 7** — Repeat for the next-worst image. By the end of the quarter, all images pass.
 
 ## 12. Self-Check
 
-  1. Pick your largest production image. Run `trivy image <name>`. How many critical vulns? Of those, how many are in the base layer?
-  2. Does your Dockerfile use multi-stage builds? If not, what's the runtime image size?
-  3. Does your image run as root? If yes, what's the blast radius of a container escape?
+1. Pick your largest production image. Run `trivy image <name>`. How many critical vulns? Of those, how many are in the base layer?
+2. Does your Dockerfile use multi-stage builds? If not, what's the runtime image size?
+3. Does your image run as root? If yes, what's the blast radius of a container escape?
 
 ## 13. The Runtime Image: Beyond the Build
 
@@ -370,15 +387,15 @@ spec:
               memory: "128Mi"
 ```
 
-The `securityContext` at the pod and container level enforces what the image *should* have set in its Dockerfile. The image sets the defaults; the runtime enforces the floor.
+The `securityContext` at the pod and container level enforces what the image _should_ have set in its Dockerfile. The image sets the defaults; the runtime enforces the floor.
 
 ### Pod Security Standards
 
 K8s has three Pod Security Standards:
 
-  - **Privileged** — no restrictions (avoid for production)
-  - **Baseline** — prevents known privilege escalations (default for most clusters)
-  - **Restricted** — hardened, follows least privilege (target for production)
+- **Privileged** — no restrictions (avoid for production)
+- **Baseline** — prevents known privilege escalations (default for most clusters)
+- **Restricted** — hardened, follows least privilege (target for production)
 
 Set at the namespace level:
 
@@ -393,29 +410,29 @@ metadata:
     pod-security.kubernetes.io/warn: restricted
 ```
 
-A workload that violates `restricted` cannot run in the `production` namespace. The image must be hardened *or* the workload must be moved to a less-restricted namespace (with documented justification).
+A workload that violates `restricted` cannot run in the `production` namespace. The image must be hardened _or_ the workload must be moved to a less-restricted namespace (with documented justification).
 
 ## 14. Image Provenance and Reproducible Builds
 
 A reproducible build is one that, given the same source, produces the same bit-for-bit artifact. Reproducibility is a supply-chain property:
 
-  - The customer can verify "this binary came from this source"
-  - The auditor can verify "this build was performed by this CI"
-  - The bit-for-bit identity enables content-addressable storage
+- The customer can verify "this binary came from this source"
+- The auditor can verify "this build was performed by this CI"
+- The bit-for-bit identity enables content-addressable storage
 
 ### Reproducible Build Steps
 
-  - **Pin all sources** — exact commit, exact dep version
-  - **Set timestamps** — `SOURCE_DATE_EPOCH` env var
-  - **Sort filesystem operations** — tar with `--sort=name`
-  - **Strip build paths** — `-trimpath` for Go, `-fdebug-prefix-map` for C
-  - **Lock the build environment** — same Go version, same libc, same OS
+- **Pin all sources** — exact commit, exact dep version
+- **Set timestamps** — `SOURCE_DATE_EPOCH` env var
+- **Sort filesystem operations** — tar with `--sort=name`
+- **Strip build paths** — `-trimpath` for Go, `-fdebug-prefix-map` for C
+- **Lock the build environment** — same Go version, same libc, same OS
 
 ### Tools
 
-  - **reproducible-builds.org** — community resources
-  - **diffoscope** — diff two artifacts to find non-reproducible parts
-  - **in-toto** — attestation that ties the build to the source
+- **reproducible-builds.org** — community resources
+- **diffoscope** — diff two artifacts to find non-reproducible parts
+- **in-toto** — attestation that ties the build to the source
 
 Reproducible builds are not required for most orgs but are required for high-assurance supply chains (FedRAMP High, defense, financial regulators). M14 covers the broader provenance story.
 
@@ -434,7 +451,7 @@ The cosign integration with common build tools:
     tags: ghcr.io/my-org/my-app:${{ github.sha }}
     provenance: true
     sbom: true
-    sign: true  # requires cosign keyless
+    sign: true # requires cosign keyless
 ```
 
 ### Kaniko
@@ -498,22 +515,22 @@ The full supply chain for a container image:
   Observability (logs, metrics, traces)
 ```
 
-Each step produces evidence. Each step is auditable. The supply chain is a *chain of custody* for the artifact.
+Each step produces evidence. Each step is auditable. The supply chain is a _chain of custody_ for the artifact.
 
 ## 17. Image Security in Regulated Environments
 
 FedRAMP, PCI-DSS, HIPAA, and similar frameworks have specific image requirements:
 
-| Requirement | Implementation |
-| ----------- | -------------- |
-| FIPS-compliant crypto | Build with BoringSSL / OpenSSL FIPS |
-| No privileged containers | K8s securityContext, PodSecurity |
-| Read-only root filesystem | K8s securityContext, distroless image |
-| Encrypted at rest | KMS-encrypted container registry |
-| Audit logging | Falco + Wazuh (M17) |
-| Vulnerability scanning | Trivy daily re-scan |
-| Image signing | cosign + Kyverno (M13, M15) |
-| No SSH in container | `RUN rm` the SSH client; distroless has no SSH |
+| Requirement               | Implementation                                 |
+| ------------------------- | ---------------------------------------------- |
+| FIPS-compliant crypto     | Build with BoringSSL / OpenSSL FIPS            |
+| No privileged containers  | K8s securityContext, PodSecurity               |
+| Read-only root filesystem | K8s securityContext, distroless image          |
+| Encrypted at rest         | KMS-encrypted container registry               |
+| Audit logging             | Falco + Wazuh (M17)                            |
+| Vulnerability scanning    | Trivy daily re-scan                            |
+| Image signing             | cosign + Kyverno (M13, M15)                    |
+| No SSH in container       | `RUN rm` the SSH client; distroless has no SSH |
 
 The pipeline you build for FedRAMP satisfies most other frameworks. The cost of a hardened image pipeline is one-time; the benefit is permanent compliance.
 
@@ -521,23 +538,23 @@ The pipeline you build for FedRAMP satisfies most other frameworks. The cost of 
 
 The cost of a vulnerable image:
 
-  - **Vuln re-scan cost** — every image scanned daily; if the image is bloated, the scan is slower
-  - **Patch frequency** — a 500-package image needs patches more often than a 5-package image
-  - **Incident likelihood** — more code = more potential vulns = more incidents
-  - **Audit cost** — auditors ask "how many CVEs in your images?" A clean answer is fast; a long list is slow
+- **Vuln re-scan cost** — every image scanned daily; if the image is bloated, the scan is slower
+- **Patch frequency** — a 500-package image needs patches more often than a 5-package image
+- **Incident likelihood** — more code = more potential vulns = more incidents
+- **Audit cost** — auditors ask "how many CVEs in your images?" A clean answer is fast; a long list is slow
 
 The cost of a hardened image:
 
-  - **Initial effort** — multi-stage build, base image selection
-  - **Compatibility** — some apps don't run on alpine (musl vs. glibc)
-  - **Debugging** — no shell in the container; you cannot `docker exec` to debug
+- **Initial effort** — multi-stage build, base image selection
+- **Compatibility** — some apps don't run on alpine (musl vs. glibc)
+- **Debugging** — no shell in the container; you cannot `docker exec` to debug
 
 The ROI: the initial effort is days; the ongoing savings are years.
 
 ## Related
 
-  - [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning|M07: SCA & Dependency Scanning]]
-  - [[DevOps/devsecops/stage1-code/08-sbom-generation|M08: SBOM Generation]]
-  - [[DevOps/devsecops/stage2-build/10-iac-security|M10: IaC Security]]
-  - [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
-  - [[DevOps/devsecops/stage2-build/README|Stage 2 — Build]]
+- [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning|M07: SCA & Dependency Scanning]]
+- [[DevOps/devsecops/stage1-code/08-sbom-generation|M08: SBOM Generation]]
+- [[DevOps/devsecops/stage2-build/10-iac-security|M10: IaC Security]]
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
+- [[DevOps/devsecops/stage2-build/README|Stage 2 — Build]]

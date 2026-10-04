@@ -23,15 +23,15 @@ Units are declarative configuration files that describe a resource or service:
 
 ### Unit Types
 
-| Type    | File suffix    | Purpose                                    |
-|---------|---------------|-------------------------------------------|
-| Service | `.service`    | Daemon/process management                  |
-| Socket | `.socket`     | Listen on socket, start service on connect |
-| Target | `.target`     | Group of units (like a runlevel)          |
-| Timer   | `.timer`      | cron-like scheduling                      |
-| Mount   | `.mount`      | Filesystem mount                          |
-| Path    | `.path`       | Trigger service when path changes         |
-| Slice   | `.slice`      | Resource management (cgroups)             |
+| Type    | File suffix | Purpose                                    |
+| ------- | ----------- | ------------------------------------------ |
+| Service | `.service`  | Daemon/process management                  |
+| Socket  | `.socket`   | Listen on socket, start service on connect |
+| Target  | `.target`   | Group of units (like a runlevel)           |
+| Timer   | `.timer`    | cron-like scheduling                       |
+| Mount   | `.mount`    | Filesystem mount                           |
+| Path    | `.path`     | Trigger service when path changes          |
+| Slice   | `.slice`    | Resource management (cgroups)              |
 
 ## Service Units
 
@@ -113,15 +113,15 @@ systemctl isolate graphical.target
 
 ### Key Targets
 
-| Target          | Description                           |
-|----------------|---------------------------------------|
-| `emergency.target` | Emergency shell, minimal boot      |
-| `rescue.target`   | Single-user, basic services         |
-| `multi-user.target` | Multi-user, no GUI                 |
-| `graphical.target` | Multi-user with GUI                |
-| `default.target`   | What boots by default              |
-| `halt.target`     | Halt the system                     |
-| `reboot.target`   | Reboot                              |
+| Target              | Description                   |
+| ------------------- | ----------------------------- |
+| `emergency.target`  | Emergency shell, minimal boot |
+| `rescue.target`     | Single-user, basic services   |
+| `multi-user.target` | Multi-user, no GUI            |
+| `graphical.target`  | Multi-user with GUI           |
+| `default.target`    | What boots by default         |
+| `halt.target`       | Halt the system               |
+| `reboot.target`     | Reboot                        |
 
 ## Socket Activation
 

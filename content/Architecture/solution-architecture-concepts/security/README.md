@@ -21,11 +21,11 @@ Security is not a feature you add at the end — it's a **structural property** 
 
 ## CIA Triad
 
-| Property | What It Means | Example Control |
-|----------|---------------|-----------------|
-| **Confidentiality** | Only authorized access | Encryption at rest, RBAC |
-| **Integrity** | Data not tampered with | Digital signatures, checksums |
-| **Availability** | System stays up | DDoS protection, redundancy |
+| Property            | What It Means          | Example Control               |
+| ------------------- | ---------------------- | ----------------------------- |
+| **Confidentiality** | Only authorized access | Encryption at rest, RBAC      |
+| **Integrity**       | Data not tampered with | Digital signatures, checksums |
+| **Availability**    | System stays up        | DDoS protection, redundancy   |
 
 ---
 
@@ -48,11 +48,11 @@ Traditional:                       Zero Trust:
 
 ## Quick Links
 
-| Topic | When to Read |
-|-------|-------------|
-| [[totp]] | Understanding how2FA / TOTP works |
-| [[shift-left]] | Integrating security into CI/CD |
-| [[security]] | Deep dive on patterns and checklist |
+| Topic          | When to Read                        |
+| -------------- | ----------------------------------- |
+| [[totp]]       | Understanding how2FA / TOTP works   |
+| [[shift-left]] | Integrating security into CI/CD     |
+| [[security]]   | Deep dive on patterns and checklist |
 
 ---
 

@@ -17,10 +17,10 @@ An operator is a **method of packaging, deploying, and managing a Kubernetes app
 
 Some applications are **stateful and operationally complex**:
 
-* A database (Postgres, MySQL) that needs a primary + replicas, with failover, backup, restore
-* A message queue (Kafka, RabbitMQ) that needs a 3-broker cluster with replicated topics
-* A search engine (Elasticsearch, Solr) that needs sharded indices and rolling restarts
-* A monitoring system (Prometheus, Thanos) that needs a federation of instances
+- A database (Postgres, MySQL) that needs a primary + replicas, with failover, backup, restore
+- A message queue (Kafka, RabbitMQ) that needs a 3-broker cluster with replicated topics
+- A search engine (Elasticsearch, Solr) that needs sharded indices and rolling restarts
+- A monitoring system (Prometheus, Thanos) that needs a federation of instances
 
 Without an operator, you'd:
 
@@ -33,11 +33,11 @@ Without an operator, you'd:
 
 With an operator, you write **one custom resource** that says "I want a Postgres cluster with 3 replicas", and the operator:
 
-* Creates the StatefulSet, Services, Secrets, ConfigMaps
-* Manages failover when a node dies
-* Performs backups on a schedule
-* Handles version upgrades with the right ordering
-* Exposes a status field that tells you "all 3 replicas are healthy, backup ran 4 hours ago"
+- Creates the StatefulSet, Services, Secrets, ConfigMaps
+- Manages failover when a node dies
+- Performs backups on a schedule
+- Handles version upgrades with the right ordering
+- Exposes a status field that tells you "all 3 replicas are healthy, backup ran 4 hours ago"
 
 The operator encodes **operational knowledge** that would otherwise live in runbooks.
 
@@ -94,9 +94,9 @@ The operator encodes **operational knowledge** that would otherwise live in runb
 
 The operator is a **custom controller** that:
 
-* **Watches** the CR (and its owned objects)
-* **Reconciles** the actual state toward the desired state
-* **Updates** `.status` so users can see what's happening
+- **Watches** the CR (and its owned objects)
+- **Reconciles** the actual state toward the desired state
+- **Updates** `.status` so users can see what's happening
 
 ## A real example: Cert-Manager
 
@@ -109,7 +109,7 @@ metadata: { name: my-cert, namespace: default }
 spec:
   secretName: my-tls
   dnsNames:
-  - app.example.com
+    - app.example.com
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
@@ -138,26 +138,26 @@ Sometimes there's a fourth: **admission webhooks** to validate or mutate the CRs
 
 ## When to use an operator
 
-* **You have a stateful application** with operational complexity (databases, queues, search engines)
-* **You want to manage many instances** of the same thing (50 Kafka clusters, 100 Postgres instances)
-* **You want GitOps for a complex app** — declare the desired state, the operator makes it so
-* **You want self-healing** for an app that doesn't have it (e.g. a legacy statefulset that doesn't handle failover)
+- **You have a stateful application** with operational complexity (databases, queues, search engines)
+- **You want to manage many instances** of the same thing (50 Kafka clusters, 100 Postgres instances)
+- **You want GitOps for a complex app** — declare the desired state, the operator makes it so
+- **You want self-healing** for an app that doesn't have it (e.g. a legacy statefulset that doesn't handle failover)
 
 ## When NOT to use an operator
 
-* **Stateless applications** — a Deployment is enough
-* **Simple stateful apps** — a StatefulSet might be enough
-* **One-off applications** — operators shine when there are many; for one instance, the overhead doesn't pay off
-* **You don't have the operational knowledge** — if no one on the team knows how to operate Postgres, building a Postgres operator is not the right first step
-* **The upstream project provides one** — Kafka has Strimzi, Postgres has CloudNativePG, Redis has Redis Operator. **Use the upstream operator if it exists.** Don't write your own.
+- **Stateless applications** — a Deployment is enough
+- **Simple stateful apps** — a StatefulSet might be enough
+- **One-off applications** — operators shine when there are many; for one instance, the overhead doesn't pay off
+- **You don't have the operational knowledge** — if no one on the team knows how to operate Postgres, building a Postgres operator is not the right first step
+- **The upstream project provides one** — Kafka has Strimzi, Postgres has CloudNativePG, Redis has Redis Operator. **Use the upstream operator if it exists.** Don't write your own.
 
 ## How operators are written
 
 The most common way: **Go, with kubebuilder or operator-sdk**. The two frameworks generate most of the boilerplate:
 
-* CRD definition (with OpenAPI schema)
-* Controller skeleton (informer, workqueue, reconcile loop)
-* RBAC needed to watch / create the CRs and resources
+- CRD definition (with OpenAPI schema)
+- Controller skeleton (informer, workqueue, reconcile loop)
+- RBAC needed to watch / create the CRs and resources
 
 The pattern in Go:
 
@@ -201,10 +201,10 @@ The framework handles the rest: informers, work queues, leader election, RBAC, m
 
 ### Other languages
 
-* **Python** with [`kopf`](https://kopf.readthedocs.io/) (Kubernetes Operator Pythonic Framework) or [`operator-sdk`](https://sdk.operatorframework.io/) for Python
-* **Java** with the Java Operator SDK
-* **Helm + a sidecar** — not really an operator, but a popular middle ground
-* **Ansible** — Ansible Operator SDK wraps Ansible playbooks as a controller
+- **Python** with [`kopf`](https://kopf.readthedocs.io/) (Kubernetes Operator Pythonic Framework) or [`operator-sdk`](https://sdk.operatorframework.io/) for Python
+- **Java** with the Java Operator SDK
+- **Helm + a sidecar** — not really an operator, but a popular middle ground
+- **Ansible** — Ansible Operator SDK wraps Ansible playbooks as a controller
 
 For most teams, **Go + kubebuilder is the standard**. The other languages are for when you have a specific reason (existing expertise, language requirements).
 
@@ -212,13 +212,13 @@ For most teams, **Go + kubebuilder is the standard**. The other languages are fo
 
 The [Operator Capability Levels](https://operatorframework.io/operator-capabilities/) define how mature an operator is:
 
-| Level | What it does |
-|---|---|
-| **Level 1: Basic install** | Can install / uninstall the app |
-| **Level 2: Seamless upgrades** | Can upgrade the app with the right ordering |
-| **Level 3: Full lifecycle** | Backup, restore, scaling, reconfiguration |
-| **Level 4: Deep insights** | Metrics, alerts, log streaming, workload recommendations |
-| **Level 5: Auto-pilot** | Auto-scaling, auto-tuning, auto-remediation |
+| Level                          | What it does                                             |
+| ------------------------------ | -------------------------------------------------------- |
+| **Level 1: Basic install**     | Can install / uninstall the app                          |
+| **Level 2: Seamless upgrades** | Can upgrade the app with the right ordering              |
+| **Level 3: Full lifecycle**    | Backup, restore, scaling, reconfiguration                |
+| **Level 4: Deep insights**     | Metrics, alerts, log streaming, workload recommendations |
+| **Level 5: Auto-pilot**        | Auto-scaling, auto-tuning, auto-remediation              |
 
 Most production operators aim for Level 3 or 4. Level 5 is rare and complex.
 
@@ -226,26 +226,26 @@ Most production operators aim for Level 3 or 4. Level 5 is rare and complex.
 
 [OperatorHub.io](https://operatorhub.io/) is a catalog of operators. **Before writing one, check if it's already there.** Categories include:
 
-* **Database** — Postgres, MySQL, MongoDB, Redis, Cassandra, ScyllaDB
-* **Messaging** — Kafka (Strimzi), RabbitMQ, NATS, Pulsar
-* **Storage** — MinIO, Rook (Ceph), OpenEBS
-* **Monitoring** — Prometheus, Grafana
-* **Security** — cert-manager, Vault
-* **Networking** — various ingress controllers, service meshes
-* **Big data** — Spark, Flink
-* **AI/ML** — Kubeflow, KServe
+- **Database** — Postgres, MySQL, MongoDB, Redis, Cassandra, ScyllaDB
+- **Messaging** — Kafka (Strimzi), RabbitMQ, NATS, Pulsar
+- **Storage** — MinIO, Rook (Ceph), OpenEBS
+- **Monitoring** — Prometheus, Grafana
+- **Security** — cert-manager, Vault
+- **Networking** — various ingress controllers, service meshes
+- **Big data** — Spark, Flink
+- **AI/ML** — Kubeflow, KServe
 
 ## The "is it a real operator?" check
 
 A few heuristics:
 
-* **Has a CRD** (or multiple) for the resource being managed
-* **Has a controller** that watches the CR and creates / updates resources
-* **Updates `.status`** so users can see what's happening
-* **Has owned resources** (StatefulSets, Services, etc.) with proper owner references
-* **Handles deletion** with finalizers (so cleanup happens)
-* **Is documented** with installation, usage, and operational guides
-* **Has tests** — at minimum, unit tests of the reconcile logic; ideally end-to-end envtest
+- **Has a CRD** (or multiple) for the resource being managed
+- **Has a controller** that watches the CR and creates / updates resources
+- **Updates `.status`** so users can see what's happening
+- **Has owned resources** (StatefulSets, Services, etc.) with proper owner references
+- **Handles deletion** with finalizers (so cleanup happens)
+- **Is documented** with installation, usage, and operational guides
+- **Has tests** — at minimum, unit tests of the reconcile logic; ideally end-to-end envtest
 
 If a tool is "a Helm chart" with no controller, it's not an operator — it's a Helm chart. Both are useful.
 
@@ -300,18 +300,18 @@ Finalizers are how controllers do cleanup. Without them, deleting a CR leaves or
 
 ## Real-world operator examples
 
-* **Argo CD** (GitOps) — `Application` CR, reconciles to desired Git state
-* **cert-manager** (TLS) — `Certificate`, `Issuer`, `ClusterIssuer` CRs
-* **Strimzi** (Kafka) — `Kafka`, `KafkaTopic`, `KafkaUser` CRs
-* **CloudNativePG** (Postgres) — `Cluster` CR
-* **Redis Operator** — `RedisCluster`, `RedisSentinel` CRs
-* **Rook** (Ceph storage) — `CephCluster` CR
-* **Keda** (event-driven autoscaling) — `ScaledObject` CR
-* **Crossplane** (cloud resources) — `Composition`, `Composite` CRs
+- **Argo CD** (GitOps) — `Application` CR, reconciles to desired Git state
+- **cert-manager** (TLS) — `Certificate`, `Issuer`, `ClusterIssuer` CRs
+- **Strimzi** (Kafka) — `Kafka`, `KafkaTopic`, `KafkaUser` CRs
+- **CloudNativePG** (Postgres) — `Cluster` CR
+- **Redis Operator** — `RedisCluster`, `RedisSentinel` CRs
+- **Rook** (Ceph storage) — `CephCluster` CR
+- **Keda** (event-driven autoscaling) — `ScaledObject` CR
+- **Crossplane** (cloud resources) — `Composition`, `Composite` CRs
 
 ## See also
 
-* [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — the pattern operators are built on
-* [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — the API extension mechanism
-* [[Kubernetes/concepts/L09-advanced/04-admission-controllers|Admission Controllers & Webhooks]] — for validating / mutating CRs
-* [[Kubernetes/concepts/L09-advanced/05-finalizers|Finalizers]] — for cleanup
+- [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — the pattern operators are built on
+- [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — the API extension mechanism
+- [[Kubernetes/concepts/L09-advanced/04-admission-controllers|Admission Controllers & Webhooks]] — for validating / mutating CRs
+- [[Kubernetes/concepts/L09-advanced/05-finalizers|Finalizers]] — for cleanup

@@ -23,11 +23,11 @@ Kinesis Data Analytics  ← SQL/Flink queries on streams
 
 ## Services at a Glance
 
-| Service | Use When | Key Benefit |
-|---------|----------|-------------|
-| **Data Streams** | You need real-time consumers, replay, custom processing | Full control, exactly-once, consumer groups |
-| **Data Firehose** | You just need data delivered to S3/Redshift | Fully managed, no consumer apps needed |
-| **Data Analytics** | You want to query streams with SQL | Managed SQL/Flink, no cluster to manage |
+| Service            | Use When                                                | Key Benefit                                 |
+| ------------------ | ------------------------------------------------------- | ------------------------------------------- |
+| **Data Streams**   | You need real-time consumers, replay, custom processing | Full control, exactly-once, consumer groups |
+| **Data Firehose**  | You just need data delivered to S3/Redshift             | Fully managed, no consumer apps needed      |
+| **Data Analytics** | You want to query streams with SQL                      | Managed SQL/Flink, no cluster to manage     |
 
 ## Data Streams vs Firehose
 
@@ -92,6 +92,7 @@ For time-series data, include a time component in the partition key if you need 
 ## Common Architecture Patterns
 
 ### Lambda Architecture (classic)
+
 ```
 Kinesis Streams → Kinesis Analytics (real-time) → DynamoDB/Kinesis Firehose
 S3 → Glue → Redshift (batch layer)
@@ -99,6 +100,7 @@ Merge at query time (Athena, Redshift)
 ```
 
 ### Kappa Architecture (simplified)
+
 ```
 Kinesis Streams → Kinesis Analytics → Kinesis Firehose → S3
 S3 as immutable log — no separate batch layer
@@ -106,6 +108,7 @@ Re-process by seeking to beginning of stream
 ```
 
 ### Event Sourcing
+
 ```
 User actions → Kinesis Streams → multiple consumers
   ├── Fraud detection (Lambda)

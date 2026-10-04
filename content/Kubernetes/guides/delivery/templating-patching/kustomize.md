@@ -12,6 +12,7 @@ Kustomize is the **declarative, template-free** way to manage k8s manifests. It 
 ## The problem it solves
 
 You have the same Deployment running in dev, staging, and prod. They differ in:
+
 - Number of replicas (1 / 2 / 5)
 - Image tag (`:dev` / `:staging` / `:v1.2.3`)
 - Resource limits
@@ -60,17 +61,17 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-- deployment.yaml
-- service.yaml
-- configmap.yaml
-- namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+  - namespace.yaml
 
 # common labels added to all resources
 labels:
-- includeSelectors: false
-  pairs:
-    app.kubernetes.io/name: my-app
-    app.kubernetes.io/managed-by: kustomize
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/name: my-app
+      app.kubernetes.io/managed-by: kustomize
 
 # common annotations
 annotations:
@@ -94,20 +95,20 @@ spec:
         app: my-app
     spec:
       containers:
-      - name: my-app
-        image: myregistry/myapp:latest
-        ports:
-        - containerPort: 8080
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 512Mi
-        envFrom:
-        - configMapRef:
-            name: my-app-config
+        - name: my-app
+          image: myregistry/myapp:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - configMapRef:
+                name: my-app-config
 ```
 
 ## The overlays
@@ -119,24 +120,24 @@ spec:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: dev   # all resources go in dev namespace
+namespace: dev # all resources go in dev namespace
 
 resources:
-- ../../base
+  - ../../base
 
 # patch the deployment
 patches:
-- path: patch-replicas.yaml
-- path: patch-resources.yaml
-- path: patch-image.yaml
+  - path: patch-replicas.yaml
+  - path: patch-resources.yaml
+  - path: patch-image.yaml
 
 # override the configmap
 configMapGenerator:
-- name: my-app-config
-  behavior: merge
-  literals:
-  - LOG_LEVEL=debug
-  - ENVIRONMENT=dev
+  - name: my-app-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=debug
+      - ENVIRONMENT=dev
 ```
 
 ```yaml
@@ -146,7 +147,7 @@ kind: Deployment
 metadata:
   name: my-app
 spec:
-  replicas: 1   # dev runs 1 replica
+  replicas: 1 # dev runs 1 replica
 ```
 
 ```yaml
@@ -159,14 +160,14 @@ spec:
   template:
     spec:
       containers:
-      - name: my-app
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 256Mi
+        - name: my-app
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
 ```
 
 ```yaml
@@ -179,8 +180,8 @@ spec:
   template:
     spec:
       containers:
-      - name: my-app
-        image: myregistry/myapp:dev
+        - name: my-app
+          image: myregistry/myapp:dev
 ```
 
 ### Prod overlay
@@ -193,21 +194,21 @@ kind: Kustomization
 namespace: prod
 
 resources:
-- ../../base
-- ingress.yaml    # prod-specific
+  - ../../base
+  - ingress.yaml # prod-specific
 
 patches:
-- path: patch-replicas.yaml
-- path: patch-resources.yaml
-- path: patch-image.yaml
-- path: patch-hpa.yaml
+  - path: patch-replicas.yaml
+  - path: patch-resources.yaml
+  - path: patch-image.yaml
+  - path: patch-hpa.yaml
 
 configMapGenerator:
-- name: my-app-config
-  behavior: merge
-  literals:
-  - LOG_LEVEL=info
-  - ENVIRONMENT=prod
+  - name: my-app-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=info
+      - ENVIRONMENT=prod
 ```
 
 ## Patches
@@ -243,8 +244,8 @@ JSON-patch syntax. Use when you need precise control.
 - op: add
   path: /spec/template/spec/containers/0/env
   value:
-  - name: NEW_VAR
-    value: newvalue
+    - name: NEW_VAR
+      value: newvalue
 ```
 
 Most precise. Useful for adding to lists.
@@ -255,10 +256,10 @@ Most precise. Useful for adding to lists.
 
 ```yaml
 labels:
-- includeSelectors: true
-  pairs:
-    environment: prod
-    cost-center: engineering
+  - includeSelectors: true
+    pairs:
+      environment: prod
+      cost-center: engineering
 ```
 
 `includeSelectors: true` also adds to selector fields (so the label is in the matchLabels).
@@ -291,9 +292,9 @@ nameSuffix: -v1
 
 ```yaml
 images:
-- name: myregistry/myapp   # match the base image
-  newName: myregistry/myapp-prod
-  newTag: v1.2.3
+  - name: myregistry/myapp # match the base image
+    newName: myregistry/myapp-prod
+    newTag: v1.2.3
 ```
 
 Useful in CI: set the image tag dynamically without patching the deployment.
@@ -302,17 +303,17 @@ Useful in CI: set the image tag dynamically without patching the deployment.
 
 ```yaml
 configMapGenerator:
-- name: my-app-config
-  literals:
-  - KEY=value
-  files:
-  - config.json
+  - name: my-app-config
+    literals:
+      - KEY=value
+    files:
+      - config.json
 
 secretGenerator:
-- name: my-app-secret
-  literals:
-  - password=secret
-  type: Opaque
+  - name: my-app-secret
+    literals:
+      - password=secret
+    type: Opaque
 ```
 
 Generates a new ConfigMap/Secret with a hash suffix. When the contents change, the hash changes, triggering a rolling update.
@@ -340,15 +341,15 @@ commonAnnotations:
 
 ```yaml
 patches:
-- target:
-    group: apps
-    version: v1
-    kind: Deployment
-    name: my-app
-  patch: |-
-    - op: replace
-      path: /spec/replicas
-      value: 5
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: my-app
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 5
 ```
 
 ### Components (reusable pieces)
@@ -359,14 +360,14 @@ apiVersion: kustomize.config.k8s.io/v1alpha1
 kind: Component
 
 resources:
-- servicemonitor.yaml
-- prometheusrule.yaml
+  - servicemonitor.yaml
+  - prometheusrule.yaml
 ```
 
 ```yaml
 # overlay
 components:
-- ../components/monitoring
+  - ../components/monitoring
 ```
 
 Reusable across many apps.
@@ -483,17 +484,17 @@ Flux's Kustomization CRD is essentially `kustomize build` + apply.
 
 ## Kustomize vs Helm
 
-| Use case | Kustomize | Helm |
-|----------|-----------|------|
-| Plain yaml, just config diffs | ✅ best | Overkill |
-| Templating, logic, conditionals | ❌ not great | ✅ best |
-| Library reuse | Components | Library charts |
-| Package distribution | ❌ not for that | ✅ OCI registries |
-| Operator-friendly | ✅ | ✅ |
-| Built into kubectl | ✅ | ❌ separate CLI |
-| GitOps | ✅ | ✅ (with values) |
-| Learning curve | Low | Medium-High |
-| Industry adoption | High | Very High |
+| Use case                        | Kustomize       | Helm              |
+| ------------------------------- | --------------- | ----------------- |
+| Plain yaml, just config diffs   | ✅ best         | Overkill          |
+| Templating, logic, conditionals | ❌ not great    | ✅ best           |
+| Library reuse                   | Components      | Library charts    |
+| Package distribution            | ❌ not for that | ✅ OCI registries |
+| Operator-friendly               | ✅              | ✅                |
+| Built into kubectl              | ✅              | ❌ separate CLI   |
+| GitOps                          | ✅              | ✅ (with values)  |
+| Learning curve                  | Low             | Medium-High       |
+| Industry adoption               | High            | Very High         |
 
 **Use Kustomize** when you have a base manifest and need environment-specific overlays.
 
@@ -503,18 +504,18 @@ Flux's Kustomization CRD is essentially `kustomize build` + apply.
 
 ## Common gotchas
 
-* **Patches need the right `apiVersion` and `kind`.** Mismatches silently fail.
-* **`configMapGenerator` adds a hash suffix** to the name. Update the references.
-* **`patchesStrategicMerge` is deprecated** in favor of `patches` with strategic merge syntax.
-* **`includeSelectors: true`** is needed for some labels (e.g., in `spec.selector.matchLabels`).
-* **Order matters** in `resources:` — kustomize processes them in order, and some operations depend on the result of others.
-* **Multi-document YAML** in resources needs `---` separators.
-* **Kustomize is pure yaml** — no logic, no loops. If you need logic, use Helm.
-* **Image transformations** require the image name to match exactly.
-* **Generated Secrets/ConfigMaps** are immutable by default. Use `generatorOptions: { disableNameSuffixHash: false }` to keep updates working.
-* **Patches in separate files** are easier to read. Don't put all patches inline.
-* **`namespace:` is set on the overlay**, not the base. The base is namespace-agnostic.
-* **The `kustomize` CLI is separate from `kubectl kustomize`.** Use the standalone for full features; kubectl's built-in is missing some.
+- **Patches need the right `apiVersion` and `kind`.** Mismatches silently fail.
+- **`configMapGenerator` adds a hash suffix** to the name. Update the references.
+- **`patchesStrategicMerge` is deprecated** in favor of `patches` with strategic merge syntax.
+- **`includeSelectors: true`** is needed for some labels (e.g., in `spec.selector.matchLabels`).
+- **Order matters** in `resources:` — kustomize processes them in order, and some operations depend on the result of others.
+- **Multi-document YAML** in resources needs `---` separators.
+- **Kustomize is pure yaml** — no logic, no loops. If you need logic, use Helm.
+- **Image transformations** require the image name to match exactly.
+- **Generated Secrets/ConfigMaps** are immutable by default. Use `generatorOptions: { disableNameSuffixHash: false }` to keep updates working.
+- **Patches in separate files** are easier to read. Don't put all patches inline.
+- **`namespace:` is set on the overlay**, not the base. The base is namespace-agnostic.
+- **The `kustomize` CLI is separate from `kubectl kustomize`.** Use the standalone for full features; kubectl's built-in is missing some.
 
 ## The "I have 50 overlays" anti-pattern
 
@@ -525,13 +526,13 @@ If you find yourself with 50 overlays, you're using kustomize wrong.
 ```yaml
 # overlays/prod/kustomization.yaml
 components:
-- ../../components/monitoring
-- ../../components/security-baseline
-- ../../components/production-tuning
-- ../../components/ingress-public
+  - ../../components/monitoring
+  - ../../components/security-baseline
+  - ../../components/production-tuning
+  - ../../components/ingress-public
 
 resources:
-- ../../base
+  - ../../base
 ```
 
 **Components** are reusable, parameterizable pieces. They replace the copy-paste of overlays.
@@ -539,6 +540,7 @@ resources:
 ## A worked example
 
 **Goal:** a web service with:
+
 - Different replicas/resources per env
 - Different config (log level, DB connection)
 - Production has HPA, ingress, monitoring
@@ -594,19 +596,19 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: dev
 resources:
-- ../../base
+  - ../../base
 components:
-- ../../components/monitoring
-- ../../components/security-baseline
+  - ../../components/monitoring
+  - ../../components/security-baseline
 patches:
-- path: patch-replicas.yaml
-- path: patch-config.yaml
+  - path: patch-replicas.yaml
+  - path: patch-config.yaml
 configMapGenerator:
-- name: my-app-config
-  behavior: merge
-  literals:
-  - LOG_LEVEL=debug
-  - DB_HOST=db.dev.example.com
+  - name: my-app-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=debug
+      - DB_HOST=db.dev.example.com
 ```
 
 **Prod:**
@@ -617,27 +619,27 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: prod
 resources:
-- ../../base
-- hpa.yaml
-- ingress.yaml
+  - ../../base
+  - hpa.yaml
+  - ingress.yaml
 components:
-- ../../components/monitoring
-- ../../components/security-baseline
-- ../../components/production-tuning
+  - ../../components/monitoring
+  - ../../components/security-baseline
+  - ../../components/production-tuning
 patches:
-- path: patch-replicas.yaml
-- path: patch-config.yaml
-- path: patch-image.yaml
+  - path: patch-replicas.yaml
+  - path: patch-config.yaml
+  - path: patch-image.yaml
 images:
-- name: myregistry/myapp
-  newName: myregistry/myapp
-  newTag: v1.2.3
+  - name: myregistry/myapp
+    newName: myregistry/myapp
+    newTag: v1.2.3
 configMapGenerator:
-- name: my-app-config
-  behavior: merge
-  literals:
-  - LOG_LEVEL=info
-  - DB_HOST=db.prod.example.com
+  - name: my-app-config
+    behavior: merge
+    literals:
+      - LOG_LEVEL=info
+      - DB_HOST=db.prod.example.com
 ```
 
 **Build prod:**
@@ -654,7 +656,7 @@ kubectl apply -k overlays/prod
 
 ## See also
 
-* [[Kubernetes/guides/delivery/templating-patching/helm/cicd|helm-cicd]] — when to use Helm instead
-* [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — kustomize + GitOps
-* [Kustomize docs](https://kubectl.docs.kubernetes.io/references/kustomize/)
-* [Kustomize cheatsheet](https://kubectl.docs.kubernetes.io/references/kustomize/cheatsheet/)
+- [[Kubernetes/guides/delivery/templating-patching/helm/cicd|helm-cicd]] — when to use Helm instead
+- [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — kustomize + GitOps
+- [Kustomize docs](https://kubectl.docs.kubernetes.io/references/kustomize/)
+- [Kustomize cheatsheet](https://kubectl.docs.kubernetes.io/references/kustomize/cheatsheet/)

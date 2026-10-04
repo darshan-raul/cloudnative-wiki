@@ -21,9 +21,9 @@ sudo yum install bind bind-utils
 
 BIND9 configuration is primarily managed through two files:
 
-* **`/etc/bind/named.conf`**: The main configuration file.
-* **`/etc/bind/named.conf.local`**: For local zone configurations.
-* **`/etc/bind/named.conf.options`**: For global server options.
+- **`/etc/bind/named.conf`**: The main configuration file.
+- **`/etc/bind/named.conf.local`**: For local zone configurations.
+- **`/etc/bind/named.conf.options`**: For global server options.
 
 #### 3. Configuring the DNS Server
 
@@ -146,10 +146,10 @@ dig @localhost -x 192.168.0.1
 
 For more advanced configurations, you might want to set up:
 
-* **DNSSEC**: Adds a layer of security by signing your DNS records.
-* **Dynamic DNS (DDNS)**: Allows automatic updates to DNS records.
-* **Slave Zones**: For redundancy and load balancing.
-* **Views**: To provide different responses based on the source of the query.
+- **DNSSEC**: Adds a layer of security by signing your DNS records.
+- **Dynamic DNS (DDNS)**: Allows automatic updates to DNS records.
+- **Slave Zones**: For redundancy and load balancing.
+- **Views**: To provide different responses based on the source of the query.
 
 #### Example of DNSSEC Configuration
 

@@ -15,13 +15,13 @@ Network costs are the most commonly underestimated line item in AWS billing. Dat
 
 Understanding where data flows determines the cost:
 
-| Source | Destination | Cost (approximate) |
-|--------|-------------|---------------------|
-| Same AZ (same VPC) | Same AZ | Free |
-| AZ-to-AZ (same region) | Same region, different AZ | ~$0.01/GB |
-| Inter-region | Different AWS region | ~$0.02-0.09/GB |
-| Internet egress | Public internet | ~$0.09/GB |
-| CloudFront | Internet | ~$0.085/GB (first 10TB) |
+| Source                 | Destination               | Cost (approximate)      |
+| ---------------------- | ------------------------- | ----------------------- |
+| Same AZ (same VPC)     | Same AZ                   | Free                    |
+| AZ-to-AZ (same region) | Same region, different AZ | ~$0.01/GB               |
+| Inter-region           | Different AWS region      | ~$0.02-0.09/GB          |
+| Internet egress        | Public internet           | ~$0.09/GB               |
+| CloudFront             | Internet                  | ~$0.085/GB (first 10TB) |
 
 **The AZ trap:** A common architecture mistake: placing a web server in AZ-a and a database in AZ-b, then running high-throughput application code that queries the database on every request. At scale, AZ-to-AZ transfer adds significant cost.
 
@@ -30,10 +30,12 @@ Understanding where data flows determines the cost:
 ## NAT Gateway Costs
 
 NAT Gateway has two billing components:
+
 - **Per hour:** ~$0.045/hour in us-east-1
 - **Per GB of data processed:** ~$0.045/GB
 
 For a server that processes 100GB/month of outbound traffic:
+
 ```
 NAT Gateway: $0.045 × 24 × 30 = $32.40
 Data transfer: 100GB × $0.045 = $4.50
@@ -43,6 +45,7 @@ Total: ~$37/month per NAT Gateway
 **Multi-AZ NAT Gateway:** Running NAT Gateway in multiple AZs for HA doubles/triples the hourly cost.
 
 **NAT Gateway alternatives:**
+
 - **NAT Instance:** EC2 instance acting as NAT. Much cheaper hourly cost but requires manual management, no HA by default. Use for cost-sensitive non-production environments.
 - **Egress-only internet gateway:** For IPv6, replaces NAT Gateway for outbound traffic only. No inbound inbound. Free.
 - **VPC Endpoints:** For S3 and DynamoDB access from private VPCs — eliminates NAT Gateway entirely for those services. Free.
@@ -56,30 +59,33 @@ VPC Endpoints let private VPC resources access AWS services without going throug
 **Interface Endpoints (PrivateLink):** ~$0.01/hour + per GB processing. Used for services like EC2, SNS, SQS, CloudWatch, Secrets Manager, Systems Manager, etc. Establishes an ENI in your subnet with a private IP.
 
 **When to use PrivateLink:**
+
 - Private resources in a VPC that need to access AWS services without internet
 - Connecting to services in another VPC without VPC peering
 - Third-party SaaS services that support PrivateLink
 
 ## PrivateLink vs VPC Peering vs Transit Gateway
 
-| Approach | Use When | Cost |
-|----------|----------|------|
-| VPC Peering | Two VPCs, same region, permanent connection | Free within region |
-| Transit Gateway | Hub-and-spoke for 3+ VPCs, cross-account | ~$0.02/GB + hourly |
-| PrivateLink | Access a service endpoint privately | ~$0.01/hour + per GB |
-| Direct Connect | On-premises to AWS, large data volumes | $0.03-0.05/GB |
+| Approach        | Use When                                    | Cost                 |
+| --------------- | ------------------------------------------- | -------------------- |
+| VPC Peering     | Two VPCs, same region, permanent connection | Free within region   |
+| Transit Gateway | Hub-and-spoke for 3+ VPCs, cross-account    | ~$0.02/GB + hourly   |
+| PrivateLink     | Access a service endpoint privately         | ~$0.01/hour + per GB |
+| Direct Connect  | On-premises to AWS, large data volumes      | $0.03-0.05/GB        |
 
 **Cost optimization insight:** Transit Gateway data processing charges add up fast in hub-and-spoke topologies. For 10 VPCs all routing through a central transit gateway, every byte of traffic between VPCs incurs transit gateway charges. VPC Peering between two VPCs is free within the same region — use it for permanent two-VPC connections.
 
 ## Load Balancer Costs
 
 **ALB (Application Load Balancer):**
+
 - Per hour: ~$0.0225 (varies by region)
 - Per LCU (Load Balancer Capacity Unit): ~$0.008
   - 1 LCU covers: 800 connections/minute, 100 rules, 1GB/hour data processing
   - Multiple LCUs can run in parallel
 
 **NLB (Network Load Balancer):**
+
 - Per hour: ~$0.0225
 - Per NCU (NCUs scale with throughput, not connections)
 - Much cheaper at high throughput than ALB
@@ -91,16 +97,19 @@ VPC Endpoints let private VPC resources access AWS services without going throug
 ## CloudFront
 
 CloudFront costs have three components:
+
 - **Requests:** ~$0.0075-0.0090 per 10,000 requests (varies by region)
 - **Data transfer:** ~$0.085/GB first 10TB/month, decreasing at higher volumes
 - **Invalidations:** $0.005 per invalidation path
 
 **Caching strategy for cost:**
+
 - Long TTL on static assets (images, CSS, JS) — reduces origin fetches
 - Cache API responses where appropriate — reduces ALB and origin EC2/Lambda costs
 - Use Lambda@Edge for edge logic without hitting origin
 
 **CloudFront → S3 vs S3 direct:**
+
 - Direct S3 egress: ~$0.09/GB
 - CloudFront → Internet: ~$0.085/GB + cheaper tier for first 10TB
 - For a site serving 1TB/month, CloudFront saves ~$5/month + improves performance
@@ -109,11 +118,13 @@ CloudFront costs have three components:
 ## Direct Connect Costs
 
 Direct Connect pricing has three components:
+
 - **Port hours:** ~$0.03-0.05/minute depending on speed (1Gbps, 10Gbps, etc.)
 - **Data transfer:** ~$0.02-0.05/GB (varies by region pair)
 - **Virtual interfaces:** Usually included in port cost
 
 Direct Connect is almost always more expensive than S2S VPN for moderate data volumes. It makes economic sense when:
+
 - You're moving large amounts of data (> 10TB/month) at consistently high throughput
 - You need predictable, low-latency connectivity for on-premises systems
 - You have compliance requirements that prohibit internet-based connectivity

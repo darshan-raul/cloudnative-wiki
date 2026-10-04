@@ -1,6 +1,13 @@
+---
+title: "Resource Requests and Limits"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Resource Requests and Limits — Kubernetes reference and architecture guide."
+---
+
 # Resource Requests and Limits
 
-*"https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"*
+_"https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"_
 
 Each container in a Pod can declare how much **CPU and memory** it needs. Two numbers: **requests** (what the container is guaranteed, used by the scheduler) and **limits** (the maximum the container is allowed to use, enforced at runtime). These are the most important numbers you set in k8s — they drive scheduling, HPA, VPA, eviction, and QoS.
 
@@ -30,19 +37,19 @@ Each container in a Pod can declare how much **CPU and memory** it needs. Two nu
 ```yaml
 spec:
   containers:
-  - name: app
-    image: app:1.0
-    resources:
-      requests:
-        cpu: 100m          # 0.1 CPU guaranteed
-        memory: 128Mi      # 128 MiB guaranteed
-      limits:
-        cpu: 500m          # 0.5 CPU max
-        memory: 256Mi      # 256 MiB max
+    - name: app
+      image: app:1.0
+      resources:
+        requests:
+          cpu: 100m # 0.1 CPU guaranteed
+          memory: 128Mi # 128 MiB guaranteed
+        limits:
+          cpu: 500m # 0.5 CPU max
+          memory: 256Mi # 256 MiB max
 ```
 
-* **`requests`** — what the container is **guaranteed** to get. Used by the scheduler for placement. Counts against ResourceQuota. Drives HPA's `Utilization` calculation.
-* **`limits`** — the **maximum** the container is allowed to use. Enforced at runtime by the kernel (CFS for CPU, cgroup memory limit for memory). Exceeding a memory limit = OOM-kill. Exceeding a CPU limit = throttled, not killed.
+- **`requests`** — what the container is **guaranteed** to get. Used by the scheduler for placement. Counts against ResourceQuota. Drives HPA's `Utilization` calculation.
+- **`limits`** — the **maximum** the container is allowed to use. Enforced at runtime by the kernel (CFS for CPU, cgroup memory limit for memory). Exceeding a memory limit = OOM-kill. Exceeding a CPU limit = throttled, not killed.
 
 **Requests are the floor; limits are the ceiling.** A container with `requests.cpu: 100m, limits.cpu: 500m` will get 100m guaranteed but can burst up to 500m if the node has spare cycles.
 
@@ -50,15 +57,16 @@ spec:
 
 ### 2.1 Units
 
-* `1` = 1 CPU = 1 vCPU on a cloud node.
-* `1000m` = 1 CPU (the `m` is millicores).
-* `500m` = half a CPU.
-* `100m` = 1/10th of a CPU.
+- `1` = 1 CPU = 1 vCPU on a cloud node.
+- `1000m` = 1 CPU (the `m` is millicores).
+- `500m` = half a CPU.
+- `100m` = 1/10th of a CPU.
 
 In fractional cores:
-* `0.1` = 100m.
-* `0.25` = 250m.
-* `0.5` = 500m.
+
+- `0.1` = 100m.
+- `0.25` = 250m.
+- `0.5` = 500m.
 
 **The decimal and milli forms are equivalent** — `0.5` and `500m` are the same.
 
@@ -70,9 +78,9 @@ This is different from memory. CPU is a "compressible" resource — the kernel c
 
 ### 2.3 CPU in clouds
 
-* 1 AWS vCPU = 1 k8s core = 1000m.
-* 1 GCP core = 1 k8s core = 1000m.
-* 1 Azure vCPU = 1 k8s core = 1000m.
+- 1 AWS vCPU = 1 k8s core = 1000m.
+- 1 GCP core = 1 k8s core = 1000m.
+- 1 Azure vCPU = 1 k8s core = 1000m.
 
 (Older AWS instance types had a 2:1 vCPU-to-physical-core ratio, but modern types are 1:1.)
 
@@ -80,9 +88,9 @@ This is different from memory. CPU is a "compressible" resource — the kernel c
 
 A container with `requests.cpu: 100m, limits.cpu: 1` is **Burstable**. In practice:
 
-* The scheduler places it based on `requests` (100m).
-* The container can use up to `limits` (1 core) if the node has spare cycles.
-* If the node is busy, the container is throttled back to 100m.
+- The scheduler places it based on `requests` (100m).
+- The container can use up to `limits` (1 core) if the node has spare cycles.
+- If the node is busy, the container is throttled back to 100m.
 
 **CFS quota enforcement** is per-cgroup. The container is assigned a quota of `100m * period` per `period` (default 100ms). If the container uses more than that quota in a period, it's throttled until the next period.
 
@@ -90,9 +98,9 @@ A container with `requests.cpu: 100m, limits.cpu: 1` is **Burstable**. In practi
 
 CPU limits can hurt **latency-sensitive apps**. A Java app with `limits.cpu: 500m` may be throttled during GC pauses or bursts, increasing tail latency. The choices:
 
-* **Remove the CPU limit** (only `requests`). The app can use whatever's free. The downside: a misbehaving app can starve neighbors.
-* **Set `limits.cpu == requests.cpu`** (Guaranteed). The app gets exactly what it asks for, no throttling. The downside: no bursting.
-* **Set a high `limits.cpu`** (e.g. `requests: 100m, limits: 4`). Some burst room, less throttling. The downside: misbehaving apps can spike.
+- **Remove the CPU limit** (only `requests`). The app can use whatever's free. The downside: a misbehaving app can starve neighbors.
+- **Set `limits.cpu == requests.cpu`** (Guaranteed). The app gets exactly what it asks for, no throttling. The downside: no bursting.
+- **Set a high `limits.cpu`** (e.g. `requests: 100m, limits: 4`). Some burst room, less throttling. The downside: misbehaving apps can spike.
 
 Most production setups use the third option. Some latency-critical apps (search, ML serving) use option 1 or 2.
 
@@ -102,11 +110,11 @@ Most production setups use the third option. Some latency-critical apps (search,
 
 Memory is in bytes by default. Common suffixes:
 
-* `Ki` = 1024 bytes (kibibyte).
-* `Mi` = 1024 Ki = 1,048,576 bytes (mebibyte).
-* `Gi` = 1024 Mi (gibibyte).
-* `K` = 1000 bytes (kilobyte). Rare in k8s.
-* `M` = 1000 KB (megabyte). Rare.
+- `Ki` = 1024 bytes (kibibyte).
+- `Mi` = 1024 Ki = 1,048,576 bytes (mebibyte).
+- `Gi` = 1024 Mi (gibibyte).
+- `K` = 1000 bytes (kilobyte). Rare in k8s.
+- `M` = 1000 KB (megabyte). Rare.
 
 **Use the binary suffixes (`Mi`, `Gi`)** — they're standard in k8s and what most tools expect.
 
@@ -120,11 +128,11 @@ Memory is **incompressible** — the kernel can't give the container less memory
 
 The cgroup memory limit accounts for **everything** in the cgroup:
 
-* RSS (Resident Set Size) — actual physical memory used.
-* Page cache — files the process has read but may not need again.
-* Stack, heap, anonymous mappings.
-* Kernel memory (network buffers, etc.).
-* TCP/UDP socket buffers.
+- RSS (Resident Set Size) — actual physical memory used.
+- Page cache — files the process has read but may not need again.
+- Stack, heap, anonymous mappings.
+- Kernel memory (network buffers, etc.).
+- TCP/UDP socket buffers.
 
 This means a process that **reads a lot of files** can hit its memory limit even if it doesn't think it's using that much memory. The page cache is counted.
 
@@ -163,9 +171,9 @@ But Go's runtime **doesn't return memory to the OS** by default. The Go runtime 
 
 `ephemeral-storage` is the third resource that the kubelet accounts for. It covers:
 
-* **The container's writable layer** (any file the container writes that isn't in a volume).
-* **Logs** stored at `/var/log/containers`.
-* **`emptyDir` volumes** in the container.
+- **The container's writable layer** (any file the container writes that isn't in a volume).
+- **Logs** stored at `/var/log/containers`.
+- **`emptyDir` volumes** in the container.
 
 ```yaml
 resources:
@@ -181,9 +189,9 @@ The kubelet monitors ephemeral storage usage. If a container exceeds `limits.eph
 
 This is most often a problem for:
 
-* **Log-spilling apps** that write huge log files.
-* **Apps that write temp files** in the writable layer.
-* **Image-extraction** — large container images take up space in the kubelet's storage.
+- **Log-spilling apps** that write huge log files.
+- **Apps that write temp files** in the writable layer.
+- **Image-extraction** — large container images take up space in the kubelet's storage.
 
 ### 4.2 The node's ephemeral storage
 
@@ -248,13 +256,13 @@ The same for memory. The filter is hard — a Pod that doesn't fit is dropped.
 
 For a 4-CPU node with `allocatable.cpu: 3800m` (200m reserved):
 
-| Pods on the node | requests.cpu | remaining |
-|---|---|---|
-| (none) | 0m | 3800m |
-| Pod A | 500m | 3300m |
-| Pod B | 1000m | 2300m |
-| Pod C | 2000m | 300m |
-| Pod D (requests 500m) | — | won't fit, dropped |
+| Pods on the node      | requests.cpu | remaining          |
+| --------------------- | ------------ | ------------------ |
+| (none)                | 0m           | 3800m              |
+| Pod A                 | 500m         | 3300m              |
+| Pod B                 | 1000m        | 2300m              |
+| Pod C                 | 2000m        | 300m               |
+| Pod D (requests 500m) | —            | won't fit, dropped |
 
 Pod D is dropped from this node. The scheduler moves to the next node.
 
@@ -291,8 +299,8 @@ If you have 10 GB of requests and 5 GB free, a Pod asking for 6 GB doesn't fit. 
 
 The kernel's CFS (Completely Fair Scheduler) is configured for the container's cgroup:
 
-* `cpu.cfs_quota_us` — the time the container can use per period.
-* `cpu.cfs_period_us` — the period (default 100ms).
+- `cpu.cfs_quota_us` — the time the container can use per period.
+- `cpu.cfs_period_us` — the period (default 100ms).
 
 The container's "CPU usage" is the sum of its threads' CPU time. If it exceeds the quota in a period, it's throttled until the next period.
 
@@ -313,8 +321,8 @@ CFS throttling can cause **latency spikes** in CPU-bound apps. A Java app doing 
 
 This is why some teams remove CPU limits entirely. The trade-off:
 
-* With limits: predictable resource use, possible throttling.
-* Without limits: possible starvation, no throttling.
+- With limits: predictable resource use, possible throttling.
+- Without limits: possible starvation, no throttling.
 
 ### 7.3 Memory: cgroup OOM
 
@@ -348,56 +356,56 @@ Every Pod has a **QoS class** based on its resource spec. The class affects **ev
 
 ### 8.1 Guaranteed
 
-* Every container has `requests == limits` for both CPU and memory.
-* Both `requests` and `limits` are set (not just one).
-* `requests > 0` for both CPU and memory.
+- Every container has `requests == limits` for both CPU and memory.
+- Both `requests` and `limits` are set (not just one).
+- `requests > 0` for both CPU and memory.
 
 Example:
 
 ```yaml
 containers:
-- name: app
-  resources:
-    requests: { cpu: 100m, memory: 128Mi }
-    limits:   { cpu: 100m, memory: 128Mi }
+  - name: app
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 100m, memory: 128Mi }
 ```
 
 **Guaranteed Pods are evicted last** (after Burstable and BestEffort).
 
 ### 8.2 Burstable
 
-* At least one container has a request or limit set.
-* Not all containers have `requests == limits`.
+- At least one container has a request or limit set.
+- Not all containers have `requests == limits`.
 
 Examples:
 
 ```yaml
 # Burstable: has requests but no limits
 containers:
-- resources:
-    requests: { cpu: 100m, memory: 128Mi }
-    # no limits
+  - resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      # no limits
 ```
 
 ```yaml
 # Burstable: requests != limits
 containers:
-- resources:
-    requests: { cpu: 100m, memory: 128Mi }
-    limits:   { cpu: 500m, memory: 256Mi }
+  - resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { cpu: 500m, memory: 256Mi }
 ```
 
 **Burstable Pods are evicted second** (after BestEffort, before Guaranteed).
 
 ### 8.3 BestEffort
 
-* No container has any request or limit set.
+- No container has any request or limit set.
 
 ```yaml
 containers:
-- name: app
-  image: app:1.0
-  # no resources
+  - name: app
+    image: app:1.0
+    # no resources
 ```
 
 **BestEffort Pods are evicted first** when the node is under memory pressure.
@@ -425,19 +433,19 @@ Init containers run **before** the main container. The scheduler uses **the high
 ```yaml
 spec:
   initContainers:
-  - name: migrate
-    image: migrate:1.0
-    resources:
-      requests:
-        cpu: 500m
-        memory: 1Gi
+    - name: migrate
+      image: migrate:1.0
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1Gi
   containers:
-  - name: app
-    image: app:1.0
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
+    - name: app
+      image: app:1.0
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
 ```
 
 This Pod is scheduled as if it needs 500m CPU and 1 GiB memory (the init container's request, which is higher than the main container's).
@@ -448,9 +456,9 @@ This Pod is scheduled as if it needs 500m CPU and 1 GiB memory (the init contain
 
 If the init container is one-time heavy, consider:
 
-* Running the migration in a separate Job, not as an init container.
-* Using a smaller init container (do the heavy work in a separate step).
-* Or: accept the over-allocation. The node is "using" those resources during init, then they're free during runtime.
+- Running the migration in a separate Job, not as an init container.
+- Using a smaller init container (do the heavy work in a separate step).
+- Or: accept the over-allocation. The node is "using" those resources during init, then they're free during runtime.
 
 ## 10. LimitRange — Defaults and Constraints
 
@@ -464,25 +472,25 @@ metadata:
   namespace: prod
 spec:
   limits:
-  - type: Container
-    default:
-      cpu: 500m
-      memory: 512Mi
-    defaultRequest:
-      cpu: 100m
-      memory: 128Mi
-    max:
-      cpu: "2"
-      memory: 4Gi
-    min:
-      cpu: 100m
-      memory: 128Mi
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "2"
+        memory: 4Gi
+      min:
+        cpu: 100m
+        memory: 128Mi
 ```
 
-* **`default`** — applied if the Container doesn't set `limits`.
-* **`defaultRequest`** — applied if the Container doesn't set `requests`.
-* **`max`** — hard cap. Pods that exceed are rejected.
-* **`min`** — hard floor. Pods that don't meet are rejected.
+- **`default`** — applied if the Container doesn't set `limits`.
+- **`defaultRequest`** — applied if the Container doesn't set `requests`.
+- **`max`** — hard cap. Pods that exceed are rejected.
+- **`min`** — hard floor. Pods that don't meet are rejected.
 
 See [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] for the full treatment.
 
@@ -502,17 +510,17 @@ spec:
       cpu: 1
       memory: 2Gi
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ```
 
 The Pod-level resources define the **total** across all containers. The per-container resources are still honored, but the Pod's `resources` field is the overall cap.
 
 This is useful for:
 
-* **ResourceQuota constraints** — a quota on `requests.cpu` checks the Pod's total, not the per-container sum.
-* **VPA recommendations** — VPA in `Pod` mode recommends at the Pod level, not per-container.
-* **Multi-container Pods** — clear, total budgets.
+- **ResourceQuota constraints** — a quota on `requests.cpu` checks the Pod's total, not the per-container sum.
+- **VPA recommendations** — VPA in `Pod` mode recommends at the Pod level, not per-container.
+- **Multi-container Pods** — clear, total budgets.
 
 As of 1.30, this is in beta. Adoption is early.
 
@@ -520,22 +528,22 @@ As of 1.30, this is in beta. Adoption is early.
 
 Some teams run with no CPU limits. The argument:
 
-* **Throttling hurts latency.** A CPU limit causes throttling. For latency-sensitive apps (search, ML serving), the throttling is the bottleneck. Removing the limit removes the throttling.
-* **The scheduler is enough.** With `requests` set, the scheduler places Pods such that `sum(requests) <= capacity`. A misbehaving app can still spike, but the average case is fine.
-* **CFS is conservative.** The kernel's CFS throttling is per-period, not per-second. A 100ms period with 50% quota means the container is throttled 50ms every 100ms. That's noticeable.
+- **Throttling hurts latency.** A CPU limit causes throttling. For latency-sensitive apps (search, ML serving), the throttling is the bottleneck. Removing the limit removes the throttling.
+- **The scheduler is enough.** With `requests` set, the scheduler places Pods such that `sum(requests) <= capacity`. A misbehaving app can still spike, but the average case is fine.
+- **CFS is conservative.** The kernel's CFS throttling is per-period, not per-second. A 100ms period with 50% quota means the container is throttled 50ms every 100ms. That's noticeable.
 
 The argument for limits:
 
-* **Predictability.** With limits, you know each container is capped.
-* **Multi-tenancy safety.** In a shared cluster, a misbehaving app can't starve neighbors.
-* **ResourceQuota safety.** Quotas are about `requests`, not limits. But a runaway container can still OOM-kill a node.
+- **Predictability.** With limits, you know each container is capped.
+- **Multi-tenancy safety.** In a shared cluster, a misbehaving app can't starve neighbors.
+- **ResourceQuota safety.** Quotas are about `requests`, not limits. But a runaway container can still OOM-kill a node.
 
 The k8s official position is **set both**. The reality is more nuanced:
 
-* **Latency-critical apps** (search, ML serving) — no CPU limits, just requests. Burstable.
-* **General services** — set both. Burstable.
-* **Critical services** — set `requests == limits`. Guaranteed.
-* **Background / batch** — no limits or high limits. Burstable.
+- **Latency-critical apps** (search, ML serving) — no CPU limits, just requests. Burstable.
+- **General services** — set both. Burstable.
+- **Critical services** — set `requests == limits`. Guaranteed.
+- **Background / batch** — no limits or high limits. Burstable.
 
 **Tune with VPA** in `recommend` mode to get data-driven values.
 
@@ -545,24 +553,24 @@ k8s supports both cgroup v1 and cgroup v2. The difference matters for resource i
 
 ### 13.1 cgroup v1 (legacy)
 
-* Separate cgroup hierarchies for CPU, memory, blkio, etc.
-* Resource limits set per-hierarchy.
-* More compatible with older kernels.
-* Less efficient — the kernel has to coordinate across hierarchies.
+- Separate cgroup hierarchies for CPU, memory, blkio, etc.
+- Resource limits set per-hierarchy.
+- More compatible with older kernels.
+- Less efficient — the kernel has to coordinate across hierarchies.
 
 ### 13.2 cgroup v2 (modern, k8s 1.25+ default)
 
-* Unified hierarchy. All controllers under one tree.
-* More efficient — the kernel can coordinate resource pressure.
-* **Required for some features** (e.g. PSI — Pressure Stall Information).
-* Default on new clusters since 1.25.
+- Unified hierarchy. All controllers under one tree.
+- More efficient — the kernel can coordinate resource pressure.
+- **Required for some features** (e.g. PSI — Pressure Stall Information).
+- Default on new clusters since 1.25.
 
 ### 13.3 The migration
 
 Most modern distros (kubeadm, EKS, GKE) use cgroup v2 by default. If you have an old cluster on cgroup v1, you can:
 
-* Set `--cgroup-driver=cgroupfs` (v1) or `systemd` (v2).
-* Migrate by draining nodes, switching the cgroup driver, rejoining.
+- Set `--cgroup-driver=cgroupfs` (v1) or `systemd` (v2).
+- Migrate by draining nodes, switching the cgroup driver, rejoining.
 
 **The kubelet's cgroup driver must match the container runtime's.** Docker uses `cgroupfs`, containerd uses `systemd` (typically). Mismatches cause Pods to fail.
 
@@ -583,9 +591,9 @@ The kubelet updates the cgroup without restarting the container. **The container
 
 This is useful for:
 
-* **VPA in `Auto` mode** — VPA can resize without a Pod restart.
-* **HPA + custom metrics** — the HPA controller can also tune requests (k8s 1.27+ feature).
-* **Operational tuning** — change limits without downtime.
+- **VPA in `Auto` mode** — VPA can resize without a Pod restart.
+- **HPA + custom metrics** — the HPA controller can also tune requests (k8s 1.27+ feature).
+- **Operational tuning** — change limits without downtime.
 
 As of 1.33, this is in alpha. Check the feature gate (`InPlacePodVerticalScaling`).
 
@@ -727,8 +735,8 @@ kubectl get pods -A --field-selector spec.nodeName=<node>
 
 ## See also
 
-* [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level aggregates
-* [[Kubernetes/concepts/L06-scheduling-scaling/06-restart-policy|Restart Policy]] — what happens when a container OOM-kills
-* [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — uses requests as the baseline
-* [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — tunes requests automatically
-* [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources]] — GPU and other opaque resources
+- [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level aggregates
+- [[Kubernetes/concepts/L06-scheduling-scaling/06-restart-policy|Restart Policy]] — what happens when a container OOM-kills
+- [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — uses requests as the baseline
+- [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — tunes requests automatically
+- [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources]] — GPU and other opaque resources

@@ -67,6 +67,7 @@ Unlike traditional message brokers (like Service Bus) where messages are deleted
 ## 2. Apache Kafka Wire-Protocol Compatibility
 
 Event Hubs exposes an endpoint compatible with Apache Kafka clients version 1.0 and higher:
+
 - **Concept Translation:**
   - Kafka Topic $\Longleftrightarrow$ Event Hub
   - Kafka Partition $\Longleftrightarrow$ Event Hub Partition
@@ -158,15 +159,15 @@ acks=all
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Tier | Premium Tier | Dedicated Cluster |
-| :--- | :--- | :--- | :--- |
-| **Capacity Units** | Throughput Units (TUs) | Processing Units (PUs) | Capacity Units (CUs) |
-| **Ingress Rate per Unit**| 1 MB/s (1,000 events/sec) | 5 MB/s to 10 MB/s | 100+ MB/s |
-| **Egress Rate per Unit** | 2 MB/s (4,096 events/sec) | 10 MB/s to 20 MB/s | 200+ MB/s |
-| **Max Message Size** | 1 MB | 100 MB | 100 MB |
-| **Partitions per Hub** | Up to 32 partitions | Up to 100 partitions | Up to 1,024 partitions |
-| **Event Retention** | 1 to 7 days | 1 to 90 days | Up to 90 days |
-| **Consumer Groups per Hub**| 20 consumer groups | 100 consumer groups | 1,000 consumer groups |
+| Parameter / Dimension       | Standard Tier             | Premium Tier           | Dedicated Cluster      |
+| :-------------------------- | :------------------------ | :--------------------- | :--------------------- |
+| **Capacity Units**          | Throughput Units (TUs)    | Processing Units (PUs) | Capacity Units (CUs)   |
+| **Ingress Rate per Unit**   | 1 MB/s (1,000 events/sec) | 5 MB/s to 10 MB/s      | 100+ MB/s              |
+| **Egress Rate per Unit**    | 2 MB/s (4,096 events/sec) | 10 MB/s to 20 MB/s     | 200+ MB/s              |
+| **Max Message Size**        | 1 MB                      | 100 MB                 | 100 MB                 |
+| **Partitions per Hub**      | Up to 32 partitions       | Up to 100 partitions   | Up to 1,024 partitions |
+| **Event Retention**         | 1 to 7 days               | 1 to 90 days           | Up to 90 days          |
+| **Consumer Groups per Hub** | 20 consumer groups        | 100 consumer groups    | 1,000 consumer groups  |
 
 ---
 
@@ -183,6 +184,7 @@ acks=all
 ## 6. Realistic Pricing Scenarios
 
 Azure Event Hubs pricing is based on:
+
 1. **Throughput Units (TUs):** $0.03 per TU per hour (~$21.90/month per TU) in Standard Tier.
 2. **Ingress Events:** $0.028 per million events ingested.
 3. **Capture Feature:** $0.10 per hour per Event Hub (~$73.00/month).

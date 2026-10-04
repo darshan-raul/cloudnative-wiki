@@ -54,12 +54,12 @@ aws cloudwatch put-metric-alarm \
 
 ### Alarm Actions
 
-| Action | Use |
-|--------|-----|
-| SNS Topic | Send notification (email, SMS, PagerDuty) |
-| Auto Scaling | Scale ASG in/out |
-| EC2 Action | Stop, terminate, or reboot EC2 |
-| Systems Manager OpsItem | Create OpsItem for runbook automation |
+| Action                  | Use                                       |
+| ----------------------- | ----------------------------------------- |
+| SNS Topic               | Send notification (email, SMS, PagerDuty) |
+| Auto Scaling            | Scale ASG in/out                          |
+| EC2 Action              | Stop, terminate, or reboot EC2            |
+| Systems Manager OpsItem | Create OpsItem for runbook automation     |
 
 ```bash
 aws cloudwatch put-metric-alarm \
@@ -113,20 +113,20 @@ aws cloudwatch put-metric-alarm \
 
 ### Missing Data Treatment
 
-| Option | Behavior |
-|--------|----------|
-| `notBreaching` (default) | Missing data treated as "good" — no alarm |
-| `breaching` | Missing data treated as "breached" — alarm |
-| `ignore` | Missing data doesn't affect alarm state |
-| `missing` | Alarm stays in current state |
+| Option                   | Behavior                                   |
+| ------------------------ | ------------------------------------------ |
+| `notBreaching` (default) | Missing data treated as "good" — no alarm  |
+| `breaching`              | Missing data treated as "breached" — alarm |
+| `ignore`                 | Missing data doesn't affect alarm state    |
+| `missing`                | Alarm stays in current state               |
 
 ### Evaluation Periods and Period Length
 
-| Scenario | Period | Evaluation Periods |
-|----------|--------|-------------------|
-| Real-time (1-min detection) | 60 | 3 |
-| Standard (5-min detection) | 300 | 2 |
-| Cost-optimized (15-min detection) | 900 | 2 |
+| Scenario                          | Period | Evaluation Periods |
+| --------------------------------- | ------ | ------------------ |
+| Real-time (1-min detection)       | 60     | 3                  |
+| Standard (5-min detection)        | 300    | 2                  |
+| Cost-optimized (15-min detection) | 900    | 2                  |
 
 ## Alarm Best Practices
 
@@ -169,12 +169,12 @@ aws cloudwatch put-metric-alarm --alarm-name UnhealthyHosts \
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Alarms per region | 10,000 (can request increase) |
-| Alarm actions per alarm | 5 |
-| Composite alarm depth | 5 nested alarms |
-| Metrics per alarm | 1 (use metric math for multiple) |
+| Resource                | Limit                            |
+| ----------------------- | -------------------------------- |
+| Alarms per region       | 10,000 (can request increase)    |
+| Alarm actions per alarm | 5                                |
+| Composite alarm depth   | 5 nested alarms                  |
+| Metrics per alarm       | 1 (use metric math for multiple) |
 
 ## References
 

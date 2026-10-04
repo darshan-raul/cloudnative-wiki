@@ -1,13 +1,23 @@
 ---
 title: etcd in Kubernetes
-tags: [kubernetes, internals, etcd, control-plane, storage, raft, consensus, disaster-recovery]
+tags:
+  [
+    kubernetes,
+    internals,
+    etcd,
+    control-plane,
+    storage,
+    raft,
+    consensus,
+    disaster-recovery,
+  ]
 date: 2026-09-06
 description: Complete production guide to etcd in Kubernetes — Raft consensus, key registry layout, defragmentation, snapshots, compaction, TLS, and disaster recovery.
 ---
 
 # etcd
 
->*"https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/"*
+> _"https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/"_
 
 etcd is the **distributed key-value store that backs Kubernetes**. Every object you create — Pod, ConfigMap, Secret, CRD — lives in etcd. The API server is the only thing that talks to it; the kubelet and controllers talk to the API server, which talks to etcd.
 
@@ -43,6 +53,7 @@ etcd is the **distributed key-value store that backs Kubernetes**. Every object 
 etcd is a **distributed, consistent, strongly consistent key-value store** based on the Raft consensus algorithm.
 
 Key properties:
+
 - **Consistent**: reads are linearizable (all clients see the same data at the same time)
 - **Fault-tolerant**: can tolerate N member failures in a 2N+1 cluster
 - **Strongly consistent**: writes are only acknowledged after quorum agrees
@@ -174,11 +185,11 @@ ETCDCTL_API=3 etcdctl member promote abc123 \
 ### 6. Quorum and availability
 
 | Cluster size | Tolerated failures | Quorum (needs) |
-|-------------|-------------------|----------------|
-| 1 | 0 | 1 |
-| 3 | 1 | 2 |
-| 5 | 2 | 3 |
-| 7 | 3 | 4 |
+| ------------ | ------------------ | -------------- |
+| 1            | 0                  | 1              |
+| 3            | 1                  | 2              |
+| 5            | 2                  | 3              |
+| 7            | 3                  | 4              |
 
 **Always use odd numbers.** A 3-member and 4-member cluster have the same write quorum (2/3 and 3/4 ≈ 2/3), but 4 has more failure points.
 
@@ -258,6 +269,7 @@ ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snap-20240611.db \
 ```
 
 **Backup schedule best practice:**
+
 ```bash
 # Cron job: daily backup + upload to S3
 0 3 * * * ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-daily.db \
@@ -356,6 +368,7 @@ In a kubeadm cluster:
 ```
 
 kube-apiserver connects to etcd with:
+
 ```bash
 kube-apiserver \
   --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt \
@@ -372,13 +385,13 @@ etcd members talk to each other with peer certs (separate from client certs).
 
 etcd has two key storage concepts:
 
-| | WAL | Snapshot |
-|---|---|---|
-| **What** | Write-Ahead Log — append-only log of all operations | Point-in-time snapshot of the DB |
-| **Purpose** | Durability — survive crashes and replay | Faster recovery, compaction |
-| **Location** | `/var/lib/etcd/member/wal/` | `/var/lib/etcd/member/snap/` |
-| **Size** | Grows indefinitely (compacted by etcd) | Periodically created |
-| **Crash recovery** | Replays WAL on top of last snapshot | |
+|                    | WAL                                                 | Snapshot                         |
+| ------------------ | --------------------------------------------------- | -------------------------------- |
+| **What**           | Write-Ahead Log — append-only log of all operations | Point-in-time snapshot of the DB |
+| **Purpose**        | Durability — survive crashes and replay             | Faster recovery, compaction      |
+| **Location**       | `/var/lib/etcd/member/wal/`                         | `/var/lib/etcd/member/snap/`     |
+| **Size**           | Grows indefinitely (compacted by etcd)              | Periodically created             |
+| **Crash recovery** | Replays WAL on top of last snapshot                 |                                  |
 
 On a crash, etcd replays the WAL on the last snapshot to reconstruct state. This is why etcd needs fast disk (fsync on every write).
 
@@ -415,6 +428,7 @@ blockdev --setra 4096 /dev/sda
 ```
 
 **Storage requirements:**
+
 - SSD/NVMe required for production (IOPS: 5,000+ for a busy cluster)
 - Spinning disks will cause write stalls and leader elections
 - RAID 0 for capacity/speed (not for availability — etcd handles replication)
@@ -423,11 +437,11 @@ blockdev --setra 4096 /dev/sda
 
 ### 15. Object size limits
 
-| Limit | Default | Applied where |
-|-------|---------|---------------|
-| Max object size | 1.5 MB | etcd — any single object |
-| Max value size | 1.5 MB | etcd key value |
-| Max key length | 16 KB | etcd |
+| Limit              | Default   | Applied where                     |
+| ------------------ | --------- | --------------------------------- |
+| Max object size    | 1.5 MB    | etcd — any single object          |
+| Max value size     | 1.5 MB    | etcd key value                    |
+| Max key length     | 16 KB     | etcd                              |
 | Max WAL entry size | Unlimited | WAL can have huge entries (don't) |
 
 **ConfigMaps and Secrets are subject to the 1.5MB limit.** Large ConfigMaps (>1MB) will cause API server slowness. For large data, use a PV or external storage.
@@ -477,22 +491,23 @@ Encryption at rest **does not protect data in transit** — that's TLS.
 
 Key metrics (exposed at `https://<etcd>:2379/metrics`):
 
-| Metric | What it tells you |
-|--------|------------------|
-| `etcd_server_leader_changes_total` | Leader elections — should be near zero |
-| `etcd_mvcc_db_total_size_in_bytes` | Physical DB size |
-| `etcd_mvcc_db_total_size_in_bytes_in_use` | Actual data size (after defrag) |
-| `etcd_mvcc_db_compaction_keys_total` | Compaction operations |
-| `etcd_disk_wal_fsync_duration_seconds` | WAL fsync latency — should be <10ms |
-| `etcd_disk_backend_commit_duration_seconds` | BoltDB commit latency |
-| `etcd_network_peer_round_trip_time_seconds` | Peer latency — high = network issue |
-| `etcd_server_has_failed_requests_total` | Failed requests — indicates issues |
+| Metric                                      | What it tells you                      |
+| ------------------------------------------- | -------------------------------------- |
+| `etcd_server_leader_changes_total`          | Leader elections — should be near zero |
+| `etcd_mvcc_db_total_size_in_bytes`          | Physical DB size                       |
+| `etcd_mvcc_db_total_size_in_bytes_in_use`   | Actual data size (after defrag)        |
+| `etcd_mvcc_db_compaction_keys_total`        | Compaction operations                  |
+| `etcd_disk_wal_fsync_duration_seconds`      | WAL fsync latency — should be <10ms    |
+| `etcd_disk_backend_commit_duration_seconds` | BoltDB commit latency                  |
+| `etcd_network_peer_round_trip_time_seconds` | Peer latency — high = network issue    |
+| `etcd_server_has_failed_requests_total`     | Failed requests — indicates issues     |
 
 Prometheus scrape config for etcd:
+
 ```yaml
 - job_name: etcd
   static_configs:
-    - targets: ['10.0.0.1:2379']
+    - targets: ["10.0.0.1:2379"]
   scheme: https
   tls_config:
     ca_file: /etc/kubernetes/pki/etcd/ca.crt
@@ -537,16 +552,16 @@ This is why backups matter — and why quorum is critical.
 
 ### 19. Common failure modes
 
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `etcd cluster is unavailable` | Lost quorum | Restore from snapshot |
-| Write timeouts | Disk too slow (HDD, fsync lag) | Switch to SSD, tune disk |
-| `etcd: request is too large` | ConfigMap/Secret > 1.5MB | Split the data |
-| High `etcd_server_leader_changes_total` | Network issues between nodes | Check network, reduce load |
-| Member shows `unstarted` | Peer TLS misconfigured | Verify certs, restart etcd |
-| `mvcc: database space exceeded` | DB quota hit (default 2GB) | Defrag, increase quota |
-| Snapshot restore fails | Snapshot corrupted or wrong version | Use `etcdctl snapshot status` to verify |
-| `etcd: invalid credentials` | Cert expired or misconfigured | Renew certs (12 months typical) |
+| Symptom                                 | Cause                               | Fix                                     |
+| --------------------------------------- | ----------------------------------- | --------------------------------------- |
+| `etcd cluster is unavailable`           | Lost quorum                         | Restore from snapshot                   |
+| Write timeouts                          | Disk too slow (HDD, fsync lag)      | Switch to SSD, tune disk                |
+| `etcd: request is too large`            | ConfigMap/Secret > 1.5MB            | Split the data                          |
+| High `etcd_server_leader_changes_total` | Network issues between nodes        | Check network, reduce load              |
+| Member shows `unstarted`                | Peer TLS misconfigured              | Verify certs, restart etcd              |
+| `mvcc: database space exceeded`         | DB quota hit (default 2GB)          | Defrag, increase quota                  |
+| Snapshot restore fails                  | Snapshot corrupted or wrong version | Use `etcdctl snapshot status` to verify |
+| `etcd: invalid credentials`             | Cert expired or misconfigured       | Renew certs (12 months typical)         |
 
 ```bash
 # Space exceeded: check quota
@@ -570,12 +585,12 @@ ETCDCTL_API=3 etcdctl quota increase 8589934592 \
 
 ### 20. etcd in different deployment modes
 
-| Mode | Description | Where |
-|------|-------------|-------|
-| **Stacked** | etcd runs as static pod on same nodes as control plane | kubeadm default for dev |
-| **External** | etcd on dedicated nodes | Production kubeadm |
-| **Managed** | Cloud provider runs etcd (EKS, GKE, AKS) | EKS/GKE/AKS |
-| **Stretched** | etcd across availability zones | HA across AZs |
+| Mode          | Description                                            | Where                   |
+| ------------- | ------------------------------------------------------ | ----------------------- |
+| **Stacked**   | etcd runs as static pod on same nodes as control plane | kubeadm default for dev |
+| **External**  | etcd on dedicated nodes                                | Production kubeadm      |
+| **Managed**   | Cloud provider runs etcd (EKS, GKE, AKS)               | EKS/GKE/AKS             |
+| **Stretched** | etcd across availability zones                         | HA across AZs           |
 
 For managed Kubernetes (EKS, GKE, AKS), you **never touch etcd** — the cloud provider manages it. For self-managed (kubeadm, kops), you're responsible.
 
@@ -596,6 +611,7 @@ curl -s https://<etcd>:2379/metrics | grep etcd_disk_backend_commit_duration_sec
 ```
 
 Solutions:
+
 1. **Fast disk (NVMe SSD)** — the single biggest improvement
 2. **Defragment** — reclaim physical space after deletions
 3. **Reduce object count** — fewer ConfigMaps/Secrets helps
@@ -607,24 +623,24 @@ Solutions:
 
 ### 22. Gotchas
 
-* **etcd is the cluster.** Lose all members = lose all cluster state. Back up regularly.
-* **SSD/NVMe is mandatory for production.** A spinning disk cannot handle etcd's fsync requirements.
-* **`snapshot restore` creates a new data dir** — never use the old data dir after restoring.
-* **The 1.5MB object limit is enforced by etcd**, not the API server. Big ConfigMaps hit the etcd error before the API server can reject them.
-* **Encryption at rest is opt-in.** Secrets are base64-encoded plaintext in etcd by default.
-* **Changing encryption keys requires a re-encryption procedure** — it's not automatic.
-* **Defragmentation is necessary** even though etcd has automatic compaction. Check physical DB size vs actual data size.
-* **The WAL is append-only** and can grow large if the cluster is write-heavy and compaction is delayed.
-* **etcd defrag is member-by-member** — you can defrag one member without affecting the cluster.
-* **Cross-cluster etcd is not supported.** Don't try to share etcd between clusters.
-* **The API server is a single Raft client.** etcd sees one client regardless of how many API server replicas you have.
-* **etcd 3.5 auto-defrags**, but the compaction happens at the revision level, not the space level — manual defrag after bulk deletes is still useful.
-* **`etcdctl endpoint health`** checks connectivity, not data integrity. For integrity, use `etcdctl endpoint status`.
+- **etcd is the cluster.** Lose all members = lose all cluster state. Back up regularly.
+- **SSD/NVMe is mandatory for production.** A spinning disk cannot handle etcd's fsync requirements.
+- **`snapshot restore` creates a new data dir** — never use the old data dir after restoring.
+- **The 1.5MB object limit is enforced by etcd**, not the API server. Big ConfigMaps hit the etcd error before the API server can reject them.
+- **Encryption at rest is opt-in.** Secrets are base64-encoded plaintext in etcd by default.
+- **Changing encryption keys requires a re-encryption procedure** — it's not automatic.
+- **Defragmentation is necessary** even though etcd has automatic compaction. Check physical DB size vs actual data size.
+- **The WAL is append-only** and can grow large if the cluster is write-heavy and compaction is delayed.
+- **etcd defrag is member-by-member** — you can defrag one member without affecting the cluster.
+- **Cross-cluster etcd is not supported.** Don't try to share etcd between clusters.
+- **The API server is a single Raft client.** etcd sees one client regardless of how many API server replicas you have.
+- **etcd 3.5 auto-defrags**, but the compaction happens at the revision level, not the space level — manual defrag after bulk deletes is still useful.
+- **`etcdctl endpoint health`** checks connectivity, not data integrity. For integrity, use `etcdctl endpoint status`.
 
 ---
 
 ## See also
 
-* [[Kubernetes/concepts/L09-advanced/09-pause-container|Pause Container]] — the infra container in every Pod
-* [[Kubernetes/concepts/L01-architecture/02-high-availability|HA Topology]] — where etcd fits in an HA cluster
-* [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how Pods find each other via Services
+- [[Kubernetes/concepts/L09-advanced/09-pause-container|Pause Container]] — the infra container in every Pod
+- [[Kubernetes/concepts/L01-architecture/02-high-availability|HA Topology]] — where etcd fits in an HA cluster
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how Pods find each other via Services

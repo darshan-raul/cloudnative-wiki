@@ -16,12 +16,12 @@ CloudWatch Events (now unified under EventBridge) routes events from AWS service
 
 ### Event Types
 
-| Event Type | Source | Example |
-|-----------|--------|---------|
-| AWS API events | AWS services | `aws.ec2.describeinstances` |
-| Schedule events | EventBridge scheduler | Every 5 minutes |
-| Custom events | Your application | Application-level events |
-| Security events | AWS services | `aws.cloudtrail` |
+| Event Type      | Source                | Example                     |
+| --------------- | --------------------- | --------------------------- |
+| AWS API events  | AWS services          | `aws.ec2.describeinstances` |
+| Schedule events | EventBridge scheduler | Every 5 minutes             |
+| Custom events   | Your application      | Application-level events    |
+| Security events | AWS services          | `aws.cloudtrail`            |
 
 ### Event Structure
 
@@ -73,27 +73,27 @@ aws events put-rule \
 
 ### Schedule Expressions
 
-| Expression | Meaning |
-|-----------|---------|
-| `rate(5 minutes)` | Every 5 minutes |
-| `rate(1 hour)` | Every hour |
-| `rate(1 day)` | Every day |
-| `cron(0 10 * * ? *)` | Every day at 10:00 UTC |
-| `cron(0/15 * * * ? *)` | Every 15 minutes |
+| Expression             | Meaning                |
+| ---------------------- | ---------------------- |
+| `rate(5 minutes)`      | Every 5 minutes        |
+| `rate(1 hour)`         | Every hour             |
+| `rate(1 day)`          | Every day              |
+| `cron(0 10 * * ? *)`   | Every day at 10:00 UTC |
+| `cron(0/15 * * * ? *)` | Every 15 minutes       |
 
 ## Targets
 
-| Target | Use |
-|--------|-----|
-| Lambda function | Run serverless code |
-| SNS topic | Send notifications |
-| SQS queue | Enqueue for processing |
-| ECS task | Run ECS task |
-| Step Functions | Start a state machine |
-| Kinesis stream | Fan-out to stream |
-| API Gateway | Trigger REST endpoint |
-| EventBridge event bus | Forward to another account/bus |
-| SSM Run Command | Run command on managed instances |
+| Target                | Use                              |
+| --------------------- | -------------------------------- |
+| Lambda function       | Run serverless code              |
+| SNS topic             | Send notifications               |
+| SQS queue             | Enqueue for processing           |
+| ECS task              | Run ECS task                     |
+| Step Functions        | Start a state machine            |
+| Kinesis stream        | Fan-out to stream                |
+| API Gateway           | Trigger REST endpoint            |
+| EventBridge event bus | Forward to another account/bus   |
+| SSM Run Command       | Run command on managed instances |
 
 ## Common Patterns
 
@@ -147,10 +147,10 @@ Each AWS account has a **default event bus** for events from AWS services. You c
 
 ### Event Bus Types
 
-| Type | Use |
-|------|-----|
-| Default | AWS service events |
-| Custom | Your application events |
+| Type    | Use                                              |
+| ------- | ------------------------------------------------ |
+| Default | AWS service events                               |
+| Custom  | Your application events                          |
 | Partner | Third-party SaaS events (Datadog, Zendesk, etc.) |
 
 ### Cross-Account Events
@@ -194,12 +194,12 @@ aws events put-rule \
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Rules per event bus | 100 |
-| Targets per rule | 5 |
+| Resource                    | Limit              |
+| --------------------------- | ------------------ |
+| Rules per event bus         | 100                |
+| Targets per rule            | 5                  |
 | Events per second (default) | Variable by target |
-| Event size | 256KB |
+| Event size                  | 256KB              |
 
 ## References
 

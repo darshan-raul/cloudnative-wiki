@@ -51,30 +51,32 @@ SCC stands out from third-party security platforms through its agentless, hyperv
 
 ### 1. SCC Standard vs. Premium / Enterprise
 
-| Capability | Standard Tier | Premium / Enterprise Tier |
-| :--- | :--- | :--- |
-| **Cost** | **Free** (Included with GCP) | Billed per project usage or organization subscription |
-| **Asset Discovery** | Basic inventory of cloud assets | Real-time asset inventory and change history |
-| **Vulnerability Detection** | Basic web security scanner | **Security Health Analytics (SHA)** with CIS Benchmarks |
-| **Threat Detection** | None | **Event, Container, and VM Threat Detection (VMTD)** |
-| **Compliance Mapping** | None | Automated reports for PCI-DSS, ISO 27001, SOC 2, NIST |
+| Capability                  | Standard Tier                   | Premium / Enterprise Tier                               |
+| :-------------------------- | :------------------------------ | :------------------------------------------------------ |
+| **Cost**                    | **Free** (Included with GCP)    | Billed per project usage or organization subscription   |
+| **Asset Discovery**         | Basic inventory of cloud assets | Real-time asset inventory and change history            |
+| **Vulnerability Detection** | Basic web security scanner      | **Security Health Analytics (SHA)** with CIS Benchmarks |
+| **Threat Detection**        | None                            | **Event, Container, and VM Threat Detection (VMTD)**    |
+| **Compliance Mapping**      | None                            | Automated reports for PCI-DSS, ISO 27001, SOC 2, NIST   |
 
 ### 2. Secret Manager
 
 Replaces hard-coded credentials, environment variable leaks, and configuration file secrets:
-* **Versioning:** Secrets are immutable versions (`/versions/1`, `/versions/latest`). Updating a password creates a new version without breaking existing active sessions.
-* **Automatic Rotation:** Triggers Cloud Functions or Pub/Sub topics on a defined schedule to automatically rotate database passwords in Cloud SQL.
-* **Native Cloud Run & GKE Integration:**
-  * Cloud Run mounts secrets directly as environment variables or volume files without writing code.
-  * GKE mounts secrets using the **Secrets Store CSI Driver**.
+
+- **Versioning:** Secrets are immutable versions (`/versions/1`, `/versions/latest`). Updating a password creates a new version without breaking existing active sessions.
+- **Automatic Rotation:** Triggers Cloud Functions or Pub/Sub topics on a defined schedule to automatically rotate database passwords in Cloud SQL.
+- **Native Cloud Run & GKE Integration:**
+  - Cloud Run mounts secrets directly as environment variables or volume files without writing code.
+  - GKE mounts secrets using the **Secrets Store CSI Driver**.
 
 ### 3. Cloud KMS & Envelope Encryption
 
 Cloud KMS (Key Management Service) manages cryptographic keys (Symmetric, Asymmetric, and FIPS 140-2 Level 3 Cloud HSM):
-* **Envelope Encryption:**
-  * **Data Encryption Key (DEK):** Fast symmetric key generated locally to encrypt large data payloads.
-  * **Key Encryption Key (KEK):** Stored inside Cloud KMS. Encrypts the DEK. Only the encrypted DEK is stored alongside the ciphertext on disk.
-* **Customer-Managed Encryption Keys (CMEK):** Allows enterprise security teams to control and revoke encryption keys used by GCS, BigQuery, and Compute Engine on demand.
+
+- **Envelope Encryption:**
+  - **Data Encryption Key (DEK):** Fast symmetric key generated locally to encrypt large data payloads.
+  - **Key Encryption Key (KEK):** Stored inside Cloud KMS. Encrypts the DEK. Only the encrypted DEK is stored alongside the ciphertext on disk.
+- **Customer-Managed Encryption Keys (CMEK):** Allows enterprise security teams to control and revoke encryption keys used by GCS, BigQuery, and Compute Engine on demand.
 
 ---
 
@@ -114,40 +116,42 @@ gcloud scc findings-exports create scc-to-siem \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
+| Parameter                             | Limit                     | Production Notes                                 |
+| :------------------------------------ | :------------------------ | :----------------------------------------------- |
 | **Max payload size (Secret Manager)** | 64 KiB per secret version | Store text tokens, certs, keys; not binary files |
-| **Secret Manager read rate** | 10,000 requests/sec | Scales globally across regions |
-| **KMS Key rotation schedule** | Minimum 24 hours | Recommended 90 days for compliance |
-| **SCC Findings retention** | 13 months | Historical findings queryable for over a year |
+| **Secret Manager read rate**          | 10,000 requests/sec       | Scales globally across regions                   |
+| **KMS Key rotation schedule**         | Minimum 24 hours          | Recommended 90 days for compliance               |
+| **SCC Findings retention**            | 13 months                 | Historical findings queryable for over a year    |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/security-command-center
-* **SCC Documentation:** https://cloud.google.com/security-command-center/docs
-* **Secret Manager Documentation:** https://cloud.google.com/secret-manager/docs
-* **Cloud KMS Guide:** https://cloud.google.com/kms/docs
-* **Pricing:** https://cloud.google.com/security-command-center/pricing
+- **Homepage:** https://cloud.google.com/security-command-center
+- **SCC Documentation:** https://cloud.google.com/security-command-center/docs
+- **Secret Manager Documentation:** https://cloud.google.com/secret-manager/docs
+- **Cloud KMS Guide:** https://cloud.google.com/kms/docs
+- **Pricing:** https://cloud.google.com/security-command-center/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Secret Manager for Cloud-Native Fleet
-* 50 Microservices in GKE accessing 150 unique secrets.
-* Secrets stored: 150 active secret versions ($0.06 / secret version / month = **$9.00 / month**).
-* Secret Access Operations: 2 million API calls / month ($0.03 per 10,000 operations = **$6.00 / month**).
-* Free Tier: First 6 secret versions and 10,000 operations free.
-* **Total Monthly Cost:** **~$15.00 / month**.
+
+- 50 Microservices in GKE accessing 150 unique secrets.
+- Secrets stored: 150 active secret versions ($0.06 / secret version / month = **$9.00 / month**).
+- Secret Access Operations: 2 million API calls / month ($0.03 per 10,000 operations = **$6.00 / month**).
+- Free Tier: First 6 secret versions and 10,000 operations free.
+- **Total Monthly Cost:** **~$15.00 / month**.
 
 ### Scenario 2: Security Command Center Premium
-* Mid-sized organization with 25 active projects across compute, storage, and GKE.
-* Pay-As-You-Go model (based on compute utilization):
-  * Compute Engine charges: ~$0.0071 / core-hour.
-  * 100 active vCPUs running 24/7 (73,000 core-hours) = **~$518.30 / month**.
-* Delivers continuous CIS benchmark compliance scanning, hypervisor-level cryptomining detection, and GKE container runtime monitoring.
+
+- Mid-sized organization with 25 active projects across compute, storage, and GKE.
+- Pay-As-You-Go model (based on compute utilization):
+  - Compute Engine charges: ~$0.0071 / core-hour.
+  - 100 active vCPUs running 24/7 (73,000 core-hours) = **~$518.30 / month**.
+- Delivers continuous CIS benchmark compliance scanning, hypervisor-level cryptomining detection, and GKE container runtime monitoring.
 
 ---
 

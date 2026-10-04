@@ -52,14 +52,14 @@ Securing pod-level access to Azure resources (Azure Key Vault, Cosmos DB, Azure 
 
 ## 2. Evolution: Workload Identity vs. Legacy `aad-pod-identity`
 
-| Architectural Dimension | Legacy `aad-pod-identity` (DEPRECATED) | Microsoft Entra Workload Identity (CURRENT) |
-| :--- | :--- | :--- |
-| **Authentication Flow** | Intercepts node-level IMDS (`169.254.169.254`) | **Direct OIDC JWT token exchange with Entra** |
-| **Cluster Node Daemons** | Requires heavy `NMI` (Node Managed Identity) pods| **Zero Node Daemons** (Lightweight webhook only) |
-| **Linux `iptables` Tampering**| Intercepts and rewrites host IP routing | **Zero host networking manipulation** |
-| **Token Acquisition Latency**| **2 to 10 seconds** (Host interception hop) | **< 200 milliseconds** (Direct HTTPS to Entra) |
-| **Windows Node Support** | Not supported | **Fully Supported on Windows and Linux** |
-| **Privilege Requirement** | Required cluster-wide `Virtual Machine Contributor`| **Least privilege (Scoped to Managed Identity)** |
+| Architectural Dimension        | Legacy `aad-pod-identity` (DEPRECATED)              | Microsoft Entra Workload Identity (CURRENT)      |
+| :----------------------------- | :-------------------------------------------------- | :----------------------------------------------- |
+| **Authentication Flow**        | Intercepts node-level IMDS (`169.254.169.254`)      | **Direct OIDC JWT token exchange with Entra**    |
+| **Cluster Node Daemons**       | Requires heavy `NMI` (Node Managed Identity) pods   | **Zero Node Daemons** (Lightweight webhook only) |
+| **Linux `iptables` Tampering** | Intercepts and rewrites host IP routing             | **Zero host networking manipulation**            |
+| **Token Acquisition Latency**  | **2 to 10 seconds** (Host interception hop)         | **< 200 milliseconds** (Direct HTTPS to Entra)   |
+| **Windows Node Support**       | Not supported                                       | **Fully Supported on Windows and Linux**         |
+| **Privilege Requirement**      | Required cluster-wide `Virtual Machine Contributor` | **Least privilege (Scoped to Managed Identity)** |
 
 ---
 
@@ -152,15 +152,15 @@ spec:
     spec:
       serviceAccountName: billing-sa
       containers:
-      - name: api
-        image: mcr.microsoft.com/dotnet/samples:aspnetapp
-        resources:
-          limits:
-            cpu: "1"
-            memory: "1Gi"
-          requests:
-            cpu: "250m"
-            memory: "512Mi"
+        - name: api
+          image: mcr.microsoft.com/dotnet/samples:aspnetapp
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
 ```
 
 Apply deployment:
@@ -175,23 +175,23 @@ kubectl apply -f billing-deployment.yaml
 
 In addition to pod identities, AKS supports **Azure RBAC for Kubernetes Authorization**, replacing static `kubeconfig` clusters with centralized Microsoft Entra ID directory role assignments:
 
-| Role Name | Kubernetes Equivalent | Operational Scope |
-| :--- | :--- | :--- |
-| **Azure Kubernetes Service RBAC Reader** | `view` ClusterRole | Read-only inspection of pods, services, deployments |
-| **Azure Kubernetes Service RBAC Writer** | `edit` ClusterRole | Create and modify deployments, configmaps, services |
-| **Azure Kubernetes Service RBAC Admin** | `admin` ClusterRole| Full access within namespace, including RoleBindings |
-| **Azure Kubernetes Service RBAC Cluster Admin**| `cluster-admin` | Unrestricted root control over all cluster resources |
+| Role Name                                       | Kubernetes Equivalent | Operational Scope                                    |
+| :---------------------------------------------- | :-------------------- | :--------------------------------------------------- |
+| **Azure Kubernetes Service RBAC Reader**        | `view` ClusterRole    | Read-only inspection of pods, services, deployments  |
+| **Azure Kubernetes Service RBAC Writer**        | `edit` ClusterRole    | Create and modify deployments, configmaps, services  |
+| **Azure Kubernetes Service RBAC Admin**         | `admin` ClusterRole   | Full access within namespace, including RoleBindings |
+| **Azure Kubernetes Service RBAC Cluster Admin** | `cluster-admin`       | Unrestricted root control over all cluster resources |
 
 ---
 
 ## 5. Quotas, Performance & Configuration Limits
 
-| Dimension | Platform Metric / Limit | Production Context |
-| :--- | :--- | :--- |
-| **Max Federated Credentials per Identity**| **20 Federated Credentials**| Max K8s ServiceAccounts linked to 1 Managed Identity |
-| **Token Projection Expiration** | Default: **3,600 seconds (1 hr)** | Automatically rotated by Kubelet at 80% lifetime |
-| **Entra Token Issuance Latency** | **< 150 milliseconds** | High-speed cryptographic token exchange |
-| **Max Service Principals / Identities** | Enterprise scale (thousands)| Managed Identities avoid client secret rotations |
+| Dimension                                  | Platform Metric / Limit           | Production Context                                   |
+| :----------------------------------------- | :-------------------------------- | :--------------------------------------------------- |
+| **Max Federated Credentials per Identity** | **20 Federated Credentials**      | Max K8s ServiceAccounts linked to 1 Managed Identity |
+| **Token Projection Expiration**            | Default: **3,600 seconds (1 hr)** | Automatically rotated by Kubelet at 80% lifetime     |
+| **Entra Token Issuance Latency**           | **< 150 milliseconds**            | High-speed cryptographic token exchange              |
+| **Max Service Principals / Identities**    | Enterprise scale (thousands)      | Managed Identities avoid client secret rotations     |
 
 ---
 
@@ -210,9 +210,9 @@ In addition to pod identities, AKS supports **Azure RBAC for Kubernetes Authoriz
 
 - **Architecture:** 50 microservices across 10 namespaces authenticating to Azure SQL and Azure Key Vault via Workload Identity.
 - **Cost Comparison vs Secret Management Tools:**
-  - *Option 1 (Third-Party HashiCorp Vault Cluster):* 3x dedicated nodes + Vault Enterprise licensing = **~$2,500 / month**.
-  - *Option 2 (Entra Workload Identity):* **$0.00 / month** (Included natively with Microsoft Entra ID and AKS).
-- **Total Operational Security Spend:** **$0.00** *(While eliminating all static secrets from Kubernetes manifests).*
+  - _Option 1 (Third-Party HashiCorp Vault Cluster):_ 3x dedicated nodes + Vault Enterprise licensing = **~$2,500 / month**.
+  - _Option 2 (Entra Workload Identity):_ **$0.00 / month** (Included natively with Microsoft Entra ID and AKS).
+- **Total Operational Security Spend:** **$0.00** _(While eliminating all static secrets from Kubernetes manifests)._
 
 ### Scenario B: Regulatory Just-In-Time Cluster Administration via PIM
 

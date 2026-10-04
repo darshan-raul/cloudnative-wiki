@@ -1,6 +1,13 @@
+---
+title: "SBOMs (Software Bill of Materials)"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "SBOMs (Software Bill of Materials) — Kubernetes reference and architecture guide."
+---
+
 # SBOMs (Software Bill of Materials)
 
-*"https://www.cisa.gov/sbom | https://cyclonedx.org/ | https://spdx.dev/"*
+_"https://www.cisa.gov/sbom | https://cyclonedx.org/ | https://spdx.dev/"_
 
 A **Software Bill of Materials (SBOM)** is a **machine-readable inventory of every component** that makes up a piece of software — the image, the libraries, the transitive dependencies, the licenses, the versions. If you've ever read a nutrition label on food, an SBOM is the same idea: when something turns out to be harmful, you need to know what you actually consumed so you can act on it. In k8s, the "something harmful" is usually a **CVE in a base image layer or a transitive dependency**, and the "act on it" is identifying which workloads are affected before a vulnerability is exploited. This note covers the formats, generation, signing, consumption, and the regulatory context.
 
@@ -51,9 +58,9 @@ When a CVE drops in **openssl 3.0.x**, you need to know **which images contain t
 
 Three reasons SBOMs matter:
 
-* **Vulnerability management** — "which of my workloads are affected by CVE-2024-XXXX?"
-* **License compliance** — "are we shipping GPL-licensed code in a proprietary product?"
-* **Supply chain assurance** — "is this image what it claims to be?" (combined with signing)
+- **Vulnerability management** — "which of my workloads are affected by CVE-2024-XXXX?"
+- **License compliance** — "are we shipping GPL-licensed code in a proprietary product?"
+- **Supply chain assurance** — "is this image what it claims to be?" (combined with signing)
 
 The first one is the **killer use case** for k8s. A new CVE drops weekly; an SBOM lets you go from "we have 800 images" to "3 images are affected, in 2 namespaces, 17 pods" in seconds.
 
@@ -61,21 +68,21 @@ The first one is the **killer use case** for k8s. A new CVE drops weekly; an SBO
 
 There are **two dominant formats** plus a third niche one:
 
-* **SPDX** (Linux Foundation) — the **broadest** format. Designed for license compliance; extended for security. Used by the Linux kernel, major distros, and most enterprise compliance tools.
-* **CycloneDX** (OWASP / CycloneDX working group) — the **security-focused** format. Designed for vulnerability management; lighter than SPDX. Used by most security / SCA tools.
-* **in-toto** (in-toto project) — less common; focused on supply chain attestation. Used by some Sigstore tooling.
+- **SPDX** (Linux Foundation) — the **broadest** format. Designed for license compliance; extended for security. Used by the Linux kernel, major distros, and most enterprise compliance tools.
+- **CycloneDX** (OWASP / CycloneDX working group) — the **security-focused** format. Designed for vulnerability management; lighter than SPDX. Used by most security / SCA tools.
+- **in-toto** (in-toto project) — less common; focused on supply chain attestation. Used by some Sigstore tooling.
 
 Both are **standardized at ISO** (SPDX ISO/IEC 5962:2024, CycloneDX ISO/IEC 5925:2024). Either is a reasonable choice. **Pick one and be consistent** — tools support both, but switching is a hassle.
 
-| | SPDX | CycloneDX |
-|---|---|---|
-| **Origin** | Linux Foundation | OWASP |
-| **Primary use** | License + security | Security + license |
-| **ISO standard** | ISO/IEC 5962:2024 | ISO/IEC 5925:2024 |
-| **Complexity** | Heavier (more fields) | Lighter (fewer fields) |
-| **Adoption** | Red Hat, SUSE, Microsoft, etc. | Anchore, Sonatype, Snyk, OWASP Dep-Check |
-| **JSON / XML / YAML** | Tag-value (text), JSON, YAML, RDF | JSON, XML, Protobuf |
-| **Best for** | Compliance-heavy orgs | Security-heavy orgs |
+|                       | SPDX                              | CycloneDX                                |
+| --------------------- | --------------------------------- | ---------------------------------------- |
+| **Origin**            | Linux Foundation                  | OWASP                                    |
+| **Primary use**       | License + security                | Security + license                       |
+| **ISO standard**      | ISO/IEC 5962:2024                 | ISO/IEC 5925:2024                        |
+| **Complexity**        | Heavier (more fields)             | Lighter (fewer fields)                   |
+| **Adoption**          | Red Hat, SUSE, Microsoft, etc.    | Anchore, Sonatype, Snyk, OWASP Dep-Check |
+| **JSON / XML / YAML** | Tag-value (text), JSON, YAML, RDF | JSON, XML, Protobuf                      |
+| **Best for**          | Compliance-heavy orgs             | Security-heavy orgs                      |
 
 For **k8s / cloud-native**, **CycloneDX** is more common (most security tools default to it). For **enterprise / regulated / compliance-heavy**, **SPDX** is more common.
 
@@ -85,49 +92,49 @@ A typical SBOM has these fields:
 
 ### 3.1 Top-level
 
-* **`bomFormat`** / **`spdxVersion`** — the format version.
-* **`serialNumber`** / **`SPDXID`** — a unique ID for the SBOM itself.
-* **`metadata`** — when generated, by what tool, the document's purpose.
-* **`creationInfo`** (SPDX) / **`metadata.timestamp`** (CycloneDX) — timestamp.
+- **`bomFormat`** / **`spdxVersion`** — the format version.
+- **`serialNumber`** / **`SPDXID`** — a unique ID for the SBOM itself.
+- **`metadata`** — when generated, by what tool, the document's purpose.
+- **`creationInfo`** (SPDX) / **`metadata.timestamp`** (CycloneDX) — timestamp.
 
 ### 3.2 Components (the actual bill of materials)
 
 For SPDX:
 
-* **`name`** — package name.
-* **`versionInfo`** — version.
-* **`downloadLocation`** — where the package was downloaded from.
-* **`filesAnalyzed`** — whether the source was inspected (true for source SBOMs, false for binary / known-good).
-* **`licenseConcluded`** — the license (SPDX identifier: `MIT`, `Apache-2.0`, `GPL-3.0-only`).
-* **`copyrightText`** — copyright notices.
-* **`checksums`** — SHA1 / SHA256 of the package.
-* **`externalRefs`** — PURL (Package URL), CPE (Common Platform Enumeration), SWHID (Software Heritage ID) — for cross-tool matching.
+- **`name`** — package name.
+- **`versionInfo`** — version.
+- **`downloadLocation`** — where the package was downloaded from.
+- **`filesAnalyzed`** — whether the source was inspected (true for source SBOMs, false for binary / known-good).
+- **`licenseConcluded`** — the license (SPDX identifier: `MIT`, `Apache-2.0`, `GPL-3.0-only`).
+- **`copyrightText`** — copyright notices.
+- **`checksums`** — SHA1 / SHA256 of the package.
+- **`externalRefs`** — PURL (Package URL), CPE (Common Platform Enumeration), SWHID (Software Heritage ID) — for cross-tool matching.
 
 For CycloneDX:
 
-* **`type`** — `library`, `application`, `operating-system`, `device`, etc.
-* **`name`** — package name.
-* **`version`** — version.
-* **`purl`** — Package URL (mandatory for tools that match vulnerabilities).
-* **`licenses`** — list of licenses.
-* **`hashes`** — SHA1 / SHA256 / etc.
-* **`externalReferences`** — vendor, security advisories, etc.
+- **`type`** — `library`, `application`, `operating-system`, `device`, etc.
+- **`name`** — package name.
+- **`version`** — version.
+- **`purl`** — Package URL (mandatory for tools that match vulnerabilities).
+- **`licenses`** — list of licenses.
+- **`hashes`** — SHA1 / SHA256 / etc.
+- **`externalReferences`** — vendor, security advisories, etc.
 
 ### 3.3 Relationships
 
 For SPDX:
 
-* **`Relationship: SPDXRef-Package-A DEPENDS_ON SPDXRef-Package-B`** — the dependency graph.
+- **`Relationship: SPDXRef-Package-A DEPENDS_ON SPDXRef-Package-B`** — the dependency graph.
 
 For CycloneDX:
 
-* `"dependencies": [{"ref": "pkg:maven/...", "dependsOn": ["pkg:maven/..."]}]` — the dependency graph.
+- `"dependencies": [{"ref": "pkg:maven/...", "dependsOn": ["pkg:maven/..."]}]` — the dependency graph.
 
 The **dependency graph** is what makes an SBOM **more than a package list**. With the graph, you can answer "is this vulnerable package reachable from this entry point?".
 
 ### 3.4 PURL (Package URL)
 
-*"https://github.com/package-url/purl-spec"*
+_"https://github.com/package-url/purl-spec"_
 
 The **Package URL (PURL)** is the de-facto standard identifier:
 
@@ -156,12 +163,12 @@ A PURL is the **key** for matching vulnerabilities. The CVE database is keyed by
 
 The **language ecosystem** has its own SBOM generators:
 
-* **Go** — `cyclonedx-gomod` (CycloneDX), `sigs.k8s.io/bom` (SPDX), `go mod why`.
-* **JavaScript / TypeScript** — `cyclonedx-node-npm`, `@cyclonedx/cyclonedx-npm`.
-* **Python** — `cyclonedx-python`, `pip-licenses`.
-* **Java / Maven** — `cyclonedx-maven-plugin`, `spdx-maven-plugin`.
-* **Rust** — `cargo-cyclonedx`.
-* **.NET** — `dotnet-CycloneDX`.
+- **Go** — `cyclonedx-gomod` (CycloneDX), `sigs.k8s.io/bom` (SPDX), `go mod why`.
+- **JavaScript / TypeScript** — `cyclonedx-node-npm`, `@cyclonedx/cyclonedx-npm`.
+- **Python** — `cyclonedx-python`, `pip-licenses`.
+- **Java / Maven** — `cyclonedx-maven-plugin`, `spdx-maven-plugin`.
+- **Rust** — `cargo-cyclonedx`.
+- **.NET** — `dotnet-CycloneDX`.
 
 The plugin is added to the build; on each build, an SBOM is generated for the source-level deps.
 
@@ -190,11 +197,11 @@ The SBOM is generated at **the same step as the image build**, so the SBOM and i
 
 ### 5.1 The image scan
 
-* **Trivy** — `trivy image --format cyclonedx <image>`. Generates CycloneDX JSON. Most popular.
-* **Grype** — `grype <image> -o cyclonedx-json`. Generates CycloneDX JSON.
-* **Syft** — `syft <image> -o cyclonedx-json` or `syft -o spdx-json`. Generators only (no scanning).
-* **Bomber** — generates from various inputs.
-* **docker sbom** — `docker sbom <image>`. Uses Syft under the hood; official Docker tool.
+- **Trivy** — `trivy image --format cyclonedx <image>`. Generates CycloneDX JSON. Most popular.
+- **Grype** — `grype <image> -o cyclonedx-json`. Generates CycloneDX JSON.
+- **Syft** — `syft <image> -o cyclonedx-json` or `syft -o spdx-json`. Generators only (no scanning).
+- **Bomber** — generates from various inputs.
+- **docker sbom** — `docker sbom <image>`. Uses Syft under the hood; official Docker tool.
 
 The scanner inspects the image's filesystem (the layers, the package managers' files like `dpkg/status`, `apk/installed`, `pip freeze`, etc.) and produces an SBOM.
 
@@ -202,11 +209,11 @@ The scanner inspects the image's filesystem (the layers, the package managers' f
 
 Image-time SBOMs are **less accurate** than build-time:
 
-* **Language deps** — image-time sees the installed packages. If the build did `npm prune --production`, only prod deps are in the image. The SBOM is correct.
-* **OS packages** — image-time sees the installed packages. Correct.
-* **Source-level deps that aren't in the image** — image-time can't see them. Build-time can.
-* **VCS / git deps** — image-time can't see them. Build-time can (if the tool is configured).
-* **License info** — image-time can usually get this from the package metadata. Less accurate for source-only deps.
+- **Language deps** — image-time sees the installed packages. If the build did `npm prune --production`, only prod deps are in the image. The SBOM is correct.
+- **OS packages** — image-time sees the installed packages. Correct.
+- **Source-level deps that aren't in the image** — image-time can't see them. Build-time can.
+- **VCS / git deps** — image-time can't see them. Build-time can (if the tool is configured).
+- **License info** — image-time can usually get this from the package metadata. Less accurate for source-only deps.
 
 For **most use cases**, image-time is good enough. For **strict supply chain assurance**, build-time is required.
 
@@ -249,15 +256,15 @@ The **best practice** is **6.1** (OCI artifact) + a **6.3** scanner. The SBOM is
 
 ### 7.1 The OCI artifact model
 
-*"https://github.com/opencontainers/image-spec/blob/main/artifact.md"*
+_"https://github.com/opencontainers/image-spec/blob/main/artifact.md"_
 
 The OCI artifact model lets you push **arbitrary blobs** to a registry. The blob has a `mediaType` that says what it is:
 
-* `application/vnd.oci.image.manifest.v1+json` — image manifest.
-* `application/vnd.oci.image.layer.v1.tar+gzip` — image layer.
-* `application/vnd.cyclonedx+json` — CycloneDX SBOM.
-* `application/spdx+json` — SPDX SBOM.
-* `application/vnd.sigstore.cosign.signature.v1+json` — cosign signature.
+- `application/vnd.oci.image.manifest.v1+json` — image manifest.
+- `application/vnd.oci.image.layer.v1.tar+gzip` — image layer.
+- `application/vnd.cyclonedx+json` — CycloneDX SBOM.
+- `application/spdx+json` — SPDX SBOM.
+- `application/vnd.sigstore.cosign.signature.v1+json` — cosign signature.
 
 The image manifest can **reference** the SBOM via the `manifests` field, using a "referrer list":
 
@@ -274,18 +281,18 @@ oras attach --artifact-type application/vnd.cyclonedx+json \
 
 ### 7.2 The vendor-specific paths
 
-* **GitHub** — `oci://ghcr.io/owner/repo:sbom-<digest>`.
-* **GitLab** — `oci://registry.gitlab.com/owner/project:sbom-<digest>`.
-* **Docker Hub** — supports OCI artifacts since 2022.
-* **AWS ECR** — supports OCI artifacts.
-* **GCP Artifact Registry** — supports OCI artifacts.
-* **Azure ACR** — supports OCI artifacts.
+- **GitHub** — `oci://ghcr.io/owner/repo:sbom-<digest>`.
+- **GitLab** — `oci://registry.gitlab.com/owner/project:sbom-<digest>`.
+- **Docker Hub** — supports OCI artifacts since 2022.
+- **AWS ECR** — supports OCI artifacts.
+- **GCP Artifact Registry** — supports OCI artifacts.
+- **Azure ACR** — supports OCI artifacts.
 
 All major registries support the OCI artifact model. Pick one and use it.
 
 ## 8. SBOM Signing (cosign / Sigstore)
 
-*"https://docs.sigstore.dev/"*
+_"https://docs.sigstore.dev/"_
 
 The SBOM is **only useful if you trust it**. An unsigned SBOM can be **tampered with**: an attacker can replace the SBOM with one that says "no vulnerabilities" (to bypass a policy that consumes the SBOM).
 
@@ -322,7 +329,7 @@ The SBOM signature is verified. The SBOM is trusted.
 
 ### 8.1 Keyless signing (Sigstore Fulcio)
 
-*"https://github.com/sigstore/fulcio"*
+_"https://github.com/sigstore/fulcio"_
 
 With **keyless signing**, you don't need a key pair. You authenticate to Fulcio (Sigstore's CA) via OIDC, and Fulcio issues a short-lived certificate tied to your OIDC identity.
 
@@ -364,12 +371,12 @@ SBOM (list of packages)
 
 ### 9.2 The tools
 
-* **Trivy** — `trivy image <image>`. Scans the image (generates SBOM internally, scans it).
-* **Grype** — `grype <image>`. Scans the image.
-* **Snyk** — `snyk container test <image>`. Scans the image.
-* **Anchore** — `anchore-cli image add <image> && anchore-cli image wait <image> && anchore-cli image vuln <image> all`.
-* **Dependency-Track** — consumes SBOMs, runs continuous monitoring.
-* **OSV-Scanner** — Google's tool, uses the OSV database.
+- **Trivy** — `trivy image <image>`. Scans the image (generates SBOM internally, scans it).
+- **Grype** — `grype <image>`. Scans the image.
+- **Snyk** — `snyk container test <image>`. Scans the image.
+- **Anchore** — `anchore-cli image add <image> && anchore-cli image wait <image> && anchore-cli image vuln <image> all`.
+- **Dependency-Track** — consumes SBOMs, runs continuous monitoring.
+- **OSV-Scanner** — Google's tool, uses the OSV database.
 
 The tools all do the same thing:
 
@@ -383,11 +390,11 @@ A CVE can drop **any time** — including 6 months after the image was built. Th
 
 Tools for continuous monitoring:
 
-* **Snyk** — re-scans periodically.
-* **Anchore** — re-scans periodically.
-* **Dependency-Track** — continuous monitoring.
-* **Trivy + cron** — periodic re-scans.
-* **kubeclarity / chainsaw** — k8s-specific continuous monitoring.
+- **Snyk** — re-scans periodically.
+- **Anchore** — re-scans periodically.
+- **Dependency-Track** — continuous monitoring.
+- **Trivy + cron** — periodic re-scans.
+- **kubeclarity / chainsaw** — k8s-specific continuous monitoring.
 
 The standard pattern: a daily or weekly cron that re-scans all images. The result is a "vulnerability report" that's updated regularly.
 
@@ -397,11 +404,11 @@ The second use case: **license compliance**. Some companies can't ship GPL-licen
 
 The SBOM has the licenses of every package. Tools:
 
-* **ScanCode** — `scancode-toolkit`. Scans the source for license expressions.
-* **FOSSology** — `fossology`. License scanning, with a web UI.
-* **ORT (OSS Review Toolkit)** — license + security review.
-* **Snyk License Compliance** — checks licenses against a policy.
-* **pip-licenses** — for Python.
+- **ScanCode** — `scancode-toolkit`. Scans the source for license expressions.
+- **FOSSology** — `fossology`. License scanning, with a web UI.
+- **ORT (OSS Review Toolkit)** — license + security review.
+- **Snyk License Compliance** — checks licenses against a policy.
+- **pip-licenses** — for Python.
 
 The flow:
 
@@ -417,14 +424,14 @@ The policy is enforced **at CI** (fail the build) or **at admission** (fail the 
 
 ## 11. The SBOM + VEX Workflow
 
-*"https://www.cisa.gov/sites/default/files/2024-01/VEX-Use-Cases-508c.pdf"*
+_"https://www.cisa.gov/sites/default/files/2024-01/VEX-Use-Cases-508c.pdf"_
 
 **VEX (Vulnerability Exploitability eXchange)** is a **statement about a CVE in the context of a specific product**: "this CVE in openssl 3.0.x does NOT affect us because we don't use the vulnerable function". The VEX status is one of:
 
-* **Not affected** — the vuln is in the code, but we don't use it.
-* **Affected** — the vuln is in the code and we do use it.
-* **Fixed** — the vuln is in the code, but we've patched it.
-* **Under investigation** — we don't know yet.
+- **Not affected** — the vuln is in the code, but we don't use it.
+- **Affected** — the vuln is in the code and we do use it.
+- **Fixed** — the vuln is in the code, but we've patched it.
+- **Under investigation** — we don't know yet.
 
 The VEX document is **linked to the SBOM** (or to a specific package version). The scanner consumes both: the SBOM says "this openssl is in the image", the VEX says "this openssl vuln doesn't affect us".
 
@@ -490,28 +497,28 @@ metadata: { name: verify-sbom }
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: verify-image-sbom
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    verifyImages:
-    - imageReferences:
-      - "myregistry/*"
-      attestations:
-      - predicateType: https://cyclonedx.org/bom
-        conditions:
-        - all:
-          - key: "{{images.{{...}}.attestations.{{...}}.predicateType}}"
-            operator: Equals
-            value: https://cyclonedx.org/bom
+    - name: verify-image-sbom
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      verifyImages:
+        - imageReferences:
+            - "myregistry/*"
+          attestations:
+            - predicateType: https://cyclonedx.org/bom
+              conditions:
+                - all:
+                    - key: "{{images.{{...}}.attestations.{{...}}.predicateType}}"
+                      operator: Equals
+                      value: https://cyclonedx.org/bom
 ```
 
 The Pod is rejected if the image doesn't have a **signed SBOM** (signed by the configured cosign identity).
 
 ### 12.2 Connaisseur
 
-*"https://github.com/sse-secure-systems/connaisseur"*
+_"https://github.com/sse-secure-systems/connaisseur"_
 
 Connaisseur verifies image signatures and SBOMs at admission. It's the **defense-in-depth layer**: only images with a valid signature + SBOM are deployed.
 
@@ -523,13 +530,13 @@ For the **runtime use case** (a Pod is running, a CVE drops), see [[Kubernetes/c
 
 ## 13. The SLSA / SLSA-provenance Link
 
-*"https://slsa.dev/"*
+_"https://slsa.dev/"_
 
 **SLSA (Supply chain Levels for Secure Artifacts)** is a framework for **provenance** — proof that an artifact was built as claimed. The provenance includes:
 
-* **Who** built it (the build system, the identity).
-* **How** it was built (the build steps, the source repo, the commit).
-* **What** was built (the artifact hash, the dependencies).
+- **Who** built it (the build system, the identity).
+- **How** it was built (the build steps, the source repo, the commit).
+- **What** was built (the artifact hash, the dependencies).
 
 The **SBOM is part of the provenance**. The provenance is a separate artifact (e.g. an in-toto attestation) signed by the build system. A consumer verifies:
 
@@ -557,37 +564,38 @@ The **regulatory landscape** has shifted. SBOMs are no longer optional in many i
 
 ### 14.1 US Executive Order 14028 (2021)
 
-*"https://www.whitehouse.gov/briefing-room/presidential-actions/2021/05/12/executive-order-on-improving-the-nations-cybersecurity/"*
+_"https://www.whitehouse.gov/briefing-room/presidential-actions/2021/05/12/executive-order-on-improving-the-nations-cybersecurity/"_
 
 EO 14028 requires federal agencies to:
 
-* Require SBOMs from software vendors.
-* Use the NIST SSDF (Secure Software Development Framework).
-* Adopt SLSA-style provenance.
+- Require SBOMs from software vendors.
+- Use the NIST SSDF (Secure Software Development Framework).
+- Adopt SLSA-style provenance.
 
 The **NTIA's "minimum elements"** (now part of CISA) define what an SBOM should contain. Most SBOM generators follow this.
 
 ### 14.2 EU Cyber Resilience Act (CRA)
 
-*"https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act"*
+_"https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act"_
 
 The CRA (effective 2027) requires:
 
-* SBOMs for products with digital elements.
-* Timely security updates.
-* Vulnerability handling.
+- SBOMs for products with digital elements.
+- Timely security updates.
+- Vulnerability handling.
 
 For **k8s operators and software vendors**, this is direct: any software you ship to EU customers needs an SBOM.
 
 ### 14.3 PCI-DSS 4.0
 
-*"https://www.pcisecuritystandards.org/"*
+_"https://www.pcisecuritystandards.org/"_
 
 PCI-DSS 4.0 (effective 2025) requires:
 
-* Inventory of all software components.
-* Patch management.
-- Vulnerability scanning.
+- Inventory of all software components.
+- Patch management.
+
+* Vulnerability scanning.
 
 The **SBOM is the inventory**. Without it, the inventory is incomplete.
 
@@ -595,9 +603,9 @@ The **SBOM is the inventory**. Without it, the inventory is incomplete.
 
 These frameworks require:
 
-* Asset inventory.
-* Change management.
-* Vulnerability management.
+- Asset inventory.
+- Change management.
+- Vulnerability management.
 
 The **SBOM supports all three** — it's a structured inventory with version tracking and a queryable vulnerability surface.
 
@@ -648,24 +656,24 @@ The report is **actionable**: you know exactly what to fix.
 
 ## 16. Common Tools and Their Output
 
-| Tool | What it does | Output format |
-|---|---|---|
-| **syft** | Generates SBOMs (no scanning) | SPDX, CycloneDX, GitHub |
-| **trivy** | Scans images (generates SBOM internally) | CycloneDX, SPDX, table, JSON |
-| **grype** | Scans images | CycloneDX JSON (vulns + SBOM) |
-| **snyk** | Scans images (proprietary) | Snyk's format, integrates with GitHub |
-| **anchore** | Scans + stores SBOMs | Anchore's format, has UI |
-| **bomber** | Scans SBOMs (input) | Reports vulns |
-| **osv-scanner** | Scans images, uses OSV DB | OSV format |
-| **dependency-track** | Stores + monitors SBOMs | Has a web UI |
-| **scancode-toolkit** | License scanning | SPDX |
-| **ort** | License + security review | SPDX + CycloneDX |
-| **kubeclarity** | k8s cluster scanning | CycloneDX + report |
-| **chainsaw** | k8s cluster scanning (CNCF Sandbox) | CycloneDX + report |
-| **cyclonedx-* tooling** | Language-specific SBOM generators | CycloneDX |
-| **spdx-* tooling** | Language-specific SBOM generators | SPDX |
-| **oras** | OCI artifact push/pull | Anything |
-| **cosign** | Signing (incl. SBOMs) | Signature bundle |
+| Tool                     | What it does                             | Output format                         |
+| ------------------------ | ---------------------------------------- | ------------------------------------- |
+| **syft**                 | Generates SBOMs (no scanning)            | SPDX, CycloneDX, GitHub               |
+| **trivy**                | Scans images (generates SBOM internally) | CycloneDX, SPDX, table, JSON          |
+| **grype**                | Scans images                             | CycloneDX JSON (vulns + SBOM)         |
+| **snyk**                 | Scans images (proprietary)               | Snyk's format, integrates with GitHub |
+| **anchore**              | Scans + stores SBOMs                     | Anchore's format, has UI              |
+| **bomber**               | Scans SBOMs (input)                      | Reports vulns                         |
+| **osv-scanner**          | Scans images, uses OSV DB                | OSV format                            |
+| **dependency-track**     | Stores + monitors SBOMs                  | Has a web UI                          |
+| **scancode-toolkit**     | License scanning                         | SPDX                                  |
+| **ort**                  | License + security review                | SPDX + CycloneDX                      |
+| **kubeclarity**          | k8s cluster scanning                     | CycloneDX + report                    |
+| **chainsaw**             | k8s cluster scanning (CNCF Sandbox)      | CycloneDX + report                    |
+| **cyclonedx-\* tooling** | Language-specific SBOM generators        | CycloneDX                             |
+| **spdx-\* tooling**      | Language-specific SBOM generators        | SPDX                                  |
+| **oras**                 | OCI artifact push/pull                   | Anything                              |
+| **cosign**               | Signing (incl. SBOMs)                    | Signature bundle                      |
 
 ## 17. Common Patterns
 
@@ -701,21 +709,21 @@ metadata: { name: block-vulnerable }
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: block-high-cve
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    verifyImages:
-    - imageReferences:
-      - "myregistry/*"
-      attestations:
-      - predicateType: https://cyclonedx.org/bom
-        conditions:
-        - all:
-          - key: "{{images.{{...}}.attestations.{{...}}.vulnerabilities[?(@.ratings[?(@.severity=='high')])].id}}"
-            operator: NotEquals
-            value: ""
+    - name: block-high-cve
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      verifyImages:
+        - imageReferences:
+            - "myregistry/*"
+          attestations:
+            - predicateType: https://cyclonedx.org/bom
+              conditions:
+                - all:
+                    - key: "{{images.{{...}}.attestations.{{...}}.vulnerabilities[?(@.ratings[?(@.severity=='high')])].id}}"
+                      operator: NotEquals
+                      value: ""
 ```
 
 The Kyverno policy is the **admission-level enforcement** of the SBOM. Vulnerable images are rejected before they're deployed.
@@ -856,10 +864,10 @@ cosign sign myregistry/myapp:1.0.0.sbom
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — the broader image context
-* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — for admission-level enforcement
-* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for admission-level enforcement (YAML)
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — the regulatory context
-* [[Kubernetes/guides/delivery/ci-cd-integration|security-scanning]] — image scanning in practice
-* [[Kubernetes/guides/delivery/ci-cd-integration|image-signing]] — image signing in practice
-* See [[Kubernetes/guides/delivery/ci-cd-integration]] (Cosign, Notary) and [[Kubernetes/guides/delivery/ci-cd-integration]] (image scanning) for the supply-chain tooling layer.
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — the broader image context
+- [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — for admission-level enforcement
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for admission-level enforcement (YAML)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — the regulatory context
+- [[Kubernetes/guides/delivery/ci-cd-integration|security-scanning]] — image scanning in practice
+- [[Kubernetes/guides/delivery/ci-cd-integration|image-signing]] — image signing in practice
+- See [[Kubernetes/guides/delivery/ci-cd-integration]] (Cosign, Notary) and [[Kubernetes/guides/delivery/ci-cd-integration]] (image scanning) for the supply-chain tooling layer.

@@ -11,21 +11,21 @@ RBAC in Kubernetes controls who can do what to which resources.
 
 ## Core Concepts
 
-| Object | Scope | Use |
-|--------|-------|-----|
-| Role | Namespace | Grant permissions within a namespace |
-| ClusterRole | Cluster-wide | Grant permissions across all namespaces or cluster-scoped resources |
-| RoleBinding | Namespace | Bind a Role/ClusterRole to users within a namespace |
-| ClusterRoleBinding | Cluster-wide | Bind a ClusterRole to users across all namespaces |
+| Object             | Scope        | Use                                                                 |
+| ------------------ | ------------ | ------------------------------------------------------------------- |
+| Role               | Namespace    | Grant permissions within a namespace                                |
+| ClusterRole        | Cluster-wide | Grant permissions across all namespaces or cluster-scoped resources |
+| RoleBinding        | Namespace    | Bind a Role/ClusterRole to users within a namespace                 |
+| ClusterRoleBinding | Cluster-wide | Bind a ClusterRole to users across all namespaces                   |
 
 ## Built-in Roles
 
-| Role | Access |
-|------|--------|
-| `view` | Read-only to most resources |
-| `edit` | Read/write but not manage RBAC |
-| `admin` | Full read/write within a namespace |
-| `cluster-admin` | Superuser on the entire cluster |
+| Role            | Access                             |
+| --------------- | ---------------------------------- |
+| `view`          | Read-only to most resources        |
+| `edit`          | Read/write but not manage RBAC     |
+| `admin`         | Full read/write within a namespace |
+| `cluster-admin` | Superuser on the entire cluster    |
 
 ## Example: Read-Only Namespace User
 
@@ -36,9 +36,9 @@ metadata:
   name: readonly
   namespace: default
 rules:
-- apiGroups: [""]
-  resources: ["pods", "services"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "services"]
+    verbs: ["get", "list", "watch"]
 ```
 
 ## Example: EKS Cluster Access via IRSA
@@ -55,9 +55,9 @@ roleRef:
   kind: ClusterRole
   name: view
 subjects:
-- kind: AWSIAMRole
-  name: my-app-role  # IRSA role
-  namespace: default
+  - kind: AWSIAMRole
+    name: my-app-role # IRSA role
+    namespace: default
 ```
 
 ## IRSA vs RBAC

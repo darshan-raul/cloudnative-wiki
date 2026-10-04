@@ -13,9 +13,7 @@ Think of it like a backpack that a function carries with it. The backpack contai
 3. **Partial Application and Currying:** Closures enable techniques where a function with multiple arguments is transformed into a sequence of functions, each taking a single argument. This is helpful for creating more modular and reusable code.
 4. **Callbacks and Event Handling:** In asynchronous programming, closures capture the necessary context (variables) for a callback function to work correctly when it's executed later.
 
-***
-
-
+---
 
 **Example 1: Basic Closure**
 
@@ -47,8 +45,8 @@ func main() {
 
 **Explanation:**
 
-* The `intSeq` function returns a closure (an anonymous function) that has access to and increments the variable `i` within its enclosing scope.
-* Each call to the returned function `nextInt` increments and returns the current value of `i`, effectively maintaining its state between calls.
+- The `intSeq` function returns a closure (an anonymous function) that has access to and increments the variable `i` within its enclosing scope.
+- Each call to the returned function `nextInt` increments and returns the current value of `i`, effectively maintaining its state between calls.
 
 **Example 2: Closure with State**
 
@@ -76,8 +74,8 @@ func main() {
 
 **Explanation:**
 
-* The `makeAdder` function returns a closure that "remembers" the value of `x` passed to it.
-* Each returned closure (e.g., `add5` and `add10`) adds its captured `x` value to the argument `y` passed during invocation.
+- The `makeAdder` function returns a closure that "remembers" the value of `x` passed to it.
+- Each returned closure (e.g., `add5` and `add10`) adds its captured `x` value to the argument `y` passed during invocation.
 
 **Example 3: Data Encapsulation**
 
@@ -108,7 +106,6 @@ func main() {
 
 **Explanation:**
 
-* The `newCounter` function creates a closure with a private variable `count`.
-* The returned closure provides controlled access to `count` through increment and retrieval.
-* Each call to `newCounter` creates a separate closure with its own isolated `count` variable.
-
+- The `newCounter` function creates a closure with a private variable `count`.
+- The returned closure provides controlled access to `count` through increment and retrieval.
+- Each call to `newCounter` creates a separate closure with its own isolated `count` variable.

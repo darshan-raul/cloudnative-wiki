@@ -31,6 +31,7 @@ Compute Nodes (data storage, query execution)
 ### Node Types
 
 **RA3 (latest):**
+
 - Separate compute from storage
 - Managed storage in S3 (Redshift-managed storage)
 - Scale compute independently of storage
@@ -38,11 +39,13 @@ Compute Nodes (data storage, query execution)
 - 16 vCPU per node, 128GB RAM per node
 
 **Dense Compute (DC2):**
+
 - Fixed local NVMe SSD storage
 - High compute density for performance-critical workloads
 - Not recommended for new workloads (RA3 is better)
 
 **Dense Storage (DS2):**
+
 - Large HDD storage for data-heavy workloads
 - Older, replaced by RA3
 
@@ -59,11 +62,13 @@ Redshift Cluster
 ```
 
 **When to use Spectrum:**
+
 - Data too large to fit in Redshift cluster
 - Infrequently accessed cold data that stays in S3
 - Data that needs to be accessible from both Redshift and other tools (Athena, EMR)
 
 **When to avoid Spectrum:**
+
 - Frequently accessed data — Spectrum has per-byte scanning cost and higher latency than local tables
 - Complex joins across many large external tables — network shuffle is expensive
 
@@ -85,11 +90,13 @@ DISTKEY(customer_id);  -- All records with same customer_id go to same node
 ```
 
 **Distribution styles:**
+
 - **KEY:** Rows with the same key value go to the same node. Use for join-heavy tables where you frequently join on the same column.
 - **ALL:** Full copy of the table on every node. Use for small dimension tables (< 10MB) that are joined frequently.
 - **EVEN:** Round-robin distribution. Default, use when you don't know the access pattern.
 
 **Choosing a DISTKEY:**
+
 - For large fact tables, use the column most frequently used in JOINs
 - For date-partitioned data, date columns often make good DISTKEYs
 - Avoid high-cardinality keys (unique IDs) as DISTKEY — causes data skew
@@ -110,11 +117,13 @@ SORTKEY(sale_date, customer_id);  -- Data sorted by date first, then customer
 ```
 
 **When to use:**
+
 - Columns frequently used in range filters (`WHERE sale_date > '2024-01-01'`)
 - Columns used in ORDER BY clauses
 - Columns used in GROUP BY with range queries
 
 **Compound vs Interleaved Sort Keys:**
+
 - **Compound (default):** Sort key columns are used in order. First column is most important. Fast for queries filtering on the leading column.
 - **Interleaved:** All sort key columns weighted equally. Good when queries filter on various combinations of sort columns. Higher maintenance overhead (VACUUM REINDEX needed).
 
@@ -133,6 +142,7 @@ CREATE TABLE sales (
 ```
 
 **Common encodings:**
+
 - **ZSTD:** Best overall compression for most data types
 - **DELTA:** Good for sequential data (timestamps, IDs)
 - **LZO:** Good for text data with many distinct values
@@ -190,6 +200,7 @@ ANALYZE COMPRESSION sales;
 ```
 
 **When to vacuum:**
+
 - After a large DELETE or UPDATE that leaves many dead rows
 - When sort key columns have changed significantly
 - When query performance degrades over time
@@ -202,7 +213,7 @@ ANALYZE COMPRESSION sales;
 
 ```sql
 CREATE LATE BINDING VIEW sales_summary AS
-SELECT 
+SELECT
   DATE_TRUNC('month', sale_date) AS month,
   product_id,
   COUNT(*) AS transaction_count,
@@ -217,7 +228,7 @@ Late-binding views don't check the underlying table schema at creation time. Use
 
 ```sql
 CREATE MATERIALIZED VIEW monthly_sales AS
-SELECT 
+SELECT
   DATE_TRUNC('month', sale_date) AS month,
   customer_id,
   SUM(amount) AS total_spend
@@ -245,6 +256,7 @@ CREATE DATABASE consumer_db FROM DATASHARE salesshare OF ACCOUNT '123456789012';
 ```
 
 **Use cases:**
+
 - Share data with partner accounts without copying
 - Separate clusters for different teams (dev vs prod) but share a single source of truth
 - Data mesh architectures where each domain owns its data

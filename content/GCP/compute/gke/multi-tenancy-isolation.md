@@ -54,9 +54,9 @@ True multi-tenant isolation requires layered boundaries spanning control plane, 
 
 ### Isolation Boundary Matrix
 
-| Multi-Tenancy Model | Typical Tenants | Threat Vector | Primary Isolation Controls |
-| :--- | :--- | :--- | :--- |
-| **Soft Multi-Tenancy** | Internal engineering teams in the same enterprise | Accidental resource starvation, unauthorized cross-team reads | Kubernetes Namespaces, RBAC, NetworkPolicies, ResourceQuotas, PSS Baseline |
+| Multi-Tenancy Model    | Typical Tenants                                                 | Threat Vector                                                            | Primary Isolation Controls                                                                         |
+| :--------------------- | :-------------------------------------------------------------- | :----------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- |
+| **Soft Multi-Tenancy** | Internal engineering teams in the same enterprise               | Accidental resource starvation, unauthorized cross-team reads            | Kubernetes Namespaces, RBAC, NetworkPolicies, ResourceQuotas, PSS Baseline                         |
 | **Hard Multi-Tenancy** | External customers, SaaS tenants, untrusted user-submitted code | Malicious kernel privilege escalation, container escape, host compromise | **GKE Sandbox (gVisor)**, dedicated tainted node pools, PSS Restricted, network micro-segmentation |
 
 ---
@@ -66,6 +66,7 @@ True multi-tenant isolation requires layered boundaries spanning control plane, 
 In standard Kubernetes, containers use `runc`. While containers are isolated via Linux cgroups and namespaces, **they share the underlying host operating system kernel**. A zero-day privilege escalation vulnerability in the Linux kernel (e.g., Dirty COW, Dirty Pipe) allows a compromised container to escape and compromise the entire node.
 
 **GKE Sandbox** replaces `runc` with **gVisor**:
+
 - **Sentry (User-Space Kernel):** Each sandboxed pod runs its own dedicated user-space microkernel called Sentry. Sentry implements the Linux system call interface (over 300 system calls).
 - **Zero Host Kernel Syscalls:** When the container executes `read()`, `write()`, or `socket()`, the system call is handled entirely inside the Sentry user-space process. The container never talks directly to the physical host Linux kernel.
 - **Gofer (File System Proxy):** File system operations are isolated behind a secure proxy daemon running in a separate namespace.
@@ -94,7 +95,8 @@ gcloud container node-pools create untrusted-sandbox-pool \
     --node-taints="sandbox.gke.io/runtime=gvisor:NoSchedule" \
     --project=core-infrastructure-prod
 ```
-*(Note: `--enable-sandbox` installs gVisor and registers the `RuntimeClass: gvisor`).*
+
+_(Note: `--enable-sandbox` installs gVisor and registers the `RuntimeClass: gvisor`)._
 
 ### 2. Deploy Untrusted Workload with gVisor RuntimeClass and Toleration
 
@@ -120,21 +122,22 @@ spec:
       runtimeClassName: gvisor
       # 2. Toleration to land on the tainted sandbox node pool
       tolerations:
-      - key: "sandbox.gke.io/runtime"
-        operator: "Equal"
-        value: "gvisor"
-        effect: "NoSchedule"
+        - key: "sandbox.gke.io/runtime"
+          operator: "Equal"
+          value: "gvisor"
+          effect: "NoSchedule"
       containers:
-      - name: executor
-        image: python:3.11-slim
-        command: ["python3", "-c", "import os; print('Running in gVisor sandbox!')"]
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "1Gi"
-          limits:
-            cpu: "1"
-            memory: "2Gi"
+        - name: executor
+          image: python:3.11-slim
+          command:
+            ["python3", "-c", "import os; print('Running in gVisor sandbox!')"]
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
 ```
 
 Apply deployment:
@@ -158,7 +161,8 @@ kubectl label --overwrite namespace tenant-untrusted \
     pod-security.kubernetes.io/audit=restricted \
     pod-security.kubernetes.io/warn=restricted
 ```
-*(Any pod attempting to run as root, mount host paths, or request privileged escalation will be rejected at admission).*
+
+_(Any pod attempting to run as root, mount host paths, or request privileged escalation will be rejected at admission)._
 
 ### 4. Enforce Multi-Tenant ResourceQuotas and LimitRanges
 
@@ -186,19 +190,19 @@ metadata:
   namespace: tenant-untrusted
 spec:
   limits:
-  - default:
-      cpu: "1"
-      memory: "2Gi"
-    defaultRequest:
-      cpu: "250m"
-      memory: "512Mi"
-    max:
-      cpu: "4"
-      memory: "8Gi"
-    min:
-      cpu: "100m"
-      memory: "128Mi"
-    type: Container
+    - default:
+        cpu: "1"
+        memory: "2Gi"
+      defaultRequest:
+        cpu: "250m"
+        memory: "512Mi"
+      max:
+        cpu: "4"
+        memory: "8Gi"
+      min:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
 ```
 
 Apply Quotas:
@@ -211,14 +215,14 @@ kubectl apply -f tenant-quotas.yaml
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension / Parameter | GKE Standard runc | GKE Sandbox (gVisor) |
-| :--- | :--- | :--- |
-| **System Call Virtualization** | None (Direct host kernel) | Handled in user-space Sentry kernel |
-| **Syscall Latency Overhead** | None (~0%) | 10% to 30% overhead on syscall-heavy code |
-| **Raw Compute / Math Overhead**| None (~0%) | 0% overhead (CPU computations execute natively) |
-| **Supported Syscalls** | All standard Linux syscalls | ~320 core Linux syscalls (95% coverage) |
-| **Host Device Passthrough** | Supported (GPUs, InfiniBand) | Limited (GPU support is experimental) |
-| **Container Escape Risk** | High (Vulnerable to 0-day)| **Near Zero** (Isolated within Sentry process) |
+| Dimension / Parameter           | GKE Standard runc            | GKE Sandbox (gVisor)                            |
+| :------------------------------ | :--------------------------- | :---------------------------------------------- |
+| **System Call Virtualization**  | None (Direct host kernel)    | Handled in user-space Sentry kernel             |
+| **Syscall Latency Overhead**    | None (~0%)                   | 10% to 30% overhead on syscall-heavy code       |
+| **Raw Compute / Math Overhead** | None (~0%)                   | 0% overhead (CPU computations execute natively) |
+| **Supported Syscalls**          | All standard Linux syscalls  | ~320 core Linux syscalls (95% coverage)         |
+| **Host Device Passthrough**     | Supported (GPUs, InfiniBand) | Limited (GPU support is experimental)           |
+| **Container Escape Risk**       | High (Vulnerable to 0-day)   | **Near Zero** (Isolated within Sentry process)  |
 
 ---
 
@@ -235,6 +239,7 @@ kubectl apply -f tenant-quotas.yaml
 ## 6. Realistic Pricing Scenarios
 
 Multi-tenancy cluster consolidation delivers massive cost savings by eliminating GKE management fees and node fragmentation:
+
 1. **Cluster Management Fee:** $0.10/hour ($73/month) per cluster.
 2. **Cluster Consolidation Savings:** Merging 20 small single-tenant clusters into 1 multi-tenant cluster eliminates 19 cluster management fees ($1,387/month).
 3. **GKE Sandbox Surcharge:** **$0.00** (Included free with GKE).

@@ -21,13 +21,14 @@ Quick-reference sheets for architecture and system design work. Bookmark this pa
               (pick1)
 ```
 
-| System Type | Guarantees |
-|-------------|-----------|
+| System Type      | Guarantees                                                   |
+| ---------------- | ------------------------------------------------------------ |
 | CA (theoretical) | Consistent + Available — cannot exist in distributed systems |
-| CP | Consistent + Partition-tolerant — blocks on partition |
-| AP | Available + Partition-tolerant — returns stale data |
+| CP               | Consistent + Partition-tolerant — blocks on partition        |
+| AP               | Available + Partition-tolerant — returns stale data          |
 
 **Practical rule:** Network partitions WILL happen. Choose CP or AP per use case:
+
 - **CP:** Zookeeper, etcd, HBase, MongoDB
 - **AP:** Cassandra, DynamoDB, CouchDB
 
@@ -35,16 +36,16 @@ Quick-reference sheets for architecture and system design work. Bookmark this pa
 
 ## Latency Numbers (Must-Know)
 
-| Operation | Latency |
-|-----------|---------|
-| L1 cache reference | 0.5 ns |
-| L2 cache reference | 7 ns |
-| Memory access | 100 ns |
-| Read1 MB from memory | 250 µs |
-| Read 1 MB from SSD | 1 ms |
-| Round trip within same DC | 0.5 ms |
-| Read 1 MB from disk | 20 ms |
-| Send packet: SF → NYC | 40 ms |
+| Operation                 | Latency |
+| ------------------------- | ------- |
+| L1 cache reference        | 0.5 ns  |
+| L2 cache reference        | 7 ns    |
+| Memory access             | 100 ns  |
+| Read1 MB from memory      | 250 µs  |
+| Read 1 MB from SSD        | 1 ms    |
+| Round trip within same DC | 0.5 ms  |
+| Read 1 MB from disk       | 20 ms   |
+| Send packet: SF → NYC     | 40 ms   |
 
 **Rule:** Latency is6 orders of magnitude from L1 cache to cross-DC round trip. Design accordingly.
 
@@ -52,78 +53,78 @@ Quick-reference sheets for architecture and system design work. Bookmark this pa
 
 ## HTTP Status Codes
 
-| Code | Meaning |
-|------|---------|
-| 200 | OK |
-| 201 | Created |
-| 204 | No Content |
-| 301 | Moved Permanently |
-| 302 | Found (redirect) |
-| 400 | Bad Request |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 409 | Conflict |
-| 429 | Too Many Requests |
-| 500 | Internal Server Error |
-| 502 | Bad Gateway |
-| 503 | Service Unavailable |
-| 504 | Gateway Timeout |
+| Code | Meaning               |
+| ---- | --------------------- |
+| 200  | OK                    |
+| 201  | Created               |
+| 204  | No Content            |
+| 301  | Moved Permanently     |
+| 302  | Found (redirect)      |
+| 400  | Bad Request           |
+| 401  | Unauthorized          |
+| 403  | Forbidden             |
+| 404  | Not Found             |
+| 409  | Conflict              |
+| 429  | Too Many Requests     |
+| 500  | Internal Server Error |
+| 502  | Bad Gateway           |
+| 503  | Service Unavailable   |
+| 504  | Gateway Timeout       |
 
 ---
 
 ## SQL vs NoSQL
 
-| Dimension | SQL (RDBMS) | NoSQL |
-|-----------|-------------|-------|
-| Data model | Relational | Key-value, Document, Column, Graph |
-| Schema | Fixed (DML migration) | Schema-less (flexible) |
-| Transactions | ACID | Eventually consistent |
-| Scaling | Vertical | Horizontal |
-| Joins | Yes | No (denormalize) |
-| Examples | PostgreSQL, MySQL | DynamoDB, MongoDB, Cassandra |
+| Dimension    | SQL (RDBMS)           | NoSQL                              |
+| ------------ | --------------------- | ---------------------------------- |
+| Data model   | Relational            | Key-value, Document, Column, Graph |
+| Schema       | Fixed (DML migration) | Schema-less (flexible)             |
+| Transactions | ACID                  | Eventually consistent              |
+| Scaling      | Vertical              | Horizontal                         |
+| Joins        | Yes                   | No (denormalize)                   |
+| Examples     | PostgreSQL, MySQL     | DynamoDB, MongoDB, Cassandra       |
 
 ---
 
 ## Load Balancing Algorithms
 
-| Algorithm | How | Best For |
-|-----------|-----|----------|
-| Round Robin | Cycle through list | Homogeneous backends |
-| Weighted RR | Assign weights | Different capacity nodes |
+| Algorithm         | How                       | Best For                  |
+| ----------------- | ------------------------- | ------------------------- |
+| Round Robin       | Cycle through list        | Homogeneous backends      |
+| Weighted RR       | Assign weights            | Different capacity nodes  |
 | Least Connections | Fewest active connections | Variable request duration |
-| IP Hash | Hash client IP → backend | Session affinity (legacy) |
-| Random | Random selection | Simple, stateless |
+| IP Hash           | Hash client IP → backend  | Session affinity (legacy) |
+| Random            | Random selection          | Simple, stateless         |
 
 ---
 
 ## Caching Patterns
 
-| Pattern | Description | Use When |
-|---------|-------------|----------|
-| Cache-Aside | App manages read/write | Read-heavy, single app |
-| Write-Through | Write to cache + DB simultaneously | Read-heavy, need consistency |
-| Write-Behind | Write to cache, async DB flush | Write-heavy, can tolerate loss |
-| Refresh-Ahead | Proactively refresh expiring entries | Predictable hot data |
+| Pattern       | Description                          | Use When                       |
+| ------------- | ------------------------------------ | ------------------------------ |
+| Cache-Aside   | App manages read/write               | Read-heavy, single app         |
+| Write-Through | Write to cache + DB simultaneously   | Read-heavy, need consistency   |
+| Write-Behind  | Write to cache, async DB flush       | Write-heavy, can tolerate loss |
+| Refresh-Ahead | Proactively refresh expiring entries | Predictable hot data           |
 
 ---
 
 ## Data Replication Models
 
-| Model | Writes | Reads | Consistency |
-|-------|--------|-------|-------------|
-| Single-leader | → primary | ← any replica | Eventual (async) |
-| Multi-leader | → any primary | ← any primary | Eventual |
-| Leaderless | → quorum (W+R>N) | ← quorum | Tunable (strong/eventual) |
+| Model         | Writes           | Reads         | Consistency               |
+| ------------- | ---------------- | ------------- | ------------------------- |
+| Single-leader | → primary        | ← any replica | Eventual (async)          |
+| Multi-leader  | → any primary    | ← any primary | Eventual                  |
+| Leaderless    | → quorum (W+R>N) | ← quorum      | Tunable (strong/eventual) |
 
 ---
 
 ## Message Queue Patterns
 
-| Pattern | Description | Example |
-|---------|-------------|---------|
-| Point-to-Point | One consumer per message | SQS, RabbitMQ queue |
-| Pub/Sub | Fan-out to multiple consumers | SNS, Kafka (consumer groups) |
+| Pattern           | Description                      | Example                             |
+| ----------------- | -------------------------------- | ----------------------------------- |
+| Point-to-Point    | One consumer per message         | SQS, RabbitMQ queue                 |
+| Pub/Sub           | Fan-out to multiple consumers    | SNS, Kafka (consumer groups)        |
 | Dead Letter Queue | Failed messages for retry/review | SQS DLQ, RabbitMQ x-delayed-message |
 
 ---

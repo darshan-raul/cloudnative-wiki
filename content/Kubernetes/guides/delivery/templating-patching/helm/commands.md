@@ -12,6 +12,7 @@ Complete reference for Helm CLI commands. Run `helm <command> --help` for detail
 ## Installation & Upgrades
 
 ### helm install
+
 Install a chart into Kubernetes.
 
 ```bash
@@ -50,6 +51,7 @@ helm install myapp oci://ghcr.io/org/charts/app@sha256:abc123...
 ```
 
 ### helm upgrade
+
 Upgrade a release to a new chart version.
 
 ```bash
@@ -79,6 +81,7 @@ helm upgrade myapp oci://ghcr.io/org/charts/app --version 2.0.0
 ```
 
 ### helm rollback
+
 Roll back a release to a previous revision.
 
 ```bash
@@ -96,6 +99,7 @@ helm rollback --wait <release-name>
 ```
 
 ### helm uninstall
+
 Uninstall a release from Kubernetes.
 
 ```bash
@@ -112,6 +116,7 @@ helm uninstall --wait <release-name>
 ## Release Management
 
 ### helm list
+
 List all releases in a namespace.
 
 ```bash
@@ -142,6 +147,7 @@ helm list --max 20
 ```
 
 ### helm status
+
 Display the status of a named release.
 
 ```bash
@@ -153,6 +159,7 @@ helm status <release-name> --show-resources
 ```
 
 ### helm history
+
 Fetch release history.
 
 ```bash
@@ -161,6 +168,7 @@ helm history <release-name> --max 10
 ```
 
 ### helm get
+
 Download extended information for a named release.
 
 ```bash
@@ -188,6 +196,7 @@ helm get metadata <release-name>
 ## Chart Operations
 
 ### helm create
+
 Create a new chart with the given name.
 
 ```bash
@@ -202,6 +211,7 @@ helm create mychart --starter common
 ```
 
 ### helm package
+
 Package a chart directory into a chart archive.
 
 ```bash
@@ -219,6 +229,7 @@ helm package --sign --key 'My Key' --keyring ~/.gnupg/secring.gpg --sign-algorit
 ```
 
 ### helm lint
+
 Examine a chart for possible issues.
 
 ```bash
@@ -233,6 +244,7 @@ helm lint --set image.tag=v1.0 ./mychart
 ```
 
 ### helm template
+
 Locally render templates.
 
 ```bash
@@ -253,6 +265,7 @@ helm template myrelease --show-only templates/NOTES.txt ./mychart
 ```
 
 ### helm diff (requires helm-diff plugin)
+
 Show differences between chart versions.
 
 ```bash
@@ -272,6 +285,7 @@ helm diff upgrade myapp --ignore-annotations ./mychart
 ## Repository Management
 
 ### helm repo add
+
 Add a chart repository.
 
 ```bash
@@ -289,6 +303,7 @@ helm repo add oci://ghcr.io/org/charts
 ```
 
 ### helm repo update
+
 Update information of available charts locally.
 
 ```bash
@@ -302,6 +317,7 @@ helm repo update
 ```
 
 ### helm repo list
+
 List chart repositories.
 
 ```bash
@@ -309,6 +325,7 @@ helm repo list
 ```
 
 ### helm repo remove
+
 Remove one or more chart repositories.
 
 ```bash
@@ -317,6 +334,7 @@ helm repo remove stable local
 ```
 
 ### helm repo index
+
 Generate an index file from a directory of charts.
 
 ```bash
@@ -330,6 +348,7 @@ helm repo index ./charts --merge ./charts/index.yaml
 ## Search
 
 ### helm search
+
 Search for charts.
 
 ```bash
@@ -352,6 +371,7 @@ helm search hub nginx --list-repo-url
 ## Dependency Management
 
 ### helm dependency build
+
 Rebuild the `charts/` directory based on `Chart.lock`.
 
 ```bash
@@ -359,6 +379,7 @@ helm dependency build ./mychart
 ```
 
 ### helm dependency update
+
 Update charts/ based on `Chart.yaml`.
 
 ```bash
@@ -369,6 +390,7 @@ helm dependency update --repository-cache /path/to/cache ./mychart
 ```
 
 ### helm dependency list
+
 List dependencies for a chart.
 
 ```bash
@@ -378,6 +400,7 @@ helm dependency list ./mychart
 ## Testing
 
 ### helm test
+
 Run tests for a release.
 
 ```bash
@@ -397,6 +420,7 @@ helm test <release-name> --filter "name=test-connection"
 ## Registry Operations
 
 ### helm registry login
+
 Login to a registry.
 
 ```bash
@@ -408,6 +432,7 @@ helm registry login -u username ghcr.io
 ```
 
 ### helm registry logout
+
 Logout from a registry.
 
 ```bash
@@ -415,6 +440,7 @@ helm registry logout ghcr.io
 ```
 
 ### helm push
+
 Push a chart to OCI registry.
 
 ```bash
@@ -428,6 +454,7 @@ helm push mychart-1.0.0.tgz oci://ghcr.io/org/charts
 ## Plugin Management
 
 ### helm plugin install
+
 Install Helm plugins.
 
 ```bash
@@ -442,6 +469,7 @@ helm plugin install https://example.com/plugin-1.0.0.tgz --version 1.0.0
 ```
 
 ### helm plugin list
+
 List installed plugins.
 
 ```bash
@@ -449,6 +477,7 @@ helm plugin list
 ```
 
 ### helm plugin update
+
 Update plugins.
 
 ```bash
@@ -457,6 +486,7 @@ helm plugin update
 ```
 
 ### helm plugin uninstall
+
 Uninstall plugins.
 
 ```bash
@@ -466,6 +496,7 @@ helm plugin uninstall diff
 ## Environment & Configuration
 
 ### helm env
+
 Print Helm client environment information.
 
 ```bash
@@ -473,6 +504,7 @@ helm env
 ```
 
 ### helm version
+
 Print version information.
 
 ```bash
@@ -481,6 +513,7 @@ helm version --short
 ```
 
 ### helm completion
+
 Generate autocompletion scripts.
 
 ```bash
@@ -503,6 +536,7 @@ source <(helm completion bash)
 ## Verification
 
 ### helm verify
+
 Verify that a chart at the given path has been signed and is valid.
 
 ```bash
@@ -514,6 +548,7 @@ helm verify --keyring ~/.gnupg/pubring.gpg ./mychart-1.0.0.tgz
 ```
 
 ### helm plugin verify
+
 Verify that a plugin is signed and valid.
 
 ```bash
@@ -522,45 +557,50 @@ helm plugin verify ./path/to/plugin.tar.gz
 
 ## Global Flags
 
-| Flag | Description |
-|------|-------------|
-| `--debug` | Enable verbose output |
-| `--kube-context` | Set the kube context |
-| `--namespace` / `-n` | Set the namespace |
-| `--kubeconfig` | Path to kubeconfig file |
-| `--dry-run` | Simulate operations |
-| `--timeout` | Set timeout (Go duration format) |
-| `--wait` | Wait for resources to be ready |
-| `--no-hooks` | Skip running hooks |
-| `--skip-schema-validation` | Skip schema validation |
-| `--set` | Set values |
-| `--set-file` | Set values from file |
-| `--set-string` | Set string values |
-| `--values` / `-f` | Set values from file |
+| Flag                       | Description                      |
+| -------------------------- | -------------------------------- |
+| `--debug`                  | Enable verbose output            |
+| `--kube-context`           | Set the kube context             |
+| `--namespace` / `-n`       | Set the namespace                |
+| `--kubeconfig`             | Path to kubeconfig file          |
+| `--dry-run`                | Simulate operations              |
+| `--timeout`                | Set timeout (Go duration format) |
+| `--wait`                   | Wait for resources to be ready   |
+| `--no-hooks`               | Skip running hooks               |
+| `--skip-schema-validation` | Skip schema validation           |
+| `--set`                    | Set values                       |
+| `--set-file`               | Set values from file             |
+| `--set-string`             | Set string values                |
+| `--values` / `-f`          | Set values from file             |
 
 ## Common Patterns
 
 ### Install-or-Upgrade (Idempotent)
+
 ```bash
 helm upgrade --install myapp ./mychart --wait --atomic
 ```
 
 ### Dry-Run Before Install
+
 ```bash
 helm template myapp ./mychart -f values.prod.yaml | less
 ```
 
 ### Debug Template Rendering
+
 ```bash
 helm template myapp ./mychart --debug --dry-run
 ```
 
 ### View Release History with Timestamps
+
 ```bash
 helm list -o yaml | yq '.[] | {name: .name, revision: .revision, updated: .updated, status: .status}'
 ```
 
 ### Cleanup Failed Release
+
 ```bash
 helm uninstall myapp --wait
 kubectl delete job -l "helm.sh/release=myapp"

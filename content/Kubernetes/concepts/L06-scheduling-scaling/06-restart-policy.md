@@ -1,6 +1,13 @@
+---
+title: "Restart Policy"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Restart Policy — Kubernetes reference and architecture guide."
+---
+
 # Restart Policy
 
-*"https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy"*
+_"https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy"_
 
 A Pod's `restartPolicy` determines how the kubelet behaves when a container terminates. The three values are `Always` (default), `OnFailure`, and `Never` — each applies to a different kind of workload. The restart policy is set at the **Pod** level and applies to all containers in the Pod (init containers excluded — they always run to completion).
 
@@ -30,10 +37,10 @@ apiVersion: v1
 kind: Pod
 metadata: { name: app }
 spec:
-  restartPolicy: Always       # default
+  restartPolicy: Always # default
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ```
 
 ### 1.1 `Always` (default)
@@ -48,6 +55,7 @@ spec:
 **Use for:** long-running services (web servers, API servers, daemons).
 
 The container is restarted on:
+
 - Normal exit (0).
 - Error exit (non-zero).
 - Crash (signal, segfault).
@@ -68,12 +76,14 @@ spec:
 **Use for:** batch jobs, one-shot tasks that should retry on failure. (This is the default for Jobs.)
 
 The container is restarted on:
+
 - Non-zero exit code.
 - Crash.
 - OOM-kill.
 - Liveness probe failure.
 
 The container is **NOT** restarted on:
+
 - Exit code 0.
 - The Pod being deleted.
 
@@ -94,28 +104,28 @@ The container is **not** restarted for any reason. Once it exits, the kubelet re
 
 The `restartPolicy` should match the workload:
 
-| Workload | Typical restartPolicy | Why |
-|---|---|---|
-| Deployment (web server) | `Always` (default) | Long-running, must stay up |
-| StatefulSet (DB) | `Always` (default) | Long-running, must stay up |
-| DaemonSet (node agent) | `Always` (default) | Long-running, must stay up |
-| Job (batch task) | `OnFailure` | Should retry on failure, but not on success |
-| CronJob (scheduled task) | `OnFailure` (via Job) | Same as Job |
-| One-shot Pod | `Never` | Should not retry |
-| Init container | (n/a) | Init containers always run to completion |
+| Workload                 | Typical restartPolicy | Why                                         |
+| ------------------------ | --------------------- | ------------------------------------------- |
+| Deployment (web server)  | `Always` (default)    | Long-running, must stay up                  |
+| StatefulSet (DB)         | `Always` (default)    | Long-running, must stay up                  |
+| DaemonSet (node agent)   | `Always` (default)    | Long-running, must stay up                  |
+| Job (batch task)         | `OnFailure`           | Should retry on failure, but not on success |
+| CronJob (scheduled task) | `OnFailure` (via Job) | Same as Job                                 |
+| One-shot Pod             | `Never`               | Should not retry                            |
+| Init container           | (n/a)                 | Init containers always run to completion    |
 
 The `restartPolicy` is set by the **controller** (Deployment, Job, etc.) when it creates the Pod. You can override it in the Pod template, but you usually shouldn't.
 
 ### 2.1 What each controller sets
 
-| Controller | Default restartPolicy | Override possible? |
-|---|---|---|
-| Deployment | `Always` | Yes, but rare |
-| StatefulSet | `Always` | Yes, but rare |
-| DaemonSet | `Always` | Yes, but rare |
-| Job | `OnFailure` | Yes, also `Never` |
-| CronJob | `OnFailure` (via Job) | Yes |
-| Bare Pod | `Always` | Yes |
+| Controller  | Default restartPolicy | Override possible? |
+| ----------- | --------------------- | ------------------ |
+| Deployment  | `Always`              | Yes, but rare      |
+| StatefulSet | `Always`              | Yes, but rare      |
+| DaemonSet   | `Always`              | Yes, but rare      |
+| Job         | `OnFailure`           | Yes, also `Never`  |
+| CronJob     | `OnFailure` (via Job) | Yes                |
+| Bare Pod    | `Always`              | Yes                |
 
 ## 3. The Restart Backoff Algorithm
 
@@ -163,24 +173,24 @@ But the backoff algorithm itself (10s → 300s, doubling) is built-in. You can o
 
 The container's **exit code** is what determines whether the kubelet restarts (under `OnFailure` or `Always`).
 
-| Exit code | Meaning | When |
-|---|---|---|
-| 0 | Success | App explicitly exited 0 |
-| 1 | General error | App's error path |
-| 2 | Misuse of shell builtins | Shell script bug |
-| 126 | Command cannot execute | Permissions |
-| 127 | Command not found | Typo |
-| 128 + N | Killed by signal N | Signal (e.g. 137 = SIGKILL, 143 = SIGTERM) |
-| 137 | SIGKILL (9) | OOM-kill, `kubectl delete pod --force` |
-| 139 | SIGSEGV (11) | Segfault |
-| 143 | SIGTERM (15) | `kubectl delete pod`, normal termination |
+| Exit code | Meaning                  | When                                       |
+| --------- | ------------------------ | ------------------------------------------ |
+| 0         | Success                  | App explicitly exited 0                    |
+| 1         | General error            | App's error path                           |
+| 2         | Misuse of shell builtins | Shell script bug                           |
+| 126       | Command cannot execute   | Permissions                                |
+| 127       | Command not found        | Typo                                       |
+| 128 + N   | Killed by signal N       | Signal (e.g. 137 = SIGKILL, 143 = SIGTERM) |
+| 137       | SIGKILL (9)              | OOM-kill, `kubectl delete pod --force`     |
+| 139       | SIGSEGV (11)             | Segfault                                   |
+| 143       | SIGTERM (15)             | `kubectl delete pod`, normal termination   |
 
 ### 4.1 Common exit codes you'll see
 
-* **0** — clean shutdown. `OnFailure` doesn't restart. `Always` does restart.
-* **137** — OOM-killed or force-killed. `OnFailure` restarts. **The container that OOM-killed will probably OOM-kill again.**
-* **139** — segfault. `OnFailure` restarts. The app has a bug.
-* **143** — graceful termination. The container handled SIGTERM and exited. `OnFailure` doesn't restart on 0... wait, 143 is 128 + 15, which is signal 15 (SIGTERM), so it's a non-zero status. `OnFailure` does restart.
+- **0** — clean shutdown. `OnFailure` doesn't restart. `Always` does restart.
+- **137** — OOM-killed or force-killed. `OnFailure` restarts. **The container that OOM-killed will probably OOM-kill again.**
+- **139** — segfault. `OnFailure` restarts. The app has a bug.
+- **143** — graceful termination. The container handled SIGTERM and exited. `OnFailure` doesn't restart on 0... wait, 143 is 128 + 15, which is signal 15 (SIGTERM), so it's a non-zero status. `OnFailure` does restart.
 
 Actually, the rule is: **exit code 0 = success, anything else = failure.** Even 143 (terminated by signal) is "non-zero" and triggers `OnFailure` restart.
 
@@ -191,6 +201,7 @@ exit_code = 128 + signal_number
 ```
 
 So:
+
 - 137 = 128 + 9 (SIGKILL)
 - 143 = 128 + 15 (SIGTERM)
 - 139 = 128 + 11 (SIGSEGV)
@@ -245,9 +256,9 @@ The kubelet's restart is at the **container** level, not the Pod level. The Pod 
 
 A container restart is **not** the same as a Pod restart:
 
-* **Container restart** — the kubelet restarts the container in place. The Pod's IP is the same. The container's filesystem is preserved. **No external disruption** (the Pod's Service routing is unaffected, but the brief moment during restart is "down").
+- **Container restart** — the kubelet restarts the container in place. The Pod's IP is the same. The container's filesystem is preserved. **No external disruption** (the Pod's Service routing is unaffected, but the brief moment during restart is "down").
 
-* **Pod restart** — the Pod is deleted and a new one is created. The new Pod has a new IP. The container starts fresh. The Service routing updates.
+- **Pod restart** — the Pod is deleted and a new one is created. The new Pod has a new IP. The container starts fresh. The Service routing updates.
 
 A container restart is **involuntary** (the kubelet does it). A Pod restart is **voluntary** (you do it, or a controller does).
 
@@ -261,12 +272,12 @@ A container restart is **involuntary** (the kubelet does it). A Pod restart is *
 spec:
   terminationGracePeriodSeconds: 30
   containers:
-  - name: app
-    image: app:1.0
-    lifecycle:
-      preStop:
-        exec:
-          command: ["/bin/sh", "-c", "sleep 5"]
+    - name: app
+      image: app:1.0
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "sleep 5"]
 ```
 
 When the kubelet wants to stop a container (for restart, eviction, etc.):
@@ -280,12 +291,14 @@ The container's `preStop` hook (if any) runs before SIGTERM. The app should hand
 ### 8.1 The interaction with restart
 
 For container restart:
+
 - `terminationGracePeriodSeconds` is the time the kubelet waits for graceful shutdown.
 - The container gets SIGTERM, has 30s to exit, then SIGKILL.
 - If the container exits within 30s, the kubelet starts the new container immediately.
 - If not, the kubelet SIGKILLs the old container and starts the new one.
 
 For Pod deletion (e.g. `kubectl delete pod`):
+
 - Same as above. The Pod's `terminationGracePeriodSeconds` applies.
 
 ## 9. livenessProbe and Restart
@@ -306,8 +319,8 @@ If the probe fails 3 times in a row (over 30s), the kubelet kills the container 
 
 ### 9.1 livenessProbe vs readinessProbe
 
-* **livenessProbe** — "is the container alive?" If no, restart. **Restart-on-failure.**
-* **readinessProbe** — "is the container ready to serve traffic?" If no, remove from Service. **Don't restart.**
+- **livenessProbe** — "is the container alive?" If no, restart. **Restart-on-failure.**
+- **readinessProbe** — "is the container ready to serve traffic?" If no, remove from Service. **Don't restart.**
 
 Common pattern: a slow app takes a while to start. Use `initialDelaySeconds` to give it time. The liveness probe shouldn't fire during startup.
 
@@ -326,16 +339,17 @@ apiVersion: batch/v1
 kind: Job
 metadata: { name: my-job }
 spec:
-  backoffLimit: 6       # retry the Pod up to 6 times
+  backoffLimit: 6 # retry the Pod up to 6 times
   template:
     spec:
       restartPolicy: OnFailure
       containers:
-      - name: worker
-        image: worker:1.0
+        - name: worker
+          image: worker:1.0
 ```
 
 The Job controller:
+
 1. Creates a Pod.
 2. The Pod runs. If it fails, the kubelet restarts the container (per `OnFailure`).
 3. If the Pod's container keeps failing, the kubelet gives up (per the backoff algorithm).
@@ -354,21 +368,21 @@ spec:
   backoffLimit: 6
   podFailurePolicy:
     rules:
-    - action: FailJob
-      onExitCodes:
-        containerName: worker
-        operator: In
-        values: [42]               # exit 42 = fail the Job
-    - action: Ignore
-      onExitCodes:
-        containerName: worker
-        operator: In
-        values: [137]              # exit 137 = ignore (OOM is normal in our app)
-    - action: Count
-      onExitCodes:
-        containerName: worker
-        operator: In
-        values: [1]                # exit 1 = count toward backoffLimit
+      - action: FailJob
+        onExitCodes:
+          containerName: worker
+          operator: In
+          values: [42] # exit 42 = fail the Job
+      - action: Ignore
+        onExitCodes:
+          containerName: worker
+          operator: In
+          values: [137] # exit 137 = ignore (OOM is normal in our app)
+      - action: Count
+        onExitCodes:
+          containerName: worker
+          operator: In
+          values: [1] # exit 1 = count toward backoffLimit
 ```
 
 This lets you distinguish "intentional failure" (exit 42 = fail) from "OOM" (exit 137 = ignore) from "transient error" (exit 1 = retry).
@@ -394,6 +408,7 @@ The DS controller also handles **rolling updates** — when the DS template chan
 A container that crashes immediately on every restart is in **CrashLoopBackOff**. The Pod is `Running` but the container isn't.
 
 Common causes:
+
 - Bad config (missing env vars, wrong image, etc.)
 - App startup error (database not reachable, port in use, etc.)
 - Liveness probe failure (probe checks something that fails on startup)
@@ -542,7 +557,7 @@ kubectl get pod <pod> -o jsonpath='{.status.phase}'
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — OOM-kill is a major cause of restarts
-* [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — what restart policy applies to
-* [[Kubernetes/concepts/L03-workloads/02-replicaset|ReplicaSets]] — the controllers that create Pods
-* [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — readiness probes affect Service routing
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — OOM-kill is a major cause of restarts
+- [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — what restart policy applies to
+- [[Kubernetes/concepts/L03-workloads/02-replicaset|ReplicaSets]] — the controllers that create Pods
+- [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — readiness probes affect Service routing

@@ -1,6 +1,17 @@
 ---
 title: "M13: Artifact Signing"
-tags: [devsecops, stage3, deploy, signing, cosign, sigstore, sigstore-fulcio, rekor, slsa]
+tags:
+  [
+    devsecops,
+    stage3,
+    deploy,
+    signing,
+    cosign,
+    sigstore,
+    sigstore-fulcio,
+    rekor,
+    slsa,
+  ]
 date: 2026-06-16
 description: "Module 13 of 20 — signing build artifacts (container images, binaries, SBOMs) with cosign/Sigstore. Keyless signing with OIDC, key management with KMS, and verification at deploy."
 ---
@@ -13,12 +24,12 @@ An unsigned artifact is an unsigned promise. The pipeline built it, but how does
 
 By the end of this module you should be able to:
 
-  - Sign a container image with cosign using keyless OIDC
-  - Sign with a KMS-backed key for higher assurance
-  - Verify signatures at deploy time
-  - Sign SBOMs and provenance
-  - Integrate signing into the build pipeline
-  - Choose between keyless and key-based signing for your threat model
+- Sign a container image with cosign using keyless OIDC
+- Sign with a KMS-backed key for higher assurance
+- Verify signatures at deploy time
+- Sign SBOMs and provenance
+- Integrate signing into the build pipeline
+- Choose between keyless and key-based signing for your threat model
 
 ## 1. Why Sign
 
@@ -53,9 +64,9 @@ Signing fixes this. The deploy target verifies the signature against a trusted p
 
 Sigstore is a Linux Foundation project that provides signing infrastructure designed for software supply chains. Three components:
 
-  - **cosign** — the CLI; signs and verifies artifacts
-  - **Fulcio** — a free CA that issues short-lived certificates bound to OIDC identities
-  - **Rekor** — a transparency log; every signature is publicly recorded, immutable, auditable
+- **cosign** — the CLI; signs and verifies artifacts
+- **Fulcio** — a free CA that issues short-lived certificates bound to OIDC identities
+- **Rekor** — a transparency log; every signature is publicly recorded, immutable, auditable
 
 The killer feature: **keyless signing**. With Fulcio, you sign an artifact using an OIDC identity (your GitHub Actions workflow, your AWS role, your Google account). Fulcio issues a certificate binding your OIDC identity to a public key. The signature + certificate + transparency log entry together prove the artifact was signed by that OIDC identity.
 
@@ -127,12 +138,13 @@ cosign verify \
 ```
 
 The verify command:
-  1. Downloads the signature from the registry
-  2. Fetches the cert from Rekor
-  3. Verifies the cert chain to Fulcio's root
-  4. Verifies the cert's OIDC identity matches the expected identity
-  5. Verifies the signature against the image digest
-  6. Optionally checks the Rekor inclusion proof
+
+1. Downloads the signature from the registry
+2. Fetches the cert from Rekor
+3. Verifies the cert chain to Fulcio's root
+4. Verifies the cert's OIDC identity matches the expected identity
+5. Verifies the signature against the image digest
+6. Optionally checks the Rekor inclusion proof
 
 If all pass, the image was signed by the expected OIDC identity, and the signature is publicly recorded.
 
@@ -154,9 +166,9 @@ The deployment target can pull the image + signature by digest. The image's iden
 
 cosign can sign anything, not just images. The most valuable things to sign:
 
-  - **SBOM** — proves this SBOM was emitted for this specific image
-  - **SLSA provenance** — proves the build was performed by this specific CI run
-  - **VEX statements** — proves the VEX was issued by the vendor
+- **SBOM** — proves this SBOM was emitted for this specific image
+- **SLSA provenance** — proves the build was performed by this specific CI run
+- **VEX statements** — proves the VEX was issued by the vendor
 
 ```bash
 # Sign an SBOM
@@ -177,10 +189,10 @@ The signature is only useful if something verifies it. Three deploy-time verific
 
 ### Pattern 1: Admission Controller (Kubernetes)
 
-  - **Kyverno** with the `verifyImages` rule
-  - **Connaisseur** (deprecated; use Kyverno or Ratify)
-  - **Ratify** (Microsoft) — generic policy engine
-  - **Cosigned** (deprecated; use Kyverno)
+- **Kyverno** with the `verifyImages` rule
+- **Connaisseur** (deprecated; use Kyverno or Ratify)
+- **Ratify** (Microsoft) — generic policy engine
+- **Cosigned** (deprecated; use Kyverno)
 
 Kyverno example:
 
@@ -220,26 +232,28 @@ A pre-deploy script that calls `cosign verify` and aborts on failure. Simplest, 
 
 ## 7. Keyless vs. Key-Based
 
-| Aspect | Keyless (Fulcio) | Key-Based (KMS) |
-| ------ | ----------------- | --------------- |
-| Private key management | None; ephemeral | KMS or HSM |
-| Trust anchor | OIDC issuer | Public key (or KMS) |
-| Replay protection | Rekor transparency log | Registry-side or external |
-| Recovery | Re-issue from same OIDC identity | Recover from KMS |
-| Compromise window | ~15 min (cert TTL) | Until key rotated |
-| Audit | Rekor (public) | KMS audit log (private) |
-| Compliance | May not satisfy all auditors | Generally accepted |
-| Cost | Free | KMS cost per sign op |
+| Aspect                 | Keyless (Fulcio)                 | Key-Based (KMS)           |
+| ---------------------- | -------------------------------- | ------------------------- |
+| Private key management | None; ephemeral                  | KMS or HSM                |
+| Trust anchor           | OIDC issuer                      | Public key (or KMS)       |
+| Replay protection      | Rekor transparency log           | Registry-side or external |
+| Recovery               | Re-issue from same OIDC identity | Recover from KMS          |
+| Compromise window      | ~15 min (cert TTL)               | Until key rotated         |
+| Audit                  | Rekor (public)                   | KMS audit log (private)   |
+| Compliance             | May not satisfy all auditors     | Generally accepted        |
+| Cost                   | Free                             | KMS cost per sign op      |
 
 **When to use keyless**:
-  - Open source projects
-  - Internal artifacts with high trust in the OIDC issuer
-  - When the operator is willing to trust the transparency log
+
+- Open source projects
+- Internal artifacts with high trust in the OIDC issuer
+- When the operator is willing to trust the transparency log
 
 **When to use key-based**:
-  - Compliance requires a managed signing key (FedRAMP, PCI)
-  - High-value artifacts that warrant HSM protection
-  - When the OIDC issuer cannot be trusted to be a root of trust
+
+- Compliance requires a managed signing key (FedRAMP, PCI)
+- High-value artifacts that warrant HSM protection
+- When the OIDC issuer cannot be trusted to be a root of trust
 
 **Common pattern**: keyless for non-prod, key-based (KMS) for prod.
 
@@ -251,101 +265,101 @@ A pre-deploy script that calls `cosign verify` and aborts on failure. Simplest, 
   Build → Test → [SAST/SCA/secrets scan] → [Image build] → Sign → Push → [Admission verify] → Deploy
 ```
 
-Signing happens *after* the build, *before* the push. The signing identity (OIDC or KMS) is bound to the build, not the registry.
+Signing happens _after_ the build, _before_ the push. The signing identity (OIDC or KMS) is bound to the build, not the registry.
 
 ### What to Sign
 
-  - The image (always)
-  - The SBOM (recommended; proves the SBOM is for this image)
-  - The provenance attestation (recommended; SLSA L2+)
-  - The VEX statement (optional)
+- The image (always)
+- The SBOM (recommended; proves the SBOM is for this image)
+- The provenance attestation (recommended; SLSA L2+)
+- The VEX statement (optional)
 
-### What to *Not* Sign
+### What to _Not_ Sign
 
-  - The build log (use a separate audit pipeline)
-  - The artifact's test report (not security-critical)
-  - Anything ephemeral
+- The build log (use a separate audit pipeline)
+- The artifact's test report (not security-critical)
+- Anything ephemeral
 
 ## 9. Key Rotation
 
 Even with KMS, keys rotate. The pattern:
 
-  - **Cosign key rotation** — sign with both old and new key for a transition period; verifiers accept either; cut over; revoke the old key
-  - **KMS key rotation** — automatic for most KMS providers; verifiers use the public key, not the private
-  - **OIDC cert rotation** — handled by Fulcio; no action needed
+- **Cosign key rotation** — sign with both old and new key for a transition period; verifiers accept either; cut over; revoke the old key
+- **KMS key rotation** — automatic for most KMS providers; verifiers use the public key, not the private
+- **OIDC cert rotation** — handled by Fulcio; no action needed
 
 The Rekor transparency log is append-only and permanent. Old signatures are still verifiable. Key rotation does not invalidate history.
 
 ## 10. Common Mistakes
 
-| Mistake | Consequence | Fix |
-| ------- | ----------- | --- |
-| Sign but never verify | Pointless; signature is not checked | Add admission controller |
-| Sign with a long-lived local key | Key compromise = total loss | Use KMS or keyless |
-| Pin to a tag, not a digest | Image can mutate; signature becomes ambiguous | Sign the digest, not the tag |
-| Verify only in prod | Dev/staging pull unverified images | Verify at every deploy |
-| Trust any OIDC identity | Open signing surface | Constrain to specific issuers/repos |
-| No transparency log | Cannot detect replay | Use Rekor (default for keyless) |
+| Mistake                          | Consequence                                   | Fix                                 |
+| -------------------------------- | --------------------------------------------- | ----------------------------------- |
+| Sign but never verify            | Pointless; signature is not checked           | Add admission controller            |
+| Sign with a long-lived local key | Key compromise = total loss                   | Use KMS or keyless                  |
+| Pin to a tag, not a digest       | Image can mutate; signature becomes ambiguous | Sign the digest, not the tag        |
+| Verify only in prod              | Dev/staging pull unverified images            | Verify at every deploy              |
+| Trust any OIDC identity          | Open signing surface                          | Constrain to specific issuers/repos |
+| No transparency log              | Cannot detect replay                          | Use Rekor (default for keyless)     |
 
 ## 11. Self-Check
 
-  1. Pick a production image. Is it signed? If not, sign it this week. If yes, is the signature verified at deploy?
-  2. What is your signing key? Where is it stored? What is the rotation policy?
-  3. Can you prove, today, that the image running in production is the one your CI built? If not, you need signing + verification.
+1. Pick a production image. Is it signed? If not, sign it this week. If yes, is the signature verified at deploy?
+2. What is your signing key? Where is it stored? What is the rotation policy?
+3. Can you prove, today, that the image running in production is the one your CI built? If not, you need signing + verification.
 
 ## 12. The Signature Lifecycle
 
 A signature has a lifecycle. The stages:
 
-  1. **Generation** — at build time, after the image is built and scanned
-  2. **Storage** — as an OCI referrer in the registry, alongside the image
-  3. **Distribution** — implicitly via the registry; no separate distribution channel
-  4. **Verification** — at deploy time, by the admission controller
-  5. **Retention** — the signature lives as long as the image; verify-ability persists
-  6. **Expiry / Rotation** — for KMS keys, rotate; for keyless, no action needed
+1. **Generation** — at build time, after the image is built and scanned
+2. **Storage** — as an OCI referrer in the registry, alongside the image
+3. **Distribution** — implicitly via the registry; no separate distribution channel
+4. **Verification** — at deploy time, by the admission controller
+5. **Retention** — the signature lives as long as the image; verify-ability persists
+6. **Expiry / Rotation** — for KMS keys, rotate; for keyless, no action needed
 
-Each stage is automated. The signature is a *byproduct* of the build, not a separate process.
+Each stage is automated. The signature is a _byproduct_ of the build, not a separate process.
 
 ## 13. The Threat Model: What Signing Defeats
 
 A signature defeats specific attacks. Knowing which is important:
 
-| Attack | Defeated by signature? | Why |
-| ------ | ---------------------- | --- |
-| Registry compromise (malicious image pushed) | Yes (if signed) | The signature would not match |
-| Man-in-the-middle (image swapped in transit) | Yes | The swap invalidates the digest, hence the signature |
-| Compromised CI pushing a backdoor | Conditional | If the CI is the signer, no. If a separate identity signs, yes. |
-| Compromised build dependencies (XZ-style) | No | The signature is on the result, not the inputs |
-| Insider with signing key access | No | The insider signs; the signature is valid |
+| Attack                                       | Defeated by signature? | Why                                                             |
+| -------------------------------------------- | ---------------------- | --------------------------------------------------------------- |
+| Registry compromise (malicious image pushed) | Yes (if signed)        | The signature would not match                                   |
+| Man-in-the-middle (image swapped in transit) | Yes                    | The swap invalidates the digest, hence the signature            |
+| Compromised CI pushing a backdoor            | Conditional            | If the CI is the signer, no. If a separate identity signs, yes. |
+| Compromised build dependencies (XZ-style)    | No                     | The signature is on the result, not the inputs                  |
+| Insider with signing key access              | No                     | The insider signs; the signature is valid                       |
 
-Signing is a *layer*, not a *panacea*. It pairs with M11 (CI hardening), M14 (provenance), and M15 (policy) for defense in depth.
+Signing is a _layer_, not a _panacea_. It pairs with M11 (CI hardening), M14 (provenance), and M15 (policy) for defense in depth.
 
 ## 14. Signature in Different Ecosystems
 
 ### Kubernetes
 
-  - **Kyverno** with `verifyImages` — image signature verification
-  - **Ratify** (Microsoft) — generic policy engine, supports signatures
-  - **Connaisseur** — deprecated, replaced by Kyverno/Ratify
-  - **Cosigned** — deprecated, replaced by policy engines
+- **Kyverno** with `verifyImages` — image signature verification
+- **Ratify** (Microsoft) — generic policy engine, supports signatures
+- **Connaisseur** — deprecated, replaced by Kyverno/Ratify
+- **Cosigned** — deprecated, replaced by policy engines
 
 ### Docker / containerd
 
-  - **Docker Content Trust** (DCT) — built into Docker, uses Notary
-  - **containerd image verification** — experimental, configurable
+- **Docker Content Trust** (DCT) — built into Docker, uses Notary
+- **containerd image verification** — experimental, configurable
 
 ### Serverless / Lambda
 
-  - **Code signing for AWS Lambda** — signs the deployment package
-  - **Function signing for GCP** — verifies the source
+- **Code signing for AWS Lambda** — signs the deployment package
+- **Function signing for GCP** — verifies the source
 
 ### Package Registries
 
-  - **npm** — supports signed provenance (Sigstore)
-  - **PyPI** — supports signed provenance (Sigstore)
-  - **RubyGems** — supports signed gems
-  - **Maven Central** — supports PGP-signed artifacts
-  - **Go modules** — uses `go.sum` for integrity, not signing per se
+- **npm** — supports signed provenance (Sigstore)
+- **PyPI** — supports signed provenance (Sigstore)
+- **RubyGems** — supports signed gems
+- **Maven Central** — supports PGP-signed artifacts
+- **Go modules** — uses `go.sum` for integrity, not signing per se
 
 For each ecosystem, the pattern is the same: sign at publish, verify at consume. The tool differs.
 
@@ -355,29 +369,30 @@ Fulcio and Rekor are public, free services. They are not the only way to do keyl
 
 ### Fulcio: The Certificate Authority
 
-  - Issues short-lived certificates (15 min) bound to OIDC identities
-  - Logs every certificate issuance to Rekor (transparency)
-  - Free, open source, run by the Sigstore project
-  - You can run your own if you don't want to depend on the public instance
+- Issues short-lived certificates (15 min) bound to OIDC identities
+- Logs every certificate issuance to Rekor (transparency)
+- Free, open source, run by the Sigstore project
+- You can run your own if you don't want to depend on the public instance
 
 ### Rekor: The Transparency Log
 
-  - Append-only public log
-  - Every signature (with keyless) is recorded
-  - Cryptographic proof of inclusion (Merkle tree)
-  - Auditors can verify the log
-  - Free, open source, run by the Sigstore project
+- Append-only public log
+- Every signature (with keyless) is recorded
+- Cryptographic proof of inclusion (Merkle tree)
+- Auditors can verify the log
+- Free, open source, run by the Sigstore project
 
 ### The Trust Root
 
 The trust root for keyless signing is the Fulcio root certificate + the OIDC issuer. The OIDC issuer is the actual trust anchor; Fulcio is the bridge from OIDC to certificate.
 
 The chain:
-  1. OIDC issuer (e.g., GitHub) signs a JWT
-  2. Fulcio verifies the JWT, issues a cert bound to the JWT's subject
-  3. cosign uses the cert to sign
-  4. Rekor records the cert + signature
-  5. Verifier checks: cert chain to Fulcio root, OIDC subject matches expected, signature valid, Rekor inclusion proof valid
+
+1. OIDC issuer (e.g., GitHub) signs a JWT
+2. Fulcio verifies the JWT, issues a cert bound to the JWT's subject
+3. cosign uses the cert to sign
+4. Rekor records the cert + signature
+5. Verifier checks: cert chain to Fulcio root, OIDC subject matches expected, signature valid, Rekor inclusion proof valid
 
 If any step fails, the signature is rejected.
 
@@ -385,34 +400,34 @@ If any step fails, the signature is rejected.
 
 A few cost dimensions:
 
-| Dimension | Cost | Notes |
-| --------- | ---- | ----- |
-| Storage | OCI referrer per image | Negligible |
-| Build time | <1s per sign | Free for keyless; pennies for KMS |
-| Verify time | <100ms per verify | Negligible |
-| KMS | Per-sign op ($0.03 per 10k for AWS KMS) | Materially free |
-| Rekor | Free | Public, sustained by Linux Foundation |
-| Fulcio | Free | Public, sustained by Linux Foundation |
+| Dimension   | Cost                                    | Notes                                 |
+| ----------- | --------------------------------------- | ------------------------------------- |
+| Storage     | OCI referrer per image                  | Negligible                            |
+| Build time  | <1s per sign                            | Free for keyless; pennies for KMS     |
+| Verify time | <100ms per verify                       | Negligible                            |
+| KMS         | Per-sign op ($0.03 per 10k for AWS KMS) | Materially free                       |
+| Rekor       | Free                                    | Public, sustained by Linux Foundation |
+| Fulcio      | Free                                    | Public, sustained by Linux Foundation |
 
 The total cost: pennies per build. The benefit: cryptographic proof of artifact integrity.
 
 ## 17. Signing and the Audit Trail
 
-| Control | Signature evidence |
-| ------- | ------------------ |
-| SOC 2 CC8.1 (change management) | Signature is part of the change record |
-| ISO A.8.32 (change management) | Signed artifacts in registry |
-| FedRAMP SI-7 (software/firmware integrity) | Signature verification at deploy |
-| FedRAMP CM-5 (access restrictions) | KMS access logs for signing keys |
-| SLSA L2 / L3 | Provenance + signature is the implementation |
+| Control                                    | Signature evidence                           |
+| ------------------------------------------ | -------------------------------------------- |
+| SOC 2 CC8.1 (change management)            | Signature is part of the change record       |
+| ISO A.8.32 (change management)             | Signed artifacts in registry                 |
+| FedRAMP SI-7 (software/firmware integrity) | Signature verification at deploy             |
+| FedRAMP CM-5 (access restrictions)         | KMS access logs for signing keys             |
+| SLSA L2 / L3                               | Provenance + signature is the implementation |
 
 The audit asks "how do you know the deployed artifact is the one you built?" The answer is the signature verification log.
 
 ## Related
 
-  - [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning]]
-  - [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
-  - [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC]]
-  - [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
-  - [[DevOps/devsecops/stage3-deploy/15-policy-as-code|M15: Policy-as-Code]]
-  - [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning]]
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC]]
+- [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
+- [[DevOps/devsecops/stage3-deploy/15-policy-as-code|M15: Policy-as-Code]]
+- [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]

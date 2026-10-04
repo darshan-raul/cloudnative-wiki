@@ -1,7 +1,17 @@
 ---
 title: "2.4 — Token Lifecycles: Access, Refresh, DPoP"
 author: darshan
-tags: [authentication, stage-2, oauth, tokens, dpop, mtls, refresh-rotation, sender-constrained]
+tags:
+  [
+    authentication,
+    stage-2,
+    oauth,
+    tokens,
+    dpop,
+    mtls,
+    refresh-rotation,
+    sender-constrained,
+  ]
 date: 2026-06-13
 description: Access token forms, refresh token rotation with reuse detection, sender-constrained tokens (DPoP, mTLS), and the OAuth 2.0 token lifecycle
 ---
@@ -121,7 +131,7 @@ Best of both worlds (sometimes):
   - Token is a JWT (fast verify)
   - AS maintains a denylist of revoked jti values (Redis, with TTL)
   - On verify: check signature (fast), check denylist (one Redis call)
-  
+
   Result: fast like JWT, revocable like opaque.
   Cost: one Redis call per request.
 ```
@@ -151,13 +161,13 @@ Hybrid (JWT + denylist):
 ```
 Opaque token:  the scope is in the introspection response
                (the RS learns scopes by asking the AS)
-               
+
 JWT token:     scopes are CLAIMS in the JWT
-               
+
                "scope": "read:invoices write:invoices"   ← OAuth 2.0 (RFC 6749)
                "scp":   ["read:invoices", "write:invoices"]   ← Microsoft identity
                "scopes": ["read:invoices", "write:invoices"]   ← some implementations
-               
+
 RFC 9068 says "scope" is the standard. Microsoft uses "scp" by convention.
 Both are common. Your verifier should accept the one your IdP uses.
 ```
@@ -226,7 +236,7 @@ What goes wrong:
   4. You finally notice, revoke
   5. The damage is done
 
-Better: short lifetime + automatic rotation. The token is "fresh" 
+Better: short lifetime + automatic rotation. The token is "fresh"
 and the system handles the lifecycle for you.
 ```
 
@@ -273,7 +283,7 @@ A stolen refresh token = permanent access (until manual revoke).
 1. Original auth code flow returns:
    { access_token, refresh_token, expires_in: 900 }
    Refresh token: R1
-   
+
 2. 15 min later, access token expires
 3. Client uses R1 to get a new pair:
    grant_type=refresh_token
@@ -281,12 +291,12 @@ A stolen refresh token = permanent access (until manual revoke).
 4. IdP returns:
    { access_token (new), refresh_token: R2 (new) }
    R1 is now invalid.
-   
+
 5. 15 min later, access token expires
 6. Client uses R2 to get a new pair:
    { access_token, refresh_token: R3 }
    R2 is now invalid.
-   
+
 ... and so on.
 ```
 
@@ -318,13 +328,13 @@ def rotate_refresh_token(old_jti: str, sub: str) -> dict:
         # Doesn't exist. Was it used and expired, or never existed?
         check_reuse_violation(old_jti)
         raise TokenReuseError("token invalid")
-    
+
     if record.get("revoked") == "1":
         raise TokenRevokedError(f"token revoked: {record.get('revoked_reason')}")
-    
+
     # 2. Mark the old token as used
     r.hset(f"rt:{old_jti}", "rotated_at", int(time.time()))
-    
+
     # 3. Issue a new token
     new_jti = f"rt-{secrets.token_urlsafe(32)}"
     new_record = {
@@ -341,10 +351,10 @@ def rotate_refresh_token(old_jti: str, sub: str) -> dict:
     }
     r.hset(f"rt:{new_jti}", mapping=new_record)
     r.expire(f"rt:{new_jti}", 30 * 86400)
-    
+
     # 4. Update the family's "current token" pointer
     r.set(f"family:{record['family_id']}:current", new_jti)
-    
+
     return new_record
 ```
 
@@ -355,7 +365,7 @@ Without rotation (token reused):
   Attacker steals R1.
   User uses R1 to refresh. Attacker uses R1 to refresh.
   Both have valid access tokens. No detection.
-  
+
 With rotation (single-use tokens):
   Attacker steals R1.
   User uses R1 → gets R2. R1 is invalid.
@@ -390,14 +400,14 @@ def check_reuse_violation(used_jti: str):
     """
     # Check if this token ever existed
     record = r.hgetall(f"rt:{used_jti}")
-    
+
     if record and record.get("rotated_at"):
         # The token WAS used (has a rotated_at). This is REUSE.
         family_id = record["family_id"]
-        
+
         # Revoke the entire family
         revoke_token_family(family_id, reason="reuse_detected")
-        
+
         # Log a security event
         log_security_event("refresh_token_reuse", {
             "jti": used_jti,
@@ -406,12 +416,12 @@ def check_reuse_violation(used_jti: str):
             "client_id": record.get("client_id"),
             "rotated_at": record.get("rotated_at"),
         })
-        
+
         # Page the on-call if this is unusual
         # (a normal user wouldn't see this; only an attack)
         if should_page_on_reuse():
             page_oncall("refresh_token_reuse_detected", used_jti)
-        
+
         raise TokenReuseError("token reuse detected, family revoked")
 
 
@@ -422,7 +432,7 @@ def revoke_token_family(family_id: str, reason: str = "user_logout"):
     # Get all tokens in the family
     # (maintain a family → tokens index for this)
     jtis = r.smembers(f"family:{family_id}")
-    
+
     pipe = r.pipeline()
     for jti in jtis:
         pipe.hset(f"rt:{jti}", "revoked", "1")
@@ -438,7 +448,7 @@ is revoked. The legitimate user has to re-auth. This is the trade-off:
 
   - Without reuse detection: attacker has ongoing access
   - With reuse detection: legitimate user occasionally gets logged out
-  
+
 The cost: 1 forced re-auth per detected attack.
 The benefit: attacker has zero access.
 
@@ -464,7 +474,7 @@ Race condition:
   2. Device A uses R1, gets R2
   3. Device B's R1 request: "R1 was used, REUSE!"
   4. Family revoked. Both devices logged out.
-  
+
 Mitigation:
   - Lock around the refresh endpoint (one refresh at a time)
   - Or: design for "concurrent refresh acceptable" (1-2 sec grace period before reuse check)
@@ -479,7 +489,7 @@ Mitigation:
 
 ```
 Bearer token: whoever has the token is the user.
-  
+
 Stolen access_token: attacker has the user's access.
 Stolen refresh_token: attacker has the user's session.
 
@@ -525,6 +535,7 @@ A stolen token alone is useless — the attacker doesn't have the key.
 **The DPoP proof structure:**
 
 Header:
+
 ```json
 {
   "typ": "dpop+jwt",
@@ -539,6 +550,7 @@ Header:
 ```
 
 Payload:
+
 ```json
 {
   "jti": "dpop-uuid-1",
@@ -608,7 +620,7 @@ jwk = {
 }
 jwk_thumbprint = _b64url(
     hashlib.sha256(
-        json.dumps({"crv": jwk["crv"], "kty": jwk["kty"], 
+        json.dumps({"crv": jwk["crv"], "kty": jwk["kty"],
                     "x": jwk["x"], "y": jwk["y"]},
                    separators=(",", ":")).encode()
     ).digest()
@@ -621,7 +633,7 @@ def make_dpop_proof(method: str, url: str, nonce: str = None) -> str:
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption(),
     )
-    
+
     payload = {
         "jti": str(uuid.uuid4()),
         "htm": method.upper(),
@@ -630,7 +642,7 @@ def make_dpop_proof(method: str, url: str, nonce: str = None) -> str:
     }
     if nonce:
         payload["nonce"] = nonce
-    
+
     return jwt.encode(
         payload, priv_pem,
         algorithm="ES256",
@@ -739,7 +751,7 @@ mTLS requires the client to have a cert. Where does the cert come from?
   - k8s: cert from the cluster (cert-manager, SPIFFE)
   - Cloud: cert from the cloud CA (AWS IAM, GCP workload identity)
   - Manual: cert from your internal CA, distributed to clients
-  
+
 If you have to manually distribute certs, mTLS is heavy.
 If you have automation (mesh, cloud), mTLS is the default.
 ```
@@ -983,34 +995,34 @@ def rotate_refresh_token(presented_jti: str) -> dict:
     2. If valid, mark as rotated
     3. Issue a new token in the same family
     4. If the presented token was already rotated → REUSE DETECTED → revoke family
-    
+
     Returns: the new token record
     Raises: TokenReuseError, TokenRevokedError
     """
     key = f"rt:{presented_jti}"
     record = r.hgetall(key)
-    
+
     if not record:
         # Token doesn't exist (expired or never existed)
         # Check if it was used (reuse detection)
         _check_reuse(presented_jti)
         raise TokenInvalidError("token not found")
-    
+
     if record.get("revoked") == "1":
         raise TokenRevokedError(
             f"token revoked: {record.get('revoked_reason', 'unknown')}"
         )
-    
+
     if record.get("rotated_at"):
         # The token WAS used. This is REUSE.
         # The earlier check should have caught it, but defense in depth
         _check_reuse(presented_jti)
         raise TokenReuseError("token already rotated")
-    
+
     # Token is valid. Mark as rotated and issue new.
     now = int(time.time())
     r.hset(key, "rotated_at", now)
-    
+
     # Issue new token in the same family
     family = TokenFamily(
         family_id=record["family_id"],
@@ -1021,7 +1033,7 @@ def rotate_refresh_token(presented_jti: str) -> dict:
     new_record = issue_refresh_token(family)
     new_record["parent_jti"] = presented_jti
     r.hset(f"rt:{new_record['jti']}", "parent_jti", presented_jti)
-    
+
     return new_record
 
 
@@ -1033,12 +1045,12 @@ def _check_reuse(used_jti: str):
     # We might not have the record anymore (expired from Redis)
     # But: if rotation worked, the record is still there with rotated_at set
     # The TTL is 30 days = same as refresh TTL, so it should be there
-    
+
     record = r.hgetall(f"rt:{used_jti}")
     if record and record.get("rotated_at"):
         family_id = record["family_id"]
         _revoke_family(family_id, reason="reuse_detected")
-        
+
         # Audit log (always)
         log_security_event("refresh_token_reuse_detected", {
             "jti": used_jti,
@@ -1046,7 +1058,7 @@ def _check_reuse(used_jti: str):
             "sub": record.get("sub"),
             "client_id": record.get("client_id"),
         })
-        
+
         # Page on-call (this is rare, almost always an attack)
         page_oncall("refresh_token_reuse", {
             "sub": record.get("sub"),
@@ -1104,13 +1116,13 @@ def make_dpop_proof(method, url, client_private_key, client_jwk, nonce=None):
     }
     if nonce:
         payload["nonce"] = nonce
-    
+
     priv_pem = client_private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption(),
     )
-    
+
     return jwt.encode(
         payload, priv_pem,
         algorithm="ES256",
@@ -1142,44 +1154,44 @@ requests.post(
 def validate_dpop_request(request, access_token):
     # 1. Extract and verify the access token
     claims = verify_jwt(access_token)  # or introspect
-    
+
     # 2. Get the cnf.jkt from the token
     expected_jkt = claims.get("cnf", {}).get("jkt")
     if not expected_jkt:
         raise InvalidTokenError("token not DPoP-bound")
-    
+
     # 3. Extract and parse the DPoP proof
     proof_jwt = request.headers.get("DPoP")
     if not proof_jwt:
         raise InvalidDPoPError("missing DPoP proof")
-    
+
     proof_header = jwt.get_unverified_header(proof_jwt)
     proof_payload = jwt.decode(proof_jwt, options={"verify_signature": False})
-    
+
     # 4. Verify jwk_thumbprint matches
     proof_jwk = proof_header.get("jwk")
     actual_jkt = jwk_thumbprint(proof_jwk)
     if actual_jkt != expected_jkt:
         raise InvalidDPoPError("jkt mismatch")
-    
+
     # 5. Verify the proof signature
     jwk_key = jwk_to_key(proof_jwk)  # convert JWK to verify key
     jwt.decode(proof_jwt, key=jwk_key, algorithms=[proof_header["alg"]])
-    
+
     # 6. Verify htm and htu
     if proof_payload["htm"] != request.method:
         raise InvalidDPoPError("method mismatch")
     if not same_url(proof_payload["htu"], request.url):
         raise InvalidDPoPError("URL mismatch")
-    
+
     # 7. Verify iat is recent
     if abs(int(time.time()) - proof_payload["iat"]) > 60:
         raise InvalidDPoPError("proof too old")
-    
+
     # 8. Optional: check nonce (if server uses nonces)
     if required_nonce and proof_payload.get("nonce") != required_nonce:
         raise InvalidDPoPError("nonce mismatch")
-    
+
     # All good
     return claims
 ```
@@ -1220,7 +1232,7 @@ The hotel has a separate system for extending your stay:
   - Show your ID + your current keycard
   - They issue a NEW keycard
   - The OLD one is automatically cancelled
-  
+
 If someone else shows up with the OLD keycard:
   - The system says "this card was already used"
   - Revokes ALL cards in your room (logout everywhere)
@@ -1291,7 +1303,7 @@ Benefit: replay prevention.
 mTLS proves the client has a cert. But which cert?
   - If the RS doesn't pin to a specific cert or CA, any cert works
   - The attacker just needs ANY cert from a trusted CA
-  
+
 Pin the cert (by thumbprint) or by your internal CA only.
 ```
 
@@ -1313,15 +1325,15 @@ Store refresh tokens in:
 Two services do mutual token exchange:
   Service A exchanges A's token for B's token
   Service B exchanges B's token for A's token
-  
+
   User makes a request
   Service A calls Service B (exchanges tokens)
   Service B calls Service A (exchanges tokens)
   Service A calls Service B (exchanges tokens)
   ...
-  
+
   Infinite loop, increasing privileges at each step
-  
+
 Fix: use clear delegation (e.g., on-behalf-of tokens with chain
      limits), or don't use token exchange for service-to-service
      (use mTLS or SPIFFE instead).
@@ -1380,7 +1392,9 @@ Always set an absolute max.
 ## 15. Exercises
 
 ### Exercise 1: Design the lifetimes
+
 For each scenario, pick access token TTL, refresh token TTL, and rotation strategy:
+
 - (a) Banking web app
 - (b) Social media mobile app
 - (c) Internal CI/CD system
@@ -1388,35 +1402,46 @@ For each scenario, pick access token TTL, refresh token TTL, and rotation strate
 - (e) B2B SaaS with enterprise customers
 
 ### Exercise 2: Build the rotation
+
 Take the code from Section 11. Test:
+
 - Normal rotation works
 - Reuse triggers family revoke
 - Legitimate concurrent refresh from two devices
 
 ### Exercise 3: DPoP demo
+
 Take the code from Section 12. Test:
+
 - Valid DPoP request succeeds
 - Stolen access token without DPoP proof fails
 - Captured DPoP proof reused on a different URL fails
 - iat 10 minutes old fails
 
 ### Exercise 4: mTLS demo
+
 Set up an nginx server that requires client certs. Configure a JWT validator that checks the cnf.x5t#S256 against the TLS connection's client cert. Test with a valid cert and an invalid one.
 
 ### Exercise 5: Storage audit
+
 For each app you use (or build), document where the access token and refresh token are stored. Classify as: best, acceptable, bad, worst.
 
 ### Exercise 6: Reuse false positive
+
 Simulate the race condition: two devices, both try to refresh with the same token. Document what happens. Implement the fix (concurrent refresh lock, or grace period).
 
 ### Exercise 7: DPoP nonce
+
 Modify the DPoP code to require server-provided nonces. The client requests a nonce from a `/dpop-nonce` endpoint, includes it in the proof. Test that replay fails (the nonce is single-use).
 
 ### Exercise 8: Token theft drill
+
 Pick a system. Simulate: access token leaked (e.g., via logs). For Bearer: attacker has access until exp. For DPoP: attacker can't make requests. Document the time-to-recovery for each.
 
 ### Exercise 9: Refresh token rotation at scale
+
 Take the rotation logic. Test with 1M simulated tokens. Measure:
+
 - Latency (p50, p95, p99)
 - Redis memory usage
 - Reuse detection rate
@@ -1424,6 +1449,7 @@ Take the rotation logic. Test with 1M simulated tokens. Measure:
 - Cost per rotation
 
 ### Exercise 10: The "right tool for the job" matrix
+
 Build a 5x5 matrix: rows are scenarios (web app, mobile, SPA, IoT, B2B, server-to-server), columns are token types (Bearer, DPoP, mTLS, opaque, JWT). For each cell, the recommended choice and why.
 
 ---
@@ -1435,6 +1461,7 @@ You can now design a complete token lifecycle, including sender-constrained vari
 → [[../stage2/05-introspection-revocation|Stage 2.5 — Token Introspection (RFC 7662) & Revocation (RFC 7009)]]
 
 **Before you move on, verify you can answer these:**
+
 1. What's the difference between opaque and JWT access tokens, and when do you pick each?
 2. What is refresh token rotation, and what is reuse detection?
 3. What does DPoP prove that Bearer doesn't?

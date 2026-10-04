@@ -99,18 +99,21 @@ kubectl top pods -A --sort-by=memory | head
 **Common sub-causes:**
 
 1. **Pod requests are too high.** Someone set `requests: { cpu: 64, memory: 256Gi }` and the cluster doesn't have that much.
+
    ```yaml
    resources:
      requests:
-       cpu: "64"          # 64 cores
-       memory: "256Gi"    # 256 GB
+       cpu: "64" # 64 cores
+       memory: "256Gi" # 256 GB
    ```
+
    Fix: lower the requests, or add nodes.
 
 2. **Node capacity is too low for the workload.** Small nodes (4 CPU, 8GB) running pods that ask for 2 CPU / 4GB.
    Fix: larger nodes, more nodes, or smaller pod requests.
 
 3. **No headroom for system pods.** kube-proxy, CNI, kubelet, OS daemons all consume resources. If you set `capacity = allocatable - system-reserved`, requests are calculated against `allocatable`. But if you've asked for `100% of allocatable`, there's no room for the actual workload.
+
    ```bash
    # check what the kubelet reserves
    kubectl describe node node-1 | grep -A 5 "System Info"
@@ -119,11 +122,13 @@ kubectl top pods -A --sort-by=memory | head
    ```
 
 4. **Ephemeral storage full.** The pod's working directory, container layers, logs all use ephemeral storage. If `/var/lib/kubelet` is full on all nodes, pods can't schedule.
+
    ```bash
    $ kubectl describe pod web-1 | tail -5
    Warning  FailedScheduling  5m  default-scheduler  0/3 nodes are available:
      3 Insufficient ephemeral-storage.
    ```
+
    Fix: clean up `/var/lib/kubelet`, add disk, or lower `ephemeral-storage` requests.
 
 5. **Hugepages.** If your pod requests hugepages and the nodes don't have them, pod can't schedule.
@@ -171,14 +176,17 @@ kubectl get nodes -l workload=batch    # if pod has nodeSelector: { workload: ba
 **Common sub-causes:**
 
 1. **Typo in nodeSelector.**
+
    ```yaml
    spec:
      nodeSelector:
-       workload: gpu    # but nodes have workload: GPU
+       workload: gpu # but nodes have workload: GPU
    ```
+
    Fix: spell it right.
 
 2. **Node has taint, pod has no toleration.** Most managed clusters taint control plane nodes.
+
    ```bash
    $ kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, taints: .spec.taints}'
    {
@@ -186,19 +194,22 @@ kubectl get nodes -l workload=batch    # if pod has nodeSelector: { workload: ba
      "taints": [{"key": "node-role.kubernetes.io/control-plane", "effect": "NoSchedule"}]
    }
    ```
+
    Pods need to tolerate this taint, or they won't schedule on the control plane.
 
 3. **Required affinity is impossible.** Pod requires `topology.kubernetes.io/zone in (us-east-1a) AND (us-east-1c)`. No single node is in both.
+
    ```yaml
    affinity:
      nodeAffinity:
        requiredDuringSchedulingIgnoredDuringExecution:
          nodeSelectorTerms:
-         - matchExpressions:
-           - key: topology.kubernetes.io/zone
-             operator: In
-             values: ["us-east-1a", "us-east-1c"]   # impossible
+           - matchExpressions:
+               - key: topology.kubernetes.io/zone
+                 operator: In
+                 values: ["us-east-1a", "us-east-1c"] # impossible
    ```
+
    Fix: review the affinity, make it possible.
 
 4. **DaemonSet pods.** If a node has a taint, even DaemonSet pods need tolerations. Forgetting this is a common gotcha.
@@ -267,24 +278,30 @@ kubectl get pods -n kube-system -l app=csi-aws-ebs-csi-driver
    Fix: create the SC, or use one that exists.
 
 2. **StorageClass provisioner is broken.** CSI driver pod is down, IAM permissions missing, zone out of capacity.
+
    ```bash
    $ kubectl logs -n kube-system -l app=ebs-csi-controller
    failed to create volume: ... AccessDenied
    ```
+
    Fix: fix the IAM policy, restart the provisioner, free up quota.
 
 3. **No available PV (static provisioning).** PVC asks for 100Gi, only 50Gi PVs exist.
+
    ```bash
    kubectl get pv | grep Available
    ```
+
    Fix: create more PVs, or switch to dynamic provisioning.
 
 4. **Access mode mismatch.** PVC asks for `ReadWriteMany`, but the SC only provisions `ReadWriteOnce`.
+
    ```yaml
    spec:
      accessModes: [ReadWriteMany]
-     storageClassName: gp3   # gp3 is RWO
+     storageClassName: gp3 # gp3 is RWO
    ```
+
    Fix: use a SC that supports RWX (e.g., EFS, NFS, CephFS).
 
 5. **Volume binding mode = WaitForFirstConsumer.** The PVC won't provision until a pod using it is scheduled. If the pod can't be scheduled, the PVC stays pending.
@@ -375,12 +392,14 @@ kubectl get nodes -o json | jq '[.items[] |
 **Common sub-causes:**
 
 1. **`maxSkew: 1` with `whenUnsatisfiable: DoNotSchedule`.** Even one node imbalance fails the constraint.
+
    ```yaml
    topologySpreadConstraints:
-   - maxSkew: 1
-     topologyKey: topology.kubernetes.io/zone
-     whenUnsatisfiable: DoNotSchedule
+     - maxSkew: 1
+       topologyKey: topology.kubernetes.io/zone
+       whenUnsatisfiable: DoNotSchedule
    ```
+
    Fix: switch to `ScheduleAnyway` to allow the imbalance, or add nodes to balance the spread.
 
 2. **All existing pods in one zone.** New pods can't spread if every existing one is in the same zone and `maxSkew: 0` (with DoNotSchedule).
@@ -476,15 +495,15 @@ kubectl get nodes -o json | jq '.items[].status.nodeInfo.containerRuntimeVersion
 
 For each cause, the typical fix:
 
-| Cause | Fix |
-|-------|-----|
-| Insufficient CPU/memory | Lower requests, add nodes, scale cluster |
-| Node selectors / affinity | Check labels, fix selectors, add tolerations |
-| PVC not bound | Create the PVC, fix the storage class, fix provisioner |
-| Topology spread | Add nodes in the missing topology, relax constraint |
-| Runtime class | Install the runtime, create the RuntimeClass |
-| Scheduling gates | Wait for the operator, or remove the gate |
-| Scheduler jam | Fix the head pod, restart scheduler |
+| Cause                     | Fix                                                    |
+| ------------------------- | ------------------------------------------------------ |
+| Insufficient CPU/memory   | Lower requests, add nodes, scale cluster               |
+| Node selectors / affinity | Check labels, fix selectors, add tolerations           |
+| PVC not bound             | Create the PVC, fix the storage class, fix provisioner |
+| Topology spread           | Add nodes in the missing topology, relax constraint    |
+| Runtime class             | Install the runtime, create the RuntimeClass           |
+| Scheduling gates          | Wait for the operator, or remove the gate              |
+| Scheduler jam             | Fix the head pod, restart scheduler                    |
 
 ## The fast triage script
 
@@ -554,9 +573,9 @@ The scheduler will **preempt** (evict) low-priority pods to make room for high-p
 
 ## Common gotchas
 
-* **"0/N nodes are available" with N = number of nodes** — read the message. It tells you *why*. Every reason is listed.
-* **Pending pods are not failures** — they're waiting. The kubelet doesn't restart them. The controller might (e.g., Deployment's controller will eventually create a new pod if one is stuck for too long, depending on `progressDeadlineSeconds`).
-* **Progress deadline.** Deployments have a `progressDeadlineSeconds` (default 600s). If a Deployment is stuck pending past this, the controller marks it as `ProgressDeadlineExceeded`.
+- **"0/N nodes are available" with N = number of nodes** — read the message. It tells you _why_. Every reason is listed.
+- **Pending pods are not failures** — they're waiting. The kubelet doesn't restart them. The controller might (e.g., Deployment's controller will eventually create a new pod if one is stuck for too long, depending on `progressDeadlineSeconds`).
+- **Progress deadline.** Deployments have a `progressDeadlineSeconds` (default 600s). If a Deployment is stuck pending past this, the controller marks it as `ProgressDeadlineExceeded`.
   ```bash
   $ kubectl get deploy web
   NAME   READY   UP-TO-DATE   AVAILABLE   AGE
@@ -565,16 +584,16 @@ The scheduler will **preempt** (evict) low-priority pods to make room for high-p
   Conditions:
     Type: ProgressDeadlineExceeded
   ```
-* **`kubectl describe` is the only place you'll see the reason.** `kubectl get pods` shows the status; `describe` shows the events. Always `describe`.
-* **Re-applying a manifest can re-trigger scheduling** — but only if the scheduler decides it's a new pod (different labels, different nodeName, etc.).
-* **"Pending" doesn't always mean "won't schedule"** — the scheduler might be about to schedule it. Run `kubectl get pods -w` to watch.
-* **Node autoscaling takes minutes.** If you're using cluster-autoscaler or Karpenter, scaling out to satisfy pending pods isn't instant. Pending pods are the trigger; you have to wait for the new node to come up.
-* **A pod in `Pending` doesn't consume resources on any node** — but the scheduler still has it in memory. If you have tens of thousands of pending pods, scheduler performance degrades.
-* **Don't set `nodeName` in production specs.** It pins the pod to a specific node. If the node is down, the pod stays pending forever. Use nodeSelector + taints/tolerations, or topology spread, instead.
+- **`kubectl describe` is the only place you'll see the reason.** `kubectl get pods` shows the status; `describe` shows the events. Always `describe`.
+- **Re-applying a manifest can re-trigger scheduling** — but only if the scheduler decides it's a new pod (different labels, different nodeName, etc.).
+- **"Pending" doesn't always mean "won't schedule"** — the scheduler might be about to schedule it. Run `kubectl get pods -w` to watch.
+- **Node autoscaling takes minutes.** If you're using cluster-autoscaler or Karpenter, scaling out to satisfy pending pods isn't instant. Pending pods are the trigger; you have to wait for the new node to come up.
+- **A pod in `Pending` doesn't consume resources on any node** — but the scheduler still has it in memory. If you have tens of thousands of pending pods, scheduler performance degrades.
+- **Don't set `nodeName` in production specs.** It pins the pod to a specific node. If the node is down, the pod stays pending forever. Use nodeSelector + taints/tolerations, or topology spread, instead.
 
 ## See also
 
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the container is the problem
-* [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — when the node is the problem
-* [[Kubernetes/guides/troubleshooting/pvc-stuck|pvc-stuck]] — when storage is the problem
-* [[Kubernetes/concepts/L06-scheduling-scaling/00-README|Scheduling & Scaling]] — how scheduling works
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the container is the problem
+- [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — when the node is the problem
+- [[Kubernetes/guides/troubleshooting/pvc-stuck|pvc-stuck]] — when storage is the problem
+- [[Kubernetes/concepts/L06-scheduling-scaling/00-README|Scheduling & Scaling]] — how scheduling works

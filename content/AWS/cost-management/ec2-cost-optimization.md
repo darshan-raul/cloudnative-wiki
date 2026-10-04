@@ -16,16 +16,19 @@ EC2 is the largest single cost line for most AWS workloads. Optimizing EC2 spend
 The most common source of EC2 waste is over-provisioned instances — buying t3.xlarge when t3.large would handle the load. Right-sizing means matching instance capacity to actual workload requirements.
 
 **How to identify over-sized instances:**
+
 - CloudWatch metrics: `CPUUtilization`, `NetworkIn`, `NetworkOut`, `VolumeReadOps`
 - Compute Optimizer: AWS's ML-based recommendation engine. It analyzes CloudWatch data and tells you "you're using 40% of your t3.xlarge, a t3.large would handle it"
 - CloudWatch Contributor Insights: Top contributors to CPU across your fleet
 
 **Typical over-size patterns:**
+
 - Database servers with 32 vCPU because "we might need it" but running at 15% average
 - Application servers with 64GB RAM because the team always spec'd it that way, actual usage is 20GB
 - CI/CD agents that run 30 minutes of work then sit idle for 23.5 hours
 
 **Right-sizing formula:**
+
 ```
 Current: t3.xlarge (4 vCPU, 16GB) @ $0.192/hour
 Target: t3.large (2 vCPU, 8GB) @ $0.096/hour
@@ -45,6 +48,7 @@ Auto Scaling is the primary mechanism for matching EC2 capacity to demand. Three
 **Predictive scaling (Compute Optimizer):** ML-based. Analyzes historical traffic patterns and schedules capacity before demand arrives. Good for consistent diurnal patterns.
 
 **Mixed instance policies:** Combine On-Demand with Spot in a single ASG:
+
 ```json
 {
   "InstanceDistribution": {
@@ -53,6 +57,7 @@ Auto Scaling is the primary mechanism for matching EC2 capacity to demand. Three
   }
 }
 ```
+
 - 20% of instances are On-Demand (covers baseline)
 - 80% are Spot (covers bursty traffic)
 - ASG launches Spot from the most available capacity pools
@@ -62,6 +67,7 @@ Auto Scaling is the primary mechanism for matching EC2 capacity to demand. Three
 Spot can reduce EC2 cost by 60-90% vs On-Demand. The key is designing for interruption.
 
 **Interruption handling options:**
+
 - `terminate` — shut down, lose state
 - `stop` — stop, resume later (persistent capacity in capacity-optimized pools)
 - `hibernate` — write memory to EBS root volume, stop, resume with state intact
@@ -71,12 +77,14 @@ Spot can reduce EC2 cost by 60-90% vs On-Demand. The key is designing for interr
 **Capacity-optimized allocation:** ASG uses `capacity-optimized` to automatically pick the pools with most capacity available, reducing interruption frequency.
 
 **Use cases for Spot:**
+
 - Batch processing (Hadoop, Spark, ML training)
 - CI/CD build agents
 - Web servers behind a load balancer that can tolerate 2-minute interruption
 - Stateless microservices
 
 **Avoid for:**
+
 - Databases
 - Anything with state that can't be restored quickly
 - Workloads requiring guaranteed availability
@@ -84,11 +92,13 @@ Spot can reduce EC2 cost by 60-90% vs On-Demand. The key is designing for interr
 ## Graviton (ARM)
 
 AWS Graviton3 processors deliver better price-performance than Intel/AMD for many workloads:
+
 - ~20% better performance per dollar for web servers
 - ~40% better performance per dollar for distributed databases
 - Lower power consumption, better perf/watt
 
 **Requirements:**
+
 - Application must support ARM64 (most modern compiled languages do: Go, Rust, Node.js, Python, Java)
 - AMI must be ARM64 (not all vendor AMIs have ARM variants)
 - Some instance types only available as Graviton (M7g, C7g, R7g)
@@ -98,6 +108,7 @@ AWS Graviton3 processors deliver better price-performance than Intel/AMD for man
 ## Reserved Instance Strategy for EC2
 
 **Baseline + Burst pattern:**
+
 ```
 Baseline: 40 x m6i.large covered by 3-year All-Upfront RI @ $0.096/hour = $3.84/hour
 Burst: Up to 100 instances covered by On-Demand/Spot @ $0.144/hour = $8.64/hour
@@ -111,12 +122,14 @@ This covers always-on baseline at maximum discount, handles bursts with On-Deman
 Resources that exist but are no longer used, still costing money:
 
 **EC2 instances:**
+
 - Development instances left running on weekends
 - Old test environments after project completion
 - `stopped` instances retain EBS volumes — still charged
 - Failed ASG instances that didn't terminate cleanly
 
 **EBS volumes:**
+
 - Unattached volumes (orphaned after instance termination)
 - Old snapshots from deleted instances
 - AMIs not cleaned up after instance type changes
@@ -128,6 +141,7 @@ AWS Instance Scheduler solution (AWS Solutions) automates stopping/starting inst
 ## Compute Optimizer
 
 AWS Compute Optimizer analyzes CloudWatch metrics and recommends:
+
 - Right-sizing (instance type downgrades/upgrades)
 - Memory utilization (for instances with CloudWatch detailed monitoring)
 - Auto Scaling group recommendations

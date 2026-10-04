@@ -24,6 +24,7 @@ When you press the power button, Linux goes through a precise sequence of stages
 ## Stage 1 — POST and Firmware
 
 When the computer powers on:
+
 1. CPU initializes and runs the **BIOS/UEFI firmware**
 2. **POST** (Power-On Self-Test) runs — checks RAM, CPU, hardware
 3. Firmware looks for a boot device (SSD, HDD, USB, network)
@@ -46,6 +47,7 @@ UEFI (Modern):
 ```
 
 The ESP is a FAT32 partition at `/boot/efi/` on Linux:
+
 ```
 /boot/efi/
   EFI/
@@ -118,6 +120,7 @@ console=tty1           # redirect console to tty1
 ## Stage 3 — Kernel
 
 Once GRUB loads the kernel into memory, the kernel:
+
 1. Initializes CPU, memory management
 2. Detects and initializes hardware
 3. Mounts the **initramfs** as the temporary root filesystem
@@ -135,6 +138,7 @@ Why initramfs?
 ```
 
 The initramfs unpacks itself, runs scripts to:
+
 1. Set up LVM volumes
 2. Decrypt LUKS-encrypted partitions
 3. Mount the real root filesystem

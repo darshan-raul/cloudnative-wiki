@@ -9,11 +9,13 @@ title: AUR & Software Management
 The **AUR** is a community-driven repository of ~80,000+ package build scripts (PKGBUILDs) for software not in the official repos. It powers Arch's massive software availability.
 
 **How it works:**
+
 - AUR packages are `PKGBUILD` scripts — instructions to compile software from source
 - Anyone can submit a PKGBUILD; popular ones get "trusted" status and move to the `community` repo
 - AUR is NOT a binary repo — packages are built on your machine (via `makepkg`)
 
 **Key terms:**
+
 - **AUR** — Arch User Repository (untrusted, user-submitted)
 - **community** — Trusted AUR packages (maintained by TU, treated like official)
 - **ABS** — Arch Build System (infrastructure to rebuild official packages with modifications)
@@ -168,6 +170,7 @@ pacman -S <pkg>
 Some software is also available as Flatpak or Snap (not exclusive to Arch):
 
 ### Flatpak
+
 ```bash
 pacman -S flatpak
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -175,6 +178,7 @@ flatpak install flathub <app>
 ```
 
 ### Snap
+
 ```bash
 pacman -S snapd
 systemctl enable --now snapd.socket

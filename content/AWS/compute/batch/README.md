@@ -30,13 +30,13 @@ Job Scheduler (runs jobs based on priority, dependencies)
 
 ### Key Terms
 
-| Term | Description |
-|------|-------------|
-| Job Definition | Blueprint for a job (image, resources, retry strategy) |
-| Job | A running instance of a job definition |
-| Job Queue | Queue with priority, maps to compute environment |
-| Compute Environment | Managed EC2 or Fargate infra |
-| Job Scheduler | AWS Batch scheduler (runs jobs in order) |
+| Term                | Description                                            |
+| ------------------- | ------------------------------------------------------ |
+| Job Definition      | Blueprint for a job (image, resources, retry strategy) |
+| Job                 | A running instance of a job definition                 |
+| Job Queue           | Queue with priority, maps to compute environment       |
+| Compute Environment | Managed EC2 or Fargate infra                           |
+| Job Scheduler       | AWS Batch scheduler (runs jobs in order)               |
 
 ## Job Definitions
 
@@ -49,17 +49,15 @@ Job Scheduler (runs jobs based on priority, dependencies)
     "vcpus": 2,
     "memory": 4096,
     "command": ["python", "process.py", "Ref::input_file"],
-    "environment": [
-      {"name": "BATCH_LOG_LEVEL", "value": "INFO"}
-    ],
+    "environment": [{ "name": "BATCH_LOG_LEVEL", "value": "INFO" }],
     "readonlyRootFilesystem": true,
     "privileged": false
   },
   "retryStrategy": {
     "attempts": 3,
     "evaluateOnExit": [
-      {"action": "RETRY", "onStatusReason": "HostUsageError"},
-      {"action": "EXIT", "onStatusReason": "TaskFailed"}
+      { "action": "RETRY", "onStatusReason": "HostUsageError" },
+      { "action": "EXIT", "onStatusReason": "TaskFailed" }
     ]
   },
   "timeout": {
@@ -79,6 +77,7 @@ Job Scheduler (runs jobs based on priority, dependencies)
 ```
 
 Override at submit time:
+
 ```bash
 aws batch submit-job \
   --job-name my-run \
@@ -191,6 +190,7 @@ aws batch submit-job \
 ```
 
 100 jobs run in parallel. Each job can reference its array index:
+
 ```python
 import os
 array_index = os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX')
@@ -264,27 +264,28 @@ aws events put-rule \
   "retryStrategy": {
     "attempts": 3,
     "evaluateOnExit": [
-      {"action": "RETRY", "onReason": "HostUsageError"},
-      {"action": "RETRY", "onReason": "NonZeroExitCode"},
-      {"action": "EXIT", "onReason": "TaskFailed"}
+      { "action": "RETRY", "onReason": "HostUsageError" },
+      { "action": "RETRY", "onReason": "NonZeroExitCode" },
+      { "action": "EXIT", "onReason": "TaskFailed" }
     ]
   }
 }
 ```
 
 Common `onStatusReason` values:
+
 - `HostUsageError` — resource exhaustion, retry
 - `TaskFailed` — task failed, don't retry
 - `JobTimeout` — job timed out, retry
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| EC2 (on-demand) | $0.096/hr (m5.xlarge) |
-| EC2 (Spot) | 70-90% off |
-| Fargate | $0.04048/vCPU-hr + $0.00444/GB-hr |
-| No charge | Job scheduling, queues |
+| Component       | Cost                              |
+| --------------- | --------------------------------- |
+| EC2 (on-demand) | $0.096/hr (m5.xlarge)             |
+| EC2 (Spot)      | 70-90% off                        |
+| Fargate         | $0.04048/vCPU-hr + $0.00444/GB-hr |
+| No charge       | Job scheduling, queues            |
 
 ## Architecture: Batch Processing Pipeline
 

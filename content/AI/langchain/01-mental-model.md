@@ -38,13 +38,13 @@ Everything in LangChain is built from four ideas:
 A chat model takes a **list of messages** and returns a **message**.
 Messages are typed. The five types are:
 
-| Type | Who writes it | What it contains |
-|---|---|---|
-| `SystemMessage` | you (the developer) | instructions, persona, rules |
-| `HumanMessage` | the user | the user's input |
-| `AIMessage` | the model | text, and optionally tool calls |
-| `ToolMessage` | a tool | the result of a tool the model called |
-| `AIMessageChunk` | the model (streaming) | a piece of the response |
+| Type             | Who writes it         | What it contains                      |
+| ---------------- | --------------------- | ------------------------------------- |
+| `SystemMessage`  | you (the developer)   | instructions, persona, rules          |
+| `HumanMessage`   | the user              | the user's input                      |
+| `AIMessage`      | the model             | text, and optionally tool calls       |
+| `ToolMessage`    | a tool                | the result of a tool the model called |
+| `AIMessageChunk` | the model (streaming) | a piece of the response               |
 
 The model's input is always `list[Message]`. Its output is always
 a single `AIMessage`. Tools return `ToolMessage`s that get appended
@@ -206,14 +206,14 @@ provides these properly.
 
 LangChain is split across many packages. Import from the right one:
 
-| Package | What it has |
-|---|---|
-| `langchain-core` | `Runnable`, messages, prompts, tools, output parsers. **Always.** |
-| `langchain-openai` | `ChatOpenAI`, `OpenAIEmbeddings` |
-| `langchain-anthropic` | `ChatAnthropic` |
-| `langchain-ollama` | `ChatOllama` (local models) |
-| `langgraph` | `StateGraph`, `ToolNode`, checkpointers (the agent framework) |
-| `langsmith` | Tracing client (optional, for observability) |
+| Package               | What it has                                                       |
+| --------------------- | ----------------------------------------------------------------- |
+| `langchain-core`      | `Runnable`, messages, prompts, tools, output parsers. **Always.** |
+| `langchain-openai`    | `ChatOpenAI`, `OpenAIEmbeddings`                                  |
+| `langchain-anthropic` | `ChatAnthropic`                                                   |
+| `langchain-ollama`    | `ChatOllama` (local models)                                       |
+| `langgraph`           | `StateGraph`, `ToolNode`, checkpointers (the agent framework)     |
+| `langsmith`           | Tracing client (optional, for observability)                      |
 
 **Never** `from langchain import ...` (the metapackage is mostly
 empty in 0.3+/1.0+). **Never** `from langchain_community import ...`
@@ -299,6 +299,7 @@ tool_result = get_weather.invoke(response.tool_calls[0].args)
 
 The model's response had `tool_calls` populated (it decided to call
 `get_weather`). In a full agent, you'd:
+
 1. Run the tool and get its result
 2. Append a `ToolMessage` to the messages list
 3. Call the model again with the updated list

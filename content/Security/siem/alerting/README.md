@@ -13,12 +13,12 @@ Alert design is critical — too many alerts causes fatigue, too few misses inci
 
 ### Severity Tiers
 
-| Level | Description | Response Time | Example |
-|-------|-------------|---------------|---------|
-| 1-4 | Low —值得监控但不需要立即处理 | Batch review | Unusual process, non-critical failed logins |
-| 5-6 | Medium —可疑活动 | Within 4h | New IAM user, port scan detected |
-| 7-8 | High —可能入侵 | Within 1h | Brute force attempt, anomalous API call |
-| 9-10 | Critical —确认事件 | Immediate | Ransomware, data exfiltration |
+| Level | Description                   | Response Time | Example                                     |
+| ----- | ----------------------------- | ------------- | ------------------------------------------- |
+| 1-4   | Low —值得监控但不需要立即处理 | Batch review  | Unusual process, non-critical failed logins |
+| 5-6   | Medium —可疑活动              | Within 4h     | New IAM user, port scan detected            |
+| 7-8   | High —可能入侵                | Within 1h     | Brute force attempt, anomalous API call     |
+| 9-10  | Critical —确认事件            | Immediate     | Ransomware, data exfiltration               |
 
 ### Alert Fatigue Metrics
 

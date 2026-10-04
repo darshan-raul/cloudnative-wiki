@@ -72,14 +72,14 @@ For mission-critical production workloads, Google mandates a **4-circuit, dual-m
 
 ## Comparison: HA VPN vs. Dedicated vs. Partner Interconnect
 
-| Feature | Cloud HA VPN | Partner Interconnect | Dedicated Interconnect |
-| :--- | :--- | :--- | :--- |
-| **Physical Medium** | Public Internet (IPSec encrypted) | Service Provider network (Equinix, Megaport, AT&T) | **Direct physical fiber cross-connect** to Google Colocation |
-| **Circuit Bandwidth**| Up to **3 Gbps per tunnel** (scale with multiple tunnels) | **50 Mbps to 100 Gbps** per VLAN attachment | **10 Gbps or 100 Gbps** per physical port |
-| **Setup Time** | **Minutes** via CLI / Console | Days to weeks | Weeks to months (cross-connect provisioning) |
-| **Routing Protocol**| Dynamic BGP exclusively | Dynamic BGP exclusively | Dynamic BGP exclusively |
-| **Maximum SLA** | **99.99%** | **99.99%** (dual-metro) or 99.9% | **99.99%** (dual-metro) or 99.9% |
-| **Encryption** | Built-in AES-GCM IPSec encryption | Unencrypted by default (add Cloud Interconnect MACsec) | Unencrypted by default (add Cloud Interconnect MACsec) |
+| Feature               | Cloud HA VPN                                              | Partner Interconnect                                   | Dedicated Interconnect                                       |
+| :-------------------- | :-------------------------------------------------------- | :----------------------------------------------------- | :----------------------------------------------------------- |
+| **Physical Medium**   | Public Internet (IPSec encrypted)                         | Service Provider network (Equinix, Megaport, AT&T)     | **Direct physical fiber cross-connect** to Google Colocation |
+| **Circuit Bandwidth** | Up to **3 Gbps per tunnel** (scale with multiple tunnels) | **50 Mbps to 100 Gbps** per VLAN attachment            | **10 Gbps or 100 Gbps** per physical port                    |
+| **Setup Time**        | **Minutes** via CLI / Console                             | Days to weeks                                          | Weeks to months (cross-connect provisioning)                 |
+| **Routing Protocol**  | Dynamic BGP exclusively                                   | Dynamic BGP exclusively                                | Dynamic BGP exclusively                                      |
+| **Maximum SLA**       | **99.99%**                                                | **99.99%** (dual-metro) or 99.9%                       | **99.99%** (dual-metro) or 99.9%                             |
+| **Encryption**        | Built-in AES-GCM IPSec encryption                         | Unencrypted by default (add Cloud Interconnect MACsec) | Unencrypted by default (add Cloud Interconnect MACsec)       |
 
 ---
 
@@ -88,19 +88,21 @@ For mission-critical production workloads, Google mandates a **4-circuit, dual-m
 ### 1. Cloud Router & BGP Route Exchange
 
 All hybrid connectivity in GCP terminates logically on a **Cloud Router**:
-* **eBGP Sessions:** Exchanging routes dynamically between Google Cloud and on-premises routers.
-* **Autonomous System Numbers (ASNs):** Google Cloud uses private ASN `16550` by default (or user-configurable RFC 6996 private ASNs: `64512–65534`).
-* **Multi-Exit Discriminator (MED):** Used by on-premises routers to configure active/passive failover paths by assigning route preferences.
+
+- **eBGP Sessions:** Exchanging routes dynamically between Google Cloud and on-premises routers.
+- **Autonomous System Numbers (ASNs):** Google Cloud uses private ASN `16550` by default (or user-configurable RFC 6996 private ASNs: `64512–65534`).
+- **Multi-Exit Discriminator (MED):** Used by on-premises routers to configure active/passive failover paths by assigning route preferences.
 
 ### 2. VPC Dynamic Routing: Regional vs. Global
 
-* **Regional Dynamic Routing (Default):** Cloud Router only advertises and learns routes for subnets within its **own region** (e.g. `us-central1`).
-* **Global Dynamic Routing:** Cloud Router advertises and learns routes for **all subnets across the entire global VPC worldwide**. An on-prem datacenter connected to Chicago can route directly to VMs in Frankfurt or Tokyo over Google's private backbone!
+- **Regional Dynamic Routing (Default):** Cloud Router only advertises and learns routes for subnets within its **own region** (e.g. `us-central1`).
+- **Global Dynamic Routing:** Cloud Router advertises and learns routes for **all subnets across the entire global VPC worldwide**. An on-prem datacenter connected to Chicago can route directly to VMs in Frankfurt or Tokyo over Google's private backbone!
 
 ### 3. Cloud Interconnect MACsec Encryption
 
 By default, physical fiber interconnects transmit unencrypted Ethernet frames. For zero-trust compliance (HIPAA, PCI-DSS):
-* **MACsec (IEEE 802.1AE):** Provides hardware-level wire-speed encryption between customer routers and Google edge switches on 100 Gbps Dedicated Interconnect circuits.
+
+- **MACsec (IEEE 802.1AE):** Provides hardware-level wire-speed encryption between customer routers and Google edge switches on 100 Gbps Dedicated Interconnect circuits.
 
 ---
 
@@ -171,41 +173,43 @@ gcloud compute routers add-bgp-peer prod-vpn-router \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **HA VPN Throughput** | Up to 3 Gbps per tunnel (ingress + egress) | Max 250,000 packets/sec per tunnel |
-| **Max Tunnels per HA VPN Gateway** | Up to 128 tunnels | Scales across multiple peers/regions |
-| **Dedicated Interconnect Port Speeds**| 10 Gbps or 100 Gbps | Up to 8 circuits in a Link Aggregation Group (LAG) |
-| **BGP Dynamic Learned Routes** | 100 routes (default) | Can be increased to 1,000 via quota request |
-| **SLA Guarantee** | **99.99% Uptime** | Strictly requires dual-tunnel or dual-metro setup |
+| Parameter                              | Limit                                      | Production Notes                                   |
+| :------------------------------------- | :----------------------------------------- | :------------------------------------------------- |
+| **HA VPN Throughput**                  | Up to 3 Gbps per tunnel (ingress + egress) | Max 250,000 packets/sec per tunnel                 |
+| **Max Tunnels per HA VPN Gateway**     | Up to 128 tunnels                          | Scales across multiple peers/regions               |
+| **Dedicated Interconnect Port Speeds** | 10 Gbps or 100 Gbps                        | Up to 8 circuits in a Link Aggregation Group (LAG) |
+| **BGP Dynamic Learned Routes**         | 100 routes (default)                       | Can be increased to 1,000 via quota request        |
+| **SLA Guarantee**                      | **99.99% Uptime**                          | Strictly requires dual-tunnel or dual-metro setup  |
 
 ---
 
 ## References
 
-* **Cloud HA VPN Documentation:** https://cloud.google.com/network-connectivity/docs/vpn/concepts/overview
-* **Cloud Interconnect Overview:** https://cloud.google.com/network-connectivity/docs/interconnect/concepts/overview
-* **99.99% SLA Topology Guide:** https://cloud.google.com/network-connectivity/docs/interconnect/tutorials/dedicated-creating-9999-pipeline
-* **Cloud Router BGP Configuration:** https://cloud.google.com/network-connectivity/docs/router/concepts/overview
-* **Pricing:** https://cloud.google.com/network-connectivity/pricing
+- **Cloud HA VPN Documentation:** https://cloud.google.com/network-connectivity/docs/vpn/concepts/overview
+- **Cloud Interconnect Overview:** https://cloud.google.com/network-connectivity/docs/interconnect/concepts/overview
+- **99.99% SLA Topology Guide:** https://cloud.google.com/network-connectivity/docs/interconnect/tutorials/dedicated-creating-9999-pipeline
+- **Cloud Router BGP Configuration:** https://cloud.google.com/network-connectivity/docs/router/concepts/overview
+- **Pricing:** https://cloud.google.com/network-connectivity/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Cloud HA VPN for Enterprise Branch Office
-* 1 HA VPN Gateway in `us-central1` with 2 active tunnels connected to corporate headquarters.
-* Gateway fee: 1 gateway × $0.05 / hour × 730 hrs = **$36.50 / month**.
-* Tunnel fees: 2 tunnels × $0.05 / hour × 730 hrs = **$73.00 / month**.
-* Outbound egress over VPN: 2 TB / month ($0.08 / GB = $160.00).
-* **Total Monthly Cost:** $36.50 + $73.00 + $160.00 = **~$269.50 / month** (Guaranteed 99.99% SLA).
+
+- 1 HA VPN Gateway in `us-central1` with 2 active tunnels connected to corporate headquarters.
+- Gateway fee: 1 gateway × $0.05 / hour × 730 hrs = **$36.50 / month**.
+- Tunnel fees: 2 tunnels × $0.05 / hour × 730 hrs = **$73.00 / month**.
+- Outbound egress over VPN: 2 TB / month ($0.08 / GB = $160.00).
+- **Total Monthly Cost:** $36.50 + $73.00 + $160.00 = **~$269.50 / month** (Guaranteed 99.99% SLA).
 
 ### Scenario 2: High-Bandwidth Dedicated Interconnect (10 Gbps)
-* 2 × 10 Gbps Dedicated Interconnect physical cross-connects (for 99.9% high availability in one colocation facility).
-* Port fee: 2 ports × $1,700.00 / port / month = **$3,400.00 / month**.
-* 2 VLAN Attachments: 2 × $72.00 / month = **$144.00 / month**.
-* Outbound egress data processed (50 TB): Discounted Interconnect egress rate ($0.02 / GB = **$1,000.00**).
-* **Total Monthly Bill:** **~$4,544.00 / month** (Delivers dedicated line rate with sub-millisecond latency).
+
+- 2 × 10 Gbps Dedicated Interconnect physical cross-connects (for 99.9% high availability in one colocation facility).
+- Port fee: 2 ports × $1,700.00 / port / month = **$3,400.00 / month**.
+- 2 VLAN Attachments: 2 × $72.00 / month = **$144.00 / month**.
+- Outbound egress data processed (50 TB): Discounted Interconnect egress rate ($0.02 / GB = **$1,000.00**).
+- **Total Monthly Bill:** **~$4,544.00 / month** (Delivers dedicated line rate with sub-millisecond latency).
 
 ---
 

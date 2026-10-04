@@ -1,13 +1,14 @@
 ---
 title: Aggregation Layer
-tags: [kubernetes, internals, apiserver, aggregation-layer, extension, apiservice]
+tags:
+  [kubernetes, internals, apiserver, aggregation-layer, extension, apiservice]
 date: 2026-09-06
 description: Architecture of the Kubernetes API aggregation layer, APIService resources, mutual TLS delegation, and extending the kube-apiserver with auxiliary API servers.
 ---
 
 # Aggregation Layer
 
->*"https://kubernetes.io/docs/tasks/access-kubernetes-api/configure-aggregation-layer/"*
+> _"https://kubernetes.io/docs/tasks/access-kubernetes-api/configure-aggregation-layer/"_
 
 The aggregation layer lets you **run additional API servers alongside the main kube-apiserver**, with requests proxied through the main apiserver. It's how metrics-server, custom apiservices, and certain cloud-provider integrations expose APIs that look native to Kubernetes.
 
@@ -96,10 +97,10 @@ kind: APIService
 metadata:
   name: v1beta1.metrics.k8s.io
 spec:
-  group: metrics.k8s.io          # /apis/<group>/<version>
-  version: v1beta1               # /apis/metrics.k8s.io/v1beta1
-  groupPriorityMinimum: 100      # higher = preferred in discovery
-  versionPriority: 100           # higher = preferred within group
+  group: metrics.k8s.io # /apis/<group>/<version>
+  version: v1beta1 # /apis/metrics.k8s.io/v1beta1
+  groupPriorityMinimum: 100 # higher = preferred in discovery
+  versionPriority: 100 # higher = preferred within group
   service:
     name: metrics-server
     namespace: kube-system
@@ -271,13 +272,13 @@ The most common pattern: the aggregated apiserver trusts the impersonation heade
 
 ### 9. What uses the aggregation layer today
 
-| Component | What it does via aggregation |
-|-----------|------------------------------|
-| **metrics-server** | Exposes `NodeMetrics` and `PodMetrics` → powers `kubectl top` and HPA |
-| **k8s.io/apiserver-network-proxy/konnectivity** | Tunneling API server traffic to node pools (not a CRD) |
-| **GKE/EKS cloud connectors** | Cluster-scoped APIs for cloud resource management |
-| **kube-oidc-proxy** | OIDC token validation via aggregated API |
-| **various storage operators** | CSI driver APIs sometimes use aggregation |
+| Component                                       | What it does via aggregation                                          |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| **metrics-server**                              | Exposes `NodeMetrics` and `PodMetrics` → powers `kubectl top` and HPA |
+| **k8s.io/apiserver-network-proxy/konnectivity** | Tunneling API server traffic to node pools (not a CRD)                |
+| **GKE/EKS cloud connectors**                    | Cluster-scoped APIs for cloud resource management                     |
+| **kube-oidc-proxy**                             | OIDC token validation via aggregated API                              |
+| **various storage operators**                   | CSI driver APIs sometimes use aggregation                             |
 
 The vast majority of CRDs use the **main kube-apiserver** (not the aggregation layer) — they register with `apiextensions.k8s.io/v1`.
 
@@ -304,6 +305,7 @@ make deploy IMG=mycompany.com/my-apiserver:v1
 ```
 
 Kubebuilder generates:
+
 - The CRD YAML (`config/crd/bases/...`)
 - The apiserver code (`api/`, `cmd/`)
 - A Dockerfile for the apiserver
@@ -333,24 +335,26 @@ Kubebuilder's `APIServer` type handles: watch loop, REST storage, error handling
 
 ### 11. CRDs vs aggregation layer
 
-| | CRD | Aggregated API Server |
-|---|---|---|
-| **Runs in** | kube-apiserver process | Separate Pod(s) |
-| **Storage** | etcd (via kube-apiserver) | Your choice (etcd, SQL, Redis, custom) |
-| **Authentication** | RBAC (same as all k8s) | Custom or delegated |
-| **Authorization** | RBAC | Custom or delegated |
-| **Schema** | OpenAPI v3 in CRD | Protobuf or OpenAPI |
-| **Performance** | Good for low/moderate volume | Better for high QPS |
-| **Operational burden** | Low | High |
-| **Complexity** | Low | High |
-| **Schema evolution** | Webhook conversion or version migration | Your API handles it |
+|                        | CRD                                     | Aggregated API Server                  |
+| ---------------------- | --------------------------------------- | -------------------------------------- |
+| **Runs in**            | kube-apiserver process                  | Separate Pod(s)                        |
+| **Storage**            | etcd (via kube-apiserver)               | Your choice (etcd, SQL, Redis, custom) |
+| **Authentication**     | RBAC (same as all k8s)                  | Custom or delegated                    |
+| **Authorization**      | RBAC                                    | Custom or delegated                    |
+| **Schema**             | OpenAPI v3 in CRD                       | Protobuf or OpenAPI                    |
+| **Performance**        | Good for low/moderate volume            | Better for high QPS                    |
+| **Operational burden** | Low                                     | High                                   |
+| **Complexity**         | Low                                     | High                                   |
+| **Schema evolution**   | Webhook conversion or version migration | Your API handles it                    |
 
 **When CRD is the right answer:**
+
 - You want to extend k8s with a new resource type
 - Your data lives in etcd (or you don't care where it lives)
 - You want full kubectl support, RBAC, watch, etc.
 
 **When aggregation layer is the right answer:**
+
 - You need a different storage backend (not etcd)
 - You need custom authentication (mTLS, SAML, custom OIDC)
 - You have a gRPC API you want to expose as k8s-style
@@ -431,6 +435,7 @@ Request latency: kube-apiserver + 1ms (proxy) + aggregated-apiserver + response
 For low-latency APIs (every pod reconcile, every `kubectl get`), this adds up. For infrequent APIs (metrics every 15s, custom APIs with low QPS), it's fine.
 
 **Mitigations:**
+
 - Deploy aggregated apiserver in same AZ as kube-apiserver
 - Use HTTP/2 for connection reuse
 - Keep aggregated apiserver stateless if possible
@@ -494,23 +499,23 @@ kubectl get apiservice <name> -o yaml
 
 ### 18. Gotchas
 
-* **`caBundle` must be valid base64.** A malformed CA bundle causes every request to the aggregated API to fail with a 503.
-* **The kube-apiserver must have `enable-aggregator-routing: true`.** Without it, requests to aggregated paths may not be routed.
-* **The aggregated apiserver must serve TLS.** Non-TLS endpoints are rejected by kube-apiserver.
-* **`--authentication-kubeconfig` is the standard pattern** for delegating auth back to the kube-apiserver. Without it, you need to implement your own token validation.
-* **Aggregated apiservers can have CRDs too.** Some operators bundle a CRD (for user-facing types) with an aggregated apiserver (for internal subresources).
-* **Discovery is automatic** — once the APIService is registered, `kubectl api-resources` includes it. There's no way to hide it.
-* **RBAC for aggregated APIs is scoped to the APIService name**, not the resources themselves. The aggregated apiserver enforces what users can do with its resources.
-* **The `serviceAccountIssuer` field** (k8s 1.20+) lets you avoid CA bundle rotation issues by using a ServiceAccount token for validation instead.
-* **`kubectl get --raw` works** for aggregated APIs, but the kube-apiserver still validates the request shape — some malformed requests fail at the proxy layer before reaching your apiserver.
-* **The aggregated apiserver sees impersonation headers** (`X-Remote-User`, etc.) but not the original client cert. If you need the original client identity (for mTLS to external services), you need to pass that explicitly.
-* **Cross-namespace requests are proxied as-is** — the aggregated apiserver receives the namespace from the request URL path, not from any isolation.
+- **`caBundle` must be valid base64.** A malformed CA bundle causes every request to the aggregated API to fail with a 503.
+- **The kube-apiserver must have `enable-aggregator-routing: true`.** Without it, requests to aggregated paths may not be routed.
+- **The aggregated apiserver must serve TLS.** Non-TLS endpoints are rejected by kube-apiserver.
+- **`--authentication-kubeconfig` is the standard pattern** for delegating auth back to the kube-apiserver. Without it, you need to implement your own token validation.
+- **Aggregated apiservers can have CRDs too.** Some operators bundle a CRD (for user-facing types) with an aggregated apiserver (for internal subresources).
+- **Discovery is automatic** — once the APIService is registered, `kubectl api-resources` includes it. There's no way to hide it.
+- **RBAC for aggregated APIs is scoped to the APIService name**, not the resources themselves. The aggregated apiserver enforces what users can do with its resources.
+- **The `serviceAccountIssuer` field** (k8s 1.20+) lets you avoid CA bundle rotation issues by using a ServiceAccount token for validation instead.
+- **`kubectl get --raw` works** for aggregated APIs, but the kube-apiserver still validates the request shape — some malformed requests fail at the proxy layer before reaching your apiserver.
+- **The aggregated apiserver sees impersonation headers** (`X-Remote-User`, etc.) but not the original client cert. If you need the original client identity (for mTLS to external services), you need to pass that explicitly.
+- **Cross-namespace requests are proxied as-is** — the aggregated apiserver receives the namespace from the request URL path, not from any isolation.
 
 ---
 
 ## See also
 
-* [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — the simpler alternative
-* [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — what most people actually build on top of CRDs
-* [[Kubernetes/concepts/L09-advanced/04-admission-controllers|Admission Controllers & Webhooks]] — validation and mutation at admission
-* [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the network layer below kube-proxy
+- [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — the simpler alternative
+- [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — what most people actually build on top of CRDs
+- [[Kubernetes/concepts/L09-advanced/04-admission-controllers|Admission Controllers & Webhooks]] — validation and mutation at admission
+- [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the network layer below kube-proxy

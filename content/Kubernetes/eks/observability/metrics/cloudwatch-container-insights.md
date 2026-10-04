@@ -26,6 +26,7 @@ helm install aws-cloudwatch-metrics aws-cloudwatch-metrics/aws-cloudwatch-metric
 ## View Metrics in Console
 
 Navigate to CloudWatch > Metrics > Container Insights to view:
+
 - CPU utilization
 - Memory usage
 - Network throughput
@@ -34,13 +35,13 @@ Navigate to CloudWatch > Metrics > Container Insights to view:
 
 ## Container Insights Metrics
 
-| Metric | Description |
-|--------|-------------|
-| pod_cpu_utilization | CPU usage % |
-| pod_memory_working_set | Memory usage |
-| pod_network_rx_bytes | Network received |
-| pod_network_tx_bytes | Network transmitted |
-| container_restart_count | Container restarts |
+| Metric                  | Description         |
+| ----------------------- | ------------------- |
+| pod_cpu_utilization     | CPU usage %         |
+| pod_memory_working_set  | Memory usage        |
+| pod_network_rx_bytes    | Network received    |
+| pod_network_tx_bytes    | Network transmitted |
+| container_restart_count | Container restarts  |
 
 ## CloudWatch Dashboard
 
@@ -51,7 +52,12 @@ Navigate to CloudWatch > Metrics > Container Insights to view:
       "type": "metric",
       "properties": {
         "metrics": [
-          ["ContainerInsights", "pod_cpu_utilization", "ClusterName", "my-cluster"]
+          [
+            "ContainerInsights",
+            "pod_cpu_utilization",
+            "ClusterName",
+            "my-cluster"
+          ]
         ],
         "period": 60,
         "stat": "Average",
@@ -66,6 +72,7 @@ Navigate to CloudWatch > Metrics > Container Insights to view:
 ## Log Insights Queries
 
 ### Top CPU consumers
+
 ```
 fields @timestamp, PodName, cpuUtilization as CPU
 | sort CPU desc
@@ -73,6 +80,7 @@ fields @timestamp, PodName, cpuUtilization as CPU
 ```
 
 ### Memory pressure
+
 ```
 fields @timestamp, PodName, memoryUtilization as Memory
 | filter Memory > 80

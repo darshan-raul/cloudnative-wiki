@@ -13,10 +13,10 @@ Pod security controls what a pod can and cannot do at the kernel level.
 
 Three built-in policies (replacing the deprecated PodSecurityPolicies):
 
-| Policy | Description |
-|--------|-------------|
+| Policy       | Description                               |
+| ------------ | ----------------------------------------- |
 | `privileged` | Unrestricted — for system-level workloads |
-| `baseline` | Minimal restrictions — default for most |
+| `baseline`   | Minimal restrictions — default for most   |
 | `restricted` | Hardened — follow security best practices |
 
 ## Enforce PSS at Namespace Level
@@ -50,26 +50,26 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   containers:
-  - name: app
-    image: my-app:latest
-    securityContext:
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      runAsUser: 1000
-      capabilities:
-        drop:
-        - ALL
+    - name: app
+      image: my-app:latest
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsUser: 1000
+        capabilities:
+          drop:
+            - ALL
 ```
 
 ## Key Settings
 
-| Setting | Secure Value | Why |
-|---------|-------------|-----|
-| `runAsNonRoot` | `true` | Containers don't run as root |
-| `allowPrivilegeEscalation` | `false` | Can't gain more privileges |
-| `readOnlyRootFilesystem` | `true` | No writable filesystem |
-| `capabilities.drop` | `ALL` | Drop all Linux capabilities |
-| `seccompProfile.type` | `RuntimeDefault` | Use default seccomp profile |
+| Setting                    | Secure Value     | Why                          |
+| -------------------------- | ---------------- | ---------------------------- |
+| `runAsNonRoot`             | `true`           | Containers don't run as root |
+| `allowPrivilegeEscalation` | `false`          | Can't gain more privileges   |
+| `readOnlyRootFilesystem`   | `true`           | No writable filesystem       |
+| `capabilities.drop`        | `ALL`            | Drop all Linux capabilities  |
+| `seccompProfile.type`      | `RuntimeDefault` | Use default seccomp profile  |
 
 ## RunAsUser / FSGroup
 

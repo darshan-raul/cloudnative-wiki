@@ -163,12 +163,12 @@ its own step budget.
 
 ## When to use `Send` vs subgraphs
 
-| Pattern | Use | Example |
-|---|---|---|
-| Same logic, multiple inputs in parallel | `Send` | Analyze 10 document chunks |
-| Independent workflow, reusable | Subgraph | A document processing pipeline |
+| Pattern                                     | Use      | Example                                               |
+| ------------------------------------------- | -------- | ----------------------------------------------------- |
+| Same logic, multiple inputs in parallel     | `Send`   | Analyze 10 document chunks                            |
+| Independent workflow, reusable              | Subgraph | A document processing pipeline                        |
 | One node calling another with its own state | Subgraph | Multi-agent where each agent has its own message list |
-| Map-reduce over a list | `Send` | Process each item, collect results |
+| Map-reduce over a list                      | `Send`   | Process each item, collect results                    |
 
 ---
 

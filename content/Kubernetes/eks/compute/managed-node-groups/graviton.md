@@ -13,13 +13,13 @@ Graviton instances use AWS-designed ARM processors for better price-performance.
 
 ## Instance Types
 
-| Instance | vCPU | Memory | Use Case |
-|----------|------|--------|----------|
-| m6g.medium | 1 | 4 GB | Small workloads |
-| m6g.xlarge | 4 | 16 GB | General purpose |
-| c6g.2xlarge | 8 | 16 GB | Compute optimized |
-| r6g.large | 2 | 16 GB | Memory optimized |
-| m6gd.xlarge | 4 | 16 GB | With local NVMe |
+| Instance    | vCPU | Memory | Use Case          |
+| ----------- | ---- | ------ | ----------------- |
+| m6g.medium  | 1    | 4 GB   | Small workloads   |
+| m6g.xlarge  | 4    | 16 GB  | General purpose   |
+| c6g.2xlarge | 8    | 16 GB  | Compute optimized |
+| r6g.large   | 2    | 16 GB  | Memory optimized  |
+| m6gd.xlarge | 4    | 16 GB  | With local NVMe   |
 
 ## Create Node Group with Graviton
 
@@ -43,8 +43,8 @@ spec:
   nodeSelector:
     kubernetes.io/arch: arm64
   containers:
-  - name: app
-    image: myapp:latest
+    - name: app
+      image: myapp:latest
 ```
 
 ## Benefits

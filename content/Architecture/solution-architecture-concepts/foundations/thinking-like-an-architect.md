@@ -30,7 +30,7 @@ Every architectural decision is a **trade-off**. There is no "correct" answer in
     ✓ Database per service (or shared with coordination cost)
 ```
 
-**The architect's question:** *What are we trading away, and is that acceptable given our constraints?*
+**The architect's question:** _What are we trading away, and is that acceptable given our constraints?_
 
 ### 2. The Whole System, Not Just Your Part
 
@@ -47,7 +47,7 @@ Engineer sees:      Architect sees:
                     └────────────────────────────────┘
 ```
 
-Ask: *What happens when this component is slow, unavailable, or overloaded?*
+Ask: _What happens when this component is slow, unavailable, or overloaded?_
 
 ### 3. Prefer Reversibility Over Correctness
 
@@ -62,6 +62,7 @@ Irreversible decision:     Reversible decision:
 ```
 
 **Rule:** When uncertain, choose the **more reversible** path. Prefer:
+
 - Strangler fig over big bang rewrite
 - Feature flags over code branches
 - Side-by-side new system over in-place replacement
@@ -77,6 +78,7 @@ Too late:   "We're in prod with 10M rows, migrating is expensive"
 ```
 
 **The last responsible moment** is when:
+
 1. You have enough information to make a good decision
 2. Delaying further would cost more than deciding now
 
@@ -111,7 +113,7 @@ Every architectural choice needs a **baseline**.
 
 ### Draw the Failure Mode
 
-For every component, ask: *How does this fail, and what is the blast radius?*
+For every component, ask: _How does this fail, and what is the blast radius?_
 
 ```
 ┌─────────────┐
@@ -142,6 +144,7 @@ The act of writing forces clarity. If you can't write a clear ADR, you don't und
 ### Say "It Depends" Without Apologizing
 
 Architecture is context-dependent. The same answer to the same question changes based on:
+
 - Team size and experience
 - Traffic patterns
 - Regulatory environment
@@ -167,15 +170,15 @@ Owns my service     →   Owns multiple      →   Owns cross-team
 
 ## Red Flags in Architecture Review
 
-| Red Flag | What It Signals |
-|----------|-----------------|
-| "We'll figure it out later" | No data for a high-impact decision |
-| "It's just like X but simpler" | Underestimated complexity |
-| "We'll add caching later" | Performance not considered in design |
-| "Nobody will need that scale" | No load testing assumptions |
-| "The cloud handles it" | Vendor lock-in, cost blindness |
-| No rollback plan | Irreversibility risk |
-| Single point of failure | Unaddressed reliability risk |
+| Red Flag                       | What It Signals                      |
+| ------------------------------ | ------------------------------------ |
+| "We'll figure it out later"    | No data for a high-impact decision   |
+| "It's just like X but simpler" | Underestimated complexity            |
+| "We'll add caching later"      | Performance not considered in design |
+| "Nobody will need that scale"  | No load testing assumptions          |
+| "The cloud handles it"         | Vendor lock-in, cost blindness       |
+| No rollback plan               | Irreversibility risk                 |
+| Single point of failure        | Unaddressed reliability risk         |
 
 ---
 

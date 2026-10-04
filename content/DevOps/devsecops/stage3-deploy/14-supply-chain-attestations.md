@@ -1,6 +1,17 @@
 ---
 title: "M14: Supply Chain Attestations & SLSA"
-tags: [devsecops, stage3, deploy, slsa, attestations, in-toto, sigstore, supply-chain, provenance]
+tags:
+  [
+    devsecops,
+    stage3,
+    deploy,
+    slsa,
+    attestations,
+    in-toto,
+    sigstore,
+    supply-chain,
+    provenance,
+  ]
 date: 2026-06-16
 description: "Module 14 of 20 — going beyond artifact signing. SLSA levels, in-toto attestations, build provenance, VEX, and the emerging supply-chain standards that customers and regulators now require."
 ---
@@ -13,73 +24,73 @@ Artifact signing (M13) answers "was this artifact signed by the expected identit
 
 By the end of this module you should be able to:
 
-  - Implement SLSA Level 2 or 3 for your build process
-  - Generate in-toto attestations for build, test, and source
-  - Issue VEX statements to communicate non-applicable CVEs
-  - Build an attestation consumer (e.g., admission controller)
-  - Map SLSA to customer and regulatory requirements
-  - Explain the difference between signing (M13) and attestations (this module)
+- Implement SLSA Level 2 or 3 for your build process
+- Generate in-toto attestations for build, test, and source
+- Issue VEX statements to communicate non-applicable CVEs
+- Build an attestation consumer (e.g., admission controller)
+- Map SLSA to customer and regulatory requirements
+- Explain the difference between signing (M13) and attestations (this module)
 
 ## 1. Signatures vs. Attestations
 
 These are different, complementary mechanisms:
 
-| Aspect | Signature (M13) | Attestation (this module) |
-| ------ | --------------- | ------------------------- |
+| Aspect   | Signature (M13)                 | Attestation (this module)                                                         |
+| -------- | ------------------------------- | --------------------------------------------------------------------------------- |
 | Question | "Is this artifact signed by X?" | "Is this artifact the result of process P, run on source S, with test T passing?" |
-| Issuer | cosign / KMS | SLSA provenance generator, in-toto |
-| Content | Binary signature over a digest | Structured claim about a process |
-| Storage | OCI referrer | OCI referrer (in-toto predicate) |
-| Consumer | cosign verify | Custom verifier (e.g., Kyverno, Ratify) |
+| Issuer   | cosign / KMS                    | SLSA provenance generator, in-toto                                                |
+| Content  | Binary signature over a digest  | Structured claim about a process                                                  |
+| Storage  | OCI referrer                    | OCI referrer (in-toto predicate)                                                  |
+| Consumer | cosign verify                   | Custom verifier (e.g., Kyverno, Ratify)                                           |
 
-A signature says *who* signed. An attestation says *what* was done. The two together: an artifact signed by CI, with an attestation that the CI run was triggered by a specific commit, on a hardened runner, with all tests passing.
+A signature says _who_ signed. An attestation says _what_ was done. The two together: an artifact signed by CI, with an attestation that the CI run was triggered by a specific commit, on a hardened runner, with all tests passing.
 
 ## 2. SLSA: Supply Chain Levels for Software Artifacts
 
 SLSA is a framework with four levels. Each level adds a guarantee:
 
-| Level | Build provenance | Signed | Source | Hardened build |
-| ----- | ---------------- | ------ | ------ | -------------- |
-| 0 | None | No | Any | No |
-| 1 | Documented | No | Any | No |
-| 2 | Documented + tamper-resistant | Yes | Verified | Some |
-| 3 | Hardened, two-party, signed | Yes | Verified | Yes (e.g., ephemeral) |
-| 4 | Two-party review, hermetic | Yes | Two-party review | Yes |
+| Level | Build provenance              | Signed | Source           | Hardened build        |
+| ----- | ----------------------------- | ------ | ---------------- | --------------------- |
+| 0     | None                          | No     | Any              | No                    |
+| 1     | Documented                    | No     | Any              | No                    |
+| 2     | Documented + tamper-resistant | Yes    | Verified         | Some                  |
+| 3     | Hardened, two-party, signed   | Yes    | Verified         | Yes (e.g., ephemeral) |
+| 4     | Two-party review, hermetic    | Yes    | Two-party review | Yes                   |
 
 Most orgs target SLSA L2 as a reasonable goal; L3 is the differentiator. L4 is hyperscaler territory.
 
 ### What SLSA Requires (L2)
 
-  - Build provenance generated and signed
-  - Provenance is non-forgeable (signed by a separate key)
-  - Source verified (commit hash in provenance matches git)
-  - Build platform is trusted (e.g., GitHub Actions with OIDC)
+- Build provenance generated and signed
+- Provenance is non-forgeable (signed by a separate key)
+- Source verified (commit hash in provenance matches git)
+- Build platform is trusted (e.g., GitHub Actions with OIDC)
 
 ### What SLSA L3 Adds
 
-  - Hardened build platform
-  - Provenance is generated by the platform, not the build script
-  - Build runs in an isolated, ephemeral environment
-  - Strong separation of duties
+- Hardened build platform
+- Provenance is generated by the platform, not the build script
+- Build runs in an isolated, ephemeral environment
+- Strong separation of duties
 
 ## 3. The in-toto Attestation Framework
 
 in-toto is a CNCF project. Attestations are JSON-LD documents with:
 
-  - A `predicateType` — what kind of attestation
-  - A `predicate` — the actual claim
-  - A `subject` — what the attestation is about (image digest, source repo, etc.)
-  - A signature (signed by cosign or KMS)
+- A `predicateType` — what kind of attestation
+- A `predicate` — the actual claim
+- A `subject` — what the attestation is about (image digest, source repo, etc.)
+- A signature (signed by cosign or KMS)
 
 The standard predicate types:
 
-  - **SLSA Provenance** — describes the build (source, builder, materials)
-  - **SPDX SBOM** — inventory of components
-  - **CycloneDX SBOM** — same, different format
-  - **VEX** — vulnerability exploitability exchange
-  - **Link** — generic predicate for any custom claim
-  - **Test Result** — what tests ran, what passed
-  - **Code Review** — review status of a change
+- **SLSA Provenance** — describes the build (source, builder, materials)
+- **SPDX SBOM** — inventory of components
+- **CycloneDX SBOM** — same, different format
+- **VEX** — vulnerability exploitability exchange
+- **Link** — generic predicate for any custom claim
+- **Test Result** — what tests ran, what passed
+- **Code Review** — review status of a change
 
 ## 4. Generating Provenance
 
@@ -92,7 +103,7 @@ A reusable GitHub Actions workflow that produces SLSA L3 provenance.
 name: release
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 permissions:
   id-token: write
@@ -109,10 +120,11 @@ jobs:
 ```
 
 The workflow:
-  - Builds the Go binary in a hardened GitHub Actions runner
-  - Generates SLSA provenance with source commit, build config, materials
-  - Signs the provenance with the workflow's OIDC identity
-  - Uploads both binary and provenance to the release
+
+- Builds the Go binary in a hardened GitHub Actions runner
+- Generates SLSA provenance with source commit, build config, materials
+- Signs the provenance with the workflow's OIDC identity
+- Uploads both binary and provenance to the release
 
 The provenance contains:
 
@@ -120,17 +132,20 @@ The provenance contains:
 {
   "_type": "https://in-toto.io/Statement/v0.1",
   "predicateType": "https://slsa.dev/provenance/v1",
-  "subject": [{"name": "my-app", "digest": {"sha256": "abc..."}}],
+  "subject": [{ "name": "my-app", "digest": { "sha256": "abc..." } }],
   "predicate": {
     "buildDefinition": {
       "buildType": "https://slsa.dev/github-actions/v1",
       "externalParameters": {
-        "workflow": {"ref": "refs/tags/v1.2.3", "repository": "https://github.com/my-org/my-app"}
+        "workflow": {
+          "ref": "refs/tags/v1.2.3",
+          "repository": "https://github.com/my-org/my-app"
+        }
       }
     },
     "runDetails": {
-      "builder": {"id": "https://github.com/actions/runner/github-hosted"},
-      "metadata": {"invocationId": "github-actions-run-12345"}
+      "builder": { "id": "https://github.com/actions/runner/github-hosted" },
+      "metadata": { "invocationId": "github-actions-run-12345" }
     }
   }
 }
@@ -144,21 +159,21 @@ VEX is the answer to "this dep has CVE-2024-XXXX, but I don't use the vulnerable
 
 ### VEX States (CycloneDX)
 
-  - `not_affected` — the vuln is in a dep, but not reachable
-  - `affected` — the vuln is reachable, fix is planned
-  - `fixed` — the vuln was reachable, but a fix has been applied
-  - `in_triage` — under investigation
-  - `false_positive` — the vuln doesn't apply; scanner was wrong
-  - `resolved` — same as fixed; included for clarity
-  - `exploitable` — the vuln is reachable, no fix available, mitigation required
-  - `resolved_with_pedigree` — fixed in a way that may not be obvious
+- `not_affected` — the vuln is in a dep, but not reachable
+- `affected` — the vuln is reachable, fix is planned
+- `fixed` — the vuln was reachable, but a fix has been applied
+- `in_triage` — under investigation
+- `false_positive` — the vuln doesn't apply; scanner was wrong
+- `resolved` — same as fixed; included for clarity
+- `exploitable` — the vuln is reachable, no fix available, mitigation required
+- `resolved_with_pedigree` — fixed in a way that may not be obvious
 
 ### When to Issue VEX
 
-  - A scanner reports a vuln in your product
-  - You determine the vuln is not reachable in your code
-  - You publish a VEX statement describing the non-applicability
-  - Customers consume the VEX and clear the finding on their side
+- A scanner reports a vuln in your product
+- You determine the vuln is not reachable in your code
+- You publish a VEX statement describing the non-applicability
+- Customers consume the VEX and clear the finding on their side
 
 ### VEX Workflow
 
@@ -173,9 +188,9 @@ VEX is the answer to "this dep has CVE-2024-XXXX, but I don't use the vulnerable
 
 ### VEX Tools
 
-  - **cve-bin-tool** — generates VEX from reachability analysis
-  - **VulnTotal** — multi-scanner aggregation with VEX output
-  - **Manual authoring** — for known cases, write the VEX JSON by hand and attach as attestation
+- **cve-bin-tool** — generates VEX from reachability analysis
+- **VulnTotal** — multi-scanner aggregation with VEX output
+- **Manual authoring** — for known cases, write the VEX JSON by hand and attach as attestation
 
 ## 6. The Full Attestation Stack
 
@@ -215,27 +230,28 @@ Every step is signed. Every claim is verifiable. Every claim can be re-checked a
 
 Customers increasingly demand evidence of supply-chain integrity. The artifacts to provide:
 
-  - **SBOM** (CycloneDX or SPDX)
-  - **SLSA provenance** (verifiable)
-  - **VEX feed** (continuously updated)
-  - **Compliance attestations** (SOC2 controls, ISO mappings)
-  - **Vulnerability disclosure policy** (how to report a vuln to you)
+- **SBOM** (CycloneDX or SPDX)
+- **SLSA provenance** (verifiable)
+- **VEX feed** (continuously updated)
+- **Compliance attestations** (SOC2 controls, ISO mappings)
+- **Vulnerability disclosure policy** (how to report a vuln to you)
 
 Distribution channels:
-  - Public attestation registry
-  - OCI artifacts alongside your product image
-  - Web portal with on-demand access
-  - API with token-based access for enterprise customers
+
+- Public attestation registry
+- OCI artifacts alongside your product image
+- Web portal with on-demand access
+- API with token-based access for enterprise customers
 
 ## 8. SLSA + Customer Requirements
 
-| Customer requirement | SLSA level | Why |
-| -------------------- | ---------- | --- |
-| "Show me your SBOM" | L1 | Documented build = documented inventory |
-| "Show me your build process" | L2 | Provenance is non-forgeable |
-| "Prove the binary came from your source" | L3 | Hardened build, two-party signing |
-| "We need to verify it independently" | L3+ | Verifiable provenance with public keys |
-| "We need to replay your build" | L4 | Hermetic, reproducible |
+| Customer requirement                     | SLSA level | Why                                     |
+| ---------------------------------------- | ---------- | --------------------------------------- |
+| "Show me your SBOM"                      | L1         | Documented build = documented inventory |
+| "Show me your build process"             | L2         | Provenance is non-forgeable             |
+| "Prove the binary came from your source" | L3         | Hardened build, two-party signing       |
+| "We need to verify it independently"     | L3+        | Verifiable provenance with public keys  |
+| "We need to replay your build"           | L4         | Hermetic, reproducible                  |
 
 Most enterprise security questionnaires map to SLSA L2. FedRAMP and similar frameworks are starting to require L3. Plan for L3 as the long-term target.
 
@@ -243,77 +259,77 @@ Most enterprise security questionnaires map to SLSA L2. FedRAMP and similar fram
 
 ### Month 1: Inventory
 
-  - Where do you build? (GitHub Actions, GitLab, Jenkins, Buildkite)
-  - Are builds reproducible? (Same source → same artifact?)
-  - Is the build platform hardened? (Ephemeral, isolated, no manual access)
-  - What is the source verification story? (Signed commits, branch protection)
+- Where do you build? (GitHub Actions, GitLab, Jenkins, Buildkite)
+- Are builds reproducible? (Same source → same artifact?)
+- Is the build platform hardened? (Ephemeral, isolated, no manual access)
+- What is the source verification story? (Signed commits, branch protection)
 
 ### Month 2: Provenance Generation
 
-  - Pick a provenance generator (slsa-github-generator, Tekton Chains, in-toto-golang)
-  - Integrate into the build pipeline
-  - Verify provenance is generated for every release
-  - Sign the provenance
+- Pick a provenance generator (slsa-github-generator, Tekton Chains, in-toto-golang)
+- Integrate into the build pipeline
+- Verify provenance is generated for every release
+- Sign the provenance
 
 ### Month 3: Verification
 
-  - Stand up an admission controller (Kyverno, Ratify)
-  - Configure it to verify provenance
-  - Test: unsigned image is rejected
-  - Roll out to all clusters
+- Stand up an admission controller (Kyverno, Ratify)
+- Configure it to verify provenance
+- Test: unsigned image is rejected
+- Roll out to all clusters
 
 ### Month 4: Hardening
 
-  - Migrate to ephemeral runners
-  - Two-party review on release (release engineer + security engineer)
-  - Document the SLSA L3 posture
-  - Audit by an external party
+- Migrate to ephemeral runners
+- Two-party review on release (release engineer + security engineer)
+- Document the SLSA L3 posture
+- Audit by an external party
 
 ## 10. Common Pitfalls
 
-| Pitfall | Consequence | Fix |
-| ------- | ----------- | --- |
-| Provenance generated but not verified | Pointless; deploy accepts anything | Verify at admission |
-| Provenance claims source but doesn't verify | Provenance is just text | Sign and verify against git |
-| VEX issued but not machine-readable | Manual suppression, drift | CycloneDX VEX format, signed |
-| No transparency log | Cannot detect tampering | Rekor for everything |
-| SBOM signed but not attached to image | Customer can't find it | Attach as OCI referrer |
-| L3 aspirations with L0 build platform | Cannot honestly claim L3 | Harden the platform first |
+| Pitfall                                     | Consequence                        | Fix                          |
+| ------------------------------------------- | ---------------------------------- | ---------------------------- |
+| Provenance generated but not verified       | Pointless; deploy accepts anything | Verify at admission          |
+| Provenance claims source but doesn't verify | Provenance is just text            | Sign and verify against git  |
+| VEX issued but not machine-readable         | Manual suppression, drift          | CycloneDX VEX format, signed |
+| No transparency log                         | Cannot detect tampering            | Rekor for everything         |
+| SBOM signed but not attached to image       | Customer can't find it             | Attach as OCI referrer       |
+| L3 aspirations with L0 build platform       | Cannot honestly claim L3           | Harden the platform first    |
 
 ## 11. Self-Check
 
-  1. What SLSA level is your build process at, honestly? Use the [slsa.dev](https://slsa.dev) self-assessment.
-  2. Can a customer today verify that your binary came from your source? If not, generate provenance.
-  3. When a new CVE drops, how long does it take you to publish a VEX for known-not-applicable cases?
+1. What SLSA level is your build process at, honestly? Use the [slsa.dev](https://slsa.dev) self-assessment.
+2. Can a customer today verify that your binary came from your source? If not, generate provenance.
+3. When a new CVE drops, how long does it take you to publish a VEX for known-not-applicable cases?
 
 ## 12. The Attestation Lifecycle
 
 An attestation has a lifecycle similar to a signature:
 
-  1. **Generation** — at build time, by the build platform
-  2. **Storage** — as an OCI referrer, alongside the artifact
-  3. **Distribution** — via the registry; consumer pulls by digest
-  4. **Verification** — at deploy time, by the admission controller
-  5. **Re-verification** — at any time, by re-pulling the attestation
-  6. **Retention** — the attestation lives as long as the artifact
+1. **Generation** — at build time, by the build platform
+2. **Storage** — as an OCI referrer, alongside the artifact
+3. **Distribution** — via the registry; consumer pulls by digest
+4. **Verification** — at deploy time, by the admission controller
+5. **Re-verification** — at any time, by re-pulling the attestation
+6. **Retention** — the attestation lives as long as the artifact
 
-The attestation is the *evidence trail*. The signature is the *authentication*. Together, they prove both *what* the artifact is and *where it came from*.
+The attestation is the _evidence trail_. The signature is the _authentication_. Together, they prove both _what_ the artifact is and _where it came from_.
 
 ## 13. Provenance and Reproducible Builds (Deep Dive)
 
 Reproducible builds (M09) and provenance are complementary:
 
-  - **Reproducible** — given source S, the build produces artifact A, deterministically
-  - **Provenance** — a signed claim that A was built from S
+- **Reproducible** — given source S, the build produces artifact A, deterministically
+- **Provenance** — a signed claim that A was built from S
 
 Reproducible builds enable independent verification: the customer can rebuild from S and check that the result equals A. Provenance attests that the build was done by a specific platform.
 
 For the highest assurance (SLSA L4, defense, financial regulators), you want both:
 
-  1. Rebuild from S in a clean environment
-  2. Compare the result to A
-  3. Verify the provenance claims the build was done correctly
-  4. Both checks pass → the artifact is genuine
+1. Rebuild from S in a clean environment
+2. Compare the result to A
+3. Verify the provenance claims the build was done correctly
+4. Both checks pass → the artifact is genuine
 
 The combination is rare in practice; most orgs do provenance first, rebuilds second.
 
@@ -321,29 +337,29 @@ The combination is rare in practice; most orgs do provenance first, rebuilds sec
 
 The in-toto project maintains a list of standard predicate types. As of 2025:
 
-| Predicate | Purpose | Typical use |
-| --------- | ------- | ----------- |
-| SLSA Provenance | Build provenance | SLSA L2+ |
-| SPDX SBOM | License + component inventory | M08 |
-| CycloneDX SBOM | Same, different format | M08 |
-| VEX | Vulnerability applicability | Customer disclosure |
-| Link | Generic claim | Custom assertions |
-| Test Result | What tests ran, what passed | Compliance |
-| Code Review | Review status | Code-review compliance |
-| Hera Workflow | Argo Workflows run | Workflow provenance |
-| Run Details | Generic build metadata | Custom build systems |
+| Predicate       | Purpose                       | Typical use            |
+| --------------- | ----------------------------- | ---------------------- |
+| SLSA Provenance | Build provenance              | SLSA L2+               |
+| SPDX SBOM       | License + component inventory | M08                    |
+| CycloneDX SBOM  | Same, different format        | M08                    |
+| VEX             | Vulnerability applicability   | Customer disclosure    |
+| Link            | Generic claim                 | Custom assertions      |
+| Test Result     | What tests ran, what passed   | Compliance             |
+| Code Review     | Review status                 | Code-review compliance |
+| Hera Workflow   | Argo Workflows run            | Workflow provenance    |
+| Run Details     | Generic build metadata        | Custom build systems   |
 
 Custom predicates are allowed but should be avoided unless none of the standard types fits.
 
 ## 15. The SLSA Levels in Practice
 
-| Level | What you need | What's hard |
-| ----- | ------------- | ----------- |
-| 0 | Nothing | — |
-| 1 | Documented build process | Easy |
-| 2 | Signed provenance | Medium (requires OIDC, slsa-github-generator or similar) |
-| 3 | Hardened build platform | Hard (ephemeral runners, two-party review) |
-| 4 | Two-party review, hermetic builds | Very hard (reproducible builds, isolation) |
+| Level | What you need                     | What's hard                                              |
+| ----- | --------------------------------- | -------------------------------------------------------- |
+| 0     | Nothing                           | —                                                        |
+| 1     | Documented build process          | Easy                                                     |
+| 2     | Signed provenance                 | Medium (requires OIDC, slsa-github-generator or similar) |
+| 3     | Hardened build platform           | Hard (ephemeral runners, two-party review)               |
+| 4     | Two-party review, hermetic builds | Very hard (reproducible builds, isolation)               |
 
 Most orgs target L2. L3 is the differentiator for high-value customers. L4 is rare outside defense and financial regulators.
 
@@ -351,29 +367,29 @@ Most orgs target L2. L3 is the differentiator for high-value customers. L4 is ra
 
 For an org targeting SLSA L3:
 
-  - [ ] All builds run on ephemeral runners (no shared state)
-  - [ ] All builds use OIDC (M12) to authenticate to the build platform
-  - [ ] All build provenance is generated by the platform, not the build script
-  - [ ] All provenance is signed (Rekor transparency log)
-  - [ ] All source is verified (commit hash in provenance matches git)
-  - [ ] All builds are isolated (no network access during build, except to allowed mirrors)
-  - [ ] All build dependencies are pinned (lockfile)
-  - [ ] Two-party review is required for releases
-  - [ ] All consumers verify provenance at deploy
+- [ ] All builds run on ephemeral runners (no shared state)
+- [ ] All builds use OIDC (M12) to authenticate to the build platform
+- [ ] All build provenance is generated by the platform, not the build script
+- [ ] All provenance is signed (Rekor transparency log)
+- [ ] All source is verified (commit hash in provenance matches git)
+- [ ] All builds are isolated (no network access during build, except to allowed mirrors)
+- [ ] All build dependencies are pinned (lockfile)
+- [ ] Two-party review is required for releases
+- [ ] All consumers verify provenance at deploy
 
 After completing the checklist, the org can honestly claim SLSA L3.
 
 ## 17. Attestation and the Audit Trail
 
-| Control | Attestation evidence |
-| ------- | -------------------- |
-| SOC 2 CC8.1 (change management) | Provenance is part of the change record |
-| ISO A.8.32 (change management) | Provenance for every release |
-| FedRAMP SI-7 (software/firmware integrity) | Provenance + signature |
-| FedRAMP CM-5 (access restrictions) | Provenance generation is restricted to the build platform |
-| SLSA L2/L3 | Provenance is the implementation |
-| EU CRA | Provenance + SBOM is the evidence |
-| US EO 14028 | Provenance + SBOM is the requirement |
+| Control                                    | Attestation evidence                                      |
+| ------------------------------------------ | --------------------------------------------------------- |
+| SOC 2 CC8.1 (change management)            | Provenance is part of the change record                   |
+| ISO A.8.32 (change management)             | Provenance for every release                              |
+| FedRAMP SI-7 (software/firmware integrity) | Provenance + signature                                    |
+| FedRAMP CM-5 (access restrictions)         | Provenance generation is restricted to the build platform |
+| SLSA L2/L3                                 | Provenance is the implementation                          |
+| EU CRA                                     | Provenance + SBOM is the evidence                         |
+| US EO 14028                                | Provenance + SBOM is the requirement                      |
 
 The audit asks "how do you know the artifact was built correctly?" The answer is the provenance. The verification is the cryptographic check at deploy.
 
@@ -381,10 +397,10 @@ The audit asks "how do you know the artifact was built correctly?" The answer is
 
 Rekor is one of several transparency logs in the supply-chain space:
 
-  - **Rekor** (Sigstore) — generic, free, public
-  - **Binary Transparency** (Google) — for binaries
-  - **in-toto.io/gossip** — peer-to-peer log
-  - **TUF / The Update Framework** — for software updates
+- **Rekor** (Sigstore) — generic, free, public
+- **Binary Transparency** (Google) — for binaries
+- **in-toto.io/gossip** — peer-to-peer log
+- **TUF / The Update Framework** — for software updates
 
 The pattern: an append-only log of claims, cryptographically verifiable, no central authority. The log is the audit trail that no one party can forge.
 
@@ -394,21 +410,21 @@ For most orgs, Rekor is sufficient. For air-gapped environments, run your own.
 
 The customer-facing supply-chain posture document (M18) includes:
 
-  - SBOM (M08)
-  - Provenance (this module)
-  - VEX (this module)
-  - Vulnerability disclosure policy
-  - Compliance certifications (SOC 2, ISO 27001)
-  - Build platform hardening (SLSA level claim)
-  - Test coverage and methodology
+- SBOM (M08)
+- Provenance (this module)
+- VEX (this module)
+- Vulnerability disclosure policy
+- Compliance certifications (SOC 2, ISO 27001)
+- Build platform hardening (SLSA level claim)
+- Test coverage and methodology
 
-The customer can verify each claim independently. The posture is the *single document* the customer uses to assess supply-chain risk.
+The customer can verify each claim independently. The posture is the _single document_ the customer uses to assess supply-chain risk.
 
 ## Related
 
-  - [[DevOps/devsecops/stage1-code/08-sbom-generation|M08: SBOM Generation]]
-  - [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
-  - [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC]]
-  - [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
-  - [[DevOps/devsecops/stage3-deploy/15-policy-as-code|M15: Policy-as-Code]]
-  - [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]
+- [[DevOps/devsecops/stage1-code/08-sbom-generation|M08: SBOM Generation]]
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC]]
+- [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
+- [[DevOps/devsecops/stage3-deploy/15-policy-as-code|M15: Policy-as-Code]]
+- [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]

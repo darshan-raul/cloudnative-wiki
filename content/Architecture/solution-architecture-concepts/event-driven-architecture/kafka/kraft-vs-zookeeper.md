@@ -6,26 +6,26 @@ The key differences between ZooKeeper mode and KRaft mode in Kafka are:
 
 ### Metadata storage
 
-* In ZooKeeper mode, Kafka stores metadata about the controller in ZooKeeper\[3].
-* In KRaft mode, metadata is stored in an internal Kafka topic called `__cluster_metadata` which has a single partition\[1]\[3].
+- In ZooKeeper mode, Kafka stores metadata about the controller in ZooKeeper\[3].
+- In KRaft mode, metadata is stored in an internal Kafka topic called `__cluster_metadata` which has a single partition\[1]\[3].
 
 ### State storage
 
-* KRaft uses an event-sourcing variant of the Raft protocol. State changes are stored as events in the metadata topic, allowing the state to be recreated by replaying the log\[3].
-* In ZooKeeper mode, state changes were isolated events without ordering maintained\[3].
+- KRaft uses an event-sourcing variant of the Raft protocol. State changes are stored as events in the metadata topic, allowing the state to be recreated by replaying the log\[3].
+- In ZooKeeper mode, state changes were isolated events without ordering maintained\[3].
 
 ### Deployment simplification
 
-* KRaft mode eliminates the need to deploy and manage ZooKeeper alongside Kafka, simplifying administration and monitoring\[3]\[4].
-* KRaft also simplifies Kafka startup by removing the need to start multiple daemons required in ZooKeeper mode\[3].
+- KRaft mode eliminates the need to deploy and manage ZooKeeper alongside Kafka, simplifying administration and monitoring\[3]\[4].
+- KRaft also simplifies Kafka startup by removing the need to start multiple daemons required in ZooKeeper mode\[3].
 
 ### Scalability
 
-* The number of partitions per cluster was a bottleneck in ZooKeeper mode. KRaft supports a much larger number of partitions\[3].
+- The number of partitions per cluster was a bottleneck in ZooKeeper mode. KRaft supports a much larger number of partitions\[3].
 
 ### Migration
 
-* Migrating an existing ZooKeeper-based cluster to KRaft mode requires a manual multi-phase process to deploy the KRaft controller quorum and migrate brokers\[5].
+- Migrating an existing ZooKeeper-based cluster to KRaft mode requires a manual multi-phase process to deploy the KRaft controller quorum and migrate brokers\[5].
 
 In summary, KRaft mode greatly simplifies Kafka's architecture, improves scalability, and eliminates the need to deploy and manage ZooKeeper alongside Kafka clusters. However, migrating existing clusters from ZooKeeper to KRaft requires careful planning and execution.
 

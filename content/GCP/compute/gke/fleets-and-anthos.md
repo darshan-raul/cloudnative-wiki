@@ -72,6 +72,7 @@ A GKE Fleet abstracts physical cluster boundaries, providing centralized governa
 ## 2. Policy Controller & OPA Gatekeeper Guardrails
 
 Policy Controller enforces declarative constraints using the **Rego** language:
+
 - **Enforcement Actions:**
   - `deny`: Blocks any `kubectl apply` or CI/CD deployment violating the rule.
   - `warn`: Allows deployment but displays a warning message in the terminal.
@@ -166,15 +167,15 @@ spec:
   enforcementAction: deny # Hard block on violations
   match:
     kinds:
-    - apiGroups: ["apps"]
-      kinds: ["Deployment", "StatefulSet"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "StatefulSet"]
     namespaces:
-    - "e-commerce"
-    - "finance"
+      - "e-commerce"
+      - "finance"
   parameters:
     labels:
-    - key: "team"
-    - key: "env"
+      - key: "team"
+      - key: "env"
 ```
 
 Apply Constraint:
@@ -190,13 +191,13 @@ kubectl apply -f require-team-label-constraint.yaml
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Limit / Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Fleet Member Clusters** | Up to 100 clusters | Multi-cloud and multi-region unified fleet |
-| **ASM Control Plane Overhead**| Managed by Google | Google SREs manage the `istiod` control plane |
-| **Envoy Sidecar Footprint** | ~50 MiB RAM, 100m CPU | Inject sidecars only where L7 security is required |
-| **Policy Controller Rules** | 100+ active constraints | Sub-millisecond admission evaluation latency |
-| **GitOps Reconcile Cadence** | Continuous (~15 seconds) | Managed by Config Sync rootsync / reposync |
+| Parameter / Dimension          | Standard Limit / Quota   | Engineering Guidance                               |
+| :----------------------------- | :----------------------- | :------------------------------------------------- |
+| **Fleet Member Clusters**      | Up to 100 clusters       | Multi-cloud and multi-region unified fleet         |
+| **ASM Control Plane Overhead** | Managed by Google        | Google SREs manage the `istiod` control plane      |
+| **Envoy Sidecar Footprint**    | ~50 MiB RAM, 100m CPU    | Inject sidecars only where L7 security is required |
+| **Policy Controller Rules**    | 100+ active constraints  | Sub-millisecond admission evaluation latency       |
+| **GitOps Reconcile Cadence**   | Continuous (~15 seconds) | Managed by Config Sync rootsync / reposync         |
 
 ---
 
@@ -213,6 +214,7 @@ kubectl apply -f require-team-label-constraint.yaml
 ## 6. Realistic Pricing Scenarios
 
 Pricing structure:
+
 1. **GKE Enterprise Edition (Anthos):** Billed as a unified subscription of **$0.00822 per vCPU-hour** across all managed worker nodes in the fleet (~$6.00 per vCPU-month).
 2. Includes: Multi-Cluster Ingress, Anthos Service Mesh, Policy Controller, Config Sync, and Cloud Service Mesh telemetry dashboards.
 3. Standalone Pricing: ASM and Policy Controller can be enabled standalone with pay-per-use billing.

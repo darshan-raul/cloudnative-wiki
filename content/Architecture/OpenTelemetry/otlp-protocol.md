@@ -15,23 +15,23 @@ OTLP is the **native wire protocol** for OpenTelemetry. It defines how telemetry
 
 ## Protocol Versions
 
-| Version | Status |
-|---------|--------|
-| OTLP v0.5 | Deprecated (gRPC only, proto3) |
-| OTLP v0.7 | Stable (HTTP added, proto3) |
-| OTLP v0.9 | Stable (logs signal added) |
-| OTLP v0.11 | Stable (exemplars, metric metadata) |
+| Version    | Status                                 |
+| ---------- | -------------------------------------- |
+| OTLP v0.5  | Deprecated (gRPC only, proto3)         |
+| OTLP v0.7  | Stable (HTTP added, proto3)            |
+| OTLP v0.9  | Stable (logs signal added)             |
+| OTLP v0.11 | Stable (exemplars, metric metadata)    |
 | OTLP v0.12 | Stable (delta temporality for metrics) |
-| OTLP v0.19 | Stable |
-| OTLP v1.0 | Current stable (traces, metrics, logs) |
+| OTLP v0.19 | Stable                                 |
+| OTLP v1.0  | Current stable (traces, metrics, logs) |
 
 ## Transport
 
-| Transport | Port | Use |
-|-----------|------|-----|
-| **gRPC** | 4317 (default) | Production — binary, streaming, bidirectional |
-| **HTTP/JSON** | 4318 (default) | Browser, environments without gRPC |
-| **HTTP/Protobuf** | 4318 | Same as JSON but binary-encoded |
+| Transport         | Port           | Use                                           |
+| ----------------- | -------------- | --------------------------------------------- |
+| **gRPC**          | 4317 (default) | Production — binary, streaming, bidirectional |
+| **HTTP/JSON**     | 4318 (default) | Browser, environments without gRPC            |
+| **HTTP/Protobuf** | 4318           | Same as JSON but binary-encoded               |
 
 ### gRPC (Production Recommended)
 
@@ -53,11 +53,11 @@ Client → Collector
 
 OTLP uses Protocol Buffers v3. Three main proto files:
 
-| Proto | Signal | Defines |
-|-------|--------|---------|
-| `opentelemetry/proto/trace/v1/trace.proto` | Traces | `TracesData` → `ResourceSpans` → `ScopeSpans` → `Span` |
+| Proto                                          | Signal  | Defines                                                       |
+| ---------------------------------------------- | ------- | ------------------------------------------------------------- |
+| `opentelemetry/proto/trace/v1/trace.proto`     | Traces  | `TracesData` → `ResourceSpans` → `ScopeSpans` → `Span`        |
 | `opentelemetry/proto/metrics/v1/metrics.proto` | Metrics | `MetricsData` → `ResourceMetrics` → `ScopeMetrics` → `Metric` |
-| `opentelemetry/proto/logs/v1/logs.proto` | Logs | `LogsData` → `ResourceLogs` → `ScopeLogs` → `LogRecord` |
+| `opentelemetry/proto/logs/v1/logs.proto`       | Logs    | `LogsData` → `ResourceLogs` → `ScopeLogs` → `LogRecord`       |
 
 ### Proto Hierarchy
 
@@ -78,22 +78,22 @@ TracesData (top-level)
 
 The **Resource** represents the entity producing telemetry — typically your service, container, or Kubernetes pod.
 
-| Field | Set by | Examples |
-|-------|--------|---------|
-| `service.name` | You / OTel SDK | `"order-service"` |
-| `service.namespace` | You | `"payments"` |
-| `k8s.pod.name` | Collector `k8sattributes` processor | `"order-service-7d9f4b8f9-xk2p4"` |
-| `cloud.account.id` | Collector or env | `"123456789"` |
+| Field               | Set by                              | Examples                          |
+| ------------------- | ----------------------------------- | --------------------------------- |
+| `service.name`      | You / OTel SDK                      | `"order-service"`                 |
+| `service.namespace` | You                                 | `"payments"`                      |
+| `k8s.pod.name`      | Collector `k8sattributes` processor | `"order-service-7d9f4b8f9-xk2p4"` |
+| `cloud.account.id`  | Collector or env                    | `"123456789"`                     |
 
 #### Instrumentation Scope
 
 The **Instrumentation Scope** is the middle layer — it identifies **which library or module** created the telemetry.
 
-| Field | What it is | Examples |
-|-------|-----------|---------|
-| `scope.name` | Library or module name | `"order-service"`, `"otelhttp"`, `"github.com/myapp/dbclient"` |
-| `scope.version` | Version of that library | `"1.2.3"` — can be empty |
-| `scope.attributes` | Optional KV pairs | Rarely used |
+| Field              | What it is              | Examples                                                       |
+| ------------------ | ----------------------- | -------------------------------------------------------------- |
+| `scope.name`       | Library or module name  | `"order-service"`, `"otelhttp"`, `"github.com/myapp/dbclient"` |
+| `scope.version`    | Version of that library | `"1.2.3"` — can be empty                                       |
+| `scope.attributes` | Optional KV pairs       | Rarely used                                                    |
 
 ```
 Service (Resource: service.name="order-service")
@@ -119,6 +119,7 @@ GOOD (OTel): Scope is structural, not an attribute
 ```
 
 This enables:
+
 - **Collector filtering without parsing body content** — filter by `scope.name` in routing rules
 - **Backend grouping** — click a scope in SigNoz and see only that library's spans
 - **Multiple teams** — each team owns a library → each library has its own Scope
@@ -137,12 +138,12 @@ otelHandler := otelhttp.NewHandler(http.DefaultServeMux, "order-service")
 
 **Scope vs Resource:**
 
-| Aspect | Resource | Instrumentation Scope |
-|--------|----------|----------------------|
-| Represents | The entity running (service, container, host) | The code module producing the data |
-| Scope | One per service/app | One per instrumented library |
-| Set by | Infrastructure (K8s, env vars) | Developer (tracer name) |
-| Examples | `service.name="order-service"`, `k8s.pod.name` | `"otelhttp"`, `"my-db-lib"`, `"order-service"` |
+| Aspect     | Resource                                       | Instrumentation Scope                          |
+| ---------- | ---------------------------------------------- | ---------------------------------------------- |
+| Represents | The entity running (service, container, host)  | The code module producing the data             |
+| Scope      | One per service/app                            | One per instrumented library                   |
+| Set by     | Infrastructure (K8s, env vars)                 | Developer (tracer name)                        |
+| Examples   | `service.name="order-service"`, `k8s.pod.name` | `"otelhttp"`, `"my-db-lib"`, `"order-service"` |
 
 **Scope in proto:**
 
@@ -163,12 +164,12 @@ message InstrumentationScope {
 
 ### Default Collector Receiver Ports
 
-| Endpoint | Protocol | Signals |
-|----------|----------|---------|
-| `0.0.0.0:4317` | gRPC | traces, metrics, logs |
-| `0.0.0.0:4318` | HTTP | traces, metrics, logs |
-| `0.0.0.0:4319` | gRPC (older) | metrics |
-| `0.0.0.0:55681` | HTTP (older) | legacy |
+| Endpoint        | Protocol     | Signals               |
+| --------------- | ------------ | --------------------- |
+| `0.0.0.0:4317`  | gRPC         | traces, metrics, logs |
+| `0.0.0.0:4318`  | HTTP         | traces, metrics, logs |
+| `0.0.0.0:4319`  | gRPC (older) | metrics               |
+| `0.0.0.0:55681` | HTTP (older) | legacy                |
 
 ### Typical Endpoint Layout
 
@@ -188,11 +189,11 @@ OTLP provides **at-least-once delivery**:
 - Backend acknowledges with `Success` or `Failure`
 - If no acknowledgment within timeout, client retries
 
-| Guarantee | Meaning |
-|-----------|---------|
-| **At-least-once** | Data may be sent multiple times on retry; backends must be idempotent |
-| **No exactly-once** | OTel does not provide deduplication |
-| **No ordering** | Out-of-order spans/metrics are accepted |
+| Guarantee           | Meaning                                                               |
+| ------------------- | --------------------------------------------------------------------- |
+| **At-least-once**   | Data may be sent multiple times on retry; backends must be idempotent |
+| **No exactly-once** | OTel does not provide deduplication                                   |
+| **No ordering**     | Out-of-order spans/metrics are accepted                               |
 
 ### Retry Configuration
 
@@ -211,12 +212,12 @@ exporters:
 
 ## Compression
 
-| Compression | Algorithm | Benefit |
-|-------------|-----------|---------|
-| `gzip` | DEFLATE | Good compression, moderate CPU |
-| `snappy` | Snappy | Fast, moderate compression |
-| `zstd` | Zstandard | Best compression, more CPU |
-| None | — | Lowest latency, highest bandwidth |
+| Compression | Algorithm | Benefit                           |
+| ----------- | --------- | --------------------------------- |
+| `gzip`      | DEFLATE   | Good compression, moderate CPU    |
+| `snappy`    | Snappy    | Fast, moderate compression        |
+| `zstd`      | Zstandard | Best compression, more CPU        |
+| None        | —         | Lowest latency, highest bandwidth |
 
 ### Configuring Compression
 
@@ -236,7 +237,7 @@ exporters:
   otlp:
     endpoint: collector.internal:4317
     tls:
-      insecure: false           # Required for TLS
+      insecure: false # Required for TLS
       cert_file: /certs/cert.pem
       key_file: /certs/key.pem
       ca_file: /certs/ca.pem
@@ -324,11 +325,11 @@ Mismatched versions return `UNIMPLEMENTED` gRPC error or HTTP 400.
 
 ## Why OTLP?
 
-| Before OTLP | After OTLP |
-|-------------|------------|
+| Before OTLP                     | After OTLP                                    |
+| ------------------------------- | --------------------------------------------- |
 | Jaeger agent → Jaeger Collector | App → OTel SDK → OTel Collector → Any backend |
-| StatsD → DogStatsD → Datadog | App → OTel SDK → OTel Collector → Datadog |
-| Custom log shipper per vendor | App → OTel SDK → OTel Collector → Any backend |
-| Zipkin client → Zipkin backend | App → OTel SDK → OTel Collector → Any backend |
+| StatsD → DogStatsD → Datadog    | App → OTel SDK → OTel Collector → Datadog     |
+| Custom log shipper per vendor   | App → OTel SDK → OTel Collector → Any backend |
+| Zipkin client → Zipkin backend  | App → OTel SDK → OTel Collector → Any backend |
 
 OTLP standardizes the transport so **instrumentation is decoupled from backend**. Change backends by updating Collector config, not application code.

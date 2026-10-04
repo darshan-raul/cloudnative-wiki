@@ -17,7 +17,8 @@ FSx provides fully managed file storage for two specialized workloads: **Windows
 
 ### Use Case
 
-Enterprise Windows applications requiring SMB file shares: 
+Enterprise Windows applications requiring SMB file shares:
+
 - Microsoft SQL Server (native file access)
 - Microsoft SharePoint
 - Custom .NET applications with file-based storage
@@ -61,16 +62,17 @@ sudo mount -t cifs //fs-xxxxx.example.com/share /mnt/fsx \
 
 ### Performance
 
-| Deployment | Throughput | IOPS | Use |
-|-----------|-----------|------|-----|
-| Single-AZ | 2-350 MB/s | Up to 350,000 | Dev/test |
-| Multi-AZ | 2-350 MB/s | Up to 350,000 | Production HA |
+| Deployment | Throughput | IOPS          | Use           |
+| ---------- | ---------- | ------------- | ------------- |
+| Single-AZ  | 2-350 MB/s | Up to 350,000 | Dev/test      |
+| Multi-AZ   | 2-350 MB/s | Up to 350,000 | Production HA |
 
 ## FSx for Lustre
 
 ### Use Case
 
 High-performance computing and ML workloads:
+
 - ML training (TensorFlow, PyTorch data loading)
 - Scientific computing (genomics, climate modeling)
 - Financial simulations
@@ -141,10 +143,10 @@ sudo mount -t lustre fs-xxxxx@tcpfs.fs-xxxxx.fsx.us-east-1.amazonaws.com@tcp:/fs
 
 ### Performance Tiers
 
-| Tier | Storage | Use |
-|------|---------|-----|
-| Scratch | Temporary (no replication) | Short-term, bursty workloads |
-| Persistent | Replicated in single AZ | Long-term, consistent performance |
+| Tier       | Storage                    | Use                               |
+| ---------- | -------------------------- | --------------------------------- |
+| Scratch    | Temporary (no replication) | Short-term, bursty workloads      |
+| Persistent | Replicated in single AZ    | Long-term, consistent performance |
 
 ## FSx for OpenZFS
 
@@ -153,6 +155,7 @@ Managed OpenZFS file system (file storage, not block). Simpler than Windows or L
 ## FSx for NetApp ONTAP
 
 Fully managed ONTAP file system with advanced features:
+
 - SnapMirror (replication)
 - FlexCache (caching)
 - Data tiering to S3
@@ -160,30 +163,30 @@ Fully managed ONTAP file system with advanced features:
 
 ## Performance Comparison
 
-| FSx Type | Max Throughput | Max IOPS | Latency |
-|----------|---------------|----------|---------|
-| Windows | 350 MB/s | 350,000 | 0.5-1ms |
-| Lustre (Scratch) | 2,000 MB/s | 1,000,000+ | 0.1ms |
-| Lustre (Persistent) | 2,500 MB/s | 1,000,000+ | 0.1ms |
-| ONTAP | 2,200 MB/s | 400,000 | 0.5-1ms |
+| FSx Type            | Max Throughput | Max IOPS   | Latency |
+| ------------------- | -------------- | ---------- | ------- |
+| Windows             | 350 MB/s       | 350,000    | 0.5-1ms |
+| Lustre (Scratch)    | 2,000 MB/s     | 1,000,000+ | 0.1ms   |
+| Lustre (Persistent) | 2,500 MB/s     | 1,000,000+ | 0.1ms   |
+| ONTAP               | 2,200 MB/s     | 400,000    | 0.5-1ms |
 
 ## Costs
 
-| Type | Cost |
-|------|------|
-| Windows | $0.138/GB/mo (storage) + $0.013/GB/mo (backup) |
-| Lustre Scratch | $0.136/GB/mo |
-| Lustre Persistent | $0.22/GB/mo |
-| ONTAP | $0.23/GB/mo |
+| Type              | Cost                                           |
+| ----------------- | ---------------------------------------------- |
+| Windows           | $0.138/GB/mo (storage) + $0.013/GB/mo (backup) |
+| Lustre Scratch    | $0.136/GB/mo                                   |
+| Lustre Persistent | $0.22/GB/mo                                    |
+| ONTAP             | $0.23/GB/mo                                    |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max storage (Windows) | 65,536 GB (64 TB) |
-| Max storage (Lustre) | 1,000,000 GB (1 PB) |
-| Max throughput (Lustre) | 2,500 MB/s |
-| Max file size (Lustre) | 16 TiB |
+| Resource                | Limit               |
+| ----------------------- | ------------------- |
+| Max storage (Windows)   | 65,536 GB (64 TB)   |
+| Max storage (Lustre)    | 1,000,000 GB (1 PB) |
+| Max throughput (Lustre) | 2,500 MB/s          |
+| Max file size (Lustre)  | 16 TiB              |
 
 ## References
 

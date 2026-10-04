@@ -30,20 +30,20 @@ Client ──[TLS]──▶ Load Balancer ──[mTLS]──▶ Service A
 
 ### Certificate Types
 
-| Type | What It Is | Example |
-|------|-----------|---------|
-| Root CA | Self-signed, trusted by everyone | DigiCert Root |
-| Intermediate CA | Signed by root, signs leaf certs | Let's Encrypt R3 |
+| Type             | What It Is                        | Example           |
+| ---------------- | --------------------------------- | ----------------- |
+| Root CA          | Self-signed, trusted by everyone  | DigiCert Root     |
+| Intermediate CA  | Signed by root, signs leaf certs  | Let's Encrypt R3  |
 | Leaf certificate | End-entity cert, used by services | `api.example.com` |
-| Wildcard | Covers all subdomains | `*.example.com` |
+| Wildcard         | Covers all subdomains             | `*.example.com`   |
 
 ### Key Exchange
 
-| Algorithm | Use | Notes |
-|-----------|-----|-------|
-| RSA | Key exchange + signatures | Legacy, being phased out |
-| ECDH | Key exchange (P-256, P-384) | Modern, fast |
-| EdDSA | Signatures (Ed25519, Ed448) | Modern, recommended |
+| Algorithm | Use                         | Notes                    |
+| --------- | --------------------------- | ------------------------ |
+| RSA       | Key exchange + signatures   | Legacy, being phased out |
+| ECDH      | Key exchange (P-256, P-384) | Modern, fast             |
+| EdDSA     | Signatures (Ed25519, Ed448) | Modern, recommended      |
 
 ---
 

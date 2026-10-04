@@ -1,6 +1,13 @@
+---
+title: "Pod Security Standards (PSS)"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Pod Security Standards (PSS) — Kubernetes reference and architecture guide."
+---
+
 # Pod Security Standards (PSS)
 
-*"https://kubernetes.io/docs/concepts/security/pod-security-standards/"*
+_"https://kubernetes.io/docs/concepts/security/pod-security-standards/"_
 
 **Pod Security Standards (PSS)** are **three predefined security profiles** for Pods — `privileged`, `baseline`, and `restricted`. They're applied at the **namespace level** via labels, and any Pod that doesn't meet the standard is rejected (or warned) at admission. PSS replaced the deprecated PodSecurityPolicy (PSP) in k8s 1.25+. It covers the **workload hardening** part of the L07 layer; the **API access** and **network** parts are in other notes.
 
@@ -26,27 +33,27 @@
 
 ## 1. The Three Profiles
 
-| Profile | Intended for | What it allows |
-|---|---|---|
-| **`privileged`** | System / infrastructure workloads | Essentially unrestricted |
-| **`baseline`** | Default for most namespaces | Prevents known privilege escalations |
-| **`restricted`** | Hardened, security-sensitive namespaces | Strict — k8s best practices |
+| Profile          | Intended for                            | What it allows                       |
+| ---------------- | --------------------------------------- | ------------------------------------ |
+| **`privileged`** | System / infrastructure workloads       | Essentially unrestricted             |
+| **`baseline`**   | Default for most namespaces             | Prevents known privilege escalations |
+| **`restricted`** | Hardened, security-sensitive namespaces | Strict — k8s best practices          |
 
 The profiles are **cumulative**: `restricted` is a superset of `baseline`, which is a superset of `privileged`. A Pod that meets `restricted` also meets `baseline` and `privileged`.
 
 The decision:
 
-* **`privileged`** for `kube-system` (system Pods need full access).
-* **`baseline`** for dev / test namespaces (some flexibility).
-* **`restricted`** for production (the safe default).
+- **`privileged`** for `kube-system` (system Pods need full access).
+- **`baseline`** for dev / test namespaces (some flexibility).
+- **`restricted`** for production (the safe default).
 
 ## 2. The Three Modes (Enforce / Audit / Warn)
 
 PSS has **three modes** for each profile:
 
-* **`enforce`** — reject violating Pods. The admission controller denies them.
-* **`audit`** — allow but log violations. The audit log has the violation.
-* **`warn`** — allow but show a warning to the user via `kubectl`.
+- **`enforce`** — reject violating Pods. The admission controller denies them.
+- **`audit`** — allow but log violations. The audit log has the violation.
+- **`warn`** — allow but show a warning to the user via `kubectl`.
 
 The standard pattern:
 
@@ -59,9 +66,9 @@ kubectl label ns production \
   pod-security.kubernetes.io/enforce-version=latest
 ```
 
-* **`enforce`** — actual enforcement.
-* **`audit`** — log violations (so you can see them in the audit log).
-* **`warn`** — UX for users; they see a warning when they try to deploy a violating Pod.
+- **`enforce`** — actual enforcement.
+- **`audit`** — log violations (so you can see them in the audit log).
+- **`warn`** — UX for users; they see a warning when they try to deploy a violating Pod.
 
 The modes are independent. You can have `enforce: baseline, audit: restricted` (enforce baseline, but log restricted violations as well). This is for the migration phase.
 
@@ -86,12 +93,12 @@ The plugin is in `--enable-admission-plugins=PodSecurity`. It's enabled by defau
 
 The plugin reads the namespace's labels:
 
-* `pod-security.kubernetes.io/enforce` — `privileged` / `baseline` / `restricted`
-* `pod-security.kubernetes.io/enforce-version` — `latest` / `v1.30` / etc.
-* `pod-security.kubernetes.io/audit` — same
-* `pod-security.kubernetes.io/audit-version` — same
-* `pod-security.kubernetes.io/warn` — same
-* `pod-security.kubernetes.io/warn-version` — same
+- `pod-security.kubernetes.io/enforce` — `privileged` / `baseline` / `restricted`
+- `pod-security.kubernetes.io/enforce-version` — `latest` / `v1.30` / etc.
+- `pod-security.kubernetes.io/audit` — same
+- `pod-security.kubernetes.io/audit-version` — same
+- `pod-security.kubernetes.io/warn` — same
+- `pod-security.kubernetes.io/warn-version` — same
 
 If the label is not set, the mode is disabled for that profile (no enforcement, no audit, no warn).
 
@@ -105,9 +112,9 @@ kubectl label ns kube-system pod-security.kubernetes.io/enforce=privileged
 
 Use for:
 
-* `kube-system` (system Pods).
-* `monitoring` (Prometheus, Grafana, etc.).
-* Any namespace with system-level infrastructure.
+- `kube-system` (system Pods).
+- `monitoring` (Prometheus, Grafana, etc.).
+- Any namespace with system-level infrastructure.
 
 If you set `enforce: privileged`, the namespace has no PSS enforcement. **It's not a "no security" setting per se** — other policies (NetworkPolicy, RBAC, etc.) still apply. But PSS doesn't add any checks.
 
@@ -117,29 +124,29 @@ If you set `enforce: privileged`, the namespace has no PSS enforcement. **It's n
 
 The `baseline` profile blocks (in detail):
 
-* **`privileged: true`** — privileged containers are rejected.
-* **`hostNetwork: true`** — Pods sharing the host's network are rejected.
-* **`hostPID: true`** — Pods sharing the host's PID namespace are rejected.
-* **`hostIPC: true`** — Pods sharing the host's IPC namespace are rejected.
-* **`hostPath` volumes** — almost all `hostPath` mounts are rejected. Exception: a few safe read-only paths (none by default; depends on the k8s version).
-* **Specific capabilities** — `SYS_ADMIN`, `NET_ADMIN`, `SYS_MODULE`, `SYS_RAWIO`, `SYS_PTRACE`, `SYS_BOOT`, etc. (about 25 capabilities).
-* **Specific procMount values** — `procMount: Unmasked` is blocked.
-* **Specific AppArmor profiles** — `unconfined` is blocked (the default is `runtime/default`, which is allowed).
-* **Specific SELinux options** — custom user / role / type / level is blocked.
+- **`privileged: true`** — privileged containers are rejected.
+- **`hostNetwork: true`** — Pods sharing the host's network are rejected.
+- **`hostPID: true`** — Pods sharing the host's PID namespace are rejected.
+- **`hostIPC: true`** — Pods sharing the host's IPC namespace are rejected.
+- **`hostPath` volumes** — almost all `hostPath` mounts are rejected. Exception: a few safe read-only paths (none by default; depends on the k8s version).
+- **Specific capabilities** — `SYS_ADMIN`, `NET_ADMIN`, `SYS_MODULE`, `SYS_RAWIO`, `SYS_PTRACE`, `SYS_BOOT`, etc. (about 25 capabilities).
+- **Specific procMount values** — `procMount: Unmasked` is blocked.
+- **Specific AppArmor profiles** — `unconfined` is blocked (the default is `runtime/default`, which is allowed).
+- **Specific SELinux options** — custom user / role / type / level is blocked.
 
 `baseline` **allows**:
 
-* `runAsUser: 0` (root).
-* `readOnlyRootFilesystem: false` (the default).
-* `allowPrivilegeEscalation: true` (the default).
-* `seccompProfile.type: Unconfined` (the default).
-* Most other "less than ideal" settings.
+- `runAsUser: 0` (root).
+- `readOnlyRootFilesystem: false` (the default).
+- `allowPrivilegeEscalation: true` (the default).
+- `seccompProfile.type: Unconfined` (the default).
+- Most other "less than ideal" settings.
 
 `baseline` is for **app namespaces that can't meet `restricted`**. Common reasons:
 
-* The app needs to write to `/` (legacy daemon).
-* The app needs root (no USER set in the image).
-* The app uses `hostPath` (e.g. for `/dev` access).
+- The app needs to write to `/` (legacy daemon).
+- The app needs root (no USER set in the image).
+- The app uses `hostPath` (e.g. for `/dev` access).
 
 ## 6. The Restricted Profile in Depth
 
@@ -147,21 +154,21 @@ The `baseline` profile blocks (in detail):
 
 The `restricted` profile blocks everything `baseline` blocks, plus:
 
-* **`runAsNonRoot: true`** is **required** (must be set in the SecurityContext, OR the image's `USER` must be non-root, OR `runAsUser` must be set to non-zero).
-* **`seccompProfile.type`** must be `RuntimeDefault` or `Localhost` (not `Unconfined`).
-* **`allowPrivilegeEscalation: false`** is required.
-* **`capabilities.drop`** must include `ALL`.
-* **`capabilities.add`** is restricted to a small allow list: `NET_BIND_SERVICE`.
+- **`runAsNonRoot: true`** is **required** (must be set in the SecurityContext, OR the image's `USER` must be non-root, OR `runAsUser` must be set to non-zero).
+- **`seccompProfile.type`** must be `RuntimeDefault` or `Localhost` (not `Unconfined`).
+- **`allowPrivilegeEscalation: false`** is required.
+- **`capabilities.drop`** must include `ALL`.
+- **`capabilities.add`** is restricted to a small allow list: `NET_BIND_SERVICE`.
 
 The `restricted` profile is **strict**. A Pod that meets `restricted`:
 
-* Runs as non-root.
-* Has all capabilities dropped (except the explicit allow list).
-* Has a seccomp filter.
-* Has no privilege escalation.
-* Has no host namespaces.
-* Has no privileged flag.
-* Has a read-only root filesystem (recommended, not required).
+- Runs as non-root.
+- Has all capabilities dropped (except the explicit allow list).
+- Has a seccomp filter.
+- Has no privilege escalation.
+- Has no host namespaces.
+- Has no privileged flag.
+- Has a read-only root filesystem (recommended, not required).
 
 A Pod that meets `restricted` is **generally considered safe to run**.
 
@@ -184,14 +191,14 @@ The `*-version` label controls the **PSS version**. `latest` means "use the vers
 
 ### 7.1 The label keys
 
-| Key | Purpose | Values |
-|---|---|---|
-| `pod-security.kubernetes.io/enforce` | Hard enforcement (reject) | `privileged` / `baseline` / `restricted` |
-| `pod-security.kubernetes.io/enforce-version` | The version for enforce | `latest` / `v1.X` |
-| `pod-security.kubernetes.io/audit` | Log violations | same as enforce |
-| `pod-security.kubernetes.io/audit-version` | Version for audit | same |
-| `pod-security.kubernetes.io/warn` | Warn the user | same |
-| `pod-security.kubernetes.io/warn-version` | Version for warn | same |
+| Key                                          | Purpose                   | Values                                   |
+| -------------------------------------------- | ------------------------- | ---------------------------------------- |
+| `pod-security.kubernetes.io/enforce`         | Hard enforcement (reject) | `privileged` / `baseline` / `restricted` |
+| `pod-security.kubernetes.io/enforce-version` | The version for enforce   | `latest` / `v1.X`                        |
+| `pod-security.kubernetes.io/audit`           | Log violations            | same as enforce                          |
+| `pod-security.kubernetes.io/audit-version`   | Version for audit         | same                                     |
+| `pod-security.kubernetes.io/warn`            | Warn the user             | same                                     |
+| `pod-security.kubernetes.io/warn-version`    | Version for warn          | same                                     |
 
 ### 7.2 The version pinning
 
@@ -201,8 +208,8 @@ The `*-version` label pins the profile version. The default (no version) is `lat
 
 The version format:
 
-* `latest` — current apiserver version.
-* `v1.X` — the version of PSS in k8s 1.X.
+- `latest` — current apiserver version.
+- `v1.X` — the version of PSS in k8s 1.X.
 
 The official PSS versions match k8s releases. v1.30 is the PSS in k8s 1.30.
 
@@ -210,15 +217,15 @@ The official PSS versions match k8s releases. v1.30 is the PSS in k8s 1.30.
 
 PSS has versions that match k8s releases:
 
-* `v1.22` — initial GA.
-* `v1.23` — no changes.
-* `v1.24` — no changes.
-* `v1.25` — `restricted` adds `runAsNonRoot: true` enforcement, additional `capabilities.add` checks.
-* `v1.26` — `unhealthyPodEvictionPolicy` (separate feature).
-* `v1.27` — no major changes.
-* `v1.28` — additional `hostPath` restrictions in `baseline`.
-* `v1.29` — additional `seccompProfile` checks.
-* `v1.30` — additional checks.
+- `v1.22` — initial GA.
+- `v1.23` — no changes.
+- `v1.24` — no changes.
+- `v1.25` — `restricted` adds `runAsNonRoot: true` enforcement, additional `capabilities.add` checks.
+- `v1.26` — `unhealthyPodEvictionPolicy` (separate feature).
+- `v1.27` — no major changes.
+- `v1.28` — additional `hostPath` restrictions in `baseline`.
+- `v1.29` — additional `seccompProfile` checks.
+- `v1.30` — additional checks.
 
 The versions are **cumulative** — v1.30 includes all v1.22 rules plus the additions.
 
@@ -238,9 +245,9 @@ for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}'); do
 done
 ```
 
-* No Pod is rejected.
-* The audit log has violations.
-* Use the log to see what's broken.
+- No Pod is rejected.
+- The audit log has violations.
+- Use the log to see what's broken.
 
 ### 9.2 Phase 2: Warn (UX)
 
@@ -254,17 +261,17 @@ for ns in $(kubectl get ns -o jsonpath='{.items[*].metadata.name}'); do
 done
 ```
 
-* Users see warnings when they deploy violating Pods.
-* The CI can fail on warnings (with `kubectl apply --dry-run=server`).
+- Users see warnings when they deploy violating Pods.
+- The CI can fail on warnings (with `kubectl apply --dry-run=server`).
 
 ### 9.3 Phase 3: Fix
 
 For each violation, fix the Pod:
 
-* `runAsNonRoot: true` — add to SecurityContext, or build a non-root image.
-* `seccompProfile` — add `seccompProfile: type: RuntimeDefault`.
-* `allowPrivilegeEscalation: false` — add to SecurityContext.
-* `capabilities.drop: [ALL]` — add to SecurityContext.
+- `runAsNonRoot: true` — add to SecurityContext, or build a non-root image.
+- `seccompProfile` — add `seccompProfile: type: RuntimeDefault`.
+- `allowPrivilegeEscalation: false` — add to SecurityContext.
+- `capabilities.drop: [ALL]` — add to SecurityContext.
 
 Or, mark the namespace as a documented exception (`baseline` or `privileged`).
 
@@ -278,9 +285,9 @@ kubectl label ns production \
   --overwrite
 ```
 
-* Violating Pods are rejected.
-* New violations are blocked immediately.
-* The cluster is hardened.
+- Violating Pods are rejected.
+- New violations are blocked immediately.
+- The cluster is hardened.
 
 The transition is **per-namespace**. Don't enforce on a namespace with a non-compliant workload — fix the workload first.
 
@@ -309,23 +316,23 @@ metadata: { labels: { pod-security.kubernetes.io/enforce: baseline } }
 
 For multi-tenant clusters:
 
-* Each tenant's namespace is `restricted` by default.
-* Documented exceptions get `baseline`.
-* A privileged workload (e.g. CI runner) gets `privileged` and is locked down by NetworkPolicy and RBAC.
+- Each tenant's namespace is `restricted` by default.
+- Documented exceptions get `baseline`.
+- A privileged workload (e.g. CI runner) gets `privileged` and is locked down by NetworkPolicy and RBAC.
 
 ## 11. The PSS vs PSP Differences
 
-*"https://kubernetes.io/docs/concepts/security/pod-security-standards/#pod-security-vs-podsecuritypolicy"*
+_"https://kubernetes.io/docs/concepts/security/pod-security-standards/#pod-security-vs-podsecuritypolicy"_
 
 PSP (PodSecurityPolicy) was the older, more flexible mechanism. PSS replaced it. The differences:
 
-| | PSP | PSS |
-|---|---|---|
-| **Status** | Deprecated in 1.21, removed in 1.25 | Active, GA |
-| **Configuration** | Custom per-policy | Three predefined profiles |
-| **Mechanism** | RBAC (the user must be allowed to use a PSP) | Namespace labels |
-| **Flexibility** | Highly configurable | Fixed rules |
-| **Use case** | Custom policies | Standard hardening |
+|                   | PSP                                          | PSS                       |
+| ----------------- | -------------------------------------------- | ------------------------- |
+| **Status**        | Deprecated in 1.21, removed in 1.25          | Active, GA                |
+| **Configuration** | Custom per-policy                            | Three predefined profiles |
+| **Mechanism**     | RBAC (the user must be allowed to use a PSP) | Namespace labels          |
+| **Flexibility**   | Highly configurable                          | Fixed rules               |
+| **Use case**      | Custom policies                              | Standard hardening        |
 
 PSP allowed **per-user** policies (a user could use a specific PSP based on RBAC). PSS is **per-namespace** (the namespace determines the policy).
 
@@ -339,8 +346,8 @@ OPA / Kyverno / Gatekeeper check **arbitrary constraints**. They're extensible b
 
 The standard pattern:
 
-* **PSS** for the **baseline** (privileged containers, host namespaces, etc.). Built-in, free.
-* **OPA / Kyverno** for **organization-specific** rules (e.g. "every image must come from our registry", "every Pod must have these labels"). Extensible.
+- **PSS** for the **baseline** (privileged containers, host namespaces, etc.). Built-in, free.
+- **OPA / Kyverno** for **organization-specific** rules (e.g. "every image must come from our registry", "every Pod must have these labels"). Extensible.
 
 PSS + OPA / Kyverno is the standard "defense in depth" for admission.
 
@@ -348,12 +355,12 @@ PSS + OPA / Kyverno is the standard "defense in depth" for admission.
 
 Workloads that can't meet `restricted` and need `baseline` or `privileged`:
 
-* **CNI plugins** (Calico, Cilium, Weave) — need `hostNetwork`, `privileged`.
-* **GPU device plugins** (NVIDIA) — need `privileged` for GPU access.
-* **Storage daemons** (some CSI drivers) — need `hostPath` for device access.
-* **Monitoring agents** (Prometheus node-exporter, Datadog agent) — need `hostPath` for `/proc`, `/sys`.
-* **Logging agents** (Fluentd, Vector) — need `hostPath` for log dirs.
-* **Init containers** that do migrations — may need `hostPath` for backup/restore.
+- **CNI plugins** (Calico, Cilium, Weave) — need `hostNetwork`, `privileged`.
+- **GPU device plugins** (NVIDIA) — need `privileged` for GPU access.
+- **Storage daemons** (some CSI drivers) — need `hostPath` for device access.
+- **Monitoring agents** (Prometheus node-exporter, Datadog agent) — need `hostPath` for `/proc`, `/sys`.
+- **Logging agents** (Fluentd, Vector) — need `hostPath` for log dirs.
+- **Init containers** that do migrations — may need `hostPath` for backup/restore.
 
 For these, document the exception and set the namespace to `baseline` or `privileged`. The exception should be **scoped** (only the system Pods, not all Pods in the namespace).
 
@@ -480,8 +487,8 @@ kubectl version
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — the per-Pod / per-Container settings
-* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — the broader admission layer
-* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — for custom rules
-* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for custom rules (YAML)
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — the CIS / NIST view
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — the per-Pod / per-Container settings
+- [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — the broader admission layer
+- [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — for custom rules
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for custom rules (YAML)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — the CIS / NIST view

@@ -13,20 +13,20 @@ A Software Bill of Materials (SBOM) is a machine-readable inventory of every com
 
 By the end of this module you should be able to:
 
-  - Generate a CycloneDX and SPDX SBOM at build time
-  - Pick the right tool for each language and build system
-  - Store SBOMs as build artifacts with cryptographic integrity
-  - Consume SBOMs for vuln tracking, license compliance, and customer disclosure
-  - Implement the VEX (Vulnerability Exploitability eXchange) pattern for known-but-not-applicable CVEs
-  - Map SBOM requirements to US Executive Order 14028 and EU CRA
+- Generate a CycloneDX and SPDX SBOM at build time
+- Pick the right tool for each language and build system
+- Store SBOMs as build artifacts with cryptographic integrity
+- Consume SBOMs for vuln tracking, license compliance, and customer disclosure
+- Implement the VEX (Vulnerability Exploitability eXchange) pattern for known-but-not-applicable CVEs
+- Map SBOM requirements to US Executive Order 14028 and EU CRA
 
 ## 1. Why SBOMs Now
 
 Three drivers:
 
-  - **Regulatory** — US Executive Order 14028 (2021) requires SBOMs for federal software procurement. EU Cyber Resilience Act (CRA, 2024) requires SBOMs for products with digital elements. Healthcare, finance, and defense customers are following.
-  - **Incident response** — when a new CVE drops, the first question is "are we affected?" An SBOM lets you answer in minutes, not weeks.
-  - **Customer transparency** — enterprise procurement asks for SBOMs as part of vendor security review. Having one ready is the difference between a 2-week security review and a 2-day one.
+- **Regulatory** — US Executive Order 14028 (2021) requires SBOMs for federal software procurement. EU Cyber Resilience Act (CRA, 2024) requires SBOMs for products with digital elements. Healthcare, finance, and defense customers are following.
+- **Incident response** — when a new CVE drops, the first question is "are we affected?" An SBOM lets you answer in minutes, not weeks.
+- **Customer transparency** — enterprise procurement asks for SBOMs as part of vendor security review. Having one ready is the difference between a 2-week security review and a 2-day one.
 
 The SBOM is the artifact that turns "we think we're fine" into a verifiable claim.
 
@@ -69,7 +69,7 @@ OWASP project. Designed for security use cases. Best for vuln tracking and suppl
       "name": "lodash",
       "version": "4.17.20",
       "purl": "pkg:npm/lodash@4.17.20",
-      "licenses": [{"license": {"id": "MIT"}}]
+      "licenses": [{ "license": { "id": "MIT" } }]
     }
   ]
 }
@@ -77,14 +77,14 @@ OWASP project. Designed for security use cases. Best for vuln tracking and suppl
 
 ### Which to Pick
 
-| Use case                                | Format     |
-| --------------------------------------- | ---------- |
-| US federal procurement                  | SPDX 2.3 (mandated) |
-| EU CRA                                  | SPDX 2.3 or CycloneDX 1.5+ |
-| Vuln scanning downstream (Trivy, Snyk)  | CycloneDX  |
-| License compliance tooling (FOSSology)  | SPDX       |
-| Internal inventory + diff tracking      | CycloneDX  |
-| Customer-facing (machine-readable)      | Both — generate and publish both |
+| Use case                               | Format                           |
+| -------------------------------------- | -------------------------------- |
+| US federal procurement                 | SPDX 2.3 (mandated)              |
+| EU CRA                                 | SPDX 2.3 or CycloneDX 1.5+       |
+| Vuln scanning downstream (Trivy, Snyk) | CycloneDX                        |
+| License compliance tooling (FOSSology) | SPDX                             |
+| Internal inventory + diff tracking     | CycloneDX                        |
+| Customer-facing (machine-readable)     | Both — generate and publish both |
 
 The good news: most generators produce both formats. Generate both by default; let consumers pick.
 
@@ -132,12 +132,12 @@ trivy image --format cyclonedx --output sbom.cdx.json my-app:v1.2.3
 
 ### Language-Specific Generators
 
-  - **npm**: `cyclonedx-npm`, `spdx-satisfies`
-  - **Python**: `cyclonedx-python`, `syft`
-  - **Go**: `cyclonedx-gomod`
-  - **Java**: `cyclonedx-maven-plugin`, `spdx-maven-plugin`
-  - **Rust**: `cargo-cyclonedx`
-  - **.NET**: `CycloneDX.CSharp`
+- **npm**: `cyclonedx-npm`, `spdx-satisfies`
+- **Python**: `cyclonedx-python`, `syft`
+- **Go**: `cyclonedx-gomod`
+- **Java**: `cyclonedx-maven-plugin`, `spdx-maven-plugin`
+- **Rust**: `cargo-cyclonedx`
+- **.NET**: `CycloneDX.CSharp`
 
 For multi-language builds, prefer Syft over language-specific tools — it handles the polyglot case and the container case in one tool.
 
@@ -145,9 +145,9 @@ For multi-language builds, prefer Syft over language-specific tools — it handl
 
 The right place to generate an SBOM is at the build, not at deploy. Reasons:
 
-  - The build has the full source and lockfile context
-  - The SBOM is reproducible given the same source
-  - Attaching the SBOM to the build artifact (image, binary) is a single step
+- The build has the full source and lockfile context
+- The SBOM is reproducible given the same source
+- Attaching the SBOM to the build artifact (image, binary) is a single step
 
 ```
 Source + Lockfile
@@ -167,13 +167,13 @@ Source + Lockfile
        +-- tag.att → provenance
 ```
 
-The SBOM is uploaded as a separate artifact; it is *not* embedded in the image. Embedding bloats the image; separating keeps the SBOM in version control of the build history.
+The SBOM is uploaded as a separate artifact; it is _not_ embedded in the image. Embedding bloats the image; separating keeps the SBOM in version control of the build history.
 
 ### Storage
 
-  - **OCI registry** (Harbor, ECR, GHCR) — store as an OCI artifact alongside the image
-  - **Build artifact store** (GitHub Actions artifacts, GitLab artifacts) — store as a build output, retained 24+ months
-  - **SBOM-only store** (e.g., `guac`, Trustify, an S3 bucket with a manifest) — for cross-system correlation
+- **OCI registry** (Harbor, ECR, GHCR) — store as an OCI artifact alongside the image
+- **Build artifact store** (GitHub Actions artifacts, GitLab artifacts) — store as a build output, retained 24+ months
+- **SBOM-only store** (e.g., `guac`, Trustify, an S3 bucket with a manifest) — for cross-system correlation
 
 For most teams, OCI registry is enough. Attach the SBOM as a referrer artifact (ORAS, cosign attach sbom).
 
@@ -206,16 +206,16 @@ The SBOM is now cryptographically associated with the image digest. Anyone with 
 
 The lifecycle has four handoffs. Each must be auditable.
 
-  1. **Build** — SBOM is generated, signed, attached. Provenance links the SBOM to the source commit.
-  2. **Store** — SBOM lives in the OCI registry as a referrer artifact. Retained 24+ months.
-  3. **Distribute** — customer asks for SBOM; you provide it with the signature for verification.
-  4. **Consume** — internal vuln scanners re-scan the SBOM daily; customer scanners do the same.
+1. **Build** — SBOM is generated, signed, attached. Provenance links the SBOM to the source commit.
+2. **Store** — SBOM lives in the OCI registry as a referrer artifact. Retained 24+ months.
+3. **Distribute** — customer asks for SBOM; you provide it with the signature for verification.
+4. **Consume** — internal vuln scanners re-scan the SBOM daily; customer scanners do the same.
 
 ## 6. Consuming SBOMs
 
 ### Internal: Continuous Re-Scanning
 
-The SBOM is not a one-time artifact. New CVEs are disclosed daily. The SBOM lets you re-scan the *same* artifact against new vuln data without rebuilding.
+The SBOM is not a one-time artifact. New CVEs are disclosed daily. The SBOM lets you re-scan the _same_ artifact against new vuln data without rebuilding.
 
 ```bash
 # Trivy: scan an SBOM for new vulns (no rebuild needed)
@@ -240,25 +240,23 @@ VEX (Vulnerability Exploitability eXchange) is the format for saying "this CVE e
         "justification": "code_not_present",
         "response": "will_not_fix"
       },
-      "affects": [
-        {"ref": "pkg:npm/lodash@4.17.20"}
-      ]
+      "affects": [{ "ref": "pkg:npm/lodash@4.17.20" }]
     }
   ]
 }
 ```
 
-VEX documents the *negative* claim, with reason and evidence. Customers can ingest it and clear the finding on their side.
+VEX documents the _negative_ claim, with reason and evidence. Customers can ingest it and clear the finding on their side.
 
 ## 7. SBOM in the Audit
 
 A 2026 SOC2 / ISO 27001 audit will ask for evidence of:
 
-  - SBOM generation at every build (the artifact, not just a claim)
-  - SBOM retention policy
-  - Process for re-scanning SBOMs on new CVE disclosures
-  - Customer SBOM distribution process
-  - VEX statements for disputed findings
+- SBOM generation at every build (the artifact, not just a claim)
+- SBOM retention policy
+- Process for re-scanning SBOMs on new CVE disclosures
+- Customer SBOM distribution process
+- VEX statements for disputed findings
 
 Modules M14 (supply chain attestations) and M18 (compliance evidence) cover the audit trail.
 
@@ -266,10 +264,10 @@ Modules M14 (supply chain attestations) and M18 (compliance evidence) cover the 
 
 The SBOM has its own quality concerns. Watch for:
 
-  - **Incomplete transitive coverage** — a generator that only sees direct deps misses the real attack surface
-  - **Hash mismatches** — the SBOM says package X@version Y, but the actual binary has Y+1; integrity check fails
-  - **License noise** — every dep is listed, including dev-only deps; downstream consumer does not know which are runtime
-  - **PURL drift** — the SBOM uses one PURL form, the scanner uses another; reconciliation fails
+- **Incomplete transitive coverage** — a generator that only sees direct deps misses the real attack surface
+- **Hash mismatches** — the SBOM says package X@version Y, but the actual binary has Y+1; integrity check fails
+- **License noise** — every dep is listed, including dev-only deps; downstream consumer does not know which are runtime
+- **PURL drift** — the SBOM uses one PURL form, the scanner uses another; reconciliation fails
 
 The fix for all of these: generate the SBOM at build time (where the lockfile is canonical), validate it (parse, check counts, check hashes), and re-scan the resulting image (M09) to confirm.
 
@@ -277,48 +275,48 @@ The fix for all of these: generate the SBOM at build time (where the lockfile is
 
 The current best practice:
 
-  1. Build → Syft produces CycloneDX SBOM
-  2. Build → cosign signs the image and attaches SBOM
-  3. Build → in-toto attestation links SBOM to source commit
-  4. Deploy → admission controller verifies SBOM exists, signature valid
-  5. Operate → Trivy re-scans SBOM against fresh vuln DB daily
-  6. Operate → VEX statements issued for non-applicable findings
-  7. Customer → receives SBOM + VEX bundle on request
+1. Build → Syft produces CycloneDX SBOM
+2. Build → cosign signs the image and attaches SBOM
+3. Build → in-toto attestation links SBOM to source commit
+4. Deploy → admission controller verifies SBOM exists, signature valid
+5. Operate → Trivy re-scans SBOM against fresh vuln DB daily
+6. Operate → VEX statements issued for non-applicable findings
+7. Customer → receives SBOM + VEX bundle on request
 
 This is the flow you will converge on. Modules M13, M14, M15 cover the signing and policy pieces.
 
 ## 10. SBOM Anti-Patterns
 
-| Anti-pattern | Symptom | Fix |
-| ------------ | ------- | --- |
-| Generate at deploy, not build | SBOM does not match image | Generate at build, attach |
-| Generate only direct deps | Misses 80% of vulns | Use Syft, which captures transitives |
-| Store without signature | Customer cannot verify | cosign sign + attach |
-| No VEX process | False positives alarm customers | VEX workflow for disputed findings |
-| One-time SBOM | Stale within days | Continuous re-scan |
-| Hand-curated SBOM | Out of date in a sprint | Generate, don't write |
+| Anti-pattern                  | Symptom                         | Fix                                  |
+| ----------------------------- | ------------------------------- | ------------------------------------ |
+| Generate at deploy, not build | SBOM does not match image       | Generate at build, attach            |
+| Generate only direct deps     | Misses 80% of vulns             | Use Syft, which captures transitives |
+| Store without signature       | Customer cannot verify          | cosign sign + attach                 |
+| No VEX process                | False positives alarm customers | VEX workflow for disputed findings   |
+| One-time SBOM                 | Stale within days               | Continuous re-scan                   |
+| Hand-curated SBOM             | Out of date in a sprint         | Generate, don't write                |
 
 ## 11. Self-Check
 
-  1. Can you answer, in under 5 minutes, "are we affected by CVE-2024-XXXX?" If not, you need SBOMs.
-  2. Where in your pipeline do you generate the SBOM? Is it signed? Is it attached to the image?
-  3. When was the last time a customer asked for your SBOM? How long did it take to produce?
+1. Can you answer, in under 5 minutes, "are we affected by CVE-2024-XXXX?" If not, you need SBOMs.
+2. Where in your pipeline do you generate the SBOM? Is it signed? Is it attached to the image?
+3. When was the last time a customer asked for your SBOM? How long did it take to produce?
 
 ## 12. SBOM Beyond Containers
 
 The SBOM concept generalizes. Any artifact can have an SBOM:
 
-| Artifact type | SBOM contents | Generator |
-| ------------- | ------------- | --------- |
-| Container image | OS packages + language packages | Syft, Trivy |
-| Compiled binary | Linked libraries + transitive deps | Syft, dependency-track |
-| npm package | npm deps tree | `cyclonedx-npm` |
-| Python wheel | pip deps tree | `cyclonedx-python` |
-| Java JAR | Maven deps tree | `cyclonedx-maven-plugin` |
-| Go binary | Go modules + cgo libs | `cyclonedx-gomod` |
-| Rust crate | Cargo deps + system libs | `cargo-cyclonedx` |
-| VM image (AMI, VHD) | OS packages, installed services | AWS Inspector, Azure Defender |
-| Firmware | OS + apps + crypto libs | Vendored, internal tools |
+| Artifact type       | SBOM contents                      | Generator                     |
+| ------------------- | ---------------------------------- | ----------------------------- |
+| Container image     | OS packages + language packages    | Syft, Trivy                   |
+| Compiled binary     | Linked libraries + transitive deps | Syft, dependency-track        |
+| npm package         | npm deps tree                      | `cyclonedx-npm`               |
+| Python wheel        | pip deps tree                      | `cyclonedx-python`            |
+| Java JAR            | Maven deps tree                    | `cyclonedx-maven-plugin`      |
+| Go binary           | Go modules + cgo libs              | `cyclonedx-gomod`             |
+| Rust crate          | Cargo deps + system libs           | `cargo-cyclonedx`             |
+| VM image (AMI, VHD) | OS packages, installed services    | AWS Inspector, Azure Defender |
+| Firmware            | OS + apps + crypto libs            | Vendored, internal tools      |
 
 The discipline is the same: declare the inventory, sign the SBOM, attach it to the artifact. The customer-facing transparency is the same.
 
@@ -371,57 +369,57 @@ This is the 30-minute response to a critical CVE. Without SBOMs, it is a 30-day 
 
 ## 15. SBOM and Customer Audits
 
-When a customer audits your supply chain, the SBOM is the *first* artifact they ask for. The audit pattern:
+When a customer audits your supply chain, the SBOM is the _first_ artifact they ask for. The audit pattern:
 
-  - "Show us your SBOM for product X" → download the SBOM
-  - "Is this SBOM authentic?" → verify the cosign signature
-  - "Is the SBOM complete?" → compare to the image (syft + diff)
-  - "What is the vuln status of this SBOM?" → re-scan with the customer's preferred tool
-  - "What is your process for new CVEs?" → describe the SCA + SBOM + re-scan loop
+- "Show us your SBOM for product X" → download the SBOM
+- "Is this SBOM authentic?" → verify the cosign signature
+- "Is the SBOM complete?" → compare to the image (syft + diff)
+- "What is the vuln status of this SBOM?" → re-scan with the customer's preferred tool
+- "What is your process for new CVEs?" → describe the SCA + SBOM + re-scan loop
 
 A clean SBOM story answers all of these. A broken one — missing SBOM, no signature, incomplete inventory — raises the customer's risk rating, and may cost the deal.
 
 ## 16. SBOM in Different Industries
 
-| Industry | SBOM requirement | Source |
-| -------- | ----------------- | ------ |
-| US Federal | Mandatory for software procurement | EO 14028 (2021) |
-| Healthcare | Required for medical devices | FDA pre-market guidance (2023) |
-| EU | Mandatory for products with digital elements | EU Cyber Resilience Act (CRA) (2024) |
-| Automotive | Required for new vehicle types | ISO/SAE 21434 |
-| Financial | Required for vendor risk management | NYDFS, PCI-DSS |
-| Energy | Required for critical infrastructure | TSA pipeline directives |
+| Industry   | SBOM requirement                             | Source                               |
+| ---------- | -------------------------------------------- | ------------------------------------ |
+| US Federal | Mandatory for software procurement           | EO 14028 (2021)                      |
+| Healthcare | Required for medical devices                 | FDA pre-market guidance (2023)       |
+| EU         | Mandatory for products with digital elements | EU Cyber Resilience Act (CRA) (2024) |
+| Automotive | Required for new vehicle types               | ISO/SAE 21434                        |
+| Financial  | Required for vendor risk management          | NYDFS, PCI-DSS                       |
+| Energy     | Required for critical infrastructure         | TSA pipeline directives              |
 
 The trajectory is clear: SBOMs are moving from "best practice" to "regulatory mandate" across industries. The pipeline that produces them is a compliance control, not a nice-to-have.
 
 ## 17. SBOM Anti-Patterns (Extended)
 
-| Anti-pattern | Symptom | Fix |
-| ------------ | ------- | --- |
-| SBOM generated, not signed | Customer cannot verify | cosign sign + attach |
-| SBOM with no PURL | Hard to correlate with vuln DB | Use PURL for every component |
-| SBOM with hashes missing | Cannot verify dep integrity | Include SHA-256 / SHA-512 |
-| SBOM with version ranges (">=1.0,<3.0") | Ambiguous, breaks re-scan | Lock to exact version |
-| SBOM not retained | Cannot answer "are we affected" for old versions | Retain in OCI registry, 24+ months |
-| SBOM in image layers | Bloats image, hard to extract | Attach as OCI referrer |
+| Anti-pattern                            | Symptom                                          | Fix                                |
+| --------------------------------------- | ------------------------------------------------ | ---------------------------------- |
+| SBOM generated, not signed              | Customer cannot verify                           | cosign sign + attach               |
+| SBOM with no PURL                       | Hard to correlate with vuln DB                   | Use PURL for every component       |
+| SBOM with hashes missing                | Cannot verify dep integrity                      | Include SHA-256 / SHA-512          |
+| SBOM with version ranges (">=1.0,<3.0") | Ambiguous, breaks re-scan                        | Lock to exact version              |
+| SBOM not retained                       | Cannot answer "are we affected" for old versions | Retain in OCI registry, 24+ months |
+| SBOM in image layers                    | Bloats image, hard to extract                    | Attach as OCI referrer             |
 
 ## 18. SBOM and Supply Chain Attestations Together
 
 SBOM is one attestation. The full attestation stack:
 
-  - **SBOM** — what's in it
-  - **SLSA Provenance** — how it was built
-  - **VEX** — what is and is not exploitable
-  - **Test Results** — what tests passed
-  - **Code Review** — what review was done
-  - **License Compliance** — what licenses apply
+- **SBOM** — what's in it
+- **SLSA Provenance** — how it was built
+- **VEX** — what is and is not exploitable
+- **Test Results** — what tests passed
+- **Code Review** — what review was done
+- **License Compliance** — what licenses apply
 
 The customer verifies all of them. Module M14 covers attestations; this module is one of the attestations.
 
 ## Related
 
-  - [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning|M07: SCA & Dependency Scanning]]
-  - [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning]]
-  - [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
-  - [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
-  - [[DevOps/devsecops/stage1-code/README|Stage 1 — Code]]
+- [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning|M07: SCA & Dependency Scanning]]
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning]]
+- [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
+- [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
+- [[DevOps/devsecops/stage1-code/README|Stage 1 — Code]]

@@ -11,12 +11,12 @@ Kubernetes secrets store sensitive data (passwords, tokens, keys) securely, but 
 
 ## Options
 
-| Tool | How It Works | Best For |
-|------|-------------|----------|
-| **Sealed Secrets** | Encrypt secrets with a cluster-specific RSA key | GitOps workflows |
-| **ESO (External Secrets Operator)** | Sync from AWS Secrets Manager / Vault | AWS-native |
-| **HashiCorp Vault** | Direct integration via Vault CSI provider | Enterprise |
-| **AWS Secrets Manager** | Native EKS integration via IRSA | AWS-first |
+| Tool                                | How It Works                                    | Best For         |
+| ----------------------------------- | ----------------------------------------------- | ---------------- |
+| **Sealed Secrets**                  | Encrypt secrets with a cluster-specific RSA key | GitOps workflows |
+| **ESO (External Secrets Operator)** | Sync from AWS Secrets Manager / Vault           | AWS-native       |
+| **HashiCorp Vault**                 | Direct integration via Vault CSI provider       | Enterprise       |
+| **AWS Secrets Manager**             | Native EKS integration via IRSA                 | AWS-first        |
 
 ## Sealed Secrets (Bitnami)
 
@@ -62,9 +62,9 @@ spec:
     name: db-credentials
     creationPolicy: Owner
   data:
-  - secretKey: password
-    remoteRef:
-      key: prod/database/password
+    - secretKey: password
+      remoteRef:
+        key: prod/database/password
 ```
 
 ## Vault via CSI Provider
@@ -75,18 +75,18 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: app
-    volumeMounts:
-    - name: vault-secrets
-      mountPath: /mnt/secrets
-      readOnly: true
+    - name: app
+      volumeMounts:
+        - name: vault-secrets
+          mountPath: /mnt/secrets
+          readOnly: true
   volumes:
-  - name: vault-secrets
-    csi:
-      driver: secrets-store.csi.k8s.io
-      readOnly: true
-      volumeAttributes:
-        secretProviderClass: vault-gpi
+    - name: vault-secrets
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: vault-gpi
 ```
 
 ## Related

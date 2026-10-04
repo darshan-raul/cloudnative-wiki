@@ -28,14 +28,14 @@ flowchart TD
 
 Compact, single-page architectural syntheses with diagrams, core rules, and common failure modes:
 
-| Refresher | Core Focus | Key Diagram / Mechanism |
-| :--- | :--- | :--- |
-| [[Kubernetes/review/architecture-refresher\|Architecture Refresher]] | Control plane, nodes, and request flow | `kubectl apply` → etcd → controller → scheduler → kubelet |
-| [[Kubernetes/review/workloads-refresher\|Workloads Refresher]] | Controller hierarchy & Pod lifecycle | Dual-ReplicaSet handoff & graceful termination timeline |
-| [[Kubernetes/review/networking-refresher\|Networking Refresher]] | Service VIPs, EndpointSlices & Gateway API | Packet path from client to pod socket via nftables |
-| [[Kubernetes/review/storage-refresher\|Storage Refresher]] | PV, PVC, StorageClass & CSI lifecycle | Provisioning vs VolumeAttachment vs node mount |
-| [[Kubernetes/review/scheduling-scaling-refresher\|Scheduling & Scaling Refresher]] | Filtering, scoring, QoS & autoscaling | Kube-scheduler pipeline & HPA metrics resolution |
-| [[Kubernetes/review/security-refresher\|Security Refresher]] | AuthN/Z, PSS, admission & NetworkPolicy | Progressive 5-ring defense-in-depth model |
+| Refresher                                                                          | Core Focus                                 | Key Diagram / Mechanism                                   |
+| :--------------------------------------------------------------------------------- | :----------------------------------------- | :-------------------------------------------------------- |
+| [[Kubernetes/review/architecture-refresher\|Architecture Refresher]]               | Control plane, nodes, and request flow     | `kubectl apply` → etcd → controller → scheduler → kubelet |
+| [[Kubernetes/review/workloads-refresher\|Workloads Refresher]]                     | Controller hierarchy & Pod lifecycle       | Dual-ReplicaSet handoff & graceful termination timeline   |
+| [[Kubernetes/review/networking-refresher\|Networking Refresher]]                   | Service VIPs, EndpointSlices & Gateway API | Packet path from client to pod socket via nftables        |
+| [[Kubernetes/review/storage-refresher\|Storage Refresher]]                         | PV, PVC, StorageClass & CSI lifecycle      | Provisioning vs VolumeAttachment vs node mount            |
+| [[Kubernetes/review/scheduling-scaling-refresher\|Scheduling & Scaling Refresher]] | Filtering, scoring, QoS & autoscaling      | Kube-scheduler pipeline & HPA metrics resolution          |
+| [[Kubernetes/review/security-refresher\|Security Refresher]]                       | AuthN/Z, PSS, admission & NetworkPolicy    | Progressive 5-ring defense-in-depth model                 |
 
 ---
 

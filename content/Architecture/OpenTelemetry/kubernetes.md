@@ -172,7 +172,7 @@ metadata:
   name: my-app-pod
   annotations:
     instrumentation.opentelemetry.io/inject-sdk: "true"
-    instrumentation.opentelemetry.io/inject-contrib: "true"  # for Python auto-instrumentation libs
+    instrumentation.opentelemetry.io/inject-contrib: "true" # for Python auto-instrumentation libs
     instrumentation.opentelemetry.io/service-name: "my-service"
     instrumentation.opentelemetry.io/otel-traces-sampler: "parentbased_traceidratio"
     instrumentation.opentelemetry.io/otel-traces-sampler-argument: "0.1"
@@ -196,13 +196,13 @@ metadata:
 
 ### Per-Language Annotation
 
-| Annotation | Language | Effect |
-|-----------|----------|--------|
-| `instrumentation.opentelemetry.io/inject-sdk` | All | Inject OTel SDK |
-| `instrumentation.opentelemetry.io/inject-javaagent` | Java | Inject Java agent JAR |
-| `instrumentation.opentelemetry.io/inject-python` | Python | Inject Python auto-instrumentation |
-| `instrumentation.opentelemetry.io/inject-nodejs` | Node.js | Inject Node.js auto-instrumentation |
-| `instrumentation.opentelemetry.io/inject-dotnet` | .NET | Inject .NET auto-instrumentation |
+| Annotation                                          | Language | Effect                              |
+| --------------------------------------------------- | -------- | ----------------------------------- |
+| `instrumentation.opentelemetry.io/inject-sdk`       | All      | Inject OTel SDK                     |
+| `instrumentation.opentelemetry.io/inject-javaagent` | Java     | Inject Java agent JAR               |
+| `instrumentation.opentelemetry.io/inject-python`    | Python   | Inject Python auto-instrumentation  |
+| `instrumentation.opentelemetry.io/inject-nodejs`    | Node.js  | Inject Node.js auto-instrumentation |
+| `instrumentation.opentelemetry.io/inject-dotnet`    | .NET     | Inject .NET auto-instrumentation    |
 
 ## ServiceAccount for Collector
 
@@ -400,8 +400,8 @@ The `memory_limiter` processor protects against OOM. Set limits ~20% above the K
 config:
   processors:
     memory_limiter:
-      limit_mib: 768       # ~20% above container limit
-      spike_limit_mib: 256  # spike allowance
+      limit_mib: 768 # ~20% above container limit
+      spike_limit_mib: 256 # spike allowance
 ```
 
 ### Gateway Scaling
@@ -512,14 +512,14 @@ config:
 
 Key Collector metrics to watch:
 
-| Metric | Alert if |
-|--------|----------|
-| `otelcol_exporter_sent_spans` | Not increasing (export stalled) |
+| Metric                            | Alert if                         |
+| --------------------------------- | -------------------------------- |
+| `otelcol_exporter_sent_spans`     | Not increasing (export stalled)  |
 | `otelcol_processor_dropped_spans` | High (memory limiter kicking in) |
-| `otelcol_receiver_refused_spans` | High ( Collector overwhelmed) |
-| `otelcol_memory_allocate_bytes` | Approaching limit |
-| `otelcol_exporter_queue_capacity` | Near 100% (backpressure) |
-| `otelcol_process_cpu_seconds` | Spiking |
+| `otelcol_receiver_refused_spans`  | High ( Collector overwhelmed)    |
+| `otelcol_memory_allocate_bytes`   | Approaching limit                |
+| `otelcol_exporter_queue_capacity` | Near 100% (backpressure)         |
+| `otelcol_process_cpu_seconds`     | Spiking                          |
 
 ## OpenTelemetry Operator
 
@@ -535,11 +535,11 @@ kubectl get pods -n opentelemetry-operator-system
 
 ### Operator CRDs
 
-| CRD | Purpose |
-|-----|---------|
-| `OpenTelemetryCollector` | Managed Collector instances |
-| `Instrumentation` | Auto-instrumentation configs |
-| `Telemetry` | Collector telemetry settings |
+| CRD                      | Purpose                      |
+| ------------------------ | ---------------------------- |
+| `OpenTelemetryCollector` | Managed Collector instances  |
+| `Instrumentation`        | Auto-instrumentation configs |
+| `Telemetry`              | Collector telemetry settings |
 
 ## Architecture Summary
 

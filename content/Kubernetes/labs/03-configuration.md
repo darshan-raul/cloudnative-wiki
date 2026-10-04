@@ -163,6 +163,7 @@ kubectl exec "$POD_NAME" -- env | grep -E "PODINFO_UI_|PODINFO_TOKEN"
 ```
 
 **Expected output:**
+
 ```
 PODINFO_UI_COLOR=#4b7bec
 PODINFO_UI_MESSAGE=Configured via ConfigMap!
@@ -178,6 +179,7 @@ kubectl exec "$POD_NAME" -- cat /data/config/config.json
 ### Step 3: Observe Live Volume Reload vs Static Env Vars
 
 How do updates propagate to running pods?
+
 - **Environment variables:** Written to the Linux process environment at process creation time (`execve`). They **never** update in a running container without recreating the Pod.
 - **Projected Volumes:** Kubelet periodically reconciles mounted ConfigMaps using atomic symlink rotation (`..data_tmp` -> `..data`). The mounted file updates in-place without restarting the Pod!
 
@@ -205,6 +207,7 @@ Notice that the file content changed **without the Pod restarting** (`RESTARTS` 
 What happens when a manifest references a configuration key that does not exist?
 
 ### Trigger the failure:
+
 Patch the Deployment to require a nonexistent key from the secret:
 
 ```bash
@@ -222,6 +225,7 @@ kubectl patch deployment podinfo --type json -p='[
 ```
 
 ### Observe the symptom:
+
 Check the Pod status:
 
 ```bash
@@ -229,6 +233,7 @@ kubectl get pods -l app.kubernetes.io/name=podinfo
 ```
 
 **Observed output:**
+
 ```
 NAME                       READY   STATUS                       RESTARTS   AGE
 podinfo-5b5c97bd5c-2p8xm   1/1     Running                      0          5m
@@ -237,6 +242,7 @@ podinfo-84fd954546-k4m2d   0/1     CreateContainerConfigError   0          12s
 ```
 
 ### Root Cause Diagnosis:
+
 Inspect the failed Pod:
 
 ```bash
@@ -245,6 +251,7 @@ kubectl describe pod "$FAILED_POD" | grep -A 5 "Events:"
 ```
 
 **Diagnostic event:**
+
 ```
 Warning  Failed     3s (x3 over 15s)  kubelet  Error: couldn't find key missing-password-key in Secret default/podinfo-secret
 ```
@@ -261,6 +268,7 @@ valueFrom:
 ```
 
 ### Recovery:
+
 Re-apply `podinfo-with-config.yaml` to remove the invalid reference:
 
 ```bash

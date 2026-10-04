@@ -61,6 +61,7 @@ GKE Cost Allocation instruments the GKE control plane to track resource consumpt
 ### The Three Components of GKE Cost
 
 When analyzing a GKE cluster invoice, cost divides into three distinct categories:
+
 1. **Utilized Workload Cost:** Compute and memory actively consumed by running containers.
 2. **Requested Slack Capacity:** Compute and memory requested by pods but sitting idle because developers over-provisioned `requests` out of caution.
 3. **Unallocated Cluster Slack:** Physical VM cores and RAM in the node pool that cannot be scheduled because remaining capacity is fragmented across nodes.
@@ -70,6 +71,7 @@ When analyzing a GKE cluster invoice, cost divides into three distinct categorie
 ## 2. Granular SQL FinOps Queries in BigQuery
 
 ### 1. Calculate Exact Monthly Spend by Kubernetes Namespace
+
 ```sql
 SELECT
   labels.value AS k8s_namespace,
@@ -88,6 +90,7 @@ ORDER BY
 ```
 
 ### 2. Identify Top 5 Overprovisioned (Slack) Microservices
+
 ```sql
 SELECT
   labels.value AS pod_name,
@@ -117,7 +120,8 @@ gcloud container clusters update prod-regional-cluster \
     --enable-cost-allocation \
     --project=core-infrastructure-prod
 ```
-*(GKE begins tagging GCE billing exports with Kubernetes namespaces and pod labels within 24 hours).*
+
+_(GKE begins tagging GCE billing exports with Kubernetes namespaces and pod labels within 24 hours)._
 
 ### 2. Purchase Flexible Spend-Based Committed Use Discount (CUD)
 
@@ -181,12 +185,12 @@ spec:
       priorityClassName: overprovisioning-priority
       terminationGracePeriodSeconds: 0
       containers:
-      - name: pause
-        image: registry.k8s.io/pause:3.9
-        resources:
-          requests:
-            cpu: "3" # Reserves 3 cores per node
-            memory: "12Gi"
+        - name: pause
+          image: registry.k8s.io/pause:3.9
+          resources:
+            requests:
+              cpu: "3" # Reserves 3 cores per node
+              memory: "12Gi"
 ```
 
 Apply overprovisioning:
@@ -199,13 +203,13 @@ kubectl apply -f overprovisioning-pause.yaml
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Limit / Metric | FinOps Recommendation |
-| :--- | :--- | :--- |
-| **Billing Export Latency** | 2 to 6 hours | BigQuery billing data is near-real-time, not instant |
-| **Max Pod Labels Exported** | 64 labels per resource | Standardize labels (`app`, `env`, `team`, `cost-center`) |
-| **Flexible CUD Discount** | Up to 46% (3-year term) | Commit to 70% of historical baseline compute trough |
-| **Spot VM Discount** | 60% to 90% discount | Ideal for stateless web replicas and batch queues |
-| **Unallocated Slack Target** | < 15% of cluster spend | Use optimize-utilization profile or GKE Autopilot |
+| Parameter / Dimension        | Limit / Metric          | FinOps Recommendation                                    |
+| :--------------------------- | :---------------------- | :------------------------------------------------------- |
+| **Billing Export Latency**   | 2 to 6 hours            | BigQuery billing data is near-real-time, not instant     |
+| **Max Pod Labels Exported**  | 64 labels per resource  | Standardize labels (`app`, `env`, `team`, `cost-center`) |
+| **Flexible CUD Discount**    | Up to 46% (3-year term) | Commit to 70% of historical baseline compute trough      |
+| **Spot VM Discount**         | 60% to 90% discount     | Ideal for stateless web replicas and batch queues        |
+| **Unallocated Slack Target** | < 15% of cluster spend  | Use optimize-utilization profile or GKE Autopilot        |
 
 ---
 
@@ -222,6 +226,7 @@ kubectl apply -f overprovisioning-pause.yaml
 ## 6. Realistic Pricing Scenarios
 
 FinOps optimization systematically cuts cluster waste:
+
 1. **Standard On-Demand Compute:** Baseline retail pricing.
 2. **CUDs:** Commitments delivering 37% (1-yr) to 57% (3-yr) discounts.
 3. **Spot VMs:** Up to 90% discount on interruptible capacity.
@@ -252,7 +257,7 @@ FinOps optimization systematically cuts cluster waste:
 
 ## 7. Battle-Tested Nuggets & Production Gotchas
 
-1. **Labels Added After Pod Deployment Do Not Backfill Billing:** GKE Cost Allocation attaches Kubernetes labels to billing records *at the moment the usage occurs*. If a pod runs for 3 weeks without a `cost-center` label, and you patch the Deployment to add the label today, **BigQuery cannot retroactively attribute the past 3 weeks of spend**. Enforce mandatory pod labels at admission time using OPA Gatekeeper or Kyverno.
+1. **Labels Added After Pod Deployment Do Not Backfill Billing:** GKE Cost Allocation attaches Kubernetes labels to billing records _at the moment the usage occurs_. If a pod runs for 3 weeks without a `cost-center` label, and you patch the Deployment to add the label today, **BigQuery cannot retroactively attribute the past 3 weeks of spend**. Enforce mandatory pod labels at admission time using OPA Gatekeeper or Kyverno.
 2. **The "Requests Equal Limits" Cost Inflation Trap:** In GKE Standard, setting pod `requests = limits` gives pods the `Guaranteed` QoS class, preventing throttling. However, if a developer sets both to 8 vCPUs for an app that averages 200m CPU, Kubernetes locks up 8 physical cores on that node. The node pool autoscales to accommodate the inflated requests, running dozens of empty VMs. FinOps best practice: **set requests based on P95 historical usage**, leaving limits higher to handle burst spikes.
 3. **Commitment Break-Even Calculation (The 70% Baseline Rule):** A 1-year CUD provides ~37% savings; a 3-year CUD provides ~57% savings. However, CUDs bill 24 hours a day, 365 days a year, whether instances are running or not. If your workload shuts down on weekends (running only 45% of the month), on-demand or Spot VMs are actually cheaper than a 1-year CUD. Only purchase CUDs for workloads running $\ge 70\%$ of the billing month.
 4. **Spot Node Evictions Triggering On-Demand Failover Churn:** If you configure a cluster to fall back to on-demand nodes when Spot capacity is preempted, ensure your Cluster Autoscaler includes scaling priority policies (`expander: priority`). Without priority expanders, CA may continue spinning up expensive on-demand nodes and refuse to return to Spot nodes when Spot capacity recovers, leaving workloads on high-cost compute indefinitely.

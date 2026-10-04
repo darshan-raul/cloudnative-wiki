@@ -7,17 +7,17 @@
 #### Key Differences Between BSON and JSON
 
 1. **Encoding Format**:
-   * **JSON**: Text-based format, which makes it human-readable and editable but less efficient in terms of space and processing speed.
-   * **BSON**: Binary format, which is more efficient for storage and processing but not human-readable.
+   - **JSON**: Text-based format, which makes it human-readable and editable but less efficient in terms of space and processing speed.
+   - **BSON**: Binary format, which is more efficient for storage and processing but not human-readable.
 2. **Data Types**:
-   * **JSON**: Limited to a small set of data types (string, number, object, array, true/false, null).
-   * **BSON**: Supports additional data types such as date, binary data, and embedded documents. For example, BSON can store 64-bit integers, floating-point numbers, and more complex types like timestamps and object IDs.
+   - **JSON**: Limited to a small set of data types (string, number, object, array, true/false, null).
+   - **BSON**: Supports additional data types such as date, binary data, and embedded documents. For example, BSON can store 64-bit integers, floating-point numbers, and more complex types like timestamps and object IDs.
 3. **Efficiency**:
-   * **JSON**: Less efficient in terms of storage and speed due to its text-based nature.
-   * **BSON**: More efficient in both storage and speed due to its binary encoding. It includes length prefixes for strings and arrays, which allows for faster traversals.
+   - **JSON**: Less efficient in terms of storage and speed due to its text-based nature.
+   - **BSON**: More efficient in both storage and speed due to its binary encoding. It includes length prefixes for strings and arrays, which allows for faster traversals.
 4. **Ordered Fields**:
-   * **JSON**: Does not enforce ordering of object keys.
-   * **BSON**: Maintains the order of keys, which can be important for certain applications.
+   - **JSON**: Does not enforce ordering of object keys.
+   - **BSON**: Maintains the order of keys, which can be important for certain applications.
 
 #### General Use of BSON
 
@@ -25,9 +25,9 @@
 
 **In MongoDB:**
 
-* **Data Storage**: MongoDB stores documents in a binary-encoded format called BSON. This allows for richer data types and more efficient storage compared to JSON.
-* **Data Transfer**: When communicating between the MongoDB server and client, BSON is used to serialize and deserialize data quickly.
-* **Indexes and Queries**: BSON's efficient encoding allows for fast indexing and querying within the MongoDB database.
+- **Data Storage**: MongoDB stores documents in a binary-encoded format called BSON. This allows for richer data types and more efficient storage compared to JSON.
+- **Data Transfer**: When communicating between the MongoDB server and client, BSON is used to serialize and deserialize data quickly.
+- **Indexes and Queries**: BSON's efficient encoding allows for fast indexing and querying within the MongoDB database.
 
 #### Example
 

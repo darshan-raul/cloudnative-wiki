@@ -15,27 +15,29 @@ There are different categories of resource limits that can be controlled by `uli
 
 `ulimit` allows setting two types of limits:
 
-* **Soft Limit**: This is a threshold that users can modify themselves within the range of the hard limit.
-* **Hard Limit**: This is the maximum limit that only the root user can modify. Once set, even the user cannot raise it beyond this point without root privileges.
+- **Soft Limit**: This is a threshold that users can modify themselves within the range of the hard limit.
+- **Hard Limit**: This is the maximum limit that only the root user can modify. Once set, even the user cannot raise it beyond this point without root privileges.
 
 #### Example of Usage
 
-*   To check the current limits:
+- To check the current limits:
 
-    ```bash
-    ulimit -a
-    ```
+  ```bash
+  ulimit -a
+  ```
 
-    This shows all resource limits for the current user session.
-*   To set the number of open files (file descriptors):
+  This shows all resource limits for the current user session.
 
-    ```bash
-    ulimit -n 4096
-    ```
-*   To set the maximum size of a core dump:
+- To set the number of open files (file descriptors):
 
-    ```bash
-    ulimit -c unlimited
-    ```
+  ```bash
+  ulimit -n 4096
+  ```
+
+- To set the maximum size of a core dump:
+
+  ```bash
+  ulimit -c unlimited
+  ```
 
 These limits are especially important for controlling resource usage in multi-user environments or on servers where resource exhaustion can affect system stability.

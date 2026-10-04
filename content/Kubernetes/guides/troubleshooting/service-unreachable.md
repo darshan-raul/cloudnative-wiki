@@ -232,9 +232,9 @@ apiVersion: v1
 kind: Service
 spec:
   ports:
-  - port: 80          # ClusterIP listens on this
-    targetPort: 8080  # pod listens on this
-    protocol: TCP
+    - port: 80 # ClusterIP listens on this
+      targetPort: 8080 # pod listens on this
+      protocol: TCP
 ```
 
 ## 4. Wrong target port
@@ -325,16 +325,18 @@ kubectl run debug -n debug --rm -it --image=busybox --restart=Never -- \
 **Common sub-causes:**
 
 1. **Default-deny + missing allow.** A baseline `policyTypes: [Ingress,Egress]` with no rules.
+
    ```yaml
    apiVersion: networking.k8s.io/v1
    kind: NetworkPolicy
    metadata:
      name: default-deny
    spec:
-     podSelector: {}     # applies to all pods in namespace
+     podSelector: {} # applies to all pods in namespace
      policyTypes: [Ingress, Egress]
      # no ingress or egress = no traffic allowed
    ```
+
    Fix: add ingress allow rules.
 
 2. **Wrong podSelector.** Allow rule selects `app: api`, but your source is `app: client`.
@@ -354,8 +356,8 @@ spec:
   podSelector: {}
   policyTypes: [Ingress]
   ingress:
-  - from:
-    - podSelector: {}     # any pod in this namespace
+    - from:
+        - podSelector: {} # any pod in this namespace
 ```
 
 ## 6. kube-proxy not running
@@ -562,8 +564,8 @@ kubectl exec -it client -- curl -sS -m 5 http://10.244.1.5:8080
 
 ## Common gotchas
 
-* **`kubectl get endpoints` shows the right pods, but traffic still fails** — check `kubectl get endpointslices`. EndpointSlices are the modern equivalent and can sometimes be out of sync.
-* **Headless Services** (`clusterIP: None`) don't get a ClusterIP. They return pod IPs from DNS. Make sure you're using the right name pattern.
+- **`kubectl get endpoints` shows the right pods, but traffic still fails** — check `kubectl get endpointslices`. EndpointSlices are the modern equivalent and can sometimes be out of sync.
+- **Headless Services** (`clusterIP: None`) don't get a ClusterIP. They return pod IPs from DNS. Make sure you're using the right name pattern.
   ```bash
   $ kubectl exec -it client -- nslookup web-service
   Name:      web-service
@@ -571,15 +573,15 @@ kubectl exec -it client -- curl -sS -m 5 http://10.244.1.5:8080
   Address 2: 10.244.2.6
   Address 3: 10.244.3.7
   ```
-* **Cross-namespace Service** — Service is in `ns-a`, you call it from `ns-b`. Use `<service>.<namespace>.svc.cluster.local`.
-* **The Service has endpoints, traffic flows, but the response is wrong** — that's an app bug, not a Service bug. Check the backend pod's logs.
-* **The Service was created, traffic works, then it stops** — check the endpoints. The pod was killed (OOM, evicted, scaled down) and the readiness probe removed it.
-* **Service created with a typo in the namespace** — `kubectl apply -f service.yaml` in a different namespace than expected.
-* **Service is on the right port, but iptables rules are wrong** — restart kube-proxy on the affected node.
-* **The Service exists in code, but not in the cluster** — Helm chart, kustomize, or CI didn't apply it. Check `kubectl get svc -A | grep web`.
-* **Egress SNAT port exhaustion** — every outbound connection from a pod uses a SNAT port. AWS has a limit (~64K ports per node). If you have many short-lived outbound connections, you can run out.
-* **Service-to-Service traffic is faster than Pod-to-Pod** — that's expected. The Service is iptables-natted locally; the pod IP goes through routing.
-* **The Service's `sessionAffinity: ClientIP`** — all requests from a single client go to the same backend. If that backend is unhealthy, all requests fail. Check if you need to disable it.
+- **Cross-namespace Service** — Service is in `ns-a`, you call it from `ns-b`. Use `<service>.<namespace>.svc.cluster.local`.
+- **The Service has endpoints, traffic flows, but the response is wrong** — that's an app bug, not a Service bug. Check the backend pod's logs.
+- **The Service was created, traffic works, then it stops** — check the endpoints. The pod was killed (OOM, evicted, scaled down) and the readiness probe removed it.
+- **Service created with a typo in the namespace** — `kubectl apply -f service.yaml` in a different namespace than expected.
+- **Service is on the right port, but iptables rules are wrong** — restart kube-proxy on the affected node.
+- **The Service exists in code, but not in the cluster** — Helm chart, kustomize, or CI didn't apply it. Check `kubectl get svc -A | grep web`.
+- **Egress SNAT port exhaustion** — every outbound connection from a pod uses a SNAT port. AWS has a limit (~64K ports per node). If you have many short-lived outbound connections, you can run out.
+- **Service-to-Service traffic is faster than Pod-to-Pod** — that's expected. The Service is iptables-natted locally; the pod IP goes through routing.
+- **The Service's `sessionAffinity: ClientIP`** — all requests from a single client go to the same backend. If that backend is unhealthy, all requests fail. Check if you need to disable it.
 
 ## A worked example
 
@@ -628,8 +630,8 @@ kubectl patch svc web-service -p '{"spec":{"ports":[{"port":80,"targetPort":8080
 
 ## See also
 
-* [[Kubernetes/guides/troubleshooting/dns-resolution|dns-resolution]] — when the name itself doesn't resolve
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the pod itself is broken
-* [[Kubernetes/guides/troubleshooting/ingress-404|ingress-404]] — when external traffic is the problem
-* [[Kubernetes/concepts/L04-services-networking/02-services|services]] — how Services work
-* [[Kubernetes/concepts/L04-services-networking/05-network-policy|network-policy]] — when NetworkPolicy is the cause
+- [[Kubernetes/guides/troubleshooting/dns-resolution|dns-resolution]] — when the name itself doesn't resolve
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the pod itself is broken
+- [[Kubernetes/guides/troubleshooting/ingress-404|ingress-404]] — when external traffic is the problem
+- [[Kubernetes/concepts/L04-services-networking/02-services|services]] — how Services work
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|network-policy]] — when NetworkPolicy is the cause

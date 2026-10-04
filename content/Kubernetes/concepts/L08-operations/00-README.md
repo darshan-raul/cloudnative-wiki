@@ -22,12 +22,12 @@ Day-2: things are running, and now you have to keep them running. This level is 
 
 ## Notes in this level
 
-| Note | Status | What's in it |
-|------|--------|--------------|
-| [[Kubernetes/concepts/L08-operations/01-troubleshooting\|Troubleshooting]] | ✅ | Decision tree for "my pod isn't working" — the quick reference |
-| [[Kubernetes/concepts/L08-operations/02-kubectl-debug\|kubectl Debug Toolkit]] | ✅ | `describe`, `logs`, `exec`, `debug`, ephemeral containers — the commands you reach for |
-| [[Kubernetes/concepts/L08-operations/03-common-failure-modes\|Common Failure Modes]] | ✅ | Stage-by-stage triage guide, exit codes, escalation checklists |
-| [[Kubernetes/concepts/L08-operations/04-metrics-sources\|Metrics Sources]] | ✅ | Where metrics come from — cAdvisor, kubelet, metrics-server, kube-state-metrics, full stack |
+| Note                                                                                 | Status | What's in it                                                                                |
+| ------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------- |
+| [[Kubernetes/concepts/L08-operations/01-troubleshooting\|Troubleshooting]]           | ✅     | Decision tree for "my pod isn't working" — the quick reference                              |
+| [[Kubernetes/concepts/L08-operations/02-kubectl-debug\|kubectl Debug Toolkit]]       | ✅     | `describe`, `logs`, `exec`, `debug`, ephemeral containers — the commands you reach for      |
+| [[Kubernetes/concepts/L08-operations/03-common-failure-modes\|Common Failure Modes]] | ✅     | Stage-by-stage triage guide, exit codes, escalation checklists                              |
+| [[Kubernetes/concepts/L08-operations/04-metrics-sources\|Metrics Sources]]           | ✅     | Where metrics come from — cAdvisor, kubelet, metrics-server, kube-state-metrics, full stack |
 
 ## Suggested reading order
 

@@ -6,9 +6,9 @@
 
 **Key Features of FDW:**
 
-* **Seamless Integration**: Access and query foreign tables using standard SQL.
-* **Data Federation**: Combine data from multiple sources into a single query.
-* **Performance**: Efficiently handles large datasets with pushdown capabilities, minimizing data transfer.
+- **Seamless Integration**: Access and query foreign tables using standard SQL.
+- **Data Federation**: Combine data from multiple sources into a single query.
+- **Performance**: Efficiently handles large datasets with pushdown capabilities, minimizing data transfer.
 
 #### Setting Up PostgreSQL FDW
 
@@ -46,9 +46,9 @@ FOREIGN DATA WRAPPER postgres_fdw
 OPTIONS (host 'remote_host', dbname 'remote_db', port '5432');
 ```
 
-* **host**: The address of the remote PostgreSQL server.
-* **dbname**: The name of the database on the remote server.
-* **port**: The port on which the remote PostgreSQL server is running.
+- **host**: The address of the remote PostgreSQL server.
+- **dbname**: The name of the database on the remote server.
+- **port**: The port on which the remote PostgreSQL server is running.
 
 **Step 4: Create a User Mapping**
 
@@ -60,9 +60,9 @@ SERVER foreign_server
 OPTIONS (user 'remote_user', password 'remote_password');
 ```
 
-* **local\_user**: The local PostgreSQL user.
-* **remote\_user**: The remote PostgreSQL user.
-* **remote\_password**: The password for the remote PostgreSQL user.
+- **local_user**: The local PostgreSQL user.
+- **remote_user**: The remote PostgreSQL user.
+- **remote_password**: The password for the remote PostgreSQL user.
 
 **Step 5: Import Foreign Schema or Tables**
 
@@ -87,8 +87,8 @@ SERVER foreign_server
 OPTIONS (schema_name 'public', table_name 'remote_table');
 ```
 
-* **foreign\_table**: The name of the foreign table in the local database.
-* **remote\_table**: The name of the table on the remote server.
+- **foreign_table**: The name of the foreign table in the local database.
+- **remote_table**: The name of the table on the remote server.
 
 #### Querying Foreign Tables
 
@@ -100,9 +100,9 @@ SELECT * FROM local_schema.foreign_table;
 
 #### Advanced Configuration and Performance Tuning
 
-* **Pushdown Capabilities**: PostgreSQL FDW can push down WHERE clauses, LIMIT clauses, and aggregate functions to the foreign server, reducing the amount of data transferred.
-* **Join Pushdown**: PostgreSQL 11 and later support join pushdown, allowing joins to be executed on the foreign server.
-* **Performance Tuning**: Use `ANALYZE` on foreign tables to gather statistics, improving query planner decisions.
+- **Pushdown Capabilities**: PostgreSQL FDW can push down WHERE clauses, LIMIT clauses, and aggregate functions to the foreign server, reducing the amount of data transferred.
+- **Join Pushdown**: PostgreSQL 11 and later support join pushdown, allowing joins to be executed on the foreign server.
+- **Performance Tuning**: Use `ANALYZE` on foreign tables to gather statistics, improving query planner decisions.
 
 ```sql
 ANALYZE local_schema.foreign_table;

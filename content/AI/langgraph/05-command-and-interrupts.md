@@ -209,12 +209,12 @@ to continue.
 
 ## When to use `Command` vs `interrupt`
 
-| Situation | Use | Why |
-|---|---|---|
-| Inject context, route to specific node | `Command(goto=...)` | No pause needed |
-| Destructive action, need human approval | `interrupt()` | Must pause, cannot proceed without approval |
-| Ask user a question mid-graph | `interrupt()` | User must respond before continuing |
-| Modify state before next node | `Command(update=...)` | No routing change |
+| Situation                               | Use                   | Why                                         |
+| --------------------------------------- | --------------------- | ------------------------------------------- |
+| Inject context, route to specific node  | `Command(goto=...)`   | No pause needed                             |
+| Destructive action, need human approval | `interrupt()`         | Must pause, cannot proceed without approval |
+| Ask user a question mid-graph           | `interrupt()`         | User must respond before continuing         |
+| Modify state before next node           | `Command(update=...)` | No routing change                           |
 
 ---
 

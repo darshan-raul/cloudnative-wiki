@@ -54,6 +54,7 @@ aws migrationevaluator import-data \
 ### Collector Deployment
 
 The agentless collector is a VMware VM that:
+
 1. Connects to your vCenter
 2. Discovers all VMs and their resource utilization
 3. Collects performance metrics over a period (typically 2-4 weeks)
@@ -61,6 +62,7 @@ The agentless collector is a VMware VM that:
 5. Migration Evaluator processes the data and generates the TCO report
 
 **Deployment steps:**
+
 1. Download OVA from Migration Evaluator console
 2. Deploy in VMware (2 vCPU, 4GB RAM)
 3. Configure vCenter credentials
@@ -87,6 +89,7 @@ Server: web-prod-01
 ### Right-Sizing Logic
 
 Migration Evaluator right-sizes based on **actual utilization**, not raw specs:
+
 - A server with 4 vCPU specs but 10% average utilization → recommended t3.small
 - A server with 16GB RAM specs but 8GB used → recommended instance type with 16GB
 
@@ -108,6 +111,7 @@ Each server gets classified into one of the 6 Rs:
 ### Initial Assessment (no agent)
 
 Quick assessment based on VMware inventory data without deep performance metrics:
+
 - Lower cost, faster to complete
 - Less accurate utilization data (uses spec vs actual)
 - Good for initial business case and rough estimates
@@ -115,6 +119,7 @@ Quick assessment based on VMware inventory data without deep performance metrics
 ### Agent-Based Assessment
 
 Deploy collector agents on servers for accurate performance data:
+
 - More accurate utilization metrics (CPU, memory, disk over time)
 - Process-level visibility (which processes are running)
 - Network dependency mapping
@@ -123,6 +128,7 @@ Deploy collector agents on servers for accurate performance data:
 ### Import Assessment
 
 Import data from existing tools:
+
 - CMDB exports (ServiceNow, BMC, etc.)
 - Cloudhealth or other cloud management platforms
 - Azure Migrate assessments
@@ -176,12 +182,14 @@ This lets you go from assessment → planning → execution using AWS native too
 ## When to Use
 
 ### Use Migration Evaluator when:
+
 - Building a business case for migration to present to leadership
 - Trying to understand how much you could save
 - Right-sizing before migration (avoid over-provisioning AWS resources)
 - Planning a large-scale migration and need to prioritize
 
 ### Don't use for:
+
 - Day-to-day cost optimization of existing AWS environment (use Cost Explorer)
 - Real-time monitoring (CloudWatch is better)
 - Detailed migration execution (use MGN, DMS, DataSync for that)

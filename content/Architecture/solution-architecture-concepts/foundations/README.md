@@ -14,11 +14,13 @@ This section covers the **mental models, processes, and frameworks** that define
 ## What's Here
 
 ### Solution Architecture
+
 - [[solutions-architecture]] — What a solution architect does, NFRs, trade-off analysis
 - [[thinking-like-an-architect]] — Mental models, the scale of the role, red flags
 - [[software-planning]] — ADRs, RFCs, SLOs, architecture reviews
 
 ### Non-Functional Requirements
+
 - [[non-functional-requirements/README]] — NFR taxonomy and how to define them
 - [[non-functional-requirements/performance|Performance]] — Latency, throughput, caching, database optimization
 - [[non-functional-requirements/availability|Availability]] — The nines, redundancy, health checks, SLOs vs SLAs
@@ -32,6 +34,7 @@ This section covers the **mental models, processes, and frameworks** that define
 - [[non-functional-requirements/reliability-vs-availability]] — The distinction that matters
 
 ### Migration Patterns
+
 - [[migration-patterns/README]] — Strategies for safe system and data migration
 - [[migration-patterns/blue-green-deployments|Blue-Green Deployments]] — Zero-downtime deployment with instant rollback
 - [[migration-patterns/expand-contract|Expand-Contract]] — Safe API and schema evolution without breaking consumers
@@ -39,6 +42,7 @@ This section covers the **mental models, processes, and frameworks** that define
 - [[migration-patterns/data-migration|Data Migration]] — Bulk data movement with zero downtime
 
 ### Design Principles
+
 - [[high-cohesion-loose-coupling]] — Object-oriented design principles applied to system architecture
 
 ---

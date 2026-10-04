@@ -54,12 +54,12 @@ prompt = ChatPromptTemplate.from_messages([
 
 The tuple format is `("role", "content")`. The four roles:
 
-| Tuple | Role | What goes here |
-|---|---|---|
-| `("system", "...")` | system | Static instructions, persona, rules. Can use `{variable}` for templating. |
-| `("human", "...")` | user | Static or templated user input. |
-| `("ai", "...")` | assistant | Few-shot examples of model responses. |
-| `("placeholder", "{name}")` | messages | A slot for the full conversation history. |
+| Tuple                       | Role      | What goes here                                                            |
+| --------------------------- | --------- | ------------------------------------------------------------------------- |
+| `("system", "...")`         | system    | Static instructions, persona, rules. Can use `{variable}` for templating. |
+| `("human", "...")`          | user      | Static or templated user input.                                           |
+| `("ai", "...")`             | assistant | Few-shot examples of model responses.                                     |
+| `("placeholder", "{name}")` | messages  | A slot for the full conversation history.                                 |
 
 The `("placeholder", "{messages}")` pattern is the canonical way to
 build a chat prompt that carries history.
@@ -98,6 +98,7 @@ prompt = ChatPromptTemplate.from_messages([
 ```
 
 Why use the explicit form:
+
 - **`optional=True`** — the prompt works even if `history` is
   missing (the shorthand errors on missing variables).
 - **Multiple placeholders** — useful if you have `messages` and

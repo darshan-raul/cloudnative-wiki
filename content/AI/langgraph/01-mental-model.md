@@ -136,13 +136,13 @@ subgraphs, interrupts, memory stores) is additive on top of this.
 
 ## LangGraph vs. LangChain chains
 
-| What you want | Use | Why |
-|---|---|---|
-| Linear: prompt → model → parser | LangChain chain (`\|`) | No loops needed |
-| Agent loop with tools | LangGraph `StateGraph` | Cycles + conditional routing |
-| Multi-step branching | LangGraph | Conditional edges + `Send` for fan-out |
-| Stateful chat with persistence | LangGraph + checkpointer | Durable, resumable |
-| Multi-agent with subgraphs | LangGraph | Each subgraph has its own state |
+| What you want                   | Use                      | Why                                    |
+| ------------------------------- | ------------------------ | -------------------------------------- |
+| Linear: prompt → model → parser | LangChain chain (`\|`)   | No loops needed                        |
+| Agent loop with tools           | LangGraph `StateGraph`   | Cycles + conditional routing           |
+| Multi-step branching            | LangGraph                | Conditional edges + `Send` for fan-out |
+| Stateful chat with persistence  | LangGraph + checkpointer | Durable, resumable                     |
+| Multi-agent with subgraphs      | LangGraph                | Each subgraph has its own state        |
 
 **The rule:** if your flow has cycles, use LangGraph. If it's
 strictly linear, a chain is fine.
@@ -151,17 +151,17 @@ strictly linear, a chain is fine.
 
 ## The package layout
 
-| Import | What's there |
-|---|---|
-| `langgraph.graph` | `StateGraph`, `START`, `END`, `MessagesState` |
-| `langgraph.prebuilt` | `ToolNode`, `tools_condition` |
-| `langgraph.checkpoint.memory` | `MemorySaver` |
-| `langgraph.checkpoint.sqlite` | `SqliteSaver` |
-| `langgraph.checkpoint.postgres` | `PostgresSaver` |
-| `langgraph.store.memory` | `InMemoryStore` |
-| `langgraph.store.postgres` | `PostgresStore` |
-| `langgraph.types` | `Command`, `Send`, `Interrupt`, `RetryPolicy` |
-| `langgraph.func` | `@entrypoint`, `@task` (functional API) |
+| Import                          | What's there                                  |
+| ------------------------------- | --------------------------------------------- |
+| `langgraph.graph`               | `StateGraph`, `START`, `END`, `MessagesState` |
+| `langgraph.prebuilt`            | `ToolNode`, `tools_condition`                 |
+| `langgraph.checkpoint.memory`   | `MemorySaver`                                 |
+| `langgraph.checkpoint.sqlite`   | `SqliteSaver`                                 |
+| `langgraph.checkpoint.postgres` | `PostgresSaver`                               |
+| `langgraph.store.memory`        | `InMemoryStore`                               |
+| `langgraph.store.postgres`      | `PostgresStore`                               |
+| `langgraph.types`               | `Command`, `Send`, `Interrupt`, `RetryPolicy` |
+| `langgraph.func`                | `@entrypoint`, `@task` (functional API)       |
 
 The graph API (`StateGraph`) is what this section covers. The
 functional API (`@entrypoint`) is just syntactic sugar — same

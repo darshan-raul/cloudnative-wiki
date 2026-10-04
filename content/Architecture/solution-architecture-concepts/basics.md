@@ -74,12 +74,12 @@ Vertical (scale up): Horizontal (scale out):
 
 ### Read vs Write Scaling
 
-| Pattern | When to Use | How |
-|---------|------------|-----|
-| Read replicas | Read-heavy (80/20 read/write) | 1 primary + N replicas |
-| Write sharding | Write-heavy | Partition by key |
-| CQRS | Complex read/write profiles | Separate models for read and write |
-| Event sourcing | Audit trail, temporal queries | Append-only event log |
+| Pattern        | When to Use                   | How                                |
+| -------------- | ----------------------------- | ---------------------------------- |
+| Read replicas  | Read-heavy (80/20 read/write) | 1 primary + N replicas             |
+| Write sharding | Write-heavy                   | Partition by key                   |
+| CQRS           | Complex read/write profiles   | Separate models for read and write |
+| Event sourcing | Audit trail, temporal queries | Append-only event log              |
 
 ---
 
@@ -87,12 +87,12 @@ Vertical (scale up): Horizontal (scale out):
 
 ### ACID vs BASE
 
-| Property | ACID (Traditional DB) | BASE (NoSQL) |
-|----------|---------------------|--------------|
-| Atomicity | All or nothing | All or nothing |
-| Consistency | Invariant enforcement | Eventually consistent |
-| Isolation | Serialized transactions | Concurrent, no isolation |
-| Durability | Committed = durable | Committed = eventually durable |
+| Property    | ACID (Traditional DB)   | BASE (NoSQL)                   |
+| ----------- | ----------------------- | ------------------------------ |
+| Atomicity   | All or nothing          | All or nothing                 |
+| Consistency | Invariant enforcement   | Eventually consistent          |
+| Isolation   | Serialized transactions | Concurrent, no isolation       |
+| Durability  | Committed = durable     | Committed = eventually durable |
 
 **Rule:** Most systems need ACID for financial transactions. BASE is fine for social feeds, activity logs, etc.
 
@@ -140,14 +140,14 @@ AP: returns stale data on partition (Cassandra, DynamoDB)
 
 ## Common Architectural Patterns
 
-| Pattern | What It Solves | Examples |
-|---------|---------------|----------|
-| **Layered** | Code organization | Traditional monoliths |
-| **Event-driven** | Decoupling, async processing | Kafka, SNS |
-| **Microservices** | Team autonomy, independent deploy | Kubernetes services |
-| **CQRS** | Read/write separation | Event-sourced systems |
-| **Hexagonal** | Testability, replaceable components | Ports and adapters |
-| **Strangler Fig** | Incremental migration | Legacy → new system |
+| Pattern           | What It Solves                      | Examples              |
+| ----------------- | ----------------------------------- | --------------------- |
+| **Layered**       | Code organization                   | Traditional monoliths |
+| **Event-driven**  | Decoupling, async processing        | Kafka, SNS            |
+| **Microservices** | Team autonomy, independent deploy   | Kubernetes services   |
+| **CQRS**          | Read/write separation               | Event-sourced systems |
+| **Hexagonal**     | Testability, replaceable components | Ports and adapters    |
+| **Strangler Fig** | Incremental migration               | Legacy → new system   |
 
 ---
 

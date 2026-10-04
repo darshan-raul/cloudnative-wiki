@@ -15,29 +15,33 @@ Helm uses a packaging format called **charts** - a collection of files that desc
 
 ### Key Concepts
 
-| Concept | Description |
-|---------|-------------|
-| **Chart** | A Helm package containing Kubernetes resource templates |
-| **Repository** | A place where charts are collected and shared |
-| **Release** | An instance of a chart running in a Kubernetes cluster |
-| **Values** | Configuration options that can be injected into templates |
+| Concept        | Description                                               |
+| -------------- | --------------------------------------------------------- |
+| **Chart**      | A Helm package containing Kubernetes resource templates   |
+| **Repository** | A place where charts are collected and shared             |
+| **Release**    | An instance of a chart running in a Kubernetes cluster    |
+| **Values**     | Configuration options that can be injected into templates |
 
 ## Documentation Index
 
 ### Getting Started
+
 - [[helm/commands]] - Complete Helm CLI commands reference
 - [[helm/charts]] - Chart structure, templates, values, and dependencies
 - [[helm/library-charts]] - Creating shared library charts for code reuse
 
 ### Testing & Quality
+
 - [[helm/testing]] - Chart testing, linting, and validation
 
 ### Production & Operations
+
 - [[helm/production]] - Multi-cluster, multi-environment deployments
 - [[helm/oci]] - OCI registries, provenance, and chart signing
 - [[helm/troubleshooting]] - Debugging failed releases and rollback strategies
 
 ### CI/CD & GitOps
+
 - [[helm/gitops]] - GitOps workflows with ArgoCD and Flux
 - [[helm/cicd]] - CI/CD pipeline integration
 
@@ -73,14 +77,14 @@ helm upgrade --install --atomic myapp ./mychart
 
 Helm 4 introduces several breaking changes and new features:
 
-| Feature | Change |
-|---------|--------|
-| Post-renderers | Now implemented as plugins |
-| Registry login | Domain name only, no URL scheme |
-| Server-side apply | Default for new installs |
-| CLI flags | `--atomic` → `--rollback-on-failure`, `--force` → `--force-replace` |
-| Plugin system | WebAssembly-based runtime for enhanced security |
-| Multi-document values | Split complex values across multiple YAML files |
+| Feature               | Change                                                              |
+| --------------------- | ------------------------------------------------------------------- |
+| Post-renderers        | Now implemented as plugins                                          |
+| Registry login        | Domain name only, no URL scheme                                     |
+| Server-side apply     | Default for new installs                                            |
+| CLI flags             | `--atomic` → `--rollback-on-failure`, `--force` → `--force-replace` |
+| Plugin system         | WebAssembly-based runtime for enhanced security                     |
+| Multi-document values | Split complex values across multiple YAML files                     |
 
 ## Chart Repository
 

@@ -1,7 +1,17 @@
 ---
 title: "2.3 — Client Credentials, ROPC, Implicit (and Why to Avoid)"
 author: darshan
-tags: [authentication, stage-2, oauth, client-credentials, ropc, implicit, device-code, m2m]
+tags:
+  [
+    authentication,
+    stage-2,
+    oauth,
+    client-credentials,
+    ropc,
+    implicit,
+    device-code,
+    m2m,
+  ]
 date: 2026-06-13
 description: The other OAuth grants — when client_credentials is right, why ROPC and implicit are deprecated, and when to reach for device_code
 ---
@@ -60,15 +70,15 @@ Is there a human user involved?
 
 **In one sentence per grant:**
 
-| Grant | Use when | Avoid when |
-|-------|----------|------------|
+| Grant                        | Use when                                          | Avoid when                                      |
+| ---------------------------- | ------------------------------------------------- | ----------------------------------------------- |
 | `authorization_code` (+PKCE) | Human user with browser or browser-capable device | (default — use unless you have a reason not to) |
-| `client_credentials` | Machine-to-machine, no human | Any user-facing flow |
-| `device_code` | User on a separate device (TV, CLI, IoT) | User has a browser on the same device |
-| `refresh_token` | Extending the auth code or device code flow | (extension grant — used with another) |
-| `password` (ROPC) | **NEVER** | (deprecated, removed in 2.1) |
-| `implicit` | **NEVER** | (deprecated, removed in 2.1) |
-| `jwt-bearer` (RFC 7523) | Token exchange — converting one token to another | (advanced — covered at the end) |
+| `client_credentials`         | Machine-to-machine, no human                      | Any user-facing flow                            |
+| `device_code`                | User on a separate device (TV, CLI, IoT)          | User has a browser on the same device           |
+| `refresh_token`              | Extending the auth code or device code flow       | (extension grant — used with another)           |
+| `password` (ROPC)            | **NEVER**                                         | (deprecated, removed in 2.1)                    |
+| `implicit`                   | **NEVER**                                         | (deprecated, removed in 2.1)                    |
+| `jwt-bearer` (RFC 7523)      | Token exchange — converting one token to another  | (advanced — covered at the end)                 |
 
 ---
 
@@ -164,7 +174,7 @@ def get_service_token() -> str:
         "jti": str(uuid.uuid4()),
     }, PRIVATE_KEY, algorithm="RS256",
        headers={"kid": "service-2024-01"})
-    
+
     response = requests.post(
         TOKEN_ENDPOINT,
         data={
@@ -201,7 +211,7 @@ For client_credentials, scopes are usually fine-grained API permissions:
   read:invoices      → can read invoices
   write:invoices     → can write invoices
   admin:everything   → can do anything (avoid)
-  
+
 The "sub" claim in the token is the CLIENT ID, not a user.
 If you need to know "which user triggered this service call," you need
 to pass that through a different mechanism (e.g., a separate header).
@@ -248,7 +258,7 @@ The client app now has the user's actual password.
   - Revoking access = changing the password
   - No MFA possible (the app has the password, MFA would be bypassed)
   - The user can't tell which app did what
-  
+
 This is the same anti-pattern OAuth was designed to replace.
 If you're tempted to use ROPC, you missed the entire point of OAuth.
 ```
@@ -343,11 +353,11 @@ The SPA does the auth code flow, with PKCE, exactly like a server-side app would
 ```
 SPA → its own backend → IdP
   (SPA never directly handles the token)
-  
+
   The SPA's backend does the auth code flow.
   The backend stores the tokens (server-side, safe).
   The SPA gets a session cookie from its backend.
-  
+
 This eliminates token-in-browser entirely.
 ```
 
@@ -384,19 +394,19 @@ This eliminates token-in-browser entirely.
    grant_type=urn:ietf:params:oauth:grant-type:device_code
    &device_code=abc123
    &client_id=tv-app
-   
+
    Response (while waiting):
    {
      "error": "authorization_pending"     ← user hasn't entered the code yet
    }
-   
+
    Response (when user enters the code and approves):
    {
      "access_token": "...",
      "refresh_token": "...",
      "expires_in": 3600
    }
-   
+
    Response (if user denies or code expires):
    {
      "error": "access_denied"  or  "expired_token"
@@ -462,28 +472,28 @@ def device_flow_login():
     })
     resp.raise_for_status()
     device = resp.json()
-    
+
     # Step 2: show the user the code and URL
     print(f"\nGo to: {device['verification_uri']}")
     print(f"Enter code: {device['user_code']}\n")
-    
+
     # Step 3: poll the token endpoint
     device_code = device["device_code"]
     interval = device.get("interval", 5)
     expires_at = time.time() + device["expires_in"]
-    
+
     while time.time() < expires_at:
         time.sleep(interval)
-        
+
         resp = requests.post(TOKEN_ENDPOINT, data={
             "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
             "device_code": device_code,
             "client_id": CLIENT_ID,
         })
-        
+
         if resp.status_code == 200:
             return resp.json()  # access_token, refresh_token, etc.
-        
+
         err = resp.json().get("error")
         if err == "authorization_pending":
             continue  # user hasn't entered the code yet
@@ -495,7 +505,7 @@ def device_flow_login():
             raise Exception("user denied the request")
         else:
             raise Exception(f"device flow error: {err}")
-    
+
     raise Exception("device flow timed out")
 
 tokens = device_flow_login()
@@ -531,22 +541,24 @@ The access_token expires (after 5-15 min).
 The client uses the refresh_token to get a new access_token:
   POST /token
   grant_type=refresh_token
-  &refresh_token=... 
+  &refresh_token=...
   &client_id=...
   &client_secret=... (if confidential)
-  
+
 IdP returns:
   { access_token: ..., refresh_token: ... (new, rotated) }
-  
+
 Old refresh_token is now invalid.
 ```
 
 **Refresh tokens are issued for:**
+
 - `authorization_code` (covered in 2.2)
 - `device_code` (same pattern)
 - Sometimes `client_credentials` (less common)
 
 **Not issued for:**
+
 - `password` (deprecated)
 - `implicit` (no secret to bind to)
 
@@ -641,18 +653,18 @@ SCOPES = "read:invoices write:invoices"
 
 class ServiceTokenCache:
     """Cache the service token until it's about to expire."""
-    
+
     def __init__(self):
         self._token = None
         self._expires_at = 0
         self._lock = threading.Lock()
-    
+
     def get(self) -> str:
         with self._lock:
             now = time.time()
             if self._token and now < self._expires_at - 60:  # refresh 60s early
                 return self._token
-            
+
             # Get a new token
             resp = requests.post(TOKEN_ENDPOINT, data={
                 "grant_type": "client_credentials",
@@ -662,7 +674,7 @@ class ServiceTokenCache:
             }, timeout=10)
             resp.raise_for_status()
             data = resp.json()
-            
+
             self._token = data["access_token"]
             self._expires_at = now + data["expires_in"]
             return self._token
@@ -854,7 +866,7 @@ If your service needs long-lived tokens, either:
     pre-shared key or workload identity like SPIFFE)
   - Get a new token from client_credentials periodically
     (the standard pattern)
-  
+
 Most IdPs don't issue refresh tokens for client_credentials.
 If yours does, be careful — it's a long-lived credential.
 ```
@@ -870,7 +882,7 @@ Every enabled grant is an attack surface. Enable only what you need:
   - Mobile app: auth code + PKCE
   - Internal service: client_credentials
   - Smart TV app: device_code
-  
+
 Less is more.
 ```
 
@@ -894,7 +906,9 @@ Options:
 ## 12. Exercises
 
 ### Exercise 1: Grant decision
+
 For each scenario, pick the right grant and justify in 2 sentences:
+
 - (a) Your CI system deploys to your production API
 - (b) A smart TV app lets the user log in with their phone
 - (c) Your SaaS web app lets users log in with Google
@@ -904,40 +918,52 @@ For each scenario, pick the right grant and justify in 2 sentences:
 - (g) A legacy desktop app from 2012 that asks for a password
 
 ### Exercise 2: Build client_credentials
+
 Take the code from Section 9. Test it against a real IdP (Keycloak in Docker is free). Verify the token works against a real API. Add metrics: how many tokens issued, average lifetime, etc.
 
 ### Exercise 3: Build device flow
+
 Take the code from Section 5. Test it: your laptop is the "TV", your phone visits the URL and enters the code. Verify the polling works, the slow_down handling works, the timeout works.
 
 ### Exercise 4: Find the implicit grant
+
 Search your codebase (or any open-source project) for `response_type=token`. For each hit, write a 1-paragraph migration plan to auth code + PKCE.
 
 ### Exercise 5: Find the ROPC
+
 Search your codebase (or any open-source project) for `grant_type=password` in HTTP requests. For each hit, design a migration to client_credentials or auth code + PKCE.
 
 ### Exercise 6: client_secret_in_app detection
+
 Find a mobile app. Unpack the APK (using apktool or similar). Search the resources/code for a `client_secret`. If you find one, that's a security issue — the secret is extractable. Document your findings.
 
 ### Exercise 7: Token caching with TTL
+
 Build a `ServiceTokenCache` class that:
+
 - Returns a cached token if valid
 - Refreshes the token if expired
 - Handles 401s by force-refreshing
 - Thread-safe (multiple goroutines/threads share the cache)
-Test with concurrent access.
+  Test with concurrent access.
 
 ### Exercise 8: Device code security review
+
 For the device flow code, identify 3 security issues that could occur:
+
 - (a) The device displays the user_code to a public screen
 - (b) The device polls faster than the IdP's interval
 - (c) The device code is exposed in the device's logs
-For each, propose a fix.
+  For each, propose a fix.
 
 ### Exercise 9: JWT bearer exercise
+
 Set up two IdPs (A and B). Configure A to federate with B. Service at A gets a JWT for user Alice. Service A uses RFC 7523 to exchange it for a B-issued JWT. Service A calls B's API as Alice. Document the config and the flow.
 
 ### Exercise 10: Grant audit
+
 For your production system (if you have one):
+
 - Which grants are enabled at your IdP?
 - Which clients use which grants?
 - Are there any ROPC clients still in production?
@@ -953,6 +979,7 @@ You can now pick the right OAuth grant for any scenario. Next, we cover the toke
 → [[../stage2/04-token-lifecycles|Stage 2.4 — Token Lifecycles: Access, Refresh, DPoP]]
 
 **Before you move on, verify you can answer these:**
+
 1. When do you use client_credentials, and how is it different from auth code + PKCE?
 2. Why is ROPC deprecated, and what's the migration path?
 3. Why is the implicit grant deprecated, and what replaced it for SPAs?

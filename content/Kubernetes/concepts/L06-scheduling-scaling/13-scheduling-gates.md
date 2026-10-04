@@ -1,6 +1,13 @@
+---
+title: "Scheduling Gates and Pod Scheduling Readiness"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Scheduling Gates and Pod Scheduling Readiness — Kubernetes reference and architecture guide."
+---
+
 # Scheduling Gates and Pod Scheduling Readiness
 
-*"https://kubernetes.io/docs/concepts/scheduling-eviction/pod-scheduling-readiness/"*
+_"https://kubernetes.io/docs/concepts/scheduling-eviction/pod-scheduling-readiness/"_
 
 A `schedulingGates` field on a Pod (k8s 1.27+, GA in 1.30) **prevents the Pod from being scheduled** until all gates are removed. It's a way to say "this Pod is not ready to be scheduled yet — wait for an external signal." The Pod exists in the cluster but stays `Pending` with no `nominatedNodeName`, no matter how many nodes could fit it.
 
@@ -23,18 +30,18 @@ A `schedulingGates` field on a Pod (k8s 1.27+, GA in 1.30) **prevents the Pod fr
 
 Before scheduling gates, a Pod that wasn't ready to be scheduled had limited options:
 
-* **Don't create the Pod yet.** The controller waits until "ready", then creates the Pod. This works but means the Pod is in a different state from "exists but not ready" — observability is harder.
-* **Use a `Job` with a pre-condition.** A Job's Pods run sequentially; you can have a "gate" Pod that does the check. Works but is hacky.
-* **Use a custom controller.** The controller creates the Pod, then patches the Pod to remove the gate. Works but requires a custom controller.
+- **Don't create the Pod yet.** The controller waits until "ready", then creates the Pod. This works but means the Pod is in a different state from "exists but not ready" — observability is harder.
+- **Use a `Job` with a pre-condition.** A Job's Pods run sequentially; you can have a "gate" Pod that does the check. Works but is hacky.
+- **Use a custom controller.** The controller creates the Pod, then patches the Pod to remove the gate. Works but requires a custom controller.
 
 Scheduling gates formalize the "exists but not ready to schedule" state. **The Pod is in the API, the scheduler sees it, but doesn't schedule it.** When the gate is removed, scheduling proceeds normally.
 
 ### 1.1 The use cases
 
-* **StatefulSet join:** a new Pod in a StatefulSet shouldn't start until the previous Pod is ready and the cluster has acknowledged the new member. Gates hold the Pod back until the application signals it's ready.
-* **Coordinated rollouts:** a Pod in a multi-Pod deployment (e.g. sidecar + main) shouldn't start until its peer is up.
-* **Pre-flight checks:** a controller wants to verify cluster state (e.g. certificates, secrets) before allowing a Pod to schedule.
-* **Migration:** a Pod in a `Deployment` being migrated to a new node pool shouldn't schedule on the old pool. Gates prevent it.
+- **StatefulSet join:** a new Pod in a StatefulSet shouldn't start until the previous Pod is ready and the cluster has acknowledged the new member. Gates hold the Pod back until the application signals it's ready.
+- **Coordinated rollouts:** a Pod in a multi-Pod deployment (e.g. sidecar + main) shouldn't start until its peer is up.
+- **Pre-flight checks:** a controller wants to verify cluster state (e.g. certificates, secrets) before allowing a Pod to schedule.
+- **Migration:** a Pod in a `Deployment` being migrated to a new node pool shouldn't schedule on the old pool. Gates prevent it.
 
 ## 2. Basic Example
 
@@ -46,11 +53,11 @@ metadata:
   namespace: default
 spec:
   schedulingGates:
-  - name: ready-for-scheduling
-  - name: cert-verified
+    - name: ready-for-scheduling
+    - name: cert-verified
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ```
 
 The Pod is created. The scheduler sees it but does not schedule it. The Pod is `Pending` with no `nominatedNodeName`.
@@ -93,8 +100,8 @@ Gate names are free-form strings, but must be valid Kubernetes names (lowercase,
 
 ```yaml
 schedulingGates:
-- name: example.com/ready
-- name: myapp.example.io/cert-verified
+  - name: example.com/ready
+  - name: myapp.example.io/cert-verified
 ```
 
 The controller that removes the gates is responsible for knowing the gate names it created.
@@ -151,8 +158,8 @@ If a Pod has multiple gates, **all** must be removed before scheduling proceeds.
 
 ```yaml
 schedulingGates:
-- name: gate-a
-- name: gate-b
+  - name: gate-a
+  - name: gate-b
 ```
 
 To unblock the Pod, both must be removed. A controller can remove one gate at a time, or all at once.
@@ -189,29 +196,20 @@ kind: Pod
 metadata: { name: db-2 }
 spec:
   schedulingGates:
-  - name: example.com/joined
+    - name: example.com/joined
   containers:
-  - name: postgres
-    image: postgres:15
+    - name: postgres
+      image: postgres:15
 ```
 
-The Pod is scheduled (because no gate prevents that — wait, yes it does, scheduling gates prevent scheduling). Hmm, let me re-check.
+Because scheduling gates prevent the Pod from being placed on a node, the Pod remains in `Pending` state with no node assignment until external readiness is validated.
 
-Actually, scheduling gates prevent **scheduling** entirely. So the Pod isn't on a node. The pattern is:
+In advanced stateful deployments, the ordered gating pattern operates as follows:
 
-1. **Create the Pod with a gate.** The Pod is in the API but not on a node.
-2. **The operator (e.g. StatefulSet controller) schedules the Pod normally, except for the gate.** But wait, gates prevent scheduling, so the Pod is Pending.
-
-Let me re-check the k8s docs.
-
-OK — the actual pattern is: the StatefulSet's "Ordinals" feature (k8s 1.26+) works with `.spec.ordinals.start` and `.spec.ordinals.statefulSetName`. The new Pod is created with a gate, and a controller (e.g. a job controller, or the StatefulSet's own logic) is responsible for:
-
-1. The Pod is **not scheduled** while gated.
-2. The controller pre-creates resources (PVs, secrets, etc.) for the new Pod.
-3. The controller removes the gate when ready.
-4. The Pod schedules normally.
-
-This is the "ordered, gated" pattern. The Pod doesn't get scheduled (and doesn't start) until the controller says "go".
+1. **Pod Creation with Gate:** The Pod is registered in the API server with a gate (e.g., `example.com/joined`).
+2. **Pre-Flight Resource Preparation:** An external operator or cluster controller notices the unassigned Pod and pre-provisions underlying dependencies (e.g., dedicated PersistentVolumes, cloud storage volumes, or TLS certificates).
+3. **External Readiness Verification:** The controller verifies that existing cluster members have acknowledged the pending join operation.
+4. **Gate Removal & Scheduling:** Once preconditions are met, the controller patches the Pod to remove the gate, allowing `kube-scheduler` to evaluate node affinity, resources, and schedule the workload onto a suitable node.
 
 ### 6.1 A simpler pattern with init containers
 
@@ -220,12 +218,12 @@ For most use cases, **init containers** are a simpler alternative to scheduling 
 ```yaml
 spec:
   initContainers:
-  - name: wait-for-cluster
-    image: my-wait:1.0
-    command: ['sh', '-c', 'until my-ready-check; do sleep 5; done']
+    - name: wait-for-cluster
+      image: my-wait:1.0
+      command: ["sh", "-c", "until my-ready-check; do sleep 5; done"]
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ```
 
 The Pod is scheduled normally, but the init container blocks the main container from starting until the readiness check passes. **This is simpler than scheduling gates** for many use cases.
@@ -243,10 +241,10 @@ kind: Pod
 metadata: { name: app-leader }
 spec:
   schedulingGates:
-  - name: example.com/peer-ready
+    - name: example.com/peer-ready
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ---
 # follower Pod has no gate, can schedule
 apiVersion: v1
@@ -254,8 +252,8 @@ kind: Pod
 metadata: { name: app-follower }
 spec:
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ```
 
 A controller watches the leader's status. When the leader is ready, the controller removes the gate on the follower.
@@ -302,9 +300,9 @@ clientset.CoreV1().Pods("default").Patch(
 
 The controller decides when the Pod is ready to schedule. This is the basis for:
 
-* **Pre-deployment checks** — verify cluster state.
-* **External dependencies** — wait for an external service to be reachable.
-* **Operator workflows** — the operator manages the entire lifecycle, including gates.
+- **Pre-deployment checks** — verify cluster state.
+- **External dependencies** — wait for an external service to be reachable.
+- **Operator workflows** — the operator manages the entire lifecycle, including gates.
 
 ## 9. Operations and Debugging
 
@@ -390,6 +388,6 @@ kubectl patch pod <pod> -p '{"spec":{"schedulingGates":[]}}' --type=merge
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the broader scheduling context
-* [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — another scheduling constraint mechanism
-* [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the framework that enforces gates
+- [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the broader scheduling context
+- [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — another scheduling constraint mechanism
+- [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the framework that enforces gates

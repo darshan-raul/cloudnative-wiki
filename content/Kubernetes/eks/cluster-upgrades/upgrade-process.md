@@ -10,6 +10,7 @@ description: Step-by-step EKS cluster upgrade process
 ## Pre-upgrade Checklist
 
 ### 1. Review Kubernetes Changes
+
 - Read Kubernetes release notes for target version
 - Check [EKS Kubernetes versions](https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html)
 - Identify deprecated APIs
@@ -44,6 +45,7 @@ kubectl rollout restart -n kube-system deployment/kube-proxy
 ```
 
 ### 4. Review Applications
+
 ```bash
 # Check for deprecated APIs
 kubectl api-resources

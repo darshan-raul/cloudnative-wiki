@@ -15,11 +15,13 @@ Savings Plans (SP) are AWS's flexible commitment pricing model. You commit to a 
 ### Compute Savings Plans
 
 The most flexible SP. Applies to:
+
 - EC2 (any instance family, any AZ, any OS)
 - Lambda (any runtime)
 - Fargate (any configuration)
 
 Coverage example: A Compute SP commitment of $50/hour covers any combination of:
+
 - 10 x t3.medium EC2 in us-east-1
 - 5 x c6i.large in eu-west-2
 - 1,000 Lambda invocations/hour at 128MB
@@ -30,6 +32,7 @@ Discount: Up to 66% off On-Demand.
 ### EC2 Instance Savings Plans
 
 More restrictive — applies to a specific instance family in a specific region. Within that family, you get flexibility on:
+
 - Instance size (t3.large vs t3.medium)
 - OS (Linux vs Windows — but Windows is a different charge code)
 - AZ (regional scope)
@@ -45,6 +48,7 @@ Apply to SageMaker training, notebook, and processing usage. Up to 64% savings.
 You commit to a **$/hour spend amount**, not a specific instance count.
 
 **Under-commitment:**
+
 ```
 You commit $50/hour. Your actual usage averages $40/hour.
 You still pay $50/hour.
@@ -52,6 +56,7 @@ The extra $10 is "wasted" — you bought commitment you didn't use.
 ```
 
 **Over-commitment:**
+
 ```
 You commit $50/hour. Your actual usage peaks at $80/hour.
 $50 is covered by SP. The $30 above the commitment is billed at On-Demand.
@@ -59,6 +64,7 @@ You don't get SP rates on the excess — SP only covers up to the commitment.
 ```
 
 **Right-sizing your commitment:**
+
 - Look at your 30-day average hourly spend
 - Commit 70-80% of your baseline (not peak)
 - Let the remaining 20-30% be covered by On-Demand
@@ -80,22 +86,24 @@ Compute Savings Plans extend this across families — m6i to c6i to r6i all cove
 
 ## SP vs Reserved Instances
 
-| Factor | Savings Plans | Reserved Instances |
-|--------|--------------|-------------------|
-| Discount | Up to 66% (Compute SP) | Up to 72% (All Upfront) |
-| Flexibility | Can change instance family (Compute SP) | Must specify family (Standard RI) |
-| Capacity reservation | No | AZ-specific reservation (zonal RI) |
-| Scope | Regional | Zonal or Regional |
-| Covered services | EC2, Lambda, Fargate | EC2, RDS, ElastiCache, Redshift |
-| Windows pricing | Included in SP rate | RI rate + Windows license separate |
+| Factor               | Savings Plans                           | Reserved Instances                 |
+| -------------------- | --------------------------------------- | ---------------------------------- |
+| Discount             | Up to 66% (Compute SP)                  | Up to 72% (All Upfront)            |
+| Flexibility          | Can change instance family (Compute SP) | Must specify family (Standard RI)  |
+| Capacity reservation | No                                      | AZ-specific reservation (zonal RI) |
+| Scope                | Regional                                | Zonal or Regional                  |
+| Covered services     | EC2, Lambda, Fargate                    | EC2, RDS, ElastiCache, Redshift    |
+| Windows pricing      | Included in SP rate                     | RI rate + Windows license separate |
 
 **When to choose SP over RI:**
+
 - You run mixed workloads across instance families
 - You use Lambda or Fargate
 - You want the flexibility to shift architecture without losing coverage
 - You prioritize discount ceiling over capacity reservation
 
 **When to choose RI over SP:**
+
 - You need capacity reservation in a specific AZ (zonal RI)
 - You run stable, single-family workloads
 - You want the maximum possible discount
@@ -116,6 +124,7 @@ Compute Savings Plans extend this across families — m6i to c6i to r6i all cove
 ## Checking Coverage
 
 In Cost Explorer, the **Coverage** tab shows:
+
 - What % of your EC2/Lambda/Fargate spend is covered by SP/RI
 - How much is still On-Demand (uncovered spend)
 - Recommendations for additional SP purchases

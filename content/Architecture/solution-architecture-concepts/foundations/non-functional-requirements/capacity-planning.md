@@ -15,6 +15,7 @@ Capacity = (Resource Amount) / (Resource Consumption per Unit of Work)
 ```
 
 **Example:**
+
 ```
 Fargate task: 1 vCPU, 2GB RAM
 Avg request:50ms CPU, 128MB RAM working set
@@ -169,12 +170,12 @@ LTV: $500 → cost is 1.2% of LTV (healthy)
 
 ### Cost Scaling Patterns
 
-| Scaling approach | Cost curve | Notes |
-|---|---|---|
-| Vertical (bigger instance) | Step function | Pay for idle capacity |
-| Horizontal (more small instances) | Linear | Pay for what you use |
-| Serverless (Lambda, Cloud Run) | Pay-per-use | Good for variable load |
-| Reserved instances |30-60% savings | Commitment required |
+| Scaling approach                  | Cost curve     | Notes                  |
+| --------------------------------- | -------------- | ---------------------- |
+| Vertical (bigger instance)        | Step function  | Pay for idle capacity  |
+| Horizontal (more small instances) | Linear         | Pay for what you use   |
+| Serverless (Lambda, Cloud Run)    | Pay-per-use    | Good for variable load |
+| Reserved instances                | 30-60% savings | Commitment required    |
 
 ### Right-Sizing
 
@@ -193,6 +194,7 @@ Capacity planning and performance are linked:
 - **Performance optimization → defer capacity purchase** (cheaper than scaling)
 
 The order of preference:
+
 1. **Optimize first** — faster code, better caching, lower latency
 2. **Scale horizontally** — add more machines
 3. **Scale vertically** — bigger machines (last resort)
@@ -201,15 +203,15 @@ The order of preference:
 
 Key signals that predict capacity exhaustion:
 
-| Signal | Threshold | Action |
-|---|---|---|
-| CPU > 70% sustained | Warning | Plan scale-up |
-| CPU > 85% | Critical | Scale immediately |
-| Memory > 80% | Warning | Investigate memory leak |
-| Disk queue > 10 | Warning | IO bottleneck |
-| DB connections > 80% max | Warning | Connection pool or scale |
-| P99 latency increasing | Any increase | Capacity constrained |
-| Queue depth growing | Warning | Consumer lag |
+| Signal                   | Threshold    | Action                   |
+| ------------------------ | ------------ | ------------------------ |
+| CPU > 70% sustained      | Warning      | Plan scale-up            |
+| CPU > 85%                | Critical     | Scale immediately        |
+| Memory > 80%             | Warning      | Investigate memory leak  |
+| Disk queue > 10          | Warning      | IO bottleneck            |
+| DB connections > 80% max | Warning      | Connection pool or scale |
+| P99 latency increasing   | Any increase | Capacity constrained     |
+| Queue depth growing      | Warning      | Consumer lag             |
 
 ## Common Capacity Planning Mistakes
 

@@ -19,11 +19,11 @@ Practical debugging and development tools.
 
 ## Quick Links
 
-| Tool | Purpose |
-|------|---------|
-| [[breakpoints]] | VSCode breakpoints guide |
-| [[../performance/caching]] | Redis debugging |
-| [[../reliability/memory-leaks]] | Memory leak detection |
+| Tool                            | Purpose                  |
+| ------------------------------- | ------------------------ |
+| [[breakpoints]]                 | VSCode breakpoints guide |
+| [[../performance/caching]]      | Redis debugging          |
+| [[../reliability/memory-leaks]] | Memory leak detection    |
 
 ---
 

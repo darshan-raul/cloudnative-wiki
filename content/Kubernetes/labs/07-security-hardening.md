@@ -92,6 +92,7 @@ EOF
 ```
 
 ### Security Audit Findings:
+
 1. **Root execution:** The container runs as root (`UID 0`). If an attacker escapes via a container runtime vulnerability, they have root access to the host kernel.
 2. **Mounted API token:** The default ServiceAccount token is mounted at `/var/run/secrets/kubernetes.io/serviceaccount/token`, enabling an attacker to probe the Kubernetes API server from inside the container.
 3. **Writable root filesystem:** Attackers can download malware or modify binaries inside the container.
@@ -231,6 +232,7 @@ kubectl exec -n sec-lab "$POD" -- id
 ```
 
 **Expected output:**
+
 ```
 uid=10001(podinfo) gid=10001(podinfo) groups=10001(podinfo)
 ```
@@ -304,6 +306,7 @@ kubectl apply -f network-policy.yaml
 What happens when a developer attempts to deploy an unhardened, privileged container into our secured namespace?
 
 ### Trigger the failure:
+
 Attempt to run a container as root (`UID 0`) with privilege escalation enabled:
 
 ```bash
@@ -315,17 +318,19 @@ kubectl run evil-root-pod -n sec-lab \
 ```
 
 ### Observe the symptom:
+
 The `kube-apiserver` immediately **rejects the request**:
 
 ```
-Error from server (Forbidden): pods "evil-root-pod" is forbidden: violates PodSecurity "restricted:latest": 
-allowPrivilegeEscalation != false (container "root-test" must set securityContext.allowPrivilegeEscalation=false), 
-runAsNonRoot != true (pod or container "root-test" must set securityContext.runAsNonRoot=true), 
-runAsUser=0 (container "root-test" must not set runAsUser=0), 
+Error from server (Forbidden): pods "evil-root-pod" is forbidden: violates PodSecurity "restricted:latest":
+allowPrivilegeEscalation != false (container "root-test" must set securityContext.allowPrivilegeEscalation=false),
+runAsNonRoot != true (pod or container "root-test" must set securityContext.runAsNonRoot=true),
+runAsUser=0 (container "root-test" must not set runAsUser=0),
 seccompProfile (pod or container "root-test" must set securityContext.seccompProfile.type to "RuntimeDefault" or "Localhost")
 ```
 
 ### Key Diagnostic Breakdown:
+
 1. The Pod **was never scheduled** and was never written to etcd.
 2. The built-in `PodSecurity` admission controller intercepted the API request during the validation phase.
 3. Because the namespace was labeled with `pod-security.kubernetes.io/enforce=restricted`, the admission webhook failed closed, preventing the insecure workload from running on the cluster.

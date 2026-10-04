@@ -15,6 +15,7 @@ Tracks completion of the Google Cloud Platform knowledge base, adhering to the h
 ## Section Progress
 
 ### 1. Compute & Containers 🖥️
+
 - [x] **[[GCP/compute/gce|Compute Engine (GCE)]]** — Machine families, custom VM shapes, Regional MIGs, auto-healing, Spot VMs, Live Migration, and OS Login
 - [x] **[[GCP/compute/gce/migs|Managed Instance Groups (MIGs)]]** — Regional vs Zonal MIGs, auto-healing health checks, rolling zero-downtime updates, stateful MIGs, and autoscaling policies
 - [x] **[[GCP/compute/gce/spot-vms|Spot VMs & Preemption Engineering]]** — 30-second ACPI shutdown notice, metadata polling, shutdown scripts, and fault-tolerant batch architectures
@@ -46,6 +47,7 @@ Tracks completion of the Google Cloud Platform knowledge base, adhering to the h
 - [x] **[[GCP/compute/cloud-functions/README|Cloud Functions (2nd Gen) & Eventarc]]** — Cloud Run infrastructure, Eventarc CloudEvents triggers, concurrency, cold-start mitigation, and 60-minute execution limits
 
 ### 2. Networking 🌐
+
 - [x] **[[GCP/networking/vpc|Virtual Private Cloud (VPC)]]** — Global VPC vs Regional Subnets, Primary/Secondary IP ranges, Shared VPC, Cloud NAT, and Hierarchical Firewalls
 - [x] **[[GCP/networking/vpc/shared-vpc|Shared VPC Architecture]]** — Host projects vs Service projects, subnet-level IAM delegation, cross-project service accounts, centralized hybrid connectivity, and enterprise governance
 - [x] **[[GCP/networking/vpc/firewalls|Firewalls & Hierarchical Policies]]** — Stateful inspection, rule priority (0-65535), Hierarchical Policies (Org/Folder), target tags vs Service Accounts, and rule logging
@@ -57,16 +59,19 @@ Tracks completion of the Google Cloud Platform knowledge base, adhering to the h
 - [x] **[[GCP/networking/private-service-connect/README|Private Service Connect (PSC)]]** — Private consumption of Google APIs and multi-tenant SaaS services, Service Attachments, PSC Endpoints, and eliminating VPC peering IP overlap
 
 ### 3. Storage 💽
+
 - [x] **[[GCP/storage/gcs|Google Cloud Storage (GCS)]]** — Storage classes, sub-second archive retrieval, Object Lifecycle Management, Bucket Lock WORM, and Soft Delete
 - [x] **[[GCP/storage/persistent-disk|Persistent Disk & Hyperdisk]]** — Zonal vs Regional synchronous mirroring, Hyperdisk ML, online volume expansion, and GKE CSI driver
 
 ### 4. Identity & Security 🔐
+
 - [x] **[[GCP/identity/README|Identity & Access Management (IAM)]]** — Resource Hierarchy (Org > Folder > Project), Roles, Service Accounts, Impersonation, Org Policies, and CEL Conditions
 - [x] **[[GCP/identity/workload-identity|Workload Identity & Federation]]** — GKE Workload Identity, GitHub Actions OIDC federation, STS token exchange
 - [x] **[[GCP/security/scc|Security Command Center & Secret Manager]]** — SCC tiers, agentless VM Threat Detection (VMTD), Secret Manager, and Cloud KMS envelope encryption
 - [x] **[[GCP/security/kms/README|Cloud KMS, Cloud HSM & CMEK Envelope Encryption]]** — FIPS 140-2 Level 3 HSM, automated rotation, asymmetric keys, and Cloud EKM
 
 ### 5. Databases & Analytics 🗄️
+
 - [x] **[[GCP/databases/cloud-sql|Cloud SQL]]** — PostgreSQL/MySQL/SQL Server, regional synchronous HA failover, Cloud SQL Auth Proxy, and IAM database authentication
 - [x] **[[GCP/databases/spanner|Cloud Spanner]]** — TrueTime atomic clock synchronization, external consistency, Processing Units (PUs), interleaved tables, and 5-nines multi-region SLA
 - [x] **[[GCP/databases/bigquery|Google BigQuery]]** — Dremel, Colossus, Capacitor columnar storage, partitioned/clustered tables, on-demand vs slot editions
@@ -78,6 +83,7 @@ Tracks completion of the Google Cloud Platform knowledge base, adhering to the h
 - [x] **[[GCP/analytics/dataflow/README|Cloud Dataflow]]** — Serverless Apache Beam runner, dynamic work rebalancing, watermarks, windowing, and Streaming Engine
 
 ### 6. Operations & Cost Optimization 📈💰
+
 - [x] **[[GCP/monitoring/cloud-monitoring/README|Cloud Monitoring & MQL]]** — Cross-project metric scopes, MQL, Managed Service for Prometheus (GMP), and SRE SLO error budgets
 - [x] **[[GCP/monitoring/cloud-logging/README|Cloud Logging & Log Analytics]]** — Log Router, exclusion filters, BigQuery SQL log analytics, log-based metrics, and enterprise sinks
 - [x] **[[GCP/cost-management/pricing-models/README|Cost Optimization, CUDs & FinOps]]** — Sustained Use Discounts (SUDs), Resource vs Flexible Committed Use Discounts (CUDs), and BigQuery billing exports

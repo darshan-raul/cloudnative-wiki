@@ -1,6 +1,13 @@
+---
+title: "Node Hardening"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Node Hardening — Kubernetes reference and architecture guide."
+---
+
 # Node Hardening
 
-*"https://kubernetes.io/docs/tasks/administer-cluster/securing-a-cluster/#securing-the-kubelet"*
+_"https://kubernetes.io/docs/tasks/administer-cluster/securing-a-cluster/#securing-the-kubelet"_
 
 **Node hardening** is the practice of **securing the k8s node** (the host that runs the kubelet and Pods). It covers the **host OS**, the **kubelet config**, the **container runtime**, the **kernel parameters**, and the **node's network exposure**. The goal: even if a workload is compromised, the host should be hard to take over. This is the **per-node** counterpart to cluster hardening (which covers the control plane).
 
@@ -27,21 +34,21 @@
 
 A k8s node has many surfaces:
 
-* **kubelet** — the per-node agent. Listens on `:10250` (API) and (deprecated) `:10255` (read-only).
-* **Container runtime** — containerd / CRI-O. Listens on a Unix socket (or, misconfigured, a TCP port).
-* **Pod network** — the bridge / overlay. Each Pod has an IP.
-* **Host services** — SSH, monitoring, logging agents.
-* **Host filesystem** — `/var/lib/kubelet`, `/var/lib/containerd`, etc.
-* **Kernel** — the host's kernel. Syscalls from Pods land here.
-* **Firmware / hardware** — the node's hardware. (Out of scope for most hardening.)
+- **kubelet** — the per-node agent. Listens on `:10250` (API) and (deprecated) `:10255` (read-only).
+- **Container runtime** — containerd / CRI-O. Listens on a Unix socket (or, misconfigured, a TCP port).
+- **Pod network** — the bridge / overlay. Each Pod has an IP.
+- **Host services** — SSH, monitoring, logging agents.
+- **Host filesystem** — `/var/lib/kubelet`, `/var/lib/containerd`, etc.
+- **Kernel** — the host's kernel. Syscalls from Pods land here.
+- **Firmware / hardware** — the node's hardware. (Out of scope for most hardening.)
 
 The attack paths:
 
-* **Compromised Pod → kernel escape** — the workload has a kernel exploit. Mitigated by seccomp, AppArmor, RuntimeClass (gVisor, Kata), kernel hardening.
-* **Compromised kubelet** — the kubelet is the node's identity. Mitigated by kubelet config, network exposure.
-* **Compromised container runtime** — the runtime manages all Pods. Mitigated by runtime config, runtime sandboxing.
-* **Compromised SSH** — anyone with SSH to the node can read everything. Mitigated by SSH hardening, no SSH from public.
-* **Compromised network** — sniffing the node's network. Mitigated by mTLS, NetworkPolicy, network segmentation.
+- **Compromised Pod → kernel escape** — the workload has a kernel exploit. Mitigated by seccomp, AppArmor, RuntimeClass (gVisor, Kata), kernel hardening.
+- **Compromised kubelet** — the kubelet is the node's identity. Mitigated by kubelet config, network exposure.
+- **Compromised container runtime** — the runtime manages all Pods. Mitigated by runtime config, runtime sandboxing.
+- **Compromised SSH** — anyone with SSH to the node can read everything. Mitigated by SSH hardening, no SSH from public.
+- **Compromised network** — sniffing the node's network. Mitigated by mTLS, NetworkPolicy, network segmentation.
 
 Node hardening addresses the **per-node** layers: the host OS, the kubelet, the runtime, the kernel, the network.
 
@@ -51,16 +58,16 @@ The host OS is the **base**. It should be minimal and hardened.
 
 ### 2.1 The OS choice
 
-* **Distroless / Container-optimized OS** — Google's Container-Optimized OS, AWS Bottlerocket, Azure's CBL-Mariner, Talos Linux. Designed for k8s nodes.
-* **Minimal Linux** — Ubuntu Server, RHEL, Alpine. Strip the GUI, unnecessary services.
-* **Windows Server** — for Windows containers. Less common.
+- **Distroless / Container-optimized OS** — Google's Container-Optimized OS, AWS Bottlerocket, Azure's CBL-Mariner, Talos Linux. Designed for k8s nodes.
+- **Minimal Linux** — Ubuntu Server, RHEL, Alpine. Strip the GUI, unnecessary services.
+- **Windows Server** — for Windows containers. Less common.
 
 For most production, **a k8s-specific OS** is preferred. They're:
 
-* Minimal (smaller attack surface).
-* Auto-updating.
-* Read-only root filesystem.
-* Designed for the kubelet's needs.
+- Minimal (smaller attack surface).
+- Auto-updating.
+- Read-only root filesystem.
+- Designed for the kubelet's needs.
 
 ### 2.2 Patching
 
@@ -68,23 +75,23 @@ The OS should be **patched regularly**. Critical patches within 24 hours, others
 
 Automation:
 
-* **Unattended-upgrades** (Debian / Ubuntu) — auto-apply security patches.
-* **yum-cron** (RHEL) — same.
-* **Container-optimized OS** — auto-updates by default (with rollback).
+- **Unattended-upgrades** (Debian / Ubuntu) — auto-apply security patches.
+- **yum-cron** (RHEL) — same.
+- **Container-optimized OS** — auto-updates by default (with rollback).
 
 ### 2.3 Disable unnecessary services
 
 Disable anything that's not needed:
 
-* **SSH** — keep it on, but restrict to a bastion. Use key auth only, no password.
-* **Telnet** — off (use SSH).
-* **FTP** — off (use SFTP / rsync over SSH).
-* **NFS** — off (unless explicitly needed).
-* **SMB / CIFS** — off.
-* **HTTP servers** — off (Apache, Nginx, etc., unless it's the node's role).
-* **Mail server** — off.
-* **Print server** — off.
-* **GUI / X11** — off (this is a server).
+- **SSH** — keep it on, but restrict to a bastion. Use key auth only, no password.
+- **Telnet** — off (use SSH).
+- **FTP** — off (use SFTP / rsync over SSH).
+- **NFS** — off (unless explicitly needed).
+- **SMB / CIFS** — off.
+- **HTTP servers** — off (Apache, Nginx, etc., unless it's the node's role).
+- **Mail server** — off.
+- **Print server** — off.
+- **GUI / X11** — off (this is a server).
 
 Most of these are off by default on minimal Linux. Audit with `systemctl list-unit-files --state=enabled`.
 
@@ -92,18 +99,18 @@ Most of these are off by default on minimal Linux. Audit with `systemctl list-un
 
 The node should have a firewall:
 
-* **Allow SSH** (from a bastion only).
-* **Allow kubelet API** (`:10250`) from the apiserver / control plane.
-* **Allow the CNI network** (e.g. VXLAN port 4789, Calico BGP 179).
-* **Allow DNS** (port 53) to the cluster DNS.
-* **Block everything else**.
+- **Allow SSH** (from a bastion only).
+- **Allow kubelet API** (`:10250`) from the apiserver / control plane.
+- **Allow the CNI network** (e.g. VXLAN port 4789, Calico BGP 179).
+- **Allow DNS** (port 53) to the cluster DNS.
+- **Block everything else**.
 
 Tools:
 
-* **iptables** — the standard.
-* **nftables** — the newer replacement.
-* **firewalld** (RHEL) — the high-level wrapper.
-* **ufw** (Ubuntu) — the simple wrapper.
+- **iptables** — the standard.
+- **nftables** — the newer replacement.
+- **firewalld** (RHEL) — the high-level wrapper.
+- **ufw** (Ubuntu) — the simple wrapper.
 
 The **kubelet should not be exposed to the world**. The kubelet's `:10250` is a powerful API. The node's firewall (and the network's firewall / security group) should restrict access.
 
@@ -111,9 +118,9 @@ The **kubelet should not be exposed to the world**. The kubelet's `:10250` is a 
 
 The container runtime is the **process that actually runs containers**. The kubelet talks to it via CRI (Container Runtime Interface). The most common:
 
-* **containerd** — the standard.
-* **CRI-O** — the Red Hat alternative.
-* **Docker** — the original, now deprecated as a k8s runtime. Use containerd.
+- **containerd** — the standard.
+- **CRI-O** — the Red Hat alternative.
+- **Docker** — the original, now deprecated as a k8s runtime. Use containerd.
 
 The runtime's config:
 
@@ -123,15 +130,15 @@ version = 2
 
 [plugins."io.containerd.grpc.v1.cri"]
   sandbox_image = "k8s.gcr.io/pause:3.9"
-  
+
   [plugins."io.containerd.grpc.v1.cri.containerd"]
     snapshotter = "overlayfs"
     disable_snapshot_annotations = true
-    
+
   [plugins."io.containerd.grpc.v1.cri.cni"]
     bin_dir = "/opt/cni/bin"
     conf_dir = "/etc/cni/net.d"
-    
+
   [plugins."io.containerd.grpc.v1.cri.containerd.runtimes.runc]
     runtime_type = "io.containerd.runc.v2"
     [plugins."io.containerd.grpc.v1.cri.containerd.runtimes.runc.options]
@@ -140,12 +147,12 @@ version = 2
 
 The security-relevant parts:
 
-* **`disable_hugetlb_controller = true`** — disable the hugetlb controller (unless needed).
-* **`restrict_oom_score_adj = true`** — restrict the OOM score adjustment.
-* **`disable_proc_mount = true`** — don't auto-mount `/proc` for containers.
-* **`seccomp_profile = ""`** — use the default (RuntimeDefault).
-* **`enable_unprivileged_ports = false`** — restrict unprivileged port binding (k8s 1.27+).
-* **`enable_unprivileged_icmp = false`** — restrict unprivileged ICMP.
+- **`disable_hugetlb_controller = true`** — disable the hugetlb controller (unless needed).
+- **`restrict_oom_score_adj = true`** — restrict the OOM score adjustment.
+- **`disable_proc_mount = true`** — don't auto-mount `/proc` for containers.
+- **`seccomp_profile = ""`** — use the default (RuntimeDefault).
+- **`enable_unprivileged_ports = false`** — restrict unprivileged port binding (k8s 1.27+).
+- **`enable_unprivileged_icmp = false`** — restrict unprivileged ICMP.
 
 ### 3.1 The runtime's socket
 
@@ -218,11 +225,11 @@ hairpinMode: promiscuous-bridge
 
 Key hardening flags:
 
-* **`readOnlyPort: 0`** — disable the read-only port.
-* **`protectKernelDefaults: true`** — prevent Pods from changing kernel tunables.
-* **`seccompDefault: true`** — apply `RuntimeDefault` seccomp to all containers without an explicit profile.
-* **`authentication.anonymous.enabled: false`** — disable anonymous access.
-* **`rotateCertificates: true`** — auto-rotate the kubelet's serving cert.
+- **`readOnlyPort: 0`** — disable the read-only port.
+- **`protectKernelDefaults: true`** — prevent Pods from changing kernel tunables.
+- **`seccompDefault: true`** — apply `RuntimeDefault` seccomp to all containers without an explicit profile.
+- **`authentication.anonymous.enabled: false`** — disable anonymous access.
+- **`rotateCertificates: true`** — auto-rotate the kubelet's serving cert.
 
 ## 5. The Kernel Parameters
 
@@ -267,19 +274,19 @@ kernel.randomize_va_space = 2     # full randomization
 
 These are general Linux hardening. The `k8s-specific` tunables:
 
-* **`net.ipv4.ip_forward = 1`** — required for Pod networking.
-* **`net.bridge.bridge-nf-call-iptables = 1`** — required for CNI plugins that use iptables.
-* **`net.bridge.bridge-nf-call-ip6tables = 1`** — same for IPv6.
+- **`net.ipv4.ip_forward = 1`** — required for Pod networking.
+- **`net.bridge.bridge-nf-call-iptables = 1`** — required for CNI plugins that use iptables.
+- **`net.bridge.bridge-nf-call-ip6tables = 1`** — same for IPv6.
 
 ### 5.2 The `sysctls` in Pods
 
 Pods can request `sysctls` via `securityContext.sysctls`. With `protectKernelDefaults: true`, only "safe" sysctls are allowed:
 
-* `kernel.shm*`
-* `kernel.msg*`
-* `kernel.sem`
-* `fs.mqueue.*`
-* `net.*` (a subset of safe networking tunables)
+- `kernel.shm*`
+- `kernel.msg*`
+- `kernel.sem`
+- `fs.mqueue.*`
+- `net.*` (a subset of safe networking tunables)
 
 "Unsafe" sysctls (e.g. `kernel.*`, `vm.*`) require a Pod Security Policy (deprecated) or an admission policy (Kyverno / OPA) to allow.
 
@@ -287,39 +294,39 @@ Pods can request `sysctls` via `securityContext.sysctls`. With `protectKernelDef
 
 The node's network has multiple interfaces. The exposure:
 
-* **Public IP** — the node may or may not have a public IP. In cloud-managed clusters, the nodes are usually on a private subnet. In self-managed, they may be public.
-* **Private IP** — the node's internal IP. The kubelet and Pods listen here.
-* **NodePort range** — 30000-32767. Services of type `NodePort` listen on these.
+- **Public IP** — the node may or may not have a public IP. In cloud-managed clusters, the nodes are usually on a private subnet. In self-managed, they may be public.
+- **Private IP** — the node's internal IP. The kubelet and Pods listen here.
+- **NodePort range** — 30000-32767. Services of type `NodePort` listen on these.
 
 The hardening:
 
-* **No public IP** — nodes are on a private subnet. A bastion / jumpbox for SSH.
-* **Security groups / firewall** — allow only what's needed (kubelet, CNI, DNS).
-* **No NodePort to the public** — use a LoadBalancer or Ingress instead.
+- **No public IP** — nodes are on a private subnet. A bastion / jumpbox for SSH.
+- **Security groups / firewall** — allow only what's needed (kubelet, CNI, DNS).
+- **No NodePort to the public** — use a LoadBalancer or Ingress instead.
 
 ### 6.1 The kubelet's port (10250)
 
 `kubelet` listens on `:10250`. This is a powerful API:
 
-* `/pods` — list Pods.
-* `/exec` — exec into a Pod.
-* `/logs` — read Pod logs.
-* `/run` — run a command in a Pod.
-* `/metrics` — kubelet metrics.
+- `/pods` — list Pods.
+- `/exec` — exec into a Pod.
+- `/logs` — read Pod logs.
+- `/run` — run a command in a Pod.
+- `/metrics` — kubelet metrics.
 
 **Anyone with access to `:10250` can do all of the above.** Mitigations:
 
-* **Network restriction** — the firewall / security group allows `:10250` from the apiserver's IP only.
-* **Authn / authz** — the kubelet's webhook authn + Node authorizer. The `system:nodes` group is for kubelets; `system:anonymous` should be disabled.
-* **TLS** — the kubelet's serving cert is TLS. The client cert (for X.509 auth) is verified against the cluster CA.
+- **Network restriction** — the firewall / security group allows `:10250` from the apiserver's IP only.
+- **Authn / authz** — the kubelet's webhook authn + Node authorizer. The `system:nodes` group is for kubelets; `system:anonymous` should be disabled.
+- **TLS** — the kubelet's serving cert is TLS. The client cert (for X.509 auth) is verified against the cluster CA.
 
 ### 6.2 The read-only port (10255, deprecated)
 
 `readOnlyPort: 10255` exposes a **read-only** kubelet API:
 
-* `/metrics` — kubelet metrics.
-* `/pods` — list Pods.
-* `/healthz` — kubelet health.
+- `/metrics` — kubelet metrics.
+- `/pods` — list Pods.
+- `/healthz` — kubelet health.
 
 **No authentication.** The port is unauthenticated. **Always disable** (`readOnlyPort: 0`).
 
@@ -329,33 +336,33 @@ This port is deprecated in k8s 1.24+ and will be removed. Disable it.
 
 The node's filesystem has k8s-specific directories:
 
-* `/var/lib/kubelet/` — the kubelet's state. Pods' volumes, secrets (cached), config.
-* `/var/lib/containerd/` — the container runtime's state. Image layers, container state.
-* `/var/lib/etcd/` — if etcd runs on the node (for self-managed control plane).
-* `/etc/kubernetes/` — the kubelet's config, the cluster's PKI, manifests.
-* `/var/log/` — kubelet logs, container logs, audit logs.
-* `/opt/cni/bin/` — CNI plugins.
-* `/etc/cni/net.d/` — CNI config.
+- `/var/lib/kubelet/` — the kubelet's state. Pods' volumes, secrets (cached), config.
+- `/var/lib/containerd/` — the container runtime's state. Image layers, container state.
+- `/var/lib/etcd/` — if etcd runs on the node (for self-managed control plane).
+- `/etc/kubernetes/` — the kubelet's config, the cluster's PKI, manifests.
+- `/var/log/` — kubelet logs, container logs, audit logs.
+- `/opt/cni/bin/` — CNI plugins.
+- `/etc/cni/net.d/` — CNI config.
 
 ### 7.1 Permissions
 
-* **`/var/lib/kubelet/`** — root-owned. The kubelet runs as root.
-* **`/etc/kubernetes/pki/`** — root-owned. The cluster's PKI.
-* **`/var/log/kubernetes/audit/`** — root-owned, but readable by the audit log shipper.
+- **`/var/lib/kubelet/`** — root-owned. The kubelet runs as root.
+- **`/etc/kubernetes/pki/`** — root-owned. The cluster's PKI.
+- **`/var/log/kubernetes/audit/`** — root-owned, but readable by the audit log shipper.
 
 The directories should be:
 
-* **Owned by root** (or the kubelet's user, if not root).
-* **Not world-writable.**
-* **On a separate disk** (for performance and isolation).
+- **Owned by root** (or the kubelet's user, if not root).
+- **Not world-writable.**
+- **On a separate disk** (for performance and isolation).
 
 ### 7.2 Disk encryption
 
 The node's disk should be **encrypted at rest**:
 
-* **LUKS** (Linux Unified Key Setup) — full disk encryption.
-* **Cloud provider's disk encryption** — EBS encryption (AWS), managed disk encryption (Azure), etc.
-* **TPM-based key sealing** — for on-prem.
+- **LUKS** (Linux Unified Key Setup) — full disk encryption.
+- **Cloud provider's disk encryption** — EBS encryption (AWS), managed disk encryption (Azure), etc.
+- **TPM-based key sealing** — for on-prem.
 
 The encryption is transparent to k8s. The kubelet and runtime don't know.
 
@@ -363,20 +370,20 @@ The encryption is transparent to k8s. The kubelet and runtime don't know.
 
 SSH is the **most common attack vector** for nodes. The hardening:
 
-* **Key-based auth only** — disable password auth in `/etc/ssh/sshd_config`:
+- **Key-based auth only** — disable password auth in `/etc/ssh/sshd_config`:
 
 ```bash
 PasswordAuthentication no
 PermitRootLogin prohibit-password    # or "no" for full disable
 ```
 
-* **Restrict to specific users / groups** — `AllowUsers`, `AllowGroups`.
-* **Disable root login** — `PermitRootLogin no`.
-* **Change the SSH port** — 2222 instead of 22. (Security by obscurity, but reduces noise.)
-* **Use fail2ban** — block IPs after N failed attempts.
-* **Use a bastion** — only the bastion accepts SSH. The nodes accept SSH from the bastion only.
-* **Disable SSH for the kubelet's user** — the kubelet user (typically `kubelet`) doesn't need SSH.
-* **MFA** — for human users (rare on nodes, but useful for the bastion).
+- **Restrict to specific users / groups** — `AllowUsers`, `AllowGroups`.
+- **Disable root login** — `PermitRootLogin no`.
+- **Change the SSH port** — 2222 instead of 22. (Security by obscurity, but reduces noise.)
+- **Use fail2ban** — block IPs after N failed attempts.
+- **Use a bastion** — only the bastion accepts SSH. The nodes accept SSH from the bastion only.
+- **Disable SSH for the kubelet's user** — the kubelet user (typically `kubelet`) doesn't need SSH.
+- **MFA** — for human users (rare on nodes, but useful for the bastion).
 
 ### 8.1 The bastion
 
@@ -384,10 +391,11 @@ A **bastion host** (or jump host) is the only entry point for SSH. The nodes acc
 
 The bastion:
 
-* Is in a public subnet (or accessible from the operator's VPN).
-* Logs every SSH session (for audit).
-- Has a small, hardened surface.
-- May have MFA.
+- Is in a public subnet (or accessible from the operator's VPN).
+- Logs every SSH session (for audit).
+
+* Has a small, hardened surface.
+* May have MFA.
 
 The operator SSHes to the bastion, then SSHes to the node from there. The node's firewall allows SSH from the bastion's IP only.
 
@@ -425,9 +433,9 @@ User namespaces are GA in k8s 1.30 (alpha in earlier). They're a significant sec
 
 The `NodeRestriction` admission plugin restricts what **kubelets can do**. With it enabled:
 
-* A kubelet can only modify **its own Node and Pod status**.
-* A kubelet can only add labels / taints to its own Node with the `kubernetes.io/hostname` or `topology.kubernetes.io/zone` prefix.
-* A kubelet can't create arbitrary resources.
+- A kubelet can only modify **its own Node and Pod status**.
+- A kubelet can only add labels / taints to its own Node with the `kubernetes.io/hostname` or `topology.kubernetes.io/zone` prefix.
+- A kubelet can't create arbitrary resources.
 
 This prevents a **compromised kubelet** from doing more than reporting its own state.
 
@@ -439,10 +447,10 @@ The **CIS Kubernetes Benchmark** is a set of recommendations for k8s hardening. 
 
 The Node benchmark covers:
 
-* **File permissions** — kubelet config, container runtime config, PKI files.
-* **Process / service config** — kubelet, runtime, auditd.
-* **Network** — kubelet port, CNI, etc.
-* **Logging** — kubelet logs, audit logs.
+- **File permissions** — kubelet config, container runtime config, PKI files.
+- **Process / service config** — kubelet, runtime, auditd.
+- **Network** — kubelet port, CNI, etc.
+- **Logging** — kubelet logs, audit logs.
 
 `kube-bench` runs as a Pod on each node (or as a Docker container) and reports findings.
 
@@ -621,7 +629,7 @@ curl -k https://<apiserver>:6443/healthz
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the control plane
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — kernel-level restrictions
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — CIS / NIST
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the control plane
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — kernel-level restrictions
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — CIS / NIST

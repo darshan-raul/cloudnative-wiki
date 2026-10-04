@@ -13,13 +13,13 @@ RDS provides managed relational databases: MySQL, PostgreSQL, MariaDB, Oracle, a
 
 ## Engines
 
-| Engine | Version | Use Case | License |
-|--------|---------|----------|---------|
-| MySQL | 5.7, 8.0 | Web apps, SaaS | Open source |
-| PostgreSQL | 13, 14, 15, 16 | Enterprise, geospatial | Open source |
-| MariaDB | 10.2, 10.3, 10.4, 10.5, 10.6, 10.11 | MySQL drop-in replacement | Open source |
-| Oracle | 19c, 21c | Enterprise (existing Oracle apps) | BYOL or Oracle License |
-| SQL Server | 2014, 2016, 2017, 2019, 2022 | Windows/.NET apps | BYOL or SQL Server License |
+| Engine     | Version                             | Use Case                          | License                    |
+| ---------- | ----------------------------------- | --------------------------------- | -------------------------- |
+| MySQL      | 5.7, 8.0                            | Web apps, SaaS                    | Open source                |
+| PostgreSQL | 13, 14, 15, 16                      | Enterprise, geospatial            | Open source                |
+| MariaDB    | 10.2, 10.3, 10.4, 10.5, 10.6, 10.11 | MySQL drop-in replacement         | Open source                |
+| Oracle     | 19c, 21c                            | Enterprise (existing Oracle apps) | BYOL or Oracle License     |
+| SQL Server | 2014, 2016, 2017, 2019, 2022        | Windows/.NET apps                 | BYOL or SQL Server License |
 
 ## Instance Classes
 
@@ -75,6 +75,7 @@ Read Replica (AZ-3)
 ```
 
 When Multi-AZ is enabled:
+
 - Synchronous replication to standby in different AZ
 - Automatic failover (< 60 seconds, typically 20-30 seconds)
 - No application code changes needed (endpoint stays the same)
@@ -161,6 +162,7 @@ aws rds modify-db-parameter-group \
 ```
 
 Common parameters:
+
 - `max_connections` — max concurrent connections
 - `shared_buffers` — PostgreSQL buffer cache
 - `innodb_buffer_pool_size` — MySQL buffer pool
@@ -188,6 +190,7 @@ aws rds modify-db-instance \
 ```
 
 Key metrics (CloudWatch vs Enhanced Monitoring):
+
 - CloudWatch: CPU, Connections, Disk queue depth, Swap usage
 - Enhanced: OS-level (processes, memory, I/O per process)
 
@@ -225,37 +228,37 @@ View in Console: RDS → Instances → my-db → Performance Insights
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| db.t3.micro | $0.017/hr (~$12/month) |
-| db.m5.large | $0.136/hr (~$98/month) |
-| db.r6g.xlarge | $0.252/hr (~$181/month) |
-| Multi-AZ | 2x instance cost |
-| Read Replica | Same as single instance |
-| Storage (gp3) | $0.08/GB/month |
-| Backup storage | $0.095/GB/month |
-| Data transfer | $0.02-0.09/GB |
+| Component      | Cost                    |
+| -------------- | ----------------------- |
+| db.t3.micro    | $0.017/hr (~$12/month)  |
+| db.m5.large    | $0.136/hr (~$98/month)  |
+| db.r6g.xlarge  | $0.252/hr (~$181/month) |
+| Multi-AZ       | 2x instance cost        |
+| Read Replica   | Same as single instance |
+| Storage (gp3)  | $0.08/GB/month          |
+| Backup storage | $0.095/GB/month         |
+| Data transfer  | $0.02-0.09/GB           |
 
 ## Storage Types
 
-| Type | Description | Use |
-|------|-------------|-----|
-| gp3 | General purpose SSD, 3000 IOPS baseline | General workloads |
-| gp2 | General purpose SSD, burst to 3000 IOPS | Legacy |
-| io1 | Provisioned IOPS (up to 64,000) | High IOPS (64K+) |
-| io2 | Provisioned IOPS (up to 256,000) | Highest IOPS |
-| io2 Block Express | Up to 256,000 IOPS, 64 TB | Maximum performance |
+| Type              | Description                             | Use                 |
+| ----------------- | --------------------------------------- | ------------------- |
+| gp3               | General purpose SSD, 3000 IOPS baseline | General workloads   |
+| gp2               | General purpose SSD, burst to 3000 IOPS | Legacy              |
+| io1               | Provisioned IOPS (up to 64,000)         | High IOPS (64K+)    |
+| io2               | Provisioned IOPS (up to 256,000)        | Highest IOPS        |
+| io2 Block Express | Up to 256,000 IOPS, 64 TB               | Maximum performance |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| DB instances per region | 40 (soft) |
-| Storage per instance | 64 TB |
-| Max databases per instance | MySQL: unlimited, PostgreSQL: unlimited |
-| Max connections | db.t3.micro: 100, db.m5.xlarge: 1000+ |
-| Parameter groups per region | 50 |
-| Read replicas per primary | 5 (MySQL/MariaDB), 5 (PostgreSQL) |
+| Resource                    | Limit                                   |
+| --------------------------- | --------------------------------------- |
+| DB instances per region     | 40 (soft)                               |
+| Storage per instance        | 64 TB                                   |
+| Max databases per instance  | MySQL: unlimited, PostgreSQL: unlimited |
+| Max connections             | db.t3.micro: 100, db.m5.xlarge: 1000+   |
+| Parameter groups per region | 50                                      |
+| Read replicas per primary   | 5 (MySQL/MariaDB), 5 (PostgreSQL)       |
 
 ## References
 

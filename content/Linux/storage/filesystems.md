@@ -194,15 +194,15 @@ noauto      # don't mount at boot
 
 ## Comparing Filesystems
 
-| Feature       | ext4     | xfs      | btrfs        |
-|--------------|----------|----------|--------------|
-| Journal      | Yes      | Yes      | Yes (CoW)    |
-| Max size     | 1EB      | 8EB      | 16EB         |
-| Max file     | 16TB     | 8EB      | 16EB         |
-| Copy-on-Write| No       | No       | Yes          |
-| Snapshots    | No (via LVM)| No   | Yes          |
-| Compression  | No       | No       | Yes          |
-| Checksumming | No       | No       | Yes          |
-| Online grow  | Yes      | Yes      | Yes          |
-| Online shrink| No       | No       | Yes          |
-| Default on   | Ubuntu   | RHEL     | OpenSUSE     |
+| Feature       | ext4         | xfs  | btrfs     |
+| ------------- | ------------ | ---- | --------- |
+| Journal       | Yes          | Yes  | Yes (CoW) |
+| Max size      | 1EB          | 8EB  | 16EB      |
+| Max file      | 16TB         | 8EB  | 16EB      |
+| Copy-on-Write | No           | No   | Yes       |
+| Snapshots     | No (via LVM) | No   | Yes       |
+| Compression   | No           | No   | Yes       |
+| Checksumming  | No           | No   | Yes       |
+| Online grow   | Yes          | Yes  | Yes       |
+| Online shrink | No           | No   | Yes       |
+| Default on    | Ubuntu       | RHEL | OpenSUSE  |

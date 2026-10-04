@@ -24,12 +24,14 @@ How easy is it to make changes without breaking existing functionality?
 How easy is it to verify that the system works correctly?
 
 A system is testable when:
+
 - It has clear inputs and outputs (black box)
 - Internal state is observable (can inspect intermediate results)
 - Dependencies are injectable (can mock/swap external services)
 - Side effects are controllable (can reset state between tests)
 
 **Testability anti-patterns:**
+
 - Hard-coded date/time (can't test time-dependent logic)
 - Static global state (tests pollute each other)
 - Uninjectable dependencies (can't mock the database)
@@ -99,6 +101,7 @@ The implied cost of future rework caused by choosing a quick solution now over a
 ```
 
 Track technical debt explicitly:
+
 - **Issue tracker** — tag debt items, prioritize alongside features
 - **SonarQube / CodeClimate** — automated debt detection
 - **Architecture Decision Records (ADRs)** — record why a suboptimal choice was made and what would make it right
@@ -106,6 +109,7 @@ Track technical debt explicitly:
 ### Paying Down Debt
 
 Two strategies:
+
 1. **Boy scout rule** — leave code cleaner than you found it (5 min refactor per change)
 2. ** dedicated debt sprints** — time-boxed periods to specifically address debt
 
@@ -115,14 +119,14 @@ Neither works without explicit tracking. Untracked debt accumulates invisibly un
 
 When defining vendor or procurement requirements:
 
-| Requirement | What to specify |
-|---|---|
-| **Code quality gates** | Linting passes, complexity thresholds, no hard-coded secrets |
-| **Test coverage** | Minimum 80% on new code, 70% on existing |
-| **Documentation** | README per service, API docs, runbook per critical path |
-| **Dependency management** | No transitive dependencies with known CVEs >7.0 |
-| **Change process** | Review required for production changes, rollback plan |
-| **On-call coverage** | Engineer availability for production incidents |
+| Requirement               | What to specify                                              |
+| ------------------------- | ------------------------------------------------------------ |
+| **Code quality gates**    | Linting passes, complexity thresholds, no hard-coded secrets |
+| **Test coverage**         | Minimum 80% on new code, 70% on existing                     |
+| **Documentation**         | README per service, API docs, runbook per critical path      |
+| **Dependency management** | No transitive dependencies with known CVEs >7.0              |
+| **Change process**        | Review required for production changes, rollback plan        |
+| **On-call coverage**      | Engineer availability for production incidents               |
 
 ## Deployment Pipeline for Maintainability
 
@@ -131,12 +135,12 @@ A well-designed CI/CD pipeline enforces maintainability:
 ```yaml
 # Quality gates in CI
 stages:
-  - lint:          # Code style, static analysis
-  - test:          # Unit tests, coverage gate
-  - security:      # SAST, dependency scan, secret scan
-  - integration:   # Integration tests
-  - staging:       # Smoke tests in staging
-  - production:    # Canary deployment, automated rollback
+  - lint: # Code style, static analysis
+  - test: # Unit tests, coverage gate
+  - security: # SAST, dependency scan, secret scan
+  - integration: # Integration tests
+  - staging: # Smoke tests in staging
+  - production: # Canary deployment, automated rollback
 ```
 
 Each gate must pass before proceeding. A failing gate blocks deployment.

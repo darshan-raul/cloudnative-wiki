@@ -57,6 +57,7 @@ Unlike traditional `Ingress` where routing, TLS, timeouts, and health checks wer
 ## 2. GKE Gateway Policy Attachments
 
 To configure Google-specific load balancing parameters without non-standard annotations, GKE introduces **Direct Policy Attachments**:
+
 - **GCPBackendPolicy:** Configures Cloud Armor WAF security policies, Cloud CDN caching, connection draining timeouts, and session affinity on backend services.
 - **HealthCheckPolicy:** Customizes HTTP health check request paths, probing intervals, and healthy/unhealthy thresholds directly at the Google load balancer.
 - **GCPFrontendPolicy:** Binds SSL policies (TLS 1.3 enforcement) and HTTPS redirects at the frontend listener level.
@@ -98,27 +99,27 @@ metadata:
 spec:
   gatewayClassName: gke-l7-global-external-managed
   addresses:
-  - type: NamedAddress
-    value: gke-gateway-global-ip
+    - type: NamedAddress
+      value: gke-gateway-global-ip
   listeners:
-  - name: https
-    protocol: HTTPS
-    port: 443
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - name: enterprise-wildcard-cert
-        group: ""
-        kind: Secret
-    allowedRoutes:
-      namespaces:
-        from: All # Allows HTTPRoutes from any microservice namespace to attach
-  - name: http
-    protocol: HTTP
-    port: 80
-    allowedRoutes:
-      namespaces:
-        from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: enterprise-wildcard-cert
+            group: ""
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: All # Allows HTTPRoutes from any microservice namespace to attach
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
 ```
 
 Apply Gateway:
@@ -139,32 +140,32 @@ metadata:
   namespace: storefront
 spec:
   parentRefs:
-  - name: prod-external-gateway
-    namespace: networking-infra
-    sectionName: https
+    - name: prod-external-gateway
+      namespace: networking-infra
+      sectionName: https
   hostnames:
-  - "shop.cloudnative-wiki.internal"
+    - "shop.cloudnative-wiki.internal"
   rules:
-  # Rule 1: Route API calls to Order Service with Canary Splitting (90% Stable / 10% Canary)
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/orders
-    backendRefs:
-    - name: order-service-stable
-      port: 8080
-      weight: 90
-    - name: order-service-canary
-      port: 8080
-      weight: 10
-  # Rule 2: Route Static Assets to Catalog UI
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: catalog-frontend
-      port: 80
+    # Rule 1: Route API calls to Order Service with Canary Splitting (90% Stable / 10% Canary)
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/orders
+      backendRefs:
+        - name: order-service-stable
+          port: 8080
+          weight: 90
+        - name: order-service-canary
+          port: 8080
+          weight: 10
+    # Rule 2: Route Static Assets to Catalog UI
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: catalog-frontend
+          port: 80
 ```
 
 Apply HTTPRoute:
@@ -205,14 +206,14 @@ kubectl apply -f order-service-security-policy.yaml
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension / Resource | Limit / Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max HTTPRoutes per Gateway** | 100 routes | Consolidate microservice routes per host |
-| **Backend NEGs per Service** | 1 Zonal NEG per zone | Direct container-native Pod IP routing |
-| **DNS / SSL Certificates** | Up to 15 certs per listener | Use Google Managed Certificates or cert-manager |
-| **Canary Weight Resolution**| 1 to 10,000 integer range | Enables precise fraction-of-a-percent canaries |
-| **Provisioning Latency** | 2 to 5 minutes | Time for GCP Load Balancer VIP propagation |
-| **Cloud Armor Support** | Global External Managed | Requires `gke-l7-global-external-managed` |
+| Dimension / Resource           | Limit / Quota               | Engineering Guidance                            |
+| :----------------------------- | :-------------------------- | :---------------------------------------------- |
+| **Max HTTPRoutes per Gateway** | 100 routes                  | Consolidate microservice routes per host        |
+| **Backend NEGs per Service**   | 1 Zonal NEG per zone        | Direct container-native Pod IP routing          |
+| **DNS / SSL Certificates**     | Up to 15 certs per listener | Use Google Managed Certificates or cert-manager |
+| **Canary Weight Resolution**   | 1 to 10,000 integer range   | Enables precise fraction-of-a-percent canaries  |
+| **Provisioning Latency**       | 2 to 5 minutes              | Time for GCP Load Balancer VIP propagation      |
+| **Cloud Armor Support**        | Global External Managed     | Requires `gke-l7-global-external-managed`       |
 
 ---
 
@@ -229,6 +230,7 @@ kubectl apply -f order-service-security-policy.yaml
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **GKE Gateway Controller:** $0 platform surcharge (included in GKE management fee).
 2. **Google Cloud Application Load Balancer:**
    - Base forwarding rule: ~$0.025 per hour (~$18.25/month).
@@ -268,13 +270,15 @@ Pricing components:
 3. **Backend Service Health Check Paths Differ from Container Probes:** GKE Gateway API does **not** automatically copy the `livenessProbe` or `readinessProbe` path from your pod specification into the Google Cloud Load Balancer health check. By default, Google Cloud checks `GET /` on the container port. If your application returns HTTP 404 or 401 on `/`, the GCP load balancer marks all Pod NEGs as unhealthy and returns `HTTP 502 Server Error`. Always deploy a `HealthCheckPolicy` specifying the exact health endpoint (e.g., `/healthz`).
 4. **Cloud Armor Policy Changes Take 60 Seconds to Propagate:** When you attach or update a `GCPBackendPolicy` binding a Cloud Armor security rule, the Google Cloud control plane compiles the Envoy rules across all global edge points of presence. This propagation takes between **30 to 90 seconds**. Do not assume a newly applied WAF block rule is actively filtering traffic the instant `kubectl apply` completes.
 5. **Gateway Deletion Orphaned Global Static IP:** If you delete a Gateway object, GKE tears down the forwarding rules, URL maps, and target proxies. However, if you specified a pre-created named external IP (`NamedAddress`), the IP address is **not deleted from your GCP project**. Unattached reserved external IP addresses accrue idle charges ($0.01/hr) until assigned or deleted.
-6. **HTTP to HTTPS Redirects Require Dual Listeners:** To enforce HTTPS redirection, you must configure *both* an HTTP (Port 80) and an HTTPS (Port 443) listener on the Gateway, and attach an HTTPRoute to the port 80 listener with a `RequestRedirect` filter:
+6. **HTTP to HTTPS Redirects Require Dual Listeners:** To enforce HTTPS redirection, you must configure _both_ an HTTP (Port 80) and an HTTPS (Port 443) listener on the Gateway, and attach an HTTPRoute to the port 80 listener with a `RequestRedirect` filter:
+
 ```yaml
 rules:
-- filters:
-  - type: RequestRedirect
-    requestRedirect:
-      scheme: https
-      statusCode: 301
+  - filters:
+      - type: RequestRedirect
+        requestRedirect:
+          scheme: https
+          statusCode: 301
 ```
+
 Omitting the port 80 listener causes client HTTP requests to time out rather than redirecting.

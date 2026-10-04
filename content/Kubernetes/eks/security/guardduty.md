@@ -22,12 +22,12 @@ aws guardduty enable-organization-configuration \
 
 ## Finding Types
 
-| Finding Type | Severity | Description |
-|-------------|----------|-------------|
-| EKSClusterAnonymousAccess | High | Cluster accessed anonymously |
-| EKSClusterPrivilegedContainer | Critical | Privileged container detected |
-| EKSPodSensitiveMountAccess | High | Sensitive mount access |
-| EKSWorkloadsSensitiveContainer | Medium | Sensitive data access |
+| Finding Type                   | Severity | Description                   |
+| ------------------------------ | -------- | ----------------------------- |
+| EKSClusterAnonymousAccess      | High     | Cluster accessed anonymously  |
+| EKSClusterPrivilegedContainer  | Critical | Privileged container detected |
+| EKSPodSensitiveMountAccess     | High     | Sensitive mount access        |
+| EKSWorkloadsSensitiveContainer | Medium   | Sensitive data access         |
 
 ## View Findings
 
@@ -49,10 +49,8 @@ aws guardduty get-findings \
 # Example: EventBridge rule for high severity
 {
   "source": ["aws.guardduty"],
-  "detail": {
-    "type": ["EKSClusterPrivilegedContainer"]
-  },
-  "target": ["sns-topic-arn"]
+  "detail": { "type": ["EKSClusterPrivilegedContainer"] },
+  "target": ["sns-topic-arn"],
 }
 ```
 

@@ -115,16 +115,16 @@ def with_enum(status: Literal["READY", "PROVISIONING", "FAILED"]) -> dict:
 
 ### Supported types
 
-| Type | Becomes |
-|---|---|
-| `str`, `int`, `float`, `bool` | JSON primitive |
-| `list[T]`, `dict[K, V]` | JSON array/object |
-| `Optional[T]` | nullable with same rules as T |
-| `Union[A, B]` | JSON `oneOf` |
-| `Literal["a", "b"]` | `enum` in schema |
-| `Enum` subclass | `enum` in schema |
-| Pydantic `BaseModel` | nested `$ref` |
-| `datetime.date`, `datetime.datetime` | ISO-8601 string |
+| Type                                 | Becomes                       |
+| ------------------------------------ | ----------------------------- |
+| `str`, `int`, `float`, `bool`        | JSON primitive                |
+| `list[T]`, `dict[K, V]`              | JSON array/object             |
+| `Optional[T]`                        | nullable with same rules as T |
+| `Union[A, B]`                        | JSON `oneOf`                  |
+| `Literal["a", "b"]`                  | `enum` in schema              |
+| `Enum` subclass                      | `enum` in schema              |
+| Pydantic `BaseModel`                 | nested `$ref`                 |
+| `datetime.date`, `datetime.datetime` | ISO-8601 string               |
 
 ### `args_schema` — override the schema
 
@@ -334,6 +334,7 @@ tool = StructuredTool.from_function(
 ```
 
 Use `from_function` when:
+
 - You generate tools at runtime
 - You wrap a class method as a tool
 - You need to override the name without renaming the function

@@ -42,7 +42,7 @@ A Managed Instance Group (MIG) is a collection of identical Compute Engine virtu
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **Regional Distribution:** A Regional MIG automatically balances instances evenly across three availability zones in the region. If a single datacenter zone suffers a physical outage, the surviving instances continue serving traffic without human intervention.
+- **Regional Distribution:** A Regional MIG automatically balances instances evenly across three availability zones in the region. If a single datacenter zone suffers a physical outage, the surviving instances continue serving traffic without human intervention.
 
 ---
 
@@ -50,20 +50,21 @@ A Managed Instance Group (MIG) is a collection of identical Compute Engine virtu
 
 ### 1. Zonal vs. Regional MIGs
 
-| Feature | Zonal MIG | Regional MIG |
-| :--- | :--- | :--- |
-| **Geographic Scope** | Confined to a single availability zone (e.g., `us-central1-a`) | Distributed across multiple zones in a region |
-| **High Availability** | None (Single Point of Failure if zone degrades) | **High (Multi-Zone Resilience)** |
-| **Target Distribution** | N/A | Balanced evenly or dynamically packed |
-| **Max Capacity** | Up to 1,000 instances | Up to 2,000 instances |
-| **Production Recommendation** | Dev/Test or strict single-zone cluster requirements | **Mandatory for all production application tiers** |
+| Feature                       | Zonal MIG                                                      | Regional MIG                                       |
+| :---------------------------- | :------------------------------------------------------------- | :------------------------------------------------- |
+| **Geographic Scope**          | Confined to a single availability zone (e.g., `us-central1-a`) | Distributed across multiple zones in a region      |
+| **High Availability**         | None (Single Point of Failure if zone degrades)                | **High (Multi-Zone Resilience)**                   |
+| **Target Distribution**       | N/A                                                            | Balanced evenly or dynamically packed              |
+| **Max Capacity**              | Up to 1,000 instances                                          | Up to 2,000 instances                              |
+| **Production Recommendation** | Dev/Test or strict single-zone cluster requirements            | **Mandatory for all production application tiers** |
 
 ### 2. Auto-Healing Mechanics
 
 Auto-healing uses application-level health checks to detect silent failures (e.g. frozen processes, memory exhaustion, deadlocked web servers) that the hypervisor cannot detect:
-* **Health Check Probe:** Pings an HTTP, HTTPS, or TCP endpoint exposed by the application (e.g., `/healthz`).
-* **Initial Delay (`--initial-delay`):** The grace period given to a newly launched VM to complete initialization (running startup scripts, pulling container images, starting application runtimes) before the auto-healer begins evaluating health check probes.
-* **Auto-Recovery:** If an instance fails the configured number of consecutive checks (e.g. 3 failures), the MIG recreates the instance from the instance template while preserving its name if stateful.
+
+- **Health Check Probe:** Pings an HTTP, HTTPS, or TCP endpoint exposed by the application (e.g., `/healthz`).
+- **Initial Delay (`--initial-delay`):** The grace period given to a newly launched VM to complete initialization (running startup scripts, pulling container images, starting application runtimes) before the auto-healer begins evaluating health check probes.
+- **Auto-Recovery:** If an instance fails the configured number of consecutive checks (e.g. 3 failures), the MIG recreates the instance from the instance template while preserving its name if stateful.
 
 ### 3. Rolling Updates & Deployment Strategies
 
@@ -87,13 +88,15 @@ MIGs support progressive, zero-downtime rolling updates when updating instance t
 ### 4. Stateful MIGs
 
 While MIGs are typically used for stateless web servers, **Stateful MIGs** allow running workloads that require persistent state across updates and auto-healing:
-* **Stateful Persistent Disks:** Disks are preserved and re-attached to the same instance upon recreation.
-* **Stateful Static IP Addresses:** Preserves internal or external IP addresses assigned to specific instances across reboots.
-* **Stateful Metadata:** Key-value metadata specific to individual instances (e.g. node IDs in a Kafka or ZooKeeper cluster).
+
+- **Stateful Persistent Disks:** Disks are preserved and re-attached to the same instance upon recreation.
+- **Stateful Static IP Addresses:** Preserves internal or external IP addresses assigned to specific instances across reboots.
+- **Stateful Metadata:** Key-value metadata specific to individual instances (e.g. node IDs in a Kafka or ZooKeeper cluster).
 
 ### 5. Autoscaling Signals
 
 A MIG autoscaler can dynamically scale the group based on multiple metrics:
+
 1. **Average CPU Utilization:** Target threshold (e.g., 70% CPU).
 2. **Cloud Load Balancing Serving Capacity:** Based on backend utilization (QPS or connections per instance).
 3. **Cloud Monitoring Metrics:** Custom metrics (e.g., Pub/Sub queue depth, RabbitMQ backlog).
@@ -175,43 +178,45 @@ gcloud compute instance-groups managed rolling-action start-update prod-api-mig 
 
 ## Quotas & Limits
 
-| Metric / Parameter | Default Limit | Production Guidance |
-| :--- | :--- | :--- |
-| **Max instances per Zonal MIG** | 1,000 instances | Single zone boundary |
-| **Max instances per Regional MIG** | 2,000 instances | Distributed across up to 3 zones |
-| **Autoscaling cooldown period** | Default 60 seconds (min 15s) | Set longer than application boot time |
-| **Max target capacity change** | Scales up by max 100% or 10 VMs at a time | Prevents sudden runaway quota exhaustion |
-| **Health Check initial delay** | Up to 3,600 seconds | Typical: 120s – 300s for heavy JVM apps |
+| Metric / Parameter                 | Default Limit                             | Production Guidance                      |
+| :--------------------------------- | :---------------------------------------- | :--------------------------------------- |
+| **Max instances per Zonal MIG**    | 1,000 instances                           | Single zone boundary                     |
+| **Max instances per Regional MIG** | 2,000 instances                           | Distributed across up to 3 zones         |
+| **Autoscaling cooldown period**    | Default 60 seconds (min 15s)              | Set longer than application boot time    |
+| **Max target capacity change**     | Scales up by max 100% or 10 VMs at a time | Prevents sudden runaway quota exhaustion |
+| **Health Check initial delay**     | Up to 3,600 seconds                       | Typical: 120s – 300s for heavy JVM apps  |
 
 ---
 
 ## References
 
-* **Managed Instance Groups Documentation:** https://cloud.google.com/compute/docs/instance-groups
-* **Auto-Healing Guide:** https://cloud.google.com/compute/docs/instance-groups/autohealing-instances-in-migs
-* **Rolling Updates Overview:** https://cloud.google.com/compute/docs/instance-groups/rolling-out-updates-to-managed-instance-groups
-* **Stateful MIGs Guide:** https://cloud.google.com/compute/docs/instance-groups/stateful-migs
-* **Pricing:** https://cloud.google.com/compute/pricing (MIG orchestrator is free; pay for provisioned VMs and disks)
+- **Managed Instance Groups Documentation:** https://cloud.google.com/compute/docs/instance-groups
+- **Auto-Healing Guide:** https://cloud.google.com/compute/docs/instance-groups/autohealing-instances-in-migs
+- **Rolling Updates Overview:** https://cloud.google.com/compute/docs/instance-groups/rolling-out-updates-to-managed-instance-groups
+- **Stateful MIGs Guide:** https://cloud.google.com/compute/docs/instance-groups/stateful-migs
+- **Pricing:** https://cloud.google.com/compute/pricing (MIG orchestrator is free; pay for provisioned VMs and disks)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Multi-Zone Production Web API Fleet
-* Regional MIG running across 3 zones in `us-central1`.
-* Baseline footprint: 6 instances of `e2-standard-4` (4 vCPU, 16 GB RAM).
-* Autoscaling range: 6 to 18 instances. Average usage: 9 instances sustained.
-* Compute cost: 9 × ~$97.00 / month = **$873.00 / month**.
-* Boot storage: 9 × 50 GB `pd-balanced` ($0.10/GB) = **$45.00 / month**.
-* MIG Orchestrator & Auto-Healer: **$0.00**.
-* **Total Monthly Cost:** **~$918.00 / month**.
+
+- Regional MIG running across 3 zones in `us-central1`.
+- Baseline footprint: 6 instances of `e2-standard-4` (4 vCPU, 16 GB RAM).
+- Autoscaling range: 6 to 18 instances. Average usage: 9 instances sustained.
+- Compute cost: 9 × ~$97.00 / month = **$873.00 / month**.
+- Boot storage: 9 × 50 GB `pd-balanced` ($0.10/GB) = **$45.00 / month**.
+- MIG Orchestrator & Auto-Healer: **$0.00**.
+- **Total Monthly Cost:** **~$918.00 / month**.
 
 ### Scenario 2: High-Volume E-Commerce Flash Sale Scaling
-* Autoscaling triggers scale-out from 6 to 30 instances for 12 hours during a promotional campaign.
-* Surge instances: 24 additional `e2-standard-4` instances for 12 hours.
-* Surge compute: 24 × $0.134 / hr × 12 hrs = **$38.59**.
-* Additional temporary disk usage: negligible (< $1.00).
-* **Incremental Surge Cost:** **~$39.50** to absorb millions of promotional requests without degradation.
+
+- Autoscaling triggers scale-out from 6 to 30 instances for 12 hours during a promotional campaign.
+- Surge instances: 24 additional `e2-standard-4` instances for 12 hours.
+- Surge compute: 24 × $0.134 / hr × 12 hrs = **$38.59**.
+- Additional temporary disk usage: negligible (< $1.00).
+- **Incremental Surge Cost:** **~$39.50** to absorb millions of promotional requests without degradation.
 
 ---
 

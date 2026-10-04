@@ -59,12 +59,12 @@ Azure Backup for AKS deploys an extension into the cluster that integrates the K
 
 ## 2. Disaster Recovery Strategy Comparison
 
-| Strategy | Recovery Time Objective (RTO) | Recovery Point Objective (RPO) | Cost Overhead | Complexity |
-| :--- | :--- | :--- | :--- | :--- |
-| **Backup & Restore (Cold Standby)**| **1 to 4 hours** | **1 to 24 hours** (Snapshot age)| **Lowest (~5% overhead)**| Low |
-| **Pilot Light (Warm Standby)** | **15 to 30 minutes** | **< 1 hour** | Moderate (~30% overhead) | Moderate |
-| **Active-Passive Failover** | **< 5 minutes** | **Near Zero (Database replication)**| High (~100% overhead) | High |
-| **Active-Active Multi-Region** | **< 10 seconds (Instant)** | **Zero (Synchronous multi-region)**| **Highest (> 200% overhead)**| Advanced |
+| Strategy                            | Recovery Time Objective (RTO) | Recovery Point Objective (RPO)       | Cost Overhead                 | Complexity |
+| :---------------------------------- | :---------------------------- | :----------------------------------- | :---------------------------- | :--------- |
+| **Backup & Restore (Cold Standby)** | **1 to 4 hours**              | **1 to 24 hours** (Snapshot age)     | **Lowest (~5% overhead)**     | Low        |
+| **Pilot Light (Warm Standby)**      | **15 to 30 minutes**          | **< 1 hour**                         | Moderate (~30% overhead)      | Moderate   |
+| **Active-Passive Failover**         | **< 5 minutes**               | **Near Zero (Database replication)** | High (~100% overhead)         | High       |
+| **Active-Active Multi-Region**      | **< 10 seconds (Instant)**    | **Zero (Synchronous multi-region)**  | **Highest (> 200% overhead)** | Advanced   |
 
 ---
 
@@ -168,13 +168,13 @@ az dataprotection backup-instance restore trigger \
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter / Capability | Platform Limit | Production Context |
-| :--- | :--- | :--- |
-| **Max Backup Instances per Vault** | **1,000 Clusters** | Centralized enterprise governance |
-| **Snapshot Consistency** | **Crash-Consistent** | Pre-freeze/post-thaw hooks required for DB ACID |
-| **Supported Storage Drivers** | Azure Disk CSI & Azure Files CSI | Backs up both block disks and shared files |
-| **Cross-Region Restore (CRR)** | Supported via GRS | Allows restoring directly to paired secondary region |
-| **Max Backup Retention** | **Up to 10 Years** | Satisfies regulatory compliance (HIPAA/FINRA) |
+| Parameter / Capability             | Platform Limit                   | Production Context                                   |
+| :--------------------------------- | :------------------------------- | :--------------------------------------------------- |
+| **Max Backup Instances per Vault** | **1,000 Clusters**               | Centralized enterprise governance                    |
+| **Snapshot Consistency**           | **Crash-Consistent**             | Pre-freeze/post-thaw hooks required for DB ACID      |
+| **Supported Storage Drivers**      | Azure Disk CSI & Azure Files CSI | Backs up both block disks and shared files           |
+| **Cross-Region Restore (CRR)**     | Supported via GRS                | Allows restoring directly to paired secondary region |
+| **Max Backup Retention**           | **Up to 10 Years**               | Satisfies regulatory compliance (HIPAA/FINRA)        |
 
 ---
 
@@ -207,7 +207,7 @@ az dataprotection backup-instance restore trigger \
   - Azure Front Door Premium Base: **$330.00 / month**
   - Cross-Region Data Transfer (50 TB): 50,000 GB × $0.08/GB = **$4,000.00**
   - Standard Control Plane SLAs (2 clusters): 2 × $73.00 = **$146.00**
-- **Total Active-Active Monthly Spend:** **$10,082.40 / month** *(Delivering sub-10 second automated global failover).*
+- **Total Active-Active Monthly Spend:** **$10,082.40 / month** _(Delivering sub-10 second automated global failover)._
 
 ---
 

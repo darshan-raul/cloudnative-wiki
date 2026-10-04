@@ -69,20 +69,20 @@ metadata:
   namespace: argocd
 spec:
   generators:
-  - clusters:
-      values:
-        destinationServer: https://kubernetes.default.svc
+    - clusters:
+        values:
+          destinationServer: https://kubernetes.default.svc
   template:
     metadata:
-      name: '{{name}}-my-app'
+      name: "{{name}}-my-app"
     spec:
       project: default
       source:
         repoURL: https://github.com/my-org/app-manifests
         targetRevision: main
-        path: './apps/{{name}}'
+        path: "./apps/{{name}}"
       destination:
-        server: '{{values.destinationServer}}'
+        server: "{{values.destinationServer}}"
         namespace: default
       syncPolicy:
         automated:
@@ -130,9 +130,9 @@ spec:
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- deployment.yaml
-- service.yaml
-- ingress.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
 commonLabels:
   app: my-app
 ```

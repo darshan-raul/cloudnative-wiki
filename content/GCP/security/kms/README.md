@@ -84,6 +84,7 @@ By default, all data stored at rest within Google Cloud is encrypted using Googl
 ### Key Lifecycle States
 
 A CryptoKeyVersion transitions through strict deterministic lifecycle states:
+
 1. `PENDING_GENERATION` $\rightarrow$ `ENABLED` (Active and usable).
 2. `DISABLED` (Temporarily suspended; cryptographic operations fail immediately).
 3. `DESTROY_SCHEDULED` (Marked for destruction with a mandatory waiting period, typically 24 hours to 30 days, to protect against accidental catastrophic data loss).
@@ -188,15 +189,15 @@ gcloud kms keys versions destroy 1 \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Resource | Default Limit | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Symmetric Crypto Operations** | 60,000 QPS per region | Software keys scale virtually without limit |
-| **Cloud HSM Operations** | 3,000 QPS per region | Suitable for envelope KEK operations, not raw data streams |
-| **Asymmetric Sign / Decrypt** | 300 QPS per region | Cache public keys locally; only verify client-side |
-| **Key Rings per Location** | Unlimited | Cannot be deleted once created |
-| **CryptoKeys per Key Ring** | Unlimited | Group keys by compliance tier or business service |
-| **Key Rotation Frequency** | Min 24 hours | Recommended enterprise standard: 90 to 365 days |
-| **Destruction Scheduled Delay**| 24 hours to 120 days | Default is 24 hours; set to 30 days for production safety |
+| Parameter / Resource            | Default Limit         | Engineering Guidance                                       |
+| :------------------------------ | :-------------------- | :--------------------------------------------------------- |
+| **Symmetric Crypto Operations** | 60,000 QPS per region | Software keys scale virtually without limit                |
+| **Cloud HSM Operations**        | 3,000 QPS per region  | Suitable for envelope KEK operations, not raw data streams |
+| **Asymmetric Sign / Decrypt**   | 300 QPS per region    | Cache public keys locally; only verify client-side         |
+| **Key Rings per Location**      | Unlimited             | Cannot be deleted once created                             |
+| **CryptoKeys per Key Ring**     | Unlimited             | Group keys by compliance tier or business service          |
+| **Key Rotation Frequency**      | Min 24 hours          | Recommended enterprise standard: 90 to 365 days            |
+| **Destruction Scheduled Delay** | 24 hours to 120 days  | Default is 24 hours; set to 30 days for production safety  |
 
 ---
 
@@ -213,6 +214,7 @@ gcloud kms keys versions destroy 1 \
 ## 6. Realistic Pricing Scenarios
 
 Cloud KMS pricing is based on:
+
 1. **Active Key Versions:**
    - Software Key Version: **$0.06 per key version / month**.
    - Cloud HSM Key Version: **$1.00 per key version / month**.
@@ -249,7 +251,7 @@ Cloud KMS pricing is based on:
 ## 7. Battle-Tested Nuggets & Production Gotchas
 
 1. **Key Rings and Keys Cannot Be Deleted:** In Google Cloud, `gcloud kms keyrings delete` or `gcloud kms keys delete` does not exist. Once created, a Key Ring and Key exist forever to maintain cryptographic non-repudiation and prevent audit log tampering. Only individual `CryptoKeyVersion` entries can have their key material destroyed. Always use consistent naming conventions (`<service>-<environment>-key`) and avoid creating temporary test keys with production names.
-2. **Key Rotation Does NOT Re-Encrypt Existing Data:** When a key auto-rotates (e.g., version 1 rotates to version 2), version 2 becomes the `PRIMARY` version used to encrypt *new* data. It does **not** automatically re-encrypt historical tables, GCS blobs, or persistent disks created with version 1. To completely decommission version 1, you must perform a batch rewrite of historical data (e.g., copying GCS objects in place or running `ALTER TABLE` in BigQuery) before scheduling version 1 for destruction.
+2. **Key Rotation Does NOT Re-Encrypt Existing Data:** When a key auto-rotates (e.g., version 1 rotates to version 2), version 2 becomes the `PRIMARY` version used to encrypt _new_ data. It does **not** automatically re-encrypt historical tables, GCS blobs, or persistent disks created with version 1. To completely decommission version 1, you must perform a batch rewrite of historical data (e.g., copying GCS objects in place or running `ALTER TABLE` in BigQuery) before scheduling version 1 for destruction.
 3. **Cross-Region CMEK Dependency Failure Mode:** Never configure a resource in `europe-west1` to use a CMEK key located in `us-central1`. If an undersea fiber disruption or regional control-plane degradation affects `us-central1`, services in `europe-west1` will fail to decrypt their DEKs, causing persistent disks to detach and Cloud SQL instances to crash into recovery mode. Always keep KMS keys co-located in the same region as the data they protect.
 4. **Disabling a CMEK Key Instantly Kills Compute & Databases:** If an administrator disables or destroys a CMEK key used by a Compute Engine boot disk, GKE node pool, or Cloud SQL database, the virtual machines are halted or enter an error state within 15 to 30 minutes when memory leases expire. Disabling a key is the ultimate cryptographic "kill switch," but it must be guarded by strict IAM deny policies and Break-Glass procedures.
 5. **Separation of Duties (Project-Level Isolation):** Never store Cloud KMS keys in the same GCP project as the workloads consuming them. If an attacker compromises a project owner credential in `app-production`, they could grant themselves decryption rights or delete keys. Place KMS in a dedicated `secops-kms-prod` project where only security administrators have IAM admin privileges, granting application service accounts only the granular `roles/cloudkms.cryptoKeyEncrypterDecrypter` role.

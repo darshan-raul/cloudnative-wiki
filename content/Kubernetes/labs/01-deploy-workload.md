@@ -100,6 +100,7 @@ kubectl apply -f podinfo-deployment.yaml
 ```
 
 **Expected output:**
+
 ```
 deployment.apps/podinfo created
 ```
@@ -111,6 +112,7 @@ kubectl rollout status deployment/podinfo
 ```
 
 **Expected output:**
+
 ```
 Waiting for deployment "podinfo" rollout to finish: 0 of 2 updated replicas are available...
 Waiting for deployment "podinfo" rollout to finish: 1 of 2 updated replicas are available...
@@ -126,6 +128,7 @@ kubectl get deployment,rs,pods -l app.kubernetes.io/name=podinfo -o wide
 ```
 
 Notice the naming pattern:
+
 1. `deployment.apps/podinfo`
 2. `replicaset.apps/podinfo-<pod-template-hash>`
 3. `pod/podinfo-<pod-template-hash>-<random-5-chars>`
@@ -138,6 +141,7 @@ kubectl get pod "$POD_NAME" -o jsonpath='{.metadata.ownerReferences}' | jq .
 ```
 
 **Observed JSON:**
+
 ```json
 [
   {
@@ -150,6 +154,7 @@ kubectl get pod "$POD_NAME" -o jsonpath='{.metadata.ownerReferences}' | jq .
   }
 ]
 ```
+
 The Pod is owned by the ReplicaSet, not directly by the Deployment. The Deployment manages the ReplicaSet, and the ReplicaSet manages the individual Pods.
 
 ### Step 4: Stream logs and verify HTTP response
@@ -171,6 +176,7 @@ curl -s http://127.0.0.1:9898/api/info | jq .
 ```
 
 **Expected output:**
+
 ```json
 {
   "hostname": "podinfo-...",
@@ -184,6 +190,7 @@ curl -s http://127.0.0.1:9898/api/info | jq .
 ```
 
 Stop the port-forward process:
+
 ```bash
 kill $PORT_FORWARD_PID
 ```
@@ -195,6 +202,7 @@ kill $PORT_FORWARD_PID
 What happens when an extraneous Pod is labeled with the ReplicaSet's selector?
 
 ### Trigger the scenario:
+
 Launch a standalone, unmanaged Pod that shares the selector `app.kubernetes.io/name=podinfo`:
 
 ```bash
@@ -205,6 +213,7 @@ kubectl run rogue-pod \
 ```
 
 ### Observe the symptom:
+
 Quickly list the pods:
 
 ```bash
@@ -212,7 +221,9 @@ kubectl get pods -l app.kubernetes.io/name=podinfo
 ```
 
 ### Observed behavior & Explanation:
+
 Within milliseconds, `rogue-pod` is terminated or one of the existing Pods is terminated!
+
 ```
 NAME                       READY   STATUS        RESTARTS   AGE
 podinfo-76575fc4c-42x8j    1/1     Running       0          3m
@@ -228,7 +239,7 @@ kubectl describe rs "$RS_NAME" | grep -A 5 "Events:"
 ```
 
 **Why this happens:**
-The ReplicaSet controller is a **reconciliation loop**. Its contract states: *At all times, exactly `replicas: 2` pods matching label `app.kubernetes.io/name=podinfo` must exist.* When `rogue-pod` appeared with that label, the count became 3. The controller immediately deleted one pod to restore observed state to desired state (2).
+The ReplicaSet controller is a **reconciliation loop**. Its contract states: _At all times, exactly `replicas: 2` pods matching label `app.kubernetes.io/name=podinfo` must exist._ When `rogue-pod` appeared with that label, the count became 3. The controller immediately deleted one pod to restore observed state to desired state (2).
 
 ---
 

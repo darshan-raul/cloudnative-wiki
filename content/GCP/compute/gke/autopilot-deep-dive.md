@@ -66,6 +66,7 @@ In GKE Autopilot, developers declare Pod resource requests, and Google's control
 ### The Autopilot Admission Mutating Webhook & Resource Model
 
 When a deployment is submitted to an Autopilot cluster, the internal admission webhook inspects the pod specification and applies runtime invariants based on your cluster's GKE version and configuration:
+
 1. **Pod Bursting vs Guaranteed QoS:**
    - **Historical Invariant (Pre-1.29.2):** Autopilot strictly mutated `limits = requests`. Specifying limits higher than requests caused requests to be mutated upward to equal limits, enforcing `Guaranteed` QoS class across all pods.
    - **Modern Standard (GKE 1.29.2+ / 1.30+):** Autopilot officially supports **Pod Bursting** (`Burstable` QoS class). If `limits` are set higher than `requests`, Autopilot allows the pod to burst into unallocated node headroom without mutating the request upward. Crucially, **billing is calculated strictly on resource requests, not limits or burst usage**, delivering massive FinOps savings for spiky microservices.
@@ -84,15 +85,15 @@ When a deployment is submitted to an Autopilot cluster, the internal admission w
 
 Autopilot enforces the **Kubernetes Hardened Security Benchmark** out of the box. Workloads cannot bypass these restrictions:
 
-| Security Feature | GKE Autopilot Policy | Engineering Workaround / Impact |
-| :--- | :--- | :--- |
-| **Privileged Containers** | **Strictly Forbidden** (`securityContext.privileged: false`) | Use Linux capabilities (e.g., `NET_ADMIN`) if permitted |
-| **Host Namespaces** | `hostNetwork`, `hostPID`, `hostIPC` **Blocked** | Pods must operate inside isolated container namespaces |
-| **HostPath Volume Mounts** | **Strictly Forbidden** (Cannot mount `/var/run/docker.sock`) | Use EmptyDir, PersistentVolumeClaims, or GCS FUSE CSI |
-| **Linux Capabilities** | Most dangerous capabilities dropped by default | Only select safe capabilities (e.g., `CAP_NET_BIND_SERVICE`) allowed |
-| **Shielded GKE Nodes** | **Mandatory & Enabled** (Secure Boot, vTPM) | Protects against rootkits and kernel tampering |
-| **Node Auto-Repair & Upgrade** | **Managed by Google** (Release Channels) | Upgrades execute automatically within maintenance windows |
-| **Workload Identity** | **Mandatory & Enabled** | Eliminates static GCP service account JSON private keys |
+| Security Feature               | GKE Autopilot Policy                                         | Engineering Workaround / Impact                                      |
+| :----------------------------- | :----------------------------------------------------------- | :------------------------------------------------------------------- |
+| **Privileged Containers**      | **Strictly Forbidden** (`securityContext.privileged: false`) | Use Linux capabilities (e.g., `NET_ADMIN`) if permitted              |
+| **Host Namespaces**            | `hostNetwork`, `hostPID`, `hostIPC` **Blocked**              | Pods must operate inside isolated container namespaces               |
+| **HostPath Volume Mounts**     | **Strictly Forbidden** (Cannot mount `/var/run/docker.sock`) | Use EmptyDir, PersistentVolumeClaims, or GCS FUSE CSI                |
+| **Linux Capabilities**         | Most dangerous capabilities dropped by default               | Only select safe capabilities (e.g., `CAP_NET_BIND_SERVICE`) allowed |
+| **Shielded GKE Nodes**         | **Mandatory & Enabled** (Secure Boot, vTPM)                  | Protects against rootkits and kernel tampering                       |
+| **Node Auto-Repair & Upgrade** | **Managed by Google** (Release Channels)                     | Upgrades execute automatically within maintenance windows            |
+| **Workload Identity**          | **Mandatory & Enabled**                                      | Eliminates static GCP service account JSON private keys              |
 
 ---
 
@@ -139,32 +140,32 @@ spec:
         app: order-api
     spec:
       containers:
-      - name: web
-        image: us-central1-docker.pkg.dev/core-infrastructure-prod/apps/order-api:v2.4.0
-        # GKE Autopilot automatically sets limits = requests
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "1Gi"
-          limits:
-            cpu: "500m"
-            memory: "1Gi"
-        ports:
-        - containerPort: 8080
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          runAsNonRoot: true
-          runAsUser: 10001
-          capabilities:
-            drop:
-            - ALL
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 10
+        - name: web
+          image: us-central1-docker.pkg.dev/core-infrastructure-prod/apps/order-api:v2.4.0
+          # GKE Autopilot automatically sets limits = requests
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ```
 
 Apply deployment:
@@ -194,12 +195,12 @@ spec:
       terminationGracePeriodSeconds: 25
       restartPolicy: OnFailure
       containers:
-      - name: worker
-        image: us-central1-docker.pkg.dev/core-infrastructure-prod/batch/reconciler:v1.1
-        resources:
-          requests:
-            cpu: "2"
-            memory: "4Gi"
+        - name: worker
+          image: us-central1-docker.pkg.dev/core-infrastructure-prod/batch/reconciler:v1.1
+          resources:
+            requests:
+              cpu: "2"
+              memory: "4Gi"
 ```
 
 ### 4. Target Specific Hardware Compute Classes (Performance & Arm)
@@ -225,15 +226,15 @@ nodeSelector:
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | GKE Autopilot Quota / Invariant | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Cluster Management Fee** | $0.10/hour ($73/month) | One flat cluster fee per cluster; waived for 1 cluster per billing account |
-| **CPU Billing Increment** | 0.25 vCPU steps | Pods billed exactly for requested CPU/RAM |
-| **Max Pod CPU / Memory** | Up to 110 vCPUs / 400+ GiB | Constrained only by largest single GCE VM shape |
-| **DaemonSets Support** | Supported with billing per-pod | You pay for DaemonSet resource requests on every node |
-| **Subnet Sizing** | Requires large Pod CIDR | Pod-per-node allocation requires spacious secondary subnets |
-| **Control Plane SLA** | **99.95%** (Regional cluster) | Guaranteed financially backed SLA |
-| **Pod Provisioning Latency** | 30s to 90s (if new VM needed) | Use Overprovisioning/Ballooning pods to eliminate latency |
+| Parameter / Dimension        | GKE Autopilot Quota / Invariant | Engineering Guidance                                                       |
+| :--------------------------- | :------------------------------ | :------------------------------------------------------------------------- |
+| **Cluster Management Fee**   | $0.10/hour ($73/month)          | One flat cluster fee per cluster; waived for 1 cluster per billing account |
+| **CPU Billing Increment**    | 0.25 vCPU steps                 | Pods billed exactly for requested CPU/RAM                                  |
+| **Max Pod CPU / Memory**     | Up to 110 vCPUs / 400+ GiB      | Constrained only by largest single GCE VM shape                            |
+| **DaemonSets Support**       | Supported with billing per-pod  | You pay for DaemonSet resource requests on every node                      |
+| **Subnet Sizing**            | Requires large Pod CIDR         | Pod-per-node allocation requires spacious secondary subnets                |
+| **Control Plane SLA**        | **99.95%** (Regional cluster)   | Guaranteed financially backed SLA                                          |
+| **Pod Provisioning Latency** | 30s to 90s (if new VM needed)   | Use Overprovisioning/Ballooning pods to eliminate latency                  |
 
 ---
 
@@ -250,6 +251,7 @@ nodeSelector:
 ## 6. Realistic Pricing Scenarios
 
 GKE Autopilot pricing is based entirely on **Pod Resource Requests**:
+
 - **vCPU:** ~$0.0445 per vCPU-hr (General Purpose, `us-central1`).
 - **Memory:** ~$0.0049 per GiB-hr.
 - **Ephemeral Storage:** ~$0.000054 per GiB-hr (first 10 GiB free per pod).
@@ -269,7 +271,7 @@ GKE Autopilot pricing is based entirely on **Pod Resource Requests**:
   - vCPU Cost: 40 vCPUs × $0.0445/hr × 730 hrs = **$1,300.20**
   - RAM Cost: 80 GiB × $0.0049/hr × 730 hrs = **$286.16**
 - **Total Monthly Cost:** **$1,659.36 / month**
-*(Note: In GKE Standard, running these 80 pods requires ~8 to 10 nodes with ~25% wasted slack capacity, yielding comparable net cost once OS overhead is counted).*
+  _(Note: In GKE Standard, running these 80 pods requires ~8 to 10 nodes with ~25% wasted slack capacity, yielding comparable net cost once OS overhead is counted)._
 
 ### Scenario B: High-Throughput Batch Pipeline with Spot Pods
 

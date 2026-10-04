@@ -12,7 +12,7 @@ tags:
 
 # Azure Network Security Groups (NSGs) & ASGs 🛡️🧱
 
-Network Security Groups (NSGs) provide stateful Layer 3 and Layer 4 packet filtering for virtual machines, subnets, and container network interfaces in Azure. 
+Network Security Groups (NSGs) provide stateful Layer 3 and Layer 4 packet filtering for virtual machines, subnets, and container network interfaces in Azure.
 
 To prevent IP churn from breaking security configurations, Azure provides **Application Security Groups (ASGs)**, allowing administrators to group VMs logically into tiers (e.g., `ASG-Web`, `ASG-DB`) and write firewall policies based on application identity rather than ephemeral IP addresses.
 
@@ -61,7 +61,7 @@ Traffic entering or leaving an Azure VM can pass through two distinct NSG bounda
                            Destination Network
 ```
 
-* **The Double-Allow Requirement:** For an inbound packet to reach a VM, **both** the Subnet NSG and the NIC NSG must permit the traffic. If either NSG denies the packet, it is immediately dropped.
+- **The Double-Allow Requirement:** For an inbound packet to reach a VM, **both** the Subnet NSG and the NIC NSG must permit the traffic. If either NSG denies the packet, it is immediately dropped.
 
 ---
 
@@ -69,8 +69,8 @@ Traffic entering or leaving an Azure VM can pass through two distinct NSG bounda
 
 ### 1. Rule Priority & Evaluation Order
 
-* Rules are processed in strict priority order from **100 to 4096** (lowest numeric value evaluated first).
-* The **first matching rule** terminates evaluation; subsequent rules are ignored.
+- Rules are processed in strict priority order from **100 to 4096** (lowest numeric value evaluated first).
+- The **first matching rule** terminates evaluation; subsequent rules are ignored.
 
 ### 2. Immutable Default Ingress & Egress Rules
 
@@ -78,19 +78,19 @@ Every NSG contains default system rules with priority >= 65000 that cannot be de
 
 #### Default Ingress Rules
 
-| Priority | Name | Source | Destination | Port | Action |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **65000** | `AllowVnetInBound` | `VirtualNetwork` | `VirtualNetwork` | Any | **ALLOW** (Permits all intra-VNet and peered VNet traffic) |
-| **65001** | `AllowAzureLoadBalancerInBound` | `AzureLoadBalancer` | Any | Any | **ALLOW** (Permits health check probes) |
-| **65500** | `DenyAllInBound` | Any | Any | Any | **DENY** (Implicit zero-trust block) |
+| Priority  | Name                            | Source              | Destination      | Port | Action                                                     |
+| :-------- | :------------------------------ | :------------------ | :--------------- | :--- | :--------------------------------------------------------- |
+| **65000** | `AllowVnetInBound`              | `VirtualNetwork`    | `VirtualNetwork` | Any  | **ALLOW** (Permits all intra-VNet and peered VNet traffic) |
+| **65001** | `AllowAzureLoadBalancerInBound` | `AzureLoadBalancer` | Any              | Any  | **ALLOW** (Permits health check probes)                    |
+| **65500** | `DenyAllInBound`                | Any                 | Any              | Any  | **DENY** (Implicit zero-trust block)                       |
 
 #### Default Egress Rules
 
-| Priority | Name | Source | Destination | Port | Action |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **65000** | `AllowVnetOutBound` | `VirtualNetwork` | `VirtualNetwork` | Any | **ALLOW** |
-| **65001** | `AllowInternetOutBound` | Any | `Internet` | Any | **ALLOW** (Permits unrestricted internet outbound by default!) |
-| **65500** | `DenyAllOutBound` | Any | Any | Any | **DENY** |
+| Priority  | Name                    | Source           | Destination      | Port | Action                                                         |
+| :-------- | :---------------------- | :--------------- | :--------------- | :--- | :------------------------------------------------------------- |
+| **65000** | `AllowVnetOutBound`     | `VirtualNetwork` | `VirtualNetwork` | Any  | **ALLOW**                                                      |
+| **65001** | `AllowInternetOutBound` | Any              | `Internet`       | Any  | **ALLOW** (Permits unrestricted internet outbound by default!) |
+| **65500** | `DenyAllOutBound`       | Any              | Any              | Any  | **DENY**                                                       |
 
 ### 3. Application Security Groups (ASGs)
 
@@ -117,15 +117,16 @@ ASGs enable micro-segmentation without managing static IP lists:
 └────────────────────────────────────────────────────────┘
 ```
 
-* When new web VMs are added via auto-scaling, they are simply tagged with `ASG-Web` and automatically inherit the database firewall rules without updating NSG CIDRs!
+- When new web VMs are added via auto-scaling, they are simply tagged with `ASG-Web` and automatically inherit the database firewall rules without updating NSG CIDRs!
 
 ### 4. Service Tags
 
 Service Tags represent pre-defined IP address groups maintained dynamically by Microsoft:
-* `VirtualNetwork`: Includes the local VNet, all peered VNets, and connected on-prem gateways.
-* `AzureLoadBalancer`: Azure's infrastructure health probe IP (`168.63.129.16`).
-* `Internet`: Any IP address outside the VirtualNetwork range.
-* `Storage.EastUS`, `Sql.EastUS`: Azure PaaS service IP ranges within a specific region.
+
+- `VirtualNetwork`: Includes the local VNet, all peered VNets, and connected on-prem gateways.
+- `AzureLoadBalancer`: Azure's infrastructure health probe IP (`168.63.129.16`).
+- `Internet`: Any IP address outside the VirtualNetwork range.
+- `Storage.EastUS`, `Sql.EastUS`: Azure PaaS service IP ranges within a specific region.
 
 ---
 
@@ -182,37 +183,39 @@ az network nsg rule create \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **NSGs per subscription** | 5,000 per region | Standard subscription limit |
-| **Security rules per NSG** | 1,000 rules | Use ASGs and augmented rules to minimize rule counts |
-| **ASGs per subscription** | 3,000 ASGs | Supports large enterprise architectures |
-| **ASGs per NIC** | Up to 20 ASGs | Can tag a VM with multiple functional roles |
-| **Augmented rule IPs** | Up to 4,000 IP prefixes per rule | Specify comma-separated CIDR blocks in a single rule |
+| Parameter                  | Limit                            | Production Notes                                     |
+| :------------------------- | :------------------------------- | :--------------------------------------------------- |
+| **NSGs per subscription**  | 5,000 per region                 | Standard subscription limit                          |
+| **Security rules per NSG** | 1,000 rules                      | Use ASGs and augmented rules to minimize rule counts |
+| **ASGs per subscription**  | 3,000 ASGs                       | Supports large enterprise architectures              |
+| **ASGs per NIC**           | Up to 20 ASGs                    | Can tag a VM with multiple functional roles          |
+| **Augmented rule IPs**     | Up to 4,000 IP prefixes per rule | Specify comma-separated CIDR blocks in a single rule |
 
 ---
 
 ## References
 
-* **Homepage:** https://azure.microsoft.com/en-us/products/virtual-network
-* **NSG Documentation:** https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview
-* **ASG Overview:** https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups
-* **Service Tags Reference:** https://learn.microsoft.com/en-us/azure/virtual-network/service-tags-overview
-* **Pricing:** Free (NSGs and ASGs incur zero charges)
+- **Homepage:** https://azure.microsoft.com/en-us/products/virtual-network
+- **NSG Documentation:** https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview
+- **ASG Overview:** https://learn.microsoft.com/en-us/azure/virtual-network/application-security-groups
+- **Service Tags Reference:** https://learn.microsoft.com/en-us/azure/virtual-network/service-tags-overview
+- **Pricing:** Free (NSGs and ASGs incur zero charges)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Standard Enterprise Micro-segmentation
-* 50 NSGs and 100 ASGs governing 500 VMs across 15 subnets in East US.
-* **Monthly NSG & ASG Cost:** **$0.00 / month** (Azure provides stateful NSG and ASG filtering completely free of charge).
+
+- 50 NSGs and 100 ASGs governing 500 VMs across 15 subnets in East US.
+- **Monthly NSG & ASG Cost:** **$0.00 / month** (Azure provides stateful NSG and ASG filtering completely free of charge).
 
 ### Scenario 2: Security Auditing with NSG Flow Logs & Traffic Analytics
-* NSG Flow Logs enabled on all 50 NSGs to capture network telemetry for SIEM ingestion.
-* Log storage in Azure Storage Account (100 GB / month): ~$2.00.
-* Traffic Analytics log processing (100 GB ingested via Log Analytics @ $2.30/GB): ~$230.00.
-* **Total Network Observability Cost:** **~$232.00 / month**.
+
+- NSG Flow Logs enabled on all 50 NSGs to capture network telemetry for SIEM ingestion.
+- Log storage in Azure Storage Account (100 GB / month): ~$2.00.
+- Traffic Analytics log processing (100 GB ingested via Log Analytics @ $2.30/GB): ~$230.00.
+- **Total Network Observability Cost:** **~$232.00 / month**.
 
 ---
 

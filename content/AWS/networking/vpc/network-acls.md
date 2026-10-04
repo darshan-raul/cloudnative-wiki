@@ -13,14 +13,14 @@ A Network ACL is a stateless subnet-level firewall. Unlike security groups (stat
 
 ## Key Differences from Security Groups
 
-| Property | Security Group | Network ACL |
-|----------|---------------|-------------|
-| Scope | Instance-level (ENI) | Subnet-level |
-| Stateful | Yes — return traffic auto-allowed | No — must explicitly allow return |
-| Default rules | Allow all outbound, deny all inbound | Allow all inbound and outbound |
-| Rule evaluation | All rules, most permissive wins | By rule number (lowest first, first match) |
-| Explicit deny | Supported | Supported |
-| Use case | Primary firewall | Subnet-level explicit deny |
+| Property        | Security Group                       | Network ACL                                |
+| --------------- | ------------------------------------ | ------------------------------------------ |
+| Scope           | Instance-level (ENI)                 | Subnet-level                               |
+| Stateful        | Yes — return traffic auto-allowed    | No — must explicitly allow return          |
+| Default rules   | Allow all outbound, deny all inbound | Allow all inbound and outbound             |
+| Rule evaluation | All rules, most permissive wins      | By rule number (lowest first, first match) |
+| Explicit deny   | Supported                            | Supported                                  |
+| Use case        | Primary firewall                     | Subnet-level explicit deny                 |
 
 ## Rule Structure
 
@@ -64,12 +64,14 @@ Outbound:
 ## When to Use NACLs vs Security Groups
 
 **Use NACLs for:**
+
 - Explicit deny of specific IP ranges at the subnet boundary (e.g., deny known malicious IPs)
 - Subnet-level policies that apply to all instances in the subnet regardless of their security group
 - Compliance requirements for explicit deny at network layer
 - Controlling traffic between tiers at the subnet level
 
 **Use Security Groups for:**
+
 - Primary firewall for most workloads
 - Instance-level access control
 - Stateful connection tracking (automatic return traffic)
@@ -88,10 +90,10 @@ Outbound: Allow 0.0.0.0/0 → TCP 443 (HTTPS outbound to internet)
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| NACLs per VPC | 200 |
-| Rules per NACL | 20 inbound + 20 outbound |
+| Resource         | Limit                                            |
+| ---------------- | ------------------------------------------------ |
+| NACLs per VPC    | 200                                              |
+| Rules per NACL   | 20 inbound + 20 outbound                         |
 | Subnets per NACL | 1 (but one NACL can be attached to many subnets) |
 
 ## References

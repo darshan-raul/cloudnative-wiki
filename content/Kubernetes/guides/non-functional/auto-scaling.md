@@ -13,13 +13,13 @@ Four layers of scaling work in concert: **HPA** scales pods, **VPA** rightsizes 
 
 ## The four scalers
 
-| Scaler | Scales | Trigger | Status |
-|--------|--------|---------|--------|
-| **HPA** (HorizontalPodAutoscaler) | Pod replicas | CPU, memory, custom metrics | GA |
-| **VPA** (VerticalPodAutoscaler) | Pod resources (requests/limits) | Historical usage | Beta |
-| **Cluster Autoscaler (CA)** | Nodes | Pending pods (unschedulable) | GA |
-| **Karpenter** | Nodes | Pending pods (direct provisioning) | GA |
-| **KEDA** | Pod replicas (via HPA) | External event sources (Kafka, SQS, cron, etc.) | GA |
+| Scaler                            | Scales                          | Trigger                                         | Status |
+| --------------------------------- | ------------------------------- | ----------------------------------------------- | ------ |
+| **HPA** (HorizontalPodAutoscaler) | Pod replicas                    | CPU, memory, custom metrics                     | GA     |
+| **VPA** (VerticalPodAutoscaler)   | Pod resources (requests/limits) | Historical usage                                | Beta   |
+| **Cluster Autoscaler (CA)**       | Nodes                           | Pending pods (unschedulable)                    | GA     |
+| **Karpenter**                     | Nodes                           | Pending pods (direct provisioning)              | GA     |
+| **KEDA**                          | Pod replicas (via HPA)          | External event sources (Kafka, SQS, cron, etc.) | GA     |
 
 ```
                           ┌─────────────────┐
@@ -88,21 +88,21 @@ spec:
   minReplicas: 2
   maxReplicas: 20
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300   # wait 5min before scaling down
+      stabilizationWindowSeconds: 300 # wait 5min before scaling down
     scaleUp:
-      stabilizationWindowSeconds: 0     # scale up immediately
+      stabilizationWindowSeconds: 0 # scale up immediately
       policies:
-      - type: Percent
-        value: 100                        # can double
-        periodSeconds: 60
+        - type: Percent
+          value: 100 # can double
+          periodSeconds: 60
 ```
 
 ### What HPA needs
@@ -133,6 +133,7 @@ kubectl get hpa web-hpa
 The Metrics API is extensible. Common adapters:
 
 - **Prometheus Adapter** — query Prometheus, expose as Metrics API
+
   ```yaml
   - type: Pods
     pods:
@@ -172,16 +173,16 @@ spec:
     kind: Deployment
     name: web
   updatePolicy:
-    updateMode: "Auto"      # or "Off" for recommendations only
+    updateMode: "Auto" # or "Off" for recommendations only
   resourcePolicy:
     containerPolicies:
-    - containerName: web
-      minAllowed:
-        cpu: 100m
-        memory: 128Mi
-      maxAllowed:
-        cpu: 2
-        memory: 4Gi
+      - containerName: web
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+        maxAllowed:
+          cpu: 2
+          memory: 4Gi
 ```
 
 ### When to use VPA
@@ -205,10 +206,10 @@ Use them on **different metrics**:
 ```yaml
 # HPA on CPU
 metrics:
-- type: Resource
-  resource:
-    name: cpu
-    target: { type: Utilization, averageUtilization: 70 }
+  - type: Resource
+    resource:
+      name: cpu
+      target: { type: Utilization, averageUtilization: 70 }
 
 # VPA on memory
 # (VPA is in "Auto" mode for memory only)
@@ -260,17 +261,17 @@ spec:
   template:
     spec:
       containers:
-      - name: cluster-autoscaler
-        image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.29.0
-        command:
-        - ./cluster-autoscaler
-        - --v=4
-        - --cloud-provider=aws
-        - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/<cluster-name>
-        - --balance-similar-node-groups
-        - --expander=least-waste
-        - --scale-down-delay-after-add=10m
-        - --scale-down-unneeded-time=10m
+        - name: cluster-autoscaler
+          image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.29.0
+          command:
+            - ./cluster-autoscaler
+            - --v=4
+            - --cloud-provider=aws
+            - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/<cluster-name>
+            - --balance-similar-node-groups
+            - --expander=least-waste
+            - --scale-down-delay-after-add=10m
+            - --scale-down-unneeded-time=10m
 ```
 
 ### CA gotchas
@@ -318,18 +319,18 @@ spec:
   template:
     spec:
       requirements:
-      - key: kubernetes.io/arch
-        operator: In
-        values: ["amd64"]
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: ["spot", "on-demand"]
-      - key: karpenter.k8s.aws/instance-category
-        operator: In
-        values: ["c", "m", "r"]
-      - key: karpenter.k8s.aws/instance-generation
-        operator: Gt
-        values: ["4"]
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot", "on-demand"]
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["c", "m", "r"]
+        - key: karpenter.k8s.aws/instance-generation
+          operator: Gt
+          values: ["4"]
       nodeClassRef:
         apiVersion: karpenter.k8s.aws/v1beta1
         kind: EC2NodeClass
@@ -383,12 +384,12 @@ spec:
   minReplicaCount: 1
   maxReplicaCount: 50
   triggers:
-  - type: kafka
-    metadata:
-      bootstrapServers: kafka:9092
-      consumerGroup: my-consumer-group
-      topic: orders
-      lagThreshold: "100"     # scale up if any partition lag > 100
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka:9092
+        consumerGroup: my-consumer-group
+        topic: orders
+        lagThreshold: "100" # scale up if any partition lag > 100
 ```
 
 KEDA watches the Kafka consumer group lag, scales the Deployment to keep lag under 100.
@@ -467,9 +468,9 @@ kind: PodDisruptionBudget
 metadata:
   name: web-pdb
 spec:
-  minAvailable: 2          # always keep 2 pods
+  minAvailable: 2 # always keep 2 pods
   # or
-  maxUnavailable: 1        # never have more than 1 down
+  maxUnavailable: 1 # never have more than 1 down
   selector:
     matchLabels:
       app: web
@@ -487,17 +488,17 @@ spec:
 
 ## Common gotchas
 
-* **HPA needs `metrics-server`.** Without it, HPA shows `<unknown>/70%` and doesn't scale.
-* **HPA can only scale on metrics it can read.** CPU/memory is built-in. RPS, queue depth, etc. need adapters.
-* **HPA won't scale to zero** by default. Use KEDA for that.
-* **VPA + HPA conflict on the same metric.** Don't run both on CPU/memory.
-* **Karpenter's consolidation is aggressive.** Always set PDBs.
-* **Cluster Autoscaler takes minutes to scale up.** Plan for it. Karpenter is faster.
-* **Spot instances + stateful workloads** is risky. Use StatefulSets carefully with spot.
-* **Resource requests are the foundation.** Without them, HPA is useless, VPA is guessing, and the scheduler doesn't know what to do.
-* **`minReplicas: 0` requires a custom metrics adapter** that supports scaling to zero (KEDA, KNative, etc.). Default HPA cannot scale to zero.
-* **HPA and PDB don't always play nicely.** If HPA scales down to minReplicas and PDB says `minAvailable: minReplicas`, the system can deadlock during voluntary disruption. Set PDB conservatively.
-* **Karpenter doesn't manage existing node groups** — only the nodes it provisions. Mixed clusters are fine but be aware.
+- **HPA needs `metrics-server`.** Without it, HPA shows `<unknown>/70%` and doesn't scale.
+- **HPA can only scale on metrics it can read.** CPU/memory is built-in. RPS, queue depth, etc. need adapters.
+- **HPA won't scale to zero** by default. Use KEDA for that.
+- **VPA + HPA conflict on the same metric.** Don't run both on CPU/memory.
+- **Karpenter's consolidation is aggressive.** Always set PDBs.
+- **Cluster Autoscaler takes minutes to scale up.** Plan for it. Karpenter is faster.
+- **Spot instances + stateful workloads** is risky. Use StatefulSets carefully with spot.
+- **Resource requests are the foundation.** Without them, HPA is useless, VPA is guessing, and the scheduler doesn't know what to do.
+- **`minReplicas: 0` requires a custom metrics adapter** that supports scaling to zero (KEDA, KNative, etc.). Default HPA cannot scale to zero.
+- **HPA and PDB don't always play nicely.** If HPA scales down to minReplicas and PDB says `minAvailable: minReplicas`, the system can deadlock during voluntary disruption. Set PDB conservatively.
+- **Karpenter doesn't manage existing node groups** — only the nodes it provisions. Mixed clusters are fine but be aware.
 
 ## A worked example
 
@@ -517,17 +518,17 @@ spec:
   minReplicas: 5
   maxReplicas: 50
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target: { type: Utilization, averageUtilization: 70 }
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 30
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 30
+        - type: Percent
+          value: 100
+          periodSeconds: 30
     scaleDown:
       stabilizationWindowSeconds: 300
 ```
@@ -543,15 +544,15 @@ spec:
   template:
     spec:
       containers:
-      - name: web
-        image: myorg/web:v1
-        resources:
-          requests:
-            cpu: 500m    # each pod wants half a core
-            memory: 512Mi
-          limits:
-            cpu: 1
-            memory: 1Gi
+        - name: web
+          image: myorg/web:v1
+          resources:
+            requests:
+              cpu: 500m # each pod wants half a core
+              memory: 512Mi
+            limits:
+              cpu: 1
+              memory: 1Gi
 ```
 
 ```yaml
@@ -564,12 +565,12 @@ spec:
   template:
     spec:
       requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: ["spot", "on-demand"]
-      - key: karpenter.k8s.aws/instance-category
-        operator: In
-        values: ["c", "m"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot", "on-demand"]
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["c", "m"]
       nodeClassRef:
         name: default
   limits:
@@ -597,7 +598,7 @@ Together: at low load, 5 pods on 2 nodes. At 1000 RPS, HPA scales to ~30 pods, K
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — autoscaling + right-sizing = cost
-* [[Kubernetes/guides/non-functional/high-availability|high-availability]] — PDBs, multi-AZ
-* [[Kubernetes/guides/non-functional/performance-tuning|performance-tuning]] — resource requests and limits
-* [[Kubernetes/concepts/L06-scheduling-scaling/00-README|L06 Scheduling & Scaling]] — the concept layer
+- [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — autoscaling + right-sizing = cost
+- [[Kubernetes/guides/non-functional/high-availability|high-availability]] — PDBs, multi-AZ
+- [[Kubernetes/guides/non-functional/performance-tuning|performance-tuning]] — resource requests and limits
+- [[Kubernetes/concepts/L06-scheduling-scaling/00-README|L06 Scheduling & Scaling]] — the concept layer

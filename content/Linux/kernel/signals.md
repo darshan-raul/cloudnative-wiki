@@ -13,6 +13,7 @@ Signals are the Linux kernel's mechanism for **asynchronous notification** of ev
 ## Signal Basics
 
 A signal is a **software interrupt** delivered to a process. The kernel delivers it by modifying the process's execution context (registers, program counter). When a signal arrives, the process either:
+
 1. Runs the **default handler** (kernel-provided)
 2. Runs a **custom handler** (user-provided `signal()` or `sigaction()`)
 3. **Ignores** it
@@ -28,6 +29,7 @@ kill -15 1234
 ```
 
 SIGTERM says "please stop when you're ready." The process:
+
 1. Receives SIGTERM
 2. Has a chance to clean up (close DB connections, flush buffers, save state)
 3. Exits with code 0 (or whatever `exit()` returns)
@@ -67,28 +69,28 @@ waitpid(-1, &status, 0);  # wait for any child
 
 ## Common Signals and Their Default Actions
 
-| Signal    | Num | Default Action | Purpose                              |
-|-----------|-----|---------------|--------------------------------------|
-| SIGHUP    | 1   | Terminate     | Terminal hangup (modem/dialup era)   |
-| SIGINT    | 2   | Terminate     | Ctrl+C interrupt                     |
-| SIGQUIT   | 3   | Core dump     | Ctrl+\ (quit and dump core)         |
-| SIGILL    | 4   | Core dump     | Illegal instruction                  |
-| SIGABRT   | 6   | Core dump     | `abort()` called                     |
-| SIGFPE    | 8   | Core dump     | Floating point exception             |
-| SIGKILL   | 9   | Terminate     | **Uncatchable** — forced kill        |
-| SIGUSR1   | 10  | Terminate     | User-defined (custom use)            |
-| SIGSEGV   | 11  | Core dump     | Segmentation fault (bad memory access)|
-| SIGUSR2   | 12  | Terminate     | User-defined (custom use)           |
-| SIGPIPE   | 13  | Terminate     | Write to pipe with no readers       |
-| SIGALRM   | 14  | Terminate     | `alarm()` timer expired              |
-| SIGTERM   | 15  | Terminate     | Polite termination request           |
-| SIGSTKFLT | 16  | Terminate     | Stack fault (obsolete)               |
-| SIGCHLD   | 17  | Ignore        | Child stopped/exited                 |
-| SIGCONT   | 18  | Continue      | Continue if stopped                 |
-| SIGSTOP   | 19  | Stop          | **Uncatchable** — pause process      |
-| SIGTSTP   | 20  | Stop          | Ctrl+Z suspend                       |
-| SIGTTIN   | 21  | Stop          | Background process reads tty         |
-| SIGTTOU   | 22  | Stop          | Background process writes tty        |
+| Signal    | Num | Default Action | Purpose                                |
+| --------- | --- | -------------- | -------------------------------------- |
+| SIGHUP    | 1   | Terminate      | Terminal hangup (modem/dialup era)     |
+| SIGINT    | 2   | Terminate      | Ctrl+C interrupt                       |
+| SIGQUIT   | 3   | Core dump      | Ctrl+\ (quit and dump core)            |
+| SIGILL    | 4   | Core dump      | Illegal instruction                    |
+| SIGABRT   | 6   | Core dump      | `abort()` called                       |
+| SIGFPE    | 8   | Core dump      | Floating point exception               |
+| SIGKILL   | 9   | Terminate      | **Uncatchable** — forced kill          |
+| SIGUSR1   | 10  | Terminate      | User-defined (custom use)              |
+| SIGSEGV   | 11  | Core dump      | Segmentation fault (bad memory access) |
+| SIGUSR2   | 12  | Terminate      | User-defined (custom use)              |
+| SIGPIPE   | 13  | Terminate      | Write to pipe with no readers          |
+| SIGALRM   | 14  | Terminate      | `alarm()` timer expired                |
+| SIGTERM   | 15  | Terminate      | Polite termination request             |
+| SIGSTKFLT | 16  | Terminate      | Stack fault (obsolete)                 |
+| SIGCHLD   | 17  | Ignore         | Child stopped/exited                   |
+| SIGCONT   | 18  | Continue       | Continue if stopped                    |
+| SIGSTOP   | 19  | Stop           | **Uncatchable** — pause process        |
+| SIGTSTP   | 20  | Stop           | Ctrl+Z suspend                         |
+| SIGTTIN   | 21  | Stop           | Background process reads tty           |
+| SIGTTOU   | 22  | Stop           | Background process writes tty          |
 
 ## Signal Handling in Shell Scripts
 

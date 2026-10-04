@@ -13,10 +13,10 @@ PSS provides policy-based enforcement for pod security across namespaces.
 
 ## Security Modes
 
-| Mode | Description |
-|------|-------------|
-| Privileged | No restrictions |
-| Baseline | Minimal restrictions |
+| Mode       | Description                       |
+| ---------- | --------------------------------- |
+| Privileged | No restrictions                   |
+| Baseline   | Minimal restrictions              |
 | Restricted | Heavily restricted, best practice |
 
 ## Apply Baseline Policy
@@ -35,6 +35,7 @@ metadata:
 ## Restricted Policy Requirements
 
 ### Non-privileged containers
+
 ```yaml
 securityContext:
   privileged: false
@@ -42,12 +43,14 @@ securityContext:
 ```
 
 ### Read-only root filesystem
+
 ```yaml
 securityContext:
   readOnlyRootFilesystem: true
 ```
 
 ### Non-root user
+
 ```yaml
 securityContext:
   runAsNonRoot: true
@@ -68,15 +71,15 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   containers:
-  - name: app
-    image: nginx
-    securityContext:
-      privileged: false
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      capabilities:
-        drop:
-        - ALL
+    - name: app
+      image: nginx
+      securityContext:
+        privileged: false
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
 ```
 
 ## References

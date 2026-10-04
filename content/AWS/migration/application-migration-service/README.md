@@ -26,6 +26,7 @@ Source Server                    MGN Service                   Target AWS
 ```
 
 **Replication process:**
+
 1. Install MGN agent on source server
 2. Agent continuously replicates block-level changes to a staging area in your AWS account (S3 bucket + EBS snapshots)
 3. When ready, initiate test launch or final cutover
@@ -36,6 +37,7 @@ Source Server                    MGN Service                   Target AWS
 ### Source Server
 
 A source server is a server (physical or virtual) that you've registered with MGN. Each source server has:
+
 - **Replication configuration:** VPC, subnet, security group for the replicated instance
 - **Agent status:** Online/Offline, last sync time
 - **Lifecycle:** `PENDING`, `TESTING`, `MIGRATING`, `CUTOVER`, `CUTOVER_COMPLETE`
@@ -135,6 +137,7 @@ aws mgn update-source-server-replication-configuration \
 ```
 
 **Key settings:**
+
 - `bandwidthThrottling`: Limit replication bandwidth (0 = unlimited)
 - `enableReBoot`: MGN can reboot the source if needed for replication (Windows only)
 - `targetInstanceTypeRightSizingMethod`: `AUTO` = right-size based on utilization, `MANUAL` = specify type
@@ -237,6 +240,7 @@ aws mgn describe-source-server-replication-configuration \
 ```
 
 **If lag is growing (not shrinking):**
+
 - Network bandwidth is too low for the rate of data change
 - Increase `bandwidthThrottling` limit
 - Consider compressing replication traffic (enable `compression` in config)
@@ -244,11 +248,13 @@ aws mgn describe-source-server-replication-configuration \
 ## Network Requirements
 
 For MGN agent to work:
+
 - Outbound HTTPS (443) to MGN service endpoints
 - Outbound HTTPS to S3 endpoints (for staging data)
 - Inbound from replication server (for initial data transfer)
 
 **Ports required:**
+
 - TCP 443 (HTTPS) — to AWS services
 - TCP 1500 — replication data transfer from source to replication server
 - UDP 1500 — heartbeat (optional, for faster failover)
@@ -256,6 +262,7 @@ For MGN agent to work:
 ## Staging Area
 
 MGN uses an S3 bucket and EBS snapshots as a staging area:
+
 - Replication data goes to S3 (encrypted with KMS)
 - EBS snapshots are created from S3 data
 - Staging area is cleaned up automatically after cutover
@@ -269,6 +276,7 @@ You can customize the staging area location (dedicated S3 bucket per account for
 - **EBS snapshot costs:** Until snapshots are deleted post-cutover
 
 **Cost tip:** After cutover is complete, immediately clean up:
+
 ```bash
 # Delete source server from MGN (stops billing)
 aws mgn delete-source-server --source-server-id s-1234567890abcdef0
@@ -288,11 +296,11 @@ aws s3 rm s3://mgn-staging-bucket --recursive
 
 ## Comparison: MGN vs SMS
 
-| Feature | MGN | SMS (deprecated) |
-|---------|-----|------------------|
-| Continuous replication | Yes | Yes |
-| Wave management | Yes | No |
-| Test launch | Yes | No |
-| Agent-based | Yes | Agent-based |
-| Status | Active development | No new features, eventually retired |
-| Cutover modes | Test + Final | Direct cutover only |
+| Feature                | MGN                | SMS (deprecated)                    |
+| ---------------------- | ------------------ | ----------------------------------- |
+| Continuous replication | Yes                | Yes                                 |
+| Wave management        | Yes                | No                                  |
+| Test launch            | Yes                | No                                  |
+| Agent-based            | Yes                | Agent-based                         |
+| Status                 | Active development | No new features, eventually retired |
+| Cutover modes          | Test + Final       | Direct cutover only                 |

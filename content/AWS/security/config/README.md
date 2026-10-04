@@ -68,13 +68,13 @@ aws configservice put-configuration-recorder \
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {"Service": "config.amazonaws.com"},
+      "Principal": { "Service": "config.amazonaws.com" },
       "Action": "s3:PutObject",
       "Resource": "arn:aws:s3:::my-config-bucket/AWSLogs/123456789012/Config/*"
     },
     {
       "Effect": "Allow",
-      "Principal": {"Service": "config.amazonaws.com"},
+      "Principal": { "Service": "config.amazonaws.com" },
       "Action": "s3:GetBucketAcl",
       "Resource": "arn:aws:s3:::my-config-bucket"
     }
@@ -137,11 +137,11 @@ def lambda_handler(event, context):
     # Invoked by Config rules
     invoking_event = json.loads(event['invokingEvent'])
     configuration_item = invoking_event['configurationItem']
-    
+
     resource_id = configuration_item['resourceId']
     resource_type = configuration_item['resourceType']
     config = configuration_item['configuration']
-    
+
     # Evaluate: check if EC2 instance is encrypted
     if resource_type == 'AWS::EC2::Volume':
         encrypted = config.get('encrypted', False)
@@ -220,21 +220,21 @@ aws configservice put-config-rule \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Config rules (first 50 rules evaluated) | Free |
-| Config rules (additional rules) | $0.001/rule evaluation |
-| Conformance packs | Included |
-| Configuration history | Free (S3 storage at $0.023/GB) |
+| Component                               | Cost                           |
+| --------------------------------------- | ------------------------------ |
+| Config rules (first 50 rules evaluated) | Free                           |
+| Config rules (additional rules)         | $0.001/rule evaluation         |
+| Conformance packs                       | Included                       |
+| Configuration history                   | Free (S3 storage at $0.023/GB) |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Config rules per region | 150 |
-| Conformance packs per account | 75 |
-| Configuration items per region | 100,000 |
-| Aggregators | 50 per account |
+| Resource                       | Limit          |
+| ------------------------------ | -------------- |
+| Config rules per region        | 150            |
+| Conformance packs per account  | 75             |
+| Configuration items per region | 100,000        |
+| Aggregators                    | 50 per account |
 
 ## References
 

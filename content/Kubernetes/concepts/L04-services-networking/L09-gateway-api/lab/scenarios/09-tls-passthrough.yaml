@@ -26,7 +26,7 @@ metadata:
 spec:
   secretName: passthrough-backend-tls
   dnsNames:
-  - passthrough.example.com
+    - passthrough.example.com
   issuerRef:
     name: selfsigned
     kind: Issuer
@@ -45,23 +45,23 @@ spec:
     metadata: { labels: { app: passthrough-target } }
     spec:
       containers:
-      - name: passthrough-target
-        image: nginx:1.27-alpine
-        ports: [{ containerPort: 8443 }]
-        volumeMounts:
-        - name: tls
-          mountPath: /etc/nginx/ssl
-          readOnly: true
-        - name: conf
-          mountPath: /etc/nginx/conf.d
-          readOnly: true
+        - name: passthrough-target
+          image: nginx:1.27-alpine
+          ports: [{ containerPort: 8443 }]
+          volumeMounts:
+            - name: tls
+              mountPath: /etc/nginx/ssl
+              readOnly: true
+            - name: conf
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
       volumes:
-      - name: tls
-        secret:
-          secretName: passthrough-backend-tls
-      - name: conf
-        configMap:
-          name: passthrough-nginx-conf
+        - name: tls
+          secret:
+            secretName: passthrough-backend-tls
+        - name: conf
+          configMap:
+            name: passthrough-nginx-conf
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -89,8 +89,8 @@ metadata:
 spec:
   selector: { app: passthrough-target }
   ports:
-  - port: 443
-    targetPort: 8443
+    - port: 443
+      targetPort: 8443
 ---
 # ReferenceGrant: TLSRoute in `app` references a Service in `app` (same ns, not
 # strictly required, but illustrates the pattern). Useful when a different
@@ -102,13 +102,13 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg-tls-passthrough
-    namespace: infra
+    - name: eg-tls-passthrough
+      namespace: infra
   hostnames: ["passthrough.example.com"]
   rules:
-  - backendRefs:
-    - name: passthrough-target
-      port: 443
+    - backendRefs:
+        - name: passthrough-target
+          port: 443
 ---
 # Gateway with TLS passthrough listener
 apiVersion: gateway.networking.k8s.io/v1
@@ -121,16 +121,16 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: tls-passthrough
-    port: 443
-    protocol: TLS
-    tls:
-      mode: Passthrough
-    allowedRoutes:
-      kinds:
-      - kind: TLSRoute
-      namespaces:
-        from: All
+    - name: tls-passthrough
+      port: 443
+      protocol: TLS
+      tls:
+        mode: Passthrough
+      allowedRoutes:
+        kinds:
+          - kind: TLSRoute
+        namespaces:
+          from: All
 ---
 apiVersion: v1
 kind: Service
@@ -143,7 +143,7 @@ spec:
     app.kubernetes.io/name: eg-tls-passthrough
     gateway.envoyproxy.io/owning-gateway-name: eg-tls-passthrough
   ports:
-  - name: tls
-    port: 443
-    targetPort: 8443
-    nodePort: 30001
+    - name: tls
+      port: 443
+      targetPort: 8443
+      nodePort: 30001

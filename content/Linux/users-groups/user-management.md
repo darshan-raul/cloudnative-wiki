@@ -20,6 +20,7 @@ nginx:x:999:999::/var/lib/nginx:/sbin/nologin
 ```
 
 Format: `username:password:UID:GID:GECOS:home:shell`
+
 - `password`: `x` means shadow file has the hash
 - `UID`: 0=root, 1-999=system accounts, 1000+=regular users
 - `GECOS`: full name, office, etc. (comma-separated)
@@ -32,6 +33,7 @@ darshan:$6$salt$hash:19000:0:99999:7:::
 ```
 
 Format: `username:password:last_change:min_age:max_age:warn:expire:reserved`
+
 - `$6$` = SHA-512 hashing (always used on modern Linux)
 - Days are from epoch (Jan 1 1970)
 - Empty password field = no password needed
@@ -76,14 +78,15 @@ echo "darshan:newpassword" | chpasswd
 
 ## UID/GID Ranges
 
-| Range       | Purpose                          |
-|-------------|----------------------------------|
-| 0           | root                             |
-| 1-999       | System accounts (daemons, services) |
-| 1000-59999  | Regular users (UID_MIN-UID_MAX)  |
-| 60000+      | Reserved for users or LDAP/NIS    |
+| Range      | Purpose                             |
+| ---------- | ----------------------------------- |
+| 0          | root                                |
+| 1-999      | System accounts (daemons, services) |
+| 1000-59999 | Regular users (UID_MIN-UID_MAX)     |
+| 60000+     | Reserved for users or LDAP/NIS      |
 
 System accounts typically have:
+
 - No login shell (`/sbin/nologin`, `/usr/bin/nologin`, `/bin/false`)
 - No real home or `/` as home
 - Used by services to run with minimal privileges

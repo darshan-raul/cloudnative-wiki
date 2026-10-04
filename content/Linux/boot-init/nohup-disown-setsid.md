@@ -42,6 +42,7 @@ nohup ./script.sh > /tmp/output.log 2>&1 &
 ```
 
 **What nohup does:**
+
 1. Signals the kernel to ignore SIGHUP for this process
 2. Redirects stdin from `/dev/null` (can't read from terminal anyway)
 3. Redirects stdout/stderr to `nohup.out` (unless you redirect)
@@ -71,6 +72,7 @@ disown 12345
 ```
 
 **What disown does:**
+
 - Removes the job from the shell's job table
 - The shell won't send SIGHUP to it on exit
 - Process keeps running
@@ -96,6 +98,7 @@ setsid bash -c './script.sh > /tmp/out.log 2>&1'
 ```
 
 **What setsid does:**
+
 1. `fork()` — creates a new process
 2. `setsid()` — makes it a session leader with no controlling terminal
 3. `exec()` — runs the command
@@ -104,14 +107,14 @@ setsid bash -c './script.sh > /tmp/out.log 2>&1'
 
 ## Comparison
 
-| Feature           | nohup              | disown             | setsid            |
-|-----------------|--------------------|--------------------|-------------------|
-| Scope           | Per-command        | Removes existing job | New session    |
-| Works on shells  | Any               | bash/zsh only      | Any              |
-| Removes TTY     | No (may still have) | Yes (job table)   | Yes (new session)|
-| Survives HUP    | Yes               | Yes                | Yes               |
-| Can detach existing | No             | Yes                | Via setsid -c    |
-| Complexity      | Simplest           | Simple             | Medium            |
+| Feature             | nohup               | disown               | setsid            |
+| ------------------- | ------------------- | -------------------- | ----------------- |
+| Scope               | Per-command         | Removes existing job | New session       |
+| Works on shells     | Any                 | bash/zsh only        | Any               |
+| Removes TTY         | No (may still have) | Yes (job table)      | Yes (new session) |
+| Survives HUP        | Yes                 | Yes                  | Yes               |
+| Can detach existing | No                  | Yes                  | Via setsid -c     |
+| Complexity          | Simplest            | Simple               | Medium            |
 
 ## Practical Patterns
 

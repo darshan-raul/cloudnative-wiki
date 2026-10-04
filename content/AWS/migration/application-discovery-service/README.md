@@ -33,6 +33,7 @@ aws discovery describe-agents --agent-ids arn:aws:discovery:us-east-1:1234567890
 ```
 
 **What it collects:**
+
 - VM name, guest OS, version
 - vCPU, memory, disk sizes
 - Network configuration (IP addresses, MAC addresses)
@@ -60,6 +61,7 @@ sudo tail -f /var/log/aws/discovery/discovery-agent.log
 ```
 
 **What it collects (beyond agentless):**
+
 - Running processes and services
 - Application names and versions
 - Network connections between servers (dependency mapping)
@@ -79,6 +81,7 @@ sudo tail -f /var/log/aws/discovery/discovery-agent.log
 ```
 
 **Requirements:**
+
 - Outbound HTTPS to AWS (port 443)
 - Access to vCenter API (read-only)
 - NTP configured (accurate timestamps are important)

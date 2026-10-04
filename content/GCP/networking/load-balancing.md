@@ -11,7 +11,7 @@ tags:
 
 # GCP Cloud Load Balancing & Cloud Armor ⚖️🛡️
 
-Google Cloud Load Balancing is built on Google's globally distributed software-defined networking infrastructure (**Google Front Ends (GFE)**, **Maglev**, and **Envoy**). 
+Google Cloud Load Balancing is built on Google's globally distributed software-defined networking infrastructure (**Google Front Ends (GFE)**, **Maglev**, and **Envoy**).
 
 The defining characteristic of GCP's Global External Load Balancer is its **Single Anycast IP architecture**: a single static IP address is advertised from hundreds of Google Edge Points of Presence (PoPs) worldwide. User traffic enters Google's private network at the closest geographical edge and travels entirely across Google's high-speed private fiber backbone to backend instances or containers.
 
@@ -45,20 +45,20 @@ The defining characteristic of GCP's Global External Load Balancer is its **Sing
        └─────────────────────────┘   └─────────────────────────┘
 ```
 
-* **Zero DNS Switching Delay:** If `us-west1` experiences an outage, edge GFEs immediately route traffic over the private backbone to `europe-west1` without waiting for client DNS TTLs to expire.
-* **Instant DDoS Absorption:** DDoS attacks are absorbed across Google's global multi-terabit edge before packets ever reach your VPC.
+- **Zero DNS Switching Delay:** If `us-west1` experiences an outage, edge GFEs immediately route traffic over the private backbone to `europe-west1` without waiting for client DNS TTLs to expire.
+- **Instant DDoS Absorption:** DDoS attacks are absorbed across Google's global multi-terabit edge before packets ever reach your VPC.
 
 ---
 
 ## Load Balancer Decision Matrix
 
-| Load Balancer Type | Layer | Scope | Architecture Base | Common Use Cases |
-| :--- | :--- | :--- | :--- | :--- |
-| **Global External Application LB** | Layer 7 (HTTP/S) | Global | Google Front End (GFE) + Envoy | Multi-region web apps, APIs, CDN, Cloud Armor, SSL offload |
-| **Regional External Application LB** | Layer 7 (HTTP/S) | Regional | Envoy in Proxy-only Subnet | Strict data sovereignty/compliance requiring traffic within one region |
-| **Internal Application LB** | Layer 7 (HTTP/S) | Regional | Envoy in Proxy-only Subnet | Microservices communication within VPC, internal dashboards |
-| **External Network LB** | Layer 4 (TCP/UDP) | Global / Regional | Maglev (kernel packet routing) | High-performance gaming, VoIP, non-HTTP wire-speed routing |
-| **Internal Network LB** | Layer 4 (TCP/UDP) | Regional | Andromeda SDN (Direct Server Return) | Database tiers, internal TCP services, zero-hop performance |
+| Load Balancer Type                   | Layer             | Scope             | Architecture Base                    | Common Use Cases                                                       |
+| :----------------------------------- | :---------------- | :---------------- | :----------------------------------- | :--------------------------------------------------------------------- |
+| **Global External Application LB**   | Layer 7 (HTTP/S)  | Global            | Google Front End (GFE) + Envoy       | Multi-region web apps, APIs, CDN, Cloud Armor, SSL offload             |
+| **Regional External Application LB** | Layer 7 (HTTP/S)  | Regional          | Envoy in Proxy-only Subnet           | Strict data sovereignty/compliance requiring traffic within one region |
+| **Internal Application LB**          | Layer 7 (HTTP/S)  | Regional          | Envoy in Proxy-only Subnet           | Microservices communication within VPC, internal dashboards            |
+| **External Network LB**              | Layer 4 (TCP/UDP) | Global / Regional | Maglev (kernel packet routing)       | High-performance gaming, VoIP, non-HTTP wire-speed routing             |
+| **Internal Network LB**              | Layer 4 (TCP/UDP) | Regional          | Andromeda SDN (Direct Server Return) | Database tiers, internal TCP services, zero-hop performance            |
 
 ---
 
@@ -68,31 +68,32 @@ The defining characteristic of GCP's Global External Load Balancer is its **Sing
 
 Traditional load balancers target VMs (Compute Engine instances). In modern containerized and serverless environments, GCP uses **Network Endpoint Groups (NEGs)**:
 
-* **Zonal NEGs (Container-Native Load Balancing):**
-  * Directly routes traffic from the GFE/Envoy to individual **GKE Pod IP addresses**.
-  * Eliminates the double-hop latency of Kubernetes `kube-proxy` and NodePort!
-* **Serverless NEGs:**
-  * Routes traffic from a Global HTTP(S) Load Balancer directly to **Cloud Run**, **Cloud Functions**, or **App Engine**.
-  * Allows you to put custom domains, Cloud CDN, and Cloud Armor WAF in front of serverless workloads.
-* **Internet NEGs:**
-  * Routes traffic to public endpoints outside Google Cloud (on-premises or 3rd-party clouds).
-* **Private Service Connect (PSC) NEGs:**
-  * Targets managed services in other VPCs or Google-managed tenant projects via internal endpoints.
+- **Zonal NEGs (Container-Native Load Balancing):**
+  - Directly routes traffic from the GFE/Envoy to individual **GKE Pod IP addresses**.
+  - Eliminates the double-hop latency of Kubernetes `kube-proxy` and NodePort!
+- **Serverless NEGs:**
+  - Routes traffic from a Global HTTP(S) Load Balancer directly to **Cloud Run**, **Cloud Functions**, or **App Engine**.
+  - Allows you to put custom domains, Cloud CDN, and Cloud Armor WAF in front of serverless workloads.
+- **Internet NEGs:**
+  - Routes traffic to public endpoints outside Google Cloud (on-premises or 3rd-party clouds).
+- **Private Service Connect (PSC) NEGs:**
+  - Targets managed services in other VPCs or Google-managed tenant projects via internal endpoints.
 
 ### 2. Cloud Armor (DDoS & WAF)
 
 Cloud Armor provides enterprise-grade Web Application Firewall (WAF) and DDoS defense integrated natively at the edge of the Global External Application Load Balancer:
 
-* **Preconfigured WAF Rules:** Defends against OWASP Top 10 vulnerabilities (SQLi, XSS, RFI, LFI, RCE, scanner detection).
-* **Adaptive Protection:** Uses machine learning models to detect anomalous traffic patterns and generates actionable mitigation rules automatically during layer 7 attacks.
-* **Rate Limiting:** Enforces client-based request rate caps per IP, subnet, or custom HTTP header/cookie.
-* **Geo-fencing:** Restricts or permits requests based on client country codes.
+- **Preconfigured WAF Rules:** Defends against OWASP Top 10 vulnerabilities (SQLi, XSS, RFI, LFI, RCE, scanner detection).
+- **Adaptive Protection:** Uses machine learning models to detect anomalous traffic patterns and generates actionable mitigation rules automatically during layer 7 attacks.
+- **Rate Limiting:** Enforces client-based request rate caps per IP, subnet, or custom HTTP header/cookie.
+- **Geo-fencing:** Restricts or permits requests based on client country codes.
 
 ### 3. Private Service Connect (PSC)
 
 Private Service Connect enables private, secure consumption of services across independent VPC networks (e.g. multi-tenant SaaS, internal platform teams, or managed Google APIs like BigQuery/Cloud SQL) without VPC Network Peering:
-* Prevents RFC 1918 CIDR IP overlap issues.
-* Consumer connects via a standard internal IP address in their local subnet.
+
+- Prevents RFC 1918 CIDR IP overlap issues.
+- Consumer connects via a standard internal IP address in their local subnet.
 
 ---
 
@@ -154,43 +155,45 @@ gcloud compute backend-services add-backend cloudrun-backend-service \
 
 ## Quotas & Limits
 
-| Parameter | Default Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Global Anycast IPv4 addresses** | 1 per forwarding rule | Included with load balancer |
-| **Cloud Armor rules per policy** | 200 rules | Higher limits available for Enterprise tier |
-| **Rate limit keys tracked** | Up to 100,000 unique IPs | Dynamic tracking in memory |
-| **Backend services per project** | 75 | Can be increased via quota request |
-| **Proxy-only subnet size** | Minimum `/26` recommended | Required for Regional/Internal Application LBs |
+| Parameter                         | Default Limit             | Production Notes                               |
+| :-------------------------------- | :------------------------ | :--------------------------------------------- |
+| **Global Anycast IPv4 addresses** | 1 per forwarding rule     | Included with load balancer                    |
+| **Cloud Armor rules per policy**  | 200 rules                 | Higher limits available for Enterprise tier    |
+| **Rate limit keys tracked**       | Up to 100,000 unique IPs  | Dynamic tracking in memory                     |
+| **Backend services per project**  | 75                        | Can be increased via quota request             |
+| **Proxy-only subnet size**        | Minimum `/26` recommended | Required for Regional/Internal Application LBs |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/load-balancing
-* **Documentation:** https://cloud.google.com/load-balancing/docs
-* **Cloud Armor Docs:** https://cloud.google.com/armor/docs
-* **Container-Native Load Balancing:** https://cloud.google.com/kubernetes-engine/docs/how-to/container-native-load-balancing
-* **Pricing:** https://cloud.google.com/load-balancing/pricing
+- **Homepage:** https://cloud.google.com/load-balancing
+- **Documentation:** https://cloud.google.com/load-balancing/docs
+- **Cloud Armor Docs:** https://cloud.google.com/armor/docs
+- **Container-Native Load Balancing:** https://cloud.google.com/kubernetes-engine/docs/how-to/container-native-load-balancing
+- **Pricing:** https://cloud.google.com/load-balancing/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Global External ALB for Microservices API
-* 1 Global External Application Load Balancer with 5 forwarding rules and SSL termination.
-* Traffic volume: 150 million HTTP requests / month (approx. 5 TB ingress + egress).
-* Base LB hourly rate: 5 forwarding rules = ~$0.025 / hour for first rule + $0.010 for each additional = ~$0.065 / hr (~$46.80 / month).
-* Data processing charges: 5 TB × $0.008 / GB = $40.
-* **Monthly LB Cost:** ~$46.80 + $40 = **~$86.80 / month**.
+
+- 1 Global External Application Load Balancer with 5 forwarding rules and SSL termination.
+- Traffic volume: 150 million HTTP requests / month (approx. 5 TB ingress + egress).
+- Base LB hourly rate: 5 forwarding rules = ~$0.025 / hour for first rule + $0.010 for each additional = ~$0.065 / hr (~$46.80 / month).
+- Data processing charges: 5 TB × $0.008 / GB = $40.
+- **Monthly LB Cost:** ~$46.80 + $40 = **~$86.80 / month**.
 
 ### Scenario 2: Cloud Armor Enterprise vs Standard WAF
-* **Standard Tier:**
-  * 1 Security Policy ($5 / month).
-  * 3 Rules ($1 / rule / month = $3).
-  * 10 million evaluated requests ($0.75 per million = $7.50).
-  * Standard Total: **~$15.50 / month**.
-* **Enterprise Tier:**
-  * Flat subscription ($3,000 / month) including unlimited rules, Adaptive Protection ML, and DDoS response team billing protection against volumetric attacks.
+
+- **Standard Tier:**
+  - 1 Security Policy ($5 / month).
+  - 3 Rules ($1 / rule / month = $3).
+  - 10 million evaluated requests ($0.75 per million = $7.50).
+  - Standard Total: **~$15.50 / month**.
+- **Enterprise Tier:**
+  - Flat subscription ($3,000 / month) including unlimited rules, Adaptive Protection ML, and DDoS response team billing protection against volumetric attacks.
 
 ---
 

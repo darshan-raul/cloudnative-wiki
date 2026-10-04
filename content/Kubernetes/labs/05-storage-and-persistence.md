@@ -77,6 +77,7 @@ kubectl get pvc podinfo-cache-pvc
 ```
 
 **Observed status:**
+
 ```
 NAME                STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
 podinfo-cache-pvc   Pending                                      standard       5s
@@ -96,7 +97,7 @@ metadata:
   name: podinfo
   namespace: default
 spec:
-  replicas: 1  # ReadWriteOnce volumes can only be mounted by one node at a time
+  replicas: 1 # ReadWriteOnce volumes can only be mounted by one node at a time
   selector:
     matchLabels:
       app.kubernetes.io/name: podinfo
@@ -161,11 +162,13 @@ curl -s http://127.0.0.1:9898/cache/k8s-curriculum
 ```
 
 **Expected output:**
+
 ```
 Persistent data survives Pod recreation!
 ```
 
 Stop the port-forward process:
+
 ```bash
 kill $PORT_FORWARD_PID
 ```
@@ -194,9 +197,11 @@ kubectl exec "$NEW_POD" -- cat /data/cache/k8s-curriculum
 ```
 
 **Output:**
+
 ```
 Persistent data survives Pod recreation!
 ```
+
 The data survived! The container filesystem was completely destroyed, but the PersistentVolume was re-attached seamlessly to the replacement container.
 
 ---
@@ -206,6 +211,7 @@ The data survived! The container filesystem was completely destroyed, but the Pe
 What happens when a manifest requests a non-existent StorageClass?
 
 ### Trigger the failure:
+
 Create a PVC requesting an imaginary StorageClass:
 
 ```bash
@@ -226,6 +232,7 @@ EOF
 ```
 
 ### Observe the symptom:
+
 Check the claim status:
 
 ```bash
@@ -238,6 +245,7 @@ broken-pvc   Pending                                      non-existent-nvme    2
 ```
 
 ### Root Cause Diagnosis:
+
 Inspect the claim's events:
 
 ```bash
@@ -245,6 +253,7 @@ kubectl describe pvc broken-pvc | grep -A 5 "Events:"
 ```
 
 **Diagnostic event:**
+
 ```
 Events:
   Type     Reason              Age               From                         Message

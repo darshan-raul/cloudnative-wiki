@@ -28,6 +28,7 @@ graph TD
 ## 1. Prerequisites & Starting State
 
 Ensure you have the following installed locally:
+
 - **Docker Engine** (v24.0+) or compatible OCI runtime
 - **kind** (v0.27+): `kind version`
 - **kubectl** (v1.35 – v1.37): `kubectl version --client`
@@ -72,6 +73,7 @@ nodes:
 ```
 
 ### Why this configuration matters:
+
 1. **Multi-node topology:** With 1 control-plane and 2 worker nodes, you can test realistic pod scheduling, anti-affinity, and node drain scenarios.
 2. **Zone labels:** Simulates a multi-zone cloud environment (`zone-a` and `zone-b`) to explore `topologySpreadConstraints`.
 3. **Host port mappings:** Binds host ports 80 and 443 to the control-plane container, enabling you to access Gateway API and Ingress routes directly from `localhost`.
@@ -87,15 +89,16 @@ kind create cluster --config kind-config.yaml
 ```
 
 **Expected output:**
+
 ```
 Creating cluster "k8s-lab" ...
  • Ensuring node image (kindest/node:v1.37.0) 🖼
- • Preparing nodes 📦 📦 📦  
- • Writing configuration 📜 
- • Starting control-plane 🕹️ 
- • Installing CNI 🔌 
- • Installing StorageClass 💾 
- • Joining worker nodes 🚜 
+ • Preparing nodes 📦 📦 📦
+ • Writing configuration 📜
+ • Starting control-plane 🕹️
+ • Installing CNI 🔌
+ • Installing StorageClass 💾
+ • Joining worker nodes 🚜
 Set kubectl context to "kind-k8s-lab"
 ```
 
@@ -107,6 +110,7 @@ kubectl config current-context
 ```
 
 **Expected output:**
+
 ```
 Kubernetes control plane is running at https://127.0.0.1:<PORT>
 CoreDNS is running at https://127.0.0.1:<PORT>/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
@@ -120,11 +124,12 @@ kubectl get nodes -L topology.kubernetes.io/zone,ingress-ready
 ```
 
 **Expected output:**
+
 ```
 NAME                  STATUS   ROLES           AGE   VERSION   ZONE     INGRESS-READY
 k8s-lab-control-plane Ready    control-plane   2m    v1.37.0            true
-k8s-lab-worker        Ready    <none>          90s   v1.37.0   zone-a   
-k8s-lab-worker2       Ready    <none>          90s   v1.37.0   zone-b   
+k8s-lab-worker        Ready    <none>          90s   v1.37.0   zone-a
+k8s-lab-worker2       Ready    <none>          90s   v1.37.0   zone-b
 ```
 
 ### Step 4: Inspect core control plane and system pods
@@ -142,6 +147,7 @@ Notice the static pods running the control plane (`etcd`, `kube-apiserver`, `kub
 What happens to a cluster when a worker node stops communicating with the control plane?
 
 ### Trigger the failure:
+
 Simulate a catastrophic hardware loss by stopping the worker container:
 
 ```bash
@@ -149,6 +155,7 @@ docker stop k8s-lab-worker
 ```
 
 ### Observe the symptom:
+
 Watch the node status:
 
 ```bash
@@ -163,6 +170,7 @@ kubectl describe node k8s-lab-worker | grep -A 5 "Conditions:"
 
 **Observed behavior:**
 `Ready` condition transitions from `True` to `Unknown`:
+
 ```
   Type                 Status  Reason
   ----                 ------  ------
@@ -172,6 +180,7 @@ kubectl describe node k8s-lab-worker | grep -A 5 "Conditions:"
 The node controller marks the node `NotReady` / `Unknown`. If any workloads were running on `k8s-lab-worker`, the controller would eventually begin pod eviction after `node.kubernetes.io/not-ready` toleration seconds expire.
 
 ### Recovery:
+
 Restart the worker container:
 
 ```bash

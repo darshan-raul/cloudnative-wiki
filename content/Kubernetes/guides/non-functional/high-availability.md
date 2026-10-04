@@ -41,13 +41,13 @@ Each layer has its own HA strategy. Failing any one layer can take down the syst
 
 ## The 9s and what they cost
 
-| Target | Downtime/year | What it requires |
-|--------|---------------|------------------|
-| 99% (2 nines) | 3.65 days | Single node, single zone, single cluster. Cheap, fragile. |
-| 99.9% (3 nines) | 8.77 hours | Multiple nodes, basic redundancy. Standard k8s. |
-| 99.95% | 4.38 hours | Multi-zone, replicated data. Real engineering. |
-| 99.99% (4 nines) | 52.6 minutes | Multi-region, tested DR, automation. Expensive. |
-| 99.999% (5 nines) | 5.26 minutes | Multi-region active-active, automated failover, chaos-tested. Telco-grade. |
+| Target            | Downtime/year | What it requires                                                           |
+| ----------------- | ------------- | -------------------------------------------------------------------------- |
+| 99% (2 nines)     | 3.65 days     | Single node, single zone, single cluster. Cheap, fragile.                  |
+| 99.9% (3 nines)   | 8.77 hours    | Multiple nodes, basic redundancy. Standard k8s.                            |
+| 99.95%            | 4.38 hours    | Multi-zone, replicated data. Real engineering.                             |
+| 99.99% (4 nines)  | 52.6 minutes  | Multi-region, tested DR, automation. Expensive.                            |
+| 99.999% (5 nines) | 5.26 minutes  | Multi-region active-active, automated failover, chaos-tested. Telco-grade. |
 
 Most production k8s clusters aim for **3-4 nines**. 5 nines is rarely the actual requirement — measure first.
 
@@ -58,6 +58,7 @@ The control plane is the API server, scheduler, controller-manager, etcd. If it 
 **Single control plane = no HA.** A single etcd node or API server is a SPOF.
 
 **HA control plane requires:**
+
 - **3 or 5 etcd nodes** (odd number, quorum-based)
 - **2+ API server instances** behind a load balancer
 - **Multiple controller-manager / scheduler replicas** (only one is leader, others standby)
@@ -99,15 +100,15 @@ spec:
   template:
     spec:
       topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: DoNotSchedule
-        labelSelector:
-          matchLabels:
-            app: web
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: web
       containers:
-      - name: web
-        image: myorg/web:v1
+        - name: web
+          image: myorg/web:v1
 ```
 
 This ensures that pods are spread across zones as evenly as possible, with no zone having more than 1 pod above the average.
@@ -119,10 +120,10 @@ spec:
   affinity:
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchLabels:
-            app: web
-        topologyKey: kubernetes.io/hostname   # don't put two web pods on the same node
+        - labelSelector:
+            matchLabels:
+              app: web
+          topologyKey: kubernetes.io/hostname # don't put two web pods on the same node
 ```
 
 Combined: `topologySpreadConstraints` for zones, `podAntiAffinity` for nodes.
@@ -154,6 +155,7 @@ spec:
 ```
 
 **Without PDBs, any voluntary disruption can take down all your pods at once:**
+
 - Karpenter consolidation
 - Cluster autoscaler scale-down
 - Node drain for maintenance
@@ -172,12 +174,12 @@ kubectl get pdb -A
 
 **Setting PDB values:**
 
-| Workload | minAvailable | maxUnavailable |
-|----------|--------------|----------------|
-| Stateless web (5 replicas) | 3 | 2 |
-| Stateful DB (3 replicas) | 2 | 1 |
-| Critical service (10 replicas) | 5 | 5 |
-| Best-effort (1 replica) | 0 | 1 (or no PDB) |
+| Workload                       | minAvailable | maxUnavailable |
+| ------------------------------ | ------------ | -------------- |
+| Stateless web (5 replicas)     | 3            | 2              |
+| Stateful DB (3 replicas)       | 2            | 1              |
+| Critical service (10 replicas) | 5            | 5              |
+| Best-effort (1 replica)        | 0            | 1 (or no PDB)  |
 
 **Common mistake:** `minAvailable: 100%`. If you have 3 replicas and want 100% available, the PDB will block all voluntary disruption. This can deadlock drain operations.
 
@@ -185,31 +187,31 @@ kubectl get pdb -A
 
 These are different, and you usually want both:
 
-| | Anti-affinity | Topology spread |
-|--|---|---|
-| **Purpose** | Don't put same-kind pods on the same node/zone | Spread pods evenly across topology |
-| **Constraint type** | Hard (required) or soft (preferred) | Hard (required) or soft (preferred) |
-| **Use case** | Avoid node failure taking all replicas | Even distribution |
+|                     | Anti-affinity                                  | Topology spread                     |
+| ------------------- | ---------------------------------------------- | ----------------------------------- |
+| **Purpose**         | Don't put same-kind pods on the same node/zone | Spread pods evenly across topology  |
+| **Constraint type** | Hard (required) or soft (preferred)            | Hard (required) or soft (preferred) |
+| **Use case**        | Avoid node failure taking all replicas         | Even distribution                   |
 
 ```yaml
 # good: combine both
 spec:
   affinity:
-    podAntiAffinity:                          # don't put two web pods on same node
+    podAntiAffinity: # don't put two web pods on same node
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 100
-        podAffinityTerm:
-          labelSelector:
-            matchLabels:
-              app: web
-          topologyKey: kubernetes.io/hostname
-  topologySpreadConstraints:                  # spread across zones
-  - maxSkew: 1
-    topologyKey: topology.kubernetes.io/zone
-    whenUnsatisfiable: ScheduleAnyway
-    labelSelector:
-      matchLabels:
-        app: web
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: web
+            topologyKey: kubernetes.io/hostname
+  topologySpreadConstraints: # spread across zones
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: web
 ```
 
 ## Graceful shutdown
@@ -224,20 +226,20 @@ When a pod is deleted (scaled down, drained, etc.), it should:
 
 ```yaml
 spec:
-  terminationGracePeriodSeconds: 60     # give 60s to finish in-flight
+  terminationGracePeriodSeconds: 60 # give 60s to finish in-flight
   containers:
-  - name: web
-    lifecycle:
-      preStop:
-        exec:
-          command:
-          - /bin/sh
-          - -c
-          - "sleep 5 && kill -SIGTERM 1"  # small delay to let Service remove pod
-    ports:
-    - name: http
-      containerPort: 8080
-  readinessProbe:                          # fails during shutdown = removed from Service
+    - name: web
+      lifecycle:
+        preStop:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - "sleep 5 && kill -SIGTERM 1" # small delay to let Service remove pod
+      ports:
+        - name: http
+          containerPort: 8080
+  readinessProbe: # fails during shutdown = removed from Service
     httpGet:
       path: /health
       port: 8080
@@ -249,11 +251,11 @@ spec:
 
 The three probes each have a different role:
 
-| Probe | Question | Failure action |
-|-------|----------|----------------|
-| **Liveness** | Is the app still working? | Restart the container |
+| Probe         | Question                           | Failure action                |
+| ------------- | ---------------------------------- | ----------------------------- |
+| **Liveness**  | Is the app still working?          | Restart the container         |
 | **Readiness** | Is the app ready to serve traffic? | Remove from Service endpoints |
-| **Startup** | Is the app still starting up? | Wait, don't run liveness yet |
+| **Startup**   | Is the app still starting up?      | Wait, don't run liveness yet  |
 
 **Best practices:**
 
@@ -262,10 +264,10 @@ livenessProbe:
   httpGet:
     path: /alive
     port: 8080
-  initialDelaySeconds: 0          # startup probe handles initial delay
+  initialDelaySeconds: 0 # startup probe handles initial delay
   periodSeconds: 10
   timeoutSeconds: 3
-  failureThreshold: 3             # 3 consecutive failures = restart
+  failureThreshold: 3 # 3 consecutive failures = restart
   successThreshold: 1
 
 readinessProbe:
@@ -274,7 +276,7 @@ readinessProbe:
     port: 8080
   periodSeconds: 5
   timeoutSeconds: 3
-  failureThreshold: 2             # 2 failures = remove from Service
+  failureThreshold: 2 # 2 failures = remove from Service
   successThreshold: 1
 
 startupProbe:
@@ -282,7 +284,7 @@ startupProbe:
     path: /alive
     port: 8080
   periodSeconds: 5
-  failureThreshold: 30            # 30*5 = 150s for slow apps to start
+  failureThreshold: 30 # 30*5 = 150s for slow apps to start
 ```
 
 **Why separate `/alive` and `/ready`?**
@@ -304,14 +306,14 @@ Tools: Istio, Linkerd, Resilience4j, Polly, etc.
 
 ## Health checks at every layer
 
-| Layer | Health check |
-|-------|--------------|
-| Node | kubelet heartbeat to apiserver |
-| Pod | Liveness, readiness, startup probes |
-| Service | Endpoints populated only with Ready pods |
-| Ingress | Backend health check, TLS verification |
-| Cloud LB | Target group health checks |
-| App | Internal health endpoints |
+| Layer    | Health check                             |
+| -------- | ---------------------------------------- |
+| Node     | kubelet heartbeat to apiserver           |
+| Pod      | Liveness, readiness, startup probes      |
+| Service  | Endpoints populated only with Ready pods |
+| Ingress  | Backend health check, TLS verification   |
+| Cloud LB | Target group health checks               |
+| App      | Internal health endpoints                |
 
 When debugging "why is X down?", walk up the layers — if the app's health check is fine but the LB says unhealthy, it's the LB's check failing, not the app.
 
@@ -373,10 +375,10 @@ spec:
   template:
     spec:
       topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: topology.kubernetes.io/zone
-        whenUnsatisfiable: DoNotSchedule
-        # ...
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          # ...
 ```
 
 The cloud LB in front of the ingress will route to healthy pods. If a zone dies, the LB removes the failed pods and routes to the remaining ones.
@@ -410,34 +412,34 @@ Tools: Cluster API for cluster lifecycle, Submariner/Cilium ClusterMesh for cros
 
 You don't have HA until you've tested it. Common failure mode tests:
 
-| Test | What it exercises |
-|------|-------------------|
-| Kill a node | Pod rescheduling, anti-affinity |
-| Drain a node | PDBs, graceful shutdown |
-| Kill a zone | Multi-AZ failover, topology spread |
-| Kill the apiserver | etcd quorum, control plane HA |
-| Network partition | Service failover, client retry |
-| Kill the database | Failover, replica promotion |
-| Spike load | Auto-scaling, resource limits |
-| Bad rollout | Rollback, readiness gates |
+| Test               | What it exercises                  |
+| ------------------ | ---------------------------------- |
+| Kill a node        | Pod rescheduling, anti-affinity    |
+| Drain a node       | PDBs, graceful shutdown            |
+| Kill a zone        | Multi-AZ failover, topology spread |
+| Kill the apiserver | etcd quorum, control plane HA      |
+| Network partition  | Service failover, client retry     |
+| Kill the database  | Failover, replica promotion        |
+| Spike load         | Auto-scaling, resource limits      |
+| Bad rollout        | Rollback, readiness gates          |
 
 Run these regularly, not just once. See [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] for the practice.
 
 ## Common gotchas
 
-* **PDBs without enough headroom** can deadlock `kubectl drain`. Always test.
-* **Topology spread with `whenUnsatisfiable: DoNotSchedule`** prevents scheduling if constraints can't be met. Use `ScheduleAnyway` for soft constraints.
-* **Single-pod Deployments** are not HA. Always run >= 2 replicas for stateless services.
-* **PodDisruptionBudgets don't protect against involuntary disruption** (node crash, OOM). For that, you need multiple replicas across failure domains.
-* **`maxSkew: 1` is strict.** A cluster with 3 zones and 5 pods means 2/2/1, which fails `maxSkew: 1`. Use `ScheduleAnyway` or accept unevenness.
-* **Graceful shutdown without a `preStop` sleep** can cause 502s during rollouts. The 5-10s sleep is the standard fix.
-* **Liveness probes that check downstream health** are wrong. Liveness should only fail if the app itself is broken; downstream checks belong in readiness.
-* **Don't run ingress as a single replica** to save cost. It's a SPOF.
-* **Storage is the silent failure mode.** A 99% HA setup with EBS volumes in one zone isn't 99% HA.
-* **Cloud-managed control plane is HA by default** but the data plane (worker nodes) is your problem.
-* **Don't set HPA `minReplicas: 1`** for critical services. Scale to 0/1 is not HA.
-* **`topology.kubernetes.io/zone` may be missing on some nodes** (especially self-managed). Always verify.
-* **DaemonSet pods run on every node.** If a DaemonSet is critical, set its tolerations carefully so it can run on tainted nodes.
+- **PDBs without enough headroom** can deadlock `kubectl drain`. Always test.
+- **Topology spread with `whenUnsatisfiable: DoNotSchedule`** prevents scheduling if constraints can't be met. Use `ScheduleAnyway` for soft constraints.
+- **Single-pod Deployments** are not HA. Always run >= 2 replicas for stateless services.
+- **PodDisruptionBudgets don't protect against involuntary disruption** (node crash, OOM). For that, you need multiple replicas across failure domains.
+- **`maxSkew: 1` is strict.** A cluster with 3 zones and 5 pods means 2/2/1, which fails `maxSkew: 1`. Use `ScheduleAnyway` or accept unevenness.
+- **Graceful shutdown without a `preStop` sleep** can cause 502s during rollouts. The 5-10s sleep is the standard fix.
+- **Liveness probes that check downstream health** are wrong. Liveness should only fail if the app itself is broken; downstream checks belong in readiness.
+- **Don't run ingress as a single replica** to save cost. It's a SPOF.
+- **Storage is the silent failure mode.** A 99% HA setup with EBS volumes in one zone isn't 99% HA.
+- **Cloud-managed control plane is HA by default** but the data plane (worker nodes) is your problem.
+- **Don't set HPA `minReplicas: 1`** for critical services. Scale to 0/1 is not HA.
+- **`topology.kubernetes.io/zone` may be missing on some nodes** (especially self-managed). Always verify.
+- **DaemonSet pods run on every node.** If a DaemonSet is critical, set its tolerations carefully so it can run on tainted nodes.
 
 ## The HA checklist
 
@@ -461,12 +463,12 @@ For production:
 
 Not every service needs the same HA bar. Define profiles:
 
-| Profile | Targets | Patterns | Cost |
-|---------|---------|----------|------|
+| Profile                      | Targets             | Patterns                                                     | Cost |
+| ---------------------------- | ------------------- | ------------------------------------------------------------ | ---- |
 | **Tier 0** (Tier-1 critical) | 99.99%, RPO seconds | Multi-region active-active, multi-AZ, multi-replica, full DR | $$$$ |
-| **Tier 1** (production) | 99.95%, RPO minutes | Multi-AZ, multi-replica, PDBs, backups, runbooks | $$$ |
-| **Tier 2** (internal) | 99.9%, RPO 1 hour | Multi-AZ, 2+ replicas, backups | $$ |
-| **Tier 3** (dev/test) | 99%, no RPO target | Single AZ, 1 replica, no backups | $ |
+| **Tier 1** (production)      | 99.95%, RPO minutes | Multi-AZ, multi-replica, PDBs, backups, runbooks             | $$$  |
+| **Tier 2** (internal)        | 99.9%, RPO 1 hour   | Multi-AZ, 2+ replicas, backups                               | $$   |
+| **Tier 3** (dev/test)        | 99%, no RPO target  | Single AZ, 1 replica, no backups                             | $    |
 
 ```yaml
 # tier annotation on the workload
@@ -475,7 +477,7 @@ kind: Deployment
 metadata:
   name: payments
   annotations:
-    ha-tier: "0"   # critical
+    ha-tier: "0" # critical
 spec:
   replicas: 6
   # ... multi-AZ, anti-affinity
@@ -488,7 +490,7 @@ kind: Deployment
 metadata:
   name: admin-tool
   annotations:
-    ha-tier: "2"   # internal
+    ha-tier: "2" # internal
 spec:
   replicas: 2
   # single AZ OK
@@ -559,11 +561,11 @@ us-east-1                  us-west-2
 
 ### The "right" pattern
 
-| Use case | Pattern |
-|----------|---------|
-| Internal tools | Backup-and-restore |
-| Standard production | Active-passive |
-| Critical production | Active-active |
+| Use case            | Pattern                       |
+| ------------------- | ----------------------------- |
+| Internal tools      | Backup-and-restore            |
+| Standard production | Active-passive                |
+| Critical production | Active-active                 |
 | Compliance mandates | Active-active (geo-redundant) |
 
 ## Capacity planning for HA
@@ -626,14 +628,14 @@ If you have multiple clusters and want a Service to span them:
 
 Storage is the hard part. Block storage is zone-bound.
 
-| Storage | Zone-bound? | Multi-AZ? | Cross-region? |
-|---------|-------------|------------|---------------|
-| **EBS** | Yes | No (replicated) | Snapshots only |
-| **EFS** | No | Yes | Replication |
-| **GCE PD** | Yes | No | Snapshots only |
-| **Filestore** | No | Yes | No (snapshots) |
-| **Ceph / Rook** | No | Yes | Yes |
-| **S3 / GCS** | No | Yes | Yes (built-in) |
+| Storage         | Zone-bound? | Multi-AZ?       | Cross-region?  |
+| --------------- | ----------- | --------------- | -------------- |
+| **EBS**         | Yes         | No (replicated) | Snapshots only |
+| **EFS**         | No          | Yes             | Replication    |
+| **GCE PD**      | Yes         | No              | Snapshots only |
+| **Filestore**   | No          | Yes             | No (snapshots) |
+| **Ceph / Rook** | No          | Yes             | Yes            |
+| **S3 / GCS**    | No          | Yes             | Yes (built-in) |
 
 **For multi-AZ, multi-replica storage:** EFS, Filestore, or Ceph.
 **For cross-region:** replication or object storage (S3, GCS).
@@ -660,13 +662,13 @@ You can't be HA if you can't see what's happening.
 
 ## HA in managed vs self-managed
 
-| Aspect | Managed (EKS/GKE/AKS) | Self-managed (kubeadm) |
-|--------|----------------------|-------------------------|
-| Control plane | Managed by cloud | You manage (3+ nodes) |
-| etcd | Managed | You manage (3+ nodes) |
-| Node upgrades | Partial (managed node groups) | You manage |
-| Add-ons | You manage | You manage |
-| Networking | Cloud-integrated | You configure |
+| Aspect        | Managed (EKS/GKE/AKS)         | Self-managed (kubeadm) |
+| ------------- | ----------------------------- | ---------------------- |
+| Control plane | Managed by cloud              | You manage (3+ nodes)  |
+| etcd          | Managed                       | You manage (3+ nodes)  |
+| Node upgrades | Partial (managed node groups) | You manage             |
+| Add-ons       | You manage                    | You manage             |
+| Networking    | Cloud-integrated              | You configure          |
 
 **The 80/20:** managed control plane handles most HA. You handle data plane (nodes, add-ons, workloads).
 
@@ -675,12 +677,14 @@ You can't be HA if you can't see what's happening.
 A 90-day plan to get to production-grade HA:
 
 **Days 1-30: foundations**
+
 - Multiple replicas per workload (anti-affinity, topology spread)
 - PodDisruptionBudgets on critical services
 - Liveness, readiness, startup probes on every workload
 - Graceful shutdown (preStop, terminationGracePeriod)
 
 **Days 31-60: infrastructure HA**
+
 - Multi-AZ deployment (3 AZs)
 - 3+ control plane nodes (or use managed)
 - 3+ etcd nodes (or use managed)
@@ -688,6 +692,7 @@ A 90-day plan to get to production-grade HA:
 - Replicated storage (EFS, Ceph, etc.)
 
 **Days 61-90: operations HA**
+
 - Documented runbooks
 - Tested failover (node, zone)
 - Monitoring and alerting
@@ -698,8 +703,8 @@ After 90 days: you have a cluster that survives most failures.
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/auto-scaling|auto-scaling]] — HPA for replicas
-* [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing HA
-* [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — beyond HA, full failover
-* [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — data protection
-* [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — when nodes fail
+- [[Kubernetes/guides/non-functional/auto-scaling|auto-scaling]] — HPA for replicas
+- [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing HA
+- [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — beyond HA, full failover
+- [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — data protection
+- [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — when nodes fail

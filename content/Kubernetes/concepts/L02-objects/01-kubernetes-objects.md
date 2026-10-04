@@ -1,6 +1,13 @@
+---
+title: "Kubernetes Objects"
+tags: ["kubernetes", "k8s-concepts", "objects"]
+date: 2026-09-06
+description: "Kubernetes Objects — Kubernetes reference and architecture guide."
+---
+
 # Kubernetes Objects
 
-*"https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/"*
+_"https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/"_
 
 A Kubernetes object is a **persistent entity in the cluster** — a Pod, Deployment, Service, ConfigMap, etc. It's a "record of intent": you declare the desired state, and the cluster's controllers work to make it so.
 
@@ -41,44 +48,44 @@ The controller keeps running, watching, diffing, acting. If something drifts fro
 ## Every object has this structure
 
 ```yaml
-apiVersion: apps/v1           # which API group and version
-kind: Deployment              # what kind of object
-metadata:                     # who this object is
+apiVersion: apps/v1 # which API group and version
+kind: Deployment # what kind of object
+metadata: # who this object is
   name: web
   namespace: default
   uid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-  resourceVersion: "12345"    # changes on every update (optimistic concurrency)
-  generation: 1               # increments on spec change
+  resourceVersion: "12345" # changes on every update (optimistic concurrency)
+  generation: 1 # increments on spec change
   labels:
     app: web
   annotations:
     description: "Production web server"
-spec:                         # DESIRED state — what you want
+spec: # DESIRED state — what you want
   replicas: 3
   selector:
     matchLabels:
       app: web
-status:                       # CURRENT state — what the cluster reports
+status: # CURRENT state — what the cluster reports
   availableReplicas: 3
   readyReplicas: 3
   replicas: 3
   conditions:
-  - type: Available
-    status: "True"
+    - type: Available
+      status: "True"
 ```
 
 ### `apiVersion`
 
 The API group + version. Kubernetes uses API groups to organize objects:
 
-* `v1` — core objects (Pod, Service, Namespace, Node, PersistentVolume, etc.)
-* `apps/v1` — apps objects (Deployment, ReplicaSet, StatefulSet, DaemonSet)
-* `batch/v1` — batch (Job, CronJob)
-* `networking.k8s.io/v1` — networking (Ingress, NetworkPolicy)
-* `rbac.authorization.k8s.io/v1` — RBAC (Role, ClusterRole, RoleBinding)
-* `policy/v1` — PodDisruptionBudget
-* `storage.k8s.io/v1` — StorageClass
-* Custom groups: `mycompany.com/v1`, `metrics.k8s.io/v1beta1`, etc.
+- `v1` — core objects (Pod, Service, Namespace, Node, PersistentVolume, etc.)
+- `apps/v1` — apps objects (Deployment, ReplicaSet, StatefulSet, DaemonSet)
+- `batch/v1` — batch (Job, CronJob)
+- `networking.k8s.io/v1` — networking (Ingress, NetworkPolicy)
+- `rbac.authorization.k8s.io/v1` — RBAC (Role, ClusterRole, RoleBinding)
+- `policy/v1` — PodDisruptionBudget
+- `storage.k8s.io/v1` — StorageClass
+- Custom groups: `mycompany.com/v1`, `metrics.k8s.io/v1beta1`, etc.
 
 ### `kind`
 
@@ -88,17 +95,17 @@ The object type. Examples: Pod, Deployment, Service, ConfigMap, Secret, Ingress,
 
 **Identity and bookkeeping:**
 
-* `name` — unique within a namespace (or cluster-wide for cluster-scoped objects)
-* `namespace` — for namespaced objects; ignored for cluster-scoped objects
-* `uid` — globally unique, assigned by the API server; survives across updates
-* `resourceVersion` — the version of the object in etcd; used for optimistic concurrency (if you try to PATCH an old version, you get a conflict)
-* `generation` — increments when the `spec` changes; `status.observedGeneration` shows which generation the controller has processed
-* `labels` — key-value pairs for organizing and selecting objects
-* `annotations` — non-identifying key-value pairs for tooling and metadata (not used by selectors)
-* `creationTimestamp` — when the object was created
-* `deletionTimestamp` — set when deletion starts (if a finalizer is present)
-* `finalizers` — a list of strings that must be removed before deletion completes
-* `ownerReferences` — references to parent objects (for cascading deletion and GC)
+- `name` — unique within a namespace (or cluster-wide for cluster-scoped objects)
+- `namespace` — for namespaced objects; ignored for cluster-scoped objects
+- `uid` — globally unique, assigned by the API server; survives across updates
+- `resourceVersion` — the version of the object in etcd; used for optimistic concurrency (if you try to PATCH an old version, you get a conflict)
+- `generation` — increments when the `spec` changes; `status.observedGeneration` shows which generation the controller has processed
+- `labels` — key-value pairs for organizing and selecting objects
+- `annotations` — non-identifying key-value pairs for tooling and metadata (not used by selectors)
+- `creationTimestamp` — when the object was created
+- `deletionTimestamp` — set when deletion starts (if a finalizer is present)
+- `finalizers` — a list of strings that must be removed before deletion completes
+- `ownerReferences` — references to parent objects (for cascading deletion and GC)
 
 ### `spec`
 
@@ -142,7 +149,7 @@ Labels are how Services find the Pods they route to:
 ```yaml
 spec:
   selector:
-    app: web          # routes to Pods with label app=web
+    app: web # routes to Pods with label app=web
 ```
 
 Labels are how Deployments find the Pods they manage:
@@ -151,15 +158,15 @@ Labels are how Deployments find the Pods they manage:
 spec:
   selector:
     matchLabels:
-      app: web        # owns Pods with label app=web
+      app: web # owns Pods with label app=web
 ```
 
 ### Label format rules
 
-* Keys: alphanumeric, optionally with a prefix + `/` (e.g. `app.kubernetes.io/name`)
-* Values: max 63 chars, alphanumeric, `-`, `_`, `.`
-* Prefixes are optional; if omitted, the label is considered private to the user
-* Reserved prefixes: `kubernetes.io/`, `k8s.io/`
+- Keys: alphanumeric, optionally with a prefix + `/` (e.g. `app.kubernetes.io/name`)
+- Values: max 63 chars, alphanumeric, `-`, `_`, `.`
+- Prefixes are optional; if omitted, the label is considered private to the user
+- Reserved prefixes: `kubernetes.io/`, `k8s.io/`
 
 ## Annotations
 
@@ -177,9 +184,9 @@ metadata:
 
 Typical uses:
 
-* **Last-applied configuration** — set by `kubectl apply` to compute diffs
-* **Tooling metadata** — Prometheus scrape configs, Git commit SHAs, CI pipeline IDs
-* **Human-readable descriptions** — for documentation in `kubectl describe`
+- **Last-applied configuration** — set by `kubectl apply` to compute diffs
+- **Tooling metadata** — Prometheus scrape configs, Git commit SHAs, CI pipeline IDs
+- **Human-readable descriptions** — for documentation in `kubectl describe`
 
 The difference: **labels are for selection**, **annotations are for everything else**.
 
@@ -210,11 +217,11 @@ kubectl api-resources --namespaced=false
 
 Namespaces provide:
 
-* **Scope** — `name` only needs to be unique within a namespace
-* **RBAC** — RoleBindings are namespace-scoped; ClusterRoles are cluster-scoped
-* **Resource quotas** — limit CPU/memory per namespace
-* **NetworkPolicy** — scope of a NetworkPolicy
-* **DNS** — Services in a namespace get short DNS names; cross-namespace needs the full FQDN
+- **Scope** — `name` only needs to be unique within a namespace
+- **RBAC** — RoleBindings are namespace-scoped; ClusterRoles are cluster-scoped
+- **Resource quotas** — limit CPU/memory per namespace
+- **NetworkPolicy** — scope of a NetworkPolicy
+- **DNS** — Services in a namespace get short DNS names; cross-namespace needs the full FQDN
 
 ## How to create objects
 
@@ -342,7 +349,7 @@ Someone else changed the object since you last read it. Re-read and re-apply.
 ```yaml
 # Error: spec.replicas in body must be of type integer
 spec:
-  replicas: "3"    # wrong: string
+  replicas: "3" # wrong: string
   # replicas: 3    # correct: integer
 ```
 
@@ -378,7 +385,7 @@ YAML distinguishes strings from integers. `replicas` must be an integer.
 
 ## See also
 
-* [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — the fundamental workload unit
-* [[Kubernetes/concepts/L03-workloads/03-deployments|Deployments]] — managing replicated Pods
-* [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — networking Pods
-* [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — extending the object model
+- [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — the fundamental workload unit
+- [[Kubernetes/concepts/L03-workloads/03-deployments|Deployments]] — managing replicated Pods
+- [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — networking Pods
+- [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — extending the object model

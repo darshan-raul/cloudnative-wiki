@@ -6,7 +6,7 @@ tags:
   - CLI
 ---
 
-*Source: [kubectl reference](https://kubernetes.io/docs/reference/kubectl/)*
+_Source: [kubectl reference](https://kubernetes.io/docs/reference/kubectl/)_
 
 The primary CLI for Kubernetes. Every other tool (`k9s`, `Lens`, `stern`, `kubectx`) wraps or composes `kubectl`. Knowing it well is the floor for operating any cluster.
 
@@ -39,12 +39,12 @@ $ kubectl get pods
 
 ## The 4 most-used verbs
 
-| Verb | What it does | Common options |
-|------|--------------|----------------|
-| `get` | List / show resources | `-n`, `-A`, `-o yaml/json`, `-w`, `--field-selector`, `-l` |
-| `describe` | Show details + events | `-n` |
-| `apply` | Create/update from a file | `-f`, `--dry-run=server`, `--validate=false` |
-| `delete` | Remove a resource | `-f`, `--grace-period=0`, `--force` |
+| Verb       | What it does              | Common options                                             |
+| ---------- | ------------------------- | ---------------------------------------------------------- |
+| `get`      | List / show resources     | `-n`, `-A`, `-o yaml/json`, `-w`, `--field-selector`, `-l` |
+| `describe` | Show details + events     | `-n`                                                       |
+| `apply`    | Create/update from a file | `-f`, `--dry-run=server`, `--validate=false`               |
+| `delete`   | Remove a resource         | `-f`, `--grace-period=0`, `--force`                        |
 
 The rest (`logs`, `exec`, `cp`, `port-forward`, `top`, `edit`, `patch`, `scale`, `rollout`, `drain`, `cordon`) are all variations on these.
 
@@ -205,6 +205,7 @@ kubectl debug web-1 -it --copy-to=web-1-debug --container=debug --image=busybox 
 ```
 
 This is the right tool when:
+
 - Target pod uses distroless/scratch (no shell)
 - You need host-level access (network, mount)
 - You don't want to `exec` into a prod pod
@@ -399,31 +400,31 @@ The `kubeconfig` stores the **command to run** for auth; `kubectl` invokes it on
 
 ```yaml
 users:
-- name: alice
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1
-      command: aws
-      args:
-        - eks
-        - get-token
-        - --cluster-name
-        - my-cluster
+  - name: alice
+    user:
+      exec:
+        apiVersion: client.authentication.k8s.io/v1
+        command: aws
+        args:
+          - eks
+          - get-token
+          - --cluster-name
+          - my-cluster
 ```
 
 ## Common gotchas
 
-* **`-A` is your friend.** Forgetting `-n`/`-A` returns empty when you're not in the right namespace.
-* **`kubectl get` doesn't show labels by default.** Use `--show-labels`. Annotations never show.
-* **`apply` is merge, not replace.** Re-applying a manifest doesn't remove fields you deleted from the file. To replace, use `replace --force` or `apply --prune`.
-* **`edit` overwrites your kubeconfig last-applied annotation.** Don't `edit` in CI.
-* **`exec` requires a shell in the container.** Distroless and scratch images break this — use `kubectl debug`.
-* **`logs --previous` only works after a crash.** If the container was just OOM-killed, `--previous` shows the last logs.
-* **`--dry-run=client` doesn't catch server-side errors.** Always use `server` in CI.
-* **`kubectl proxy` exposes the apiserver on localhost:8001** — convenient for UI tools, but a security risk if the port is reachable. Don't run this on a jump host.
-* **The `kubectl.kubernetes.io/last-applied-configuration` annotation grows with each apply.** Long-lived resources accumulate JSON blobs in their annotations. Not a problem normally, but watch for it with very dynamic configs.
-* **`kubectl diff` shows you what `apply` would change.** Use it.
-* **`-o name` is the secret weapon for scripting:** `kubectl get pods -l app=web -o name | xargs kubectl delete`.
+- **`-A` is your friend.** Forgetting `-n`/`-A` returns empty when you're not in the right namespace.
+- **`kubectl get` doesn't show labels by default.** Use `--show-labels`. Annotations never show.
+- **`apply` is merge, not replace.** Re-applying a manifest doesn't remove fields you deleted from the file. To replace, use `replace --force` or `apply --prune`.
+- **`edit` overwrites your kubeconfig last-applied annotation.** Don't `edit` in CI.
+- **`exec` requires a shell in the container.** Distroless and scratch images break this — use `kubectl debug`.
+- **`logs --previous` only works after a crash.** If the container was just OOM-killed, `--previous` shows the last logs.
+- **`--dry-run=client` doesn't catch server-side errors.** Always use `server` in CI.
+- **`kubectl proxy` exposes the apiserver on localhost:8001** — convenient for UI tools, but a security risk if the port is reachable. Don't run this on a jump host.
+- **The `kubectl.kubernetes.io/last-applied-configuration` annotation grows with each apply.** Long-lived resources accumulate JSON blobs in their annotations. Not a problem normally, but watch for it with very dynamic configs.
+- **`kubectl diff` shows you what `apply` would change.** Use it.
+- **`-o name` is the secret weapon for scripting:** `kubectl get pods -l app=web -o name | xargs kubectl delete`.
 
 ## Useful one-liners
 
@@ -483,8 +484,8 @@ complete -F __start_kubectl k
 
 ## Further reading
 
-* [[Kubernetes/guides/tools/k9s|k9s]] — terminal UI built on kubectl
-* [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig management
-* [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — operating many clusters
-* [kubectl reference](https://kubernetes.io/docs/reference/kubectl/)
-* [kubectl book](https://kubectl.docs.kubernetes.io/) — concept-level walkthrough
+- [[Kubernetes/guides/tools/k9s|k9s]] — terminal UI built on kubectl
+- [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig management
+- [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — operating many clusters
+- [kubectl reference](https://kubernetes.io/docs/reference/kubectl/)
+- [kubectl book](https://kubectl.docs.kubernetes.io/) — concept-level walkthrough

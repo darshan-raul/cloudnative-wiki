@@ -14,11 +14,13 @@ API design is where solution architecture meets implementation. This section cov
 ## What's Here
 
 ### Distributed Systems Theory
+
 - [[cap-theorem]] — Consistency vs Availability vs Partition tolerance
 - [[concurrency]] — Concurrency models, locks, actors, async patterns
 - [[stateful-vs-stateless]] — How state affects scalability and reliability
 
 ### API Design Patterns
+
 - [[12-factor-app]] — Heroku's methodology for cloud-native SaaS
 - [[cheatsheets]] — Quick reference: latency numbers, CAP, HTTP status codes, caching patterns
 - [[idempotency]] — Designing for safe retries (covered in [[../reliability/idempotency]])
@@ -40,12 +42,12 @@ PACELC:
 
 ## Quick Reference
 
-| Topic | Key Question |
-|-------|--------------|
-| [[cap-theorem]] | Can I have both consistency and availability during a network partition? |
-| [[concurrency]] | What concurrency model fits my team's skills and language? |
-| [[stateful-vs-stateless]] | Should my service hold state or delegate to a backing store? |
-| [[12-factor-app]] | Does my app follow cloud-native principles? |
+| Topic                     | Key Question                                                             |
+| ------------------------- | ------------------------------------------------------------------------ |
+| [[cap-theorem]]           | Can I have both consistency and availability during a network partition? |
+| [[concurrency]]           | What concurrency model fits my team's skills and language?               |
+| [[stateful-vs-stateless]] | Should my service hold state or delegate to a backing store?             |
+| [[12-factor-app]]         | Does my app follow cloud-native principles?                              |
 
 ---
 

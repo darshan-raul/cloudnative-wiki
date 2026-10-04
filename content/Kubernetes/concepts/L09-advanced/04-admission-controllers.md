@@ -1,6 +1,15 @@
 ---
 title: "Admission Controllers & Webhooks"
-tags: [kubernetes, advanced, admission-controllers, webhooks, cel, validation, mutation]
+tags:
+  [
+    kubernetes,
+    advanced,
+    admission-controllers,
+    webhooks,
+    cel,
+    validation,
+    mutation,
+  ]
 date: 2026-09-06
 description: Detailed reference on mutating and validating admission webhooks, execution order, failure policies, and ValidatingAdmissionPolicy.
 aliases:
@@ -9,7 +18,7 @@ aliases:
 
 # Admission Controllers and Webhooks
 
->*"https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/"*
+> _"https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/"_
 
 Admission controllers are **plugins that run in the API server** and can reject or mutate API requests **after authentication and authorization, before the object is stored in etcd**. They're how you enforce custom policy — and how built-in k8s features like ResourceQuota and PodSecurity actually work.
 
@@ -65,13 +74,13 @@ Mutating webhooks run **before** validating webhooks. A request can hit multiple
 
 ### 2. Mutating vs validating
 
-| | Mutating | Validating |
-|---|---|---|
-| Can modify object | ✅ Yes | ❌ No |
-| Can reject request | ✅ Yes | ✅ Yes |
-| Can approve request | ✅ Yes | ✅ Yes |
-| Runs first | ✅ Yes | ❌ No |
-| Can be re-run after changes | ✅ Yes | ❌ No (runs once) |
+|                             | Mutating | Validating        |
+| --------------------------- | -------- | ----------------- |
+| Can modify object           | ✅ Yes   | ❌ No             |
+| Can reject request          | ✅ Yes   | ✅ Yes            |
+| Can approve request         | ✅ Yes   | ✅ Yes            |
+| Runs first                  | ✅ Yes   | ❌ No             |
+| Can be re-run after changes | ✅ Yes   | ❌ No (runs once) |
 
 Both can exist for the same resource. Istio uses mutating webhooks to inject sidecars. OPA/Gatekeeper uses validating webhooks to enforce policies.
 
@@ -83,41 +92,41 @@ The kube-apiserver ships with ~30 admission controllers. The recommended set (en
 
 #### Namespace and lifecycle
 
-| Controller | What it does |
-|---|---|
-| `NamespaceLifecycle` | Prevents `create`/`update`/`delete` in `Terminating` or `Unknown` namespaces |
-| `NamespaceAutoProvision` | (removed in 1.14) Creates namespaces on demand — deprecated |
-| `LimitRanger` | Enforces `LimitRange` defaults and limits per namespace |
-| `ResourceQuota` | Enforces `ResourceQuota` across the namespace |
-| `NodeRestriction` | Limits kubelet's ability to modify Node and Pod objects |
+| Controller               | What it does                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `NamespaceLifecycle`     | Prevents `create`/`update`/`delete` in `Terminating` or `Unknown` namespaces |
+| `NamespaceAutoProvision` | (removed in 1.14) Creates namespaces on demand — deprecated                  |
+| `LimitRanger`            | Enforces `LimitRange` defaults and limits per namespace                      |
+| `ResourceQuota`          | Enforces `ResourceQuota` across the namespace                                |
+| `NodeRestriction`        | Limits kubelet's ability to modify Node and Pod objects                      |
 
 #### Defaults and mutating
 
-| Controller | What it does |
-|---|---|
-| `DefaultStorageClass` | Sets default StorageClass on PVCs that don't specify one |
-| `DefaultTolerationSeconds` | Adds 5-minute toleration for `node.kubernetes.io/not-ready` and `node.kubernetes.io/unreachable` |
-| `PodSecurity` | Enforces Pod Security Standards (PSS) — replaces the removed PodSecurityPolicy |
-| `ServiceAccount` | Auto-mounts the default ServiceAccount token if not disabled |
-| `MutatingAdmissionWebhook` | Calls registered mutating webhooks |
-| `ValidatingAdmissionWebhook` | Calls registered validating webhooks |
+| Controller                   | What it does                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ |
+| `DefaultStorageClass`        | Sets default StorageClass on PVCs that don't specify one                                         |
+| `DefaultTolerationSeconds`   | Adds 5-minute toleration for `node.kubernetes.io/not-ready` and `node.kubernetes.io/unreachable` |
+| `PodSecurity`                | Enforces Pod Security Standards (PSS) — replaces the removed PodSecurityPolicy                   |
+| `ServiceAccount`             | Auto-mounts the default ServiceAccount token if not disabled                                     |
+| `MutatingAdmissionWebhook`   | Calls registered mutating webhooks                                                               |
+| `ValidatingAdmissionWebhook` | Calls registered validating webhooks                                                             |
 
 #### Storage and persistence
 
-| Controller | What it does |
-|---|---|
-| `StorageObjectInUseProtection` | Adds a finalizer to PVCs and PVs to prevent accidental deletion |
-| `PersistentVolumeClaimResize` | Validates PVC resize requests against StorageClass allowVolumeExpansion |
+| Controller                     | What it does                                                            |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| `StorageObjectInUseProtection` | Adds a finalizer to PVCs and PVs to prevent accidental deletion         |
+| `PersistentVolumeClaimResize`  | Validates PVC resize requests against StorageClass allowVolumeExpansion |
 
 #### Security and network
 
-| Controller | What it does |
-|---|---|
+| Controller               | What it does                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------ |
 | `DenyServiceExternalIPs` | Rejects `Service.spec.externalIPs` — prevents a common lateral movement vector |
-| `DenyExecOnNameNode` | (removed) Denied exec on kube-system pods |
-| `DenyProxyOnNameNode` | (removed) Denied proxy on kube-system pods |
-| `EventRateLimit` | Limits event creation rate per namespace (requires config) |
-| `ImagePolicyWebhook` | Delegates image policy to an external webhook |
+| `DenyExecOnNameNode`     | (removed) Denied exec on kube-system pods                                      |
+| `DenyProxyOnNameNode`    | (removed) Denied proxy on kube-system pods                                     |
+| `EventRateLimit`         | Limits event creation rate per namespace (requires config)                     |
+| `ImagePolicyWebhook`     | Delegates image policy to an external webhook                                  |
 
 #### Admission webhooks you might enable
 
@@ -151,7 +160,7 @@ webhooks:
       service:
         name: my-webhook
         namespace: webhook-ns
-        path: /validate      # optional — defaults to /validate-<kind>
+        path: /validate # optional — defaults to /validate-<kind>
       caBundle: <base64-CA-cert>
     rules:
       - operations: [CREATE, UPDATE]
@@ -159,15 +168,15 @@ webhooks:
         apiVersions: [v1]
         resources: [deployments]
         scope: Namespaced
-    matchPolicy: Equivalent      # Equivalent or Exact
-    failurePolicy: Fail          # Fail or Ignore
-    timeoutSeconds: 10           # max 30
+    matchPolicy: Equivalent # Equivalent or Exact
+    failurePolicy: Fail # Fail or Ignore
+    timeoutSeconds: 10 # max 30
     admissionReviewVersions: [v1, v1beta1]
     sideEffects: None
-    namespaceSelector:           # only call webhook for namespaces matching this
+    namespaceSelector: # only call webhook for namespaces matching this
       matchLabels:
         name: production
-    objectSelector:              # only call webhook for objects matching this
+    objectSelector: # only call webhook for objects matching this
       matchLabels:
         audited: "true"
 ```
@@ -310,11 +319,15 @@ The API server sends this to your webhook:
   "kind": "AdmissionReview",
   "request": {
     "uid": "705abd4c-5e5f-11ec-9bec-42010a8a0f5d",
-    "kind": {"group": "apps", "version": "v1", "kind": "Deployment"},
-    "resource": {"group": "apps", "version": "v1", "resource": "deployments"},
+    "kind": { "group": "apps", "version": "v1", "kind": "Deployment" },
+    "resource": { "group": "apps", "version": "v1", "resource": "deployments" },
     "subResource": "",
-    "requestKind": {"group": "apps", "version": "v1", "kind": "Deployment"},
-    "requestResource": {"group": "apps", "version": "v1", "resource": "deployments"},
+    "requestKind": { "group": "apps", "version": "v1", "kind": "Deployment" },
+    "requestResource": {
+      "group": "apps",
+      "version": "v1",
+      "resource": "deployments"
+    },
     "name": "my-deployment",
     "namespace": "default",
     "operation": "CREATE",
@@ -322,10 +335,14 @@ The API server sends this to your webhook:
       "username": "admin",
       "groups": ["system:masters", "system:authenticated"]
     },
-    "object": { /* full object YAML/JSON */ },
+    "object": {
+      /* full object YAML/JSON */
+    },
     "oldObject": null,
     "dryRun": false,
-    "options": { /* original request options */ }
+    "options": {
+      /* original request options */
+    }
   }
 }
 ```
@@ -361,7 +378,7 @@ Request → MutatingWebhook1 → MutatingWebhook2 → MutatingWebhook3 → Valid
 Use `reinvocationPolicy` to re-run mutating webhooks after other mutating webhooks have run:
 
 ```yaml
-reinvocationPolicy: IfNeeded   # IfNeeded or Never (default)
+reinvocationPolicy: IfNeeded # IfNeeded or Never (default)
 ```
 
 `IfNeeded` means: if any mutating webhook modified the object, re-run all mutating webhooks. Use carefully — it can cause loops.
@@ -375,9 +392,9 @@ failurePolicy: Fail    # API server REJECTS the request if the webhook is unreac
 failurePolicy: Ignore  # API server PROCEEDS if the webhook is unreachable
 ```
 
-| Policy | Behavior when webhook fails/unreachable |
-|--------|----------------------------------------|
-| `Fail` | Object is rejected with `500 Internal Server Error` |
+| Policy   | Behavior when webhook fails/unreachable                          |
+| -------- | ---------------------------------------------------------------- |
+| `Fail`   | Object is rejected with `500 Internal Server Error`              |
 | `Ignore` | Object proceeds past this webhook (but other webhooks still run) |
 
 **`timeoutSeconds`** — defaults to 10s. If your webhook is slow, increase it. But: **slow webhooks block the API request path** — every request waits for your webhook to respond.
@@ -385,8 +402,8 @@ failurePolicy: Ignore  # API server PROCEEDS if the webhook is unreachable
 #### Production recommendations
 
 ```yaml
-failurePolicy: Ignore    # if the webhook is down, don't block all deployments
-timeoutSeconds: 5       # 5s is usually enough; 10s is the max
+failurePolicy: Ignore # if the webhook is down, don't block all deployments
+timeoutSeconds: 5 # 5s is usually enough; 10s is the max
 ```
 
 For **critical policies** (security, compliance), use `Fail` — but ensure you have 2+ webhook replicas with a readiness probe.
@@ -404,13 +421,13 @@ rules:
     scope: "*"
 ```
 
-| Field | What it does |
-|-------|-------------|
-| `operations` | `CREATE`, `UPDATE`, `DELETE`, `CONNECT` |
-| `apiGroups` | `""` for core API (`v1`), `apps`, `networking.k8s.io`, etc. |
-| `apiVersions` | `v1`, `v1beta1`, `*` |
-| `resources` | `pods`, `*/status` (subresource), `pods/log` (subresource) |
-| `scope` | `Namespaced`, `Cluster`, `*` |
+| Field         | What it does                                                |
+| ------------- | ----------------------------------------------------------- |
+| `operations`  | `CREATE`, `UPDATE`, `DELETE`, `CONNECT`                     |
+| `apiGroups`   | `""` for core API (`v1`), `apps`, `networking.k8s.io`, etc. |
+| `apiVersions` | `v1`, `v1beta1`, `*`                                        |
+| `resources`   | `pods`, `*/status` (subresource), `pods/log` (subresource)  |
+| `scope`       | `Namespaced`, `Cluster`, `*`                                |
 
 ```yaml
 # matchPolicy: how to interpret rules when a resource has multiple versions
@@ -463,12 +480,12 @@ sideEffects: Unknown       # assume it has side effects
 sideEffects: Some          # has side effects
 ```
 
-| Value | Can be called during dry-run? |
-|-------|-------------------------------|
-| `None` | ✅ Yes |
-| `NoneOnDryRun` | ✅ Yes |
-| `Unknown` | ❌ No |
-| `Some` | ❌ No |
+| Value          | Can be called during dry-run? |
+| -------------- | ----------------------------- |
+| `None`         | ✅ Yes                        |
+| `NoneOnDryRun` | ✅ Yes                        |
+| `Unknown`      | ❌ No                         |
+| `Some`         | ❌ No                         |
 
 `sideEffects: None` is required for webhooks that don't have side effects. Most validating webhooks are `None`. Mutating webhooks that modify the object are `Some` or `Unknown` — they won't be called during dry-run.
 
@@ -476,15 +493,15 @@ sideEffects: Some          # has side effects
 
 ### 13. Tools that use webhooks
 
-| Tool | Type | What it does |
-|------|------|-------------|
-| **OPA Gatekeeper** | Validating | Rego-based policy: no public images, label requirements, resource limits |
-| **Kyverno** | Mutating + Validating | YAML-native policy: generate sidecars, validate resources, mutate on create |
-| **Istio** | Mutating | Injects Envoy sidecar on every Pod creation |
-| **Linkerd** | Mutating | Injects Linkerd proxy sidecar |
-| **cert-manager** | Validating | Validates Certificate CRs, auto-writes to ACME/VA APIs |
-| **Velero** | Validating | Protects namespaces from deletion during restore |
-| **Datree** / **Polaris** | Validating (CI tool, not webhook) | Validates YAML before apply — not a webhook |
+| Tool                     | Type                              | What it does                                                                |
+| ------------------------ | --------------------------------- | --------------------------------------------------------------------------- |
+| **OPA Gatekeeper**       | Validating                        | Rego-based policy: no public images, label requirements, resource limits    |
+| **Kyverno**              | Mutating + Validating             | YAML-native policy: generate sidecars, validate resources, mutate on create |
+| **Istio**                | Mutating                          | Injects Envoy sidecar on every Pod creation                                 |
+| **Linkerd**              | Mutating                          | Injects Linkerd proxy sidecar                                               |
+| **cert-manager**         | Validating                        | Validates Certificate CRs, auto-writes to ACME/VA APIs                      |
+| **Velero**               | Validating                        | Protects namespaces from deletion during restore                            |
+| **Datree** / **Polaris** | Validating (CI tool, not webhook) | Validates YAML before apply — not a webhook                                 |
 
 **Gatekeeper** (OPA) example policy:
 
@@ -553,23 +570,23 @@ kubectl logs -n webhook-ns deployment/my-webhook
 
 #### Common error codes
 
-| HTTP Code | Meaning |
-|-----------|---------|
-| `400 Bad Request` | Webhook returned malformed response |
-| `403 Forbidden` | RBAC — webhook SA can't read the object |
-| `500 Internal Server Error` | Webhook panicked or returned error |
-| `503 Service Unavailable` | Webhook timed out or is down |
+| HTTP Code                   | Meaning                                 |
+| --------------------------- | --------------------------------------- |
+| `400 Bad Request`           | Webhook returned malformed response     |
+| `403 Forbidden`             | RBAC — webhook SA can't read the object |
+| `500 Internal Server Error` | Webhook panicked or returned error      |
+| `503 Service Unavailable`   | Webhook timed out or is down            |
 
 ---
 
 ### 15. When webhooks vs CRD controllers vs operators
 
-| Tool | When to use | Runs |
-|------|------------|------|
-| **Validating webhook** | Reject objects that don't meet criteria | Synchronously, on every request |
-| **Mutating webhook** | Set defaults, inject sidecars | Synchronously, on every request |
-| **CRD controller** | Reconcile to desired state asynchronously | Background loop |
-| **Operator** | CRD controller + domain-specific knowledge | Background loop |
+| Tool                   | When to use                                | Runs                            |
+| ---------------------- | ------------------------------------------ | ------------------------------- |
+| **Validating webhook** | Reject objects that don't meet criteria    | Synchronously, on every request |
+| **Mutating webhook**   | Set defaults, inject sidecars              | Synchronously, on every request |
+| **CRD controller**     | Reconcile to desired state asynchronously  | Background loop                 |
+| **Operator**           | CRD controller + domain-specific knowledge | Background loop                 |
 
 **Webhook** = "you can't apply this object" (synchronous gate).
 **Controller** = "this Deployment should always have 3 replicas and the right config" (asynchronous reconciliation).
@@ -578,12 +595,12 @@ kubectl logs -n webhook-ns deployment/my-webhook
 
 ### 16. Admission controllers in managed clusters
 
-| Provider | Notes |
-|----------|-------|
-| **EKS** | Pod Security Standard enforced by default; OPA Gatekeeper available |
-| **GKE** | Pod Security, Binary Authorization, Anthos Policy Controller (Gatekeeper) |
-| **AKS** | Azure Policy (Gatekeeper-based) |
-| **kind/minikube** | All admission controllers available, no restrictions |
+| Provider          | Notes                                                                     |
+| ----------------- | ------------------------------------------------------------------------- |
+| **EKS**           | Pod Security Standard enforced by default; OPA Gatekeeper available       |
+| **GKE**           | Pod Security, Binary Authorization, Anthos Policy Controller (Gatekeeper) |
+| **AKS**           | Azure Policy (Gatekeeper-based)                                           |
+| **kind/minikube** | All admission controllers available, no restrictions                      |
 
 On EKS, you can see which admission controllers are enabled:
 
@@ -617,23 +634,23 @@ For a `kubectl apply -f deployment.yaml` on a standard cluster:
 
 ### 18. Gotchas
 
-* **Webhooks are on the API request hot path.** A slow or down webhook blocks or fails requests. Use `failurePolicy: Ignore` for non-critical validations. Use timeouts and run 2+ replicas.
-* **`sideEffects: None` is mandatory** for webhooks without side effects. Without it, the API server can't call the webhook during dry-run and may reject the registration.
-* **`failurePolicy: Fail` is dangerous for mutating webhooks.** If your mutating webhook is down and `failurePolicy: Fail`, no one can create/update deployments. This is a site-wide outage risk.
-* **`namespaceSelector` excludes system namespaces by default.** If you need to audit system namespace changes, explicitly include them.
-* **The `caBundle` must be the CA that signed the webhook's TLS cert.** For webhooks with a `Service` endpoint, this is the CA that issued the webhook's serving certificate — usually the cluster's CA, NOT the etcd CA.
-* **Mutating + Validating on the same resource:** The mutating webhook runs first. If it approves, the validating webhook runs. If the mutating webhook modifies the object, the validating webhook sees the modified version.
-* **Object and oldObject:** For UPDATE operations, both are provided. For CREATE, oldObject is null. For DELETE, object contains the object being deleted (but may be a stub).
-* **Webhooks don't see Secret contents by default**, but they DO see them if the ServiceAccount has `secrets` read permission. Be careful what you log.
-* **Kubelet's own Pod creation** goes through the same admission chain — but some controllers (like `NodeRestriction`) limit what kubelet can modify.
-* **`kubectl apply` and `kubectl create`** both go through admission. Dry-run (`--dry-run=server`) goes through admission too (since k8s 1.18), but `sideEffects: Some` webhooks are skipped.
+- **Webhooks are on the API request hot path.** A slow or down webhook blocks or fails requests. Use `failurePolicy: Ignore` for non-critical validations. Use timeouts and run 2+ replicas.
+- **`sideEffects: None` is mandatory** for webhooks without side effects. Without it, the API server can't call the webhook during dry-run and may reject the registration.
+- **`failurePolicy: Fail` is dangerous for mutating webhooks.** If your mutating webhook is down and `failurePolicy: Fail`, no one can create/update deployments. This is a site-wide outage risk.
+- **`namespaceSelector` excludes system namespaces by default.** If you need to audit system namespace changes, explicitly include them.
+- **The `caBundle` must be the CA that signed the webhook's TLS cert.** For webhooks with a `Service` endpoint, this is the CA that issued the webhook's serving certificate — usually the cluster's CA, NOT the etcd CA.
+- **Mutating + Validating on the same resource:** The mutating webhook runs first. If it approves, the validating webhook runs. If the mutating webhook modifies the object, the validating webhook sees the modified version.
+- **Object and oldObject:** For UPDATE operations, both are provided. For CREATE, oldObject is null. For DELETE, object contains the object being deleted (but may be a stub).
+- **Webhooks don't see Secret contents by default**, but they DO see them if the ServiceAccount has `secrets` read permission. Be careful what you log.
+- **Kubelet's own Pod creation** goes through the same admission chain — but some controllers (like `NodeRestriction`) limit what kubelet can modify.
+- **`kubectl apply` and `kubectl create`** both go through admission. Dry-run (`--dry-run=server`) goes through admission too (since k8s 1.18), but `sideEffects: Some` webhooks are skipped.
 
 ---
 
 ## See also
 
-* [[Kubernetes/concepts/L09-advanced/07-aggregation-layer|Aggregation Layer]] — for extending the API, not just mutating/validating
-* [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — what the webhook is validating/mutating
-* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|L07: Admission Controllers]] — the security context
-* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|L07: OPA Gatekeeper]] — Rego-based policy as a webhook
-* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|L07: Kyverno]] — YAML-native policy engine
+- [[Kubernetes/concepts/L09-advanced/07-aggregation-layer|Aggregation Layer]] — for extending the API, not just mutating/validating
+- [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — what the webhook is validating/mutating
+- [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|L07: Admission Controllers]] — the security context
+- [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|L07: OPA Gatekeeper]] — Rego-based policy as a webhook
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|L07: Kyverno]] — YAML-native policy engine

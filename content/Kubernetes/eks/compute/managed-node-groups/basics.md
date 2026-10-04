@@ -69,15 +69,17 @@ eksctl delete nodegroup \
 ## Node Group Configuration Options
 
 ### Instance Types
-| Family | Use Case |
-|--------|----------|
-| t3, m5, c5 | General purpose |
-| m5n, c5n | High network bandwidth |
-| r5, r5n | Memory optimized |
-| p3, p4, g4 | GPU workloads |
-| a1, m6g, c6g, r6g | ARM/Graviton |
+
+| Family            | Use Case               |
+| ----------------- | ---------------------- |
+| t3, m5, c5        | General purpose        |
+| m5n, c5n          | High network bandwidth |
+| r5, r5n           | Memory optimized       |
+| p3, p4, g4        | GPU workloads          |
+| a1, m6g, c6g, r6g | ARM/Graviton           |
 
 ### Launch Template Customization
+
 ```yaml
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig

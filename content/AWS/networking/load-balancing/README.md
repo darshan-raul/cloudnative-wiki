@@ -15,17 +15,17 @@ AWS provides three load balancer types. ALB and NLB are the current-generation t
 
 ## Load Balancer Types
 
-| | ALB | NLB | CLB |
-|--|--|--|--|
-| OSI Layer | Layer 7 (HTTP/S) | Layer 4 (TCP/UDP) | Layer 4 and 7 |
-| Routing | Path-based, host-based | IP-based | Port-based |
-| TLS Termination | Yes | Pass-through | Yes |
-| WebSocket | Yes | Yes | Yes |
-| HTTP/2 | Yes | No | Yes |
-| AWS WAF | Yes (integrated) | No | No |
-| Static IP | No (changes on AZ changes) | Yes (one per AZ) | Yes |
-| Preserve Client IP | X-Forwarded-For header | Via proxy protocol | X-Forwarded-For |
-| Use when | HTTP/S web services | High-throughput, low-latency TCP/UDP | Legacy only |
+|                    | ALB                        | NLB                                  | CLB             |
+| ------------------ | -------------------------- | ------------------------------------ | --------------- |
+| OSI Layer          | Layer 7 (HTTP/S)           | Layer 4 (TCP/UDP)                    | Layer 4 and 7   |
+| Routing            | Path-based, host-based     | IP-based                             | Port-based      |
+| TLS Termination    | Yes                        | Pass-through                         | Yes             |
+| WebSocket          | Yes                        | Yes                                  | Yes             |
+| HTTP/2             | Yes                        | No                                   | Yes             |
+| AWS WAF            | Yes (integrated)           | No                                   | No              |
+| Static IP          | No (changes on AZ changes) | Yes (one per AZ)                     | Yes             |
+| Preserve Client IP | X-Forwarded-For header     | Via proxy protocol                   | X-Forwarded-For |
+| Use when           | HTTP/S web services        | High-throughput, low-latency TCP/UDP | Legacy only     |
 
 ## ALB: Application Load Balancer
 
@@ -90,6 +90,7 @@ NLB operates at layer 4 and handles TCP, UDP, and TLS traffic. It can handle mil
 ### Target Types
 
 NLB can route to:
+
 - EC2 instances (via ENI)
 - IP addresses (for on-premises targets via Direct Connect)
 - Application Load Balancers (NLB → ALB pattern for WAF integration)
@@ -127,28 +128,28 @@ Connection draining timeout: 300 seconds (default, configurable 1-3600)
 
 ## ALB vs NLB Decision Matrix
 
-| Use Case | Recommended LB |
-|----------|---------------|
-| HTTP/S microservice with URL routing | ALB |
-| HTTP/S API with WAF integration | ALB |
-| gRPC service | ALB (HTTP/2) |
-| High-throughput TCP/UDP (video streaming, gaming) | NLB |
-| IoT MQTT over TCP | NLB |
-| DNS-over-TCP | NLB |
-| Legacy TCP application | NLB |
-| TLS termination at load balancer | ALB (easier) or NLB |
-| Static IP for whitelisting | NLB |
+| Use Case                                          | Recommended LB      |
+| ------------------------------------------------- | ------------------- |
+| HTTP/S microservice with URL routing              | ALB                 |
+| HTTP/S API with WAF integration                   | ALB                 |
+| gRPC service                                      | ALB (HTTP/2)        |
+| High-throughput TCP/UDP (video streaming, gaming) | NLB                 |
+| IoT MQTT over TCP                                 | NLB                 |
+| DNS-over-TCP                                      | NLB                 |
+| Legacy TCP application                            | NLB                 |
+| TLS termination at load balancer                  | ALB (easier) or NLB |
+| Static IP for whitelisting                        | NLB                 |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Load balancers per region | 50 |
-| Target groups per LB | 100 |
-| Targets per target group | 1000 |
-| Listeners per LB | 50 |
-| Rules per LB | 100 (minus default rule) |
-| Certificates per LB | 25 |
+| Resource                  | Limit                    |
+| ------------------------- | ------------------------ |
+| Load balancers per region | 50                       |
+| Target groups per LB      | 100                      |
+| Targets per target group  | 1000                     |
+| Listeners per LB          | 50                       |
+| Rules per LB              | 100 (minus default rule) |
+| Certificates per LB       | 25                       |
 
 ## References
 

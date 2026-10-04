@@ -64,13 +64,13 @@ global:
 
 redis:
   enabled: true
-  architecture: replication    # 3 instances, not 1
+  architecture: replication # 3 instances, not 1
   sentinel:
-    enabled: false             # use the replication pattern
+    enabled: false # use the replication pattern
 
 controller:
   enabled: true
-  replicas: 3                  # HA controller
+  replicas: 3 # HA controller
   metrics:
     enabled: true
   resources:
@@ -83,7 +83,7 @@ controller:
 
 server:
   enabled: true
-  replicas: 3                  # HA server
+  replicas: 3 # HA server
   autoscaling:
     enabled: true
     minReplicas: 3
@@ -99,15 +99,15 @@ server:
       cert-manager.io/cluster-issuer: letsencrypt-prod
       nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     hosts:
-    - argocd.example.com
-    tls:
-    - hosts:
       - argocd.example.com
-      secretName: argocd-server-tls
+    tls:
+      - hosts:
+          - argocd.example.com
+        secretName: argocd-server-tls
 
 repoServer:
   enabled: true
-  replicas: 3                  # HA repo server
+  replicas: 3 # HA repo server
   autoscaling:
     enabled: true
     minReplicas: 3
@@ -123,10 +123,10 @@ repoServer:
       memory: 1Gi
 
 applicationSet:
-  enabled: true                # for ApplicationSets
+  enabled: true # for ApplicationSets
 
 dex:
-  enabled: false               # we're using SSO via OIDC, not Dex
+  enabled: false # we're using SSO via OIDC, not Dex
 
 configs:
   cm:
@@ -148,10 +148,10 @@ configs:
     server.disable.auth: false
 
   rbac:
-    defaultPolicy: 'role:readonly'
-    policyMatcherMode: 'glob'
-    scopes: '[groups, email]'
-    policy.default: 'role:readonly'
+    defaultPolicy: "role:readonly"
+    policyMatcherMode: "glob"
+    scopes: "[groups, email]"
+    policy.default: "role:readonly"
 
   secrets:
     # OIDC client secret
@@ -176,6 +176,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/ha
 ```
 
 **What HA gives you:**
+
 - 3 controller replicas (1 leader, 2 standby)
 - 3 Redis instances (1 master, 2 replicas)
 - 3 repo-server replicas
@@ -250,6 +251,7 @@ configs:
 ```
 
 The OIDC client in Okta/Keycloak/etc. needs:
+
 - Redirect URI: `https://argocd.example.com/auth/callback`
 - Grant type: Authorization Code
 - Scopes: openid, profile, email, groups
@@ -259,9 +261,9 @@ The OIDC client in Okta/Keycloak/etc. needs:
 ```yaml
 configs:
   rbac:
-    policy.default: 'role:readonly'
-    scopes: '[groups, email]'
-    policyMatcherMode: 'glob'
+    policy.default: "role:readonly"
+    scopes: "[groups, email]"
+    policyMatcherMode: "glob"
 ```
 
 ```yaml
@@ -334,48 +336,48 @@ metadata:
   namespace: argocd
 spec:
   description: Team A's applications
-  
+
   # source repos
   sourceRepos:
-  - https://github.com/myorg/team-a-*
-  
+    - https://github.com/myorg/team-a-*
+
   # destination clusters + namespaces
   destinations:
-  - namespace: team-a-*
-    server: '*'
-  
+    - namespace: team-a-*
+      server: "*"
+
   # cluster resources allowed
   clusterResourceWhitelist:
-  - group: ''
-    kind: Namespace
-  
+    - group: ""
+      kind: Namespace
+
   # namespace resources allowed
   namespaceResourceWhitelist:
-  - group: ''
-    kind: '*'
-  
+    - group: ""
+      kind: "*"
+
   # sync windows (when syncing is allowed)
   syncWindows:
-  - kind: deny
-    schedule: '0 0 * * 5'    # deny on Friday
-    duration: 24h
-    applications:
-    - '*-prod'
-  
+    - kind: deny
+      schedule: "0 0 * * 5" # deny on Friday
+      duration: 24h
+      applications:
+        - "*-prod"
+
   # roles (RBAC)
   roles:
-  - name: developer
-    policies:
-    - p, proj:team-a:developer, applications, get, team-a/*, allow
-    - p, proj:team-a:developer, applications, sync, team-a/*, allow
-    groups:
-    - team-a-developers
-  
-  - name: admin
-    policies:
-    - p, proj:team-a:admin, applications, *, team-a/*, allow
-    groups:
-    - team-a-admins
+    - name: developer
+      policies:
+        - p, proj:team-a:developer, applications, get, team-a/*, allow
+        - p, proj:team-a:developer, applications, sync, team-a/*, allow
+      groups:
+        - team-a-developers
+
+    - name: admin
+      policies:
+        - p, proj:team-a:admin, applications, *, team-a/*, allow
+      groups:
+        - team-a-admins
 ```
 
 **For tenant isolation:** projects prevent team-a from deploying to team-b's namespace.
@@ -392,23 +394,23 @@ metadata:
   namespace: argocd
 spec:
   generators:
-  - list:
-      elements:
-      - cluster: prod-us
-        url: https://prod-us.example.com
-      - cluster: prod-eu
-        url: https://prod-eu.example.com
+    - list:
+        elements:
+          - cluster: prod-us
+            url: https://prod-us.example.com
+          - cluster: prod-eu
+            url: https://prod-eu.example.com
   template:
     metadata:
-      name: 'addons-{{cluster}}'
+      name: "addons-{{cluster}}"
     spec:
       project: infrastructure
       source:
         repoURL: https://github.com/myorg/cluster-addons
         targetRevision: HEAD
-        path: 'overlays/{{cluster}}'
+        path: "overlays/{{cluster}}"
       destination:
-        server: '{{url}}'
+        server: "{{url}}"
         namespace: kube-system
       syncPolicy:
         automated:
@@ -450,6 +452,7 @@ Image Updater opens PRs with new image tags. No CI needed.
 ## Backup and restore
 
 Argo CD state is in 2 places:
+
 - **Configuration:** Application manifests, Projects (in git)
 - **State:** Sync status, history (in Redis)
 
@@ -511,12 +514,12 @@ ApplicationSet can generate many Applications from a template. For 100+ apps:
 
 ```yaml
 generators:
-- list:
-    elements:
-    - app: app1
-    - app: app2
-    - ...
-    - app: app100
+  - list:
+      elements:
+        - app: app1
+        - app: app2
+        - ...
+        - app: app100
 ```
 
 ### Repository caching
@@ -534,29 +537,29 @@ data:
 ```yaml
 controller:
   env:
-  - name: ARGOCD_CONTROLLER_REPLICAS
-    value: "3"
-  - name: ARGOCD_CONTROLLER_PARALLELISM_LIMIT
-    value: "10"
+    - name: ARGOCD_CONTROLLER_REPLICAS
+      value: "3"
+    - name: ARGOCD_CONTROLLER_PARALLELISM_LIMIT
+      value: "10"
 ```
 
 ## Common gotchas
 
-* **Application CRDs must be in the cluster.** If you delete them, all apps become orphan.
-* **The initial admin password** is stored in a Secret that's auto-deleted. Save it.
-* **`argocd-server --insecure`** is fine for dev, not for production. Use TLS.
-* **RBAC requires OIDC or SAML.** Local users don't get group-based RBAC.
-* **Argo CD's ServiceAccount** has wide cluster permissions. Restrict via Projects.
-* **Sync windows can lock you out.** A "deny on Friday" sync window means no auto-sync on Friday.
-* **Image Updater needs git credentials.** The Secret must be in `argocd` namespace.
-* **The CLI is `argocd`**, not `kubectl-argocd`. Install it from argocd-cli.
-* **ApplicationSet requires CRDs.** Helm install doesn't always include them; check.
-* **Self-heal deletes manual changes.** The controller reverts kubectl edits.
-* **The HA install is resource-hungry.** Don't try to run it on small clusters.
+- **Application CRDs must be in the cluster.** If you delete them, all apps become orphan.
+- **The initial admin password** is stored in a Secret that's auto-deleted. Save it.
+- **`argocd-server --insecure`** is fine for dev, not for production. Use TLS.
+- **RBAC requires OIDC or SAML.** Local users don't get group-based RBAC.
+- **Argo CD's ServiceAccount** has wide cluster permissions. Restrict via Projects.
+- **Sync windows can lock you out.** A "deny on Friday" sync window means no auto-sync on Friday.
+- **Image Updater needs git credentials.** The Secret must be in `argocd` namespace.
+- **The CLI is `argocd`**, not `kubectl-argocd`. Install it from argocd-cli.
+- **ApplicationSet requires CRDs.** Helm install doesn't always include them; check.
+- **Self-heal deletes manual changes.** The controller reverts kubectl edits.
+- **The HA install is resource-hungry.** Don't try to run it on small clusters.
 
 ## See also
 
-* [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — the model
-* [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for Argo CD
-* [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — RBAC
-* [Argo CD operator docs](https://argo-cd.readthedocs.io/en/stable/operator-manual/)
+- [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — the model
+- [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for Argo CD
+- [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — RBAC
+- [Argo CD operator docs](https://argo-cd.readthedocs.io/en/stable/operator-manual/)

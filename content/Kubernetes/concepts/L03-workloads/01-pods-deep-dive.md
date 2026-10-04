@@ -30,15 +30,15 @@ flowchart TD
 
 ### Namespace Sharing Matrix
 
-| Kernel Namespace | Shared Across Pod Containers? | Mechanism / Flag | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Network (`net`)** | **Yes (Always)** | Shared via pause container | All containers share the Pod IP, port space, and `localhost` loopback interface. |
-| **IPC (`ipc`)** | **Yes (Always)** | Shared via pause container | POSIX shared memory (`/dev/shm`) and System V IPC queues are accessible across containers. |
-| **UTS (`uts`)** | **Yes (Always)** | Shared hostname | All containers see the Pod's name as their hostname (`uname -n`). |
-| **PID (`pid`)** | **Optional** | `shareProcessNamespace: true` | When enabled, containers can see each other's processes via `ps` and signal them (`kill`). |
-| **Mount (`mnt`)** | **No (Isolated)** | Per-container rootfs + shared volumes | Each container has its own isolated filesystem layers. Shared files require explicit `volumes`. |
-| **User (`user`)** | **Isolated (Optional)** | `UserNamespacesSupport` (GA in v1.30+) | Maps container root (UID 0) to unprivileged host UIDs for enhanced security. |
-| **Cgroups** | **Shared & Scoped** | Pod-level cgroup + container cgroups | Enforces resource requests and limits across the Pod hierarchy. |
+| Kernel Namespace    | Shared Across Pod Containers? | Mechanism / Flag                       | Purpose                                                                                         |
+| :------------------ | :---------------------------- | :------------------------------------- | :---------------------------------------------------------------------------------------------- |
+| **Network (`net`)** | **Yes (Always)**              | Shared via pause container             | All containers share the Pod IP, port space, and `localhost` loopback interface.                |
+| **IPC (`ipc`)**     | **Yes (Always)**              | Shared via pause container             | POSIX shared memory (`/dev/shm`) and System V IPC queues are accessible across containers.      |
+| **UTS (`uts`)**     | **Yes (Always)**              | Shared hostname                        | All containers see the Pod's name as their hostname (`uname -n`).                               |
+| **PID (`pid`)**     | **Optional**                  | `shareProcessNamespace: true`          | When enabled, containers can see each other's processes via `ps` and signal them (`kill`).      |
+| **Mount (`mnt`)**   | **No (Isolated)**             | Per-container rootfs + shared volumes  | Each container has its own isolated filesystem layers. Shared files require explicit `volumes`. |
+| **User (`user`)**   | **Isolated (Optional)**       | `UserNamespacesSupport` (GA in v1.30+) | Maps container root (UID 0) to unprivileged host UIDs for enhanced security.                    |
+| **Cgroups**         | **Shared & Scoped**           | Pod-level cgroup + container cgroups   | Enforces resource requests and limits across the Pod hierarchy.                                 |
 
 ---
 
@@ -60,11 +60,11 @@ metadata:
     prometheus.io/port: "9898"
 spec:
   # Pod-level networking & scheduling controls
-  restartPolicy: Always          # Always | OnFailure | Never
+  restartPolicy: Always # Always | OnFailure | Never
   terminationGracePeriodSeconds: 30
   shareProcessNamespace: false
   serviceAccountName: default
-  priorityClassName: system-cluster-critical  # Optional priority
+  priorityClassName: system-cluster-critical # Optional priority
   nodeSelector:
     topology.kubernetes.io/zone: "zone-a"
 
@@ -143,6 +143,7 @@ spec:
 Kubernetes provides two per-container lifecycle hooks: `postStart` and `preStop`.
 
 ### `preStop` Execution Contract
+
 1. Sent **before** `SIGTERM` is delivered to the container entrypoint process.
 2. Blocks the termination sequence until the hook finishes or `terminationGracePeriodSeconds` expires.
 3. If the hook hangs, Kubernetes waits until the grace period elapses and sends `SIGKILL`.
@@ -162,6 +163,7 @@ lifecycle:
 ## 4. Operational Debugging Recipes
 
 ### Inspecting Pod Conditions
+
 The coarse `status.phase` (e.g. `Running`) is insufficient for diagnosing subtle issues. Inspect `status.conditions`:
 
 ```bash
@@ -169,6 +171,7 @@ kubectl get pod <pod-name> -o jsonpath='{range .status.conditions[*]}{.type}{"="
 ```
 
 ### Checking Termination Reason & Exit Code
+
 When a container terminates unexpectedly:
 
 ```bash

@@ -42,7 +42,7 @@ You can enrich stream data with reference data stored in S3 (CSV, JSON). Referen
 
 ```sql
 CREATE STREAM enriched_events AS
-SELECT 
+SELECT
   s.event_id,
   s.user_id,
   s.action,
@@ -64,7 +64,7 @@ Kinesis Data Analytics supports standard SQL window functions with tumbling, sli
 
 ```sql
 CREATE STREAM pageview_counts AS
-SELECT 
+SELECT
   STEP(s.timestamp) AS window_end,
   page_url,
   COUNT(*) AS view_count,
@@ -78,7 +78,7 @@ GROUP BY STEP(s.timestamp), page_url;
 ### Sliding Windows (overlapping, with slide interval)
 
 ```sql
-SELECT 
+SELECT
   FLOOR(s.timestamp TO HOUR) AS window_start,
   product_id,
   SUM(sale_amount) AS total_sales,
@@ -93,7 +93,7 @@ Session windows close after a period of inactivity. Useful for user sessionizati
 
 ```sql
 -- Session window: group events with gap > 30 seconds = new session
-SELECT 
+SELECT
   user_id,
   SESSION_TIMESTAMP AS session_start,
   SESSION_RUNTIME() AS session_duration,
@@ -109,7 +109,7 @@ Kinesis Data Analytics supports JOINs between two input streams. This enables co
 ```sql
 -- Correlate page views with purchases (within 1 hour)
 CREATE STREAM purchase_after_view AS
-SELECT 
+SELECT
   v.user_id,
   v.page_url,
   p.purchase_id,
@@ -126,6 +126,7 @@ LEFT JOIN purchases p
 ## Output Destinations
 
 SQL results can be written to:
+
 - **Kinesis Data Streams** — for chaining multiple analytics applications
 - **Kinesis Data Firehose** — for delivery to S3, Redshift, Elasticsearch
 - **Lambda** — for custom processing and alerts
@@ -134,6 +135,7 @@ SQL results can be written to:
 ## Exactly-Once Semantics
 
 Kinesis Data Analytics provides exactly-once delivery to output destinations when combined with Kinesis Data Streams (not Firehose). This means:
+
 - Each input record is processed exactly once
 - Output records are delivered exactly once
 - No duplicate results from reprocessing
@@ -147,7 +149,7 @@ Kinesis Data Analytics provides exactly-once delivery to output destinations whe
 ```sql
 -- Rolling average response time by API endpoint, per minute
 CREATE STREAM api_latency AS
-SELECT 
+SELECT
   STEP(event_time TO MINUTE) AS minute,
   api_endpoint,
   AVG(response_time_ms) AS avg_latency,
@@ -162,7 +164,7 @@ GROUP BY STEP(event_time TO MINUTE), api_endpoint;
 ```sql
 -- Alert when error rate exceeds 5% in a 5-minute window
 CREATE STREAM error_alerts AS
-SELECT 
+SELECT
   STEP(event_time TO MINUTE) AS window,
   service_name,
   COUNT(*) AS total_requests,
@@ -178,7 +180,7 @@ HAVING CAST(SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS DOUBLE) / COUNT(*)
 ```sql
 -- User sessions with timeout of 5 minutes
 CREATE STREAM user_sessions AS
-SELECT 
+SELECT
   user_id,
   SESSION_TIMESTAMP AS session_start,
   COUNT(*) AS events,
@@ -191,6 +193,7 @@ GROUP BY user_id, SESSION(gap => INTERVAL '5' MINUTE);
 ## Monitoring
 
 CloudWatch metrics for Kinesis Data Analytics:
+
 - `BytesReceived` — input data volume
 - `RecordsReceived` — input record count
 - `BytesProcessed` — data processed by the application
@@ -205,6 +208,7 @@ CloudWatch metrics for Kinesis Data Analytics:
 ### In-Application Streams and Pumps
 
 In Kinesis Data Analytics terminology:
+
 - **In-application stream:** An intermediate stream created by a SQL query (virtual, not a Kinesis stream)
 - **Pump:** The continuous query that reads from an input and writes to an in-application stream
 

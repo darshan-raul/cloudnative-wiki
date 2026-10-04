@@ -15,10 +15,10 @@ The Amazon VPC CNI plugin assigns IP addresses from the VPC to each pod, providi
 
 VPC CNI has two main components running in the `aws-node` DaemonSet:
 
-| Component | Container | Purpose |
-|-----------|-----------|---------|
-| **CNI Plugin** | `aws-cni` | Wires up host/pod network stack when called by kubelet |
-| **ipamd** | `aws-node` | Long-running daemon managing IP address allocation |
+| Component      | Container  | Purpose                                                |
+| -------------- | ---------- | ------------------------------------------------------ |
+| **CNI Plugin** | `aws-cni`  | Wires up host/pod network stack when called by kubelet |
+| **ipamd**      | `aws-node` | Long-running daemon managing IP address allocation     |
 
 ### CNI Plugin Flow
 
@@ -35,6 +35,7 @@ When kubelet creates a pod, it calls the CNI plugin to configure networking:
 ### ipamd Daemon
 
 The IP Address Management (IPAMD) daemon is responsible for:
+
 - Maintaining warm pool of ENIs and IP addresses
 - Tracking assigned/free IPs in `/var/run/aws-node/ipam.json`
 - Reconciling desired state with actual EC2 state
@@ -42,6 +43,7 @@ The IP Address Management (IPAMD) daemon is responsible for:
 ### VPC Resource Controller
 
 A separate controller (`vpc-resource-controller`) running on the EKS control plane handles:
+
 - Branch network interface attachment for Security Groups for Pods
 - Advertising branch ENIs as extended resources (`vpc.amazonaws.com/pod-enis`)
 
@@ -57,18 +59,18 @@ Pod ←→ veth0 (host) ←→ eth0 (node)
 
 ## IP Limits by Instance Type
 
-| Instance Type | Max ENIs | IPs per ENI | Max Pods* |
-|---------------|----------|-------------|----------|
-| t3.medium | 3 | 6 | 17 |
-| t3.large | 3 | 10 | 27 |
-| m5.large | 3 | 10 | 27 |
-| m5.xlarge | 4 | 15 | 57 |
-| m5.2xlarge | 4 | 15 | 57 |
-| c5.2xlarge | 4 | 15 | 57 |
-| c5.4xlarge | 8 | 15 | 57 |
-| r5.xlarge | 4 | 15 | 57 |
+| Instance Type | Max ENIs | IPs per ENI | Max Pods\* |
+| ------------- | -------- | ----------- | ---------- |
+| t3.medium     | 3        | 6           | 17         |
+| t3.large      | 3        | 10          | 27         |
+| m5.large      | 3        | 10          | 27         |
+| m5.xlarge     | 4        | 15          | 57         |
+| m5.2xlarge    | 4        | 15          | 57         |
+| c5.2xlarge    | 4        | 15          | 57         |
+| c5.4xlarge    | 8        | 15          | 57         |
+| r5.xlarge     | 4        | 15          | 57         |
 
-\* *Max pods formula: `(ENIs × IPs_per_ENI) - 1` + 2 for kubelet reserved IPs*
+\* _Max pods formula: `(ENIs × IPs_per_ENI) - 1` + 2 for kubelet reserved IPs_
 
 ## Sub-commands for Debugging
 
@@ -96,19 +98,19 @@ kubectl get nodes -o custom-columns=NAME:.metadata.name,MAX_PODS:.status.capacit
 ## VPC CNI Version Requirements
 
 | Kubernetes Version | Minimum VPC CNI Version |
-|--------------------|------------------------|
-| 1.35 | v1.21.1-eksbuild.8 |
-| 1.34 | v1.21.1-eksbuild.8 |
-| 1.33 | v1.21.1-eksbuild.8 |
-| 1.32 | v1.21.1-eksbuild.8 |
-| 1.31 | v1.21.1-eksbuild.8 |
-| 1.30 | v1.21.1-eksbuild.8 |
-| 1.29 | v1.21.1-eksbuild.8 |
+| ------------------ | ----------------------- |
+| 1.35               | v1.21.1-eksbuild.8      |
+| 1.34               | v1.21.1-eksbuild.8      |
+| 1.33               | v1.21.1-eksbuild.8      |
+| 1.32               | v1.21.1-eksbuild.8      |
+| 1.31               | v1.21.1-eksbuild.8      |
+| 1.30               | v1.21.1-eksbuild.8      |
+| 1.29               | v1.21.1-eksbuild.8      |
 
 ## Related Topics
 
 - [[Kubernetes/eks/networking/vpc-cni/architecture|Architecture Deep-Dive]] - Internal components, CNI plugin flow
-- [[Kubernetes/eks/networking/vpc-cni/eni-allocation|ENI/IP Allocation]] - Warm pools, WARM_* targets
+- [[Kubernetes/eks/networking/vpc-cni/eni-allocation|ENI/IP Allocation]] - Warm pools, WARM\_\* targets
 - [[Kubernetes/eks/networking/vpc-cni/prefix-delegation|Prefix Delegation]] - Increase pod density with /28 prefixes
 - [[Kubernetes/eks/networking/vpc-cni/security-groups-for-pods|Security Groups for Pods]] - Per-pod security groups
 - [[Kubernetes/eks/networking/vpc-cni/network-policies|Network Policies]] - Pod traffic control

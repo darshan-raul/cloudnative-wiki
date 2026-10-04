@@ -38,9 +38,11 @@ kubectl edit svc kubecost-cost-analyzer -n kubecost
 ## Key Features
 
 ### Namespace Cost Breakdown
+
 View costs by namespace, deployment, or service.
 
 ### Allocation View
+
 ```
 Namespace    | CPU Cost | Memory Cost | Storage Cost | Total
 -------------|----------|-------------|--------------|-------
@@ -67,12 +69,12 @@ spec:
 
 ### Savings Recommendations
 
-| Type | Savings | Action |
-|------|---------|--------|
-| Idle resources | $150/mo | Right-size underutilized pods |
-| Unused volumes | $50/mo | Delete orphaned PVCs |
-| Spot instances | $300/mo | Migrate to Spot |
-| Namespace cleanup | $75/mo | Remove unused namespaces |
+| Type              | Savings | Action                        |
+| ----------------- | ------- | ----------------------------- |
+| Idle resources    | $150/mo | Right-size underutilized pods |
+| Unused volumes    | $50/mo  | Delete orphaned PVCs          |
+| Spot instances    | $300/mo | Migrate to Spot               |
+| Namespace cleanup | $75/mo  | Remove unused namespaces      |
 
 ## Cost Optimization Tips
 

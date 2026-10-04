@@ -1,6 +1,13 @@
+---
+title: "DNS in Kubernetes"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "DNS in Kubernetes — Kubernetes reference and architecture guide."
+---
+
 # DNS in Kubernetes
 
-*"https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/"*
+_"https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/"_
 
 Every Service gets a DNS name automatically. Every Pod gets one too. This is the **primary way services find each other** in a cluster — don't hardcode IPs, ever. DNS in k8s is implemented by **CoreDNS** (since k8s 1.13), running as a Deployment in `kube-system` and exposed as a Service named `kube-dns` (kept for compatibility).
 
@@ -57,12 +64,12 @@ This is why **cross-namespace access always needs at least the `<service>.<names
 
 ### 1.2 Records created per Service type
 
-| Service type | DNS record | Returns |
-|---|---|---|
-| `ClusterIP` | A record `<svc>.<ns>.svc.cluster.local` | The ClusterIP |
-| `Headless` (`clusterIP: None`) | A records, **one per Pod** | Each Pod's IP |
-| `ExternalName` | CNAME `<svc>.<ns>.svc.cluster.local` | The external name's resolved name |
-| `NodePort` / `LoadBalancer` | A record (same as ClusterIP) | The ClusterIP — NodePort/LB is on the node IP, not in DNS |
+| Service type                   | DNS record                              | Returns                                                   |
+| ------------------------------ | --------------------------------------- | --------------------------------------------------------- |
+| `ClusterIP`                    | A record `<svc>.<ns>.svc.cluster.local` | The ClusterIP                                             |
+| `Headless` (`clusterIP: None`) | A records, **one per Pod**              | Each Pod's IP                                             |
+| `ExternalName`                 | CNAME `<svc>.<ns>.svc.cluster.local`    | The external name's resolved name                         |
+| `NodePort` / `LoadBalancer`    | A record (same as ClusterIP)            | The ClusterIP — NodePort/LB is on the node IP, not in DNS |
 
 **Headless** is special — instead of one A record pointing at the ClusterIP, you get N A records (one per Pod). This is the basis for per-Pod discovery in StatefulSets.
 
@@ -133,10 +140,10 @@ The first one that resolves wins. The Pod's namespace is the first search domain
 
 A query like `api.example.com` has 2 dots — under 5 — so it's tried as:
 
-1. `api.example.com.default.svc.cluster.local`  (NXDOMAIN)
-2. `api.example.com.svc.cluster.local`           (NXDOMAIN)
-3. `api.example.com.cluster.local`                (NXDOMAIN)
-4. `api.example.com`                              (resolves!)
+1. `api.example.com.default.svc.cluster.local` (NXDOMAIN)
+2. `api.example.com.svc.cluster.local` (NXDOMAIN)
+3. `api.example.com.cluster.local` (NXDOMAIN)
+4. `api.example.com` (resolves!)
 
 That's **3 failed lookups for every external call**. On busy clusters, this is a real perf problem.
 
@@ -146,8 +153,8 @@ The fix:
 spec:
   dnsConfig:
     options:
-    - name: ndots
-      value: "2"
+      - name: ndots
+        value: "2"
 ```
 
 With `ndots: 2`, queries with 2+ dots skip the search path. `api.example.com` (2 dots) goes straight to the upstream DNS. Saves 3 round-trips per external call.
@@ -228,38 +235,38 @@ data:
 
 Plugins execute in order, top to bottom. The first plugin to answer wins; the rest are skipped for that query.
 
-| Plugin | What it does |
-|---|---|
-| `errors` | Logs errors |
-| `health` | Serves HTTP on :8080 for liveness checks |
-| `ready` | Serves HTTP on :8181 to indicate the Pod is ready (only after plugins have loaded) |
-| `kubernetes` | The core plugin. Watches the apiserver for Services and Pods, serves `cluster.local` records. The `pods insecure` option enables per-Pod DNS. |
-| `forward` | Forwards queries to upstream DNS (uses the CoreDNS Pod's `/etc/resolv.conf` by default) |
-| `cache` | Caches responses, 30s TTL by default |
-| `loop` | Detects forwarding loops |
-| `reload` | Hot-reloads the Corefile on change |
-| `loadbalance` | Round-robins A record responses |
+| Plugin        | What it does                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `errors`      | Logs errors                                                                                                                                   |
+| `health`      | Serves HTTP on :8080 for liveness checks                                                                                                      |
+| `ready`       | Serves HTTP on :8181 to indicate the Pod is ready (only after plugins have loaded)                                                            |
+| `kubernetes`  | The core plugin. Watches the apiserver for Services and Pods, serves `cluster.local` records. The `pods insecure` option enables per-Pod DNS. |
+| `forward`     | Forwards queries to upstream DNS (uses the CoreDNS Pod's `/etc/resolv.conf` by default)                                                       |
+| `cache`       | Caches responses, 30s TTL by default                                                                                                          |
+| `loop`        | Detects forwarding loops                                                                                                                      |
+| `reload`      | Hot-reloads the Corefile on change                                                                                                            |
+| `loadbalance` | Round-robins A record responses                                                                                                               |
 
 ## 5. dnsPolicy and Pod-Level DNS Behavior
 
 The Pod's `dnsPolicy` controls how `/etc/resolv.conf` is generated:
 
-| Policy | Behavior | Use case |
-|---|---|---|
-| `ClusterFirst` | Use CoreDNS for cluster queries, upstream for everything else (default) | Most apps |
-| `Default` | Inherit the node's `/etc/resolv.conf` entirely | Apps that need node-level DNS, e.g. some monitoring |
-| `ClusterFirstWithHostNet` | `ClusterFirst` for queries, but use the host's network for the Pod itself | Host-network Pods that still want cluster DNS |
-| `None` | No DNS config generated. You must specify `dnsConfig` explicitly | Fully custom DNS, advanced use cases |
+| Policy                    | Behavior                                                                  | Use case                                            |
+| ------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- |
+| `ClusterFirst`            | Use CoreDNS for cluster queries, upstream for everything else (default)   | Most apps                                           |
+| `Default`                 | Inherit the node's `/etc/resolv.conf` entirely                            | Apps that need node-level DNS, e.g. some monitoring |
+| `ClusterFirstWithHostNet` | `ClusterFirst` for queries, but use the host's network for the Pod itself | Host-network Pods that still want cluster DNS       |
+| `None`                    | No DNS config generated. You must specify `dnsConfig` explicitly          | Fully custom DNS, advanced use cases                |
 
 ```yaml
 spec:
-  dnsPolicy: ClusterFirst   # default, can be omitted
+  dnsPolicy: ClusterFirst # default, can be omitted
   dnsConfig:
     options:
-    - name: ndots
-      value: "2"
+      - name: ndots
+        value: "2"
     nameservers:
-    - 1.1.1.1               # custom upstream (used with dnsPolicy: None)
+      - 1.1.1.1 # custom upstream (used with dnsPolicy: None)
 ```
 
 ### 5.1 The `hostNetwork` gotcha
@@ -272,18 +279,18 @@ If a Pod has `hostNetwork: true` and `dnsPolicy: ClusterFirst`, the kubelet can'
 spec:
   dnsConfig:
     nameservers:
-    - 10.96.0.10            # CoreDNS (default; usually not overridden)
-    - 1.1.1.1               # fallback upstream
+      - 10.96.0.10 # CoreDNS (default; usually not overridden)
+      - 1.1.1.1 # fallback upstream
     searches:
-    - my-org.svc.cluster.local
-    - other-org.svc.cluster.local
+      - my-org.svc.cluster.local
+      - other-org.svc.cluster.local
     options:
-    - name: ndots
-      value: "2"
-    - name: timeout
-      value: "3"
-    - name: attempts
-      value: "2"
+      - name: ndots
+        value: "2"
+      - name: timeout
+        value: "3"
+      - name: attempts
+        value: "2"
 ```
 
 The `searches` field **replaces** the default search path. If you specify it, you lose the default `default.svc.cluster.local svc.cluster.local cluster.local` — you need to add them back if you still want them.
@@ -295,18 +302,18 @@ You can set `dnsConfig.nameservers` to point to specific DNS servers:
 ```yaml
 dnsConfig:
   nameservers:
-  - 10.0.0.53              # corporate DNS
-  - 8.8.8.8                # backup
+    - 10.0.0.53 # corporate DNS
+    - 8.8.8.8 # backup
   options:
-  - name: ndots
-    value: "1"
+    - name: ndots
+      value: "1"
 ```
 
 This is useful when:
 
-* You have a private DNS zone for `internal.company.com` that the cluster DNS can't see.
-* You're connecting to a legacy network that has its own DNS.
-* You're testing DNS behavior.
+- You have a private DNS zone for `internal.company.com` that the cluster DNS can't see.
+- You're connecting to a legacy network that has its own DNS.
+- You're testing DNS behavior.
 
 ## 7. Headless Services + StatefulSets = Per-Pod DNS
 
@@ -359,12 +366,12 @@ The Pods are reachable by their **stable ordinal name**. Even when Pod-0 is resc
 
 This is the **canonical way** to address replicas in:
 
-* PostgreSQL (primary + replicas)
-* MongoDB (replica sets)
-* Kafka (brokers)
-* etcd (members)
-* ZooKeeper (ensemble)
-* Elasticsearch (data/master nodes)
+- PostgreSQL (primary + replicas)
+- MongoDB (replica sets)
+- Kafka (brokers)
+- etcd (members)
+- ZooKeeper (ensemble)
+- Elasticsearch (data/master nodes)
 
 ## 8. Tuning CoreDNS for Performance
 
@@ -376,10 +383,10 @@ Most k8s distributions install CoreDNS with 2 replicas. This handles up to ~1000
 
 Watch these metrics (CoreDNS exposes Prometheus metrics on :9153):
 
-* `coredns_dns_requests_total` — request rate
-* `coredns_dns_responses_total` — response rate
-* `coredns_dns_request_duration_seconds` — p50/p99 latency
-* `coredns_cache_hits_total` vs `coredns_cache_misses_total` — cache hit ratio
+- `coredns_dns_requests_total` — request rate
+- `coredns_dns_responses_total` — response rate
+- `coredns_dns_request_duration_seconds` — p50/p99 latency
+- `coredns_cache_hits_total` vs `coredns_cache_misses_total` — cache hit ratio
 
 If p99 latency is > 5ms or cache hit ratio is < 80%, scale up.
 
@@ -388,12 +395,12 @@ If p99 latency is > 5ms or cache hit ratio is < 80%, scale up.
 ```yaml
 # increase replicas
 spec:
-  replicas: 4   # was 2
+  replicas: 4 # was 2
 ```
 
 ```yaml
 # increase cache TTL in the Corefile
-cache 300   # 5 minutes, was 30s
+cache 300 # 5 minutes, was 30s
 ```
 
 **Note:** higher cache TTL means longer delay when records change. 30s is a reasonable default. 300s is fine for services that don't churn.
@@ -438,9 +445,9 @@ consul.local:53 {
 
 Now queries for `service.consul.local` go to the Consul DNS server. Used for:
 
-* Consul service discovery
-* Active Directory (the Windows kind)
-* Custom internal DNS zones
+- Consul service discovery
+- Active Directory (the Windows kind)
+- Custom internal DNS zones
 
 ### 9.2 Custom forward targets
 
@@ -459,9 +466,9 @@ By default, `forward . /etc/resolv.conf` sends external queries to whatever's in
 
 Useful for:
 
-* Restricting which upstreams the cluster can talk to (security)
-* Routing through a corporate DNS for compliance
-* Using a faster public DNS
+- Restricting which upstreams the cluster can talk to (security)
+- Routing through a corporate DNS for compliance
+- Using a faster public DNS
 
 ### 9.3 Modifying the Corefile
 
@@ -482,8 +489,8 @@ kubectl -n kube-system rollout restart deployment coredns
 
 CoreDNS exposes:
 
-* `http://<pod>:8080/health` — liveness probe (lives on :8080)
-* `http://<pod>:8181/ready` — readiness probe (lives on :8181)
+- `http://<pod>:8080/health` — liveness probe (lives on :8080)
+- `http://<pod>:8181/ready` — readiness probe (lives on :8181)
 
 The default liveness/readiness probes (in the Deployment) hit these. **Both are essential** — if `ready` fails, the Pod is removed from the Service, and DNS queries to its IP fail.
 
@@ -518,12 +525,12 @@ kubectl -n kube-system port-forward <coredns-pod> 9153:9153
 ```
 DNS not resolving
        │
-       ├── "connection refused" on UDP :53 ── CoreDNS Pods not running, 
+       ├── "connection refused" on UDP :53 ── CoreDNS Pods not running,
        │                                         or kube-dns Service IP not routable
        │
        ├── "timeout" ── upstream DNS is unreachable, or NetworkPolicy blocking egress
        │
-       ├── "NXDOMAIN" on a known Service ── CoreDNS not watching the namespace, 
+       ├── "NXDOMAIN" on a known Service ── CoreDNS not watching the namespace,
        │                                      or Service doesn't exist
        │
        ├── "no such host" ── resolv.conf is wrong, nameservers empty
@@ -671,8 +678,8 @@ kubectl -n kube-system logs -l k8s-app=kube-dns --tail=100 | grep -i error
 
 ## See also
 
-* [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
-* [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — the primary user of DNS
-* [[Kubernetes/concepts/L04-services-networking/04-ingress|Ingress]] — L7 routing
-* [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
-* [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — primary consumer of per-Pod DNS
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
+- [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — the primary user of DNS
+- [[Kubernetes/concepts/L04-services-networking/04-ingress|Ingress]] — L7 routing
+- [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
+- [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — primary consumer of per-Pod DNS

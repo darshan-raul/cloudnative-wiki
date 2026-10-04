@@ -18,6 +18,7 @@ Cost = (Invocations × $0.0000002) + (GB-seconds × $0.0000166667)
 ```
 
 1 million invocations at 512MB for 200ms:
+
 ```
 Requests: 1,000,000 × $0.0000002 = $0.20
 Duration: 1,000,000 × (0.512 GB × 0.2 sec) = 102,400 GB-seconds
@@ -50,6 +51,7 @@ Lambda allows you to set memory from 128MB to 10,240MB (10GB). The more memory y
 When a Lambda function accesses VPC resources (RDS, ElastiCache, internal APIs), it must attach to a VPC. This introduces a hidden cost: **ENI attachment**.
 
 Lambda creates an ENI in each subnet you configure. When the function runs:
+
 1. Lambda allocates an ENI in your subnet (first invocation cold start)
 2. Lambda scales ENIs as concurrent executions increase
 3. ENIs persist even when functions aren't running
@@ -63,6 +65,7 @@ VPC Lambda → NAT Gateway → Private subnet → RDS
 ```
 
 **Mitigation:**
+
 - Use RDS Proxy — it has its own private IP, Lambda connects to it directly without routing through NAT
 - Place Lambda in the same AZ as the RDS instance to minimize cross-AZ charges
 - Use Amazon API Gateway private endpoints (PrivateLink) instead of routing through NAT
@@ -73,16 +76,19 @@ VPC Lambda → NAT Gateway → Private subnet → RDS
 Provisioned Concurrency keeps Lambda functions initialized and ready to respond in milliseconds — no cold starts. Pricing: you pay for the allocated concurrency and duration, not per invocation.
 
 **When it makes sense:**
+
 - Predictable, latency-sensitive traffic (API calls, synchronous processing)
 - When cold start latency is unacceptable (e.g., < 100ms SLA)
 - When you can forecast concurrency needs
 
 **When it's not worth it:**
+
 - Sporadic, unpredictable traffic
 - Asynchronous workloads (S3 triggers, SQS consumers) — cold starts don't matter
 - Batch workloads where total duration matters more than individual invocation latency
 
 **Cost comparison:**
+
 ```
 On-Demand: $0.20 per million invocations
 Provisioned: You pay for reserved concurrency × duration
@@ -98,10 +104,12 @@ At high concurrency, provisioned concurrency can actually be cheaper — you're 
 ## API Gateway Cost Optimization
 
 **REST API vs HTTP API:**
+
 - REST API: $3.50 per million requests + caching costs
 - HTTP API: $1.00 per million requests (70% cheaper), no caching option
 
 HTTP API is the right choice for most new workloads unless you specifically need:
+
 - API caching
 - SOAP passthrough
 - Private integrations (use HTTP API with PrivateLink instead)
@@ -117,6 +125,7 @@ Cold starts add duration to the first invocation after a period of inactivity. F
 **Duration impact:** Cold starts run your function code, paying for the full cold start duration. A 1-second cold start at 512MB costs the same as 1 second of normal execution.
 
 **Mitigation:**
+
 - Keep functions warm with scheduled CloudWatch Events (every 5 minutes)
 - Use provisioned concurrency for latency-sensitive workloads
 - Provisioned concurrency eliminates cold starts entirely

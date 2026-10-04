@@ -53,24 +53,24 @@ tmux kill-server
 
 ## Key Bindings (Prefix = `Ctrl+b`)
 
-| Action | Key |
-|--------|-----|
-| Send prefix | `Ctrl+b` |
-| New window | `Ctrl+b c` |
-| Next window | `Ctrl+b n` |
-| Previous window | `Ctrl+b p` |
-| List windows | `Ctrl+b w` |
-| Rename window | `Ctrl+b ,` |
-| Kill window | `Ctrl+b &` |
-| Split vertical | `Ctrl+b %` |
-| Split horizontal | `Ctrl+b "` |
-| Switch pane | `Ctrl+b arrow` |
-| Cycle pane | `Ctrl+b o` |
-| Swap panes | `Ctrl+b {` `Ctrl+b }` |
-| Zoom pane | `Ctrl+b z` |
-| Kill pane | `Ctrl+b x` |
-| Detach | `Ctrl+b d` |
-| Command prompt | `Ctrl+b :` |
+| Action           | Key                   |
+| ---------------- | --------------------- |
+| Send prefix      | `Ctrl+b`              |
+| New window       | `Ctrl+b c`            |
+| Next window      | `Ctrl+b n`            |
+| Previous window  | `Ctrl+b p`            |
+| List windows     | `Ctrl+b w`            |
+| Rename window    | `Ctrl+b ,`            |
+| Kill window      | `Ctrl+b &`            |
+| Split vertical   | `Ctrl+b %`            |
+| Split horizontal | `Ctrl+b "`            |
+| Switch pane      | `Ctrl+b arrow`        |
+| Cycle pane       | `Ctrl+b o`            |
+| Swap panes       | `Ctrl+b {` `Ctrl+b }` |
+| Zoom pane        | `Ctrl+b z`            |
+| Kill pane        | `Ctrl+b x`            |
+| Detach           | `Ctrl+b d`            |
+| Command prompt   | `Ctrl+b :`            |
 
 ## Panes Deep Dive
 

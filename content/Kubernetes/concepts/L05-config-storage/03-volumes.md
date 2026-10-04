@@ -1,6 +1,13 @@
+---
+title: "Volume Types"
+tags: ["kubernetes", "k8s-concepts", "storage"]
+date: 2026-09-06
+description: "Volume Types — Kubernetes reference and architecture guide."
+---
+
 # Volume Types
 
-*"https://kubernetes.io/docs/concepts/storage/volumes/"*
+_"https://kubernetes.io/docs/concepts/storage/volumes/"_
 
 A Pod's `volumes` array declares what storage is available. Each volume type is a different source — local disk, network filesystem, cloud disk, ConfigMap, etc. The type you pick determines the lifetime, contents, and operational characteristics of the volume.
 
@@ -34,31 +41,31 @@ metadata:
   name: app
 spec:
   containers:
-  - name: app
-    image: app:1.0
-    volumeMounts:
-    - name: cache
-      mountPath: /var/cache
+    - name: app
+      image: app:1.0
+      volumeMounts:
+        - name: cache
+          mountPath: /var/cache
   volumes:
-  - name: cache
-    emptyDir: {}        # <-- the volume type
+    - name: cache
+      emptyDir: {} # <-- the volume type
 ```
 
 The volume's name (`cache`) is the link between `volumes` and `volumeMounts`. The same volume can be mounted at multiple paths (and even in multiple containers in the same Pod).
 
 ### 1.1 Volume lifetime vs Pod lifetime
 
-| Type | Lifetime | Survives Pod restart? | Survives node restart? |
-|---|---|---|---|
-| `emptyDir` | Pod | ❌ (deleted with Pod) | ❌ |
-| `hostPath` | Node | ✅ (on the same node) | ✅ |
-| `nfs` | NFS share | ✅ (data is on NFS) | ✅ |
-| `persistentVolumeClaim` | PV's lifetime | ✅ | ✅ |
-| `configMap` / `secret` | The source resource | ✅ (until the resource is deleted) | ✅ |
-| `projected` | Depends on sources | Depends | Depends |
-| `downwardAPI` | Pod | ❌ | ❌ |
-| `ephemeral` | Pod (with a PVC) | ❌ | ✅ (if backed by remote storage) |
-| `gitRepo` | Pod | ❌ | ❌ |
+| Type                    | Lifetime            | Survives Pod restart?              | Survives node restart?           |
+| ----------------------- | ------------------- | ---------------------------------- | -------------------------------- |
+| `emptyDir`              | Pod                 | ❌ (deleted with Pod)              | ❌                               |
+| `hostPath`              | Node                | ✅ (on the same node)              | ✅                               |
+| `nfs`                   | NFS share           | ✅ (data is on NFS)                | ✅                               |
+| `persistentVolumeClaim` | PV's lifetime       | ✅                                 | ✅                               |
+| `configMap` / `secret`  | The source resource | ✅ (until the resource is deleted) | ✅                               |
+| `projected`             | Depends on sources  | Depends                            | Depends                          |
+| `downwardAPI`           | Pod                 | ❌                                 | ❌                               |
+| `ephemeral`             | Pod (with a PVC)    | ❌                                 | ✅ (if backed by remote storage) |
+| `gitRepo`               | Pod                 | ❌                                 | ❌                               |
 
 ### 1.2 The volume vs the mount
 
@@ -66,14 +73,14 @@ The `volumes` array declares **what** storage is available. The `volumeMounts` a
 
 ```yaml
 volumeMounts:
-- name: data
-  mountPath: /var/lib/data
-- name: data
-  mountPath: /var/log/app     # same volume, different path
-  readOnly: true
-- name: data
-  mountPath: /cache
-  subPath: my-cache           # only the subpath is mounted
+  - name: data
+    mountPath: /var/lib/data
+  - name: data
+    mountPath: /var/log/app # same volume, different path
+    readOnly: true
+  - name: data
+    mountPath: /cache
+    subPath: my-cache # only the subpath is mounted
 ```
 
 Or in multiple containers of the same Pod (they share the volume by default).
@@ -84,19 +91,19 @@ A directory that **lives for the lifetime of the Pod**. Created on the node when
 
 ```yaml
 volumes:
-- name: cache
-  emptyDir:
-    sizeLimit: 1Gi             # k8s 1.22+, evict if exceeded
-    medium: Memory             # or "" (default, node disk) or "HugePages"
+  - name: cache
+    emptyDir:
+      sizeLimit: 1Gi # k8s 1.22+, evict if exceeded
+      medium: Memory # or "" (default, node disk) or "HugePages"
 ```
 
 ### 2.1 The three media
 
-| Medium | Storage | Use case |
-|---|---|---|
-| `""` (default) | Node's disk | Scratch space, caches, intermediate data |
-| `Memory` | tmpfs (RAM) | Fast scratch, but counts against Pod's memory limit |
-| `HugePages` | Huge pages | High-performance apps (databases, scientific computing) |
+| Medium         | Storage     | Use case                                                |
+| -------------- | ----------- | ------------------------------------------------------- |
+| `""` (default) | Node's disk | Scratch space, caches, intermediate data                |
+| `Memory`       | tmpfs (RAM) | Fast scratch, but counts against Pod's memory limit     |
+| `HugePages`    | Huge pages  | High-performance apps (databases, scientific computing) |
 
 **`medium: Memory` uses tmpfs** — the kernel allocates RAM. The data is gone when the Pod is deleted. **Be careful:** tmpfs counts against the Pod's memory limit. A 1Gi tmpfs + 512Mi request = the Pod is constrained to ~512Mi total (request-based, not limit-based).
 
@@ -111,25 +118,25 @@ If the emptyDir exceeds the sizeLimit, the kubelet evicts the Pod (or the contai
 
 This is useful for:
 
-* **Caches that should be bounded** — preventing a runaway cache from filling the node's disk.
-* **Build scratch** — preventing a build from filling /tmp.
-* **Logging buffers** — preventing log buffers from eating all the disk.
+- **Caches that should be bounded** — preventing a runaway cache from filling the node's disk.
+- **Build scratch** — preventing a build from filling /tmp.
+- **Logging buffers** — preventing log buffers from eating all the disk.
 
 **Watch out:** the sizeLimit is **enforced by the kubelet**, not the emptyDir itself. On `medium: ""` (node disk), the sizeLimit corresponds to a quota on the node's filesystem. On `medium: Memory`, it corresponds to a memory limit on the tmpfs.
 
 ### 2.3 Use cases
 
-* **Scratch space** for the app's working data.
-* **Cache for build steps** in a CI runner.
-* **Sidecar reading app's logs** (shared `/var/log/app`).
-* **Shared memory between containers in the same Pod** (with `medium: Memory`).
-* **Tmpfs for fast data** (image processing, encryption keys, etc.).
+- **Scratch space** for the app's working data.
+- **Cache for build steps** in a CI runner.
+- **Sidecar reading app's logs** (shared `/var/log/app`).
+- **Shared memory between containers in the same Pod** (with `medium: Memory`).
+- **Tmpfs for fast data** (image processing, encryption keys, etc.).
 
 ### 2.4 What it's NOT for
 
-* **Anything that needs to survive the Pod** — emptyDir is deleted with the Pod.
-* **Multi-Pod shared storage** — emptyDir is per-Pod, not shared between Pods.
-* **Durable data** — see `persistentVolumeClaim`.
+- **Anything that needs to survive the Pod** — emptyDir is deleted with the Pod.
+- **Multi-Pod shared storage** — emptyDir is per-Pod, not shared between Pods.
+- **Durable data** — see `persistentVolumeClaim`.
 
 ## 3. hostPath — The Node's Filesystem
 
@@ -137,23 +144,23 @@ Mounts a **file or directory from the host node's filesystem** into the Pod.
 
 ```yaml
 volumes:
-- name: host-fs
-  hostPath:
-    path: /data
-    type: DirectoryOrCreate
+  - name: host-fs
+    hostPath:
+      path: /data
+      type: DirectoryOrCreate
 ```
 
 ### 3.1 The `type` field
 
-| Type | Behavior |
-|---|---|
+| Type                | Behavior                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------- |
 | `DirectoryOrCreate` | Mount the directory; create it on the host with root ownership if it doesn't exist (0755) |
-| `Directory` | Mount the directory; must exist, otherwise mount fails |
-| `FileOrCreate` | Mount a file; create it on the host with root ownership if it doesn't exist (0644) |
-| `File` | Mount a file; must exist, otherwise mount fails |
-| `CharDevice` | Mount a character device |
-| `BlockDevice` | Mount a block device |
-| `Socket` | Mount a unix socket |
+| `Directory`         | Mount the directory; must exist, otherwise mount fails                                    |
+| `FileOrCreate`      | Mount a file; create it on the host with root ownership if it doesn't exist (0644)        |
+| `File`              | Mount a file; must exist, otherwise mount fails                                           |
+| `CharDevice`        | Mount a character device                                                                  |
+| `BlockDevice`       | Mount a block device                                                                      |
+| `Socket`            | Mount a unix socket                                                                       |
 
 **`DirectoryOrCreate` is the dangerous one.** It creates the directory on the host as root, with default permissions. If the host's `/data` doesn't exist, the kubelet creates it. This is a common path for privilege escalation and unintended host access.
 
@@ -161,24 +168,24 @@ volumes:
 
 ### 3.2 Use cases
 
-* **DaemonSets that need to read host logs/metrics** — Prometheus node-exporter, Fluent Bit, Filebeat.
-* **Single-node clusters** — kind, minikube, k3d. Dev/test only.
-* **Custom CNIs, storage plugins, or network plugins** that need raw host access.
-* **Accessing the node's Docker socket** (`/var/run/docker.sock`) — for sidecars that interact with the container runtime.
+- **DaemonSets that need to read host logs/metrics** — Prometheus node-exporter, Fluent Bit, Filebeat.
+- **Single-node clusters** — kind, minikube, k3d. Dev/test only.
+- **Custom CNIs, storage plugins, or network plugins** that need raw host access.
+- **Accessing the node's Docker socket** (`/var/run/docker.sock`) — for sidecars that interact with the container runtime.
 
 ### 3.3 What it's NOT for
 
-* **Portable workloads** — if the Pod reschedules to a different node, the data isn't there.
-* **Production stateful apps** — hostPath survives only as long as the node does. If the node is replaced, the data is gone.
-* **Multi-Pod shared storage** — hostPath is per-node. Pods on different nodes see different files.
+- **Portable workloads** — if the Pod reschedules to a different node, the data isn't there.
+- **Production stateful apps** — hostPath survives only as long as the node does. If the node is replaced, the data is gone.
+- **Multi-Pod shared storage** — hostPath is per-node. Pods on different nodes see different files.
 
 ### 3.4 The security implications
 
 hostPath is one of the **most dangerous volume types** in k8s. A Pod with a hostPath mount can:
 
-* Read host files (`/etc`, `/var`, `/proc`, etc.)
-* Write to host files (corrupting the node's OS)
-* Mount `/` and get full host access (the most extreme form)
+- Read host files (`/etc`, `/var`, `/proc`, etc.)
+- Write to host files (corrupting the node's OS)
+- Mount `/` and get full host access (the most extreme form)
 
 This is why **Pod Security Standards** restrict hostPath. In `baseline` and `restricted` profiles, hostPath is either disallowed or restricted to specific paths.
 
@@ -190,11 +197,11 @@ Mounts an NFS share. Requires an NFS server reachable from the cluster.
 
 ```yaml
 volumes:
-- name: nfs-vol
-  nfs:
-    server: nfs.example.com
-    path: /exports/data
-    readOnly: false
+  - name: nfs-vol
+    nfs:
+      server: nfs.example.com
+      path: /exports/data
+      readOnly: false
 ```
 
 ### 4.1 The in-tree NFS driver is deprecated
@@ -204,28 +211,28 @@ Since k8s 1.20, the in-tree `nfs` volume type is **deprecated**. The recommended
 ```yaml
 # New way: NFS CSI
 volumes:
-- name: nfs-vol
-  csi:
-    driver: nfs.csi.k8s.io
-    readOnly: false
-    volumeAttributes:
-      server: nfs.example.com
-      share: /exports/data
+  - name: nfs-vol
+    csi:
+      driver: nfs.csi.k8s.io
+      readOnly: false
+      volumeAttributes:
+        server: nfs.example.com
+        share: /exports/data
 ```
 
 The CSI driver provides the same functionality but follows the standard CSI model (out-of-tree, with dynamic provisioning, snapshots, etc.).
 
 ### 4.2 Use cases
 
-* **Legacy NFS-based storage** — migrating from a pre-CSI setup.
-* **Read-only data shared across many Pods** — content, ML models, static assets.
-* **Hybrid setups** — on-prem + NFS for cross-cluster data sharing.
+- **Legacy NFS-based storage** — migrating from a pre-CSI setup.
+- **Read-only data shared across many Pods** — content, ML models, static assets.
+- **Hybrid setups** — on-prem + NFS for cross-cluster data sharing.
 
 ### 4.3 What it's NOT for
 
-* **Cloud-native setups** — use EFS, Filestore, or a CSI driver instead. They're more reliable, scalable, and integrated with the cloud.
-* **High-performance workloads** — NFS has known perf issues for high-IO workloads.
-* **Cross-AZ setups** — NFS is typically single-AZ. Cross-AZ NFS is slow.
+- **Cloud-native setups** — use EFS, Filestore, or a CSI driver instead. They're more reliable, scalable, and integrated with the cloud.
+- **High-performance workloads** — NFS has known perf issues for high-IO workloads.
+- **Cross-AZ setups** — NFS is typically single-AZ. Cross-AZ NFS is slow.
 
 ## 5. CSI — The Modern Way
 
@@ -233,9 +240,9 @@ The **Container Storage Interface (CSI)** is the abstraction layer for all cloud
 
 ```yaml
 volumes:
-- name: data
-  persistentVolumeClaim:
-    claimName: my-pvc
+  - name: data
+    persistentVolumeClaim:
+      claimName: my-pvc
 ```
 
 This is the right way to use EBS, EFS, Azure Disk/Files, GCP PD, Ceph, NetApp, Pure, etc. The PV is provisioned (statically or dynamically via a StorageClass) and the Pod just claims it.
@@ -271,9 +278,9 @@ A CSI driver typically has three components:
 
 ### 5.2 Why CSI
 
-* **Out-of-tree** — drivers don't need to be in the kubelet binary. They can be installed, upgraded, and managed independently.
-* **Standardized** — every CSI driver exposes the same interface (CreateVolume, DeleteVolume, CreateSnapshot, etc.). Cluster admins don't need to learn vendor-specific APIs.
-* **Decoupled from k8s release** — vendors release drivers on their own schedule. No more waiting for a k8s release to get a new feature.
+- **Out-of-tree** — drivers don't need to be in the kubelet binary. They can be installed, upgraded, and managed independently.
+- **Standardized** — every CSI driver exposes the same interface (CreateVolume, DeleteVolume, CreateSnapshot, etc.). Cluster admins don't need to learn vendor-specific APIs.
+- **Decoupled from k8s release** — vendors release drivers on their own schedule. No more waiting for a k8s release to get a new feature.
 
 ### 5.3 The in-tree → CSI migration
 
@@ -293,9 +300,9 @@ The volume type you'll use most often. References a PVC by name.
 
 ```yaml
 volumes:
-- name: data
-  persistentVolumeClaim:
-    claimName: my-pvc
+  - name: data
+    persistentVolumeClaim:
+      claimName: my-pvc
 ```
 
 The PVC must be in the same namespace as the Pod. The PV behind the PVC is provisioned (statically or dynamically). **This is the only way to use a PVC from a Pod.**
@@ -308,25 +315,25 @@ Mount a ConfigMap or Secret as a directory of files. Each key becomes a file.
 
 ```yaml
 volumes:
-- name: config
-  configMap:
-    name: app-config
-    items:
-    - key: app.properties
-      path: app.properties
-    - key: log4j.xml
-      path: logging/log4j.xml
-    defaultMode: 0400
+  - name: config
+    configMap:
+      name: app-config
+      items:
+        - key: app.properties
+          path: app.properties
+        - key: log4j.xml
+          path: logging/log4j.xml
+      defaultMode: 0400
 ```
 
 The keys become files at the volume's mount path. The `items` field lets you pick which keys to mount and where. `defaultMode` sets the file mode (default 0644).
 
 ```yaml
 volumes:
-- name: secrets
-  secret:
-    secretName: app-secrets
-    defaultMode: 0400
+  - name: secrets
+    secret:
+      secretName: app-secrets
+      defaultMode: 0400
 ```
 
 Same pattern for Secrets.
@@ -349,26 +356,26 @@ A `projected` volume combines multiple sources into a single volume. Each source
 
 ```yaml
 volumes:
-- name: all-config
-  projected:
-    sources:
-    - configMap:
-        name: app-config
-    - secret:
-        name: app-secrets
-    - downwardAPI:
-        items:
-        - path: "labels"
-          fieldRef:
-            fieldPath: metadata.labels
-        - path: "cpu-limit"
-          resourceFieldRef:
-            containerName: app
-            resource: limits.cpu
-    - serviceAccountToken:
-        path: token
-        audience: api.example.com
-        expirationSeconds: 3600
+  - name: all-config
+    projected:
+      sources:
+        - configMap:
+            name: app-config
+        - secret:
+            name: app-secrets
+        - downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
+              - path: "cpu-limit"
+                resourceFieldRef:
+                  containerName: app
+                  resource: limits.cpu
+        - serviceAccountToken:
+            path: token
+            audience: api.example.com
+            expirationSeconds: 3600
 ```
 
 The Pod sees:
@@ -388,9 +395,9 @@ The Pod sees:
 
 Use cases:
 
-* **Consolidating config** — one volume for the app's complete config, instead of mounting five separate volumes.
-* **Workload identity** — the `serviceAccountToken` source projects a token for an external service (e.g. AWS IAM, Vault, GCP IAM).
-* **One source of truth** — the app reads one directory instead of five.
+- **Consolidating config** — one volume for the app's complete config, instead of mounting five separate volumes.
+- **Workload identity** — the `serviceAccountToken` source projects a token for an external service (e.g. AWS IAM, Vault, GCP IAM).
+- **One source of truth** — the app reads one directory instead of five.
 
 ## 9. downwardAPI — Pod Metadata as Files
 
@@ -398,44 +405,44 @@ Expose Pod metadata as files in the volume. Useful for apps that need to know th
 
 ```yaml
 volumes:
-- name: podinfo
-  downwardAPI:
-    items:
-    - path: "name"
-      fieldRef:
-        fieldPath: metadata.name
-    - path: "namespace"
-      fieldRef:
-        fieldPath: metadata.namespace
-    - path: "labels"
-      fieldRef:
-        fieldPath: metadata.labels
-    - path: "annotations"
-      fieldRef:
-        fieldPath: metadata.annotations
-    - path: "cpu-limit"
-      resourceFieldRef:
-        containerName: app
-        resource: limits.cpu
-        divisor: "1m"
+  - name: podinfo
+    downwardAPI:
+      items:
+        - path: "name"
+          fieldRef:
+            fieldPath: metadata.name
+        - path: "namespace"
+          fieldRef:
+            fieldPath: metadata.namespace
+        - path: "labels"
+          fieldRef:
+            fieldPath: metadata.labels
+        - path: "annotations"
+          fieldRef:
+            fieldPath: metadata.annotations
+        - path: "cpu-limit"
+          resourceFieldRef:
+            containerName: app
+            resource: limits.cpu
+            divisor: "1m"
 ```
 
 Available fields:
 
-* `metadata.name` — Pod name
-* `metadata.namespace` — namespace
-* `metadata.uid` — Pod UID
-* `metadata.labels` — all labels, as a key=value file
-* `metadata.annotations` — all annotations, as a key=value file
-* `status.podIP` — Pod IP
-* `status.hostIP` — node IP
-* `spec.serviceAccountName` — ServiceAccount
-* `spec.nodeName` — node name
+- `metadata.name` — Pod name
+- `metadata.namespace` — namespace
+- `metadata.uid` — Pod UID
+- `metadata.labels` — all labels, as a key=value file
+- `metadata.annotations` — all annotations, as a key=value file
+- `status.podIP` — Pod IP
+- `status.hostIP` — node IP
+- `spec.serviceAccountName` — ServiceAccount
+- `spec.nodeName` — node name
 
 For container resources:
 
-* `limits.cpu`, `limits.memory`, `limits.ephemeral-storage`
-* `requests.cpu`, `requests.memory`, `requests.ephemeral-storage`
+- `limits.cpu`, `limits.memory`, `limits.ephemeral-storage`
+- `requests.cpu`, `requests.memory`, `requests.ephemeral-storage`
 
 `divisor` is the unit. `1m` = millicores, `1` = bytes, `1Mi` = mebibytes, etc.
 
@@ -447,32 +454,32 @@ A newer volume type (k8s 1.19+) that creates an **inline PVC per Pod**. The Pod 
 
 ```yaml
 volumes:
-- name: scratch
-  ephemeral:
-    volumeClaimTemplate:
-      metadata:
-        labels:
-          type: scratch
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        storageClassName: "scratch-storage"
-        resources:
-          requests:
-            storage: 1Gi
+  - name: scratch
+    ephemeral:
+      volumeClaimTemplate:
+        metadata:
+          labels:
+            type: scratch
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: "scratch-storage"
+          resources:
+            requests:
+              storage: 1Gi
 ```
 
 The PVC:
 
-* Is created when the Pod is created
-* Has the labels specified in `volumeClaimTemplate.metadata.labels`
-* Uses the StorageClass specified
-* Is **deleted when the Pod is deleted**
+- Is created when the Pod is created
+- Has the labels specified in `volumeClaimTemplate.metadata.labels`
+- Uses the StorageClass specified
+- Is **deleted when the Pod is deleted**
 
 This is the **inline alternative to** a separate PVC + Pod. Useful for:
 
-* **Batch jobs** that need scratch storage
-* **Per-Pod temp space** without managing PVCs
-* **Stateless apps with a writeable scratch directory** (test runners, build containers)
+- **Batch jobs** that need scratch storage
+- **Per-Pod temp space** without managing PVCs
+- **Stateless apps with a writeable scratch directory** (test runners, build containers)
 
 The PVC's lifecycle is tied to the Pod. **Don't use ephemeral for stateful data** — the PVC is deleted with the Pod.
 
@@ -485,21 +492,21 @@ If you need a git repo in a Pod:
 ```yaml
 # Use an init container
 initContainers:
-- name: git-clone
-  image: alpine/git
-  command: ['git', 'clone', 'https://github.com/my-org/my-repo', '/data']
-  volumeMounts:
-- name: data
-  mountPath: /data
+  - name: git-clone
+    image: alpine/git
+    command: ["git", "clone", "https://github.com/my-org/my-repo", "/data"]
+    volumeMounts:
+  - name: data
+    mountPath: /data
 containers:
-- name: app
-  image: app:1.0
-  volumeMounts:
-- name: data
-  mountPath: /var/lib/app
+  - name: app
+    image: app:1.0
+    volumeMounts:
+  - name: data
+    mountPath: /var/lib/app
 volumes:
-- name: data
-  emptyDir: {}
+  - name: data
+    emptyDir: {}
 ```
 
 This is the modern equivalent. The init container clones the repo into an emptyDir, and the main container reads from it.
@@ -510,16 +517,16 @@ This is the modern equivalent. The init container clones the repo into an emptyD
 
 ```yaml
 volumeMounts:
-- name: config
-  mountPath: /etc/app/app.properties
-  subPath: app.properties       # mount just this file, not the whole volume
+  - name: config
+    mountPath: /etc/app/app.properties
+    subPath: app.properties # mount just this file, not the whole volume
 ```
 
 `subPath` lets you mount a single file (or a subdirectory) instead of the whole volume. Useful when:
 
-* The volume is a ConfigMap and you want one file at a specific path.
-* The volume is a PVC and you want a subdirectory.
-* You need to avoid symlink-related issues with hot reload.
+- The volume is a ConfigMap and you want one file at a specific path.
+- The volume is a PVC and you want a subdirectory.
+- You need to avoid symlink-related issues with hot reload.
 
 **The hot-reload gotcha:** `subPath` mounts **do NOT track updates** to the source. A ConfigMap updated after Pod start won't be reflected in the subPath mount. This is the #1 subPath gotcha.
 
@@ -529,18 +536,18 @@ A templated alternative to subPath:
 
 ```yaml
 volumeMounts:
-- name: data
-  mountPath: /var/lib/data/$(POD_NAME)
-  subPathExpr: $(POD_NAME)
+  - name: data
+    mountPath: /var/lib/data/$(POD_NAME)
+    subPathExpr: $(POD_NAME)
 ```
 
 `subPathExpr` supports downward API variables. Use it for per-Pod directories in shared volumes.
 
 ```yaml
 volumeMounts:
-- name: data
-  mountPath: /cache/$(POD_NAME)
-  subPathExpr: $(POD_NAME)
+  - name: data
+    mountPath: /cache/$(POD_NAME)
+    subPathExpr: $(POD_NAME)
 ```
 
 The value comes from the Pod's environment (or downward API). The expression is evaluated at Pod start, not dynamically.
@@ -549,11 +556,11 @@ The value comes from the Pod's environment (or downward API). The expression is 
 
 Controls how mounts made inside the container propagate to the host and other containers.
 
-| Value | Behavior |
-|---|---|
-| `None` (default) | Mounts inside the container stay inside the container |
-| `HostToContainer` | Mounts on the host propagate to the container |
-| `Bidirectional` | Mounts in either direction propagate |
+| Value             | Behavior                                              |
+| ----------------- | ----------------------------------------------------- |
+| `None` (default)  | Mounts inside the container stay inside the container |
+| `HostToContainer` | Mounts on the host propagate to the container         |
+| `Bidirectional`   | Mounts in either direction propagate                  |
 
 **`Bidirectional` is dangerous.** It lets the container mount volumes onto the host (and have them propagate back). This is required for some CSI drivers (e.g. some networked storage systems), but should be a rare, deliberate choice.
 
@@ -563,16 +570,16 @@ Controls how mounts made inside the container propagate to the host and other co
 
 ```yaml
 volumeMounts:
-- name: data
-  mountPath: /data
-  readOnly: true
+  - name: data
+    mountPath: /data
+    readOnly: true
 ```
 
 Mount the volume read-only. The container can't write to it. Useful for:
 
-* **ConfigMaps and Secrets** — they're already read-only, but explicit is better.
-* **Shared data** — prevent one container from corrupting another's data.
-* **Defense in depth** — even if the app is compromised, it can't write to the volume.
+- **ConfigMaps and Secrets** — they're already read-only, but explicit is better.
+- **Shared data** — prevent one container from corrupting another's data.
+- **Defense in depth** — even if the app is compromised, it can't write to the volume.
 
 ### 12.5 `mountPath` and the bind mount
 
@@ -704,9 +711,9 @@ A Pod's `persistentVolumeClaim` volume can't mount if the PVC is `Pending`. See 
 
 ## See also
 
-* [[Kubernetes/concepts/L05-config-storage/01-config-maps|ConfigMaps]] — one of the volume types
-* [[Kubernetes/concepts/L05-config-storage/02-secrets|Secrets]] — the secret volume type
-* [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the standard persistent storage
-* [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API for storage
-* [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
-* [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
+- [[Kubernetes/concepts/L05-config-storage/01-config-maps|ConfigMaps]] — one of the volume types
+- [[Kubernetes/concepts/L05-config-storage/02-secrets|Secrets]] — the secret volume type
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the standard persistent storage
+- [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API for storage
+- [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
+- [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model

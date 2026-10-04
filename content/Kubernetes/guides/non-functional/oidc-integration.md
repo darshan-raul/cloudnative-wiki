@@ -13,6 +13,7 @@ Cluster auth with OIDC: every cluster trusts the same IdP (Keycloak, Okta, Azure
 ## Why OIDC
 
 **Without OIDC:**
+
 - Each user has a static cert/token in their kubeconfig
 - Tokens expire, need rotation
 - No central audit of who accessed the cluster
@@ -20,6 +21,7 @@ Cluster auth with OIDC: every cluster trusts the same IdP (Keycloak, Okta, Azure
 - Service accounts use long-lived JWTs (legacy)
 
 **With OIDC:**
+
 - Users authenticate via SSO (Okta, Azure AD, Keycloak, etc.)
 - Tokens are short-lived (15min-1hr), auto-refreshed
 - Central audit (in your IdP)
@@ -72,6 +74,7 @@ Cluster auth with OIDC: every cluster trusts the same IdP (Keycloak, Okta, Azure
 ### The IdP (Identity Provider)
 
 Stores users, groups, credentials. Examples:
+
 - **Keycloak** — open source, self-hosted
 - **Okta** — commercial, popular
 - **Azure AD / Entra ID** — for Azure shops
@@ -85,6 +88,7 @@ The IdP issues JWTs that the apiserver validates.
 Runs on the user's machine (or CI runner). Handles the IdP login, token exchange, refresh.
 
 Examples:
+
 - **kubelogin** (`kubelogin`) — generic OIDC client
 - **aws** (CLI) — uses AWS SSO / IAM Identity Center
 - **gcloud** (CLI) — uses Google OIDC
@@ -150,6 +154,7 @@ curl -X POST http://keycloak:8080/admin/realms/k8s-prod/clients \
 ### Step 4: Create users and groups
 
 In Keycloak:
+
 - Create users (alice, bob, etc.)
 - Create groups (developers, ops, sre)
 - Add users to groups
@@ -198,9 +203,9 @@ kind: ClusterRoleBinding
 metadata:
   name: developers-edit
 subjects:
-- kind: Group
-  name: k8s-developers   # matches the Keycloak group name
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: k8s-developers # matches the Keycloak group name
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
   name: edit
@@ -217,31 +222,32 @@ The kubeconfig has an `exec` block that runs an OIDC client.
 apiVersion: v1
 kind: Config
 clusters:
-- name: prod
-  cluster:
-    server: https://api.example.com
-    certificate-authority-data: xxx
+  - name: prod
+    cluster:
+      server: https://api.example.com
+      certificate-authority-data: xxx
 users:
-- name: alice
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1
-      command: kubelogin
-      args:
-      - get-token
-      - --oidc-issuer-url=https://keycloak.example.com/realms/k8s-prod
-      - --oidc-client-id=kubernetes
-      - --oidc-client-secret=xxx
-      - --oidc-extra-scope=email,profile,groups
+  - name: alice
+    user:
+      exec:
+        apiVersion: client.authentication.k8s.io/v1
+        command: kubelogin
+        args:
+          - get-token
+          - --oidc-issuer-url=https://keycloak.example.com/realms/k8s-prod
+          - --oidc-client-id=kubernetes
+          - --oidc-client-secret=xxx
+          - --oidc-extra-scope=email,profile,groups
 contexts:
-- name: prod
-  context:
-    cluster: prod
-    user: alice
+  - name: prod
+    context:
+      cluster: prod
+      user: alice
 current-context: prod
 ```
 
 **`kubelogin` handles the OIDC dance.** When kubectl runs it, it:
+
 1. Opens a browser to the IdP
 2. User logs in (MFA, etc.)
 3. IdP redirects with an auth code
@@ -443,12 +449,12 @@ metadata:
   name: developers
   namespace: my-app
 subjects:
-- kind: Group
-  name: k8s-developers   # OIDC group
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: k8s-developers # OIDC group
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
-  name: edit   # most namespace operations
+  name: edit # most namespace operations
   apiGroup: rbac.authorization.k8s.io
 ```
 
@@ -460,12 +466,12 @@ kind: ClusterRoleBinding
 metadata:
   name: sre-read
 subjects:
-- kind: Group
-  name: sre   # OIDC group
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: sre # OIDC group
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
-  name: view   # read-only cluster-wide
+  name: view # read-only cluster-wide
   apiGroup: rbac.authorization.k8s.io
 ```
 
@@ -477,9 +483,9 @@ kind: ClusterRoleBinding
 metadata:
   name: platform-admins
 subjects:
-- kind: Group
-  name: platform-admins
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: platform-admins
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
   name: cluster-admin
@@ -497,17 +503,17 @@ OIDC tokens are short-lived (15min-1hr). After expiration:
 
 ## Common gotchas
 
-* **Group claim format varies.** Keycloak uses `groups`, Okta uses `groups` (different default), Azure AD uses `groups` (object IDs, not names). Map explicitly.
-* **Refresh tokens require offline_access scope.** Without it, the user is prompted to log in every hour.
-* **OIDC requires HTTPS.** The issuer URL must be HTTPS. Self-signed certs need `--oidc-ca-file`.
-* **The `sub` claim is the unique identifier.** Don't use email as the subject — emails change.
-* **Group names with special characters** can break RBAC matching. Stick to alphanumeric.
-* **Workload identity requires the cloud's OIDC integration** (EKS OIDC, GKE Workload Identity, AKS OIDC). It's not just a config flag.
-* **The legacy long-lived ServiceAccount tokens** are deprecated. Use projected tokens (bound to a pod, time-limited).
-* **The apiserver caches OIDC config.** Changes to OIDC config require apiserver restart.
-* **Cross-tenant trust** is complex. One IdP, multiple clusters is fine. Multiple IdPs, one cluster: use OIDC federation or multiple `--oidc-issuer-url` flags (not supported in all versions).
-* **Kubelogin prints the device URL for headless auth.** Make sure users know to copy it.
-* **The `--oidc-required-claim` flag** can restrict to a specific organization or tenant. Use it for multi-tenant IdPs.
+- **Group claim format varies.** Keycloak uses `groups`, Okta uses `groups` (different default), Azure AD uses `groups` (object IDs, not names). Map explicitly.
+- **Refresh tokens require offline_access scope.** Without it, the user is prompted to log in every hour.
+- **OIDC requires HTTPS.** The issuer URL must be HTTPS. Self-signed certs need `--oidc-ca-file`.
+- **The `sub` claim is the unique identifier.** Don't use email as the subject — emails change.
+- **Group names with special characters** can break RBAC matching. Stick to alphanumeric.
+- **Workload identity requires the cloud's OIDC integration** (EKS OIDC, GKE Workload Identity, AKS OIDC). It's not just a config flag.
+- **The legacy long-lived ServiceAccount tokens** are deprecated. Use projected tokens (bound to a pod, time-limited).
+- **The apiserver caches OIDC config.** Changes to OIDC config require apiserver restart.
+- **Cross-tenant trust** is complex. One IdP, multiple clusters is fine. Multiple IdPs, one cluster: use OIDC federation or multiple `--oidc-issuer-url` flags (not supported in all versions).
+- **Kubelogin prints the device URL for headless auth.** Make sure users know to copy it.
+- **The `--oidc-required-claim` flag** can restrict to a specific organization or tenant. Use it for multi-tenant IdPs.
 
 ## A worked example
 
@@ -570,8 +576,8 @@ roleRef:
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — auth in the security layer
-* [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — RBAC patterns
-* [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig
-* [kubelogin](https://github.com/int128/kubelogin)
-* [Keycloak docs](https://www.keycloak.org/documentation.html)
+- [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — auth in the security layer
+- [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — RBAC patterns
+- [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig
+- [kubelogin](https://github.com/int128/kubelogin)
+- [Keycloak docs](https://www.keycloak.org/documentation.html)

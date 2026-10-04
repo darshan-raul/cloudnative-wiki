@@ -29,10 +29,10 @@ spec:
     metadata: { labels: { app: shared-api } }
     spec:
       containers:
-      - name: shared-api
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "shared-api (app-b)" }]
-        ports: [{ containerPort: 8080 }]
+        - name: shared-api
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "shared-api (app-b)" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -42,8 +42,8 @@ metadata:
 spec:
   selector: { app: shared-api }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 # The consumer (app-a) writes this HTTPRoute that points at app-b's Service.
 apiVersion: gateway.networking.k8s.io/v1
@@ -53,18 +53,18 @@ metadata:
   namespace: app-a
 spec:
   parentRefs:
-  - name: eg-cross
-    namespace: infra
+    - name: eg-cross
+      namespace: infra
   hostnames: ["cross.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - group: ""
-      kind: Service
-      name: shared-api
-      namespace: app-b     # <-- the cross-namespace pointer
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: shared-api
+          namespace: app-b # <-- the cross-namespace pointer
+          port: 80
 ---
 # The OWNER of app-b writes this ReferenceGrant to approve the cross-ns read.
 # Without this, the HTTPRoute's ResolvedRefs=False, reason=RefNotPermitted.
@@ -75,12 +75,12 @@ metadata:
   namespace: app-b
 spec:
   from:
-  - group: gateway.networking.k8s.io
-    kind: HTTPRoute
-    namespace: app-a
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: app-a
   to:
-  - group: ""
-    kind: Service
+    - group: ""
+      kind: Service
 ---
 # A second Gateway: same listener port+protocol as the baseline `eg`, but in
 # the same namespace. The two Gateways will conflict on port 80 by default;
@@ -96,9 +96,9 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces:
-        from: All
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All

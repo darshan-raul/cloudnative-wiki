@@ -238,11 +238,11 @@ uses it to look up the saved state.
 
 ### `MemorySaver` vs `SqliteSaver`
 
-| Checkpointer | Persistence | When to use |
-|---|---|---|
-| `MemorySaver` | RAM only | Dev, single-process |
-| `SqliteSaver` | SQLite file | Single-process, persistent |
-| `PostgresSaver` | PostgreSQL | Multi-host, production |
+| Checkpointer    | Persistence | When to use                |
+| --------------- | ----------- | -------------------------- |
+| `MemorySaver`   | RAM only    | Dev, single-process        |
+| `SqliteSaver`   | SQLite file | Single-process, persistent |
+| `PostgresSaver` | PostgreSQL  | Multi-host, production     |
 
 ```python
 # Postgres in prod

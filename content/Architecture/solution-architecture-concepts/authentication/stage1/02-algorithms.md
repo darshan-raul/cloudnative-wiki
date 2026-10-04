@@ -1,7 +1,18 @@
 ---
 title: "1.2 — JWT Algorithms: HS/RS/ES/PS/EdDSA"
 author: darshan
-tags: [authentication, stage-1, jwt, algorithms, hs256, rs256, es256, eddsa, performance]
+tags:
+  [
+    authentication,
+    stage-1,
+    jwt,
+    algorithms,
+    hs256,
+    rs256,
+    es256,
+    eddsa,
+    performance,
+  ]
 date: 2026-06-13
 description: The full algorithm zoo — HMAC, RSA, ECDSA, RSA-PSS, EdDSA — when to pick which, performance, security, interop
 ---
@@ -113,11 +124,11 @@ Scenario:
   Service A signs tokens
   Service B verifies tokens
   Both share the same secret K
-  
+
   Service B is compromised
   Attacker steals K
   Attacker can now sign any token (forge any user, any claim)
-  
+
 This is the "shared secret = shared blast radius" problem.
 The more services that know the key, the bigger the compromise.
 ```
@@ -160,7 +171,7 @@ RS512 = RSASSA-PKCS1-v1_5 + SHA-512
 ```
 sign:
   signature = RSA-PKCS1-v1.5-SIGN(private_key, SHA256(header.payload))
-  
+
   Internally:
   1. Hash the signing input with SHA-256 → 32-byte digest
   2. Pad the digest per PKCS#1 v1.5: 0x00 0x01 [0xff padding] 0x00 [DigestInfo]
@@ -191,7 +202,7 @@ RS256 is the universal fallback.
   - Government, healthcare, finance, telco all standardized on it
   - The default in OpenID Connect examples
   - The default in most IdPs (Auth0, Okta, Keycloak, Azure AD)
-  
+
 If you pick something else, you're making an interop bet.
 ```
 
@@ -336,15 +347,15 @@ verify:
 If two signatures use the same nonce k:
   - Same r value (the x-coordinate of k*G)
   - Attacker can solve for the private key:
-    
+
     s1 = k^-1 * (z1 + r * priv)
     s2 = k^-1 * (z2 + r * priv)
-    
+
     s1 - s2 = k^-1 * (z1 - z2)
     k = (z1 - z2) / (s1 - s2)
-    
+
     priv = (s1 * k - z1) / r
-    
+
   - One leaked private key, all signatures past + future compromised
 
 Historical examples:
@@ -358,10 +369,10 @@ Historical examples:
 ```
 Instead of generating a random k, derive it deterministically from:
   k = HMAC(private_key, message)
-  
+
 Same private key + same message → same k → same signature
 Different message → different k
-  
+
 No randomness needed, no nonce-reuse possible.
 If your library doesn't use RFC 6979, switch libraries.
 ```
@@ -371,10 +382,10 @@ If your library doesn't use RFC 6979, switch libraries.
 ```
 For any valid (r, s), the signature (r, -s mod n) is also valid.
 Defeats: signature caching, idempotency keys, audit trail uniqueness.
-  
+
 Mitigation: enforce s <= n/2 (low-S) at signing time, reject high-S
 at verification time. Most modern libs do this by default.
-  
+
 If your library doesn't, you have the malleability bug.
 ```
 
@@ -472,7 +483,7 @@ The JOSE header for EdDSA:
     "alg": "EdDSA",
     "typ": "JWT"
   }
-  
+
 That's it. No "crv" or curve name in the JWT header.
 The curve is implied (Ed25519).
 The public key has a JWK representation:
@@ -507,30 +518,30 @@ This is good for:
 
 ### Security equivalence (per NIST SP 800-57, 2020)
 
-| Symmetric bits | HSxxx | RSxxx | PSxxx | ESxxx | EdDSA |
-|----------------|-------|-------|-------|-------|-------|
-| **112** | HS256 (256-bit key) | RS256 (2048-bit) | PS256 (2048-bit) | ES256 (P-256) | (none standard) |
-| **128** | HS256/384 (32-48 byte key) | RS384 (3072-bit) | PS384 (3072-bit) | ES256 (P-256) | Ed25519 |
-| **192** | HS384 | RS512 (7680-bit) | PS512 (7680-bit) | ES384 (P-384) | Ed448 (not in JOSE) |
-| **256** | HS512 | RS512 (15360-bit) | PS512 (15360-bit) | ES512 (P-521) | (none) |
+| Symmetric bits | HSxxx                      | RSxxx             | PSxxx             | ESxxx         | EdDSA               |
+| -------------- | -------------------------- | ----------------- | ----------------- | ------------- | ------------------- |
+| **112**        | HS256 (256-bit key)        | RS256 (2048-bit)  | PS256 (2048-bit)  | ES256 (P-256) | (none standard)     |
+| **128**        | HS256/384 (32-48 byte key) | RS384 (3072-bit)  | PS384 (3072-bit)  | ES256 (P-256) | Ed25519             |
+| **192**        | HS384                      | RS512 (7680-bit)  | PS512 (7680-bit)  | ES384 (P-384) | Ed448 (not in JOSE) |
+| **256**        | HS512                      | RS512 (15360-bit) | PS512 (15360-bit) | ES512 (P-521) | (none)              |
 
 ### Practical matrix
 
-| Algorithm | Family | Key size (sign) | Key size (verify) | Sig size | Sign speed | Verify speed | Deterministic | Notes |
-|-----------|--------|----------------|-------------------|----------|------------|--------------|---------------|-------|
-| **HS256** | HMAC | 32 bytes | 32 bytes (same) | 32 bytes | Fastest | Fastest | Yes | Symmetric |
-| **HS384** | HMAC | 48 bytes | 48 bytes (same) | 48 bytes | Fastest | Fastest | Yes | Symmetric |
-| **HS512** | HMAC | 64 bytes | 64 bytes (same) | 64 bytes | Fastest | Fastest | Yes | Symmetric |
-| **RS256** | RSA PKCS#1 | 2048-4096 bits | 2048-4096 bits | 256 bytes | Slow | **Slowest** | Yes | Universal interop |
-| **RS384** | RSA PKCS#1 | 2048-4096 bits | 2048-4096 bits | 256 bytes | Slow | **Slowest** | Yes | |
-| **RS512** | RSA PKCS#1 | 2048-4096 bits | 2048-4096 bits | 256 bytes | Slowest | **Slowest** | Yes | |
-| **PS256** | RSA-PSS | 2048-4096 bits | 2048-4096 bits | 256 bytes | Slow | **Slowest** | **No** (salt) | Provably secure |
-| **PS384** | RSA-PSS | 2048-4096 bits | 2048-4096 bits | 256 bytes | Slow | **Slowest** | **No** | |
-| **PS512** | RSA-PSS | 2048-4096 bits | 2048-4096 bits | 256 bytes | Slowest | **Slowest** | **No** | |
-| **ES256** | ECDSA | 32 bytes | 64 bytes | 64 bytes | Fast | Fast | With RFC 6979 | Modern default |
-| **ES384** | ECDSA | 48 bytes | 64 bytes | 96 bytes | Fast | Fast | With RFC 6979 | |
-| **ES512** | ECDSA | 64 bytes | 132 bytes | 132 bytes | Fast | Fast | With RFC 6979 | Note: P-521, not P-512 |
-| **EdDSA** | Ed25519 | 32 bytes | 32 bytes | 64 bytes | **Fastest** | **Fastest** | Yes | Modern ideal |
+| Algorithm | Family     | Key size (sign) | Key size (verify) | Sig size  | Sign speed  | Verify speed | Deterministic | Notes                  |
+| --------- | ---------- | --------------- | ----------------- | --------- | ----------- | ------------ | ------------- | ---------------------- |
+| **HS256** | HMAC       | 32 bytes        | 32 bytes (same)   | 32 bytes  | Fastest     | Fastest      | Yes           | Symmetric              |
+| **HS384** | HMAC       | 48 bytes        | 48 bytes (same)   | 48 bytes  | Fastest     | Fastest      | Yes           | Symmetric              |
+| **HS512** | HMAC       | 64 bytes        | 64 bytes (same)   | 64 bytes  | Fastest     | Fastest      | Yes           | Symmetric              |
+| **RS256** | RSA PKCS#1 | 2048-4096 bits  | 2048-4096 bits    | 256 bytes | Slow        | **Slowest**  | Yes           | Universal interop      |
+| **RS384** | RSA PKCS#1 | 2048-4096 bits  | 2048-4096 bits    | 256 bytes | Slow        | **Slowest**  | Yes           |                        |
+| **RS512** | RSA PKCS#1 | 2048-4096 bits  | 2048-4096 bits    | 256 bytes | Slowest     | **Slowest**  | Yes           |                        |
+| **PS256** | RSA-PSS    | 2048-4096 bits  | 2048-4096 bits    | 256 bytes | Slow        | **Slowest**  | **No** (salt) | Provably secure        |
+| **PS384** | RSA-PSS    | 2048-4096 bits  | 2048-4096 bits    | 256 bytes | Slow        | **Slowest**  | **No**        |                        |
+| **PS512** | RSA-PSS    | 2048-4096 bits  | 2048-4096 bits    | 256 bytes | Slowest     | **Slowest**  | **No**        |                        |
+| **ES256** | ECDSA      | 32 bytes        | 64 bytes          | 64 bytes  | Fast        | Fast         | With RFC 6979 | Modern default         |
+| **ES384** | ECDSA      | 48 bytes        | 64 bytes          | 96 bytes  | Fast        | Fast         | With RFC 6979 |                        |
+| **ES512** | ECDSA      | 64 bytes        | 132 bytes         | 132 bytes | Fast        | Fast         | With RFC 6979 | Note: P-521, not P-512 |
+| **EdDSA** | Ed25519    | 32 bytes        | 32 bytes          | 64 bytes  | **Fastest** | **Fastest**  | Yes           | Modern ideal           |
 
 ### Cost per million operations (rough, AWS Graviton, 2024 measurements)
 
@@ -649,12 +660,12 @@ HS256:  ~1.0 KB
 ## 10. Compatibility: Who Supports What
 
 | Algorithm | Auth0 | Okta | Keycloak | Azure AD | AWS Cognito | Google | Apple | FAPI 2.0 |
-|-----------|-------|------|----------|----------|-------------|--------|-------|----------|
-| **RS256** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **PS256** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **ES256** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **EdDSA** | ✅ | ✅ | ✅ | ✅ | ⚠️ partial | ✅ | ✅ | ⚠️ |
-| **HS256** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ | ❌ | ❌ |
+| --------- | ----- | ---- | -------- | -------- | ----------- | ------ | ----- | -------- |
+| **RS256** | ✅    | ✅   | ✅       | ✅       | ✅          | ✅     | ✅    | ✅       |
+| **PS256** | ✅    | ✅   | ✅       | ✅       | ✅          | ✅     | ✅    | ✅       |
+| **ES256** | ✅    | ✅   | ✅       | ✅       | ✅          | ✅     | ✅    | ✅       |
+| **EdDSA** | ✅    | ✅   | ✅       | ✅       | ⚠️ partial  | ✅     | ✅    | ⚠️       |
+| **HS256** | ✅    | ✅   | ✅       | ⚠️       | ⚠️          | ❌     | ❌    | ❌       |
 
 If you're an IdP: support RS256, PS256, ES256, EdDSA. Skip HS256 unless explicitly requested.
 
@@ -854,12 +865,12 @@ EdDSA (281 bytes):
 
 Imagine a notary public in a corporate office building.
 
-| JWT algorithm | Notary equivalent |
-|---------------|-------------------|
-| **HS256** | A single shared rubber stamp that everyone authorized has. Anyone with the stamp can certify. If someone loses it, the stamp is replaced. |
-| **RS256** | A notary with a personal embossed seal. The seal pattern is published in the company directory. Anyone can check the seal against the directory. Only the notary has the embossing tool. |
-| **ES256** | Same as RS256, but the embossing tool is a tiny precision instrument, not a heavy cast-iron press. Cheaper to make, harder to forge, smaller imprint. |
-| **EdDSA** | The modern equivalent: a laser-etched seal. The smallest, fastest, hardest to forge. |
+| JWT algorithm | Notary equivalent                                                                                                                                                                        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **HS256**     | A single shared rubber stamp that everyone authorized has. Anyone with the stamp can certify. If someone loses it, the stamp is replaced.                                                |
+| **RS256**     | A notary with a personal embossed seal. The seal pattern is published in the company directory. Anyone can check the seal against the directory. Only the notary has the embossing tool. |
+| **ES256**     | Same as RS256, but the embossing tool is a tiny precision instrument, not a heavy cast-iron press. Cheaper to make, harder to forge, smaller imprint.                                    |
+| **EdDSA**     | The modern equivalent: a laser-etched seal. The smallest, fastest, hardest to forge.                                                                                                     |
 
 **The operational reality:**
 
@@ -891,27 +902,35 @@ ES256 / EdDSA:
 ## 13. Attacks & Pitfalls
 
 ### A1. `alg=none` (revisit)
+
 Never accept. Most libraries default to rejecting it, but some have a `verify=False` mode that's like inviting the attack in. Set `verify=True` and use an algorithm allowlist.
 
 ### A2. Algorithm confusion (HS256 vs RS256, HS256 vs ES256)
+
 The forged token has `alg=HS256`, the public key is used as the HMAC secret, the library accepts. Defense: pin the algorithm. If your service expects RS256, the token's `alg` MUST be RS256.
 
 ### A3. ECDSA nonce reuse
+
 Use RFC 6979 (deterministic ECDSA) and a vetted library. If your library has a `nonce` parameter, you have non-deterministic ECDSA, which is one RNG bug away from a private key leak.
 
 ### A4. ECDSA signature malleability
+
 Enforce low-S (s <= n/2) at signing and verification. Most modern libs do this. If yours doesn't, you have a bug.
 
 ### A5. RSA PKCS#1 v1.5 padding (BERserk, 2014)
+
 Use PS256 (RSA-PSS) for new code. If you must use RS256, audit your padding verification implementation for the BERserk bug. Most modern libs (OpenSSL, BoringSSL, Go's crypto/rsa) are safe.
 
 ### A6. Choosing RSA key size below 2048
+
 1024-bit RSA is broken. Some old systems still use it. 2048 is the minimum, 3072 is the standard for new systems. 4096 is paranoid. 15360 is post-quantum prep.
 
 ### A7. HSxxx with predictable keys
+
 "secret", "mycompanyname", "changeme" — all public. Always use a 32+ byte cryptographically random key. Use a KMS, not a config file.
 
 ### A8. Forgetting to validate the algorithm
+
 Most JWT libraries will let you pass `algorithms=None` and just trust the header. Never do this. Always pass an explicit allowlist.
 
 ```python
@@ -928,7 +947,7 @@ jwt.decode(token, key, algorithms=["RS256"])  # pinned allowlist
 Service expects RS256. Attacker sends:
   Token with alg=PS256 (same key, different padding)
   Some libs treat PS256 like RS256 and "just verify it" — silently wrong
-  
+
 Defense: algorithm allowlist must match exactly. If you say ["RS256"],
 PS256 is rejected.
 ```
@@ -947,7 +966,7 @@ interchangeable.
 In JWK:
   Ed25519: {"kty":"OKP", "crv":"Ed25519", "x":"...", "d":"..."}
   X25519:  {"kty":"OKP", "crv":"X25519",  "x":"...", "d":"..."}
-  
+
 If the crv field is wrong, the library should reject.
 ```
 
@@ -985,16 +1004,21 @@ Recommended IdP config:
 ## 14. Exercises
 
 ### Exercise 1: Sign with all 5 algs
+
 Take the code from Section 11, run it. Compare the token sizes. Sign the same payload 1000 times with each algorithm. Are the signatures deterministic?
 
 ### Exercise 2: Algorithm confusion drill
+
 Use the same script. Try the algorithm confusion attack against each algorithm pair (HS256 secret vs RS256 public key, etc.). Which ones does PyJWT block? Could you bypass the block?
 
 ### Exercise 3: Performance microbench
+
 Write a small script that times 10,000 sign+verify operations for each algorithm. Compare the relative order to Section 9. If you see different ordering, why might that be?
 
 ### Exercise 4: Choose for your scenario
+
 For each scenario, pick the algorithm and justify in 2-3 sentences:
+
 - (a) New internal microservice, all in your VPC, no external RPs
 - (b) Public API, 10,000 third-party developers verify your tokens
 - (c) FAPI 2.0 banking app
@@ -1002,26 +1026,34 @@ For each scenario, pick the algorithm and justify in 2-3 sentences:
 - (e) Workload identity (k8s service account → AWS IAM)
 
 ### Exercise 5: Key rotation
+
 Your service signs with RS256 using a 2048-bit key. You want to migrate to EdDSA. Design a 90-day rotation plan. (Hint: dual-sign, dual-verify, then drop the old one.)
 
 ### Exercise 6: Find the bug
+
 A colleague writes:
+
 ```python
 def verify(token, key):
     return jwt.decode(token, key, algorithms=None)
 ```
+
 What's wrong? How many attack vectors does it open? Write 3 attack tokens that exploit it.
 
 ### Exercise 7: The EdDSA portability check
+
 Try to sign with EdDSA in your language's JWT library. Does it work? If not, upgrade. (Most libraries have had EdDSA support for 5+ years.)
 
 ### Exercise 8: Compute the cost
+
 Your API verifies 50M JWTs/day. At $0.50/1M for RS256 vs $0.02/1M for EdDSA, what's the annual savings of migrating? What about the migration cost?
 
 ### Exercise 9: Read a CVE
+
 Pick a real JWT algorithm CVE (search "JWT algorithm CVE" or "RS256 CVE" in your preferred CVE database). Identify: which algorithm, what was the bug, what's the fix, would your validator have been vulnerable?
 
 ### Exercise 10: Build a "what's my alg?" tool
+
 Write a 30-line function that takes a token, decodes the header, prints the algorithm, key type (symmetric vs asymmetric), recommended key size, and any concerns (e.g., "alg=none — REJECT", "HS256 — internal use only").
 
 ---
@@ -1033,6 +1065,7 @@ You can now choose, sign, verify, and attack-test JWT algorithms. Next, the hear
 → [[../stage1/03-validation|Stage 1.3 — JWT Validation: The 7 Checks]]
 
 **Before you move on, verify you can answer these:**
+
 1. What's the difference between HS256 and RS256, and when do you pick each?
 2. Why is PS256 preferred over RS256 for new code, but RS256 still the universal default?
 3. What's the ECDSA nonce-reuse attack, and how does EdDSA prevent it?

@@ -29,13 +29,13 @@ oci://myregistry.azurecr.io/helm/myapp:sha256-abc123
 
 ### Key Differences from Chart Repos
 
-| Feature | Chart Repository | OCI Registry |
-|---------|------------------|--------------|
-| Index | index.yaml | Manifest |
-| Storage | HTTP server | Container registry |
-| Authentication | Basic auth | Registry auth |
-| Helm support | Native | Native (Helm 3+) |
-| Artifact types | Charts only | Multiple (charts, images) |
+| Feature        | Chart Repository | OCI Registry              |
+| -------------- | ---------------- | ------------------------- |
+| Index          | index.yaml       | Manifest                  |
+| Storage        | HTTP server      | Container registry        |
+| Authentication | Basic auth       | Registry auth             |
+| Helm support   | Native           | Native (Helm 3+)          |
+| Artifact types | Charts only      | Multiple (charts, images) |
 
 ## Pushing Charts to OCI Registry
 
@@ -323,20 +323,22 @@ helm pull oci://ghcr.io/org/charts/myapp@sha256:abc123...
 # ECR IAM policy for Helm operations
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ecr:GetAuthorizationToken",
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:GetRepositoryPolicy",
-        "ecr:DescribeRepositories",
-        "ecr:ListImages"
-      ],
-      "Resource": "arn:aws:ecr:*:*:repository/*"
-    }
-  ]
+  "Statement":
+    [
+      {
+        "Effect": "Allow",
+        "Action":
+          [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:GetRepositoryPolicy",
+            "ecr:DescribeRepositories",
+            "ecr:ListImages",
+          ],
+        "Resource": "arn:aws:ecr:*:*:repository/*",
+      },
+    ],
 }
 ```
 
@@ -377,13 +379,13 @@ NEW_REGISTRY="oci://ghcr.io/org/charts"
 # Get all chart versions
 helm search repo $OLD_REPO/myapp --versions | tail -n +2 | while read line; do
   VERSION=$(echo $line | awk '{print $2}')
-  
+
   # Pull chart
   helm pull $OLD_REPO/myapp --version $VERSION
-  
+
   # Push to OCI
   helm push myapp-$VERSION.tgz $NEW_REGISTRY/myapp
-  
+
   # Cleanup
   rm -f myapp-$VERSION.tgz
 done
@@ -393,13 +395,13 @@ done
 
 ### Common Issues
 
-| Error | Solution |
-|-------|----------|
-| `unsupported protocol scheme "oci"` | Set `HELM_EXPERIMENTAL_OCI=1` |
-| `authentication required` | Run `helm registry login` |
-| `manifest unknown` | Check tag/version exists |
-| `name invalid` | Use lowercase, no special chars |
-| `application/octet-stream` | Registry may not support OCI |
+| Error                               | Solution                        |
+| ----------------------------------- | ------------------------------- |
+| `unsupported protocol scheme "oci"` | Set `HELM_EXPERIMENTAL_OCI=1`   |
+| `authentication required`           | Run `helm registry login`       |
+| `manifest unknown`                  | Check tag/version exists        |
+| `name invalid`                      | Use lowercase, no special chars |
+| `application/octet-stream`          | Registry may not support OCI    |
 
 ### Debug OCI Operations
 
@@ -426,7 +428,7 @@ name: Publish to OCI
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   publish:
@@ -452,7 +454,7 @@ jobs:
         run: |
           export HELM_EXPERIMENTAL_OCI=1
           helm package charts/myapp
-          
+
           VERSION=$(helm show chart charts/myapp | grep version: | awk '{print $2}')
           helm push myapp-${VERSION}.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
 ```

@@ -24,10 +24,10 @@ spec:
     metadata: { labels: { app: rate-target } }
     spec:
       containers:
-      - name: rate-target
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "rate: ok" }]
-        ports: [{ containerPort: 8080 }]
+        - name: rate-target
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "rate: ok" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -37,8 +37,8 @@ metadata:
 spec:
   selector: { app: rate-target }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
@@ -47,17 +47,17 @@ metadata:
   namespace: app
 spec:
   targetRefs:
-  - group: gateway.networking.k8s.io
-    kind: HTTPRoute
-    name: rate
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: rate
   rateLimit:
     local:
       rules:
-      - clientSelectors:
-        - sourceIP
-        limit:
-          requests: 10
-          unit: Minute
+        - clientSelectors:
+            - sourceIP
+          limit:
+            requests: 10
+            unit: Minute
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -66,12 +66,12 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg
-    namespace: infra
+    - name: eg
+      namespace: infra
   hostnames: ["rate.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: rate-target
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: rate-target
+          port: 80

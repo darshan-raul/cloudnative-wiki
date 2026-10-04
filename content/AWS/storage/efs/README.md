@@ -38,14 +38,14 @@ EFS is an NFSv4 share — you mount it on Linux as a directory. It's accessible 
 
 ### EFS vs EBS
 
-| | EFS | EBS |
-|--|--|--|
-| Attachment | Multiple instances (NFS) | Single instance (block) |
-| AZ span | Multi-AZ | Single AZ |
-| Performance | Network NFS (0.5-2ms) | Network block (0.5-2ms) |
-| Max throughput | 10 GB/s (provisioned) | 1,000 MB/s (io2 Block Express) |
-| Max IOPS | 500,000 (provisioned) | 256,000 (io2 Block Express) |
-| Use case | Shared storage, CI runners | Databases, app data |
+|                | EFS                        | EBS                            |
+| -------------- | -------------------------- | ------------------------------ |
+| Attachment     | Multiple instances (NFS)   | Single instance (block)        |
+| AZ span        | Multi-AZ                   | Single AZ                      |
+| Performance    | Network NFS (0.5-2ms)      | Network block (0.5-2ms)        |
+| Max throughput | 10 GB/s (provisioned)      | 1,000 MB/s (io2 Block Express) |
+| Max IOPS       | 500,000 (provisioned)      | 256,000 (io2 Block Express)    |
+| Use case       | Shared storage, CI runners | Databases, app data            |
 
 ## Mounting EFS
 
@@ -94,11 +94,11 @@ For highly parallel workloads: HPC, genomics, media processing. Higher latency b
 
 ### Throughput Modes
 
-| Mode | How It Works | Use Case |
-|------|-------------|----------|
-| Bursting | 100 MB/s per TB, bursts to 100 MB/s per TB | Variable, predictable |
-| Provisioned | Fixed throughput regardless of size | Consistent high throughput |
-| Elastic | Auto-scales with workload | Unknown/variable patterns |
+| Mode        | How It Works                               | Use Case                   |
+| ----------- | ------------------------------------------ | -------------------------- |
+| Bursting    | 100 MB/s per TB, bursts to 100 MB/s per TB | Variable, predictable      |
+| Provisioned | Fixed throughput regardless of size        | Consistent high throughput |
+| Elastic     | Auto-scales with workload                  | Unknown/variable patterns  |
 
 ### Throughput Calculation
 
@@ -150,6 +150,7 @@ aws efs create-access-point \
 ```
 
 Use access points to:
+
 - Isolate different applications' data
 - Enforce different POSIX permissions per application
 - Restrict access to specific directories
@@ -210,6 +211,7 @@ aws cloudwatch get-metric-statistics \
 ```
 
 Key metrics:
+
 - `BurstCreditBalance` — remaining burst credits
 - `PercentIOLimit` — how close to max IOPS
 - `ClientConnections` — number of NFS connections
@@ -233,14 +235,14 @@ aws backup create-backup-plan \
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| File system size | Petabytes |
-| Max throughput (provisioned) | 10 GB/s |
-| Max IOPS (provisioned) | 500,000 |
-| Concurrent connections | Thousands |
-| File size | 47.9 TiB |
-| Max files | Billions |
+| Resource                     | Limit     |
+| ---------------------------- | --------- |
+| File system size             | Petabytes |
+| Max throughput (provisioned) | 10 GB/s   |
+| Max IOPS (provisioned)       | 500,000   |
+| Concurrent connections       | Thousands |
+| File size                    | 47.9 TiB  |
+| Max files                    | Billions  |
 
 ## References
 

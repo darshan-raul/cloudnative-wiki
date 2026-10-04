@@ -64,6 +64,7 @@ T0: Pod marked Terminating in apiserver
 > If your application does not have a `preStop` hook with a brief delay (e.g. `sleep 5`), the application process might exit immediately upon receiving `SIGTERM` before kube-proxy and ingress proxies have completed updating their routing tables. This causes client requests to be sent to a dead socket, resulting in `502 Bad Gateway` drops.
 
 ### Recommended `preStop` Configuration:
+
 ```yaml
 lifecycle:
   preStop:

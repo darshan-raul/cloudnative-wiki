@@ -41,12 +41,12 @@ Reliability Patterns (in order of impact):
 
 ## Key Metrics
 
-| Metric | Meaning |
-|--------|---------|
+| Metric       | Meaning                                              |
+| ------------ | ---------------------------------------------------- |
 | Error Budget | Allowable downtime per period (SLO target vs actual) |
-| MTTR | Mean Time To Recovery — how fast you recover |
-| MTTF | Mean Time To Failure — how long until first failure |
-| Availability | Uptime / (Uptime + Downtime) as a percentage |
+| MTTR         | Mean Time To Recovery — how fast you recover         |
+| MTTF         | Mean Time To Failure — how long until first failure  |
+| Availability | Uptime / (Uptime + Downtime) as a percentage         |
 
 ---
 

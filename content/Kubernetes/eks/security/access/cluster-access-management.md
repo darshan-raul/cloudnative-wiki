@@ -34,12 +34,12 @@ aws eks associate-access-entry \
 
 ### Predefined Kubernetes Groups
 
-| Group | Access |
-|-------|--------|
-| `system:masters` | Full cluster access (like sudo) |
-| `system:authenticated` | All authenticated users |
-| `system:node` | Node pool nodes |
-| `system:bootstrappers` | Node bootstrapping |
+| Group                  | Access                          |
+| ---------------------- | ------------------------------- |
+| `system:masters`       | Full cluster access (like sudo) |
+| `system:authenticated` | All authenticated users         |
+| `system:node`          | Node pool nodes                 |
+| `system:bootstrappers` | Node bootstrapping              |
 
 ### Custom RBAC Role Mapping
 
@@ -58,9 +58,9 @@ kind: Role
 metadata:
   name: developer-readonly
 rules:
-- apiGroups: [""]
-  resources: ["pods", "services", "configmaps"]
-  verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list"]
 ```
 
 ## IRSA (IAM Roles for Service Accounts)
@@ -88,4 +88,4 @@ The `aws-auth` ConfigMap approach is deprecated. New clusters don't have it by d
 - [[Kubernetes/eks/security/access/README|EKS Security Access Hub]]
 - [[Kubernetes/eks/security/pod-identity|Pod Identity]]
 - [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]]
-- [[AWS/concepts/iam/README|IAM]]
+- [[AWS/security/iam/README|IAM]]

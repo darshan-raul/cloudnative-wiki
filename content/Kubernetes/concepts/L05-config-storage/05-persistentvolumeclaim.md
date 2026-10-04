@@ -1,6 +1,13 @@
+---
+title: "PersistentVolumeClaim (PVC)"
+tags: ["kubernetes", "k8s-concepts", "storage"]
+date: 2026-09-06
+description: "PersistentVolumeClaim (PVC) — Kubernetes reference and architecture guide."
+---
+
 # PersistentVolumeClaim (PVC)
 
-*"https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims"*
+_"https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims"_
 
 A PersistentVolumeClaim is a **request for storage** by a user / Pod. It's the namespaced object that the cluster binds to a PersistentVolume. Pods use PVCs the way they use ConfigMaps or Secrets — declared in the spec, mounted as a volume.
 
@@ -34,7 +41,7 @@ metadata:
   namespace: prod
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: gp3
   resources:
     requests:
@@ -53,15 +60,15 @@ metadata:
   namespace: prod
 spec:
   containers:
-  - name: app
-    image: app:1.0
-    volumeMounts:
-    - name: data
-      mountPath: /var/lib/data
+    - name: app
+      image: app:1.0
+      volumeMounts:
+        - name: data
+          mountPath: /var/lib/data
   volumes:
-  - name: data
-    persistentVolumeClaim:
-      claimName: data
+    - name: data
+      persistentVolumeClaim:
+        claimName: data
 ```
 
 The Pod references the PVC by name (in the same namespace), the volume is mounted at `/var/lib/data`. The contents of the PV appear at that path.
@@ -104,34 +111,34 @@ metadata:
     app: myapp
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: gp3
   resources:
     requests:
       storage: 50Gi
-  volumeMode: Filesystem           # or Block
-  selector:                        # optional: bind to specific PVs
+  volumeMode: Filesystem # or Block
+  selector: # optional: bind to specific PVs
     matchLabels:
       tier: gold
-  dataSource:                      # k8s 1.20+: clone or restore
+  dataSource: # k8s 1.20+: clone or restore
     apiGroup: snapshot.storage.k8s.io
     kind: VolumeSnapshot
     name: my-snapshot
-  dataSourceRef:                   # k8s 1.22+: typed version of dataSource
+  dataSourceRef: # k8s 1.22+: typed version of dataSource
     apiGroup: snapshot.storage.k8s.io
     kind: VolumeSnapshot
     name: my-snapshot
 status:
-  phase: Bound                     # Pending | Bound | Lost
+  phase: Bound # Pending | Bound | Lost
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   capacity:
     storage: 50Gi
   conditions:
-  - type: Ready
-    status: "True"
-    reason: ""
-    message: ""
+    - type: Ready
+      status: "True"
+      reason: ""
+      message: ""
 ```
 
 ### 2.1 The `spec.resources.requests.storage`
@@ -154,32 +161,32 @@ spec:
     matchLabels:
       tier: gold
     matchExpressions:
-    - key: environment
-      operator: In
-      values: [production]
+      - key: environment
+        operator: In
+        values: [production]
 ```
 
 The `selector` is mostly used in static provisioning. In dynamic provisioning, the labels are usually set in the StorageClass's `volumeBindingMode` and topology constraints.
 
 ## 3. Access Modes in Detail
 
-| Mode | Meaning | Use case |
-|---|---|---|
-| `ReadWriteOnce` (RWO) | Mounted read-write by a single node | Databases, single-instance stateful apps |
-| `ReadOnlyMany` (ROX) | Mounted read-only by many nodes | Shared content, models, static assets |
-| `ReadWriteMany` (RWX) | Mounted read-write by many nodes | Multi-writer filesystems, cluster-aware apps |
-| `ReadWriteOncePod` (RWOP) | Mounted read-write by a single Pod | Single-writer volumes, strict ownership |
+| Mode                      | Meaning                             | Use case                                     |
+| ------------------------- | ----------------------------------- | -------------------------------------------- |
+| `ReadWriteOnce` (RWO)     | Mounted read-write by a single node | Databases, single-instance stateful apps     |
+| `ReadOnlyMany` (ROX)      | Mounted read-only by many nodes     | Shared content, models, static assets        |
+| `ReadWriteMany` (RWX)     | Mounted read-write by many nodes    | Multi-writer filesystems, cluster-aware apps |
+| `ReadWriteOncePod` (RWOP) | Mounted read-write by a single Pod  | Single-writer volumes, strict ownership      |
 
 ### 3.1 Matching PVC to PV access modes
 
 The PV must support **at least** the access modes the PVC requests. The matching rules:
 
-| PVC requests | PV supports |
-|---|---|
-| RWO | RWO or RWX (anything that includes RWO) |
-| ROX | RWO, ROX, or RWX (anything that can be mounted read-only) |
-| RWX | RWX only |
-| RWOP | RWOP only |
+| PVC requests | PV supports                                               |
+| ------------ | --------------------------------------------------------- |
+| RWO          | RWO or RWX (anything that includes RWO)                   |
+| ROX          | RWO, ROX, or RWX (anything that can be mounted read-only) |
+| RWX          | RWX only                                                  |
+| RWOP         | RWOP only                                                 |
 
 **Common mistake:** a PVC requesting RWO can bind to a RWX PV, but a PVC requesting RWX cannot bind to a RWO PV. **The PVC can never get a less-capable PV than it asks for.**
 
@@ -198,11 +205,11 @@ spec:
 
 ### 4.1 The three cases
 
-| Value | Behavior |
-|---|---|
+| Value               | Behavior                                                                                |
+| ------------------- | --------------------------------------------------------------------------------------- |
 | `gp3` (or any name) | Bind to a PV with that storageClassName, or dynamically provision via that StorageClass |
-| `""` (empty string) | Opt out of dynamic provisioning. Bind to a pre-existing PV with `storageClassName: ""` |
-| omitted | Use the cluster's default StorageClass |
+| `""` (empty string) | Opt out of dynamic provisioning. Bind to a pre-existing PV with `storageClassName: ""`  |
+| omitted             | Use the cluster's default StorageClass                                                  |
 
 ### 4.2 The default StorageClass
 
@@ -225,7 +232,7 @@ Set `storageClassName: ""` to bind to a pre-existing PV only. If no matching PV 
 
 ```yaml
 spec:
-  storageClassName: ""     # opt out of dynamic
+  storageClassName: "" # opt out of dynamic
   selector:
     matchLabels:
       tier: gold
@@ -236,35 +243,35 @@ spec:
 
 This is useful for:
 
-* Legacy on-prem storage that's pre-allocated
-* Custom storage pools with specific labels
-* Testing without consuming cloud resources
+- Legacy on-prem storage that's pre-allocated
+- Custom storage pools with specific labels
+- Testing without consuming cloud resources
 
 ## 5. The Binding Lifecycle
 
 The PVC's `status.phase` reflects the binding state:
 
-| Phase | Meaning |
-|---|---|
-| `Pending` | No PV bound yet, waiting for one to be found or provisioned |
-| `Bound` | A PV is bound to this claim |
-| `Lost` | The bound PV has been lost (deleted or otherwise inaccessible) |
+| Phase     | Meaning                                                        |
+| --------- | -------------------------------------------------------------- |
+| `Pending` | No PV bound yet, waiting for one to be found or provisioned    |
+| `Bound`   | A PV is bound to this claim                                    |
+| `Lost`    | The bound PV has been lost (deleted or otherwise inaccessible) |
 
 ### 5.1 Pending → Bound
 
 The transition happens when:
 
-* A matching PV exists (static).
-* The StorageClass's provisioner creates one (dynamic).
-* The bind is allowed by the StorageClass's `volumeBindingMode` (Immediate vs WaitForFirstConsumer).
+- A matching PV exists (static).
+- The StorageClass's provisioner creates one (dynamic).
+- The bind is allowed by the StorageClass's `volumeBindingMode` (Immediate vs WaitForFirstConsumer).
 
 **Common reasons for staying Pending:**
 
-* No matching PV (storage class mismatch, capacity mismatch, access mode mismatch).
-* The provisioner can't reach the cloud API (auth issue, network).
-* The StorageClass has `WaitForFirstConsumer` and no Pod is using the PVC yet.
-* A namespace ResourceQuota is blocking the storage request (see 8-resource-quota.md).
-* The provisioner is misconfigured (wrong region, missing permissions).
+- No matching PV (storage class mismatch, capacity mismatch, access mode mismatch).
+- The provisioner can't reach the cloud API (auth issue, network).
+- The StorageClass has `WaitForFirstConsumer` and no Pod is using the PVC yet.
+- A namespace ResourceQuota is blocking the storage request (see 8-resource-quota.md).
+- The provisioner is misconfigured (wrong region, missing permissions).
 
 ### 5.2 The WaitForFirstConsumer dance
 
@@ -318,7 +325,7 @@ kubectl edit pvc data
 spec:
   resources:
     requests:
-      storage: 100Gi   # was 50Gi
+      storage: 100Gi # was 50Gi
 ```
 
 The PV's `capacity` is updated, and the underlying volume is resized by the CSI driver. **Not all backends support online expansion** — check the CSI driver's docs.
@@ -358,10 +365,10 @@ If you need a smaller volume, create a new one and migrate data.
 
 ### 6.5 Capacity constraints
 
-* The expansion is **online** if the volume is in use and the driver supports it. Otherwise, the Pod may need to be restarted (driver-dependent).
-* Some drivers don't allow expansion of volumes in use (e.g. older EBS CSI versions). Check the docs.
-* The expanded capacity must be **larger** than the current. Shrinking is rejected.
-* Expanding across storage classes is not allowed.
+- The expansion is **online** if the volume is in use and the driver supports it. Otherwise, the Pod may need to be restarted (driver-dependent).
+- Some drivers don't allow expansion of volumes in use (e.g. older EBS CSI versions). Check the docs.
+- The expanded capacity must be **larger** than the current. Shrinking is rejected.
+- Expanding across storage classes is not allowed.
 
 ## 7. Volume Modes: Filesystem vs Block
 
@@ -378,8 +385,8 @@ The volume is **formatted with a filesystem** (ext4, xfs, etc.) by the CSI drive
 
 ```yaml
 volumeMounts:
-- name: data
-  mountPath: /var/lib/data
+  - name: data
+    mountPath: /var/lib/data
 ```
 
 The CSI driver:
@@ -395,18 +402,18 @@ The volume is exposed as a **raw block device** (`/dev/xvda` or similar). The Po
 
 ```yaml
 volumeDevices:
-- name: data
-  devicePath: /dev/xvda
+  - name: data
+    devicePath: /dev/xvda
 ```
 
 The container reads/writes the device directly. **Used for apps that manage their own filesystem** — databases, ZFS, raw block apps.
 
 **Block mode constraints:**
 
-* `volumeMode` must match between PVC and PV.
-* `accessModes` must be compatible (RWO or RWOP, typically).
-* The container must be able to use the device path (no `volumeMounts`, use `volumeDevices`).
-* `fsType` is irrelevant in block mode (the device is unformatted).
+- `volumeMode` must match between PVC and PV.
+- `accessModes` must be compatible (RWO or RWOP, typically).
+- The container must be able to use the device path (no `volumeMounts`, use `volumeDevices`).
+- `fsType` is irrelevant in block mode (the device is unformatted).
 
 ## 8. DataSource: Cloning and Restoring
 
@@ -421,7 +428,7 @@ metadata:
   name: data-restored
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: gp3
   resources:
     requests:
@@ -449,7 +456,7 @@ metadata:
   name: data-clone
 spec:
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   storageClassName: gp3
   resources:
     requests:
@@ -467,9 +474,9 @@ The cluster:
 
 Cloning is useful for:
 
-* **Testing** — copy a production DB to a dev environment.
-* **Branching data** — fork the data for an experiment.
-* **Migrations** — copy data from one cluster to another.
+- **Testing** — copy a production DB to a dev environment.
+- **Branching data** — fork the data for an experiment.
+- **Migrations** — copy data from one cluster to another.
 
 ### 8.3 The dataSourceRef (k8s 1.22+)
 
@@ -488,9 +495,9 @@ It's almost identical to `dataSource` but with stricter validation. **Prefer `da
 
 A **volume populator** is a controller that handles a custom `dataSourceRef.kind`. The default Kubernetes installation supports `VolumeSnapshot` and `PersistentVolumeClaim`. Custom populators can be installed for:
 
-* **Database snapshots** — restore from a database-aware snapshot (Postgres WAL position, etc.).
-* **S3-backed volumes** — populate a CSI volume with S3 data.
-* **Custom workflows** — anything that can be expressed as "create a volume with these contents".
+- **Database snapshots** — restore from a database-aware snapshot (Postgres WAL position, etc.).
+- **S3-backed volumes** — populate a CSI volume with S3 data.
+- **Custom workflows** — anything that can be expressed as "create a volume with these contents".
 
 The populator registers itself with the apiserver, and the kube-controller-manager defers to it when it sees the custom `kind`.
 
@@ -500,12 +507,12 @@ In **static provisioning**, a PVC can use a `selector` to bind to a specific PV:
 
 ```yaml
 spec:
-  storageClassName: ""        # opt out of dynamic
+  storageClassName: "" # opt out of dynamic
   selector:
     matchLabels:
       tier: gold
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
       storage: 100Gi
@@ -515,9 +522,9 @@ This binds to a PV that has `tier: gold` and `storageClassName: ""`.
 
 ### 10.1 Match semantics
 
-* The PV's labels must satisfy both `matchLabels` and `matchExpressions`.
-* The PV's `accessModes`, `storageClassName`, and `volumeMode` must match the PVC's.
-* The PV's `capacity` must be **at least** the PVC's request.
+- The PV's labels must satisfy both `matchLabels` and `matchExpressions`.
+- The PV's `accessModes`, `storageClassName`, and `volumeMode` must match the PVC's.
+- The PV's `capacity` must be **at least** the PVC's request.
 
 If no matching PV exists, the PVC stays `Pending`. **There is no error, just silence.** This is a common source of confusion.
 
@@ -525,7 +532,7 @@ If no matching PV exists, the PVC stays `Pending`. **There is no error, just sil
 
 ```yaml
 spec:
-  selector: {}     # matches all PVs
+  selector: {} # matches all PVs
 ```
 
 This binds to any PV that satisfies the other constraints. **Use with care** — it can match unintended PVs.
@@ -536,9 +543,9 @@ A Pod mounts a PVC via a `volumes[]` entry of type `persistentVolumeClaim`:
 
 ```yaml
 volumes:
-- name: data
-  persistentVolumeClaim:
-    claimName: data     # the PVC's name, in the Pod's namespace
+  - name: data
+    persistentVolumeClaim:
+      claimName: data # the PVC's name, in the Pod's namespace
 ```
 
 ### 11.1 The mount flow
@@ -556,8 +563,8 @@ The PVC and the Pod must be in the **same namespace**. A Pod in `default` can't 
 
 Cross-namespace mounting requires:
 
-* **A second PVC in the same namespace** that references the same PV (via a `dataSource` of kind `PersistentVolumeClaim`).
-* **Read-only mounting** from a different namespace — the Pod can use a PVC in its own namespace that was created from a snapshot of the original.
+- **A second PVC in the same namespace** that references the same PV (via a `dataSource` of kind `PersistentVolumeClaim`).
+- **Read-only mounting** from a different namespace — the Pod can use a PVC in its own namespace that was created from a snapshot of the original.
 
 There is **no direct cross-namespace PVC mount**.
 
@@ -567,9 +574,9 @@ Like other volume types, a PVC-backed volume can be mounted with `subPath` or `s
 
 ```yaml
 volumeMounts:
-- name: data
-  mountPath: /var/lib/data/$(POD_NAME)
-  subPathExpr: $(POD_NAME)
+  - name: data
+    mountPath: /var/lib/data/$(POD_NAME)
+    subPathExpr: $(POD_NAME)
 ```
 
 **`subPath` bypasses volume updates.** A subPath mount of a PVC doesn't track updates to the volume. Don't use subPath with PVCs you expect to be expanded (or that have hot-updated data).
@@ -681,9 +688,9 @@ kubectl get pv -o yaml | grep -A 5 "csi:"
 
 Recovery:
 
-* If the cloud volume was deleted accidentally, restore from a snapshot.
-* If the volume is in a different zone, the Pod can't reach it.
-* If the CSI driver has lost its connection to the cloud, the volume is effectively gone.
+- If the cloud volume was deleted accidentally, restore from a snapshot.
+- If the volume is in a different zone, the Pod can't reach it.
+- If the CSI driver has lost its connection to the cloud, the volume is effectively gone.
 
 ## 13. Gotchas and Common Mistakes
 
@@ -751,8 +758,8 @@ Recovery:
 
 ## See also
 
-* [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — the volume types, including PVCs
-* [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped storage object
-* [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
-* [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
-* [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — primary consumer of PVCs
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — the volume types, including PVCs
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped storage object
+- [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
+- [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
+- [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — primary consumer of PVCs

@@ -47,8 +47,8 @@ spec:
         app: my-app
     spec:
       containers:
-      - name: my-app
-        image: myregistry/myapp:v1
+        - name: my-app
+          image: myregistry/myapp:v1
 ```
 
 Same as Deployment. Use this if you don't need the advanced features.
@@ -65,13 +65,13 @@ spec:
   strategy:
     canary:
       steps:
-      - setWeight: 5         # 5% to new version
-      - pause: {duration: 5m}
-      - setWeight: 20
-      - pause: {duration: 5m}
-      - setWeight: 50
-      - pause: {duration: 5m}
-      - setWeight: 100
+        - setWeight: 5 # 5% to new version
+        - pause: { duration: 5m }
+        - setWeight: 20
+        - pause: { duration: 5m }
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - setWeight: 100
       canaryService: my-app-canary
       stableService: my-app-stable
   selector:
@@ -83,11 +83,12 @@ spec:
         app: my-app
     spec:
       containers:
-      - name: my-app
-        image: myregistry/myapp:v2
+        - name: my-app
+          image: myregistry/myapp:v2
 ```
 
 **Canary flow:**
+
 1. New ReplicaSet created with v2
 2. 5% traffic shifts to v2 (rest to v1)
 3. Pause 5 minutes (monitor)
@@ -113,7 +114,7 @@ spec:
       previewService: my-app-preview
       autoPromotionEnabled: false
       scaleDownDelaySeconds: 30
-      previewReplicaCount: 100%   # run preview at full replicas
+      previewReplicaCount: 100% # run preview at full replicas
   selector:
     matchLabels:
       app: my-app
@@ -123,11 +124,12 @@ spec:
         app: my-app
     spec:
       containers:
-      - name: my-app
-        image: myregistry/myapp:v2
+        - name: my-app
+          image: myregistry/myapp:v2
 ```
 
 **Blue-green flow:**
+
 1. New ReplicaSet created with v2 (green)
 2. `my-app-preview` Service routes to green
 3. `my-app-active` still routes to blue (v1)
@@ -246,37 +248,37 @@ metadata:
   name: success-rate
 spec:
   args:
-  - name: service-name
+    - name: service-name
   metrics:
-  - name: success-rate
-    interval: 30s
-    count: 5
-    successCondition: result[0] >= 0.95
-    failureCondition: result[0] < 0.95
-    provider:
-      prometheus:
-        address: http://prometheus.monitoring:9090
-        query: |
-          sum(rate(
-            http_requests_total{service="{{args.service-name}}",status!~"5.."}[2m]
-          )) /
-          sum(rate(
-            http_requests_total{service="{{args.service-name}}"}[2m]
-          ))
-  - name: latency
-    interval: 30s
-    count: 5
-    successCondition: result[0] <= 0.5
-    failureCondition: result[0] > 0.5
-    provider:
-      prometheus:
-        address: http://prometheus.monitoring:9090
-        query: |
-          histogram_quantile(0.99,
+    - name: success-rate
+      interval: 30s
+      count: 5
+      successCondition: result[0] >= 0.95
+      failureCondition: result[0] < 0.95
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
             sum(rate(
-              http_request_duration_seconds_bucket{service="{{args.service-name}}"}[2m]
-            )) by (le)
-          )
+              http_requests_total{service="{{args.service-name}}",status!~"5.."}[2m]
+            )) /
+            sum(rate(
+              http_requests_total{service="{{args.service-name}}"}[2m]
+            ))
+    - name: latency
+      interval: 30s
+      count: 5
+      successCondition: result[0] <= 0.5
+      failureCondition: result[0] > 0.5
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            histogram_quantile(0.99,
+              sum(rate(
+                http_request_duration_seconds_bucket{service="{{args.service-name}}"}[2m]
+              )) by (le)
+            )
 ```
 
 **Use in a Rollout:**
@@ -285,27 +287,28 @@ spec:
 strategy:
   canary:
     steps:
-    - setWeight: 10
-    - pause: {duration: 5m}
-    - analysis:
-        templates:
-        - templateName: success-rate
-        args:
-        - name: service-name
-          value: my-app
-    - setWeight: 50
-    - pause: {duration: 5m}
-    - analysis:
-        templates:
-        - templateName: success-rate
-        - templateName: latency
-        args:
-        - name: service-name
-          value: my-app
-    - setWeight: 100
+      - setWeight: 10
+      - pause: { duration: 5m }
+      - analysis:
+          templates:
+            - templateName: success-rate
+          args:
+            - name: service-name
+              value: my-app
+      - setWeight: 50
+      - pause: { duration: 5m }
+      - analysis:
+          templates:
+            - templateName: success-rate
+            - templateName: latency
+          args:
+            - name: service-name
+              value: my-app
+      - setWeight: 100
 ```
 
 **Flow:**
+
 1. 10% to v2
 2. Pause 5 min
 3. Run analysis (success-rate)
@@ -354,18 +357,18 @@ provider:
     region: us-east-1
     interval: 60s
     metrics:
-    - name: 5xxRate
-      metricDataQueries:
-      - id: e1
-        metricStat:
-          metric:
-            namespace: "MyApp"
-            metricName: "5xxCount"
-            dimensions:
-            - name: Service
-              value: "my-app"
-          period: 60
-          stat: Sum
+      - name: 5xxRate
+        metricDataQueries:
+          - id: e1
+            metricStat:
+              metric:
+                namespace: "MyApp"
+                metricName: "5xxCount"
+                dimensions:
+                  - name: Service
+                    value: "my-app"
+              period: 60
+              stat: Sum
 ```
 
 ### New Relic
@@ -373,7 +376,7 @@ provider:
 ```yaml
 provider:
   newrelic:
-    region: US   # US or EU
+    region: US # US or EU
     apiKeySecret:
       name: newrelic-secret
       key: api-key
@@ -404,8 +407,8 @@ For "human in the loop":
 
 ```yaml
 steps:
-- setWeight: 50
-- pause: {}
+  - setWeight: 50
+  - pause: {}
 ```
 
 `pause: {}` waits indefinitely. Resume with:
@@ -484,6 +487,7 @@ kubectl argo rollouts dashboard
 ```
 
 Browser UI showing:
+
 - Active rollouts
 - ReplicaSet status
 - Step progress
@@ -496,8 +500,8 @@ Browser UI showing:
 strategy:
   canary:
     steps:
-    - setWeight: 50
-    - pause: {duration: 30m}
+      - setWeight: 50
+      - pause: { duration: 30m }
     abortScaleDownDelaySeconds: 30
     canaryService: my-app-canary
     stableService: my-app-stable
@@ -520,26 +524,26 @@ kind: Rollout
 metadata:
   name: my-app
   annotations:
-    argocd.argoproj.io/sync-wave: "2"   # apply after Service
+    argocd.argoproj.io/sync-wave: "2" # apply after Service
 ```
 
 The image tag in the Rollout is updated by CI (or Image Updater), GitOps syncs, Rollout rolls out.
 
 ## Common gotchas
 
-* **Two Services are required** for canary (`canaryService` and `stableService`). One Service can only point to one ReplicaSet.
-* **Ingress controllers differ in canary support.** NGINX has `canary-weight`, Traefik has weighted middlewares, Istio has VS.
-* **Analysis requires metrics** — Prometheus (or other provider) must be installed and the metrics must exist.
-* **`pause: {}` (indefinite) is a footgun.** Use `pause: {duration: "30m"}` with a real timeout, or you'll never auto-resume.
-* **The `replicas` field in the Rollout is the total desired.** Not per-ReplicaSet.
-* **When changing strategy mid-rollout,** the rollout may abort. Plan the migration.
-* **MaxSurge/MaxUnavailable don't apply** to canary/blue-green the same way. The Rollout controller manages replica counts.
-* **Aborted rollouts don't undo automatically** — you may need to `undo` to revert to a known good state.
-* **Analysis templates are global.** One template, many Rollouts.
-* **Each `setWeight` step** creates new pods. The weight is L7 (Istio, etc.) or approximate (Service-based).
-* **Service-based traffic routing is "best effort."** Not real L7 weighting.
-* **The Rollout controller itself is a SPOF.** Run it HA (2+ replicas).
-* **Active rollouts consume resources** (pods of both versions). For big rollouts, plan capacity.
+- **Two Services are required** for canary (`canaryService` and `stableService`). One Service can only point to one ReplicaSet.
+- **Ingress controllers differ in canary support.** NGINX has `canary-weight`, Traefik has weighted middlewares, Istio has VS.
+- **Analysis requires metrics** — Prometheus (or other provider) must be installed and the metrics must exist.
+- **`pause: {}` (indefinite) is a footgun.** Use `pause: {duration: "30m"}` with a real timeout, or you'll never auto-resume.
+- **The `replicas` field in the Rollout is the total desired.** Not per-ReplicaSet.
+- **When changing strategy mid-rollout,** the rollout may abort. Plan the migration.
+- **MaxSurge/MaxUnavailable don't apply** to canary/blue-green the same way. The Rollout controller manages replica counts.
+- **Aborted rollouts don't undo automatically** — you may need to `undo` to revert to a known good state.
+- **Analysis templates are global.** One template, many Rollouts.
+- **Each `setWeight` step** creates new pods. The weight is L7 (Istio, etc.) or approximate (Service-based).
+- **Service-based traffic routing is "best effort."** Not real L7 weighting.
+- **The Rollout controller itself is a SPOF.** Run it HA (2+ replicas).
+- **Active rollouts consume resources** (pods of both versions). For big rollouts, plan capacity.
 
 ## A worked example
 
@@ -574,38 +578,38 @@ spec:
       maxSurge: 25%
       maxUnavailable: 0
       steps:
-      - setWeight: 5
-      - pause: {duration: 2m}
-      - setWeight: 25
-      - pause: {duration: 2m}
-      - analysis:
-          templates:
-          - templateName: error-rate-check
-          args:
-          - name: service-name
-            value: web
-      - setWeight: 50
-      - pause: {duration: 5m}
-      - setWeight: 100
-      - pause: {duration: 1m}
+        - setWeight: 5
+        - pause: { duration: 2m }
+        - setWeight: 25
+        - pause: { duration: 2m }
+        - analysis:
+            templates:
+              - templateName: error-rate-check
+            args:
+              - name: service-name
+                value: web
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - setWeight: 100
+        - pause: { duration: 1m }
   template:
     metadata:
       labels:
         app: web
     spec:
       containers:
-      - name: web
-        image: myregistry/web:v1
-        ports:
-        - containerPort: 8080
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8080
+        - name: web
+          image: myregistry/web:v1
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
 ```
 
 **The Services:**
@@ -621,8 +625,8 @@ spec:
   selector:
     app: web
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 
 ---
 # canary
@@ -635,8 +639,8 @@ spec:
   selector:
     app: web
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ```
 
 **The AnalysisTemplate:**
@@ -649,23 +653,23 @@ metadata:
   namespace: prod
 spec:
   args:
-  - name: service-name
+    - name: service-name
   metrics:
-  - name: error-rate
-    interval: 30s
-    count: 5
-    successCondition: result[0] < 0.05
-    failureCondition: result[0] >= 0.05
-    provider:
-      prometheus:
-        address: http://prometheus.monitoring:9090
-        query: |
-          sum(rate(
-            http_requests_total{service="{{args.service-name}}",status=~"5.."}[2m]
-          )) /
-          sum(rate(
-            http_requests_total{service="{{args.service-name}}"}[2m]
-          ))
+    - name: error-rate
+      interval: 30s
+      count: 5
+      successCondition: result[0] < 0.05
+      failureCondition: result[0] >= 0.05
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(rate(
+              http_requests_total{service="{{args.service-name}}",status=~"5.."}[2m]
+            )) /
+            sum(rate(
+              http_requests_total{service="{{args.service-name}}"}[2m]
+            ))
 ```
 
 **Trigger a rollout:**
@@ -685,7 +689,7 @@ kubectl argo rollouts get rollout web --watch
 
 ## See also
 
-* [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — Rollouts live in GitOps
-* [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — CI for image builds
-* [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — break things safely
-* [Argo Rollouts docs](https://argoproj.github.io/argo-rollouts/)
+- [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — Rollouts live in GitOps
+- [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — CI for image builds
+- [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — break things safely
+- [Argo Rollouts docs](https://argoproj.github.io/argo-rollouts/)

@@ -1,13 +1,20 @@
+---
+title: "ResourceQuota and LimitRange"
+tags: ["kubernetes", "k8s-concepts", "storage"]
+date: 2026-09-06
+description: "ResourceQuota and LimitRange — Kubernetes reference and architecture guide."
+---
+
 # ResourceQuota and LimitRange
 
-*"https://kubernetes.io/docs/concepts/policy/resource-quotas/"*
+_"https://kubernetes.io/docs/concepts/policy/resource-quotas/"_
 
 ResourceQuota and LimitRange are the two **namespace-level policy objects** that constrain what a namespace can use. They're how a cluster admin or platform team enforces "this namespace gets at most 100 GB of storage and 50 cores" or "Pods in this namespace can request at most 8 GB of memory each".
 
 This note covers:
 
-* **ResourceQuota** — aggregate limits for a namespace (total CPU, total memory, total storage, object counts, etc.).
-* **LimitRange** — per-object limits and defaults (e.g. "every container in this namespace gets a default 100m CPU request if not specified").
+- **ResourceQuota** — aggregate limits for a namespace (total CPU, total memory, total storage, object counts, etc.).
+- **LimitRange** — per-object limits and defaults (e.g. "every container in this namespace gets a default 100m CPU request if not specified").
 
 These are **complementary** — ResourceQuota is the ceiling, LimitRange is the floor and per-object constraint.
 
@@ -52,13 +59,13 @@ These are **complementary** — ResourceQuota is the ceiling, LimitRange is the 
 
 ### 1.1 Why two objects
 
-* **ResourceQuota** is about the **namespace as a whole** — how much total resource consumption is allowed.
-* **LimitRange** is about **individual objects** — what each Pod, Container, or PVC can request or limit.
+- **ResourceQuota** is about the **namespace as a whole** — how much total resource consumption is allowed.
+- **LimitRange** is about **individual objects** — what each Pod, Container, or PVC can request or limit.
 
 A team might set:
 
-* `ResourceQuota`: "this namespace gets at most 100 cores and 500 GB of memory"
-* `LimitRange`: "every container in this namespace must request at least 100m CPU, can't request more than 8 cores"
+- `ResourceQuota`: "this namespace gets at most 100 cores and 500 GB of memory"
+- `LimitRange`: "every container in this namespace must request at least 100m CPU, can't request more than 8 cores"
 
 The ResourceQuota says "the namespace is full, you can't add more Pods". The LimitRange says "this individual Pod is too big, you need to shrink it".
 
@@ -130,7 +137,7 @@ ResourceQuota lives in a namespace and applies to that namespace only. Different
 
 ```yaml
 metadata:
-  namespace: prod       # this quota applies to the prod namespace
+  namespace: prod # this quota applies to the prod namespace
 ```
 
 Cross-namespace quotas are not a thing. To limit the entire cluster, you'd need a controller that aggregates per-namespace quotas.
@@ -206,19 +213,19 @@ spec:
 
 By default, the quota counts **all** Pods (BestEffort, Burstable, Guaranteed, and Terminating). You can scope the quota to a subset:
 
-| Scope | Applies to |
-|---|---|
-| `Terminating` | Pods with `activeDeadlineSeconds` set, or Jobs |
-| `NotTerminating` | All other Pods (the default) |
-| `BestEffort` | Pods with no resource requests/limits set |
-| `NotBestEffort` | Pods with at least one resource request/limit set |
+| Scope            | Applies to                                        |
+| ---------------- | ------------------------------------------------- |
+| `Terminating`    | Pods with `activeDeadlineSeconds` set, or Jobs    |
+| `NotTerminating` | All other Pods (the default)                      |
+| `BestEffort`     | Pods with no resource requests/limits set         |
+| `NotBestEffort`  | Pods with at least one resource request/limit set |
 
 **Example:** you want to limit Burstable / Guaranteed Pods but not BestEffort:
 
 ```yaml
 spec:
   scopes:
-  - NotBestEffort
+    - NotBestEffort
   hard:
     requests.cpu: "50"
     requests.memory: 200Gi
@@ -236,7 +243,7 @@ metadata:
   name: long-running
 spec:
   scopes:
-  - NotTerminating
+    - NotTerminating
   hard:
     pods: "50"
     requests.cpu: "30"
@@ -248,7 +255,7 @@ metadata:
   name: jobs
 spec:
   scopes:
-  - Terminating
+    - Terminating
   hard:
     requests.cpu: "100"
     count/jobs.batch: "20"
@@ -261,25 +268,25 @@ Now you can have at most 50 long-running Pods and at most 20 Jobs, with separate
 ```yaml
 spec:
   hard:
-    requests.cpu: "50"          # total CPU requested by all Pods
-    requests.memory: 200Gi      # total memory requested by all Pods
-    limits.cpu: "100"           # total CPU limits across all Pods
-    limits.memory: 400Gi        # total memory limits across all Pods
-    requests.ephemeral-storage: 100Gi   # total ephemeral storage requested
-    limits.ephemeral-storage: 200Gi     # total ephemeral storage limits
+    requests.cpu: "50" # total CPU requested by all Pods
+    requests.memory: 200Gi # total memory requested by all Pods
+    limits.cpu: "100" # total CPU limits across all Pods
+    limits.memory: 400Gi # total memory limits across all Pods
+    requests.ephemeral-storage: 100Gi # total ephemeral storage requested
+    limits.ephemeral-storage: 200Gi # total ephemeral storage limits
 ```
 
 ### 4.1 Requests vs limits
 
 A Pod can have both `requests` and `limits`. The quota can constrain each separately.
 
-* **`requests.cpu` and `requests.memory`** — the **sum of all Pods' requests** must not exceed this. The scheduler uses this for placement.
-* **`limits.cpu` and `limits.memory`** — the **sum of all Pods' limits** must not exceed this. The kubelet enforces this at runtime.
+- **`requests.cpu` and `requests.memory`** — the **sum of all Pods' requests** must not exceed this. The scheduler uses this for placement.
+- **`limits.cpu` and `limits.memory`** — the **sum of all Pods' limits** must not exceed this. The kubelet enforces this at runtime.
 
 **Why have both?** A common pattern is:
 
-* `requests.cpu: 50` — at most 50 cores of "guaranteed" capacity.
-* `limits.cpu: 100` — Pods can burst up to 100 cores (overcommit).
+- `requests.cpu: 50` — at most 50 cores of "guaranteed" capacity.
+- `limits.cpu: 100` — Pods can burst up to 100 cores (overcommit).
 
 This lets you overcommit, with the scheduler placing based on requests and the kubelet throttling based on limits.
 
@@ -295,8 +302,8 @@ A Pod with `requests == limits` for both CPU and memory is Guaranteed. The numbe
 
 If you have 10 nodes, each with 16 cores = 160 cores of cluster capacity.
 
-* `requests.cpu: 80` — at most 80 cores of guaranteed capacity (50% overcommit).
-* `limits.cpu: 160` — Pods can use up to 100% of cluster capacity.
+- `requests.cpu: 80` — at most 80 cores of guaranteed capacity (50% overcommit).
+- `limits.cpu: 160` — Pods can use up to 100% of cluster capacity.
 
 This is a common setup. The scheduler uses the request for placement (so we don't overcommit placement), the kubelet uses the limit for throttling (so we don't OOM the node).
 
@@ -305,22 +312,22 @@ This is a common setup. The scheduler uses the request for placement (so we don'
 ```yaml
 spec:
   hard:
-    requests.storage: 1Ti              # total storage requested by all PVCs
-    persistentvolumeclaims: "20"       # max number of PVCs
-    requests.ephemeral-storage: 100Gi  # total ephemeral storage requested (emptyDir, etc.)
-    limits.ephemeral-storage: 200Gi    # total ephemeral storage limits
+    requests.storage: 1Ti # total storage requested by all PVCs
+    persistentvolumeclaims: "20" # max number of PVCs
+    requests.ephemeral-storage: 100Gi # total ephemeral storage requested (emptyDir, etc.)
+    limits.ephemeral-storage: 200Gi # total ephemeral storage limits
 ```
 
 ### 5.1 `requests.storage` vs `persistentvolumeclaims`
 
-* **`requests.storage`** — the sum of all PVCs' `spec.resources.requests.storage`.
-* **`persistentvolumeclaims`** — the count of PVCs.
+- **`requests.storage`** — the sum of all PVCs' `spec.resources.requests.storage`.
+- **`persistentvolumeclaims`** — the count of PVCs.
 
 A single namespace can have:
 
-* 20 PVCs, each 50 GiB = 1 TiB total (`requests.storage: 1Ti`).
-* 5 PVCs, each 200 GiB = 1 TiB total.
-* 100 PVCs, each 10 GiB = 1 TiB total (but `persistentvolumeclaims: 20` would block the 21st).
+- 20 PVCs, each 50 GiB = 1 TiB total (`requests.storage: 1Ti`).
+- 5 PVCs, each 200 GiB = 1 TiB total.
+- 100 PVCs, each 10 GiB = 1 TiB total (but `persistentvolumeclaims: 20` would block the 21st).
 
 The two constraints are **independent**. You can have 20 PVCs totaling 10 TiB if you only set `persistentvolumeclaims: 20`.
 
@@ -329,15 +336,15 @@ The two constraints are **independent**. You can have 20 PVCs totaling 10 TiB if
 ```yaml
 spec:
   hard:
-    requests.storage: 1Ti                          # total across all classes
-    gold.storageclass.requests.storage: 500Gi      # total for the gold class
-    silver.storageclass.requests.storage: 500Gi    # total for the silver class
+    requests.storage: 1Ti # total across all classes
+    gold.storageclass.requests.storage: 500Gi # total for the gold class
+    silver.storageclass.requests.storage: 500Gi # total for the silver class
 ```
 
 This constrains the total storage for each StorageClass. Useful for:
 
-* **Tiered storage** — limit how much high-perf storage a namespace can use.
-* **Cost control** — gp3 vs io2 vs sc1 have very different costs.
+- **Tiered storage** — limit how much high-perf storage a namespace can use.
+- **Cost control** — gp3 vs io2 vs sc1 have very different costs.
 
 ### 5.3 PVC count vs total storage
 
@@ -371,10 +378,10 @@ spec:
 
 These count **objects of the given type** in the namespace. Some examples:
 
-* **`pods: 100`** — at most 100 Pods in the namespace (regardless of resource requests).
-* **`services: 50`** — at most 50 Services.
-* **`services.loadbalancers: 5`** — at most 5 LoadBalancer Services (a subset of `services`).
-* **`services.nodeports: 5`** — at most 5 NodePort Services.
+- **`pods: 100`** — at most 100 Pods in the namespace (regardless of resource requests).
+- **`services: 50`** — at most 50 Services.
+- **`services.loadbalancers: 5`** — at most 5 LoadBalancer Services (a subset of `services`).
+- **`services.nodeports: 5`** — at most 5 NodePort Services.
 
 ### 6.1 Typed object counts
 
@@ -392,8 +399,8 @@ The format is `count/<resource>.<api-group>`. The api-group is the part after th
 
 This is useful for:
 
-* **Restricting who can create what** — only 10 StatefulSets, but unlimited Deployments.
-* **Cost control** — LoadBalancer Services cost money; limit them.
+- **Restricting who can create what** — only 10 StatefulSets, but unlimited Deployments.
+- **Cost control** — LoadBalancer Services cost money; limit them.
 
 ## 7. Extended Resources (GPU, etc.)
 
@@ -408,23 +415,23 @@ Extended resources are **opaque to k8s** — they're reported by nodes (via the 
 
 ```yaml
 containers:
-- name: ml
-  image: tensorflow/tensorflow:latest-gpu
-  resources:
-    requests:
-      nvidia.com/gpu: 1
-    limits:
-      nvidia.com/gpu: 1
+  - name: ml
+    image: tensorflow/tensorflow:latest-gpu
+    resources:
+      requests:
+        nvidia.com/gpu: 1
+      limits:
+        nvidia.com/gpu: 1
 ```
 
 The ResourceQuota can constrain how many GPUs a namespace can request.
 
 **Other extended resources:**
 
-* `nvidia.com/gpu` — NVIDIA GPUs
-* `amd.com/gpu` — AMD GPUs
-* `intel.com/sgx` — Intel SGX enclaves
-* Custom resources from device plugins (FPGAs, InfiniBand, etc.)
+- `nvidia.com/gpu` — NVIDIA GPUs
+- `amd.com/gpu` — AMD GPUs
+- `intel.com/sgx` — Intel SGX enclaves
+- Custom resources from device plugins (FPGAs, InfiniBand, etc.)
 
 The quota format is `requests/<resource-domain>/<resource-name>` and `limits/<resource-domain>/<resource-name>`.
 
@@ -440,59 +447,59 @@ metadata:
   namespace: prod
 spec:
   limits:
-  - type: Container
-    default:                  # applied if not set in the Pod
-      cpu: 500m
-      memory: 512Mi
-    defaultRequest:           # applied if not set in the Pod
-      cpu: 200m
-      memory: 256Mi
-    max:                      # max allowed per container
-      cpu: "2"
-      memory: 4Gi
-    min:                      # min allowed per container
-      cpu: 100m
-      memory: 128Mi
-    maxLimitRequestRatio:     # max ratio of limit:request
-      cpu: 4
-      memory: 2
-  - type: Pod
-    max:                      # max total per Pod (sum of all containers)
-      cpu: "8"
-      memory: 16Gi
-  - type: PersistentVolumeClaim
-    max:
-      storage: 100Gi
-    min:
-      storage: 1Gi
-  - type: PersistentVolumeClaim
-    max:
-      storage: 1Ti
-    min:
-      storage: 10Gi
-    default:
-      storage: 100Gi
-    defaultRequest:
-      storage: 50Gi
+    - type: Container
+      default: # applied if not set in the Pod
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest: # applied if not set in the Pod
+        cpu: 200m
+        memory: 256Mi
+      max: # max allowed per container
+        cpu: "2"
+        memory: 4Gi
+      min: # min allowed per container
+        cpu: 100m
+        memory: 128Mi
+      maxLimitRequestRatio: # max ratio of limit:request
+        cpu: 4
+        memory: 2
+    - type: Pod
+      max: # max total per Pod (sum of all containers)
+        cpu: "8"
+        memory: 16Gi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 100Gi
+      min:
+        storage: 1Gi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 1Ti
+      min:
+        storage: 10Gi
+      default:
+        storage: 100Gi
+      defaultRequest:
+        storage: 50Gi
 ```
 
 This is per-Pod, per-Container, and per-PVC constraints and defaults. **The defaults are applied automatically** to Pods / PVCs that don't specify the field.
 
 ### 8.1 The four types
 
-| Type | Applies to | What it can do |
-|---|---|---|
-| `Container` | Each container in a Pod | default, defaultRequest, max, min, maxLimitRequestRatio |
-| `Pod` | Each Pod (sum of all containers) | max (only) |
-| `PersistentVolumeClaim` | Each PVC | default, defaultRequest, max, min |
-| `PersistentVolume` | Each PV (cluster-wide) | max, min (rarely used) |
+| Type                    | Applies to                       | What it can do                                          |
+| ----------------------- | -------------------------------- | ------------------------------------------------------- |
+| `Container`             | Each container in a Pod          | default, defaultRequest, max, min, maxLimitRequestRatio |
+| `Pod`                   | Each Pod (sum of all containers) | max (only)                                              |
+| `PersistentVolumeClaim` | Each PVC                         | default, defaultRequest, max, min                       |
+| `PersistentVolume`      | Each PV (cluster-wide)           | max, min (rarely used)                                  |
 
 ### 8.2 The `default` and `defaultRequest` fields
 
 These are the **defaults applied to objects that don't specify the field**.
 
-* `default.cpu: 500m` — if a Container doesn't specify `limits.cpu`, set it to 500m.
-* `defaultRequest.cpu: 200m` — if a Container doesn't specify `requests.cpu`, set it to 200m.
+- `default.cpu: 500m` — if a Container doesn't specify `limits.cpu`, set it to 500m.
+- `defaultRequest.cpu: 200m` — if a Container doesn't specify `requests.cpu`, set it to 200m.
 
 The default is what the user gets if they don't say. The defaultRequest is the same for requests. The defaults can be overridden by the Pod's spec, but the **max** and **min** are hard constraints.
 
@@ -500,8 +507,8 @@ The default is what the user gets if they don't say. The defaultRequest is the s
 
 Hard constraints on individual values:
 
-* `max.cpu: 2` — no Container can request more than 2 cores.
-* `min.memory: 128Mi` — no Container can request less than 128 MiB.
+- `max.cpu: 2` — no Container can request more than 2 cores.
+- `min.memory: 128Mi` — no Container can request less than 128 MiB.
 
 A Pod that violates a `max` or `min` is **rejected at admission**.
 
@@ -511,8 +518,8 @@ The **maximum allowed ratio** of `limit:request` for a single resource:
 
 ```yaml
 maxLimitRequestRatio:
-  cpu: 4        # limit can be at most 4x the request
-  memory: 2     # limit can be at most 2x the request
+  cpu: 4 # limit can be at most 4x the request
+  memory: 2 # limit can be at most 2x the request
 ```
 
 If a Pod sets `requests.cpu: 500m, limits.cpu: 1`, the ratio is 1/0.5 = 2, which is ≤ 4. Allowed.
@@ -531,41 +538,41 @@ metadata:
   namespace: prod
 spec:
   limits:
-  - type: Container
-    default:
-      cpu: 500m
-      memory: 512Mi
-      ephemeral-storage: 1Gi
-    defaultRequest:
-      cpu: 200m
-      memory: 256Mi
-      ephemeral-storage: 100Mi
-    max:
-      cpu: "2"
-      memory: 4Gi
-      ephemeral-storage: 10Gi
-    min:
-      cpu: 100m
-      memory: 128Mi
-      ephemeral-storage: 10Mi
-    maxLimitRequestRatio:
-      cpu: 4
-      memory: 2
-      ephemeral-storage: 10
-  - type: Pod
-    max:
-      cpu: "8"
-      memory: 16Gi
-      ephemeral-storage: 50Gi
-  - type: PersistentVolumeClaim
-    max:
-      storage: 1Ti
-    min:
-      storage: 1Gi
-    default:
-      storage: 100Gi
-    defaultRequest:
-      storage: 10Gi
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 512Mi
+        ephemeral-storage: 1Gi
+      defaultRequest:
+        cpu: 200m
+        memory: 256Mi
+        ephemeral-storage: 100Mi
+      max:
+        cpu: "2"
+        memory: 4Gi
+        ephemeral-storage: 10Gi
+      min:
+        cpu: 100m
+        memory: 128Mi
+        ephemeral-storage: 10Mi
+      maxLimitRequestRatio:
+        cpu: 4
+        memory: 2
+        ephemeral-storage: 10
+    - type: Pod
+      max:
+        cpu: "8"
+        memory: 16Gi
+        ephemeral-storage: 50Gi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 1Ti
+      min:
+        storage: 1Gi
+      default:
+        storage: 100Gi
+      defaultRequest:
+        storage: 10Gi
 ```
 
 ### 9.1 How defaults are applied
@@ -593,7 +600,7 @@ metadata:
   name: no-besteffort
 spec:
   scopes:
-  - NotBestEffort
+    - NotBestEffort
   hard:
     pods: "100"
 ```
@@ -663,9 +670,9 @@ Error from server (Forbidden):
 
 ### 10.4 What quota doesn't do
 
-* **Quota doesn't move existing Pods to a different node.** It only blocks new creations / updates.
-* **Quota doesn't evict Pods.** A Pod that's already running is fine, even if the namespace is now over quota (rare, but possible if the quota was reduced).
-* **Quota doesn't care about actual usage.** A Pod that requests 1 CPU but uses 10 millicores still counts as 1 CPU.
+- **Quota doesn't move existing Pods to a different node.** It only blocks new creations / updates.
+- **Quota doesn't evict Pods.** A Pod that's already running is fine, even if the namespace is now over quota (rare, but possible if the quota was reduced).
+- **Quota doesn't care about actual usage.** A Pod that requests 1 CPU but uses 10 millicores still counts as 1 CPU.
 
 ## 11. Operations and Debugging
 
@@ -703,10 +710,10 @@ Error from server (Forbidden): ...
 1. **Read the error message.** It tells you which quota, what's used, what's requested, what's the limit.
 2. **Check the quota's current state:** `kubectl describe resourcequota <name> -n <namespace>`.
 3. **Options:**
-   * Increase the quota (`kubectl edit resourcequota`).
-   * Reduce the Pod's requests.
-   * Delete unused resources in the namespace.
-   * Move the Pod to a different namespace.
+   - Increase the quota (`kubectl edit resourcequota`).
+   - Reduce the Pod's requests.
+   - Delete unused resources in the namespace.
+   - Move the Pod to a different namespace.
 
 ### 11.3 The "PVC is forbidden" debugging
 
@@ -770,8 +777,8 @@ kubectl get pod <pod> -o yaml
 
 Actually, for PVCs, `default` and `defaultRequest` are both supported. The behavior is similar to Container:
 
-* `defaultRequest.storage` is applied if `spec.resources.requests.storage` is not set.
-* `default.storage` is applied if `spec.resources.limits.storage` is not set.
+- `defaultRequest.storage` is applied if `spec.resources.requests.storage` is not set.
+- `default.storage` is applied if `spec.resources.limits.storage` is not set.
 
 But for PVCs, the standard is to use `requests` (the limit is the same as the request). So `default` and `defaultRequest` are usually the same.
 
@@ -801,8 +808,8 @@ But for PVCs, the standard is to use `requests` (the limit is the same as the re
 
 ## See also
 
-* [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped storage object
-* [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing storage API
-* [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
-* [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests and Limits]] — the per-Pod view
-* [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped storage object
+- [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing storage API
+- [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests and Limits]] — the per-Pod view
+- [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model

@@ -75,6 +75,7 @@ Binary Authorization decouples image building and security scanning in the CI/CD
 ## 2. Sigstore / Cosign vs KMS-Based Attestations
 
 Binary Authorization natively supports both Google Cloud KMS-backed attestations and **Sigstore / Cosign** open-source signatures:
+
 - **Cloud KMS Asymmetric Signing:** Uses enterprise hardware HSM keys (`rsa-sign-pss-4096-sha512` or `ec-sign-p256-sha256`) managed inside Cloud KMS. Keys cannot be extracted from Google Cloud.
 - **Sigstore Integration:** Allows developers and open-source projects to sign container images using OIDC identity tokens and Cosign, verifying signatures directly against public transparency logs (Rekor).
 
@@ -153,20 +154,20 @@ defaultAdmissionRule:
   evaluationMode: REQUIRE_ATTESTATION
   enforcementMode: ENFORCED_BLOCK_AND_AUDIT_LOG
   requireAttestationsBy:
-  - projects/secops-kms-prod/attestors/prod-qa-attestor
+    - projects/secops-kms-prod/attestors/prod-qa-attestor
 globalPolicyEvaluationMode: ENABLE
 clusterAdmissionRules:
   us-central1.prod-regional-cluster:
     evaluationMode: REQUIRE_ATTESTATION
     enforcementMode: ENFORCED_BLOCK_AND_AUDIT_LOG
     requireAttestationsBy:
-    - projects/secops-kms-prod/attestors/prod-qa-attestor
+      - projects/secops-kms-prod/attestors/prod-qa-attestor
 # Whitelist critical infrastructure components
 admissionWhitelistPatterns:
-- matchedPattern: "gke.gcr.io/*"
-- matchedPattern: "k8s.gcr.io/*"
-- matchedPattern: "registry.k8s.io/*"
-- matchedPattern: "us-central1-docker.pkg.dev/core-infrastructure-prod/system/*"
+  - matchedPattern: "gke.gcr.io/*"
+  - matchedPattern: "k8s.gcr.io/*"
+  - matchedPattern: "registry.k8s.io/*"
+  - matchedPattern: "us-central1-docker.pkg.dev/core-infrastructure-prod/system/*"
 ```
 
 Apply Policy to GCP:
@@ -208,21 +209,21 @@ metadata:
     imagepolicy.k8s.io/break-glass: "true"
 spec:
   containers:
-  - name: patch
-    image: us-central1-docker.pkg.dev/core-infrastructure-prod/apps/order-api:hotfix-v1
+    - name: patch
+      image: us-central1-docker.pkg.dev/core-infrastructure-prod/apps/order-api:hotfix-v1
 ```
 
 ---
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Quota / Limit | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Admission Webhook Latency** | ~50 to 150 milliseconds | Cached KMS public keys prevent admission timeouts |
-| **Max Attestors per Policy** | Up to 100 attestors | Enforce multi-signature gates (QA + Security + CI) |
-| **Whitelisted Pattern Limit** | 500 regex patterns | Use registry wildcards (`pkg.dev/my-project/*`) |
-| **Audit Log Latency** | Instantaneous | Emitted to Cloud Logging on every check |
-| **Fail-Open vs Fail-Closed** | Configurable | Fail-closed guarantees security; fail-open prioritizes uptime |
+| Parameter / Dimension         | Standard Quota / Limit  | Engineering Guidance                                          |
+| :---------------------------- | :---------------------- | :------------------------------------------------------------ |
+| **Admission Webhook Latency** | ~50 to 150 milliseconds | Cached KMS public keys prevent admission timeouts             |
+| **Max Attestors per Policy**  | Up to 100 attestors     | Enforce multi-signature gates (QA + Security + CI)            |
+| **Whitelisted Pattern Limit** | 500 regex patterns      | Use registry wildcards (`pkg.dev/my-project/*`)               |
+| **Audit Log Latency**         | Instantaneous           | Emitted to Cloud Logging on every check                       |
+| **Fail-Open vs Fail-Closed**  | Configurable            | Fail-closed guarantees security; fail-open prioritizes uptime |
 
 ---
 
@@ -239,6 +240,7 @@ spec:
 ## 6. Realistic Pricing Scenarios
 
 Pricing structure:
+
 1. **Binary Authorization Enforcement:** **Free** (Included with GKE Standard and Autopilot).
 2. **Cloud KMS Cryptographic Signing:** $0.06 per key version / month + $0.03 per 10,000 signing operations in CI/CD.
 3. **Artifact Analysis (Vulnerability Scanning):** $0.26 per scanned container image in Artifact Registry.

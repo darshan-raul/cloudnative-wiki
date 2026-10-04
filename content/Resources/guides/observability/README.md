@@ -1,19 +1,49 @@
-# Observability
+---
+title: Observability Architecture & Implementation Guide
+description: Architectural guide to cloud-native observability — the Three Pillars (Metrics, Logs, Traces), OpenTelemetry standard, distributed tracing, and continuous profiling
+tags:
+  - observability
+  - opentelemetry
+  - prometheus
+  - grafana
+  - tracing
+---
 
-O<mark style="color:red;background-color:purple;">bservability means the ability to ask questions to your system to observe your system from the outside to figure what is going on in the inside without having to go in</mark>
+# Observability Architecture & Implementation Guide
 
+**Observability** is a measure of how well internal states of a system can be inferred solely from knowledge of its external outputs (metrics, logs, traces, and profiles). In complex distributed microservices, observability allows engineers to ask novel, open-ended questions about system failure modes without deploying new code.
 
+```mermaid
+graph TD
+    System[Distributed System & Kubernetes Workloads] --> Telemetry[OpenTelemetry Collector Pipeline]
 
+    subgraph The Core Signals
+        Telemetry --> Metrics[Metrics: Numerical aggregations over time<br/>Prometheus / VictoriaMetrics]
+        Telemetry --> Logs[Logs: Discrete timestamped event records<br/>Loki / OpenSearch / Wazuh]
+        Telemetry --> Traces[Traces: Request journeys across services<br/>Tempo / Jaeger / SigNoz]
+        Telemetry --> Profiles[Profiles: CPU and memory flamegraphs<br/>Parca / Pyroscope]
+    end
 
+    Metrics --> Dashboard[Unified Visualization & Correlation: Grafana]
+    Logs --> Dashboard
+    Traces --> Dashboard
+    Profiles --> Dashboard
+```
 
-<figure><img src="../../.gitbook/assets/image (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption></figcaption></figure>
+---
 
-"https://betterstack.com/community/guides/observability/what-is-observability/"
+## 1. The Three Pillars of Observability
 
-"https://medium.com/@YuriShkuro/temple-six-pillars-of-observability-4ac3e3deb402"
+| Signal      | Nature                                                                        | Strength                                                          | Limitation                                                     |
+| :---------- | :---------------------------------------------------------------------------- | :---------------------------------------------------------------- | :------------------------------------------------------------- |
+| **Metrics** | Periodic numeric counters, gauges, and histograms                             | Extremely cost-effective; real-time alerting; trend visualization | Zero context into individual customer requests                 |
+| **Logs**    | Structured JSON strings emitted per event                                     | Rich contextual detail and error stack traces                     | Expensive storage; difficult to correlate across microservices |
+| **Traces**  | Directed Acyclic Graphs (DAGs) of spans representing distributed transactions | Pinpoints exact latency bottlenecks and cross-network failures    | Sampling required at scale to control costs                    |
 
-"https://dev.to/codenameone/observability-is-cultural-djl"
+---
 
-"https://devopscube.com/what-is-observability/"
+## 2. Core Curricula & Hands-On Guides
 
-"https://podcasts.google.com/feed/aHR0cHM6Ly9hbmNob3IuZm0vcy81YjgwOTdiNC9wb2RjYXN0L3Jzcw/episode/ZDhjM2MxN2MtMWMxZC00ODJjLTgzMTAtZjc1NjkyNTFiOTgx?sa=X&ved=0CAIQx8UHahcKEwiw_IW4nJf7AhUAAAAAHQAAAAAQNg"
+- [[Observability]]: The root observability map covering Prometheus, Grafana, Alertmanager, and tracing.
+- [[Architecture/OpenTelemetry/overview|OpenTelemetry (OTel) Full Curriculum]]: Complete 13-module guide to the vendor-neutral telemetry standard (Traces, Metrics, Logs, Collector, Context Propagation, and Kubernetes deployment).
+- [[prometheus/instrumenting|Instrumenting with Prometheus]]: Exposing custom application metrics using client libraries.

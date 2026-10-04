@@ -129,12 +129,12 @@ sns.subscribe(
 
 ```json
 {
-  "severity": ["high", "critical"],          // exact match in array
-  "order_total": [{"numeric": [">=", 1000]}], // numeric comparison
-  "category": [{"exists": true}],             // attribute must exist
-  "event_type": [{"anything-but": "test"}],  // exclude value
-  "status": ["pending", "processing"],        // match any in list
-  "country": [{"prefix": "us-"}]              // prefix match
+  "severity": ["high", "critical"], // exact match in array
+  "order_total": [{ "numeric": [">=", 1000] }], // numeric comparison
+  "category": [{ "exists": true }], // attribute must exist
+  "event_type": [{ "anything-but": "test" }], // exclude value
+  "status": ["pending", "processing"], // match any in list
+  "country": [{ "prefix": "us-" }] // prefix match
 }
 ```
 
@@ -188,25 +188,25 @@ sns.get_sms_attributes()
 
 ## Pricing
 
-| Protocol | Cost |
-|----------|------|
-| Publish to topic | $0.50/million |
-| SQS subscription | $0.00 (free) |
-| Lambda subscription | $0.00 (free) |
-| HTTP/HTTPS | $0.06/million |
-| Email | $2.00/million |
-| SMS (US) | $0.00645/message |
-| Mobile push | $0.00 (AWS pays carrier fees) |
+| Protocol            | Cost                          |
+| ------------------- | ----------------------------- |
+| Publish to topic    | $0.50/million                 |
+| SQS subscription    | $0.00 (free)                  |
+| Lambda subscription | $0.00 (free)                  |
+| HTTP/HTTPS          | $0.06/million                 |
+| Email               | $2.00/million                 |
+| SMS (US)            | $0.00645/message              |
+| Mobile push         | $0.00 (AWS pays carrier fees) |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Topic name | 256 characters |
-| Message size | 256KB |
+| Resource               | Limit           |
+| ---------------------- | --------------- |
+| Topic name             | 256 characters  |
+| Message size           | 256KB           |
 | Subscription per topic | 12.5M (default) |
-| Message attributes | 10 per message |
-| Filter policy size | 256KB |
+| Message attributes     | 10 per message  |
+| Filter policy size     | 256KB           |
 
 ## References
 

@@ -1,7 +1,5 @@
 # System Design
 
-
-
 "https://medium.com/@shivambhadani_/system-design-for-beginners-everything-you-need-in-one-article-c74eb702540b"
 
 "https://github.com/subhashchy/The-Accidental-CTO/blob/main/The%20Accidental%20CTO.md"
@@ -20,4 +18,4 @@ https://azeynalli1990.medium.com/cloud-native-architecture-patterns-part-2-9704f
 
 ### References:
 
-* https://docs.microsoft.com/en-us/azure/architecture/patterns/
+- https://docs.microsoft.com/en-us/azure/architecture/patterns/

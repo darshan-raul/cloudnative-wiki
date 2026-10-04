@@ -41,25 +41,26 @@ Azure Virtual Machines (VMs) provide on-demand, high-performance compute capacit
 
 ### 1. High Availability: Availability Zones vs. Availability Sets
 
-| High Availability Topology | SLA | Resilience Scope |
-| :--- | :--- | :--- |
-| **Single VM with Premium SSD** | **99.9%** | Protects against individual drive failure; no hardware host resilience |
-| **Availability Set (Legacy)** | **99.95%** | Distributes VMs across isolated **Fault Domains (FDs)** (separate power/racks) and **Update Domains (UDs)** inside a single datacenter |
-| **Availability Zones (Modern Standard)**| **99.99%** | Distributes VMs across physically separate datacenter facilities (Zones 1, 2, 3) with independent power, cooling, and network |
+| High Availability Topology               | SLA        | Resilience Scope                                                                                                                       |
+| :--------------------------------------- | :--------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| **Single VM with Premium SSD**           | **99.9%**  | Protects against individual drive failure; no hardware host resilience                                                                 |
+| **Availability Set (Legacy)**            | **99.95%** | Distributes VMs across isolated **Fault Domains (FDs)** (separate power/racks) and **Update Domains (UDs)** inside a single datacenter |
+| **Availability Zones (Modern Standard)** | **99.99%** | Distributes VMs across physically separate datacenter facilities (Zones 1, 2, 3) with independent power, cooling, and network          |
 
 ### 2. Virtual Machine Scale Sets (VMSS): Flexible vs. Uniform
 
-* **Uniform Orchestration (Legacy):** Identical VMs deployed from a single golden image. Limited flexibility.
-* **Flexible Orchestration (Modern Standard):**
-  * Allows mixing multiple VM sizes and architectures within the same scale set.
-  * Dynamically mixes **Spot VMs** and **On-Demand VMs** to optimize cloud spend.
-  * Provides granular control over individual VM instances within the scale set.
+- **Uniform Orchestration (Legacy):** Identical VMs deployed from a single golden image. Limited flexibility.
+- **Flexible Orchestration (Modern Standard):**
+  - Allows mixing multiple VM sizes and architectures within the same scale set.
+  - Dynamically mixes **Spot VMs** and **On-Demand VMs** to optimize cloud spend.
+  - Provides granular control over individual VM instances within the scale set.
 
 ### 3. Spot VMs & Scheduled Events
 
-* **Spot VMs:** Up to 90% discount on unused Azure capacity.
-* **Eviction Notice:** Azure can evict a Spot VM when capacity is reclaimed. The instance is provided a **30-second eviction notice** via Azure Scheduled Events metadata.
-* **Scheduled Events Query:**
+- **Spot VMs:** Up to 90% discount on unused Azure capacity.
+- **Eviction Notice:** Azure can evict a Spot VM when capacity is reclaimed. The instance is provided a **30-second eviction notice** via Azure Scheduled Events metadata.
+- **Scheduled Events Query:**
+
 ```bash
 curl -H Metadata:true http://169.254.169.254/metadata/scheduledevents?api-version=2020-07-01
 ```
@@ -67,13 +68,15 @@ curl -H Metadata:true http://169.254.169.254/metadata/scheduledevents?api-versio
 ### 4. Proximity Placement Groups (PPGs)
 
 For workloads requiring microsecond network latency between nodes (e.g., high-frequency trading or multi-node MPI clustering):
-* A **Proximity Placement Group (PPG)** physically co-locates compute hardware within the exact same server rack or datacenter hall, reducing inter-VM latency to under **0.5 milliseconds**.
+
+- A **Proximity Placement Group (PPG)** physically co-locates compute hardware within the exact same server rack or datacenter hall, reducing inter-VM latency to under **0.5 milliseconds**.
 
 ### 5. Azure Bastion (Zero-Exposure Remote Access)
 
 Azure Bastion provides fully managed RDP and SSH connectivity directly through the Azure Portal or browser over SSL (Port 443):
-* VMs require **no public IP addresses**.
-* Eliminates the need for exposing port 22 or 3389 to internet port scanners.
+
+- VMs require **no public IP addresses**.
+- Eliminates the need for exposing port 22 or 3389 to internet port scanners.
 
 ---
 
@@ -137,40 +140,42 @@ az monitor autoscale rule create \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Total Regional vCPUs** | 20–100 vCPUs (default) | Increase via Azure Portal Quotas blade |
-| **Spot vCPUs per region** | Separate quota tier | Request increase before launching large Spot clusters |
-| **Instances per Flexible VMSS** | Up to 1,000 instances | Scalable for massive compute tiers |
-| **Data disks per VM** | Up to 64 disks | Dependent on VM size (e.g. 2 disks per vCPU) |
+| Parameter                       | Limit                  | Production Notes                                      |
+| :------------------------------ | :--------------------- | :---------------------------------------------------- |
+| **Total Regional vCPUs**        | 20–100 vCPUs (default) | Increase via Azure Portal Quotas blade                |
+| **Spot vCPUs per region**       | Separate quota tier    | Request increase before launching large Spot clusters |
+| **Instances per Flexible VMSS** | Up to 1,000 instances  | Scalable for massive compute tiers                    |
+| **Data disks per VM**           | Up to 64 disks         | Dependent on VM size (e.g. 2 disks per vCPU)          |
 
 ---
 
 ## References
 
-* **Homepage:** https://azure.microsoft.com/en-us/products/virtual-machines
-* **VM Series Guide:** https://learn.microsoft.com/en-us/azure/virtual-machines/sizes
-* **VMSS Overview:** https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview
-* **Azure Bastion Overview:** https://learn.microsoft.com/en-us/azure/bastion/bastion-overview
-* **Pricing:** https://azure.microsoft.com/en-us/pricing/details/virtual-machines/
+- **Homepage:** https://azure.microsoft.com/en-us/products/virtual-machines
+- **VM Series Guide:** https://learn.microsoft.com/en-us/azure/virtual-machines/sizes
+- **VMSS Overview:** https://learn.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview
+- **Azure Bastion Overview:** https://learn.microsoft.com/en-us/azure/bastion/bastion-overview
+- **Pricing:** https://azure.microsoft.com/en-us/pricing/details/virtual-machines/
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Multi-Zone Production Web Tier (Reserved Instances)
-* 6 instances of `Standard_D4s_v5` (4 vCPU, 16 GB RAM) running 24/7 across Zones 1, 2, 3.
-* On-Demand rate: 6 × $0.192 / hr × 730 hrs = **$840.96 / month**.
-* With a **3-Year Azure Reserved VM Instance (RI)**:
-  * 62% discount applied ($0.073 / hr).
-* **Effective Monthly Compute Bill:** **~$320.00 / month** (Saving $520/month).
+
+- 6 instances of `Standard_D4s_v5` (4 vCPU, 16 GB RAM) running 24/7 across Zones 1, 2, 3.
+- On-Demand rate: 6 × $0.192 / hr × 730 hrs = **$840.96 / month**.
+- With a **3-Year Azure Reserved VM Instance (RI)**:
+  - 62% discount applied ($0.073 / hr).
+- **Effective Monthly Compute Bill:** **~$320.00 / month** (Saving $520/month).
 
 ### Scenario 2: Batch Processing with VMSS Spot Instances
-* 50 worker VMs using `Standard_F8s_v2` (Compute-optimized: 8 vCPU, 16 GB RAM).
-* Job runs for 20 hours per week (80 hours / month).
-* Standard On-Demand cost: 50 × $0.338 / hr × 80 hrs = $1,352.00.
-* Spot discount (~85% savings): 50 × $0.0507 / hr × 80 hrs = **$202.80 / month**.
-* **Monthly Savings:** **$1,149.20** per month.
+
+- 50 worker VMs using `Standard_F8s_v2` (Compute-optimized: 8 vCPU, 16 GB RAM).
+- Job runs for 20 hours per week (80 hours / month).
+- Standard On-Demand cost: 50 × $0.338 / hr × 80 hrs = $1,352.00.
+- Spot discount (~85% savings): 50 × $0.0507 / hr × 80 hrs = **$202.80 / month**.
+- **Monthly Savings:** **$1,149.20** per month.
 
 ---
 

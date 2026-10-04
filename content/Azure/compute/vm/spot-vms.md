@@ -57,8 +57,8 @@ Unlike standard Azure Virtual Machines that operate with a 99.9% to 99.99% avail
 ### Eviction Triggers & Policies
 
 1. **Eviction Triggers:**
-   - **Capacity-Only:** Eviction occurs *only* when Azure needs the physical CPU/RAM capacity back for pay-as-you-go customers. The customer pays the current dynamic spot price up to the regular on-demand cap.
-   - **Price or Capacity:** The customer sets a strict `max-price` cap (e.g., $0.05/hr). Eviction occurs if either Azure requires capacity *or* the market spot price rises above the configured cap.
+   - **Capacity-Only:** Eviction occurs _only_ when Azure needs the physical CPU/RAM capacity back for pay-as-you-go customers. The customer pays the current dynamic spot price up to the regular on-demand cap.
+   - **Price or Capacity:** The customer sets a strict `max-price` cap (e.g., $0.05/hr). Eviction occurs if either Azure requires capacity _or_ the market spot price rises above the configured cap.
 2. **Eviction Policy Options:**
    - **Deallocate (Default):** The VM is shut down and its compute cores are released. The attached OS managed disk and data disks persist, retaining all data and IP assignments (storage costs continue to accrue). The VM can be manually or programmatically restarted later when spot capacity returns.
    - **Delete:** The VM and its ephemeral or attached managed disks are permanently destroyed upon eviction. This eliminates lingering storage charges and is optimal for stateless batch workers and Kubernetes nodes.
@@ -79,6 +79,7 @@ curl -H "Metadata: true" -s \
 ```
 
 When an eviction is scheduled, the response contains:
+
 ```json
 {
   "DocumentIncarnation": 1,
@@ -116,7 +117,8 @@ az vm create \
     --admin-username azureuser \
     --generate-ssh-keys
 ```
-*(Note: `--max-price -1` specifies that the VM will not be evicted due to price fluctuations; it will only be evicted if Azure runs out of physical hardware capacity).*
+
+_(Note: `--max-price -1` specifies that the VM will not be evicted due to price fluctuations; it will only be evicted if Azure runs out of physical hardware capacity)._
 
 ### 2. Deploy a Spot Virtual Machine Scale Set (VMSS) with Delete Policy
 
@@ -189,10 +191,10 @@ def handle_eviction(event_id):
     print("ALERT: Eviction notice received! 30 seconds remaining.")
     # 1. Kubernetes Node Drain (if AKS node)
     subprocess.run(["kubectl", "drain", os.uname().nodename, "--ignore-daemonsets", "--delete-emptydir-data", "--force", "--grace-period=20"])
-    
+
     # 2. Stop application gracefully
     subprocess.run(["systemctl", "stop", "batch-worker-service"])
-    
+
     # 3. Acknowledge the event to Azure
     ack_url = "http://169.254.169.254/metadata/scheduledevents?api-version=2020-07-01"
     ack_data = json.dumps({"StartRequests": [{"EventId": event_id}]}).encode("utf-8")
@@ -210,14 +212,14 @@ if __name__ == "__main__":
 
 ## 4. Quotas, Eviction Rates, and VM Family Matrix
 
-| VM Family | General Workload Fit | Historical Eviction Rate | Typical Spot Discount |
-| :--- | :--- | :--- | :--- |
-| **Standard D-Series (D4s, D8s v5)** | General compute, web apps, microservices | Low (5% - 10%) | 60% - 80% |
-| **Standard E-Series (E8s, E16s v5)**| In-memory caching, Spark, big data | Moderate (10% - 15%) | 70% - 85% |
-| **Standard F-Series (F8s, F16s v2)**| Batch transcoding, CI/CD runners | Low (5% - 10%) | 75% - 90% |
-| **Standard NC / ND-Series (GPU)**   | AI model training, LLM inference | **High (20% - 40%+)** | 50% - 70% |
-| **Notice Duration** | **30 seconds** | Fixed platform constraint via Scheduled Events API |
-| **SLA Guarantee** | **0.0% (None)** | Cannot be used for single-instance stateful production DBs |
+| VM Family                            | General Workload Fit                     | Historical Eviction Rate                                   | Typical Spot Discount |
+| :----------------------------------- | :--------------------------------------- | :--------------------------------------------------------- | :-------------------- |
+| **Standard D-Series (D4s, D8s v5)**  | General compute, web apps, microservices | Low (5% - 10%)                                             | 60% - 80%             |
+| **Standard E-Series (E8s, E16s v5)** | In-memory caching, Spark, big data       | Moderate (10% - 15%)                                       | 70% - 85%             |
+| **Standard F-Series (F8s, F16s v2)** | Batch transcoding, CI/CD runners         | Low (5% - 10%)                                             | 75% - 90%             |
+| **Standard NC / ND-Series (GPU)**    | AI model training, LLM inference         | **High (20% - 40%+)**                                      | 50% - 70%             |
+| **Notice Duration**                  | **30 seconds**                           | Fixed platform constraint via Scheduled Events API         |
+| **SLA Guarantee**                    | **0.0% (None)**                          | Cannot be used for single-instance stateful production DBs |
 
 ---
 

@@ -1,23 +1,33 @@
 ---
 title: "M17: Runtime Detection & Response"
-tags: [devsecops, stage4, runtime, falco, wazuh, detection, runtime-protection, shift-right]
+tags:
+  [
+    devsecops,
+    stage4,
+    runtime,
+    falco,
+    wazuh,
+    detection,
+    runtime-protection,
+    shift-right,
+  ]
 date: 2026-06-16
 description: "Module 17 of 20 — runtime detection for shift-right. Falco for K8s, eBPF-based detection, anomaly response, and the SOC playbook for containerized workloads."
 ---
 
 # M17: Runtime Detection & Response
 
-Stages 0–3 are shift-left: catch the issue before it ships. Stage 4 is shift-right: catch the issue *after* it ships, when an attacker is exploiting it. This module covers runtime detection (Falco, eBPF, Wazuh), the response pattern, and the integration with the rest of the pipeline.
+Stages 0–3 are shift-left: catch the issue before it ships. Stage 4 is shift-right: catch the issue _after_ it ships, when an attacker is exploiting it. This module covers runtime detection (Falco, eBPF, Wazuh), the response pattern, and the integration with the rest of the pipeline.
 
 ## Learning Objectives
 
 By the end of this module you should be able to:
 
-  - Deploy Falco for K8s runtime detection
-  - Read and tune Falco rules
-  - Design a runtime-detection response playbook
-  - Integrate runtime alerts with the SIEM
-  - Distinguish detection (M17) from compliance audit (M18)
+- Deploy Falco for K8s runtime detection
+- Read and tune Falco rules
+- Design a runtime-detection response playbook
+- Integrate runtime alerts with the SIEM
+- Distinguish detection (M17) from compliance audit (M18)
 
 ## 1. Shift-Right: The Other Half
 
@@ -33,12 +43,13 @@ By the end of this module you should be able to:
 ```
 
 Shift-left catches the issue at design/code/build time. Shift-right catches the issue at runtime, when:
-  - A new CVE was disclosed between build and deploy
-  - A workload behaves anomalously even though it passed all scans
-  - An attacker is exploiting a zero-day
-  - A misconfiguration was missed by IaC scanning
 
-The two halves are not redundant; they are complementary. Shift-left is for *known* issues. Shift-right is for *everything else*.
+- A new CVE was disclosed between build and deploy
+- A workload behaves anomalously even though it passed all scans
+- An attacker is exploiting a zero-day
+- A misconfiguration was missed by IaC scanning
+
+The two halves are not redundant; they are complementary. Shift-left is for _known_ issues. Shift-right is for _everything else_.
 
 ## 2. The Detection Stack
 
@@ -47,27 +58,30 @@ Three layers, each with different tradeoffs:
 ### Layer 1: eBPF Kernel-Level Detection
 
 eBPF (extended Berkeley Packet Filter) runs sandboxed programs in the Linux kernel. It can observe:
-  - Syscalls (open, read, execve, connect, setuid, ...)
-  - Network activity (TCP connect, DNS queries)
-  - File access (read, write, chmod)
+
+- Syscalls (open, read, execve, connect, setuid, ...)
+- Network activity (TCP connect, DNS queries)
+- File access (read, write, chmod)
 
 The advantages: no instrumentation in the app, no sidecar, very low overhead, sees everything. The disadvantage: kernel-level; requires kernel expertise to extend.
 
 ### Layer 2: Container/K8s-Level Detection
 
 Tools that hook into the container runtime (Falco for K8s, Aqua, Sysdig, Prisma Cloud):
-  - Syscall tracing via kernel module or eBPF
-  - K8s API audit log monitoring
-  - Container image metadata
-  - Network policy violations
+
+- Syscall tracing via kernel module or eBPF
+- K8s API audit log monitoring
+- Container image metadata
+- Network policy violations
 
 ### Layer 3: Application-Level Detection
 
 Inside the app or as a sidecar:
-  - Custom audit logs
-  - Anomaly detection on app behavior
-  - Auth log analysis
-  - API call patterns
+
+- Custom audit logs
+- Anomaly detection on app behavior
+- Auth log analysis
+- API call patterns
 
 The full stack: eBPF (kernel) + K8s-aware tool (Falco) + app logs → SIEM → alert.
 
@@ -96,14 +110,14 @@ Sidekick can route to Elasticsearch, Loki, Slack, PagerDuty, OpsGenie, and more.
 
 ### What Falco Detects (Default Rules)
 
-  - Shell spawned in container (potential RCE)
-  - Sensitive file read (/etc/shadow, /proc/1/environ)
-  - Outbound connection to known-bad IP
-  - Crypto miner indicators
-  - Unexpected process in container
-  - Privilege escalation attempts
-  - Container namespace escape attempts
-  - And ~150+ more
+- Shell spawned in container (potential RCE)
+- Sensitive file read (/etc/shadow, /proc/1/environ)
+- Outbound connection to known-bad IP
+- Crypto miner indicators
+- Unexpected process in container
+- Privilege escalation attempts
+- Container namespace escape attempts
+- And ~150+ more
 
 ### A Falco Rule
 
@@ -126,9 +140,9 @@ This rule fires when a shell is spawned in any container. Most production contai
 
 Default rules produce noise. The tuning process:
 
-  - **Week 1** — Run with defaults; collect all alerts
-  - **Week 2** — Classify: true positive, false positive, accepted risk
-  - **Week 3** — Suppress false positives via exceptions:
+- **Week 1** — Run with defaults; collect all alerts
+- **Week 2** — Classify: true positive, false positive, accepted risk
+- **Week 3** — Suppress false positives via exceptions:
 
 ```yaml
 - rule: Terminal shell in container
@@ -139,7 +153,7 @@ Default rules produce noise. The tuning process:
       values: [[dev-tools, debugger, ctr-tools]]
 ```
 
-  - **Week 4** — Custom rules for your environment
+- **Week 4** — Custom rules for your environment
 
 ### Custom Rules
 
@@ -187,7 +201,7 @@ spec:
   kprobeMaxActive: 512
 ```
 
-Tetragon can also *enforce* — block the syscall, not just alert.
+Tetragon can also _enforce_ — block the syscall, not just alert.
 
 ### Inspektor Gadget
 
@@ -203,10 +217,10 @@ For production, Falco (detection) + Tetragon (enforcement) is the modern stack.
 
 Wazuh is covered in [[Security/siem/wazuh/README]] in detail. The DevSecOps integration:
 
-  - Falco alerts → Sidekick → Wazuh indexer
-  - K8s audit logs → Wazuh
-  - CloudTrail → Wazuh
-  - Wazuh correlates: a Falco "shell in container" + a CloudTrail "IAM key used from new IP" = critical alert
+- Falco alerts → Sidekick → Wazuh indexer
+- K8s audit logs → Wazuh
+- CloudTrail → Wazuh
+- Wazuh correlates: a Falco "shell in container" + a CloudTrail "IAM key used from new IP" = critical alert
 
 The pipeline that produced the alert becomes part of the detection story. An alert in production is fed back into M19 (incident response in CI).
 
@@ -246,7 +260,7 @@ The playbook is a document, but the document only matters if it has been drilled
 
 ## 7. The Feedback Loop to CI
 
-The most valuable output of runtime detection is not the alert — it is the *learning* that goes back to the pipeline.
+The most valuable output of runtime detection is not the alert — it is the _learning_ that goes back to the pipeline.
 
 ```
   Runtime detection
@@ -272,46 +286,48 @@ This is the "shift-left" half of shift-right: the runtime teaches the build what
 ## 8. Network Detection at Runtime
 
 Beyond the host, network-level detection catches:
-  - East-west traffic between compromised pods
-  - Crypto miner pool connections
-  - Data exfiltration patterns
-  - DNS tunneling
+
+- East-west traffic between compromised pods
+- Crypto miner pool connections
+- Data exfiltration patterns
+- DNS tunneling
 
 Tools:
-  - **Cilium** with Hubble for L3/L4 visibility
-  - **Calico** with flow logs
-  - **Service mesh** (Istio, Linkerd) sidecar metrics
-  - **eBPF** in host networking namespace
+
+- **Cilium** with Hubble for L3/L4 visibility
+- **Calico** with flow logs
+- **Service mesh** (Istio, Linkerd) sidecar metrics
+- **eBPF** in host networking namespace
 
 The pattern: every pod-to-pod call is logged, anomaly detection flags unusual patterns.
 
 ## 9. The Cost of Runtime Detection
 
-| Tool | Cost | Trade-off |
-| ---- | ---- | --------- |
-| Falco (OSS) | Free, ops overhead | You run it, you tune it |
-| Falco (managed via Sidekick + SIEM) | SIEM ingest cost | Higher signal, lower ops |
-| Tetragon | Free, eBPF expertise required | More powerful, harder |
-| Commercial runtime protection (Aqua, Sysdig, Prisma) | $$$ per node | Less ops, vendor lock |
+| Tool                                                 | Cost                          | Trade-off                |
+| ---------------------------------------------------- | ----------------------------- | ------------------------ |
+| Falco (OSS)                                          | Free, ops overhead            | You run it, you tune it  |
+| Falco (managed via Sidekick + SIEM)                  | SIEM ingest cost              | Higher signal, lower ops |
+| Tetragon                                             | Free, eBPF expertise required | More powerful, harder    |
+| Commercial runtime protection (Aqua, Sysdig, Prisma) | $$$ per node                  | Less ops, vendor lock    |
 
 For most orgs, Falco + Wazuh is the right starting point. Add Tetragon when you need enforcement, not just detection.
 
 ## 10. Common Anti-Patterns
 
-| Anti-pattern | Symptom | Fix |
-| ------------ | ------- | --- |
-| Run with default rules forever | Alert fatigue | Tune in week 2–4 |
-| Alert to a Slack channel only | Alerts get scrolled past | Page on critical |
-| No runbook for the alert | Every alert is researched from scratch | Playbook per top-10 alerts |
-| No feedback to CI | Same incident twice | File a story for each new alert type |
-| Detection only, no enforcement | Attacker has 10 minutes of dwell time | Add Tetragon for blocking |
-| Runtime only, no shift-left | Catching everything at runtime is expensive | Use both |
+| Anti-pattern                   | Symptom                                     | Fix                                  |
+| ------------------------------ | ------------------------------------------- | ------------------------------------ |
+| Run with default rules forever | Alert fatigue                               | Tune in week 2–4                     |
+| Alert to a Slack channel only  | Alerts get scrolled past                    | Page on critical                     |
+| No runbook for the alert       | Every alert is researched from scratch      | Playbook per top-10 alerts           |
+| No feedback to CI              | Same incident twice                         | File a story for each new alert type |
+| Detection only, no enforcement | Attacker has 10 minutes of dwell time       | Add Tetragon for blocking            |
+| Runtime only, no shift-left    | Catching everything at runtime is expensive | Use both                             |
 
 ## 11. Self-Check
 
-  1. What is your mean time to detect (MTTD) for a container compromise? Pick a number; it's a baseline.
-  2. For the top 3 alerts in the last month, is there a runbook? If not, write one this week.
-  3. For each alert, is there a story filed to prevent it from happening again?
+1. What is your mean time to detect (MTTD) for a container compromise? Pick a number; it's a baseline.
+2. For the top 3 alerts in the last month, is there a runbook? If not, write one this week.
+3. For each alert, is there a story filed to prevent it from happening again?
 
 ## 12. Detection Engineering
 
@@ -334,21 +350,21 @@ The role of a detection engineer: 0.5–1 FTE for a mid-size org. Writes Falco r
 
 ATT&CK has a Containers matrix that enumerates container-specific techniques. Some highlights:
 
-| Tactic | Technique | Detection |
-| ------ | --------- | --------- |
-| Initial Access | Exploit public-facing app | WAF, runtime detection |
-| Execution | Exec into container | Falco: k8s_audit, exec |
-| Persistence | Add malicious sidecar | K8s admission policy |
-| Privilege Escalation | Privileged container | K8s policy, Falco |
-| Defense Evasion | Disable security tools | Audit log anomaly |
-| Credential Access | Steal service account token | Falco, k8s audit |
-| Discovery | Enumerate cloud metadata | Falco: egress to 169.254.169.254 |
-| Lateral Movement | Cross-namespace connection | K8s NetworkPolicy + Falco |
-| Collection | Mount host filesystem | K8s policy, Falco |
-| Exfiltration | Outbound to known-bad IP | Falco, network IDS |
-| Impact | Cryptominer | Falco: process patterns |
+| Tactic               | Technique                   | Detection                        |
+| -------------------- | --------------------------- | -------------------------------- |
+| Initial Access       | Exploit public-facing app   | WAF, runtime detection           |
+| Execution            | Exec into container         | Falco: k8s_audit, exec           |
+| Persistence          | Add malicious sidecar       | K8s admission policy             |
+| Privilege Escalation | Privileged container        | K8s policy, Falco                |
+| Defense Evasion      | Disable security tools      | Audit log anomaly                |
+| Credential Access    | Steal service account token | Falco, k8s audit                 |
+| Discovery            | Enumerate cloud metadata    | Falco: egress to 169.254.169.254 |
+| Lateral Movement     | Cross-namespace connection  | K8s NetworkPolicy + Falco        |
+| Collection           | Mount host filesystem       | K8s policy, Falco                |
+| Exfiltration         | Outbound to known-bad IP    | Falco, network IDS               |
+| Impact               | Cryptominer                 | Falco: process patterns          |
 
-The ATT&CK matrix is the *catalog* of what to detect. Mapped to Falco rules, it is the detection coverage.
+The ATT&CK matrix is the _catalog_ of what to detect. Mapped to Falco rules, it is the detection coverage.
 
 ## 14. Detection in Non-K8s Environments
 
@@ -356,33 +372,33 @@ Not every workload runs in K8s. For VMs, bare metal, serverless:
 
 ### VM Detection
 
-  - **osquery** + **Fleet** — SQL-based host telemetry
-  - **Falco** on the host (not the container) — same rules, different scope
-  - **EDR** (CrowdStrike, SentinelOne, etc.) — vendor-managed
-  - **Sysmon** (Windows) — process, file, network events
+- **osquery** + **Fleet** — SQL-based host telemetry
+- **Falco** on the host (not the container) — same rules, different scope
+- **EDR** (CrowdStrike, SentinelOne, etc.) — vendor-managed
+- **Sysmon** (Windows) — process, file, network events
 
 ### Serverless Detection
 
-  - **Cloud-native logs** — Lambda invocation logs, CloudWatch
-  - **CloudTrail** — IAM activity
-  - **App-layer logs** — structured logs from the function
+- **Cloud-native logs** — Lambda invocation logs, CloudWatch
+- **CloudTrail** — IAM activity
+- **App-layer logs** — structured logs from the function
 
 The pattern is the same: collect, normalize, detect, alert. The tools differ.
 
 ## 15. Detection and Compliance
 
-| Framework | Control | Detection evidence |
-| --------- | ------- | ------------------ |
-| SOC 2 CC7.2 | System monitoring | Falco, Wazuh, audit logs |
-| SOC 2 CC7.3 | Anomaly evaluation | Wazuh correlation rules |
-| SOC 2 CC7.4 | Incident response | Alert → IR runbook |
-| ISO A.8.16 | Monitoring activities | SIEM, audit logs |
-| PCI 10 | Logging | Audit trail, immutable |
-| PCI 11.4 | Intrusion detection | Falco, NIDS |
-| PCI 11.5 | Change detection | File integrity monitoring |
-| FedRAMP SI-4 | System monitoring | Continuous monitoring |
-| FedRAMP IR-4 | Incident handling | IR runbooks |
-| HIPAA §164.308 | Workforce | Detection + response |
+| Framework      | Control               | Detection evidence        |
+| -------------- | --------------------- | ------------------------- |
+| SOC 2 CC7.2    | System monitoring     | Falco, Wazuh, audit logs  |
+| SOC 2 CC7.3    | Anomaly evaluation    | Wazuh correlation rules   |
+| SOC 2 CC7.4    | Incident response     | Alert → IR runbook        |
+| ISO A.8.16     | Monitoring activities | SIEM, audit logs          |
+| PCI 10         | Logging               | Audit trail, immutable    |
+| PCI 11.4       | Intrusion detection   | Falco, NIDS               |
+| PCI 11.5       | Change detection      | File integrity monitoring |
+| FedRAMP SI-4   | System monitoring     | Continuous monitoring     |
+| FedRAMP IR-4   | Incident handling     | IR runbooks               |
+| HIPAA §164.308 | Workforce             | Detection + response      |
 
 The audit asks "how do you know when an incident is happening?" The answer is the alert log + the IR cycle.
 
@@ -415,7 +431,7 @@ A mature org manages detection rules in code:
               └── ...
 ```
 
-Each rule is versioned, tested, reviewed. The library is the *detection coverage*. New threats → new rules. Old rules that no longer fire → investigate (the threat may have evolved, or the rule is dead).
+Each rule is versioned, tested, reviewed. The library is the _detection coverage_. New threats → new rules. Old rules that no longer fire → investigate (the threat may have evolved, or the rule is dead).
 
 ## 17. Detection and the Loop-Back (Deep Dive)
 
@@ -445,20 +461,20 @@ The loop-back from runtime to CI is the highest-value detection work:
   Same incident can't recur
 ```
 
-The loop-back is a *force multiplier*. One runtime incident becomes five controls that prevent the next one.
+The loop-back is a _force multiplier_. One runtime incident becomes five controls that prevent the next one.
 
 ## 18. The Cost of Detection
 
 The total cost of detection:
 
-| Component | Cost (annual) | Notes |
-| --------- | ------------- | ----- |
-| Falco deployment | $0 + ops time | Open source |
-| Wazuh deployment | $0 + ops time | Open source; ~0.5 FTE |
-| SIEM (commercial) | $10k–$100k | Per GB ingested |
-| Commercial EDR | $50–$200 per endpoint | Per-endpoint license |
-| 24/7 SOC | $1M+ | Outsourced, per-region |
-| Detection engineer | $150k–$250k | 1 FTE |
+| Component          | Cost (annual)         | Notes                  |
+| ------------------ | --------------------- | ---------------------- |
+| Falco deployment   | $0 + ops time         | Open source            |
+| Wazuh deployment   | $0 + ops time         | Open source; ~0.5 FTE  |
+| SIEM (commercial)  | $10k–$100k            | Per GB ingested        |
+| Commercial EDR     | $50–$200 per endpoint | Per-endpoint license   |
+| 24/7 SOC           | $1M+                  | Outsourced, per-region |
+| Detection engineer | $150k–$250k           | 1 FTE                  |
 
 The cost ranges from "almost free" (open source, no SOC) to "a small SOC" (24/7, commercial SIEM). Most orgs are in the middle: open source + part-time detection engineer + on-call rotation.
 
@@ -482,16 +498,17 @@ The cost ranges from "almost free" (open source, no SOC) to "a small SOC" (24/7,
 ```
 
 The rule is:
-  - Named clearly
-  - Documented
-  - Testable (sample audit log → rule fires)
-  - Tagged (for ATT&CK mapping)
-  - Version-controlled
-  - Reviewed
+
+- Named clearly
+- Documented
+- Testable (sample audit log → rule fires)
+- Tagged (for ATT&CK mapping)
+- Version-controlled
+- Reviewed
 
 ## Related
 
-  - [[DevOps/devsecops/stage0-foundations/01-devsecops-mindset|M01: DevSecOps Mindset]]
-  - [[Security/siem/wazuh/README|Wazuh SIEM]]
-  - [[DevOps/devsecops/stage4-runtime/19-incident-response-in-ci|M19: Incident Response in CI]]
-  - [[DevOps/devsecops/stage4-runtime/README|Stage 4 — Runtime]]
+- [[DevOps/devsecops/stage0-foundations/01-devsecops-mindset|M01: DevSecOps Mindset]]
+- [[Security/siem/wazuh/README|Wazuh SIEM]]
+- [[DevOps/devsecops/stage4-runtime/19-incident-response-in-ci|M19: Incident Response in CI]]
+- [[DevOps/devsecops/stage4-runtime/README|Stage 4 — Runtime]]

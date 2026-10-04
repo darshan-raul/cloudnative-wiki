@@ -32,6 +32,7 @@ GROUP BY user_id, action;
 ```
 
 Behind the scenes:
+
 1. Athena parses the query, determines which partitions are needed (`year=2024, month=06`)
 2. Athena uses the AWS Glue Data Catalog to find the schema and partition metadata
 3. Athena reads only the relevant S3 objects (partition pruning)
@@ -41,11 +42,13 @@ Behind the scenes:
 ### Cost Model
 
 Athena charges per query based on data scanned:
+
 - **$5 per TB of data scanned** for SELECT queries
 - **No charge** for DDL (CREATE TABLE, ALTER TABLE, etc.)
 - **No charge** for CTAS (CREATE TABLE AS SELECT) — data written to S3 is charged at S3 rates
 
 **Compression and columnar formats dramatically reduce cost:**
+
 - CSV (uncompressed): 100% of data scanned
 - GZIP compressed: ~20-40% reduction in data scanned
 - Parquet: 10-20% of data scanned (only required columns read)
@@ -157,6 +160,7 @@ With partitions: Athena reads only matching partitions → cheap
 ### Columnar Formats (Parquet, ORC)
 
 Best for analytical queries that read many rows but few columns:
+
 - **Parquet:** Most widely supported, excellent for Athena
 - **ORC:** Slightly better performance for Hive/Presto workloads, good for Athena
 
@@ -164,12 +168,12 @@ Columnar formats store data column-by-column rather than row-by-row. For queries
 
 ### Compression
 
-| Format | Compression | Athena Support | Use When |
-|--------|-------------|----------------|----------|
-| Parquet | Snappy (default), GZIP, Zstd | Native | Analytical queries, best perf |
-| ORC | Zstd (default), Snappy | Native | Hive workloads |
-| JSON | GZIP | Native | Human-readable logs |
-| CSV | GZIP | Native | Simple structured data |
+| Format  | Compression                  | Athena Support | Use When                      |
+| ------- | ---------------------------- | -------------- | ----------------------------- |
+| Parquet | Snappy (default), GZIP, Zstd | Native         | Analytical queries, best perf |
+| ORC     | Zstd (default), Snappy       | Native         | Hive workloads                |
+| JSON    | GZIP                         | Native         | Human-readable logs           |
+| CSV     | GZIP                         | Native         | Simple structured data        |
 
 ### When to Use Each
 
@@ -190,12 +194,14 @@ SELECT * FROM my_table; -- runs in default workgroup
 ```
 
 **Workgroup features:**
+
 - Per-workgroup query result expiration
 - Per-workgroup data scanned limit (blocks queries that would scan too much)
 - Per-workgroup CloudWatch logging
 - Per-workgroup cost tracking via tags
 
 **Use cases:**
+
 - `engineering` workgroup: higher limits, full logging
 - `dev` workgroup: lower limits, cost tracking
 - `adhoc` workgroup: query size limits to prevent runaway queries
@@ -214,6 +220,7 @@ SELECT * FROM cloudwatch_logs.scan_logs(
 ```
 
 Available connectors:
+
 - CloudWatch Logs
 - DynamoDB
 - Redis (ElastiCache)
@@ -226,6 +233,7 @@ Available connectors:
 ### 1. Use Columnar Formats
 
 Parquet/ORC instead of CSV/JSON:
+
 ```
 CSV: 100GB scanned @ $5/TB = $0.50/query
 Parquet (10% compression): 10GB scanned @ $5/TB = $0.05/query
@@ -254,7 +262,7 @@ AS SELECT * FROM source_table;
 
 Bucketing groups data by the bucketed column within each partition. If you frequently query `WHERE user_id = '123'`, bucketing ensures all records for that user are in the same file.
 
-### 5. Avoid SELECT *
+### 5. Avoid SELECT \*
 
 Always specify the columns you need. `SELECT *` reads all columns, even unused ones.
 
@@ -275,6 +283,7 @@ These are orders of magnitude faster than exact counts and accurate within ~2%.
 Athena uses the AWS Glue Data Catalog as its metastore. Tables created in Glue are available in Athena automatically.
 
 **Glue Crawlers** can automatically discover schema by scanning S3:
+
 ```python
 import boto3
 

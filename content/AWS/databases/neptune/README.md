@@ -46,13 +46,13 @@ WHERE {
 
 ## When to Use Neptune
 
-| Use Case | Model | Example |
-|----------|-------|---------|
-| Social network | Property Graph (Gremlin) | "Friends of friends" queries |
+| Use Case        | Model                    | Example                                  |
+| --------------- | ------------------------ | ---------------------------------------- |
+| Social network  | Property Graph (Gremlin) | "Friends of friends" queries             |
 | Fraud detection | Property Graph (Gremlin) | Find suspicious patterns in transactions |
-| Knowledge graph | RDF (SPARQL) | Biomedical research, linked data |
-| Network/IT ops | Property Graph (Gremlin) | Dependencies, impact analysis |
-| Recommendation | Property Graph (Gremlin) | "Users who bought X also bought Y" |
+| Knowledge graph | RDF (SPARQL)             | Biomedical research, linked data         |
+| Network/IT ops  | Property Graph (Gremlin) | Dependencies, impact analysis            |
+| Recommendation  | Property Graph (Gremlin) | "Users who bought X also bought Y"       |
 
 ## Creating a Neptune Cluster
 
@@ -130,57 +130,62 @@ result = g.query("""
 
 ```javascript
 // Add vertex (node)
-g.addV('Person').property('name', 'Alice').property('age', 35)
+g.addV("Person").property("name", "Alice").property("age", 35);
 
 // Add vertex with ID
-g.addV('Person').property(T.id, 'alice-id').property('name', 'Alice')
+g.addV("Person").property(T.id, "alice-id").property("name", "Alice");
 
 // Get vertex by property
-g.V().has('Person', 'name', 'Alice')
+g.V().has("Person", "name", "Alice");
 
 // Get all vertices
-g.V()
+g.V();
 
 // Delete vertex (and edges)
-g.V('alice-id').drop()
+g.V("alice-id").drop();
 ```
 
 ### Edges
 
 ```javascript
 // Add edge
-g.V('alice-id').addE('knows').to(g.V('bob-id'))
+g.V("alice-id").addE("knows").to(g.V("bob-id"));
 
 // Add edge with properties
-g.V('alice-id').addE('knows').property('since', 2020).to(g.V('bob-id'))
+g.V("alice-id").addE("knows").property("since", 2020).to(g.V("bob-id"));
 
 // Traverse edge
-g.V('alice-id').outE('knows').inV()
+g.V("alice-id").outE("knows").inV();
 
 // Get all outgoing edges
-g.V('alice-id').outE()
+g.V("alice-id").outE();
 
 // Get all incoming edges
-g.V('alice-id').inE()
+g.V("alice-id").inE();
 
 // Delete edge
-g.E('knows-id').drop()
+g.E("knows-id").drop();
 ```
 
 ### Traversals
 
 ```javascript
 // Friends of friends
-g.V('alice-id').out('knows').out('knows').dedup()
+g.V("alice-id").out("knows").out("knows").dedup();
 
 // Common friends
-g.V('alice-id').out('knows').in('knows').where(is(neq('alice-id')))
+g.V("alice-id")
+  .out("knows")
+  .in("knows")
+  .where(is(neq("alice-id")));
 
 // Friends older than 30
-g.V('alice-id').out('knows').filter(values('age').is(gt(30)))
+g.V("alice-id")
+  .out("knows")
+  .filter(values("age").is(gt(30)));
 
 // Count friends
-g.V('alice-id').out('knows').count()
+g.V("alice-id").out("knows").count();
 ```
 
 ## SPARQL Operations
@@ -238,29 +243,30 @@ aws cloudwatch get-metric-statistics \
 ```
 
 Key metrics:
+
 - `GremlinOpLatency` — operation latency
 - `NeptuneReplicaLag` — replica lag
 - `LanguageRequests` — requests by language (Gremlin vs SPARQL)
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| db.r6g.xlarge | $0.36/hr (~$259/month) |
-| db.r6g.2xlarge | $0.72/hr (~$518/month) |
-| Serverless | $0.00006 per capacity unit-second |
-| Storage | $0.10/GB/month |
+| Component      | Cost                              |
+| -------------- | --------------------------------- |
+| db.r6g.xlarge  | $0.36/hr (~$259/month)            |
+| db.r6g.2xlarge | $0.72/hr (~$518/month)            |
+| Serverless     | $0.00006 per capacity unit-second |
+| Storage        | $0.10/GB/month                    |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max storage per cluster | 64 TB |
-| Max instances per cluster | 1 primary + 14 replicas |
-| Max edges per node | ~100,000 |
-| Max labels per node | ~100 |
-| Max properties per vertex | ~1,000 |
-| Max query timeout | 30 seconds (configurable) |
+| Resource                  | Limit                     |
+| ------------------------- | ------------------------- |
+| Max storage per cluster   | 64 TB                     |
+| Max instances per cluster | 1 primary + 14 replicas   |
+| Max edges per node        | ~100,000                  |
+| Max labels per node       | ~100                      |
+| Max properties per vertex | ~1,000                    |
+| Max query timeout         | 30 seconds (configurable) |
 
 ## References
 

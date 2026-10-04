@@ -1,6 +1,13 @@
+---
+title: "HorizontalPodAutoscaler (HPA)"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "HorizontalPodAutoscaler (HPA) — Kubernetes reference and architecture guide."
+---
+
 # HorizontalPodAutoscaler (HPA)
 
-*"https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"*
+_"https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/"_
 
 The HorizontalPodAutoscaler (HPA) automatically scales the **number of Pod replicas** in a Deployment, StatefulSet, ReplicaSet, or similar controller, based on observed metrics (CPU, memory, custom, external). It's the **workhorse of k8s autoscaling** — most production clusters have multiple HPAs. HPA is a **control loop** that runs every `--horizontal-pod-autoscaler-sync-period` (default 15s).
 
@@ -90,19 +97,19 @@ spec:
   minReplicas: 2
   maxReplicas: 10
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 60
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
 ```
 
 This HPA:
 
-* Targets the `web` Deployment.
-* Scales between 2 and 10 Pods.
-* Tries to keep average CPU utilization at 60% of `requests.cpu`.
+- Targets the `web` Deployment.
+- Scales between 2 and 10 Pods.
+- Tries to keep average CPU utilization at 60% of `requests.cpu`.
 
 ### 3.1 What "Utilization" means
 
@@ -120,9 +127,9 @@ desiredReplicas = ceil(currentReplicas * currentMetricValue / targetMetricValue)
 
 For the example above:
 
-* `currentReplicas: 3`
-* `currentMetricValue: 90%` (average across Pods)
-* `targetMetricValue: 60%`
+- `currentReplicas: 3`
+- `currentMetricValue: 90%` (average across Pods)
+- `targetMetricValue: 60%`
 
 ```
 desiredReplicas = ceil(3 * 90 / 60) = ceil(4.5) = 5
@@ -132,12 +139,12 @@ The HPA scales to 5 Pods.
 
 ### 4.1 Different metric types
 
-| Metric type | Formula |
-|---|---|
-| `Utilization` | `currentReplicas * (currentUtilization / targetUtilization)` |
-| `AverageValue` | `currentReplicas * (currentAverage / targetAverage)` |
-| `Value` | One value per target, scaled directly |
-| `AverageUtilization` | Same as `Utilization` (alias in v1) |
+| Metric type          | Formula                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| `Utilization`        | `currentReplicas * (currentUtilization / targetUtilization)` |
+| `AverageValue`       | `currentReplicas * (currentAverage / targetAverage)`         |
+| `Value`              | One value per target, scaled directly                        |
+| `AverageUtilization` | Same as `Utilization` (alias in v1)                          |
 
 For `Utilization`, the metric is a fraction (0-100) of `requests`. For `AverageValue`, the metric is in raw units (e.g. "1k requests per second").
 
@@ -153,12 +160,12 @@ Resource metrics are **CPU and memory** — the standard k8s resource metrics. T
 
 ```yaml
 metrics:
-- type: Resource
-  resource:
-    name: cpu                    # or "memory"
-    target:
-      type: Utilization
-      averageUtilization: 60
+  - type: Resource
+    resource:
+      name: cpu # or "memory"
+      target:
+        type: Utilization
+        averageUtilization: 60
 ```
 
 ### 5.1 CPU target
@@ -169,12 +176,12 @@ metrics:
 
 ```yaml
 metrics:
-- type: Resource
-  resource:
-    name: memory
-    target:
-      type: AverageValue
-      averageValue: 512Mi
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: AverageValue
+        averageValue: 512Mi
 ```
 
 Memory target is usually `AverageValue` (raw bytes), not `Utilization`. **Memory is harder to reason about as a fraction of requests** because apps are bursty.
@@ -196,13 +203,13 @@ v2 of the HPA API lets you target **specific containers** (not the whole Pod) an
 
 ```yaml
 metrics:
-- type: ContainerResource
-  containerResource:
-    name: cpu
-    container: app              # specific container
-    target:
-      type: Utilization
-      averageUtilization: 60
+  - type: ContainerResource
+    containerResource:
+      name: cpu
+      container: app # specific container
+      target:
+        type: Utilization
+        averageUtilization: 60
 ```
 
 Useful for multi-container Pods where you want to scale based on the main container, not the sidecar.
@@ -211,13 +218,13 @@ Useful for multi-container Pods where you want to scale based on the main contai
 
 ```yaml
 metrics:
-- type: Pods
-  pods:
-    metric:
-      name: http_requests_per_second
-    target:
-      type: AverageValue
-      averageValue: "1k"
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1k"
 ```
 
 This is a **custom metric**, but the source is per-Pod. The HPA reads the metric for each Pod in the Deployment and computes the average.
@@ -232,13 +239,13 @@ Custom metrics are **per-Pod or per-Object**, not standard k8s resources. They c
 
 ```yaml
 metrics:
-- type: Pods
-  pods:
-    metric:
-      name: queue_depth
-    target:
-      type: AverageValue
-      averageValue: "10"
+  - type: Pods
+    pods:
+      metric:
+        name: queue_depth
+      target:
+        type: AverageValue
+        averageValue: "10"
 ```
 
 The adapter serves `queue_depth` per Pod. The HPA reads the metric and computes the average.
@@ -247,17 +254,17 @@ The adapter serves `queue_depth` per Pod. The HPA reads the metric and computes 
 
 ```yaml
 metrics:
-- type: Object
-  object:
-    metric:
-      name: queue_depth
-    describedObject:
-      apiVersion: v1
-      kind: Queue           # some custom resource
-      name: jobs
-    target:
-      type: Value
-      value: "30"
+  - type: Object
+    object:
+      metric:
+        name: queue_depth
+      describedObject:
+        apiVersion: v1
+        kind: Queue # some custom resource
+        name: jobs
+      target:
+        type: Value
+        value: "30"
 ```
 
 The metric is for a specific k8s Object (not a Pod). Useful for queue depth, custom resources, etc.
@@ -268,16 +275,16 @@ External metrics are **outside the cluster** — Kafka lag, SQS depth, CloudWatc
 
 ```yaml
 metrics:
-- type: External
-  external:
-    metric:
-      name: kafka_consumer_lag
-      selector:
-        matchLabels:
-          topic: orders
-    target:
-      type: AverageValue
-      averageValue: "100"
+  - type: External
+    external:
+      metric:
+        name: kafka_consumer_lag
+        selector:
+          matchLabels:
+            topic: orders
+      target:
+        type: AverageValue
+        averageValue: "100"
 ```
 
 **External metrics are not associated with a Pod or Object** — they're cluster-wide (or labeled). The HPA reads the metric and scales accordingly.
@@ -292,18 +299,18 @@ spec:
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
-      - type: Percent
-        value: 10
-        periodSeconds: 60
+        - type: Percent
+          value: 10
+          periodSeconds: 60
     scaleUp:
       stabilizationWindowSeconds: 0
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 30
-      - type: Pods
-        value: 4
-        periodSeconds: 30
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 4
+          periodSeconds: 30
       selectPolicy: Max
 ```
 
@@ -313,8 +320,8 @@ The `behavior` field controls how aggressively HPA scales up vs down. The asymme
 
 Without a `behavior` field:
 
-* **scaleUp**: 0s stabilization, can add 100% or 4 Pods every 30s
-* **scaleDown**: 300s stabilization, can remove 100% or 4 Pods every 30s (with the stabilization, scale-down is conservative)
+- **scaleUp**: 0s stabilization, can add 100% or 4 Pods every 30s
+- **scaleDown**: 300s stabilization, can remove 100% or 4 Pods every 30s (with the stabilization, scale-down is conservative)
 
 The defaults are sensible. Override them for specific workloads.
 
@@ -364,9 +371,9 @@ Policies cap **how fast** HPA can change replicas, in either direction.
 
 ```yaml
 policies:
-- type: Percent
-  value: 50               # at most 50% of current replicas
-  periodSeconds: 60       # per 60s
+  - type: Percent
+    value: 50 # at most 50% of current replicas
+    periodSeconds: 60 # per 60s
 ```
 
 A `Percent` policy caps the change as a fraction of the current replicas.
@@ -377,9 +384,9 @@ For 3 → 5 with `value: 50, periodSeconds: 60`: at most 50% of 3 = 1.5 → 1 ne
 
 ```yaml
 policies:
-- type: Pods
-  value: 2                # at most 2 Pods
-  periodSeconds: 30       # per 30s
+  - type: Pods
+    value: 2 # at most 2 Pods
+    periodSeconds: 30 # per 30s
 ```
 
 An absolute cap. At most 2 new Pods every 30s.
@@ -388,12 +395,12 @@ An absolute cap. At most 2 new Pods every 30s.
 
 ```yaml
 policies:
-- type: Percent
-  value: 100
-  periodSeconds: 30
-- type: Pods
-  value: 4
-  periodSeconds: 30
+  - type: Percent
+    value: 100
+    periodSeconds: 30
+  - type: Pods
+    value: 4
+    periodSeconds: 30
 selectPolicy: Max
 ```
 
@@ -459,8 +466,8 @@ spec:
   maxReplicas: 10
 ```
 
-* **`minReplicas`** — the floor. The HPA never scales below this. Default is 1.
-* **`maxReplicas`** — the ceiling. The HPA never scales above this.
+- **`minReplicas`** — the floor. The HPA never scales below this. Default is 1.
+- **`maxReplicas`** — the ceiling. The HPA never scales above this.
 
 ### 13.1 Scale to zero
 
@@ -468,7 +475,7 @@ spec:
 
 ```yaml
 spec:
-  minReplicaCount: 0       # KEDA uses minReplicaCount, not minReplicas
+  minReplicaCount: 0 # KEDA uses minReplicaCount, not minReplicas
   maxReplicaCount: 10
 ```
 
@@ -476,9 +483,9 @@ spec:
 
 ### 13.2 Scale to zero gotchas
 
-* **Cold start latency** — scaling from 0 takes 5-30s. Plan for it.
-* **Service routing** — a Service with 0 Pods has no Endpoints. The Service is "not ready". Some clients fail.
-* **Knative and KEDA** handle this gracefully (built-in scale-to-zero support). Plain HPA doesn't have the same level of polish.
+- **Cold start latency** — scaling from 0 takes 5-30s. Plan for it.
+- **Service routing** — a Service with 0 Pods has no Endpoints. The Service is "not ready". Some clients fail.
+- **Knative and KEDA** handle this gracefully (built-in scale-to-zero support). Plain HPA doesn't have the same level of polish.
 
 For most production workloads, **don't set `minReplicas: 0`**. The cold start penalty is real. Use it for dev / test or event-driven workloads where KEDA's handling is appropriate.
 
@@ -486,11 +493,11 @@ For most production workloads, **don't set `minReplicas: 0`**. The cold start pe
 
 HPA works on any controller that implements the **scale subresource** (`/scale`):
 
-* Deployment ✓
-* StatefulSet ✓
-* ReplicaSet ✓
-* ReplicationController ✓
-* Custom controllers with the scale subresource
+- Deployment ✓
+- StatefulSet ✓
+- ReplicaSet ✓
+- ReplicationController ✓
+- Custom controllers with the scale subresource
 
 ### 14.1 HPA on StatefulSet
 
@@ -529,8 +536,9 @@ HPA:  sees 10 Pods at 60% CPU each
 ```yaml
 # HPA: scale on CPU
 metrics:
-- type: Resource
-  resource: { name: cpu, target: { type: Utilization, averageUtilization: 60 } }
+  - type: Resource
+    resource:
+      { name: cpu, target: { type: Utilization, averageUtilization: 60 } }
 
 # VPA: tune memory
 controlledResources: [memory]
@@ -550,9 +558,9 @@ Same as HPA + Karpenter. CA or Karpenter is the cluster-level autoscaler.
 
 ### 15.4 What doesn't work
 
-* **HPA + VPA on the same metric** — fight. The HPA controller emits an error event.
-* **HPA scaling on a metric VPA controls** — see above.
-* **HPA on `replicas: 0` Deployment** — HPA has no Pods to query, can't compute.
+- **HPA + VPA on the same metric** — fight. The HPA controller emits an error event.
+- **HPA scaling on a metric VPA controls** — see above.
+- **HPA on `replicas: 0` Deployment** — HPA has no Pods to query, can't compute.
 
 ## 16. Operations and Debugging
 
@@ -697,8 +705,8 @@ kubectl edit deployment <name>
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — what HPA computes against
-* [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — the vertical counterpart
-* [[Kubernetes/concepts/L06-scheduling-scaling/10-keda|KEDA]] — the event-driven variant
-* [[Kubernetes/concepts/L06-scheduling-scaling/04-poddisruptionbudget|PDB]] — how PDBs interact with HPA scale-down
-* [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — the L06 overview
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — what HPA computes against
+- [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — the vertical counterpart
+- [[Kubernetes/concepts/L06-scheduling-scaling/10-keda|KEDA]] — the event-driven variant
+- [[Kubernetes/concepts/L06-scheduling-scaling/04-poddisruptionbudget|PDB]] — how PDBs interact with HPA scale-down
+- [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — the L06 overview

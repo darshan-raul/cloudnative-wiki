@@ -16,14 +16,14 @@ CloudWatch Dashboards create customizable views of your metrics and logs. You ca
 
 ### Widget Types
 
-| Widget | Use |
-|--------|-----|
-| Line | Time-series metrics (CPU, latency) |
+| Widget       | Use                                                     |
+| ------------ | ------------------------------------------------------- |
+| Line         | Time-series metrics (CPU, latency)                      |
 | Stacked Area | Multiple metrics stacked (request count by status code) |
-| Bar | Comparative metrics (error rate by service) |
-| Number | Single metric value (current p99 latency) |
-| Text | Static text, markdown (annotations, team info) |
-| Pie/Donut | Percentage breakdown (error types) |
+| Bar          | Comparative metrics (error rate by service)             |
+| Number       | Single metric value (current p99 latency)               |
+| Text         | Static text, markdown (annotations, team info)          |
+| Pie/Donut    | Percentage breakdown (error types)                      |
 
 ### Dashboard Structure
 
@@ -32,11 +32,19 @@ CloudWatch Dashboards create customizable views of your metrics and logs. You ca
   "widgets": [
     {
       "type": "metric",
-      "x": 0, "y": 0, "width": 12, "height": 6,
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
       "properties": {
         "title": "API Latency",
         "metrics": [
-          ["AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "app/my-alb"],
+          [
+            "AWS/ApplicationELB",
+            "TargetResponseTime",
+            "LoadBalancer",
+            "app/my-alb"
+          ],
           [".", "HealthyHostCount", ".", "."]
         ],
         "period": 60,
@@ -46,7 +54,10 @@ CloudWatch Dashboards create customizable views of your metrics and logs. You ca
     },
     {
       "type": "text",
-      "x": 12, "y": 0, "width": 12, "height": 3,
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 3,
       "properties": {
         "markdown": "# Production Dashboard\nLast updated: 2024-01-15"
       }
@@ -140,9 +151,7 @@ Use metric math expressions directly in dashboard widgets:
   "type": "metric",
   "properties": {
     "title": "Error Rate %",
-    "metrics": [
-      {"expression": "100 * (m1/m2)", "label": "Error Rate"}
-    ]
+    "metrics": [{ "expression": "100 * (m1/m2)", "label": "Error Rate" }]
   }
 }
 ```
@@ -155,7 +164,11 @@ Use metric math expressions directly in dashboard widgets:
 {
   "widgets": [
     {
-      "type": "metric", "x": 0, "y": 0, "width": 12, "height": 6,
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
       "properties": {
         "title": "ALB Metrics",
         "metrics": [
@@ -166,17 +179,25 @@ Use metric math expressions directly in dashboard widgets:
       }
     },
     {
-      "type": "metric", "x": 12, "y": 0, "width": 12, "height": 6,
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
       "properties": {
         "title": "EC2 Metrics",
         "metrics": [
-          ["AWS/EC2", "CPUUtilization", {"value": "*"}],
-          ["AWS/EC2", "NetworkOut", {"value": "*"}]
+          ["AWS/EC2", "CPUUtilization", { "value": "*" }],
+          ["AWS/EC2", "NetworkOut", { "value": "*" }]
         ]
       }
     },
     {
-      "type": "metric", "x": 0, "y": 6, "width": 12, "height": 6,
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
       "properties": {
         "title": "RDS Metrics",
         "metrics": [
@@ -236,12 +257,12 @@ Dashboard widgets can sync to a specific time range — when you zoom in on one 
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Dashboards per account | 100 |
-| Widgets per dashboard | 100 |
-| Metrics per widget | 100 |
-| Dashboard body size | 512KB |
+| Resource               | Limit |
+| ---------------------- | ----- |
+| Dashboards per account | 100   |
+| Widgets per dashboard  | 100   |
+| Metrics per widget     | 100   |
+| Dashboard body size    | 512KB |
 
 ## References
 

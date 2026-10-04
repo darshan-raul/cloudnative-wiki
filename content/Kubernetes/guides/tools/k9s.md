@@ -1,3 +1,10 @@
+---
+title: "K9s - Kubernetes CLI To Manage Your Clusters In Style"
+tags: ["kubernetes", "guides"]
+date: 2026-09-06
+description: "K9s - Kubernetes CLI To Manage Your Clusters In Style — Kubernetes reference and architecture guide."
+---
+
 # K9s - Kubernetes CLI To Manage Your Clusters In Style
 
 [K9s](https://k9scli.io/) is a terminal-based UI to interact with Kubernetes clusters. It continually watches for changes and provides commands to interact with observed resources.
@@ -28,6 +35,7 @@ K9s uses your standard kubeconfig. Switch between clusters using:
 ```
 
 Or from the command line:
+
 ```bash
 k9s --context <context-name>
 ```
@@ -44,11 +52,11 @@ k9s:
     active: default
     lockFavorites: false
     favorites:
-    - kube-system
-    - default
-    - production
+      - kube-system
+      - default
+      - production
   view:
-    active: po  # default view for this context
+    active: po # default view for this context
   featureGates:
     nodeShell: false
   portForwardAddress: localhost
@@ -72,67 +80,67 @@ k9s:
   namespace:
     active: default
     favorites:
-    - kube-system
-    - default
-    - production
-    lockFavorites: true  # Prevent k9s from auto-updating favorites
+      - kube-system
+      - default
+      - production
+    lockFavorites: true # Prevent k9s from auto-updating favorites
 ```
 
 ## Essential Workflows
 
 ### Navigation & Views
 
-| Command | Description |
-|---------|-------------|
-| `:` | Enter command mode |
-| `:`pod | View pods |
-| `:`dp | View deployments |
-| `:`svc | View services |
-| `:`ns | Switch namespace |
-| `:`ctx | Switch context |
+| Command            | Description                     |
+| ------------------ | ------------------------------- |
+| `:`                | Enter command mode              |
+| `:`pod             | View pods                       |
+| `:`dp              | View deployments                |
+| `:`svc             | View services                   |
+| `:`ns              | Switch namespace                |
+| `:`ctx             | Switch context                  |
 | `:`xray <resource> | XRay view (e.g., `xray deploy`) |
-| `:`pulses | Cluster pulses dashboard |
-| `/` | Filter mode |
-| `?` | Show all keybindings |
+| `:`pulses          | Cluster pulses dashboard        |
+| `/`                | Filter mode                     |
+| `?`                | Show all keybindings            |
 
 ### Logs
 
-| Key | Description |
-|-----|-------------|
-| `l` | View logs |
-| `p` | Previous logs |
-| `t` | Toggle timestamps |
-| `w` | Toggle wrap |
-| `f` | Toggle fullscreen |
+| Key       | Description         |
+| --------- | ------------------- |
+| `l`       | View logs           |
+| `p`       | Previous logs       |
+| `t`       | Toggle timestamps   |
+| `w`       | Toggle wrap         |
+| `f`       | Toggle fullscreen   |
 | `shift-f` | Port-forward + logs |
 
 ### Container Interaction
 
-| Key | Description |
-|-----|-------------|
+| Key | Description          |
+| --- | -------------------- |
 | `s` | Shell into container |
-| `a` | Attach to container |
-| `c` | Copy container name |
+| `a` | Attach to container  |
+| `c` | Copy container name  |
 
 ### Resource Management
 
-| Key | Description |
-|-----|-------------|
-| `d` | Describe resource |
-| `e` | Edit resource |
-| `y` | View YAML |
-| `ctrl-d` | Delete (with confirmation) |
-| `ctrl-k` | Kill (immediate) |
-| `r` | Restart (Deployments/DaemonSets/StatefulSets) |
-| `b` | Benchmark HTTP service |
+| Key      | Description                                   |
+| -------- | --------------------------------------------- |
+| `d`      | Describe resource                             |
+| `e`      | Edit resource                                 |
+| `y`      | View YAML                                     |
+| `ctrl-d` | Delete (with confirmation)                    |
+| `ctrl-k` | Kill (immediate)                              |
+| `r`      | Restart (Deployments/DaemonSets/StatefulSets) |
+| `b`      | Benchmark HTTP service                        |
 
 ### Port Forwards
 
-| Key | Description |
-|-----|-------------|
-| `f` | Show active port-forwards |
-| `shift-f` | Create port-forward |
-| `ctrl-z` | Toggle faults display |
+| Key       | Description               |
+| --------- | ------------------------- |
+| `f`       | Show active port-forwards |
+| `shift-f` | Create port-forward       |
+| `ctrl-z`  | Toggle faults display     |
 
 ## Filtering
 
@@ -144,6 +152,7 @@ k9s:
 ```
 
 Examples:
+
 ```
 :pod /fred              # Pods matching "fred"
 :pod app=fred,env=dev   # Pods with labels app=fred AND env=dev
@@ -178,7 +187,7 @@ Create `~/.config/k9s/aliases.yaml`:
 aliases:
   pp: v1/pods
   dep: apps/v1/deployments
-  fred: pod default app=fred  # Pre-filtered alias
+  fred: pod default app=fred # Pre-filtered alias
 ```
 
 ## Configuration
@@ -230,6 +239,7 @@ k9s --readonly
 ```
 
 Or per-context in config:
+
 ```yaml
 k9s:
   readOnly: true

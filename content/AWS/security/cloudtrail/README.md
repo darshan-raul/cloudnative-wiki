@@ -16,11 +16,11 @@ CloudTrail records AWS API calls made in your account. Every AWS action (Console
 
 ### Event Types
 
-| Event Type | Description | Examples |
-|------------|-------------|----------|
-| Management Events | Control plane operations | CreateInstance, DeleteBucket, AttachRolePolicy |
-| Data Events | Data plane operations | GetObject, PutObject, PutItem, Query |
-| Insight Events | Unusual API call patterns | Spike in Delete*, abnormal Create* activity |
+| Event Type        | Description               | Examples                                       |
+| ----------------- | ------------------------- | ---------------------------------------------- |
+| Management Events | Control plane operations  | CreateInstance, DeleteBucket, AttachRolePolicy |
+| Data Events       | Data plane operations     | GetObject, PutObject, PutItem, Query           |
+| Insight Events    | Unusual API call patterns | Spike in Delete*, abnormal Create* activity    |
 
 ### CloudTrail vs CloudWatch Logs vs VPC Flow Logs
 
@@ -53,7 +53,7 @@ VPC Flow Logs  → Network traffic (who talked to whom, not API calls)
   },
   "responseElements": {
     "reservationId": "r-xxxxx",
-    "instancesSet": [{"instanceId": "i-xxxxx"}]
+    "instancesSet": [{ "instanceId": "i-xxxxx" }]
   },
   "requestID": "xxxxx-xxxxx",
   "eventID": "xxxxx-xxxxx",
@@ -89,18 +89,20 @@ aws cloudtrail update-trail \
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {"Service": "cloudtrail.amazonaws.com"},
-    "Action": "s3:PutObject",
-    "Resource": "arn:aws:s3:::my-cloudtrail-logs/*",
-    "Condition": {
-      "StringEquals": {
-        "s3:x-amz-acl": "bucket-owner-full-control",
-        "aws:SourceAccount": "123456789012"
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "Service": "cloudtrail.amazonaws.com" },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::my-cloudtrail-logs/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control",
+          "aws:SourceAccount": "123456789012"
+        }
       }
     }
-  }]
+  ]
 }
 ```
 
@@ -193,24 +195,24 @@ CloudTrail encrypts log files with the specified CMK. You pay for KMS API calls 
 
 ## Security Recommendations
 
-| Recommendation | Why |
-|----------------|-----|
-| Enable multi-region trail | Capture events from all regions |
-| Enable global service events | Capture IAM, STS, Lambda events |
-| Enable log file validation | Detect tampering with log files |
-| Send to CloudWatch | Real-time alerting (not just post-hoc) |
-| Use S3 Object Lock | Prevent log deletion (compliance) |
-| Enable Insights events | Detect abnormal activity |
+| Recommendation               | Why                                    |
+| ---------------------------- | -------------------------------------- |
+| Enable multi-region trail    | Capture events from all regions        |
+| Enable global service events | Capture IAM, STS, Lambda events        |
+| Enable log file validation   | Detect tampering with log files        |
+| Send to CloudWatch           | Real-time alerting (not just post-hoc) |
+| Use S3 Object Lock           | Prevent log deletion (compliance)      |
+| Enable Insights events       | Detect abnormal activity               |
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Management events | Free (90-day event history) |
-| Data events | $0.10/100,000 events (S3), $0.05/100,000 events (DynamoDB) |
-| Insight events | $0.10/100,000 events |
-| S3 storage | $0.023/GB |
-| CloudWatch Logs | $0.50/GB ingested |
+| Component         | Cost                                                       |
+| ----------------- | ---------------------------------------------------------- |
+| Management events | Free (90-day event history)                                |
+| Data events       | $0.10/100,000 events (S3), $0.05/100,000 events (DynamoDB) |
+| Insight events    | $0.10/100,000 events                                       |
+| S3 storage        | $0.023/GB                                                  |
+| CloudWatch Logs   | $0.50/GB ingested                                          |
 
 ## References
 
@@ -228,7 +230,7 @@ CloudTrail encrypts log files with the specified CMK. You pay for KMS API calls 
 
 ## Nuggets & Gotchas
 
-- **CloudTrail doesn't log read operations by default (GetObject, Describe*) — enable data events:** Management events are free and cover control plane (who created/deleted resources). For data plane operations (who accessed what data), you need data events at $0.10/100K (S3) or disable them.
+- **CloudTrail doesn't log read operations by default (GetObject, Describe\*) — enable data events:** Management events are free and cover control plane (who created/deleted resources). For data plane operations (who accessed what data), you need data events at $0.10/100K (S3) or disable them.
 - **CloudTrail log files are delivered every 5 minutes — not real-time:** If you need immediate alerting (e.g., someone deleting a bucket), use CloudWatch integration with a 1-minute filter. CloudTrail delivers to S3 every 5 minutes.
 - **S3 data events generate 2 events per object operation (List and Get/Put):** A single `aws s3 cp file.txt s3://bucket/` generates 2 CloudTrail events. For heavy S3 use, this multiplies costs fast.
 - **CloudTrail log validation (hash chain) detects deletion but not modification:** File validation uses a hash chain to prove integrity. If someone deletes a log file, validation fails. If someone modifies a log file, the hash won't match. But the hash is stored in a separate file.

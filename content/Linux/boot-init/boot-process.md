@@ -38,6 +38,7 @@ UEFI boot order:
 ## Stage 2: Bootloader
 
 The bootloader (almost always GRUB2) does two jobs:
+
 1. **Select a kernel** from disk
 2. **Pass kernel parameters** and load the kernel + initramfs into memory
 
@@ -78,6 +79,7 @@ net.ifnames=0             # disable predictable network interface names
 ### Initramfs
 
 The **initial RAM filesystem** (`initramfs`) is a temporary root filesystem loaded into RAM by the bootloader. It contains:
+
 - Busybox (minimal /bin/sh, /bin/cat, /bin/mount, etc.)
 - Kernel modules needed to access the real root filesystem (SCSI, RAID, LVM, ext4, xfs, etc.)
 - `init` script that mounts the real root and pivots into it
@@ -130,6 +132,7 @@ The oldest init system. Uses shell scripts and runlevels:
 ```
 
 Runlevels:
+
 - 0: Halt
 - 1/s/S: Single-user mode (no network, root only)
 - 2-5: Multi-user (2 = no network, 3 = full, 5 = GUI)
@@ -156,6 +159,7 @@ systemd
 ```
 
 Units are in:
+
 ```
 /etc/systemd/system/     # system administrator units
 /run/systemd/system/    # runtime units
@@ -164,13 +168,13 @@ Units are in:
 
 ### systemd Targets (equivalent to runlevels)
 
-| Target         | Equivalent | Purpose                          |
-|---------------|-----------|----------------------------------|
-| emergency.target | init 1  | Emergency shell                  |
-| rescue.target    | init s  | Single-user with basic services |
-| multi-user.target| init 3  | Multi-user, no GUI              |
-| graphical.target | init 5  | Multi-user with GUI            |
-| default.target   |         | What systemd boots to by default |
+| Target            | Equivalent | Purpose                          |
+| ----------------- | ---------- | -------------------------------- |
+| emergency.target  | init 1     | Emergency shell                  |
+| rescue.target     | init s     | Single-user with basic services  |
+| multi-user.target | init 3     | Multi-user, no GUI               |
+| graphical.target  | init 5     | Multi-user with GUI              |
+| default.target    |            | What systemd boots to by default |
 
 ```bash
 # Change default target

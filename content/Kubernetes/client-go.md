@@ -38,12 +38,12 @@ flowchart TD
 
 `client-go` provides four distinct clients depending on your type-safety and customization needs:
 
-| Client Type | Import Package | Type Safety | Best Used For |
-| :--- | :--- | :--- | :--- |
-| **`Clientset`** | `k8s.io/client-go/kubernetes` | Strongly typed (Go structs) | Core built-in Kubernetes objects (`Pods`, `Deployments`, `Services`, `Nodes`). |
-| **`DynamicClient`** | `k8s.io/client-go/dynamic` | Untyped (`unstructured.Unstructured`) | Custom Resources (CRDs) without needing pre-generated Go code. |
-| **`MetadataClient`** | `k8s.io/client-go/metadata` | Metadata-only (`metav1.ObjectMeta`) | High-performance controllers doing garbage collection, labeling, or quota tracking without loading entire specs into RAM. |
-| **`RESTClient`** | `k8s.io/client-go/rest` | Raw HTTP wrapper | Low-level subresource streaming (`exec`, `logs`, port-forwarding). |
+| Client Type          | Import Package                | Type Safety                           | Best Used For                                                                                                             |
+| :------------------- | :---------------------------- | :------------------------------------ | :------------------------------------------------------------------------------------------------------------------------ |
+| **`Clientset`**      | `k8s.io/client-go/kubernetes` | Strongly typed (Go structs)           | Core built-in Kubernetes objects (`Pods`, `Deployments`, `Services`, `Nodes`).                                            |
+| **`DynamicClient`**  | `k8s.io/client-go/dynamic`    | Untyped (`unstructured.Unstructured`) | Custom Resources (CRDs) without needing pre-generated Go code.                                                            |
+| **`MetadataClient`** | `k8s.io/client-go/metadata`   | Metadata-only (`metav1.ObjectMeta`)   | High-performance controllers doing garbage collection, labeling, or quota tracking without loading entire specs into RAM. |
+| **`RESTClient`**     | `k8s.io/client-go/rest`       | Raw HTTP wrapper                      | Low-level subresource streaming (`exec`, `logs`, port-forwarding).                                                        |
 
 ---
 
@@ -91,6 +91,7 @@ func GetKubernetesClient() (*kubernetes.Clientset, error) {
 Never query `kube-apiserver` with `client.CoreV1().Pods("").List(...)` inside a reconcile loop! A polling loop against etcd will exhaust API server resources and bring down the cluster.
 
 Instead, use **`SharedInformerFactory`**:
+
 1. The **Reflector** establishes an HTTP chunked watch stream.
 2. The **Indexer** caches all objects in memory as a local, indexed cache.
 3. The **Lister** reads strictly from local RAM (`Get` / `List` have zero network overhead).
@@ -139,6 +140,7 @@ func SetupInformer(client *kubernetes.Clientset, stopCh <-chan struct{}) {
 ## 4. The Workqueue & Reconcile Loop Pattern
 
 Controllers process items using a **`RateLimitingQueue`**, which provides:
+
 - **Deduplication:** Adding the same key multiple times while it is queued collapses into a single work item.
 - **Exponential Backoff:** Retries failing reconciliations with increasing backoff intervals to prevent thrashing the API.
 - **Fair Parallelism:** Multiple worker goroutines can pop items concurrently without race conditions on the same key.

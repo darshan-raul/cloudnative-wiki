@@ -54,6 +54,7 @@ cat /etc/pacman.conf
 ```
 
 Key settings:
+
 ```
 [options]
 Architecture = auto           # x86_64, i686
@@ -146,11 +147,11 @@ paru -S minecraft-launcher
 
 ### AUR Helpers Comparison
 
-| Helper   | Language | Features                            |
-|---------|----------|-------------------------------------|
-| yay     | Go       | Default in EndeavourOS, interactive |
-| paru    | Rust      | Fastest, --leaf, -Qm for foreign    |
-| trizen  | Perl      | Minimal, pacman-like                 |
+| Helper | Language | Features                            |
+| ------ | -------- | ----------------------------------- |
+| yay    | Go       | Default in EndeavourOS, interactive |
+| paru   | Rust     | Fastest, --leaf, -Qm for foreign    |
+| trizen | Perl     | Minimal, pacman-like                |
 
 ### AUR Safety
 

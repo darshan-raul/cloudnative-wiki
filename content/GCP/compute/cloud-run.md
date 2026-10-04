@@ -44,7 +44,7 @@ Unlike AWS Lambda (which executes exactly one request per container instance at 
        └─────────────────────┘         └─────────────────────┘
 ```
 
-* **Cost Efficiency:** Instead of provisioning 150 separate instances (as Lambda would), Cloud Run serves the identical workload using only **2 container instances**.
+- **Cost Efficiency:** Instead of provisioning 150 separate instances (as Lambda would), Cloud Run serves the identical workload using only **2 container instances**.
 
 ---
 
@@ -52,41 +52,42 @@ Unlike AWS Lambda (which executes exactly one request per container instance at 
 
 ### 1. Cloud Run Services vs. Cloud Run Jobs
 
-| Dimension | Cloud Run Services | Cloud Run Jobs |
-| :--- | :--- | :--- |
-| **Trigger** | Ingress-driven: HTTP, HTTPS, WebSockets, gRPC, Pub/Sub | Invoked explicitly via CLI, API, or Cloud Scheduler |
-| **Execution Model** | Continuously listening on `$PORT` (default 8080) | Runs until completion (exit code 0 or error) |
-| **Max Timeout** | 60 minutes per request | 24 hours per task execution |
-| **Scaling** | Scale-to-zero when traffic stops; scales out on concurrency | Parallel tasks array (`--tasks=50`, `--parallelism=10`) |
-| **Use Cases** | Web apps, REST APIs, webhooks, microservices | DB migrations, batch video processing, periodic reports |
+| Dimension           | Cloud Run Services                                          | Cloud Run Jobs                                          |
+| :------------------ | :---------------------------------------------------------- | :------------------------------------------------------ |
+| **Trigger**         | Ingress-driven: HTTP, HTTPS, WebSockets, gRPC, Pub/Sub      | Invoked explicitly via CLI, API, or Cloud Scheduler     |
+| **Execution Model** | Continuously listening on `$PORT` (default 8080)            | Runs until completion (exit code 0 or error)            |
+| **Max Timeout**     | 60 minutes per request                                      | 24 hours per task execution                             |
+| **Scaling**         | Scale-to-zero when traffic stops; scales out on concurrency | Parallel tasks array (`--tasks=50`, `--parallelism=10`) |
+| **Use Cases**       | Web apps, REST APIs, webhooks, microservices                | DB migrations, batch video processing, periodic reports |
 
 ### 2. Concurrency Tuning
 
 Concurrency specifies the maximum number of simultaneous requests a single container instance can receive:
-* **Default:** 80 concurrent requests per instance.
-* **Range:** 1 to 1,000.
-* **Tuning Guide:**
-  * **I/O-Bound (Node.js, Go, Python AsyncIO):** Concurrency 80–200 works exceptionally well because threads yield during network/DB waits.
-  * **CPU-Bound (Image processing, ML inference, cryptography):** Set concurrency to **1 to 4** to prevent CPU starvation and latency spikes.
+
+- **Default:** 80 concurrent requests per instance.
+- **Range:** 1 to 1,000.
+- **Tuning Guide:**
+  - **I/O-Bound (Node.js, Go, Python AsyncIO):** Concurrency 80–200 works exceptionally well because threads yield during network/DB waits.
+  - **CPU-Bound (Image processing, ML inference, cryptography):** Set concurrency to **1 to 4** to prevent CPU starvation and latency spikes.
 
 ### 3. CPU Allocation: Throttled vs. Always-On
 
-* **CPU allocated during request processing (Default):**
-  * CPU is granted only while an active HTTP request is being processed.
-  * When no requests are in flight, CPU is throttled to near 0%.
-  * **Gotcha:** Any background thread or async task executing outside an active request scope is frozen!
-* **CPU always allocated:**
-  * CPU is continuously provided throughout the container's entire lifecycle.
-  * Enables background tasks, scheduled polling, and long-lived WebSockets without freezing.
-  * Incurs hourly billing for the entire duration the instance exists.
+- **CPU allocated during request processing (Default):**
+  - CPU is granted only while an active HTTP request is being processed.
+  - When no requests are in flight, CPU is throttled to near 0%.
+  - **Gotcha:** Any background thread or async task executing outside an active request scope is frozen!
+- **CPU always allocated:**
+  - CPU is continuously provided throughout the container's entire lifecycle.
+  - Enables background tasks, scheduled polling, and long-lived WebSockets without freezing.
+  - Incurs hourly billing for the entire duration the instance exists.
 
 ### 4. Direct VPC Egress vs. Serverless VPC Access Connector
 
 To connect Cloud Run to private resources (like a private Cloud SQL instance or Redis):
 
-| Approach | Mechanics | Tradeoffs |
-| :--- | :--- | :--- |
-| **Serverless VPC Access Connector** | Deploys dedicated `e2-micro` bridge VMs in your VPC | Extra cost ($20–$30/mo/connector), scaling bottlenecks, slow provisioning |
+| Approach                               | Mechanics                                                         | Tradeoffs                                                                      |
+| :------------------------------------- | :---------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| **Serverless VPC Access Connector**    | Deploys dedicated `e2-micro` bridge VMs in your VPC               | Extra cost ($20–$30/mo/connector), scaling bottlenecks, slow provisioning      |
 | **Direct VPC Egress (Modern Default)** | Directly attaches container network interfaces to your VPC subnet | **Zero connector VMs**, zero connector cost, sub-second scaling, lower latency |
 
 ---
@@ -135,43 +136,45 @@ gcloud run jobs execute data-indexer --region=us-central1 --wait
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max instances per service** | 1,000 (default) | Can be increased to 10,000 via quota request |
-| **Max request timeout** | 60 minutes | Default is 5 minutes |
-| **Max container image size** | 32 GB | Keep under 500 MB for fast cold starts |
-| **Max memory per instance** | 32 GiB | Up to 8 vCPUs |
-| **Default HTTP port** | Reads `$PORT` (8080 default) | Container must bind to `0.0.0.0:$PORT` |
+| Parameter                     | Limit                        | Production Notes                             |
+| :---------------------------- | :--------------------------- | :------------------------------------------- |
+| **Max instances per service** | 1,000 (default)              | Can be increased to 10,000 via quota request |
+| **Max request timeout**       | 60 minutes                   | Default is 5 minutes                         |
+| **Max container image size**  | 32 GB                        | Keep under 500 MB for fast cold starts       |
+| **Max memory per instance**   | 32 GiB                       | Up to 8 vCPUs                                |
+| **Default HTTP port**         | Reads `$PORT` (8080 default) | Container must bind to `0.0.0.0:$PORT`       |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/run
-* **Documentation:** https://cloud.google.com/run/docs
-* **Concurrency Guide:** https://cloud.google.com/run/docs/about-instance-concurrency
-* **Direct VPC Egress:** https://cloud.google.com/run/docs/configuring/vpc-direct-vpc
-* **Pricing:** https://cloud.google.com/run/pricing
+- **Homepage:** https://cloud.google.com/run
+- **Documentation:** https://cloud.google.com/run/docs
+- **Concurrency Guide:** https://cloud.google.com/run/docs/about-instance-concurrency
+- **Direct VPC Egress:** https://cloud.google.com/run/docs/configuring/vpc-direct-vpc
+- **Pricing:** https://cloud.google.com/run/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Low-Traffic Web API (Scale-to-Zero)
-* API receives 500,000 requests / month with average response time of 200 ms.
-* Concurrency: 80. Instance footprint: 1 vCPU, 512 MB RAM.
-* Active compute time: (500,000 reqs × 0.2s) / 80 = 1,250 instance-seconds.
-* Monthly Free Tier: First 2 million requests, 360,000 vCPU-seconds, and 180,000 GiB-seconds are **completely free** every month.
-* **Total Monthly Bill:** **$0.00 / month** (Falls entirely within the permanent free tier).
+
+- API receives 500,000 requests / month with average response time of 200 ms.
+- Concurrency: 80. Instance footprint: 1 vCPU, 512 MB RAM.
+- Active compute time: (500,000 reqs × 0.2s) / 80 = 1,250 instance-seconds.
+- Monthly Free Tier: First 2 million requests, 360,000 vCPU-seconds, and 180,000 GiB-seconds are **completely free** every month.
+- **Total Monthly Bill:** **$0.00 / month** (Falls entirely within the permanent free tier).
 
 ### Scenario 2: High-Traffic Production Microservice
-* 100 million requests / month, average execution time: 100 ms.
-* Settings: 1 vCPU, 512 MB RAM, concurrency: 50.
-* Billable vCPU-seconds: ~200,000 vCPU-seconds.
-* Minimum instances: 1 continuous warm instance (to eliminate cold starts):
-  * 730 hours × 3600s = 2,628,000 vCPU-seconds (idle tier @ $0.0000025/sec = ~$6.57).
-* Total requests + active execution: ~$45.00.
-* **Total Monthly Cost:** **~$51.57 / month**. (An equivalent AWS Lambda workload with 100M invocations would cost ~$180+ due to 1-request-per-instance limitations).
+
+- 100 million requests / month, average execution time: 100 ms.
+- Settings: 1 vCPU, 512 MB RAM, concurrency: 50.
+- Billable vCPU-seconds: ~200,000 vCPU-seconds.
+- Minimum instances: 1 continuous warm instance (to eliminate cold starts):
+  - 730 hours × 3600s = 2,628,000 vCPU-seconds (idle tier @ $0.0000025/sec = ~$6.57).
+- Total requests + active execution: ~$45.00.
+- **Total Monthly Cost:** **~$51.57 / month**. (An equivalent AWS Lambda workload with 100M invocations would cost ~$180+ due to 1-request-per-instance limitations).
 
 ---
 

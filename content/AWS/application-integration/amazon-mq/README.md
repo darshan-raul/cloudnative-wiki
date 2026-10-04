@@ -16,14 +16,14 @@ Amazon MQ is a managed broker service for ActiveMQ (Java, JMS) and RabbitMQ (Erl
 
 ## ActiveMQ vs RabbitMQ
 
-| Feature | ActiveMQ | RabbitMQ |
-|---------|----------|----------|
-| Language | Java | Erlang |
-| Protocols | JMS, AMQP, MQTT, OpenWire, STOMP | AMQP, MQTT, STOMP, HTTP |
-| Management | Web console, JMX | Management UI, CLI |
-| Queue features | Message groups, virtual topics | Dead-letter exchanges, per-message TTL |
-| Clustering | Master/slave | Quorum queues |
-| Use case | Java/JMS apps | Flexible routing, microservices |
+| Feature        | ActiveMQ                         | RabbitMQ                               |
+| -------------- | -------------------------------- | -------------------------------------- |
+| Language       | Java                             | Erlang                                 |
+| Protocols      | JMS, AMQP, MQTT, OpenWire, STOMP | AMQP, MQTT, STOMP, HTTP                |
+| Management     | Web console, JMX                 | Management UI, CLI                     |
+| Queue features | Message groups, virtual topics   | Dead-letter exchanges, per-message TTL |
+| Clustering     | Master/slave                     | Quorum queues                          |
+| Use case       | Java/JMS apps                    | Flexible routing, microservices        |
 
 ## Creating a Broker
 
@@ -165,13 +165,13 @@ aws mq reboot-broker --broker-name my-activemq
 
 ### CloudWatch Metrics
 
-| Metric | Description |
-|--------|-------------|
-| ActiveConsumerCount | Active consumers |
-| ConnectionCount | Open connections |
-| EnqueueCount | Messages enqueued |
-| DequeueCount | Messages dequeued |
-| MessageCount | Messages in queue |
+| Metric              | Description       |
+| ------------------- | ----------------- |
+| ActiveConsumerCount | Active consumers  |
+| ConnectionCount     | Open connections  |
+| EnqueueCount        | Messages enqueued |
+| DequeueCount        | Messages dequeued |
+| MessageCount        | Messages in queue |
 
 ## Encryption
 
@@ -185,23 +185,23 @@ aws mq create-broker \
 
 ## Pricing
 
-| Instance | Cost |
-|----------|------|
-| mq.t3.micro | $0.065/hr |
-| mq.m5.large | $0.50/hr |
-| mq.m5.xlarge | $1.00/hr |
-| mq.m5.2xlarge | $2.00/hr |
+| Instance      | Cost      |
+| ------------- | --------- |
+| mq.t3.micro   | $0.065/hr |
+| mq.m5.large   | $0.50/hr  |
+| mq.m5.xlarge  | $1.00/hr  |
+| mq.m5.2xlarge | $2.00/hr  |
 
 Plus storage at $0.25/GB/month.
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Brokers per region | 25 |
-| Connections per broker | 1000 (ActiveMQ), 5000 (RabbitMQ) |
-| Queues per broker | 1000 |
-| Message size | 64KB (ActiveMQ), 128KB (RabbitMQ) |
+| Resource               | Limit                             |
+| ---------------------- | --------------------------------- |
+| Brokers per region     | 25                                |
+| Connections per broker | 1000 (ActiveMQ), 5000 (RabbitMQ)  |
+| Queues per broker      | 1000                              |
+| Message size           | 64KB (ActiveMQ), 128KB (RabbitMQ) |
 
 ## References
 

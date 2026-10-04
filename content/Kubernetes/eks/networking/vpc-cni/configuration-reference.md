@@ -9,11 +9,11 @@ description: Complete configuration reference for VPC CNI - all environment vari
 
 ## Configuration Methods
 
-| Installation Type | Configuration Method |
-|------------------|----------------------|
+| Installation Type   | Configuration Method          |
+| ------------------- | ----------------------------- |
 | EKS Addon (Managed) | AWS API / Console / Terraform |
-| Self-managed (Helm) | Helm values or ConfigMap |
-| Self-managed (YAML) | ConfigMap only |
+| Self-managed (Helm) | Helm values or ConfigMap      |
+| Self-managed (YAML) | ConfigMap only                |
 
 ## Environment Variables
 
@@ -21,36 +21,36 @@ All VPC CNI configuration is via environment variables on the `aws-node` DaemonS
 
 ### Quick Reference Table
 
-| Variable | Default | Valid Values | Since |
-|----------|---------|--------------|-------|
-| `AWS_VPC_K8S_CNI_LOGLEVEL` | DEBUG | DEBUG, INFO, WARN, ERROR, FATAL | v1.0 |
-| `AWS_VPC_K8S_CNI_EXTERNALSNAT` | false | true, false | v1.0 |
-| `AWS_VPC_K8S_CNI_RANDOMIZESNAT` | prng | hashrandom, prng, none | v1.0 |
-| `AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG` | false | true, false | v1.1 |
-| `AWS_VPC_K8S_CNI_EXCLUDE_SNAT_CIDRS` | empty | Comma-separated CIDRs | v1.6 |
-| `AWS_VPC_ENI_MTU` | 9001 | 576-9001 (IPv4), 1280-9001 (IPv6) | v1.6 |
-| `POD_MTU` | 9001 | 576-9001 (IPv4), 1280-9001 (IPv6) | v1.16.4 |
-| `WARM_ENI_TARGET` | 1 | Integer >= 0 | v1.0 |
-| `WARM_IP_TARGET` | (none) | Integer >= 0 | v1.2 |
-| `MINIMUM_IP_TARGET` | (none) | Integer >= 0 | v1.6 |
-| `MAX_ENI` | (none) | Integer >= 0 | v1.3 |
-| `ENABLE_PREFIX_DELEGATION` | false | true, false | v1.9 |
-| `WARM_PREFIX_TARGET` | (none) | Integer >= 0 | v1.9 |
-| `ENABLE_POD_ENI` | false | true, false | v1.7 |
-| `POD_SECURITY_GROUP_ENFORCING_MODE` | strict | strict, standard | v1.11 |
-| `ENABLE_IPv4` | true | true, false | v1.10 |
-| `ENABLE_IPv6` | false | true, false | v1.10 |
-| `ENABLE_NFTABLES` | false | true, false | v1.12.1 (deprecated v1.13.2) |
-| `CLUSTER_NAME` | (none) | String | v1.6 |
-| `CLUSTER_ENDPOINT` | (none) | String (API server endpoint) | v1.12.1 |
-| `DISABLE_INTROSPECTION` | false | true, false | v1.4 |
-| `DISABLE_METRICS` | false | true, false | v1.4 |
-| `AWS_MANAGE_ENIS_NON_SCHEDULABLE` | false | true, false | v1.12.6 |
-| `DISABLE_LEAKED_ENI_CLEANUP` | false | true, false | v1.13.0 |
-| `ENABLE_SUBNET_DISCOVERY` | true | true, false | v1.18.0 |
-| `ENABLE_V6_EGRESS` | false | true, false | v1.13.0 |
-| `ENABLE_BANDWIDTH_PLUGIN` | false | true, false | v1.10.0 |
-| `ADDITIONAL_ENI_TAGS` | {} | JSON object | v1.6 |
+| Variable                             | Default | Valid Values                      | Since                        |
+| ------------------------------------ | ------- | --------------------------------- | ---------------------------- |
+| `AWS_VPC_K8S_CNI_LOGLEVEL`           | DEBUG   | DEBUG, INFO, WARN, ERROR, FATAL   | v1.0                         |
+| `AWS_VPC_K8S_CNI_EXTERNALSNAT`       | false   | true, false                       | v1.0                         |
+| `AWS_VPC_K8S_CNI_RANDOMIZESNAT`      | prng    | hashrandom, prng, none            | v1.0                         |
+| `AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG` | false   | true, false                       | v1.1                         |
+| `AWS_VPC_K8S_CNI_EXCLUDE_SNAT_CIDRS` | empty   | Comma-separated CIDRs             | v1.6                         |
+| `AWS_VPC_ENI_MTU`                    | 9001    | 576-9001 (IPv4), 1280-9001 (IPv6) | v1.6                         |
+| `POD_MTU`                            | 9001    | 576-9001 (IPv4), 1280-9001 (IPv6) | v1.16.4                      |
+| `WARM_ENI_TARGET`                    | 1       | Integer >= 0                      | v1.0                         |
+| `WARM_IP_TARGET`                     | (none)  | Integer >= 0                      | v1.2                         |
+| `MINIMUM_IP_TARGET`                  | (none)  | Integer >= 0                      | v1.6                         |
+| `MAX_ENI`                            | (none)  | Integer >= 0                      | v1.3                         |
+| `ENABLE_PREFIX_DELEGATION`           | false   | true, false                       | v1.9                         |
+| `WARM_PREFIX_TARGET`                 | (none)  | Integer >= 0                      | v1.9                         |
+| `ENABLE_POD_ENI`                     | false   | true, false                       | v1.7                         |
+| `POD_SECURITY_GROUP_ENFORCING_MODE`  | strict  | strict, standard                  | v1.11                        |
+| `ENABLE_IPv4`                        | true    | true, false                       | v1.10                        |
+| `ENABLE_IPv6`                        | false   | true, false                       | v1.10                        |
+| `ENABLE_NFTABLES`                    | false   | true, false                       | v1.12.1 (deprecated v1.13.2) |
+| `CLUSTER_NAME`                       | (none)  | String                            | v1.6                         |
+| `CLUSTER_ENDPOINT`                   | (none)  | String (API server endpoint)      | v1.12.1                      |
+| `DISABLE_INTROSPECTION`              | false   | true, false                       | v1.4                         |
+| `DISABLE_METRICS`                    | false   | true, false                       | v1.4                         |
+| `AWS_MANAGE_ENIS_NON_SCHEDULABLE`    | false   | true, false                       | v1.12.6                      |
+| `DISABLE_LEAKED_ENI_CLEANUP`         | false   | true, false                       | v1.13.0                      |
+| `ENABLE_SUBNET_DISCOVERY`            | true    | true, false                       | v1.18.0                      |
+| `ENABLE_V6_EGRESS`                   | false   | true, false                       | v1.13.0                      |
+| `ENABLE_BANDWIDTH_PLUGIN`            | false   | true, false                       | v1.10.0                      |
+| `ADDITIONAL_ENI_TAGS`                | {}      | JSON object                       | v1.6                         |
 
 ## Detailed Reference
 
@@ -65,12 +65,12 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_LOGLEVEL=DEBUG
 ```
 
-| Value | Use Case |
-|-------|----------|
-| DEBUG | Troubleshooting, development |
-| INFO | Default for most deployments |
-| WARN | Production when reducing log volume |
-| ERROR | Minimal logging |
+| Value | Use Case                            |
+| ----- | ----------------------------------- |
+| DEBUG | Troubleshooting, development        |
+| INFO  | Default for most deployments        |
+| WARN  | Production when reducing log volume |
+| ERROR | Minimal logging                     |
 
 #### AWS_VPC_K8S_CNI_LOG_FILE
 
@@ -99,11 +99,11 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_ENI_MTU=9001
 ```
 
-| MTU Value | Notes |
-|-----------|-------|
-| 9001 | Standard for jumbo frames in AWS |
-| 1500 | Standard Ethernet |
-| 576 | Minimum for IPv4 |
+| MTU Value | Notes                            |
+| --------- | -------------------------------- |
+| 9001      | Standard for jumbo frames in AWS |
+| 1500      | Standard Ethernet                |
+| 576       | Minimum for IPv4                 |
 
 #### POD_MTU
 
@@ -136,10 +136,10 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_EXTERNALSNAT=false
 ```
 
-| Value | Behavior |
-|-------|----------|
+| Value             | Behavior                                                 |
+| ----------------- | -------------------------------------------------------- |
 | `false` (default) | Pod egress to outside VPC is SNATed to node's primary IP |
-| `true` | Pod keeps its pod IP as source (no SNAT) |
+| `true`            | Pod keeps its pod IP as source (no SNAT)                 |
 
 **When to use true**: VPN, Direct Connect, or pod needs direct routing without NAT.
 
@@ -152,11 +152,11 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_RANDOMIZESNAT=prng
 ```
 
-| Value | Behavior |
-|-------|----------|
-| `prng` (default) | Use `--random-fully` for better port randomization |
-| `hashrandom` | Legacy random mode |
-| `none` | Sequential port allocation (for NACL compatibility) |
+| Value            | Behavior                                            |
+| ---------------- | --------------------------------------------------- |
+| `prng` (default) | Use `--random-fully` for better port randomization  |
+| `hashrandom`     | Legacy random mode                                  |
+| `none`           | Sequential port allocation (for NACL compatibility) |
 
 #### AWS_VPC_K8S_CNI_EXCLUDE_SNAT_CIDRS
 
@@ -259,10 +259,10 @@ kubectl set env daemonset/aws-node -n kube-system \
   POD_SECURITY_GROUP_ENFORCING_MODE=strict
 ```
 
-| Mode | Behavior |
-|------|----------|
-| `strict` (default) | Pod SG rules apply to all traffic |
-| `standard` | Relaxed - traffic to/from same host uses node SG |
+| Mode               | Behavior                                         |
+| ------------------ | ------------------------------------------------ |
+| `strict` (default) | Pod SG rules apply to all traffic                |
+| `standard`         | Relaxed - traffic to/from same host uses node SG |
 
 ### Custom Networking Settings
 
@@ -308,10 +308,10 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_ENABLE_IPv4=true
 ```
 
-| Value | Notes |
-|-------|-------|
+| Value            | Notes        |
+| ---------------- | ------------ |
 | `true` (default) | IPv4 pod IPs |
-| `false` | Disable IPv4 |
+| `false`          | Disable IPv4 |
 
 #### ENABLE_IPv6
 
@@ -435,47 +435,47 @@ kubectl set env daemonset/aws-node -n kube-system \
 ```yaml
 # Complete VPC CNI configuration
 env:
-# Networking
-- name: AWS_VPC_K8S_CNI_LOGLEVEL
-  value: "DEBUG"
-- name: AWS_VPC_ENI_MTU
-  value: "9001"
-- name: AWS_VPC_K8S_CNI_EXTERNALSNAT
-  value: "false"
-- name: AWS_VPC_K8S_CNI_RANDOMIZESNAT
-  value: "prng"
+  # Networking
+  - name: AWS_VPC_K8S_CNI_LOGLEVEL
+    value: "DEBUG"
+  - name: AWS_VPC_ENI_MTU
+    value: "9001"
+  - name: AWS_VPC_K8S_CNI_EXTERNALSNAT
+    value: "false"
+  - name: AWS_VPC_K8S_CNI_RANDOMIZESNAT
+    value: "prng"
 
-# IP Allocation
-- name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
-  value: "30"
-- name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
-  value: "5"
+  # IP Allocation
+  - name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
+    value: "30"
+  - name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
+    value: "5"
 
-# Prefix Delegation (uncomment if using)
-# - name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
-#   value: "true"
-# - name: AWS_VPC_K8S_CNI_WARM_PREFIX_TARGET
-#   value: "1"
+  # Prefix Delegation (uncomment if using)
+  # - name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
+  #   value: "true"
+  # - name: AWS_VPC_K8S_CNI_WARM_PREFIX_TARGET
+  #   value: "1"
 
-# Security Groups for Pods (uncomment if using)
-# - name: AWS_VPC_K8S_CNI_ENABLE_POD_ENI
-#   value: "true"
-# - name: POD_SECURITY_GROUP_ENFORCING_MODE
-#   value: "strict"
+  # Security Groups for Pods (uncomment if using)
+  # - name: AWS_VPC_K8S_CNI_ENABLE_POD_ENI
+  #   value: "true"
+  # - name: POD_SECURITY_GROUP_ENFORCING_MODE
+  #   value: "strict"
 
-# Custom Networking (uncomment if using)
-# - name: AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG
-#   value: "true"
+  # Custom Networking (uncomment if using)
+  # - name: AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG
+  #   value: "true"
 
-# Cluster
-- name: CLUSTER_NAME
-  value: "my-cluster"
-- name: CLUSTER_ENDPOINT
-  value: "https://ABCD1234.gr7.us-west-2.eks.amazonaws.com"
+  # Cluster
+  - name: CLUSTER_NAME
+    value: "my-cluster"
+  - name: CLUSTER_ENDPOINT
+    value: "https://ABCD1234.gr7.us-west-2.eks.amazonaws.com"
 
-# Tags
-- name: ADDITIONAL_ENI_TAGS
-  value: '{"Environment":"production"}'
+  # Tags
+  - name: ADDITIONAL_ENI_TAGS
+    value: '{"Environment":"production"}'
 ```
 
 ## Applying Configuration

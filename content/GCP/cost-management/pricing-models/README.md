@@ -71,15 +71,15 @@ Understanding how Google Cloud discounts stack and apply across projects, folder
 
 ### Committed Use Discounts (CUDs): Resource-Based vs Flexible Spend
 
-| Dimension | Resource-Based CUDs | Flexible Spend-Based CUDs |
-| :--- | :--- | :--- |
-| **Commitment Unit** | Specific amount of vCPU, RAM, GPU, or Local SSD | Dollar spend commitment per hour (e.g., $50.00/hr) |
-| **Term Length** | 1 Year or 3 Years | 1 Year or 3 Years |
-| **Region Portability** | **Regionally locked** (e.g., must run in `us-central1`) | **Globally portable** across all GCP regions |
-| **Family Portability** | Pinned to machine family (e.g., N2 only) | **Cross-family** (N1, N2, N2D, C2, C3, E2) |
-| **Service Scope** | Compute Engine, Cloud SQL, AlloyDB, Spanner | Compute Engine, GKE Autopilot, Cloud Run |
-| **Maximum Savings** | Up to **57%** (1-yr ~37%, 3-yr ~57%) | Up to **46%** (1-yr ~28%, 3-yr ~46%) |
-| **Best Used For** | Predictable, static database and core compute tiers | Rapidly evolving microservice clusters & global apps |
+| Dimension              | Resource-Based CUDs                                     | Flexible Spend-Based CUDs                            |
+| :--------------------- | :------------------------------------------------------ | :--------------------------------------------------- |
+| **Commitment Unit**    | Specific amount of vCPU, RAM, GPU, or Local SSD         | Dollar spend commitment per hour (e.g., $50.00/hr)   |
+| **Term Length**        | 1 Year or 3 Years                                       | 1 Year or 3 Years                                    |
+| **Region Portability** | **Regionally locked** (e.g., must run in `us-central1`) | **Globally portable** across all GCP regions         |
+| **Family Portability** | Pinned to machine family (e.g., N2 only)                | **Cross-family** (N1, N2, N2D, C2, C3, E2)           |
+| **Service Scope**      | Compute Engine, Cloud SQL, AlloyDB, Spanner             | Compute Engine, GKE Autopilot, Cloud Run             |
+| **Maximum Savings**    | Up to **57%** (1-yr ~37%, 3-yr ~57%)                    | Up to **46%** (1-yr ~28%, 3-yr ~46%)                 |
+| **Best Used For**      | Predictable, static database and core compute tiers     | Rapidly evolving microservice clusters & global apps |
 
 ---
 
@@ -87,13 +87,15 @@ Understanding how Google Cloud discounts stack and apply across projects, folder
 
 ### Billing Sharing & Scope Hierarchy
 
-By default, a CUD purchased within a billing account can be shared across all projects linked to that billing account (**Discount Sharing Enabled**). 
+By default, a CUD purchased within a billing account can be shared across all projects linked to that billing account (**Discount Sharing Enabled**).
+
 - If Project A under-utilizes its committed vCPUs, Project B in the same region running N2 machines automatically consumes the unused commitment, preventing financial slippage.
 - Organizations can disable discount sharing or isolate commitments to specific projects using Billing Subaccounts for strict departmental cost boundaries.
 
 ### BigQuery Detailed Billing Export
 
 To calculate true cost of ownership (TCO) and unit economics:
+
 - **Standard Usage Cost:** Hourly line-item usage.
 - **Detailed Usage Cost:** Includes resource-level metadata, instance IDs, GKE pod labels, and disk serial numbers.
 - **Pricing Export:** Historical catalog pricing adjustments.
@@ -182,14 +184,14 @@ gcloud billing budgets create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Limit | Operational Best Practice |
-| :--- | :--- | :--- |
-| **Max CUD Purchases per Day** | 20 commitments | Consolidate commitments into quarterly or monthly reviews |
-| **CUD Term Modification** | Irrevocable contract | Cannot cancel or decrease commitment once finalized |
-| **CUD Expiration Notice** | Active Assist alert at 30d | Set up calendar reminders to prevent sudden cliff drop to on-demand |
-| **Budgets per Billing Account** | 5,000 budgets | Create granular budgets per environment / department |
-| **Recommender API Lookback** | 8 to 30 days default | Configurable lookback prevents rightsizing based on anomalous dips |
-| **Billing Export Latency** | 2 to 6 hours | BigQuery billing export streams micro-batches; not instantaneous |
+| Parameter / Dimension           | Default Limit              | Operational Best Practice                                           |
+| :------------------------------ | :------------------------- | :------------------------------------------------------------------ |
+| **Max CUD Purchases per Day**   | 20 commitments             | Consolidate commitments into quarterly or monthly reviews           |
+| **CUD Term Modification**       | Irrevocable contract       | Cannot cancel or decrease commitment once finalized                 |
+| **CUD Expiration Notice**       | Active Assist alert at 30d | Set up calendar reminders to prevent sudden cliff drop to on-demand |
+| **Budgets per Billing Account** | 5,000 budgets              | Create granular budgets per environment / department                |
+| **Recommender API Lookback**    | 8 to 30 days default       | Configurable lookback prevents rightsizing based on anomalous dips  |
+| **Billing Export Latency**      | 2 to 6 hours               | BigQuery billing export streams micro-batches; not instantaneous    |
 
 ---
 
@@ -237,8 +239,8 @@ gcloud billing budgets create \
 ## 7. Battle-Tested Nuggets & Production Gotchas
 
 1. **The CUD Commitment Trap (Commit to the Valley, Not the Peak):** A Committed Use Discount is a legally binding contract to pay for the committed resources for every single hour of the 1-year or 3-year term, whether you use them or not. If traffic drops or architecture migrates to another architecture (e.g., migrating from N2 VMs to Cloud Run), unused resource-based CUDs continue to bill every month. FinOps golden rule: **commit only to 70-80% of your historic minimum baseline trough**, leaving fluctuating peaks to on-demand or Spot VMs.
-2. **Resource CUDs Do Not Cover Cross-Family Migrations:** If you purchase 500 vCPUs of a 3-year N2 Resource CUD in `us-central1`, and next year your team upgrades all workloads to C3 or ARM-based T2A instances, your N2 commitment **will not apply to C3 or T2A**. You will pay for the empty N2 CUD *plus* the new C3 instances. If your infrastructure roadmap anticipates machine family modernization, purchase **Flexible Spend CUDs** instead of Resource CUDs.
+2. **Resource CUDs Do Not Cover Cross-Family Migrations:** If you purchase 500 vCPUs of a 3-year N2 Resource CUD in `us-central1`, and next year your team upgrades all workloads to C3 or ARM-based T2A instances, your N2 commitment **will not apply to C3 or T2A**. You will pay for the empty N2 CUD _plus_ the new C3 instances. If your infrastructure roadmap anticipates machine family modernization, purchase **Flexible Spend CUDs** instead of Resource CUDs.
 3. **SUDs Disappear on Modern Machine Series:** Many engineering teams budget assuming Compute Engine provides automatic ~30% Sustained Use Discounts. However, Google intentionally deprecated SUDs on third-generation and newer machine types (C3, C3D, N4, Z3) and GKE Autopilot. If you migrate from N1/N2 to C3 without purchasing CUDs, your monthly bill may jump significantly because the automatic 30% SUD is absent.
-4. **Billing Export Labels Are Not Retroactive:** BigQuery detailed billing export only records labels and tags that existed on the resources *at the moment the usage occurred*. If you add an `environment: production` or `cost-center: 4010` label to a fleet of 200 persistent disks today, you cannot back-query or attribute last month's costs by that label. Enforce resource labeling at birth via Terraform or Google Cloud Policy (`require-labels`).
+4. **Billing Export Labels Are Not Retroactive:** BigQuery detailed billing export only records labels and tags that existed on the resources _at the moment the usage occurred_. If you add an `environment: production` or `cost-center: 4010` label to a fleet of 200 persistent disks today, you cannot back-query or attribute last month's costs by that label. Enforce resource labeling at birth via Terraform or Google Cloud Policy (`require-labels`).
 5. **Over-Rightsizing Memory Can Trigger OOM Failures:** Active Assist Recommender analyzes historical P95 and P99 memory utilization. If an application utilizes JVM or Python memory pools that occasionally spike during end-of-month financial reconciliation runs, an 8-day recommender window will suggest downsizing RAM. Blindly applying rightsizing recommendations via automated scripts can cause fatal Out-Of-Memory (`OOMKilled`) pod evictions during unexpected traffic bursts.
 6. **Cross-Project Discount Sharing Must Be Actively Verified:** In large enterprise organizations with multiple billing subaccounts, verify that **Commitment Discount Sharing** is explicitly turned on in the Cloud Billing Console. If discount sharing is disabled, a project running at 200% capacity in `us-central1` cannot consume surplus CUDs purchased by a sister project in the exact same region, resulting in wasted commitments on one project and full on-demand surcharges on the other.

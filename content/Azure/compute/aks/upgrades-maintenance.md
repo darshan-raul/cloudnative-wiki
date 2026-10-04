@@ -54,13 +54,13 @@ AKS separates the automated upgrade lifecycle into **Cluster Auto-Upgrade** (Kub
 
 ## 2. Upgrade Strategy Comparison: In-Place Surge vs. Blue-Green Cluster Migration
 
-| Dimension | AKS In-Place Surge Upgrade (`maxSurge`) | Multi-Cluster Blue-Green Migration |
-| :--- | :--- | :--- |
-| **Complexity** | Low (Native `az aks upgrade` command) | High (Requires DNS / Traffic Manager routing) |
-| **Rollback Capability** | **Impossible to downgrade** (K8s invariant)| **Instant Rollback** (Shift traffic back to Blue)|
-| **Additional Cloud Spend** | Temporary VM surge capacity (~10–33% for 1 hr)| Full duplicate cluster running in parallel |
-| **PDB Sensitivity** | High (Strict PDBs stall in-place upgrades) | Zero impact on existing active cluster |
-| **Recommended Scope** | Minor patch & weekly NodeImage updates | Major minor versions (e.g., v1.28 -> v1.31) |
+| Dimension                  | AKS In-Place Surge Upgrade (`maxSurge`)        | Multi-Cluster Blue-Green Migration                |
+| :------------------------- | :--------------------------------------------- | :------------------------------------------------ |
+| **Complexity**             | Low (Native `az aks upgrade` command)          | High (Requires DNS / Traffic Manager routing)     |
+| **Rollback Capability**    | **Impossible to downgrade** (K8s invariant)    | **Instant Rollback** (Shift traffic back to Blue) |
+| **Additional Cloud Spend** | Temporary VM surge capacity (~10–33% for 1 hr) | Full duplicate cluster running in parallel        |
+| **PDB Sensitivity**        | High (Strict PDBs stall in-place upgrades)     | Zero impact on existing active cluster            |
+| **Recommended Scope**      | Minor patch & weekly NodeImage updates         | Major minor versions (e.g., v1.28 -> v1.31)       |
 
 ---
 
@@ -144,13 +144,13 @@ kubectl apply -f order-api-pdb.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter | Default Value | Tunable Limit | Production Impact |
-| :--- | :--- | :--- | :--- |
-| **Default `maxSurge`** | **1 extra node** | Up to 100% or absolute node count | Set to `33%` for balanced speed and safety |
-| **Node Drain Timeout** | **30 minutes** | Configurable via `--drain-timeout`| Prevents hung pods from stalling upgrades |
-| **Undrainable Node Action**| **Fail Upgrade** | `DrainWithoutForce` or `Run` | Can be set to `--undrainable-node-behavior` |
-| **Max Upgrade Duration** | **24 hours** | Hard Azure ARM timeout | Cluster marks upgrade failed if timeout hits |
-| **Maintenance Window Duration**| Minimum **4 hours**| Up to 24 hours | Microsoft enforces minimum 4-hour window |
+| Parameter                       | Default Value       | Tunable Limit                      | Production Impact                            |
+| :------------------------------ | :------------------ | :--------------------------------- | :------------------------------------------- |
+| **Default `maxSurge`**          | **1 extra node**    | Up to 100% or absolute node count  | Set to `33%` for balanced speed and safety   |
+| **Node Drain Timeout**          | **30 minutes**      | Configurable via `--drain-timeout` | Prevents hung pods from stalling upgrades    |
+| **Undrainable Node Action**     | **Fail Upgrade**    | `DrainWithoutForce` or `Run`       | Can be set to `--undrainable-node-behavior`  |
+| **Max Upgrade Duration**        | **24 hours**        | Hard Azure ARM timeout             | Cluster marks upgrade failed if timeout hits |
+| **Maintenance Window Duration** | Minimum **4 hours** | Up to 24 hours                     | Microsoft enforces minimum 4-hour window     |
 
 ---
 
@@ -173,7 +173,7 @@ kubectl apply -f order-api-pdb.yaml
 - **Cost Calculation:**
   - Surge VM Compute: 10 surge nodes × $0.384/hr × 0.75 hrs = **$2.88**
   - Ephemeral OS Disks: **$0.00**
-- **Total Operational Upgrade Cost:** **$2.88 per upgrade event** *(A negligible cost for zero application downtime).*
+- **Total Operational Upgrade Cost:** **$2.88 per upgrade event** _(A negligible cost for zero application downtime)._
 
 ### Scenario B: Blue-Green Multi-Cluster Enterprise Cutover
 
@@ -184,7 +184,7 @@ kubectl apply -f order-api-pdb.yaml
   - Parallel Green Cluster (7 days): 20 nodes × $0.768/hr × 168 hrs = **$2,580.48**
   - Additional Control Plane SLA: $0.10/hr × 168 hrs = **$16.80**
   - Azure Traffic Manager / Front Door Weighted Routing: ~$25.00
-- **Total Migration Cost:** **$2,622.28** *(Provides 100% risk elimination and instant rollback capability).*
+- **Total Migration Cost:** **$2,622.28** _(Provides 100% risk elimination and instant rollback capability)._
 
 ---
 

@@ -1,6 +1,13 @@
+---
+title: "Extended Resources and Device Plugins"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Extended Resources and Device Plugins — Kubernetes reference and architecture guide."
+---
+
 # Extended Resources and Device Plugins
 
-*"https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/"*
+_"https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/"_
 
 Extended resources are **opaque resources** beyond CPU and memory — GPUs, FPGAs, InfiniBand HCAs, SR-IOV NICs, and custom hardware. They're reported by **device plugins** running on the nodes, scheduled by the standard scheduler (via the `NodeResourcesFit` plugin), and consumed by Pods via the `resources.limits` field.
 
@@ -25,10 +32,10 @@ Extended resources are **opaque resources** beyond CPU and memory — GPUs, FPGA
 
 Standard k8s resources (CPU, memory, ephemeral-storage) are **not enough** for many workloads:
 
-* **ML / AI** — needs GPUs.
-* **HPC** — needs FPGAs, InfiniBand, custom interconnects.
-* **Telco / NFV** — needs SR-IOV NICs, DPDK, hardware accelerators.
-* **Storage** — needs high-performance local NVMe.
+- **ML / AI** — needs GPUs.
+- **HPC** — needs FPGAs, InfiniBand, custom interconnects.
+- **Telco / NFV** — needs SR-IOV NICs, DPDK, hardware accelerators.
+- **Storage** — needs high-performance local NVMe.
 
 Extended resources let **nodes advertise what they have** (e.g. "I have 4 NVIDIA A100 GPUs"), and **Pods request what they need** (e.g. "give me 1 GPU"). The scheduler places the Pod on a node that has the resource.
 
@@ -82,7 +89,7 @@ func (m *MyDevicePlugin) Register() error {
     )
     defer conn.Close()
     client := pluginapi.NewRegistrationClient(conn)
-    
+
     req := &pluginapi.RegisterRequest{
         Version:      pluginapi.Version,
         Endpoint:     "my-device-plugin.sock",
@@ -117,22 +124,22 @@ status:
 
 The plugin also:
 
-* Sets up the NVIDIA container runtime.
-* Mounts CUDA libraries.
-* Configures the GPU for the container.
+- Sets up the NVIDIA container runtime.
+- Mounts CUDA libraries.
+- Configures the GPU for the container.
 
 ### 3.3 Other accelerators
 
-| Resource | Vendor / Project | Common use |
-|---|---|---|
-| `nvidia.com/gpu` | NVIDIA | ML, AI, CUDA workloads |
-| `amd.com/gpu` | AMD | ML on AMD GPUs (ROCm) |
-| `intel.com/gpu` | Intel | Integrated GPU, Intel Xe |
-| `nvidia.com/mig-1g.5gb` | NVIDIA MIG | Multi-Instance GPU partitioning |
-| `nvidia.com/gpu.shared` | Time-slicing | Multiple Pods sharing one GPU |
-| `hugepages-1Gi` | (built-in) | Huge page allocation |
-| `example.com/infiniband` | Custom | InfiniBand HCA |
-| `example.com/fpga` | Intel / Xilinx | FPGA workloads |
+| Resource                 | Vendor / Project | Common use                      |
+| ------------------------ | ---------------- | ------------------------------- |
+| `nvidia.com/gpu`         | NVIDIA           | ML, AI, CUDA workloads          |
+| `amd.com/gpu`            | AMD              | ML on AMD GPUs (ROCm)           |
+| `intel.com/gpu`          | Intel            | Integrated GPU, Intel Xe        |
+| `nvidia.com/mig-1g.5gb`  | NVIDIA MIG       | Multi-Instance GPU partitioning |
+| `nvidia.com/gpu.shared`  | Time-slicing     | Multiple Pods sharing one GPU   |
+| `hugepages-1Gi`          | (built-in)       | Huge page allocation            |
+| `example.com/infiniband` | Custom           | InfiniBand HCA                  |
+| `example.com/fpga`       | Intel / Xilinx   | FPGA workloads                  |
 
 ### 3.4 Huge pages
 
@@ -168,8 +175,8 @@ status:
     nvidia.com/gpu: 4
     hugepages-1Gi: 4Gi
   allocatable:
-    cpu: 63500m               # 63.5 cores (500m reserved)
-    memory: 250Gi             # 250 GB (6 GB reserved)
+    cpu: 63500m # 63.5 cores (500m reserved)
+    memory: 250Gi # 250 GB (6 GB reserved)
     nvidia.com/gpu: 4
     hugepages-1Gi: 4Gi
 ```
@@ -204,13 +211,13 @@ kind: Pod
 metadata: { name: ml-trainer }
 spec:
   containers:
-  - name: trainer
-    image: tensorflow/tensorflow:latest-gpu
-    resources:
-      requests:
-        nvidia.com/gpu: 1
-      limits:
-        nvidia.com/gpu: 1
+    - name: trainer
+      image: tensorflow/tensorflow:latest-gpu
+      resources:
+        requests:
+          nvidia.com/gpu: 1
+        limits:
+          nvidia.com/gpu: 1
 ```
 
 For most extended resources, `requests` and `limits` are the **same value** — the resource is not compressible. You can't ask for "0.5 GPUs".
@@ -233,10 +240,10 @@ When the Pod is scheduled, the kubelet:
 
 For NVIDIA GPUs, this is:
 
-* Mount the GPU device files (`/dev/nvidia0`).
-* Set environment variables (`NVIDIA_VISIBLE_DEVICES=0`).
-* Mount the NVIDIA libraries.
-* Configure the container runtime for GPU access.
+- Mount the GPU device files (`/dev/nvidia0`).
+- Set environment variables (`NVIDIA_VISIBLE_DEVICES=0`).
+- Mount the NVIDIA libraries.
+- Configure the container runtime for GPU access.
 
 ## 6. GPU Scheduling Patterns
 
@@ -245,10 +252,10 @@ For NVIDIA GPUs, this is:
 ```yaml
 spec:
   containers:
-  - name: trainer
-    resources:
-      limits:
-        nvidia.com/gpu: 1
+    - name: trainer
+      resources:
+        limits:
+          nvidia.com/gpu: 1
 ```
 
 One Pod, one GPU. The Pod owns the GPU exclusively.
@@ -258,10 +265,10 @@ One Pod, one GPU. The Pod owns the GPU exclusively.
 ```yaml
 spec:
   containers:
-  - name: trainer
-    resources:
-      limits:
-        nvidia.com/gpu: 4
+    - name: trainer
+      resources:
+        limits:
+          nvidia.com/gpu: 4
 ```
 
 For distributed training (e.g. 4 GPUs for one model). The Pod owns 4 GPUs.
@@ -273,10 +280,10 @@ spec:
   nodeSelector:
     nvidia.com/gpu.product: NVIDIA-A100-SXM4-80GB
   containers:
-  - name: trainer
-    resources:
-      limits:
-        nvidia.com/gpu: 1
+    - name: trainer
+      resources:
+        limits:
+          nvidia.com/gpu: 1
 ```
 
 The Pod is scheduled only on nodes with A100 80GB GPUs. **The GPU model is a node label** — the device plugin or a custom controller sets it.
@@ -292,14 +299,14 @@ kubectl taint nodes gpu-node-1 nvidia.com/gpu=present:NoSchedule
 # GPU Pod tolerates the taint
 spec:
   tolerations:
-  - key: nvidia.com/gpu
-    operator: Exists
-    effect: NoSchedule
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
   containers:
-  - name: trainer
-    resources:
-      limits:
-        nvidia.com/gpu: 1
+    - name: trainer
+      resources:
+        limits:
+          nvidia.com/gpu: 1
 ```
 
 This is a common pattern for mixed clusters (CPU + GPU nodes).
@@ -354,10 +361,10 @@ The plugin advertises `nvidia.com/mig-1g.5gb` (1 instance with 5 GB) etc. A Pod 
 ```yaml
 spec:
   containers:
-  - name: inference
-    resources:
-      limits:
-        nvidia.com/mig-1g.5gb: 1
+    - name: inference
+      resources:
+        limits:
+          nvidia.com/mig-1g.5gb: 1
 ```
 
 **MIG is true isolation** — each instance has its own memory and compute. Two Pods on MIG instances don't interfere.
@@ -395,8 +402,8 @@ The kubelet applies these to the container. The plugin can set env vars, mount f
 
 The plugin reports a `resourceName` (e.g. `example.com/foo`) and a count. The granularity is up to the plugin:
 
-* A plugin that reports `example.com/foo: 1` means "1 unit of foo".
-* A plugin that reports `example.com/foo: 8` means "8 units of foo".
+- A plugin that reports `example.com/foo: 1` means "1 unit of foo".
+- A plugin that reports `example.com/foo: 8` means "8 units of foo".
 
 The Pod's request must be a positive integer. The kubelet doesn't know about partial units.
 
@@ -422,10 +429,10 @@ A `ResourceClaim` is a request for a resource. The scheduler matches it to an av
 ```yaml
 spec:
   containers:
-  - name: trainer
-    resources:
-      claims:
-      - name: ml-claim
+    - name: trainer
+      resources:
+        claims:
+          - name: ml-claim
 ```
 
 The Pod asks for the claim. The scheduler allocates the claim to a device on a node, and the kubelet exposes the device to the container.
@@ -448,10 +455,10 @@ A StatefulSet uses `ResourceClaimTemplate` to create one claim per replica. Each
 
 DRA is the **next generation** of extended resources:
 
-* **Structured claims** (not just opaque integers).
-* **First-class scheduler support** (the scheduler has a plugin for DRA).
-* **Class-based selection** (multiple classes of GPU, with priorities).
-* **Init-time allocation** (allocate when the Pod starts, not before).
+- **Structured claims** (not just opaque integers).
+- **First-class scheduler support** (the scheduler has a plugin for DRA).
+- **Class-based selection** (multiple classes of GPU, with priorities).
+- **Init-time allocation** (allocate when the Pod starts, not before).
 
 DRA is still in alpha/beta as of 1.30. Adoption is early. The device plugin model is still the standard.
 
@@ -587,6 +594,6 @@ nvidia-smi    # on the node
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the broader scheduling context
-* [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the NodeResourcesFit plugin
-* [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level extended resource quotas
+- [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the broader scheduling context
+- [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the NodeResourcesFit plugin
+- [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level extended resource quotas

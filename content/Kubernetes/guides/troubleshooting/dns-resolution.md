@@ -105,6 +105,7 @@ options ndots:5
 ```
 
 The flow for a query:
+
 1. Pod asks `web-service`
 2. With `ndots:5`, the resolver checks: is this an FQDN? `web-service` has 0 dots, so no.
 3. The resolver appends search domains: `web-service.default.svc.cluster.local.`, then `web-service.svc.cluster.local.`, etc.
@@ -157,20 +158,24 @@ $ kubectl exec -it debug -- nslookup web-service
 **Common sub-causes:**
 
 1. **CoreDNS is OOMKilled.** CoreDNS has a default memory limit (~170Mi) that's tight for clusters with thousands of Services. When the limit is hit, OOMKilled.
+
    ```bash
    $ kubectl describe pod coredns-xxx -n kube-system | grep -A 3 "Last State"
    Last State:     Terminated
      Reason:       OOMKilled
      Exit Code:    137
    ```
+
    Fix: increase the memory limit in the CoreDNS Deployment.
 
 2. **CoreDNS can't reach the apiserver.** If the apiserver is unreachable, CoreDNS can't watch Services and can't serve records.
+
    ```bash
    $ kubectl logs -n kube-system coredns-xxx
    .:53
    2024-01-15 10:00:00 [ERROR] plugin/kubernetes: failed to list API: ...
    ```
+
    Fix: see the apiserver connectivity issue.
 
 3. **CoreDNS Deployment scaled to zero.** A bad Helm release or manual scale-down.
@@ -246,29 +251,35 @@ kubectl get pod debug -o json | jq '.spec.dnsConfig'
 **Common sub-causes:**
 
 1. **Pod has `dnsPolicy: Default`** (uses node's resolv.conf, not k8s DNS).
+
    ```yaml
    spec:
-     dnsPolicy: Default   # inherits from node, not k8s
+     dnsPolicy: Default # inherits from node, not k8s
    ```
+
    Fix: change to `ClusterFirst` (default).
 
 2. **Pod has `dnsConfig` overriding search/nameserver.**
+
    ```yaml
    spec:
      dnsConfig:
        nameservers:
-       - 8.8.8.8          # bypasses kube-dns
+         - 8.8.8.8 # bypasses kube-dns
        searches:
-       - my-domain.local
+         - my-domain.local
    ```
+
    Fix: remove the override, or fix it.
 
 3. **The kubelet was configured with `--cluster-dns=<wrong-ip>`.**
+
    ```bash
    # in /var/lib/kubelet/config.yaml
    clusterDNS:
    - 10.96.0.42          # wrong IP
    ```
+
    Fix: update to the right ClusterIP of the kube-dns Service.
 
 4. **Custom DNS settings on the container runtime** (rare, but possible with custom containerd configs).
@@ -309,6 +320,7 @@ kubectl get cm -n kube-system coredns -o yaml
 **Common sub-causes:**
 
 1. **CoreDNS ServiceAccount missing the cluster role binding.**
+
    ```bash
    $ kubectl get clusterrolebinding system:coredns -o yaml
    apiVersion: rbac.authorization.k8s.io/v1
@@ -318,6 +330,7 @@ kubectl get cm -n kube-system coredns -o yaml
      name: coredns
      namespace: kube-system
    ```
+
    Fix: re-create the ClusterRoleBinding.
 
 2. **NetworkPolicy blocks CoreDNS from reaching the apiserver.** If the kube-system namespace has a default-deny, CoreDNS might be blocked.
@@ -353,8 +366,8 @@ kubectl logs -n kube-system coredns-xxx | grep google.com
 spec:
   dnsConfig:
     options:
-    - name: ndots
-      value: "2"
+      - name: ndots
+        value: "2"
 ```
 
 Or for an FQDN, add a trailing dot (e.g., `google.com.`), which is treated as fully-qualified and skips the search expansion.
@@ -424,13 +437,14 @@ coredns-5554c7b6f7-2       1/1     Running   10
 ```yaml
 resources:
   limits:
-    memory: 512Mi   # up from 170Mi
+    memory: 512Mi # up from 170Mi
   requests:
     cpu: 100m
     memory: 70Mi
 ```
 
 For very large clusters (10K+ Services), consider:
+
 - **NodeLocal DNSCache** — runs a DNS proxy on every node, reduces CoreDNS load.
 - **Cilium DNS proxy** — eBPF-based, scales better.
 - **External DNS provider** (e.g., SkyDNS replacement, BIND-based, etc.).
@@ -469,18 +483,18 @@ spec:
   podSelector: {}
   policyTypes: [Egress]
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: kube-system
-      podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    ports:
-    - port: 53
-      protocol: UDP
-    - port: 53
-      protocol: TCP
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
 ```
 
 ## 9. Pod's DNS cache stale
@@ -499,6 +513,7 @@ dial tcp 10.244.1.5:8080: connect: connection refused
 **Fix:** disable DNS caching in the app, or set a short TTL. In Go, the default TTL is 30s; in `musl libc` containers, there's no caching by default. In JVM, the default is forever (the famous "DNS resolution stuck" Java bug).
 
 For JVM:
+
 ```java
 # set TTL in security policy
 networkaddress.cache.ttl=10
@@ -576,16 +591,16 @@ kubectl exec -it pod -- nslookup web-service.default.svc.cluster.local
 
 ## Common gotchas
 
-* **`/etc/resolv.conf` from the node, not the pod.** If your container has its own `resolv.conf` baked in (e.g., a custom base image), k8s won't override it. The pod will use whatever you put in the image.
-* **`ndots:5` is the default** and is often wrong. Set `ndots:2` for typical apps.
-* **Headless Services return pod IPs from DNS.** If your app expects a single ClusterIP, you'll be confused by the multiple A records.
-* **SRV records for named ports.** If your Service has `port.name: http`, the DNS query for `_http._tcp.web-service` returns an SRV record, not A. Some clients don't handle SRV.
-* **The DNS path has 5 levels of caching.** Pod's libc cache, NodeLocal DNSCache (if installed), CoreDNS, kube-dns Service VIP, apiserver cache. Each can be stale.
-* **CoreDNS logging can spam.** If you turn on debug logging, it can fill the disk quickly. Don't leave it on.
-* **Search domains add up.** If you have many search domains, the resolver tries each one. `ndots:5` + 3 search domains = a lot of queries for short names.
-* **Some apps don't honor resolv.conf.** Hard-coded DNS in the app (e.g., `dns.resolver({ servers: ['8.8.8.8'] })`) bypasses k8s DNS.
-* **TCP vs UDP.** CoreDNS serves both, but some networks only allow UDP. If UDP is dropped, TCP should still work, but if both are blocked, DNS fails.
-* **The `kube-dns` Service is the cluster DNS Service.** It's named `kube-dns` for historical reasons (the original was `kube-dns`, an older SkyDNS-based system). CoreDNS is the modern implementation that runs behind it.
+- **`/etc/resolv.conf` from the node, not the pod.** If your container has its own `resolv.conf` baked in (e.g., a custom base image), k8s won't override it. The pod will use whatever you put in the image.
+- **`ndots:5` is the default** and is often wrong. Set `ndots:2` for typical apps.
+- **Headless Services return pod IPs from DNS.** If your app expects a single ClusterIP, you'll be confused by the multiple A records.
+- **SRV records for named ports.** If your Service has `port.name: http`, the DNS query for `_http._tcp.web-service` returns an SRV record, not A. Some clients don't handle SRV.
+- **The DNS path has 5 levels of caching.** Pod's libc cache, NodeLocal DNSCache (if installed), CoreDNS, kube-dns Service VIP, apiserver cache. Each can be stale.
+- **CoreDNS logging can spam.** If you turn on debug logging, it can fill the disk quickly. Don't leave it on.
+- **Search domains add up.** If you have many search domains, the resolver tries each one. `ndots:5` + 3 search domains = a lot of queries for short names.
+- **Some apps don't honor resolv.conf.** Hard-coded DNS in the app (e.g., `dns.resolver({ servers: ['8.8.8.8'] })`) bypasses k8s DNS.
+- **TCP vs UDP.** CoreDNS serves both, but some networks only allow UDP. If UDP is dropped, TCP should still work, but if both are blocked, DNS fails.
+- **The `kube-dns` Service is the cluster DNS Service.** It's named `kube-dns` for historical reasons (the original was `kube-dns`, an older SkyDNS-based system). CoreDNS is the modern implementation that runs behind it.
 
 ## A worked example
 
@@ -628,7 +643,7 @@ The fix: either use the FQDN in the app config, or set `ndots:2` to make the sea
 
 ## See also
 
-* [[Kubernetes/guides/troubleshooting/service-unreachable|service-unreachable]] — when the Service itself is the issue
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when CoreDNS is the crashing thing
-* [[Kubernetes/concepts/L04-services-networking/03-dns|dns]] — how k8s DNS works
-* [CoreDNS docs](https://coredns.io/manual/toc/)
+- [[Kubernetes/guides/troubleshooting/service-unreachable|service-unreachable]] — when the Service itself is the issue
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when CoreDNS is the crashing thing
+- [[Kubernetes/concepts/L04-services-networking/03-dns|dns]] — how k8s DNS works
+- [CoreDNS docs](https://coredns.io/manual/toc/)

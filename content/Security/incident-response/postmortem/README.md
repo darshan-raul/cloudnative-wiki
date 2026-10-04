@@ -24,9 +24,11 @@ Write one for every Severity-1 or Severity-2 incident, and for any recurring iss
 **Status:** Resolved
 
 ## Summary
+
 One-paragraph description of what happened and impact.
 
 ## Timeline
+
 - HH:MM — Event
 - HH:MM — Detection
 - HH:MM — Response started
@@ -34,29 +36,35 @@ One-paragraph description of what happened and impact.
 - HH:MM — Resolution
 
 ## Root Cause
+
 What was the technical root cause?
 
 ## Contributing Factors
+
 - What made this harder to detect/resolve?
 - What systems/processes failed?
 
 ## What Went Well
+
 - Fast detection
 - Good communication
 - Effective automation
 
 ## What Could Be Improved
+
 - Slower to identify root cause
 - Missing monitoring
 - Runbook gaps
 
 ## Action Items
-| Action | Owner | Due Date |
-|--------|-------|----------|
+
+| Action          | Owner    | Due Date   |
+| --------------- | -------- | ---------- |
 | Add alert for X | @analyst | 2025-06-01 |
-| Update runbook | @sre | 2025-06-07 |
+| Update runbook  | @sre     | 2025-06-07 |
 
 ## Metrics
+
 - Time to Detect (TTD): X min
 - Time to Resolve (TTR): Y min
 - False positives generated: Z

@@ -86,16 +86,17 @@ In traditional Azure networking, VNet peering is **non-transitive**: Spoke A can
 
 To create network micro-segmentation without deploying firewalls between every spoke, Virtual WAN uses Route Tables:
 
-| Spoke Type | Associated Route Table | Propagates To | Routing Behavior |
-| :--- | :--- | :--- | :--- |
-| **Production Spoke** | `RT_Production` | `RT_Production`, `Default` | Can reach all Prod spokes and Hub Gateways; cannot reach Dev |
-| **Development Spoke** | `RT_Development` | `RT_Development`, `Default` | Can reach Dev spokes; isolated from Prod spokes |
-| **Shared Services Spoke** | `Default` | `Default`, `RT_Production`, `RT_Dev` | Reachable by both Production and Development spokes |
-| **Hybrid On-Premises** | `Default` | `Default`, `RT_Production` | Routes to corporate datacenter via ExpressRoute |
+| Spoke Type                | Associated Route Table | Propagates To                        | Routing Behavior                                             |
+| :------------------------ | :--------------------- | :----------------------------------- | :----------------------------------------------------------- |
+| **Production Spoke**      | `RT_Production`        | `RT_Production`, `Default`           | Can reach all Prod spokes and Hub Gateways; cannot reach Dev |
+| **Development Spoke**     | `RT_Development`       | `RT_Development`, `Default`          | Can reach Dev spokes; isolated from Prod spokes              |
+| **Shared Services Spoke** | `Default`              | `Default`, `RT_Production`, `RT_Dev` | Reachable by both Production and Development spokes          |
+| **Hybrid On-Premises**    | `Default`              | `Default`, `RT_Production`           | Routes to corporate datacenter via ExpressRoute              |
 
 ### Routing Intent & Routing Policies
 
 Historically, forcing all traffic through a firewall required writing explicit `0.0.0.0/0` and private CIDR UDRs. Virtual WAN introduced **Routing Intent**:
+
 - **Internet Traffic Policy:** Configures the Virtual Hub to automatically inject a `0.0.0.0/0` default route pointing to Azure Firewall across all connected Spoke VNets and Branches.
 - **Private Traffic Policy:** Automatically steers all RFC 1918 private inter-spoke and branch-to-spoke traffic through Azure Firewall.
 
@@ -181,15 +182,15 @@ az network vhub routing-intent create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension / Resource | Default Limit | Maximum / High-Scale Consideration |
-| :--- | :--- | :--- |
-| **Virtual Hubs per vWAN** | 60 Hubs | Multi-hub mesh across global regions |
-| **Spoke VNets per Hub** | 500 VNet connections | Connects hundreds of enterprise spoke VNets |
-| **Hub-to-Hub Transit** | Automatic full-mesh | Microsoft global fiber backbone routing |
-| **VPN Gateway Scale Units** | 1 to 40 Scale Units | 500 Mbps to 20 Gbps active-active throughput |
-| **ExpressRoute Scale Units**| 1 to 20 Scale Units | 1 Gbps to 20 Gbps active-active throughput |
-| **Hub Address Prefix** | `/24` minimum | Recommend `/23` to support Azure Firewall + Gateways |
-| **BGP Dynamic Routes** | Up to 10,000 routes | Learned from ExpressRoute & SD-WAN partners |
+| Dimension / Resource         | Default Limit        | Maximum / High-Scale Consideration                   |
+| :--------------------------- | :------------------- | :--------------------------------------------------- |
+| **Virtual Hubs per vWAN**    | 60 Hubs              | Multi-hub mesh across global regions                 |
+| **Spoke VNets per Hub**      | 500 VNet connections | Connects hundreds of enterprise spoke VNets          |
+| **Hub-to-Hub Transit**       | Automatic full-mesh  | Microsoft global fiber backbone routing              |
+| **VPN Gateway Scale Units**  | 1 to 40 Scale Units  | 500 Mbps to 20 Gbps active-active throughput         |
+| **ExpressRoute Scale Units** | 1 to 20 Scale Units  | 1 Gbps to 20 Gbps active-active throughput           |
+| **Hub Address Prefix**       | `/24` minimum        | Recommend `/23` to support Azure Firewall + Gateways |
+| **BGP Dynamic Routes**       | Up to 10,000 routes  | Learned from ExpressRoute & SD-WAN partners          |
 
 ---
 
@@ -206,6 +207,7 @@ az network vhub routing-intent create \
 ## 6. Realistic Pricing Scenarios
 
 Azure Virtual WAN pricing includes:
+
 1. **Virtual Hub Base Fee:** $0.25 per Virtual Hub per hour (~$182.50/month).
 2. **VNet Connection Fee:** $0.05 per connection per hour (~$36.50/month per connected VNet).
 3. **Gateway Scale Units:** E.g., VPN Gateway at $0.361 per Scale Unit per hour (~$263.53/month per unit).
@@ -249,7 +251,7 @@ Azure Virtual WAN pricing includes:
 ## 7. Battle-Tested Nuggets & Production Gotchas
 
 1. **VNet Connection Hourly Charges Add Up Quickly:** In traditional Hub-and-Spoke networks, VNet Peering has no hourly connection fee (only $0.01/GB data transfer). In Virtual WAN, **every single VNet connected to a hub incurs a flat fee of $0.05 per hour ($36.50/month)**. If you have 100 small micro-service or developer VNets connected to a hub, you will pay $3,650/month just in connection idle fees before transferring a single byte. Consolidate subnets into fewer, well-architected spoke VNets.
-2. **Virtual Hub Address Prefix Overlap is Fatal:** When creating a Virtual Hub, you must assign it an address prefix (e.g., `10.10.0.0/23`). This prefix is used internally by Azure for the router instances and gateways. If this CIDR overlaps with *any* existing on-premises network, SD-WAN branch, or spoke VNet, Virtual WAN routing breaks catastrophically. The hub prefix **cannot be edited or modified after creation**; you must delete and recreate the entire hub and all gateways to fix an IP conflict.
+2. **Virtual Hub Address Prefix Overlap is Fatal:** When creating a Virtual Hub, you must assign it an address prefix (e.g., `10.10.0.0/23`). This prefix is used internally by Azure for the router instances and gateways. If this CIDR overlaps with _any_ existing on-premises network, SD-WAN branch, or spoke VNet, Virtual WAN routing breaks catastrophically. The hub prefix **cannot be edited or modified after creation**; you must delete and recreate the entire hub and all gateways to fix an IP conflict.
 3. **Routing Intent Replaces All Spoke UDRs Automatically:** Before Virtual WAN Routing Intent existed, engineers had to write and maintain dozens of UDRs on spoke subnets to steer traffic through the firewall. When you enable Routing Intent on a Secured Hub, Azure **programmatically overrides and injects default routes into the effective routing tables of all attached VNets**. If you had custom UDRs sending specific traffic directly to another NVA, Routing Intent will take precedence, which can unintentionally black-hole legacy appliance traffic.
 4. **Hub-to-Hub Transit Requires "Standard" SKU:** Azure offers a "Basic" Virtual WAN SKU and a "Standard" SKU. Basic only supports Site-to-Site VPN and does not support VNet-to-VNet transit, ExpressRoute, or Hub-to-Hub inter-region transit. If you create a Basic vWAN, you cannot convert it in-place to Standard without deleting and rebuilding your hub topology. Always create **Standard Virtual WAN** from day one.
 5. **ExpressRoute Gateway Scale Units Cannot Be Set to Zero:** Once you deploy an ExpressRoute or VPN Gateway inside a Virtual Hub, you cannot scale it down to 0 units to pause billing during a testing hiatus. The gateway will bill for at least 1 Scale Unit ($263 - $306/month) 24/7. To stop charges in development environments, you must delete the gateway resource completely.

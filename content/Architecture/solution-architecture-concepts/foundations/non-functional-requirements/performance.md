@@ -12,12 +12,12 @@ Performance is the measure of how fast a system responds to requests and how muc
 
 **Latency** is the time between a request being sent and the response being received. Key percentiles:
 
-| Percentile | What it means | Common target |
-|---|---|---|
-| p50 (median) | Half of requests are faster | < 100ms for APIs |
-| p95 | 5% of requests are slower | < 200ms for web |
-| p99 | 1% of requests are slowest | < 500ms for non-real-time |
-| p99.9 | 0.1% — your worst users | < 1s for any sync call |
+| Percentile   | What it means               | Common target             |
+| ------------ | --------------------------- | ------------------------- |
+| p50 (median) | Half of requests are faster | < 100ms for APIs          |
+| p95          | 5% of requests are slower   | < 200ms for web           |
+| p99          | 1% of requests are slowest  | < 500ms for non-real-time |
+| p99.9        | 0.1% — your worst users     | < 1s for any sync call    |
 
 > **ELI5:** p99 means "if 1000 requests come in, the 10 slowest ones should still be under your limit." That's the customer you don't want to lose.
 
@@ -66,11 +66,11 @@ Reducing any single layer improves the whole. Common wins: connection pooling (r
 
 **Horizontal scaling** (more machines) — scales linearly, requires stateless design, adds complexity at the load-balancing layer.
 
-| Approach | Pros | Cons |
-|---|---|---|
-| Vertical | Simple, low latency (shared memory) | Hardware ceiling, single failure point |
+| Approach   | Pros                                  | Cons                                           |
+| ---------- | ------------------------------------- | ---------------------------------------------- |
+| Vertical   | Simple, low latency (shared memory)   | Hardware ceiling, single failure point         |
 | Horizontal | Near-unlimited scale, fault tolerance | Stateless requirement, session affinity issues |
-| Hybrid | Best of both | Complex — big machines in the data path |
+| Hybrid     | Best of both                          | Complex — big machines in the data path        |
 
 ### Caching as a Performance Multiplier
 
@@ -83,6 +83,7 @@ Caching is the single highest-leverage performance move in architecture. Layers:
 5. **OS page cache** — kernel-level file caching (often overlooked)
 
 **Cache invalidation** is the hard problem. Strategies:
+
 - **TTL-based** — simple, eventual consistency, risk of stale reads
 - **Event-driven invalidation** — pub/sub invalidation on write (complex, immediate)
 - **Write-through** — update cache on every write (consistency, write latency cost)

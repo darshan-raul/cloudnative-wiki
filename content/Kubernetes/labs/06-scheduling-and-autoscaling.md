@@ -99,6 +99,7 @@ kubectl rollout status deployment/podinfo
 ### Step 1: Inspect Pod Quality of Service (QoS)
 
 Kubernetes assigns every Pod one of three QoS classes based on its resource definitions:
+
 - **`Guaranteed`**: Requests == Limits for both CPU and Memory across all containers.
 - **`Burstable`**: Requests < Limits, or at least one container has requests specified.
 - **`BestEffort`**: No requests or limits specified at all (first to be evicted under node pressure).
@@ -133,6 +134,7 @@ kubectl drain k8s-lab-worker --ignore-daemonsets --delete-emptydir-data
 ```
 
 **Expected output:**
+
 ```
 node/k8s-lab-worker cordoned
 evicting pod default/podinfo-...
@@ -155,6 +157,7 @@ kubectl uncordon k8s-lab-worker
 What happens when a Pod requests more compute capacity than any node can provide?
 
 ### Trigger the failure:
+
 Attempt to run a pod requesting 100 CPU cores (impossible on our local machine):
 
 ```bash
@@ -166,6 +169,7 @@ kubectl run monster-pod \
 ```
 
 ### Observe the symptom:
+
 Check the pod status:
 
 ```bash
@@ -180,6 +184,7 @@ monster-pod   0/1     Pending   0          10s
 The Pod remains permanently stuck in **`Pending`**.
 
 ### Root Cause Diagnosis:
+
 Inspect the scheduler events:
 
 ```bash
@@ -187,6 +192,7 @@ kubectl describe pod monster-pod | grep -A 5 "Events:"
 ```
 
 **Diagnostic event:**
+
 ```
 Events:
   Type     Reason            Age   From               Message
@@ -195,6 +201,7 @@ Events:
 ```
 
 **Key Diagnostic Breakdown:**
+
 1. **Filtering phase:** `kube-scheduler` ran all registered filter plugins (`NodeResourcesFit`). Every node failed because its allocatable CPU was lower than the requested `100`.
 2. **Preemption phase:** The scheduler checked if it could evict lower-priority pods to make room (`PostFilter`). Because even an entirely empty node lacks 100 CPUs, preemption failed.
 3. The Pod remains in the scheduler queue until a node with sufficient capacity joins the cluster (e.g., via Karpenter or Cluster Autoscaler in cloud environments).
@@ -210,6 +217,7 @@ kubectl delete pod monster-pod
 ## 5. Lab Track Completion & Summary
 
 Congratulations! Over Labs 00 through 06, you have successfully:
+
 1. **Bootstrapped** a multi-node local cluster with host port bindings.
 2. **Deployed** a production microservice (`podinfo`) across a declarative controller chain.
 3. **Executed** zero-downtime rolling updates and safe rollbacks.

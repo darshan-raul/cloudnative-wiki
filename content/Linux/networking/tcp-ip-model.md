@@ -197,6 +197,7 @@ Connection teardown (4-way):
 ```
 
 **Key TCP concepts:**
+
 - **Sequence numbers**: every byte is numbered (prevents gaps, enables ordering)
 - **ACK**: receiver acknowledges receipt (cumulative)
 - **Window size**: how much data can be sent before waiting for ACK (flow control)
@@ -225,14 +226,14 @@ Applications: DNS (single request/response), QUIC, video streaming, VoIP
 
 ### TCP vs UDP Quick Comparison
 
-| Property | TCP | UDP |
-|---------|-----|-----|
-| Connection | Connected (handshake) | Connectionless |
-| Reliability | Reliable (ACK, retransmit) | None |
-| Ordering | Ordered (sequence numbers) | None |
-| Overhead | 20 bytes + options | 8 bytes |
-| Speed | Slower (handshake + ACK) | Faster (no overhead) |
-| Use cases | HTTP, SSH, PostgreSQL | DNS, DHCP, VoIP, QUIC |
+| Property    | TCP                        | UDP                   |
+| ----------- | -------------------------- | --------------------- |
+| Connection  | Connected (handshake)      | Connectionless        |
+| Reliability | Reliable (ACK, retransmit) | None                  |
+| Ordering    | Ordered (sequence numbers) | None                  |
+| Overhead    | 20 bytes + options         | 8 bytes               |
+| Speed       | Slower (handshake + ACK)   | Faster (no overhead)  |
+| Use cases   | HTTP, SSH, PostgreSQL      | DNS, DHCP, VoIP, QUIC |
 
 ## Key Ports (Well-Known)
 

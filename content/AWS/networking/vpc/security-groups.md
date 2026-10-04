@@ -26,6 +26,7 @@ A Security Group acts as a virtual stateful firewall for an EC2 instance (or any
 Every VPC has a default security group. When you launch an instance without specifying a security group, the default SG is attached.
 
 Default rules:
+
 - Inbound: Allow traffic from other instances attached to the same default SG
 - Outbound: Allow all
 
@@ -40,6 +41,7 @@ Description: "Allow HTTP from app tier"
 ```
 
 **Source options:**
+
 - Another security group (e.g., `sg-0123456789abcdef`) — allows traffic from any instance using that SG
 - CIDR block (e.g., `10.0.1.0/24`) — allows traffic from that IP range
 - Prefix list (e.g., `pl-0123456789abcdef`) — AWS-managed IP ranges (used for AWS managed services)
@@ -83,18 +85,19 @@ Outbound:
 ## Monitoring Security Group Changes
 
 Security group changes are logged in CloudTrail (`AuthorizeSecurityGroupIngress`, `RevokeSecurityGroupIngress`, etc.). Use AWS Config rules to detect:
+
 - Security groups allowing 0.0.0.0/0 on sensitive ports
 - Security groups with rules referencing deprecated SGs
 - Security groups modified in production without change management
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Security groups per VPC | 500 |
-| Rules per security group | 60 inbound + 60 outbound |
-| Security groups per ENI | 5 |
-| Security groups you can reference per rule | 10 |
+| Resource                                   | Limit                    |
+| ------------------------------------------ | ------------------------ |
+| Security groups per VPC                    | 500                      |
+| Rules per security group                   | 60 inbound + 60 outbound |
+| Security groups per ENI                    | 5                        |
+| Security groups you can reference per rule | 10                       |
 
 ## References
 

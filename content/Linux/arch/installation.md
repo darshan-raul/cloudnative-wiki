@@ -14,6 +14,7 @@ archinstall
 ```
 
 It handles:
+
 - Disk partitioning (with LUKS encryption option)
 - Bootloader selection (systemd-boot or GRUB)
 - Profile selection (minimal, desktop, server, etc.)
@@ -21,6 +22,7 @@ It handles:
 - User creation
 
 **Profiles available:**
+
 - `desktop` (with Gnome/KDE/Xfce)
 - `server`
 - `minimal`
@@ -145,13 +147,13 @@ passwd
 
 ## Manjaro Editions
 
-| Edition | Desktop | Target |
-|---------|---------|--------|
-| **Manjaro Gnome** | GNOME 45+ | Modern, feature-rich |
-| **Manjaro KDE** | Plasma 5.x/6 | Customizable, familiar |
-| **Manjaro Xfce** | Xfce 4.18 | Lightweight, older hardware |
-| **Manjaro Cinnamon** | Cinnamon 6 | Traditional desktop feel |
-| **Manjaro Architect** | CLI/TUI | Build your own environment |
+| Edition               | Desktop      | Target                      |
+| --------------------- | ------------ | --------------------------- |
+| **Manjaro Gnome**     | GNOME 45+    | Modern, feature-rich        |
+| **Manjaro KDE**       | Plasma 5.x/6 | Customizable, familiar      |
+| **Manjaro Xfce**      | Xfce 4.18    | Lightweight, older hardware |
+| **Manjaro Cinnamon**  | Cinnamon 6   | Traditional desktop feel    |
+| **Manjaro Architect** | CLI/TUI      | Build your own environment  |
 
 ### Manjaro-Specific Tools
 
@@ -207,6 +209,7 @@ swapon /dev/vg0/swap
 ```
 
 **mkinitcpio config** (`/etc/mkinitcpio.conf`):
+
 ```
 HOOKS=(base udev autodetect keyboard keymap encrypt lvm2 resume filesystems)
 ```
@@ -216,24 +219,28 @@ Then run `mkinitcpio -P` after arch-chroot.
 ## DE/WM Installation After Base
 
 ### GNOME
+
 ```bash
 pacman -S gnome gnome-extra gdm
 systemctl enable gdm
 ```
 
 ### KDE Plasma
+
 ```bash
 pacman -S plasma sddm
 systemctl enable sddm
 ```
 
 ### Xfce
+
 ```bash
 pacman -S xfce4 xfce4-goodies lightdm
 systemctl enable lightdm
 ```
 
 ### i3 (tiling WM)
+
 ```bash
 pacman -S i3 dmenu i3status i3lock terminator
 ```

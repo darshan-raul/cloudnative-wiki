@@ -1,75 +1,88 @@
-# AI, ML, Genai whats the difference?
+---
+title: AI vs ML vs DL vs GenAI vs LLMs — What's the Difference?
+description: Complete taxonomy and breakdown of Artificial Intelligence, Machine Learning, Deep Learning, Generative AI, and Large Language Models
+tags:
+  - ai
+  - machine-learning
+  - deep-learning
+  - genai
+  - llm
+---
 
-<figure><img src="../.gitbook/assets/image (268).png" alt=""><figcaption></figcaption></figure>
+# AI vs ML vs DL vs GenAI vs LLMs — What's the Difference?
 
-The total landscape of Artificial Intelligence (AI) is vast and diverse, encompassing various subfields, techniques, and applications. Here's an overview of the AI landscape and where LLM (Large Language Models), GenAI, and Machine Learning (ML) fit into it:
+```mermaid
+graph TD
+    AI[Artificial Intelligence - AI<br/>Simulating human intelligence] --> ML[Machine Learning - ML<br/>Learning from data without explicit rules]
+    ML --> DL[Deep Learning - DL<br/>Multi-layer neural networks]
+    DL --> GenAI[Generative AI - GenAI<br/>Creating novel content: text, code, images]
+    GenAI --> LLMs[Large Language Models - LLMs<br/>Transformer architectures trained on massive text]
 
-**Artificial Intelligence (AI)** The broadest term<mark style="color:purple;">, AI refers to the development of computer systems that can perform tasks that typically require human intelligence</mark>, such as:
+    AI --> NLP[Natural Language Processing - NLP]
+    NLP -.-> LLMs
+```
+
+The landscape of Artificial Intelligence (AI) encompasses various nested subfields, techniques, and applications. Here is an architectural overview of how they fit together:
+
+---
+
+## 1. Artificial Intelligence (AI)
+
+The broadest umbrella term, AI refers to the development of computational systems that perform tasks typically requiring human intelligence:
 
 1. Reasoning and problem-solving
 2. Knowledge representation and management
 3. Planning and decision-making
-4. Learning and adaptation
-5. Perception and sensing
-6. Natural Language Processing (NLP)
-7. Robotics and computer vision
+4. Perception and sensing
+5. Natural Language Processing (NLP)
+6. Robotics and computer vision
 
-**Machine Learning (ML)** A subset of AI, ML focuses on developing algorithms and statistical models that enable computers to learn from data, without being explicitly programmed. ML involves:
+---
 
-1. Supervised learning (e.g., regression, classification)
-2. Unsupervised learning (e.g., clustering, dimensionality reduction)
-3. Reinforcement learning (e.g., Q-learning, policy gradients)
-4. Deep learning (e.g., neural networks, convolutional neural networks)
+## 2. Machine Learning (ML)
 
-**Deep Learning (DL)** A subfield of ML, DL involves the use of neural networks with multiple layers to analyze data. DL techniques include:
+A subset of AI, ML develops algorithms and statistical models that learn patterns from data rather than relying on hardcoded procedural rules:
 
-1. Convolutional Neural Networks (CNNs)
-2. Recurrent Neural Networks (RNNs)
-3. Long Short-Term Memory (LSTM) networks
-4. Transformers (e.g., BERT, RoBERTa)
+1. **Supervised learning:** Regression, classification (labeled datasets).
+2. **Unsupervised learning:** Clustering, dimensionality reduction (unlabeled datasets).
+3. **Reinforcement learning:** Agent optimization via reward signals and policy gradients.
 
-**Natural Language Processing (NLP)** A subfield of AI, NLP deals with the interaction between computers and humans in natural language. NLP encompasses:
+---
 
-1. Text processing and analysis
-2. Sentiment analysis and opinion mining
-3. Language modeling and generation
-4. Dialogue systems and chatbots
+## 3. Deep Learning (DL)
 
-**Large Language Models (LLM)** A specific type of NLP model, LLMs are designed to process and generate human-like language. They are typically trained on vast amounts of text data and can perform tasks such as:
+A subfield of ML based on artificial neural networks with multiple representation layers:
 
-1. Language translation
-2. Text summarization
-3. Question answering
-4. Text generation (e.g., chatbots, language translation)
+1. **Convolutional Neural Networks (CNNs):** Spatial pattern processing for computer vision.
+2. **Recurrent Neural Networks (RNNs) / LSTMs:** Sequential processing for time-series data.
+3. **Transformers:** Self-attention architectures that revolutionized language and multimodal modeling.
 
-Examples of LLMs include:
+---
 
-1. BERT (Bidirectional Encoder Representations from Transformers)
-2. RoBERTa (Robustly Optimized BERT Pretraining Approach)
-3. Transformer-XL (Transformer with extra-large model)
+## 4. Generative AI (GenAI)
 
-**Generative AI (GenAI)** A subset of AI, GenAI focuses on developing models that can generate new, synthetic data, such as:
+A subset of Deep Learning focused on **generating novel, synthetic data artifacts** rather than merely classifying or predicting values:
 
-1. Images (e.g., Generative Adversarial Networks, GANs)
-2. Text (e.g., language models, text generation)
-3. Music (e.g., music generation, composition)
-4. Videos (e.g., video generation, animation)
+- Text and code generation (Transformers)
+- Image and video generation (Diffusion models, GANs)
+- Audio and speech synthesis
 
-GenAI models can be used for various applications, including:
+---
 
-1. Data augmentation
-2. Synthetic data generation
-3. Artistic creation
-4. Entertainment (e.g., video games, interactive stories)
+## 5. Large Language Models (LLMs)
 
-**Relationship between LLM, GenAI, and ML** LLMs and GenAI models often rely on ML techniques, such as deep learning, to learn from data and generate new content. LLMs, in particular, are a type of ML model that focuses on NLP tasks. GenAI, on the other hand, is a broader field that encompasses various AI techniques, including ML, to generate new data.
+A specific class of foundation models trained on massive text corpora using the Transformer architecture:
 
-To illustrate the relationships between these concepts:
+- Autoregressive next-token prediction
+- Zero-shot and few-shot reasoning
+- Instruction fine-tuning (RLHF / DPO) for aligned dialogue execution
 
-* AI is the overarching field that includes ML, NLP, and GenAI.
-* ML is a subset of AI that includes techniques such as deep learning.
-* DL is a subfield of ML that focuses on neural networks.
-* NLP is a subfield of AI that deals with language processing and generation.
-* LLMs are a specific type of NLP model that uses ML techniques, such as deep learning, to process and generate language.
-* GenAI is a subset of AI that focuses on generating new data, often using ML techniques, such as deep learning.
+---
 
+## 6. Summary Taxonomy
+
+- **AI** is the overarching field of intelligent machines.
+- **ML** is learning patterns from data.
+- **DL** is learning patterns using deep neural networks.
+- **GenAI** is generating new content using deep generative models.
+- **LLMs** are language-specialized generative foundation models.

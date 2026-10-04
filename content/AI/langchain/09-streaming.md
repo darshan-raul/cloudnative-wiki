@@ -14,11 +14,11 @@ tags:
 
 LangChain has three progressively more powerful streaming interfaces:
 
-| Method | Returns | Use when |
-|---|---|---|
-| `stream(input)` | `Iterator[Output]` | Simple — you want the output chunks |
-| `astream(input)` | `AsyncIterator[Output]` | Same, but async context |
-| `astream_events(input, version="v2")` | `AsyncIterator[Event]` | You need tokens + tool calls + lifecycle |
+| Method                                | Returns                 | Use when                                 |
+| ------------------------------------- | ----------------------- | ---------------------------------------- |
+| `stream(input)`                       | `Iterator[Output]`      | Simple — you want the output chunks      |
+| `astream(input)`                      | `AsyncIterator[Output]` | Same, but async context                  |
+| `astream_events(input, version="v2")` | `AsyncIterator[Event]`  | You need tokens + tool calls + lifecycle |
 
 ---
 
@@ -86,16 +86,16 @@ Each event is a dict:
 
 ### Event taxonomy
 
-| Event | Emitted by | `data` |
-|---|---|---|
-| `on_chat_model_start` | Model begins | `input` (the messages) |
-| `on_chat_model_stream` | Token arrives | `chunk` (AIMessageChunk) |
-| `on_chat_model_end` | Model done | `output` (AIMessage) |
-| `on_tool_start` | Tool begins | `input` (the args) |
-| `on_tool_end` | Tool completes | `output` (the result) |
+| Event                       | Emitted by       | `data`                   |
+| --------------------------- | ---------------- | ------------------------ |
+| `on_chat_model_start`       | Model begins     | `input` (the messages)   |
+| `on_chat_model_stream`      | Token arrives    | `chunk` (AIMessageChunk) |
+| `on_chat_model_end`         | Model done       | `output` (AIMessage)     |
+| `on_tool_start`             | Tool begins      | `input` (the args)       |
+| `on_tool_end`               | Tool completes   | `output` (the result)    |
 | `on_chain_start/end/stream` | RunnableSequence | `input`/`output`/`chunk` |
-| `on_retriever_start/end` | Retriever | `input`/`output` |
-| `on_error` | Exception | `error` |
+| `on_retriever_start/end`    | Retriever        | `input`/`output`         |
+| `on_error`                  | Exception        | `error`                  |
 
 ### Filtering events
 
@@ -113,12 +113,12 @@ async for event in graph.astream_events(
     ...
 ```
 
-| Param | What it filters on |
-|---|---|
-| `include_names` | The `name` of the runnable (e.g. "call_model") |
+| Param           | What it filters on                               |
+| --------------- | ------------------------------------------------ |
+| `include_names` | The `name` of the runnable (e.g. "call_model")   |
 | `include_types` | Kind: "chat_model", "tool", "chain", "retriever" |
-| `include_tags` | The `tags` on the runnable |
-| `exclude_*` | Same, but exclusion |
+| `include_tags`  | The `tags` on the runnable                       |
+| `exclude_*`     | Same, but exclusion                              |
 
 ### `version="v2"` is required
 

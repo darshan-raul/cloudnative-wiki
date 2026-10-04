@@ -1,6 +1,16 @@
 ---
 title: "Stage 5 — Security, Attacks, Hardening"
-tags: [authentication, stage-5, security, attacks, hardening, audit, siem, threat-model]
+tags:
+  [
+    authentication,
+    stage-5,
+    security,
+    attacks,
+    hardening,
+    audit,
+    siem,
+    threat-model,
+  ]
 date: 2026-06-13
 description: The top 12 OAuth/OIDC/JWT attacks, token storage, cryptographic hardening, audit logging, SIEM detection rules
 ---
@@ -13,12 +23,12 @@ description: The top 12 OAuth/OIDC/JWT attacks, token storage, cryptographic har
 
 ## Modules
 
-| # | Module | Why it matters | Exit criterion |
-|---|--------|----------------|----------------|
-| [[01-top-12-attacks\|5.1 The Top 12 OAuth/OIDC/JWT Attacks]] | Confused deputy, CSRF, alg confusion, PKCE downgrade, IDOR, token leakage, mix-up, JWT stripping, open redirect, scope escalation, stolen refresh, session fixation | You can audit an auth system and produce a prioritized fix list |
-| [[02-token-storage\|5.2 Token Storage & Side-channel Leaks]] | localStorage vs memory vs cookie, HttpOnly + SameSite, devtools, server logs, referer leakage | You pick the right storage for SPA, native, server-side |
-| [[03-crypto-hardening\|5.3 Cryptographic Hardening & Key Rotation]] | JWKS rotation, RS256 → EdDSA migration, key compromise playbook | You can rotate signing keys without a 3am outage |
-| [[04-audit-logging-siem\|5.4 Audit, Logging, SIEM Detection]] | Auth event taxonomy, what SOC 2 + ISO 27001 demand, Wazuh/Splunk rules | You can ship an auth audit pipeline that survives a SOC 2 audit |
+| #                                                                   | Module                                                                                                                                                              | Why it matters                                                  | Exit criterion |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------- |
+| [[01-top-12-attacks\|5.1 The Top 12 OAuth/OIDC/JWT Attacks]]        | Confused deputy, CSRF, alg confusion, PKCE downgrade, IDOR, token leakage, mix-up, JWT stripping, open redirect, scope escalation, stolen refresh, session fixation | You can audit an auth system and produce a prioritized fix list |
+| [[02-token-storage\|5.2 Token Storage & Side-channel Leaks]]        | localStorage vs memory vs cookie, HttpOnly + SameSite, devtools, server logs, referer leakage                                                                       | You pick the right storage for SPA, native, server-side         |
+| [[03-crypto-hardening\|5.3 Cryptographic Hardening & Key Rotation]] | JWKS rotation, RS256 → EdDSA migration, key compromise playbook                                                                                                     | You can rotate signing keys without a 3am outage                |
+| [[04-audit-logging-siem\|5.4 Audit, Logging, SIEM Detection]]       | Auth event taxonomy, what SOC 2 + ISO 27001 demand, Wazuh/Splunk rules                                                                                              | You can ship an auth audit pipeline that survives a SOC 2 audit |
 
 ## Connections
 

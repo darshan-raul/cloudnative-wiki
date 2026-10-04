@@ -56,14 +56,14 @@ Unlike legacy Application Gateway v2 (which required minutes to reconfigure back
 
 ## 2. Decision Matrix: Ingress Options on AKS
 
-| Dimension | Application Gateway Ingress Controller (AGIC) | Application Routing Add-on | Application Gateway for Containers (AGfC) |
-| :--- | :--- | :--- | :--- |
-| **API Specification** | Kubernetes `networking.k8s.io/v1` Ingress | Kubernetes `networking.k8s.io/v1` Ingress | **Kubernetes Gateway API (`gateway.networking.k8s.io/v1`)** |
-| **Data Plane Engine** | Azure Application Gateway v2 VM instances | In-cluster managed NGINX pods | **Managed Envoy-based Disaggregated Proxy** |
-| **Reconfiguration Latency**| **15 to 90 seconds** (ARM API call bottleneck) | Near instant (< 1 second) | **Sub-second (< 1 second via xDS streaming)** |
-| **WAF Protection** | Azure WAF v2 on App Gateway | Requires custom ModSecurity | **Native Azure WAF v2 integration** |
-| **Canary Traffic Splitting**| Requires complex annotations | Annotations-based | **Declarative weight in `HTTPRoute`** |
-| **Cost Model** | Hourly App Gateway fee + Capacity Units | In-cluster VM resource consumption | **Fixed base fee + Capacity Units (NCUs)** |
+| Dimension                    | Application Gateway Ingress Controller (AGIC)  | Application Routing Add-on                | Application Gateway for Containers (AGfC)                   |
+| :--------------------------- | :--------------------------------------------- | :---------------------------------------- | :---------------------------------------------------------- |
+| **API Specification**        | Kubernetes `networking.k8s.io/v1` Ingress      | Kubernetes `networking.k8s.io/v1` Ingress | **Kubernetes Gateway API (`gateway.networking.k8s.io/v1`)** |
+| **Data Plane Engine**        | Azure Application Gateway v2 VM instances      | In-cluster managed NGINX pods             | **Managed Envoy-based Disaggregated Proxy**                 |
+| **Reconfiguration Latency**  | **15 to 90 seconds** (ARM API call bottleneck) | Near instant (< 1 second)                 | **Sub-second (< 1 second via xDS streaming)**               |
+| **WAF Protection**           | Azure WAF v2 on App Gateway                    | Requires custom ModSecurity               | **Native Azure WAF v2 integration**                         |
+| **Canary Traffic Splitting** | Requires complex annotations                   | Annotations-based                         | **Declarative weight in `HTTPRoute`**                       |
+| **Cost Model**               | Hourly App Gateway fee + Capacity Units        | In-cluster VM resource consumption        | **Fixed base fee + Capacity Units (NCUs)**                  |
 
 ---
 
@@ -103,18 +103,18 @@ metadata:
 spec:
   gatewayClassName: azure-alb-external
   listeners:
-  - name: https-listener
-    port: 443
-    protocol: HTTPS
-    allowedRoutes:
-      namespaces:
-        from: All
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - group: ""
-        kind: Secret
-        name: wildcard-corp-tls-secret
+    - name: https-listener
+      port: 443
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: wildcard-corp-tls-secret
 ```
 
 ### 3. Deploy Advanced Canary Routing with HTTPRoute
@@ -131,23 +131,23 @@ metadata:
   namespace: production
 spec:
   parentRefs:
-  - name: external-public-gateway
+    - name: external-public-gateway
   hostnames:
-  - "orders.contoso.com"
+    - "orders.contoso.com"
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api/orders
-    backendRefs:
-    # Stable Production Version (90% weight)
-    - name: orders-service-v1
-      port: 80
-      weight: 90
-    # Canary Candidate Version (10% weight)
-    - name: orders-service-v2
-      port: 80
-      weight: 10
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/orders
+      backendRefs:
+        # Stable Production Version (90% weight)
+        - name: orders-service-v1
+          port: 80
+          weight: 90
+        # Canary Candidate Version (10% weight)
+        - name: orders-service-v2
+          port: 80
+          weight: 10
 ```
 
 Apply manifests:
@@ -161,13 +161,13 @@ kubectl apply -f canary-httproute.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Limit / Metric | Hard Limit / SLA | Production Impact |
-| :--- | :--- | :--- |
-| **Reconfiguration Speed** | **< 1 second** | Solves the legacy AGIC pod scaling delay completely |
-| **Max Gateways per ALB** | **Up to 100 Gateways** | Multi-tenant platform consolidation |
-| **Max Rules per HTTPRoute**| **1,000 rules** | High-density path, header, and query parameter routing |
-| **Max Concurrent TCP Conns**| **1,000,000+ connections**| Scales dynamically via Envoy data plane |
-| **TLS Certificate Source** | Kubernetes Secrets / Key Vault| Automated rotation via Azure Key Vault CSI Provider |
+| Limit / Metric               | Hard Limit / SLA               | Production Impact                                      |
+| :--------------------------- | :----------------------------- | :----------------------------------------------------- |
+| **Reconfiguration Speed**    | **< 1 second**                 | Solves the legacy AGIC pod scaling delay completely    |
+| **Max Gateways per ALB**     | **Up to 100 Gateways**         | Multi-tenant platform consolidation                    |
+| **Max Rules per HTTPRoute**  | **1,000 rules**                | High-density path, header, and query parameter routing |
+| **Max Concurrent TCP Conns** | **1,000,000+ connections**     | Scales dynamically via Envoy data plane                |
+| **TLS Certificate Source**   | Kubernetes Secrets / Key Vault | Automated rotation via Azure Key Vault CSI Provider    |
 
 ---
 
@@ -195,7 +195,7 @@ Application Gateway for Containers uses a consumption-based pricing model based 
   - NCU Consumption: 20 NCUs × $0.008/NCU-hr × 730 hrs = **$116.80**
   - WAF Security Surcharge: ~$0.015/hr × 730 hrs = **$10.95**
   - Ingress Data Egress Bandwidth (10 TB): ~$150.00
-- **Total Ingress Cost:** **$296.00 / month** *(Compared to $450+/mo on legacy Application Gateway v2).*
+- **Total Ingress Cost:** **$296.00 / month** _(Compared to $450+/mo on legacy Application Gateway v2)._
 
 ### Scenario B: Lightweight B2B Portal (Application Routing Add-on)
 

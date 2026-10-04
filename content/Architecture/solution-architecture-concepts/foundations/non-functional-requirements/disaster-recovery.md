@@ -20,12 +20,12 @@ RTO = how long can we afford to be down?
 
 These are business decisions, not technical ones. Finance cares about RPO (transactions), Operations cares about RTO (service restoration).
 
-| Criticality | RPO | RTO | Example |
-|---|---|---|---|
-| Mission-critical | 0 (synchronous replication) | < 15 min | Financial trading, emergency services |
-| Business-critical | < 1 hour | < 4 hours | E-commerce checkout, ERP |
-| Business-operational | < 24 hours | < 24 hours | Internal tools, reporting |
-| Low-critical | < 1 week | < 1 week | Analytics, data pipelines |
+| Criticality          | RPO                         | RTO        | Example                               |
+| -------------------- | --------------------------- | ---------- | ------------------------------------- |
+| Mission-critical     | 0 (synchronous replication) | < 15 min   | Financial trading, emergency services |
+| Business-critical    | < 1 hour                    | < 4 hours  | E-commerce checkout, ERP              |
+| Business-operational | < 24 hours                  | < 24 hours | Internal tools, reporting             |
+| Low-critical         | < 1 week                    | < 1 week   | Analytics, data pipelines             |
 
 ## DR Strategies
 
@@ -155,6 +155,7 @@ us-west-2 (primary) ←→ ap-southeast-1 (secondary)
 ```
 
 **Considerations:**
+
 - Data residency laws (data can't leave certain jurisdictions)
 - Cross-region latency (all writes have added latency)
 - Cost differences between regions
@@ -171,6 +172,7 @@ Disaster: Change ALIAS → us-west-2
 ```
 
 **Requirements:**
+
 - Low TTL on DNS records (60 seconds or less)
 - Health checks before failover (don't fail over to a also-failing region)
 - Automated DNS update (Route53 health check + failover routing)
@@ -203,12 +205,12 @@ A DR plan that hasn't been tested is not a DR plan.
 
 ### Types of DR Testing
 
-| Test Type | What it exercises | Frequency |
-|---|---|---|
-| **Tabletop exercise** | Walk through procedure, identify gaps | Quarterly |
-| **Partial failover** | Fail over one component, verify recovery | Monthly |
-| **Full failover** | Complete DR drill, measure actual RTO | Annually |
-| **Chaos injection** | Deliberately destroy components, verify recovery | Monthly |
+| Test Type             | What it exercises                                | Frequency |
+| --------------------- | ------------------------------------------------ | --------- |
+| **Tabletop exercise** | Walk through procedure, identify gaps            | Quarterly |
+| **Partial failover**  | Fail over one component, verify recovery         | Monthly   |
+| **Full failover**     | Complete DR drill, measure actual RTO            | Annually  |
+| **Chaos injection**   | Deliberately destroy components, verify recovery | Monthly   |
 
 ### Measuring Actual RTO
 

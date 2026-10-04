@@ -59,14 +59,14 @@ root hypervisors CANNOT inspect in-memory encryption keys or cleartext data!
 
 ## 2. Isolation Technology Comparison Matrix
 
-| Dimension | Standard Container (Soft) | Kata Containers (Hard) | Confidential Containers (Hardware) |
-| :--- | :--- | :--- | :--- |
-| **Isolation Mechanism** | Linux Namespaces + cgroups | **Dedicated Micro-VM (Hyper-V)**| **Hardware Memory Encryption (SEV-SNP)**|
-| **Kernel Sharing** | **Shared Host Kernel** | **Independent Guest Kernel** | **Independent Guest Kernel + Memory Enc**|
-| **Startup Latency** | ~500 milliseconds | ~1 to 2 seconds | ~2 to 3 seconds |
-| **CPU/RAM Overhead** | Negligible (< 1%) | Low (~25 MiB RAM per pod) | Low (~3–5% CPU encryption overhead) |
-| **Untrusted Code Execution**| **High Risk (Unsafe)** | **Completely Safe** | **Completely Safe + Zero-Trust Operator**|
-| **Target Workload** | Internal trusted services | Multi-tenant SaaS, tenant plugins| Banking, Health, Defense, Clean Rooms |
+| Dimension                    | Standard Container (Soft)  | Kata Containers (Hard)            | Confidential Containers (Hardware)        |
+| :--------------------------- | :------------------------- | :-------------------------------- | :---------------------------------------- |
+| **Isolation Mechanism**      | Linux Namespaces + cgroups | **Dedicated Micro-VM (Hyper-V)**  | **Hardware Memory Encryption (SEV-SNP)**  |
+| **Kernel Sharing**           | **Shared Host Kernel**     | **Independent Guest Kernel**      | **Independent Guest Kernel + Memory Enc** |
+| **Startup Latency**          | ~500 milliseconds          | ~1 to 2 seconds                   | ~2 to 3 seconds                           |
+| **CPU/RAM Overhead**         | Negligible (< 1%)          | Low (~25 MiB RAM per pod)         | Low (~3–5% CPU encryption overhead)       |
+| **Untrusted Code Execution** | **High Risk (Unsafe)**     | **Completely Safe**               | **Completely Safe + Zero-Trust Operator** |
+| **Target Workload**          | Internal trusted services  | Multi-tenant SaaS, tenant plugins | Banking, Health, Defense, Clean Rooms     |
 
 ---
 
@@ -101,21 +101,26 @@ spec:
   # Instructs Kubernetes to wrap container inside Hyper-V Micro-VM
   runtimeClassName: kata-mshv-vm-isolation
   tolerations:
-  - key: "isolation"
-    operator: "Equal"
-    value: "kata"
-    effect: "NoSchedule"
+    - key: "isolation"
+      operator: "Equal"
+      value: "kata"
+      effect: "NoSchedule"
   containers:
-  - name: code-runner
-    image: python:3.11-slim
-    command: ["python", "-c", "import time; print('Running inside isolated microkernel'); time.sleep(3600)"]
-    resources:
-      requests:
-        cpu: "500m"
-        memory: "512Mi"
-      limits:
-        cpu: "1000m"
-        memory: "1Gi"
+    - name: code-runner
+      image: python:3.11-slim
+      command:
+        [
+          "python",
+          "-c",
+          "import time; print('Running inside isolated microkernel'); time.sleep(3600)",
+        ]
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "512Mi"
+        limits:
+          cpu: "1000m"
+          memory: "1Gi"
 ```
 
 Apply pod:
@@ -160,13 +165,13 @@ metadata:
   namespace: tenant-alpha
 spec:
   limits:
-  - default:
-      cpu: "500m"
-      memory: "512Mi"
-    defaultRequest:
-      cpu: "100m"
-      memory: "128Mi"
-    type: Container
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container
 ```
 
 Apply governance manifests:
@@ -179,12 +184,12 @@ kubectl apply -f tenant-alpha-governance.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter | Platform Limit | Production Rule |
-| :--- | :--- | :--- |
-| **Max Namespaces per Cluster** | **10,000 Namespaces** | Logical tenancy capacity |
-| **Kata Micro-VM Memory Floor** | **~25 MiB RAM overhead**| Required to host lightweight guest kernel |
-| **Confidential VM Series** | DCasv5 / ECasv5 | Hardware memory encryption requires AMD EPYC |
-| **Network Isolation Engine** | Cilium NetworkPolicy | Enforces default-deny between tenant namespaces |
+| Parameter                      | Platform Limit           | Production Rule                                 |
+| :----------------------------- | :----------------------- | :---------------------------------------------- |
+| **Max Namespaces per Cluster** | **10,000 Namespaces**    | Logical tenancy capacity                        |
+| **Kata Micro-VM Memory Floor** | **~25 MiB RAM overhead** | Required to host lightweight guest kernel       |
+| **Confidential VM Series**     | DCasv5 / ECasv5          | Hardware memory encryption requires AMD EPYC    |
+| **Network Isolation Engine**   | Cilium NetworkPolicy     | Enforces default-deny between tenant namespaces |
 
 ---
 
@@ -203,13 +208,13 @@ kubectl apply -f tenant-alpha-governance.yaml
 
 - **Architecture:** 50 enterprise customers sharing a 12-node AKS cluster running untrusted custom user scripts inside Kata Micro-VMs.
 - **Cost Comparison vs Dedicated Single-Tenant Clusters:**
-  - *Option 1 (50 Small Single-Tenant Clusters):* 50 clusters × $73/mo control plane + 150 VMs = **~$25,000 / month**.
-  - *Option 2 (Consolidated Multi-Tenant Cluster with Kata):* 12x `Standard_D8ds_v5` nodes + 1 control plane = **~$3,440 / month**.
+  - _Option 1 (50 Small Single-Tenant Clusters):_ 50 clusters × $73/mo control plane + 150 VMs = **~$25,000 / month**.
+  - _Option 2 (Consolidated Multi-Tenant Cluster with Kata):_ 12x `Standard_D8ds_v5` nodes + 1 control plane = **~$3,440 / month**.
 - **Monthly Cost Breakdown:**
   - Control Plane Fee: **$73.00**
   - Compute Nodes (12 nodes): 12 × $0.384/hr × 730 hrs = **$3,363.84**
   - Kata Containers Surcharge: **$0.00 (Built into Azure Linux)**.
-- **Total Monthly Spend:** **$3,436.84 / month** *(Delivering over $21,000/month in infrastructure savings).*
+- **Total Monthly Spend:** **$3,436.84 / month** _(Delivering over $21,000/month in infrastructure savings)._
 
 ### Scenario B: High-Security Banking Core with Confidential Containers
 
@@ -225,6 +230,6 @@ kubectl apply -f tenant-alpha-governance.yaml
 
 1. **HostPath Volume Mounts Forbidden in Kata Micro-VMs:** Because Kata Containers run inside isolated Hyper-V micro-virtual machines, they do not share the host VM's filesystem. Any pod attempting to mount a `hostPath` volume (e.g., `/var/log` or `/var/run/docker.sock`) will fail during container initialization with `FailedToCreateContainer: hostPath is not supported by Kata runtime`. Use `emptyDir` or persistent volumes.
 2. **Missing `Default-Deny` NetworkPolicy Allows Cross-Namespace Snooping:** By default in Kubernetes, all namespaces can freely communicate over the network. Creating namespaces without an explicit default-deny `NetworkPolicy` allows Tenant A to query internal HTTP services and Redis caches running in Tenant B's namespace. Always deploy a cluster-wide baseline denying cross-namespace traffic unless explicitly permitted.
-3. **Kata Containers Micro-VM Memory Sizing:** When declaring pod memory limits for Kata containers, the pod memory limit must encompass both the application container *and* the lightweight guest Linux kernel (~25–35 MiB). If you declare an extremely small memory limit (e.g., `memory: 32Mi`), the pod will be abruptly killed before the application even boots.
+3. **Kata Containers Micro-VM Memory Sizing:** When declaring pod memory limits for Kata containers, the pod memory limit must encompass both the application container _and_ the lightweight guest Linux kernel (~25–35 MiB). If you declare an extremely small memory limit (e.g., `memory: 32Mi`), the pod will be abruptly killed before the application even boots.
 4. **Confidential Containers Signature Verification Bottlenecks:** Confidential Containers on AKS enforce image signature verification and attestation before booting. If container images are stored in an external registry with high network latency, container boot times can stretch to **15–30 seconds**. Always co-locate container images inside an Azure Container Registry (ACR) Premium in the same Azure region.
 5. **ResourceQuota Saturation Silent Pipeline Failures:** When a tenant reaches their namespace CPU or pod count `ResourceQuota`, Kubernetes does not queue new pods; it rejects the API deployment outright. If an automated CI/CD pipeline does not inspect the error code, deployments silently fail while reporting success. Configure alert rules on `kube_resourcequota{type="used"}` exceeding 85%.

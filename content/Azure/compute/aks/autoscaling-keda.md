@@ -14,6 +14,7 @@ tags:
 # AKS Autoscaling Architecture — Cluster Autoscaler, KEDA, and Virtual Nodes 📈⚡
 
 Modern cloud architectures experience volatile, bursty, and unpredictable traffic patterns. Scaling an Azure Kubernetes Service (AKS) cluster efficiently requires coordinating **three distinct autoscaling layers**:
+
 1. **Pod Horizontal Scaling (HPA v2):** Adjusts pod replicas based on CPU, memory, or custom HTTP request metrics.
 2. **Event-Driven Scaling (KEDA):** Drives pod counts to zero or hundreds based on external messaging queues (Azure Service Bus, Event Hubs, Kafka).
 3. **Infrastructure Scaling:** Expands underlying VM capacity via the **Cluster Autoscaler (CA)**, **Node Auto-Provisioning (Karpenter for Azure)**, or serverless container bursts via **Azure Virtual Nodes (ACI)**.
@@ -62,14 +63,14 @@ Modern cloud architectures experience volatile, bursty, and unpredictable traffi
 
 ## 2. Infrastructure Scaler Comparison: CA vs. NAP (Karpenter) vs. Virtual Nodes
 
-| Dimension | Cluster Autoscaler (CA) | Node Auto-Provisioning (Karpenter) | Azure Virtual Nodes (ACI) |
-| :--- | :--- | :--- | :--- |
-| **Target Mechanism** | Pre-configured VMSS pools | JIT Arbitrary VM creation | Serverless Container Instances |
-| **Cold Start Latency**| **60 to 90 seconds** | **~40 seconds** | **< 10 seconds** |
-| **Instance Flexibility**| Fixed to pool's VM size (e.g. D4s)| Any Azure VM size matching pod requests| CPU/Memory allocated per container |
-| **Bin-Packing Efficiency**| Moderate (Can strand CPU/RAM) | **Optimal (Consolidates on the fly)**| Perfect (Pay strictly for pod size) |
-| **Max Pods per Node** | Fixed per VMSS node pool | Dynamically tailored per instance | Unlimited (Serverless) |
-| **Stateful Disks (PVC)**| Supported (Azure Disk / Files)| Supported | Azure Files only (No Azure Disk) |
+| Dimension                  | Cluster Autoscaler (CA)            | Node Auto-Provisioning (Karpenter)      | Azure Virtual Nodes (ACI)           |
+| :------------------------- | :--------------------------------- | :-------------------------------------- | :---------------------------------- |
+| **Target Mechanism**       | Pre-configured VMSS pools          | JIT Arbitrary VM creation               | Serverless Container Instances      |
+| **Cold Start Latency**     | **60 to 90 seconds**               | **~40 seconds**                         | **< 10 seconds**                    |
+| **Instance Flexibility**   | Fixed to pool's VM size (e.g. D4s) | Any Azure VM size matching pod requests | CPU/Memory allocated per container  |
+| **Bin-Packing Efficiency** | Moderate (Can strand CPU/RAM)      | **Optimal (Consolidates on the fly)**   | Perfect (Pay strictly for pod size) |
+| **Max Pods per Node**      | Fixed per VMSS node pool           | Dynamically tailored per instance       | Unlimited (Serverless)              |
+| **Stateful Disks (PVC)**   | Supported (Azure Disk / Files)     | Supported                               | Azure Files only (No Azure Disk)    |
 
 ---
 
@@ -127,18 +128,18 @@ metadata:
 spec:
   scaleTargetRef:
     name: order-processor
-  minReplicaCount: 0   # Scales to ZERO when queue is empty!
-  maxReplicaCount: 50  # Scales up to 50 pods during flash sales
+  minReplicaCount: 0 # Scales to ZERO when queue is empty!
+  maxReplicaCount: 50 # Scales up to 50 pods during flash sales
   cooldownPeriod: 300
   pollingInterval: 15
   triggers:
-  - type: azure-servicebus
-    metadata:
-      queueName: incoming-orders
-      namespace: sb-ecommerce-prod
-      messageCount: "10" # Target 1 pod for every 10 messages in queue
-    authenticationRef:
-      name: azure-servicebus-auth
+    - type: azure-servicebus
+      metadata:
+        queueName: incoming-orders
+        namespace: sb-ecommerce-prod
+        messageCount: "10" # Target 1 pod for every 10 messages in queue
+      authenticationRef:
+        name: azure-servicebus-auth
 ```
 
 Apply KEDA manifests:
@@ -165,25 +166,25 @@ spec:
   minReplicas: 3
   maxReplicas: 30
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
   behavior:
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
-      - type: Percent
-        value: 10
-        periodSeconds: 60
+        - type: Percent
+          value: 10
+          periodSeconds: 60
 ```
 
 Apply HPA:
@@ -196,13 +197,13 @@ kubectl apply -f api-hpa-v2.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter | Platform Limit | Production Context |
-| :--- | :--- | :--- |
-| **Max Nodes per VMSS Pool** | **1,000 nodes** | Single node pool ceiling |
-| **Max ScaledObject per Cluster**| **1,000 ScaledObjects** | KEDA controller polling scale limit |
-| **ACI Virtual Node Scale** | Up to **500 concurrent pods**| Limited by regional ACI subscription vCPU quotas |
-| **KEDA Polling Interval** | Default: **30 seconds** | Minimum safe interval is `10s` to avoid Azure API throttling |
-| **Cluster Autoscaler Expanders**| `random`, `most-pods`, `least-waste`, `priority` | `least-waste` minimizes unallocated VM slack capacity |
+| Parameter                        | Platform Limit                                   | Production Context                                           |
+| :------------------------------- | :----------------------------------------------- | :----------------------------------------------------------- |
+| **Max Nodes per VMSS Pool**      | **1,000 nodes**                                  | Single node pool ceiling                                     |
+| **Max ScaledObject per Cluster** | **1,000 ScaledObjects**                          | KEDA controller polling scale limit                          |
+| **ACI Virtual Node Scale**       | Up to **500 concurrent pods**                    | Limited by regional ACI subscription vCPU quotas             |
+| **KEDA Polling Interval**        | Default: **30 seconds**                          | Minimum safe interval is `10s` to avoid Azure API throttling |
+| **Cluster Autoscaler Expanders** | `random`, `most-pods`, `least-waste`, `priority` | `least-waste` minimizes unallocated VM slack capacity        |
 
 ---
 
@@ -227,7 +228,7 @@ kubectl apply -f api-hpa-v2.yaml
   - Idle Hours (21 hrs/day × 30 days = 630 hrs): **$0.00 compute spend** (Worker node pool scales to 0 nodes).
   - Active Processing Hours (3 hrs/day × 30 days = 90 hrs): 5 nodes × $0.384/hr × 90 hrs = **$172.80**
   - Control Plane Fee: **$73.00**
-- **Total Monthly Spend:** **$245.80 / month** *(Delivering over $1,200/mo in savings compared to keeping 5 nodes running 24/7).*
+- **Total Monthly Spend:** **$245.80 / month** _(Delivering over $1,200/mo in savings compared to keeping 5 nodes running 24/7)._
 
 ### Scenario B: Flash Sale Burst via Azure Virtual Nodes (ACI)
 

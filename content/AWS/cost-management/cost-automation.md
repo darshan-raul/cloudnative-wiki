@@ -17,6 +17,7 @@ AWS cost management works best when it's automated. Manual processes fail, get i
 The most common cost waste: development and test instances left running 24/7 when they only need to be available during business hours.
 
 **Implementation:** CloudWatch Events (or EventBridge) → Lambda that:
+
 1. Finds EC2 instances with tag `Schedule=stop-after-hours` or `Environment=dev`
 2. Checks if any cloud-init user data is running critical tasks
 3. Stops instances that have been idle for 4+ hours
@@ -28,7 +29,7 @@ import os
 
 def handler(event, context):
     ec2 = boto3.client('ec2')
-    
+
     # Find instances with 'auto-stop' tag
     instances = ec2.describe_instances(
         Filters=[
@@ -36,14 +37,14 @@ def handler(event, context):
             {'Name': 'instance-state-name', 'Values': ['running']}
         ]
     )
-    
+
     for reservation in instances['Reservations']:
         for instance in reservation['Instances']:
             instance_id = instance['InstanceId']
-            
+
             # Check if instance has been idle (no CPU > 5% for 4 hours)
             # Using CloudWatch metrics check
-            
+
             ec2.stop_instances(InstanceIds=[instance_id])
             print(f"Stopped {instance_id}")
 ```
@@ -55,6 +56,7 @@ def handler(event, context):
 EBS volumes remain after terminated instances and accumulate storage costs.
 
 **Implementation:** Scheduled Lambda that:
+
 1. Finds volumes in `available` state
 2. Checks age — volumes attached long ago and unattached are likely orphaned
 3. Checks for `DoNotDelete` tag (protection)
@@ -66,6 +68,7 @@ EBS volumes remain after terminated instances and accumulate storage costs.
 Snapshots accumulate from failed migrations, failed instance lifecycle manager runs, or manual backups.
 
 **Implementation:** Lambda that:
+
 1. Finds snapshots older than retention period
 2. Checks `DoNotDelete` tag
 3. Deletes snapshots that have no associated volume (orphaned)
@@ -82,6 +85,7 @@ AMIs are stored in S3 and cost money. Old AMIs from instance migrations or faile
 Instead of building custom Lambda functions, the AWS Solutions team provides **Instance Scheduler** — a pre-built CloudFormation template that automates stopping/starting EC2 and RDS instances on schedules.
 
 **Features:**
+
 - Tag-based: add `Schedule=BusinessHours` tag to instances
 - Supports both EC2 and RDS
 - Multiple schedules (weekday, weekend, custom)
@@ -89,6 +93,7 @@ Instead of building custom Lambda functions, the AWS Solutions team provides **I
 - Reports cost savings in CloudWatch metrics
 
 **Setup:**
+
 ```bash
 # Deploy via CloudFormation (one-click in AWS Console)
 # Tag instances: Schedule=business-hours
@@ -96,6 +101,7 @@ Instead of building custom Lambda functions, the AWS Solutions team provides **I
 ```
 
 **Savings example:**
+
 ```
 Before: t3.medium running 24/7 = $0.0416/hour × 24 × 30 = $29.95/month
 After: Running 10 hours/weekday × 22 weekdays = 220 hours/month
@@ -114,6 +120,7 @@ CloudWatch Rules (EventBridge) → Lambda (boto3) → AWS API call
 ```
 
 **Common schedule patterns:**
+
 - **Every 15 minutes:** High-frequency cleanup (build agents, short-lived resources)
 - **Every hour:** General cleanup (idle instances, unattached volumes)
 - **Daily (off-peak):** Deep cleanup (snapshots, old AMIs, old CloudWatch log groups)
@@ -124,17 +131,18 @@ CloudWatch Rules (EventBridge) → Lambda (boto3) → AWS API call
 Beyond cleanup, Lambda can respond to Cost Anomaly Detection alerts:
 
 **Anomaly alert → SNS → Lambda:**
+
 ```python
 def handler(event, context):
     anomaly = json.loads(event['Records'][0]['Sns']['Message'])
-    
+
     if anomaly['TotalImpact'] > 500:
         # Stop non-production EC2 instances to cap spending
         stop_non_production_instances()
-        
+
         # Disable auto-scaling on production ASGs
         disable_production_asg_scaling()
-        
+
         # Send PagerDuty alert
         send_alert(anomaly)
     else:
@@ -143,6 +151,7 @@ def handler(event, context):
 ```
 
 **CAUTION:** Automated remediation can break production systems if not carefully designed. Always:
+
 - Use tag-based filters (never blanket-stop all instances)
 - Add circuit breakers (stop after 10 instances, not unlimited)
 - Include rollback (Slack notification with "this happened, approve rollback")
@@ -153,6 +162,7 @@ def handler(event, context):
 ### CloudWatch Metrics
 
 Cost automation can emit custom CloudWatch metrics:
+
 - `InstancesStopped` — count of instances stopped this run
 - `VolumesDeleted` — count of volumes deleted
 - `EstimatedMonthlySavings` — dollar value of actions taken
@@ -162,6 +172,7 @@ These metrics feed into Cost Explorer for reporting.
 ### AWS Chatbot
 
 Integrate with Slack via AWS Chatbot instead of custom Lambda + SNS:
+
 ```bash
 # AWS Chatbot can trigger Lambda from SNS alerts
 # Less code than custom Lambda + Slack webhook

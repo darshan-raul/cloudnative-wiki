@@ -12,14 +12,14 @@ AWS offers a suite of migration services spanning discovery, assessment, and act
 
 ## Service Map
 
-| Service | What It Does | When to Use |
-|---------|--------------|-------------|
-| **Application Discovery Service** | Discovers on-prem infrastructure (servers, dependencies) via agentless/agent-based collectors | Before migration — planning and sizing |
-| **Migration Evaluator** | Analyzes on-prem environment and generates TCO report for AWS | Business case and cost estimation |
-| **Application Migration Service (MGN)** | Lift-and-shift — replicates live servers to AWS, cutover with near-zero downtime | Lift-and-shift migrations |
-| **Database Migration Service (DMS)** | Migrates databases (homogeneous and heterogeneous) with continuous replication | Database migrations |
-| **DataSync** | Transfers files between on-prem storage and S3/EFS/FSx | Bulk data transfer for migrations |
-| **Server Migration Service (SMS)** | Older service, superseded by MGN | Legacy — use MGN instead |
+| Service                                 | What It Does                                                                                  | When to Use                            |
+| --------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------- |
+| **Application Discovery Service**       | Discovers on-prem infrastructure (servers, dependencies) via agentless/agent-based collectors | Before migration — planning and sizing |
+| **Migration Evaluator**                 | Analyzes on-prem environment and generates TCO report for AWS                                 | Business case and cost estimation      |
+| **Application Migration Service (MGN)** | Lift-and-shift — replicates live servers to AWS, cutover with near-zero downtime              | Lift-and-shift migrations              |
+| **Database Migration Service (DMS)**    | Migrates databases (homogeneous and heterogeneous) with continuous replication                | Database migrations                    |
+| **DataSync**                            | Transfers files between on-prem storage and S3/EFS/FSx                                        | Bulk data transfer for migrations      |
+| **Server Migration Service (SMS)**      | Older service, superseded by MGN                                                              | Legacy — use MGN instead               |
 
 ## Migration Strategies
 
@@ -68,6 +68,7 @@ aws discovery get-discovered-resource-summary --region us-east-1
 ```
 
 **What it discovers:**
+
 - Server hardware specs (CPU, RAM, storage)
 - Installed software and versions
 - Network connections between servers (dependency mapping)
@@ -88,6 +89,7 @@ aws migrationevaluator create-assessment \
 ```
 
 **Assessment output:**
+
 - Monthly AWS cost estimate (compute, storage, networking)
 - Right-sized EC2 recommendations
 - Recommended instance families
@@ -112,6 +114,7 @@ aws discovery start-import-task \
 MGN is the current-generation lift-and-shift service for Windows and Linux servers.
 
 **How it works:**
+
 1. Install the MGN agent on the source server
 2. Agent continuously replicates changes to a staging area in your AWS account (S3 + EBS snapshots)
 3. When ready to cut over, initiate a test launch or final cutover
@@ -147,6 +150,7 @@ aws mgn complete-cutover \
 ```
 
 **Key features:**
+
 - **Continuous replication:** Data synced continuously, not batch
 - **Wave management:** Group servers into waves for coordinated cutover
 - **Throttling:** Control replication bandwidth to avoid impacting production workloads
@@ -154,6 +158,7 @@ aws mgn complete-cutover \
 - **Cutover modes:** Test launch (non-destructive), final cutover
 
 **Cutover workflow:**
+
 ```
 Agent installed → Continuous replication (hours/days)
     ↓
@@ -207,11 +212,13 @@ aws dms start-replication-task \
 ```
 
 **Migration types:**
+
 - **Full load:** One-time bulk copy. Fast but requires downtime during cutover.
 - **Full load + CDC:** Bulk copy + continuous replication of changes. Best for minimal downtime.
 - **CDC only:** Migrate existing data first manually, then use CDC for changes.
 
 **Homogeneous vs Heterogeneous:**
+
 - **Homogeneous:** Same engine (Postgres to Postgres). DMS handles schema conversion automatically.
 - **Heterogeneous:** Different engines (Oracle to PostgreSQL). Requires schema conversion step using AWS SCT (Schema Conversion Tool).
 
@@ -237,6 +244,7 @@ aws schema-conversion-tool create-assessment \
 ```
 
 **When to use SCT:**
+
 - Oracle → RDS PostgreSQL / Aurora PostgreSQL
 - SQL Server → RDS SQL Server / RDS PostgreSQL
 - Teradata → Redshift
@@ -277,12 +285,14 @@ aws datasync start-task-execution \
 ```
 
 **DataSync options:**
+
 - `Mtime`: Preserve modification time (important for incremental sync)
 - `VerifyMode`: NONE (skip verify), POINT_IN_TIME_CONSISTENT (verify full), OVERWRITE (verify overwritten files)
 - `PreserveDeletedFiles`: Keep deleted files in target or remove them
 - `TaskScheduling`: Schedule recurring transfers (cron-like)
 
 **DataSync vs DMS:**
+
 - DataSync: File-based transfers (NFS, SMB, S3). No database support.
 - DMS: Database migrations (full load or CDC). Not for files.
 
@@ -304,6 +314,7 @@ aws datasync describe-task-execution --task-execution-arn arn:aws:datasync:us-ea
 ### Post-Migration Validation
 
 After cutover, validate:
+
 1. **Data integrity:** Row counts match, no missing records
 2. **Application connectivity:** App can connect to migrated database
 3. **Performance:** Query latency within acceptable range
@@ -329,7 +340,7 @@ def estimate_monthly_cost(servers):
         storage_cost_per_gb = 0.10  # gp3
         # Network cost estimate
         network_cost = 20  # rough estimate
-        
+
         monthly = (
             instance_costs[srv['size']] +
             (srv.get('storage_gb', 100) * storage_cost_per_gb) +

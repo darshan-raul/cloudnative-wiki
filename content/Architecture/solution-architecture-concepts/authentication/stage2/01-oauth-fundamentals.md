@@ -1,7 +1,8 @@
 ---
 title: "2.1 — OAuth 2.0 Fundamentals: What It Is, What It Isn't"
 author: darshan
-tags: [authentication, stage-2, oauth, oauth2, authorization, framework, rfc6749]
+tags:
+  [authentication, stage-2, oauth, oauth2, authorization, framework, rfc6749]
 date: 2026-06-13
 description: The single most misunderstood thing in modern auth — what OAuth 2.0 actually is, who the actors are, and why "Login with Google" is OAuth, not auth
 ---
@@ -152,12 +153,12 @@ RFC 6749 names them precisely. Memorize these four.
 
 **Aliases you'll see in the wild:**
 
-| RFC 6749 name | Common aliases |
-|---------------|----------------|
-| Resource Owner | User, end user, subject, principal |
-| Client | App, application, Relying Party (in OIDC), Service Provider (in SAML) |
+| RFC 6749 name        | Common aliases                                                            |
+| -------------------- | ------------------------------------------------------------------------- |
+| Resource Owner       | User, end user, subject, principal                                        |
+| Client               | App, application, Relying Party (in OIDC), Service Provider (in SAML)     |
 | Authorization Server | IdP (Identity Provider), OP (OIDC Provider), STS (Security Token Service) |
-| Resource Server | API, backend, resource host, target service |
+| Resource Server      | API, backend, resource host, target service                               |
 
 **Concrete example: a fitness app reading your Fitbit data**
 
@@ -226,13 +227,13 @@ A **scope** is a permission the resource owner grants. It's a string that the AS
                        "delete:calendar", "admin"]
     User approves: all of them
     App does: read the calendar once
-    
+
     Over-privileged. App got write + delete + admin for a read-only task.
-    
+
 ✅  Client requests: ["read:calendar"]
     User approves: just read
     App does: read the calendar
-    
+
     Minimum necessary. User can verify the request matches the use.
 ```
 
@@ -269,14 +270,14 @@ The RS validates it directly with the public key. No round-trip to the AS.
 
 **Trade-offs (covered in detail in [[05-introspection-revocation|2.5]]):**
 
-| | Opaque | JWT |
-|--|--------|-----|
-| Format | Random string | Signed JSON |
-| Validation | Call AS introspection | Verify signature locally |
-| Speed | Network round-trip per request | Local, O(microseconds) |
-| Revocation | Instant (AS says "revoked") | Hard (token valid until exp) |
-| Storage | AS must remember each token | Stateless |
-| Use when | High-security, low-volume | High-volume, latency-sensitive |
+|            | Opaque                         | JWT                            |
+| ---------- | ------------------------------ | ------------------------------ |
+| Format     | Random string                  | Signed JSON                    |
+| Validation | Call AS introspection          | Verify signature locally       |
+| Speed      | Network round-trip per request | Local, O(microseconds)         |
+| Revocation | Instant (AS says "revoked")    | Hard (token valid until exp)   |
+| Storage    | AS must remember each token    | Stateless                      |
+| Use when   | High-security, low-volume      | High-volume, latency-sensitive |
 
 ### The token itself: Bearer, MAC, PoP
 
@@ -414,7 +415,7 @@ The ID token is a JWT signed by the AS, containing USER identity:
   - name, email, picture: user profile
   - auth_time, amr, acr: when and how they authenticated
   - iss, aud, exp, iat: standard claims
-  
+
 OIDC is covered in detail in Stage 3. For now, the mental model:
   - OAuth 2.0 = authorization (for the API)
   - OIDC = authentication (for your app)
@@ -426,7 +427,7 @@ OIDC is covered in detail in Stage 3. For now, the mental model:
 ```
 "Sign in with Google"  →  technically, this is OIDC
                            with OAuth 2.0 as the transport
-                           
+
                           The "Sign in" is OIDC (ID token proves identity)
                           The "with Google" is OAuth (Google's AS issues tokens)
 ```
@@ -437,7 +438,7 @@ OIDC is covered in detail in Stage 3. For now, the mental model:
 Your app: "Is this user logged in?"
   - Look at the ID token (OIDC). It has the user's identity.
   - Don't look at the access token (OAuth). It doesn't have the user's identity.
-  
+
 Your API: "Is this request authorized?"
   - Look at the access token (OAuth). It has the scopes.
   - Don't look at the ID token (OIDC). It doesn't have the API's permissions.
@@ -469,6 +470,7 @@ DPoP: eyJhbG...                  ← a JWT signed with the client's key
 ```
 
 The DPoP proof is a JWT that contains:
+
 - The HTTP method
 - The URL
 - A timestamp (iat)
@@ -526,11 +528,11 @@ OAuth 2.0 has been "in progress" for years. Here's the current state of the spec
 ```
 RFC 6749          (2012)   The original. THE spec for OAuth 2.0.
                             "OAuth 2.0 Authorization Framework"
-                            
+
 draft-ietf-oauth-v2-1  (2024+)  The cleanup. Removes the deprecated bits,
                             pins the modern best practices. NOT an RFC yet.
                             When it lands, it'll be "OAuth 2.1".
-                            
+
 RFC 6749bis        (drafts)  The intermediate drafts that fed into 2.1.
                             Most of the "best current practice" guidance
                             came from this work.
@@ -538,15 +540,15 @@ RFC 6749bis        (drafts)  The intermediate drafts that fed into 2.1.
 
 **What 2.1 changes vs 2.0:**
 
-| OAuth 2.0 | OAuth 2.1 |
-|-----------|-----------|
-| Implicit grant (deprecated) | Implicit grant REMOVED |
-| Resource Owner Password Credentials (ROPC) | ROPC REMOVED |
-| PKCE "RECOMMENDED" | PKCE REQUIRED for authorization code |
-| Exact redirect URI matching "RECOMMENDED" | EXACT matching REQUIRED |
-| Multiple response types in one request | Restricted |
-| Public clients | Public clients OK with PKCE |
-| Bearer tokens | Bearer, DPoP, mTLS all first-class |
+| OAuth 2.0                                  | OAuth 2.1                            |
+| ------------------------------------------ | ------------------------------------ |
+| Implicit grant (deprecated)                | Implicit grant REMOVED               |
+| Resource Owner Password Credentials (ROPC) | ROPC REMOVED                         |
+| PKCE "RECOMMENDED"                         | PKCE REQUIRED for authorization code |
+| Exact redirect URI matching "RECOMMENDED"  | EXACT matching REQUIRED              |
+| Multiple response types in one request     | Restricted                           |
+| Public clients                             | Public clients OK with PKCE          |
+| Bearer tokens                              | Bearer, DPoP, mTLS all first-class   |
 
 **If you're starting new in 2026, follow OAuth 2.1.** Most IdPs already do. RFC 6749 is for understanding the historical baggage; 2.1 is for the modern reality.
 
@@ -604,19 +606,19 @@ RFC 6749bis        (drafts)  The intermediate drafts that fed into 2.1.
 
 ### The matrix
 
-| Scenario | Use |
-|----------|-----|
-| "Login with Google" | OIDC (OAuth 2.0 + ID token) |
-| "Connect Strava to your Fitbit" | OAuth 2.0 authorization code + PKCE |
-| "Server-to-server internal API" | OAuth 2.0 client credentials |
-| "Mobile app talks to your API" | OAuth 2.0 authorization code + PKCE |
-| "Web SPA talks to your API" | OAuth 2.0 authorization code + PKCE |
-| "CLI tool talks to your API" | OAuth 2.0 device code or authorization code + PKCE |
-| "Internal microservice identity" | mTLS / SPIFFE, not OAuth |
-| "Banking-grade API" | FAPI 2.0 (OAuth 2.1 + additional constraints) |
-| "Single-page app, no backend" | OAuth 2.0 authorization code + PKCE + back-end-for-front-end |
-| "Smart TV / IoT with no browser" | OAuth 2.0 device code |
-| "Server-rendered app with first-party users" | Probably just sessions, or OIDC |
+| Scenario                                     | Use                                                          |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| "Login with Google"                          | OIDC (OAuth 2.0 + ID token)                                  |
+| "Connect Strava to your Fitbit"              | OAuth 2.0 authorization code + PKCE                          |
+| "Server-to-server internal API"              | OAuth 2.0 client credentials                                 |
+| "Mobile app talks to your API"               | OAuth 2.0 authorization code + PKCE                          |
+| "Web SPA talks to your API"                  | OAuth 2.0 authorization code + PKCE                          |
+| "CLI tool talks to your API"                 | OAuth 2.0 device code or authorization code + PKCE           |
+| "Internal microservice identity"             | mTLS / SPIFFE, not OAuth                                     |
+| "Banking-grade API"                          | FAPI 2.0 (OAuth 2.1 + additional constraints)                |
+| "Single-page app, no backend"                | OAuth 2.0 authorization code + PKCE + back-end-for-front-end |
+| "Smart TV / IoT with no browser"             | OAuth 2.0 device code                                        |
+| "Server-rendered app with first-party users" | Probably just sessions, or OIDC                              |
 
 ---
 
@@ -630,7 +632,7 @@ Full key:    Opens everything. Start the car, open the trunk, glove box, all doo
 
 Valet key:   Starts the car, drives it. CAN'T open the trunk or glove box.
              Given to the parking attendant, who only needs to drive the car.
-             
+
 OAuth token: A "valet key" for a digital resource.
              Gives the client LIMITED access to do SOMETHING with the user's data.
              Can't do anything else.
@@ -702,13 +704,13 @@ In 2012-2018, SPAs used the implicit grant:
   1. Redirect to IdP
   2. IdP returns the token in the URL fragment (#access_token=...)
   3. JS extracts the token from the URL
-  
+
 Problems:
   - Token in URL → leaked via browser history, logs, Referer
   - No client authentication → anyone can pretend to be the client
   - Tokens had long lifetimes (no refresh, so the user could stay logged in)
   - Industry moved on: use authorization code + PKCE for SPAs now
-  
+
 OAuth 2.1 REMOVES implicit. Don't use it.
 ```
 
@@ -724,7 +726,7 @@ Problems:
   - Client app can do anything with the password
   - No way to do MFA in the flow
   - Same anti-pattern OAuth was designed to fix
-  
+
 OAuth 2.1 REMOVES ROPC. If you see ROPC in 2026, it's a code smell.
 The only legitimate modern use: migration from a legacy system
 that already had the password. And even then, do the migration
@@ -734,7 +736,7 @@ quickly and use auth code + PKCE going forward.
 ### A4. Scope creep (the silent over-permission)
 
 ```
-App requests: ["read:profile", "write:profile", "read:calendar", 
+App requests: ["read:profile", "write:profile", "read:calendar",
                "write:calendar", "admin:everything"]
 AS grants:    all of them (because user clicked "Allow")
 App uses:     read:profile, occasionally
@@ -806,7 +808,7 @@ Attack:
   4. Victim's app now thinks victim is logged in as attacker
   5. Victim adds their data to attacker's account
   6. Attacker reads victim's data via attacker's account
-  
+
 Fix: generate a random state, store it in the session, verify it on
 callback. Mismatch → reject.
 ```
@@ -830,7 +832,7 @@ The list of allowed redirect URIs is hardcoded per client.
 IdP config: authorization_code, implicit, password, client_credentials,
             refresh_token, urn:ietf:params:oauth:grant-type:device_code,
             urn:ietf:params:oauth:grant-type:jwt-bearer
-            
+
 This is the "we support every grant" antipattern. It looks flexible.
 It's a security disaster.
 
@@ -839,7 +841,7 @@ For each client, configure only the grants it needs:
   - Mobile app: authorization_code + PKCE + refresh_token
   - Server-to-server: client_credentials
   - CLI: device_code or authorization_code + PKCE
-  
+
 Less is more. Every grant you enable is an attack surface.
 ```
 
@@ -869,20 +871,26 @@ with rotation.
 ## 13. Exercises
 
 ### Exercise 1: Name the four actors
+
 For each real-world scenario, identify the four OAuth actors (RO, Client, AS, RS):
+
 - (a) "Connect Strava to Fitbit"
 - (b) "Sign in to a web app with Google"
 - (c) "GitHub Actions deploying to AWS"
 - (d) "Your CI system calling your internal API"
 
 ### Exercise 2: Find the OAuth misuse
+
 A colleague says: "We're using OAuth for our app's session. The access token IS the session cookie. It works great." Identify the (at least) 3 problems with this.
 
 ### Exercise 3: Scope audit
+
 Take a real app you use that does "Login with X" (Google, Apple, GitHub, etc.). What scopes does it request? Does it request more than it needs? Could you design it with minimum scopes?
 
 ### Exercise 4: Trace a flow
+
 Take a real "Login with Google" you can do right now. In DevTools network tab, trace:
+
 - The redirect to Google's auth endpoint
 - The consent screen
 - The callback to the app
@@ -890,21 +898,27 @@ Take a real "Login with Google" you can do right now. In DevTools network tab, t
 - The API call with the access token
 
 ### Exercise 5: The valet key
+
 Explain OAuth 2.0 to a non-technical friend using ONLY the valet key analogy. No jargon. Time yourself: under 3 minutes.
 
 ### Exercise 6: Build a tiny authorization server
+
 Use a library (e.g., `oauthlib` for Python, `oauth2-server` for Node). Issue a token, validate it. Don't use OIDC yet — just OAuth. Then add OIDC (request "openid" scope, return id_token).
 
 ### Exercise 7: Identify the implicit grant
+
 Search your codebase (or any open-source project) for `response_type=token` in URLs. This was the implicit grant. If you find it, write a 1-paragraph proposal for migrating to authorization code + PKCE.
 
 ### Exercise 8: RFC reading
+
 Read RFC 6749 Section 1 (Introduction) and Section 1.7 (What OAuth 2.0 Is Not). Compare to what you thought OAuth was. What surprised you?
 
 ### Exercise 9: The 5-second test
+
 If I give you the name of an app, can you say whether it uses OAuth, OIDC, or both? Test on 10 apps: Slack, Notion, GitHub, AWS Console, your bank, your ISP's portal, Spotify, a SaaS you pay for, a SaaS you don't pay for, an open-source dashboard.
 
 ### Exercise 10: A confused-deputy in 100 lines
+
 Build a tiny multi-tenant app that uses ONLY OAuth (no OIDC). Demonstrate the confused-deputy: a user from tenant A can access tenant B's data. Then add OIDC with a custom "tenant_id" claim, and show the fix.
 
 ---
@@ -916,6 +930,7 @@ You now understand what OAuth actually is, who the actors are, and why "OAuth fo
 → [[../stage2/02-auth-code-pkce|Stage 2.2 — Authorization Code + PKCE: The Workhorse]]
 
 **Before you move on, verify you can answer these:**
+
 1. What are the four OAuth actors? Give an example with real products.
 2. What is a scope, and why does the principle of least privilege apply to it?
 3. Why is OAuth 2.0 NOT an authentication protocol? What do you add to make it one?

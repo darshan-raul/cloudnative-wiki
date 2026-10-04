@@ -80,15 +80,15 @@ spec:
     matchLabels:
       tier: backend
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          tier: frontend
-    ports:
-    - protocol: TCP
-      port: 8080
+    - from:
+        - podSelector:
+            matchLabels:
+              tier: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
 ```
 
 ## External Traffic Policies
@@ -104,8 +104,8 @@ spec:
   selector:
     app: my-app
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
   externalTrafficPolicy: Local
   healthCheckNodePort: 30778
 ```
@@ -128,8 +128,8 @@ spec:
   selector:
     app: my-app
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ```
 
 ## NLB with TLS
@@ -148,8 +148,8 @@ spec:
   selector:
     app: my-app
   ports:
-  - port: 443
-    targetPort: 8080
+    - port: 443
+      targetPort: 8080
 ```
 
 ## References

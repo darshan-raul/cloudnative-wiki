@@ -223,16 +223,16 @@ OnCalendar=*:0/0/30
 
 ## cron vs systemd Timers
 
-| Feature | cron | systemd timers |
-|---------|------|----------------|
-| Persistence | Not automatic | `Persistent=true` catches up |
-| Logs | syslog | journald (structured) |
-| Dependencies | Limited | Full dependency graph |
-| Randomized delay | No | `RandomizedDelaySec` |
-| Calendar expressions | Standard only | Rich + shorthand |
-| Manual trigger | `run-parts` | `systemctl start` |
-| Status | `crontab -l` | `systemctl list-timers` |
-| User-level timers | `crontab -e` | `systemctl --user` |
+| Feature              | cron          | systemd timers               |
+| -------------------- | ------------- | ---------------------------- |
+| Persistence          | Not automatic | `Persistent=true` catches up |
+| Logs                 | syslog        | journald (structured)        |
+| Dependencies         | Limited       | Full dependency graph        |
+| Randomized delay     | No            | `RandomizedDelaySec`         |
+| Calendar expressions | Standard only | Rich + shorthand             |
+| Manual trigger       | `run-parts`   | `systemctl start`            |
+| Status               | `crontab -l`  | `systemctl list-timers`      |
+| User-level timers    | `crontab -e`  | `systemctl --user`           |
 
 ## User-Level Timers
 

@@ -14,13 +14,13 @@ description: JWT anatomy, algorithms, validation, lifecycle, and the JOSE family
 
 ## Modules
 
-| # | Module | Why it matters | Exit criterion |
-|---|--------|----------------|----------------|
-| [[01-jwt-anatomy\|1.1 JWT Anatomy]] | Header.Payload.Signature, registered claims, JOSE header fields | You can decode any JWT and explain every field |
-| [[02-algorithms\|1.2 JWT Algorithms]] | HS256/384/512, RS256, ES256, EdDSA, PS256 | You can pick the right algorithm for a use case and justify it |
-| [[03-validation\|1.3 JWT Validation]] | The 7 checks, in the right order, every time | You never ship a validator that accepts `alg=none` or a wrong-audience token |
-| [[04-lifecycle\|1.4 JWT Lifecycle]] | Issuance, rotation, revocation, replay protection | You can design a short-lived + refresh + JTI-denylist system |
-| [[05-jose-family\|1.5 JWS/JWE/JWK/JWKS]] | Compact vs JSON serialization, JWE encryption, JWK public key format, JWKS rotation | You can operate JWKS rotation without a 3am outage |
+| #                                        | Module                                                                              | Why it matters                                                               | Exit criterion |
+| ---------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------- |
+| [[01-jwt-anatomy\|1.1 JWT Anatomy]]      | Header.Payload.Signature, registered claims, JOSE header fields                     | You can decode any JWT and explain every field                               |
+| [[02-algorithms\|1.2 JWT Algorithms]]    | HS256/384/512, RS256, ES256, EdDSA, PS256                                           | You can pick the right algorithm for a use case and justify it               |
+| [[03-validation\|1.3 JWT Validation]]    | The 7 checks, in the right order, every time                                        | You never ship a validator that accepts `alg=none` or a wrong-audience token |
+| [[04-lifecycle\|1.4 JWT Lifecycle]]      | Issuance, rotation, revocation, replay protection                                   | You can design a short-lived + refresh + JTI-denylist system                 |
+| [[05-jose-family\|1.5 JWS/JWE/JWK/JWKS]] | Compact vs JSON serialization, JWE encryption, JWK public key format, JWKS rotation | You can operate JWKS rotation without a 3am outage                           |
 
 ## Connections
 

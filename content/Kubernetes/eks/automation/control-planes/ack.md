@@ -13,15 +13,15 @@ ACK lets you create and manage AWS resources using Kubernetes Custom Resource De
 
 ## Available Controllers
 
-| Controller | AWS Service |
-|------------|-------------|
-| ack-rds-controller | Amazon RDS |
-| ack-eks-controller | Amazon EKS |
-| ack-s3-controller | Amazon S3 |
-| ack-dynamodb-controller | Amazon DynamoDB |
-| ack-sqs-controller | Amazon SQS |
-| ack-sns-controller | Amazon SNS |
-| ack-ec2-controller | Amazon EC2 |
+| Controller                   | AWS Service       |
+| ---------------------------- | ----------------- |
+| ack-rds-controller           | Amazon RDS        |
+| ack-eks-controller           | Amazon EKS        |
+| ack-s3-controller            | Amazon S3         |
+| ack-dynamodb-controller      | Amazon DynamoDB   |
+| ack-sqs-controller           | Amazon SQS        |
+| ack-sns-controller           | Amazon SNS        |
+| ack-ec2-controller           | Amazon EC2        |
 | ack-emrcontainers-controller | Amazon EMR on EKS |
 
 ## Install ACK
@@ -122,15 +122,15 @@ spec:
   template:
     spec:
       containers:
-      - name: app
-        image: my-app:latest
-        env:
-        - name: DB_HOST
-          valueFrom:
-            secretKeyRef:
-              name: rds-connection
-              namespace: default
-              key: host
+        - name: app
+          image: my-app:latest
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: rds-connection
+                  namespace: default
+                  key: host
 ```
 
 ## References

@@ -26,13 +26,13 @@ cron runs as a daemon (`crond`) that wakes up every minute, reads schedule files
 * * * * * command
 ```
 
-| Field     | Values      | Specials          |
-|-----------|------------|-------------------|
-| minute    | 0-59       | `*` = any, `*/n` = every n  |
-| hour      | 0-23       | `*` = any, `*/2` = every 2h |
-| day       | 1-31       | `*` = any                   |
-| month     | 1-12       | `*` = any                   |
-| weekday   | 0-7        | `*` = any, 0,7=Sunday        |
+| Field   | Values | Specials                    |
+| ------- | ------ | --------------------------- |
+| minute  | 0-59   | `*` = any, `*/n` = every n  |
+| hour    | 0-23   | `*` = any, `*/2` = every 2h |
+| day     | 1-31   | `*` = any                   |
+| month   | 1-12   | `*` = any                   |
+| weekday | 0-7    | `*` = any, 0,7=Sunday       |
 
 ### Examples
 
@@ -145,6 +145,7 @@ cat /etc/anacrontab
 ```
 
 **Example**: If `cron.daily` is scheduled to run but the machine was off:
+
 1. Machine boots on Tuesday
 2. anacron sees `/etc/cron.daily` wasn't run since Friday
 3. Waits 10 minutes (the delay field), then runs it
@@ -193,16 +194,16 @@ systemctl list-timers
 
 ### cron vs systemd Timers
 
-| Feature             | cron          | systemd timers              |
-|--------------------|---------------|----------------------------|
-| Resolution         | minute        | second (or better)         |
-| Boot-time jobs     | @reboot       | OnBootSec=                 |
-| Random jitter      | no            | RandomizedDelaySec=        |
-| Manual run         | run-parts     | systemctl start service    |
-| Dependencies       | separate      | PartOf=, After=            |
-| On-demand          | no            | yes (Path=, Socket=)       |
-| Persistence        | file          | unit files                 |
-| Syslog             | syslog        | journald                   |
+| Feature        | cron      | systemd timers          |
+| -------------- | --------- | ----------------------- |
+| Resolution     | minute    | second (or better)      |
+| Boot-time jobs | @reboot   | OnBootSec=              |
+| Random jitter  | no        | RandomizedDelaySec=     |
+| Manual run     | run-parts | systemctl start service |
+| Dependencies   | separate  | PartOf=, After=         |
+| On-demand      | no        | yes (Path=, Socket=)    |
+| Persistence    | file      | unit files              |
+| Syslog         | syslog    | journald                |
 
 ## Gotchas
 

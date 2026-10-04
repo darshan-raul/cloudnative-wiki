@@ -158,6 +158,7 @@ lvcreate -V 1T --thin -n thin_vol2 vg0/thin_pool   # 2TB virtual total, 500G phy
 ```
 
 Useful for:
+
 - VM hosts (many VMs, not all fully allocated)
 - Container storage (many containers, sparse usage)
 

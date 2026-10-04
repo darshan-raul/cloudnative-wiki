@@ -1,6 +1,13 @@
+---
+title: "Image Hardening"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Image Hardening — Kubernetes reference and architecture guide."
+---
+
 # Image Hardening
 
-*"https://kubernetes.io/docs/concepts/containers/images/"*
+_"https://kubernetes.io/docs/concepts/containers/images/"_
 
 **Image hardening** is the practice of making container images **smaller, simpler, and harder to attack**. A 1 GB image with a full Linux userspace has more attack surface than a 20 MB `distroless` image. The goal: ship only what's needed to run the application, nothing more. This is the **shift-left** of runtime security — every layer of bloat is a potential vulnerability or backdoor.
 
@@ -28,10 +35,10 @@
 
 A container image is a **filesystem snapshot** with metadata. The contents are:
 
-* **OS userspace** — libc, openssl, busybox, shell, package manager, etc.
-* **Application** — your code + dependencies.
-* **Build artifacts** — compilers, headers, dev packages (often).
-* **Config** — env files, default configs, etc.
+- **OS userspace** — libc, openssl, busybox, shell, package manager, etc.
+- **Application** — your code + dependencies.
+- **Build artifacts** — compilers, headers, dev packages (often).
+- **Config** — env files, default configs, etc.
 
 The "OS userspace" is the **attack surface** that's not under your control. Every package, every library, every binary is a potential vulnerability. The Equifax breach (2017) was a vulnerability in Apache Struts. The Log4Shell (2021) was a vulnerability in `log4j`. Both were in the dependency tree of an image, not in the application code.
 
@@ -54,9 +61,9 @@ The image is ~200 MB. The layers are cached separately. If you change a layer, t
 
 ### 2.1 The implications
 
-* **Smaller images** — fewer layers, smaller base, fewer `RUN`s. Each `RUN` is a layer; combine them.
-* **Cached layers** — if a layer doesn't change, it's reused. **Order matters**: put stable layers first (base image, dependencies), then the changing layer (your code).
-* **Vulnerabilities** — every layer adds vulnerabilities. Fewer layers = fewer vulnerabilities.
+- **Smaller images** — fewer layers, smaller base, fewer `RUN`s. Each `RUN` is a layer; combine them.
+- **Cached layers** — if a layer doesn't change, it's reused. **Order matters**: put stable layers first (base image, dependencies), then the changing layer (your code).
+- **Vulnerabilities** — every layer adds vulnerabilities. Fewer layers = fewer vulnerabilities.
 
 The Dockerfile best practices:
 
@@ -82,21 +89,21 @@ The `slim` base is smaller. `--no-cache-dir` removes pip's cache. The `requireme
 
 The base image is the **biggest decision**. Options:
 
-| Base | Size | Has shell? | Has package manager? | Use case |
-|---|---|---|---|---|
-| `ubuntu:22.04` | ~70 MB | Yes | Yes | General purpose |
-| `ubuntu:22.04-slim` | ~30 MB | Yes | Yes | Smaller variant |
-| `debian:bookworm-slim` | ~25 MB | Yes | Yes | Smaller Debian |
-| `alpine:3.19` | ~5 MB | Yes | Yes (apk) | Minimal |
-| `gcr.io/distroless/*` | ~2-20 MB | No | No | Production, security-sensitive |
-| `scratch` | 0 MB | No | No | Static binaries (Go) |
+| Base                   | Size     | Has shell? | Has package manager? | Use case                       |
+| ---------------------- | -------- | ---------- | -------------------- | ------------------------------ |
+| `ubuntu:22.04`         | ~70 MB   | Yes        | Yes                  | General purpose                |
+| `ubuntu:22.04-slim`    | ~30 MB   | Yes        | Yes                  | Smaller variant                |
+| `debian:bookworm-slim` | ~25 MB   | Yes        | Yes                  | Smaller Debian                 |
+| `alpine:3.19`          | ~5 MB    | Yes        | Yes (apk)            | Minimal                        |
+| `gcr.io/distroless/*`  | ~2-20 MB | No         | No                   | Production, security-sensitive |
+| `scratch`              | 0 MB     | No         | No                   | Static binaries (Go)           |
 
 The trade-off:
 
-* **Bigger base** (Ubuntu) — easy to debug, has all the tools. More attack surface.
-* **Alpine** — small, fast, but uses `musl` libc (not glibc). Some apps may have issues.
-* **Distroless** — minimal, no shell, no package manager. Harder to debug. Best for production.
-* **Scratch** — empty. For static binaries (Go, Rust).
+- **Bigger base** (Ubuntu) — easy to debug, has all the tools. More attack surface.
+- **Alpine** — small, fast, but uses `musl` libc (not glibc). Some apps may have issues.
+- **Distroless** — minimal, no shell, no package manager. Harder to debug. Best for production.
+- **Scratch** — empty. For static binaries (Go, Rust).
 
 For **production, security-sensitive** workloads: **distroless or scratch**.
 
@@ -104,7 +111,7 @@ For **development / debug** workloads: **Ubuntu / Debian** (you can `kubectl exe
 
 ## 4. The "distroless" Pattern
 
-*"https://github.com/GoogleContainerTools/distroless"*
+_"https://github.com/GoogleContainerTools/distroless"_
 
 **Distroless** images (from Google) are **minimal** — they contain only your application and its runtime dependencies. **No shell, no package manager, no OS utilities**.
 
@@ -122,30 +129,30 @@ CMD ["/myapp"]
 
 The final image is ~10 MB. It has:
 
-* The compiled `myapp` binary.
-* `ca-certificates` (for HTTPS).
-* `/etc/passwd` with the `nonroot` user.
-* A minimal `tzdata` (for timezones).
+- The compiled `myapp` binary.
+- `ca-certificates` (for HTTPS).
+- `/etc/passwd` with the `nonroot` user.
+- A minimal `tzdata` (for timezones).
 
 It does **not** have:
 
-* A shell (`/bin/sh`).
-* A package manager (`apt`).
-* `curl`, `wget`, `bash`, `vi`.
-* Any OS utilities.
+- A shell (`/bin/sh`).
+- A package manager (`apt`).
+- `curl`, `wget`, `bash`, `vi`.
+- Any OS utilities.
 
 This is **the smallest practical production image**.
 
 ### 4.1 The distroless variants
 
-| Image | Use case | Size |
-|---|---|---|
-| `gcr.io/distroless/static-debian12` | Static binaries (Go, Rust) | ~2 MB |
-| `gcr.io/distroless/base-debian12` | Apps with libc but no shell | ~20 MB |
-| `gcr.io/distroless/cc-debian12` | C / C++ apps, with glibc | ~25 MB |
-| `gcr.io/distroless/java17-debian12` | Java apps | ~200 MB |
-| `gcr.io/distroless/python3-debian12` | Python apps | ~50 MB |
-| `gcr.io/distroless/nodejs20-debian12` | Node.js apps | ~150 MB |
+| Image                                 | Use case                    | Size    |
+| ------------------------------------- | --------------------------- | ------- |
+| `gcr.io/distroless/static-debian12`   | Static binaries (Go, Rust)  | ~2 MB   |
+| `gcr.io/distroless/base-debian12`     | Apps with libc but no shell | ~20 MB  |
+| `gcr.io/distroless/cc-debian12`       | C / C++ apps, with glibc    | ~25 MB  |
+| `gcr.io/distroless/java17-debian12`   | Java apps                   | ~200 MB |
+| `gcr.io/distroless/python3-debian12`  | Python apps                 | ~50 MB  |
+| `gcr.io/distroless/nodejs20-debian12` | Node.js apps                | ~150 MB |
 
 For most languages, there's a distroless variant. For languages without one, use `cc` (with the runtime) or `base`.
 
@@ -155,21 +162,21 @@ A distroless container has no shell. `kubectl exec -it <pod> -- sh` fails. This 
 
 Workarounds:
 
-* **Debug images** — a sidecar with a full image (Ubuntu, etc.) for debugging. Switch to it temporarily.
-* **kubectl debug** (k8s 1.20+) — creates an ephemeral debug container with a full image, sharing the Pod's volumes.
-* **Init containers** — for setup that needs a shell, use a regular image as an init.
+- **Debug images** — a sidecar with a full image (Ubuntu, etc.) for debugging. Switch to it temporarily.
+- **kubectl debug** (k8s 1.20+) — creates an ephemeral debug container with a full image, sharing the Pod's volumes.
+- **Init containers** — for setup that needs a shell, use a regular image as an init.
 
 The standard pattern:
 
 ```yaml
 # in the Pod
 containers:
-- name: app
-  image: gcr.io/distroless/static-debian12
-  # ... no shell
-- name: debug       # only for debug builds
-  image: alpine
-  # ... with shell
+  - name: app
+    image: gcr.io/distroless/static-debian12
+    # ... no shell
+  - name: debug # only for debug builds
+    image: alpine
+    # ... with shell
 ```
 
 The `debug` container is for development. In production, only `app` is deployed.
@@ -198,7 +205,7 @@ For dynamic binaries (most Java, Python, Node.js), you can't use `scratch` — y
 
 ## 6. Multi-Stage Builds
 
-*"https://docs.docker.com/develop/develop-images/multistage-build/"*
+_"https://docs.docker.com/develop/develop-images/multistage-build/"_
 
 A **multi-stage build** uses **two or more `FROM`s** in a Dockerfile. The earlier stages are for building; the later stages are for the final image.
 
@@ -219,9 +226,9 @@ The final image has only the `myapp` binary. The `golang:1.22` image (with the c
 
 The benefits:
 
-* **Smaller final image** — only the runtime, not the build tools.
-* **Fewer vulnerabilities** — the compiler, headers, dev packages are not in the final image.
-* **No leaked secrets** — secrets used in `RUN` (e.g. `pip install` with credentials) are in the build stage, not the final image.
+- **Smaller final image** — only the runtime, not the build tools.
+- **Fewer vulnerabilities** — the compiler, headers, dev packages are not in the final image.
+- **No leaked secrets** — secrets used in `RUN` (e.g. `pip install` with credentials) are in the build stage, not the final image.
 
 The cost: the build is in one image, the runtime in another. Slightly more complex Dockerfile.
 
@@ -233,12 +240,12 @@ Image scanners check the image's packages against **vulnerability databases** (C
 
 Tools:
 
-* **Trivy** — open source, scans OS packages + language deps. The most popular.
-* **Grype** — open source, similar to Trivy. Anchore.
-* **Snyk** — commercial, integrates with CI/CD.
-* **Clair** — open source, used by Quay.
-* **Docker Scout** — Docker's built-in scanner.
-* **ECR Scan** — AWS's scanner (uses Clair under the hood).
+- **Trivy** — open source, scans OS packages + language deps. The most popular.
+- **Grype** — open source, similar to Trivy. Anchore.
+- **Snyk** — commercial, integrates with CI/CD.
+- **Clair** — open source, used by Quay.
+- **Docker Scout** — Docker's built-in scanner.
+- **ECR Scan** — AWS's scanner (uses Clair under the hood).
 
 The standard flow:
 
@@ -273,13 +280,13 @@ In CI:
   uses: aquasecurity/trivy-action@master
   with:
     image-ref: myapp:1.0
-    severity: 'CRITICAL,HIGH'
-    exit-code: '1'   # fail the build on CRITICAL or HIGH
+    severity: "CRITICAL,HIGH"
+    exit-code: "1" # fail the build on CRITICAL or HIGH
 ```
 
 ## 8. Image Signing (cosign, Notary)
 
-*"https://docs.sigstore.dev/cosign/overview/"*
+_"https://docs.sigstore.dev/cosign/overview/"_
 
 **Image signing** is the practice of cryptographically signing an image so consumers can verify the publisher. It's the **integrity** part of the supply chain.
 
@@ -304,9 +311,9 @@ The signature is stored in the registry (as a separate artifact). When the clust
 
 The image is verified at admission (or at pull):
 
-* **Kyverno** has a `verifyImages` rule that checks cosign signatures.
-* **Connaisseur** is a dedicated admission controller for image verification.
-* **Cosign's own admission controller** can be deployed as a webhook.
+- **Kyverno** has a `verifyImages` rule that checks cosign signatures.
+- **Connaisseur** is a dedicated admission controller for image verification.
+- **Cosign's own admission controller** can be deployed as a webhook.
 
 The flow:
 
@@ -326,9 +333,9 @@ A Pod with an unsigned image is rejected. **Only signed images run**.
 
 The signing key is the trust root. Where it lives:
 
-* **Local file** — on the CI machine. The CI signs, the cluster verifies with the public key.
-* **KMS** — AWS KMS, GCP KMS, etc. The key never leaves the KMS.
-* **Sigstore's "keyless"** — uses ephemeral keys tied to an OIDC identity (e.g. GitHub Actions, Google Accounts). The signature is tied to the identity, not a long-lived key.
+- **Local file** — on the CI machine. The CI signs, the cluster verifies with the public key.
+- **KMS** — AWS KMS, GCP KMS, etc. The key never leaves the KMS.
+- **Sigstore's "keyless"** — uses ephemeral keys tied to an OIDC identity (e.g. GitHub Actions, Google Accounts). The signature is tied to the identity, not a long-lived key.
 
 The "keyless" mode is the modern approach. **No long-lived keys to manage.** The signature is verified against an OIDC token.
 
@@ -338,47 +345,47 @@ Limit which registries the cluster pulls from. Without restriction, a Pod can pu
 
 The enforcement:
 
-* **Admission policy** (Kyverno / OPA) — reject Pods whose images are not from allowed registries.
-* **ImagePolicyWebhook** (built-in, deprecated) — the older mechanism. Use admission policies instead.
+- **Admission policy** (Kyverno / OPA) — reject Pods whose images are not from allowed registries.
+- **ImagePolicyWebhook** (built-in, deprecated) — the older mechanism. Use admission policies instead.
 
 ```yaml
 # Kyverno policy
 - name: approved-registries
   match:
     any:
-    - resources:
-        kinds: ["Pod"]
+      - resources:
+          kinds: ["Pod"]
   validate:
     message: "images must come from approved registries"
     pattern:
       spec:
         containers:
-        - name: "?*"
-          image: "gcr.io/my-project/* | 1234.dkr.ecr.us-east-1.amazonaws.com/*"
+          - name: "?*"
+            image: "gcr.io/my-project/* | 1234.dkr.ecr.us-east-1.amazonaws.com/*"
 ```
 
 Only images from the approved registries are allowed. A Pod pulling from `docker.io/library/nginx` is rejected.
 
 The standard:
 
-* **Production** — only the org's private registry (ECR, GCR, Harbor, etc.).
-* **Dev / test** — same plus a curated list of public registries (Docker Hub official, gcr.io/distroless, etc.).
+- **Production** — only the org's private registry (ECR, GCR, Harbor, etc.).
+- **Dev / test** — same plus a curated list of public registries (Docker Hub official, gcr.io/distroless, etc.).
 
 ## 10. SBOM (Software Bill of Materials)
 
-*"https://www.cisa.gov/sbom"*
+_"https://www.cisa.gov/sbom"_
 
 An **SBOM** is a list of all the components in an image. It's the "ingredient list". For each component:
 
-* Name, version, license.
-* Supplier.
-* Dependencies.
+- Name, version, license.
+- Supplier.
+- Dependencies.
 
 The formats:
 
-* **SPDX** — Linux Foundation's standard.
-* **CycloneDX** — OWASP's standard.
-* **Syft** generates SBOMs from images.
+- **SPDX** — Linux Foundation's standard.
+- **CycloneDX** — OWASP's standard.
+- **Syft** generates SBOMs from images.
 
 ```bash
 # generate an SBOM
@@ -387,9 +394,9 @@ syft myapp:1.0 -o spdx-json > myapp.spdx.json
 
 SBOMs are required for:
 
-* **Compliance** — auditors want to know what's in the image.
-* **Vulnerability management** — when a new CVE is announced, you can find all affected images.
-* **Supply chain** — the SBOM is the basis for the Software Supply Chain attestation (in-toto, SLSA).
+- **Compliance** — auditors want to know what's in the image.
+- **Vulnerability management** — when a new CVE is announced, you can find all affected images.
+- **Supply chain** — the SBOM is the basis for the Software Supply Chain attestation (in-toto, SLSA).
 
 The shift: every image should have an SBOM. The SBOM is published alongside the image (e.g. as a separate artifact in the registry).
 
@@ -419,10 +426,10 @@ Some CVEs are so common they have a pattern:
 
 ### 11.4 The general pattern
 
-* **OS package CVEs** — update the base image, rebuild.
-* **Language runtime CVEs** — update the runtime (e.g. `python:3.12` instead of `python:3.10`).
-* **Library CVEs** — update the library (`flask`, `requests`, etc.) in `requirements.txt`.
-* **Application CVEs** — fix the application code.
+- **OS package CVEs** — update the base image, rebuild.
+- **Language runtime CVEs** — update the runtime (e.g. `python:3.12` instead of `python:3.10`).
+- **Library CVEs** — update the library (`flask`, `requests`, etc.) in `requirements.txt`.
+- **Application CVEs** — fix the application code.
 
 **Rebuild the image frequently.** A `latest` tag in production is bad; a `latest` rebuild in CI is the answer.
 
@@ -432,9 +439,9 @@ Some CVEs are so common they have a pattern:
 
 The standard:
 
-* **Tag with version** — `image: myapp:1.2.3` (semver).
-* **Tag with git SHA** — `image: myapp:abc1234` (the commit SHA).
-* **Tag with build ID** — `image: myapp:build-4567` (the CI build ID).
+- **Tag with version** — `image: myapp:1.2.3` (semver).
+- **Tag with git SHA** — `image: myapp:abc1234` (the commit SHA).
+- **Tag with build ID** — `image: myapp:build-4567` (the CI build ID).
 
 The image is **immutable** per tag. A `1.2.3` always points to the same image (after publish).
 
@@ -446,19 +453,19 @@ For **continuous deployment**: tag with the git SHA, not `latest`. The image is 
 
 The `imagePullPolicy`:
 
-* **`Always`** — pull every time. The image is fetched on every Pod start.
-* **`IfNotPresent`** — pull only if the image is not on the node.
-* **`Never`** — never pull. Use the local image.
+- **`Always`** — pull every time. The image is fetched on every Pod start.
+- **`IfNotPresent`** — pull only if the image is not on the node.
+- **`Never`** — never pull. Use the local image.
 
 The default:
 
-* `Always` for `:latest` tags.
-* `IfNotPresent` for other tags.
+- `Always` for `:latest` tags.
+- `IfNotPresent` for other tags.
 
 For production:
 
-* **Tag with version** — `IfNotPresent` is the default. Good.
-* **Tag with `latest`** — `Always` is the default. **Avoid `latest`**.
+- **Tag with version** — `IfNotPresent` is the default. Good.
+- **Tag with `latest`** — `Always` is the default. **Avoid `latest`**.
 
 ### 13.1 The kubelet's image cache
 
@@ -597,7 +604,7 @@ docker image ls myapp:1.0
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the runtime enforcement
-* [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for image signature verification
-* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — alternative policy engine
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detect what's not prevented
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the runtime enforcement
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for image signature verification
+- [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — alternative policy engine
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detect what's not prevented

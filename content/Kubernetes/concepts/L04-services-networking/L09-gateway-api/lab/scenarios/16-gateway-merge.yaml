@@ -37,10 +37,10 @@ spec:
     metadata: { labels: { app: tenant-a } }
     spec:
       containers:
-      - name: tenant-a
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "tenant-a" }]
-        ports: [{ containerPort: 8080 }]
+        - name: tenant-a
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "tenant-a" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -50,8 +50,8 @@ metadata:
 spec:
   selector: { app: tenant-a }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -66,10 +66,10 @@ spec:
     metadata: { labels: { app: tenant-b } }
     spec:
       containers:
-      - name: tenant-b
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "tenant-b" }]
-        ports: [{ containerPort: 8080 }]
+        - name: tenant-b
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "tenant-b" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -79,8 +79,8 @@ metadata:
 spec:
   selector: { app: tenant-b }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 # Two Gateways, same listener, will be merged into one data plane
 apiVersion: gateway.networking.k8s.io/v1
@@ -93,11 +93,11 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces: { from: All }
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces: { from: All }
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
@@ -109,11 +109,11 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces: { from: All }
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces: { from: All }
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -122,15 +122,15 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: tenant-a-gw
-    namespace: infra
+    - name: tenant-a-gw
+      namespace: infra
   hostnames: ["tenant-a.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: tenant-a
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: tenant-a
+          port: 80
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -139,12 +139,12 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: tenant-b-gw
-    namespace: infra
+    - name: tenant-b-gw
+      namespace: infra
   hostnames: ["tenant-b.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: tenant-b
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: tenant-b
+          port: 80

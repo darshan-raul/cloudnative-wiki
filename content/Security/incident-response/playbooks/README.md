@@ -12,6 +12,7 @@ Standard playbooks for the most common security incidents.
 ## AWS Credential Compromise
 
 ### Detection
+
 - GuardDuty alert: "Credential access: Instance credential exfiltration"
 - CloudTrail: `GetSessionToken` or `AssumeRole` from unexpected IP
 - Wazuh: brute force on AWS console
@@ -33,6 +34,7 @@ aws cloudtrail lookup-events --lookup-attributes AttributeKey=Username,Attribute
 ```
 
 ### Automation (n8n)
+
 ```
 Wazuh alert (level 9)
   → n8n: revoke key + create Planio ticket + Slack #security-incidents
@@ -41,6 +43,7 @@ Wazuh alert (level 9)
 ## Malware on Endpoint
 
 ### Detection
+
 - Wazuh: suspicious process (crypto miner, RAT)
 - Falco: shell spawned from network
 - EDR alert
@@ -83,6 +86,7 @@ sudo dd if=/dev/sda of=/ forensics/sda.image bs=4M
 ## Kubernetes Cluster Compromise
 
 ### Detection
+
 - Falco: suspicious kubectl exec, mounting sensitive paths
 - Wazuh: unusual API calls to K8s API from external IP
 
@@ -108,6 +112,7 @@ kubectl get events --all-namespaces --sort-by='.lastTimestamp'
 ## S3 Public Access
 
 ### Detection
+
 - AWS Config rule: `s3-bucket-public-access-prohibited`
 - GuardDuty: S3 data exfiltration
 

@@ -1,3 +1,10 @@
+---
+title: "RUNBOOK — Operations"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "RUNBOOK — Operations — Kubernetes reference and architecture guide."
+---
+
 # RUNBOOK — Operations
 
 This is the day-2 playbook for the lab / a real cluster. After install.sh, you'll be doing these operations regularly.
@@ -7,6 +14,7 @@ This is the day-2 playbook for the lab / a real cluster. After install.sh, you'l
 ## 0. Sandbox Note
 
 This lab was authored in a cloud sandbox without `docker`/`kind`/`kubectl`/`helm`. We **validated** the manifests with:
+
 - `bash -n` on every shell script
 - `python3 -c "yaml.safe_load_all(...)"` on every YAML file
 - A structural sweep verifying every HTTPRoute has `parentRefs` + `rules`, every Gateway has `gatewayClassName` + `listeners`, etc.
@@ -147,6 +155,7 @@ kubectl describe gateway <name> -n <ns>
 ```
 
 Common:
+
 - `OverlappingTLSConfig` → two HTTPS listeners sharing the same port+hostname
 - `RefNotPermitted` → ReferenceGrant missing
 - `InvalidCertificate` → Secret is not `kubernetes.io/tls` type
@@ -187,6 +196,7 @@ kubectl get referencegrant -A
 ### 7.7 Re-encrypt fails with `TLS error: 268435581`
 
 EG can't verify the upstream cert. Check:
+
 - The `caCertificateRefs` ConfigMap contains a valid PEM
 - The upstream's cert SAN matches `BackendTLSPolicy.spec.tls.hostname`
 - The upstream's cert is signed by the CA in the ConfigMap, not just any cert

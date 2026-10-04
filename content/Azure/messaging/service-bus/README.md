@@ -72,6 +72,7 @@ Service Bus organizes messaging topologies into two primary paradigms: point-to-
 ### FIFO Message Sessions (Strict Ordered Processing)
 
 Standard Service Bus topics and queues provide high concurrency across competing consumers, which means message 2 might finish processing before message 1.
+
 - When **Sessions** are enabled (`RequiresSession = true`), messages are stamped with a `SessionId` (e.g., `account_id_9942`).
 - A consumer locks the entire `SessionId`. All messages for that session are delivered strictly sequentially (FIFO) to that specific consumer instance. No other consumer can touch messages for that session until the session lock is closed.
 
@@ -172,16 +173,16 @@ az servicebus namespace update \
 
 ## 4. Quotas, SKUs, and Performance Limits
 
-| Parameter / Dimension | Standard Tier | Premium Tier |
-| :--- | :--- | :--- |
-| **Pricing Model** | Pay-as-you-go per million ops | Fixed hourly per Messaging Unit (MU) |
-| **Tenant Isolation** | Multi-tenant shared broker | Dedicated CPU, RAM, and storage |
-| **Max Message Size** | 256 KB | **Up to 100 MB** (Large message support) |
-| **Max Capacity** | Up to 80 GB per queue | Elastic up to 1 TB |
-| **Max Concurrent Connections** | 1,000 AMQP connections | Up to 100,000+ connections |
-| **VNet Integration / Private Link**| Not supported | **Fully supported** |
-| **Geo-Disaster Recovery** | Metadata only | Geo-DR with cross-region replication |
-| **Predictable P99 Latency** | High variance (noisy neighbors) | **< 10 milliseconds** deterministic |
+| Parameter / Dimension               | Standard Tier                   | Premium Tier                             |
+| :---------------------------------- | :------------------------------ | :--------------------------------------- |
+| **Pricing Model**                   | Pay-as-you-go per million ops   | Fixed hourly per Messaging Unit (MU)     |
+| **Tenant Isolation**                | Multi-tenant shared broker      | Dedicated CPU, RAM, and storage          |
+| **Max Message Size**                | 256 KB                          | **Up to 100 MB** (Large message support) |
+| **Max Capacity**                    | Up to 80 GB per queue           | Elastic up to 1 TB                       |
+| **Max Concurrent Connections**      | 1,000 AMQP connections          | Up to 100,000+ connections               |
+| **VNet Integration / Private Link** | Not supported                   | **Fully supported**                      |
+| **Geo-Disaster Recovery**           | Metadata only                   | Geo-DR with cross-region replication     |
+| **Predictable P99 Latency**         | High variance (noisy neighbors) | **< 10 milliseconds** deterministic      |
 
 ---
 
@@ -198,6 +199,7 @@ az servicebus namespace update \
 ## 6. Realistic Pricing Scenarios
 
 Pricing structure:
+
 1. **Standard Tier:** Base fee of $0.0135/hr (~$10/month) + $0.05 per million operations.
 2. **Premium Tier:** Fixed hourly rate per Messaging Unit (MU):
    - 1 MU = ~$0.93 per hour (~$678.90/month).

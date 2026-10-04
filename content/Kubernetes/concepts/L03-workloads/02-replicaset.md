@@ -43,11 +43,11 @@ In modern Kubernetes, you almost never write a ReplicaSet directly. A [[Kubernet
 
 Three numbers tell the whole story:
 
-| Field | Meaning |
-|---|---|
-| `spec.replicas` | Desired number of Pods |
-| `status.replicas` | Actual number of Pods currently managed by this RS |
-| `status.readyReplicas` | Pods that are also `Ready: True` |
+| Field                  | Meaning                                            |
+| ---------------------- | -------------------------------------------------- |
+| `spec.replicas`        | Desired number of Pods                             |
+| `status.replicas`      | Actual number of Pods currently managed by this RS |
+| `status.readyReplicas` | Pods that are also `Ready: True`                   |
 
 The controller's job is to make `replicas == readyReplicas` by reconciling the spec to the observed state.
 
@@ -77,14 +77,14 @@ The controller never "checks" anything periodically. It reacts to events. That's
 
 ### What a ReplicaSet does NOT do
 
-| Capability | ReplicaSet | Deployment |
-|---|---|---|
-| Self-heal Pods | ✅ | ✅ (via the RS) |
-| Maintain a fixed count | ✅ | ✅ (via the RS) |
-| Rolling updates | ❌ | ✅ |
-| Rollback to previous version | ❌ | ✅ |
-| Pause / resume updates | ❌ | ✅ |
-| Scale by changing a field | ✅ (edit `replicas`) | ✅ (transparently updates the RS) |
+| Capability                   | ReplicaSet           | Deployment                        |
+| ---------------------------- | -------------------- | --------------------------------- |
+| Self-heal Pods               | ✅                   | ✅ (via the RS)                   |
+| Maintain a fixed count       | ✅                   | ✅ (via the RS)                   |
+| Rolling updates              | ❌                   | ✅                                |
+| Rollback to previous version | ❌                   | ✅                                |
+| Pause / resume updates       | ❌                   | ✅                                |
+| Scale by changing a field    | ✅ (edit `replicas`) | ✅ (transparently updates the RS) |
 
 A ReplicaSet is "Pods of this template, exactly N of them, always." A Deployment is "rolling-update these Pods to a new template, while keeping the app available."
 
@@ -102,20 +102,20 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 3                    # desired count
-  selector:                      # CRITICAL — see section 3
+  replicas: 3 # desired count
+  selector: # CRITICAL — see section 3
     matchLabels:
       app: frontend
-  template:                      # Pod template (used to create new Pods)
+  template: # Pod template (used to create new Pods)
     metadata:
       labels:
-        app: frontend            # MUST match selector
+        app: frontend # MUST match selector
     spec:
       containers:
-      - name: web
-        image: nginx:1.27
-        ports:
-        - containerPort: 80
+        - name: web
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
 ```
 
 Full anatomy, in field order:
@@ -130,24 +130,24 @@ metadata:
     app: frontend
     tier: web
 spec:
-  replicas: 3                          # desired count (default 1)
-  minReadySeconds: 0                   # min time a Pod must be Ready before counted as ready
-  selector:                            # which Pods this RS owns
-    matchLabels:                       # OR matchExpressions
+  replicas: 3 # desired count (default 1)
+  minReadySeconds: 0 # min time a Pod must be Ready before counted as ready
+  selector: # which Pods this RS owns
+    matchLabels: # OR matchExpressions
       app: frontend
-    matchExpressions:                  # same as Pod spec selectors
-    - key: tier
-      operator: In
-      values: ["web", "api"]
-  template:                            # Pod spec
+    matchExpressions: # same as Pod spec selectors
+      - key: tier
+        operator: In
+        values: ["web", "api"]
+  template: # Pod spec
     metadata:
       labels:
-        app: frontend                  # MUST intersect with selector
+        app: frontend # MUST intersect with selector
     spec:
       containers:
-      - name: web
-        image: nginx:1.27
-        # ... full Pod spec ...
+        - name: web
+          image: nginx:1.27
+          # ... full Pod spec ...
 status:
   replicas: 3
   fullyLabeledReplicas: 3
@@ -159,14 +159,14 @@ status:
 
 ### Required fields
 
-| Field | Required | Why |
-|---|---|---|
-| `apiVersion` | yes | Always `apps/v1` |
-| `kind` | yes | Must be `ReplicaSet` |
-| `metadata.name` | yes | DNS-1123 label |
-| `spec.selector` | yes | Determines which Pods this RS owns |
-| `spec.template` | yes | Pod template for new Pods |
-| `spec.replicas` | no (default 1) | Desired count |
+| Field           | Required       | Why                                |
+| --------------- | -------------- | ---------------------------------- |
+| `apiVersion`    | yes            | Always `apps/v1`                   |
+| `kind`          | yes            | Must be `ReplicaSet`               |
+| `metadata.name` | yes            | DNS-1123 label                     |
+| `spec.selector` | yes            | Determines which Pods this RS owns |
+| `spec.template` | yes            | Pod template for new Pods          |
+| `spec.replicas` | no (default 1) | Desired count                      |
 
 ### The `template` vs `selector` constraint
 
@@ -180,7 +180,7 @@ selector:
 template:
   metadata:
     labels:
-      app: api        # doesn't match selector
+      app: api # doesn't match selector
 ```
 
 This constraint exists to prevent an infinite-creation loop: if the template didn't match the selector, the Pods an RS creates would never be selected by its own selector, and the controller would keep creating more.
@@ -207,22 +207,22 @@ Matches Pods with **both** `app: frontend` AND `tier: web`. AND across keys, exa
 ```yaml
 selector:
   matchExpressions:
-  - key: app
-    operator: In
-    values: [frontend, mobile]
-  - key: env
-    operator: NotIn
-    values: [deprecated]
+    - key: app
+      operator: In
+      values: [frontend, mobile]
+    - key: env
+      operator: NotIn
+      values: [deprecated]
 ```
 
 Supported operators:
 
-| Operator | Behavior |
-|---|---|
-| `In` | Key's value is in the listed values |
-| `NotIn` | Key's value is NOT in the listed values |
-| `Exists` | Key exists (any value) |
-| `DoesNotExist` | Key does not exist |
+| Operator       | Behavior                                |
+| -------------- | --------------------------------------- |
+| `In`           | Key's value is in the listed values     |
+| `NotIn`        | Key's value is NOT in the listed values |
+| `Exists`       | Key exists (any value)                  |
+| `DoesNotExist` | Key does not exist                      |
 
 `In` and `NotIn` require `values`. `Exists` and `DoesNotExist` must NOT have `values` (the API server rejects otherwise).
 
@@ -249,11 +249,11 @@ kind: Pod
 metadata:
   name: web-orphan
   labels:
-    app: web          # matches the RS's selector
+    app: web # matches the RS's selector
 spec:
   containers:
-  - name: web
-    image: nginx:1.27
+    - name: web
+      image: nginx:1.27
 ---
 # RS that selects that Pod
 apiVersion: apps/v1
@@ -271,21 +271,21 @@ spec:
         app: web
     spec:
       containers:
-      - name: web
-        image: nginx:1.27
+        - name: web
+          image: nginx:1.27
 ```
 
 When `web-rs` is created, the controller sees: "I want 2 Pods. There's already 1 matching Pod (`web-orphan`). I need to create only 1 more." The orphan Pod is **adopted** — it becomes part of the ReplicaSet's count, gets the RS's owner reference, and is treated like any other replica.
 
 ### Adoption details
 
-| Behavior | Detail |
-|---|---|
-| **Triggered by** | ReplicaSet creation or scale-up, with selector matching an existing orphan |
-| **Owner reference** | Added to the adopted Pod. The Pod is now an "owner reference" of the RS. |
-| **Deletion** | Scaling the RS down **can delete the adopted Pod** if it's "extra" |
-| **Adopted Pods get no template updates** | Even if you change the RS template, the existing Pod is not updated |
-| **What about scale-down** | The RS picks which Pods to delete; orphaned Pods are not protected |
+| Behavior                                 | Detail                                                                     |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| **Triggered by**                         | ReplicaSet creation or scale-up, with selector matching an existing orphan |
+| **Owner reference**                      | Added to the adopted Pod. The Pod is now an "owner reference" of the RS.   |
+| **Deletion**                             | Scaling the RS down **can delete the adopted Pod** if it's "extra"         |
+| **Adopted Pods get no template updates** | Even if you change the RS template, the existing Pod is not updated        |
+| **What about scale-down**                | The RS picks which Pods to delete; orphaned Pods are not protected         |
 
 ### Why this matters
 
@@ -297,7 +297,7 @@ When `web-rs` is created, the controller sees: "I want 2 Pods. There's already 1
 
 ```yaml
 status:
-  replicas: 5             # total Pods matching selector
+  replicas: 5 # total Pods matching selector
   fullyLabeledReplicas: 3 # Pods matching selector AND having all template labels
 ```
 
@@ -379,15 +379,15 @@ When you update a Deployment:
 
 ### What the Deployment adds on top of a ReplicaSet
 
-| Capability | ReplicaSet | Deployment |
-|---|---|---|
-| Maintain N replicas | ✅ | ✅ |
-| Rolling update (gradual) | ❌ | ✅ |
-| Rollback to previous revision | ❌ | ✅ |
-| Pause / resume updates | ❌ | ✅ |
-| Multiple update strategies | ❌ | ✅ (Recreate, RollingUpdate) |
-| Revision history (with `kubectl rollout undo`) | ❌ | ✅ (default 10) |
-| Progress deadline (timeout) | ❌ | ✅ (`progressDeadlineSeconds`) |
+| Capability                                     | ReplicaSet | Deployment                     |
+| ---------------------------------------------- | ---------- | ------------------------------ |
+| Maintain N replicas                            | ✅         | ✅                             |
+| Rolling update (gradual)                       | ❌         | ✅                             |
+| Rollback to previous revision                  | ❌         | ✅                             |
+| Pause / resume updates                         | ❌         | ✅                             |
+| Multiple update strategies                     | ❌         | ✅ (Recreate, RollingUpdate)   |
+| Revision history (with `kubectl rollout undo`) | ❌         | ✅ (default 10)                |
+| Progress deadline (timeout)                    | ❌         | ✅ (`progressDeadlineSeconds`) |
 
 So when would you ever write a bare ReplicaSet? Section 8.
 
@@ -420,8 +420,8 @@ spec:
         app: web
     spec:
       containers:
-      - name: web
-        image: nginx:1.27   # ← change this to 1.28
+        - name: web
+          image: nginx:1.27 # ← change this to 1.28
 ```
 
 If you change this image to `nginx:1.28` and apply it:
@@ -570,6 +570,7 @@ kubectl describe rs frontend
 ```
 
 Common causes:
+
 - Insufficient node resources
 - Node selector doesn't match any nodes
 - Persistent volume can't be bound
@@ -583,6 +584,7 @@ kubectl get pods -l app=frontend
 ```
 
 Common causes:
+
 - Bad image (ErrImagePull)
 - Bad command/args
 - Probe failing immediately
@@ -597,6 +599,7 @@ kubectl get pod <pod> -o yaml | grep -A 5 "lastState"
 ```
 
 If you see frequent kills, suspect:
+
 - A DaemonSet's `exclude` annotation
 - An eviction (node pressure)
 - A custom controller with overlapping selector
@@ -710,11 +713,11 @@ You tried to change the RS's selector. The API server forbids it. To change a se
 
 ## 12. Related Notes
 
-| Topic | Note |
-|---|---|
-| Pods (what an RS manages) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] |
-| Deployments (manage ReplicaSets) | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]] |
-| StatefulSets (stable IDs, ordered) | [[Kubernetes/concepts/L03-workloads/04-statefulsets\|04 — StatefulSets]] |
-| DaemonSet (one per node) | [[Kubernetes/concepts/L03-workloads/05-daemonset\|05 — DaemonSet]] |
-| Labels and selectors (in depth) | [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|L02 — Kubernetes Objects]] |
-| PodDisruptionBudgets | [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling\|L06 — Scaling]] |
+| Topic                              | Note                                                                                |
+| ---------------------------------- | ----------------------------------------------------------------------------------- |
+| Pods (what an RS manages)          | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]]                            |
+| Deployments (manage ReplicaSets)   | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]]              |
+| StatefulSets (stable IDs, ordered) | [[Kubernetes/concepts/L03-workloads/04-statefulsets\|04 — StatefulSets]]            |
+| DaemonSet (one per node)           | [[Kubernetes/concepts/L03-workloads/05-daemonset\|05 — DaemonSet]]                  |
+| Labels and selectors (in depth)    | [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|L02 — Kubernetes Objects]] |
+| PodDisruptionBudgets               | [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling\|L06 — Scaling]]            |

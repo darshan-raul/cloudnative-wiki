@@ -62,7 +62,7 @@ Azure Monitor collects telemetry from across the IT estate and routes it into ei
 ### Core Architecture Constructs
 
 1. **Log Analytics Workspace (LAW):** The administrative, security, and geographic boundary for log storage. All tables (e.g., `AzureActivity`, `ContainerLogV2`, `AppRequests`, `SecurityEvent`) exist inside a workspace.
-2. **Data Collection Rules (DCR):** Declarative definitions that specify what data to collect, how to transform it during stream ingestion, and which destinations to deliver it to. DCRs can filter out junk logs *before* they are written to disk, directly reducing ingestion billing.
+2. **Data Collection Rules (DCR):** Declarative definitions that specify what data to collect, how to transform it during stream ingestion, and which destinations to deliver it to. DCRs can filter out junk logs _before_ they are written to disk, directly reducing ingestion billing.
 3. **Table Data Tiers:**
    - **Analytics Tier (Default):** Full KQL analytical query capabilities, sub-second execution, alerting, and workbooks.
    - **Basic Tier:** Cut-rate ingestion price (approx. 80% cheaper) for high-volume debugging logs; supports simple KQL queries.
@@ -77,6 +77,7 @@ KQL is a read-only, declarative data analysis language structured with pipes (`|
 ### Essential Production KQL Queries
 
 #### 1. Analyze Container Crash Loops in AKS (ContainerLogV2)
+
 ```kql
 ContainerLogV2
 | where TimeGenerated > ago(1h)
@@ -87,11 +88,12 @@ ContainerLogV2
 ```
 
 #### 2. Detect High-Latency HTTP Requests in Azure App Service
+
 ```kql
 AppRequests
 | where TimeGenerated > ago(24h)
 | where Success == false or DurationMs > 2000
-| summarize 
+| summarize
     FailedCount = countif(Success == false),
     SlowCount = countif(DurationMs > 2000),
     P95Latency = percentile(DurationMs, 95)
@@ -100,6 +102,7 @@ AppRequests
 ```
 
 #### 3. Correlate Firewall Denied Connections Across Spoke VNets
+
 ```kql
 AzureDiagnostics
 | where Category == "AzureFirewallNetworkRule"
@@ -127,7 +130,8 @@ az monitor log-analytics workspace create \
     --retention-time 365 \
     --quota 50
 ```
-*(Note: `--quota 50` sets a daily ingestion cap of 50 GB to prevent accidental runaway billing spikes).*
+
+_(Note: `--quota 50` sets a daily ingestion cap of 50 GB to prevent accidental runaway billing spikes)._
 
 ### 2. Configure Diagnostic Settings on Key Infrastructure
 
@@ -187,14 +191,14 @@ az monitor scheduled-query create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Ingestion Rate** | 6 GB/min (~100 MB/s) | Soft limit; raise quota for enterprise Sentinel hubs |
-| **Daily Ingestion Cap** | Unlimited (Default) | Configure cap (`dailyQuotaGb`) in non-prod workspaces |
-| **Data Retention (Analytics)**| 30 to 730 days | 30 to 90 days is standard; first 30 days included |
-| **Data Retention (Archive)**  | Up to 4,383 days (12 yrs) | Used for financial, HIPAA, and SOC2 compliance |
-| **Max KQL Query Timeout** | 10 minutes | Structure queries with `TimeGenerated` filters |
-| **Max Query Result Records** | 30,000 rows | Use `summarize`, `top`, or `take` to aggregate |
+| Parameter / Dimension          | Default Quota             | Engineering Guidance                                  |
+| :----------------------------- | :------------------------ | :---------------------------------------------------- |
+| **Max Ingestion Rate**         | 6 GB/min (~100 MB/s)      | Soft limit; raise quota for enterprise Sentinel hubs  |
+| **Daily Ingestion Cap**        | Unlimited (Default)       | Configure cap (`dailyQuotaGb`) in non-prod workspaces |
+| **Data Retention (Analytics)** | 30 to 730 days            | 30 to 90 days is standard; first 30 days included     |
+| **Data Retention (Archive)**   | Up to 4,383 days (12 yrs) | Used for financial, HIPAA, and SOC2 compliance        |
+| **Max KQL Query Timeout**      | 10 minutes                | Structure queries with `TimeGenerated` filters        |
+| **Max Query Result Records**   | 30,000 rows               | Use `summarize`, `top`, or `take` to aggregate        |
 
 ---
 
@@ -211,6 +215,7 @@ az monitor scheduled-query create \
 ## 6. Realistic Pricing Scenarios
 
 Azure Monitor Log Analytics pricing is based on:
+
 1. **Pay-As-You-Go Ingestion:** ~$2.30 per GB ingested (Analytics tier).
 2. **Commitment Tiers:**
    - 100 GB/day: $1.96/GB ($196/day).

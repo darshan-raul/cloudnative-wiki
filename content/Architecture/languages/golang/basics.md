@@ -1,10 +1,6 @@
 # Basics
 
-
-
 ### Go mod/Go sum
-
-
 
 "https://golangbyexample.com/go-mod-sum-module/"
 

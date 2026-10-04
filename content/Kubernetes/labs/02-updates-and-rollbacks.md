@@ -43,6 +43,7 @@ sequenceDiagram
 ## 2. Configuring the RollingUpdate Strategy
 
 To prevent downtime during updates, configure explicit surge parameters in `podinfo`:
+
 - `maxSurge: 1`: Kubernetes may create 1 additional Pod above desired replicas during the rollout.
 - `maxUnavailable: 0`: No existing healthy Pods may be terminated until a new Pod is fully `Ready`.
 
@@ -75,6 +76,7 @@ kubectl get rs -l app.kubernetes.io/name=podinfo
 ```
 
 **Expected output:**
+
 ```
 NAME                 DESIRED   CURRENT   READY   AGE
 podinfo-76575fc4c    2         2         2       8m
@@ -96,8 +98,9 @@ kubectl rollout history deployment/podinfo
 ```
 
 **Expected output:**
+
 ```
-deployment.apps/podinfo 
+deployment.apps/podinfo
 REVISION  CHANGE-CAUSE
 1         <none>
 2         <none>
@@ -110,6 +113,7 @@ REVISION  CHANGE-CAUSE
 What happens when an engineer deploys an image tag that does not exist in the container registry?
 
 ### Trigger the failure:
+
 Set an invalid image tag:
 
 ```bash
@@ -117,6 +121,7 @@ kubectl set image deployment/podinfo podinfo=ghcr.io/stefanprodan/podinfo:v9.9.9
 ```
 
 ### Observe the symptom:
+
 Check the rollout status:
 
 ```bash
@@ -124,6 +129,7 @@ kubectl rollout status deployment/podinfo
 ```
 
 Notice that the command hangs indefinitely with:
+
 ```
 Waiting for deployment "podinfo" rollout to finish: 1 out of 2 new replicas have been updated...
 ```
@@ -135,6 +141,7 @@ kubectl get pods -l app.kubernetes.io/name=podinfo
 ```
 
 **Observed output:**
+
 ```
 NAME                       READY   STATUS             RESTARTS   AGE
 podinfo-76575fc4c-42x8j    1/1     Running            0          12m
@@ -143,10 +150,12 @@ podinfo-66d48c8b6b-k8f9p   0/1     ImagePullBackOff   0          45s
 ```
 
 ### Key Diagnostic Takeaway:
+
 Notice that the two old `podinfo-76575fc4c` Pods are **still Running and serving traffic!**
 Because we configured `maxUnavailable: 0`, the Deployment controller refused to terminate any old Pods until the new Pod became `Ready`. Because the new container cannot pull its image, the rollout was safely paused, protecting production users from an outage.
 
 ### Root Cause Inspection:
+
 Inspect the failed Pod's event log:
 
 ```bash
@@ -155,6 +164,7 @@ kubectl describe pod "$FAILED_POD" | grep -A 8 "Events:"
 ```
 
 **Expected events:**
+
 ```
 Events:
   Type     Reason     Age                From               Message
@@ -178,6 +188,7 @@ kubectl rollout undo deployment/podinfo
 ```
 
 **Expected output:**
+
 ```
 deployment.apps/podinfo rolled back
 ```

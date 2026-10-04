@@ -58,12 +58,12 @@ autoModeConfig:
 
 ## Compute Comparison
 
-| Feature | EKS Auto Mode | MNG | Karpenter |
-|---------|---------------|-----|-----------|
-| Node management | Full | Partial | Partial |
-| OS patching | Auto | Manual | Manual |
-| Scaling | Policy-based | ASG-based | Workload-based |
-| Pricing | EC2 + fee | EC2 | EC2 |
+| Feature         | EKS Auto Mode | MNG       | Karpenter      |
+| --------------- | ------------- | --------- | -------------- |
+| Node management | Full          | Partial   | Partial        |
+| OS patching     | Auto          | Manual    | Manual         |
+| Scaling         | Policy-based  | ASG-based | Workload-based |
+| Pricing         | EC2 + fee     | EC2       | EC2            |
 
 ## When to Use Auto Mode
 

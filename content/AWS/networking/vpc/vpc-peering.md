@@ -16,6 +16,7 @@ VPC Peering creates a private connection between two VPCs so instances in either
 ```
 VPC-A (10.0.0.0/16) ←→ VPC Peering ←→ VPC-B (10.1.0.0/16)
 ```
+
 Traffic flows directly between VPCs over the AWS backbone, not the public internet. Latency is lower than internet-based communication.
 
 ## Key Constraints
@@ -56,22 +57,22 @@ If you want instances in VPC-B to resolve DNS names in VPC-A, enable **DNS resol
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Active peering connections per VPC | 50 (can request increase) |
-| Pending peering connections per VPC | 50 |
-| VPCs per region (default) | 5 |
+| Resource                            | Limit                     |
+| ----------------------------------- | ------------------------- |
+| Active peering connections per VPC  | 50 (can request increase) |
+| Pending peering connections per VPC | 50                        |
+| VPCs per region (default)           | 5                         |
 
 ## Comparison: Peering vs Transit Gateway
 
-| | VPC Peering | Transit Gateway |
-|--|--|--|
-| Transitive routing | No | Yes |
-| Scales to100s of VPCs | No (mesh complexity) | Yes (hub-and-spoke) |
-| Cross-account | Yes | Yes (with AWS Organizations) |
-| Route management | Per-VPC route tables | Centralized route tables |
-| Cost | Free (same region) | Per-hour + per-GB data transfer |
-| Use when | 2-3 VPCs, simple topology | 10+ VPCs, hub-and-spoke |
+|                       | VPC Peering               | Transit Gateway                 |
+| --------------------- | ------------------------- | ------------------------------- |
+| Transitive routing    | No                        | Yes                             |
+| Scales to100s of VPCs | No (mesh complexity)      | Yes (hub-and-spoke)             |
+| Cross-account         | Yes                       | Yes (with AWS Organizations)    |
+| Route management      | Per-VPC route tables      | Centralized route tables        |
+| Cost                  | Free (same region)        | Per-hour + per-GB data transfer |
+| Use when              | 2-3 VPCs, simple topology | 10+ VPCs, hub-and-spoke         |
 
 ## References
 

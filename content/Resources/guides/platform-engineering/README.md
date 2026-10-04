@@ -1,31 +1,59 @@
-# Platform Engineering
+---
+title: Platform Engineering & Internal Developer Platforms (IDP)
+description: Guide to Platform Engineering — designing Internal Developer Platforms (IDP), establishing Golden Paths, and enabling developer self-service in cloud-native environments
+tags:
+  - platform-engineering
+  - devops
+  - idp
+  - backstage
+  - kubernetes
+---
 
-Platform Engineering is the process of enabling software engineering teams so they can autonomously perform end-to-end operations of the application life cycle in a cloud environment. Platform Engineers develop an integrated product that provides self-service capabilities to developers.&#x20;
+# Platform Engineering & Internal Developer Platforms (IDP)
 
-Luca Galante defines platform engineering as the <mark style="color:purple;">“discipline of designing and building toolchains and workflows that enable self-service capabilities for software engineering organizations in the cloud native era</mark>. Platform engineers provide an integrated product most often referred to as an ‘Internal Developer Platform’ covering the operation necessities of the entire life cycle of an application.”
+**Platform Engineering** is the discipline of designing and building toolchains and workflows that enable self-service capabilities for software engineering organizations in the cloud-native era. Platform engineers treat the platform as a product, providing an **Internal Developer Platform (IDP)** that abstracts operational and infrastructure complexities away from application developers.
 
-<figure><img src="../../.gitbook/assets/image (14).png" alt=""><figcaption></figcaption></figure>
+```mermaid
+graph TD
+    Dev([Application Developer]) --> Portal[Internal Developer Portal<br/>Backstage / Port / CLI]
 
-<figure><img src="../../.gitbook/assets/image (222).png" alt=""><figcaption></figcaption></figure>
+    subgraph Internal Developer Platform (IDP)
+        Portal --> GoldenPaths[Golden Paths / Software Templates]
+        GoldenPaths --> Orchestrator[Platform Orchestrator<br/>Kratix / Crossplane / Terraform]
+    end
 
-Whether it is infrastructure provisioning, code pipelines, monitoring, or container management, the self-service platform hides all these complexities and provides developers with all the necessities of the entire life cycle of the application.&#x20;
+    subgraph Cloud Infrastructure Fabric
+        Orchestrator --> K8s[Kubernetes Clusters]
+        Orchestrator --> DB[Managed Databases: RDS / Cloud SQL]
+        Orchestrator --> Observability[Monitoring: Prometheus / Datadog]
+        Orchestrator --> Security[Secret Stores: Vault / KMS]
+    end
 
-Platform Engineering is not just‌ necessary tooling but a combination of tools, workflows, and processes.
+    style Portal fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    style Orchestrator fill:#10b981,stroke:#047857,color:#fff
+```
 
-"https://podcasts.google.com/feed/aHR0cHM6Ly9jaGFuZ2Vsb2cuY29tL3NoaXBpdC9mZWVk/episode/Y2hhbmdlbG9nLmNvbS8xNC8xOTUy?sa=X&ved=0CAIQx8UHahcKEwjwu7Sm-tD8AhUAAAAAHQAAAAAQLA"
+---
 
-"https://youtu.be/j5M16qooAvo"
+## 1. Core Principles of Platform Engineering
 
-"https://medium.com/@rphilogene/the-10-platform-engineering-tools-to-use-in-2022-c2cbf2561f77"
+1. **Treat the Platform as a Product:** The platform team must conduct user research, gather feedback from internal development teams, and measure developer Net Promoter Score (NPS) and Time to First Commit.
+2. **Paved Roads / Golden Paths:** Provide opinionated, fully supported paths for common workflows (e.g. "Spin up a new Go microservice with CI/CD, Argo CD, Vault secrets, and Datadog monitoring in 2 minutes").
+3. **Self-Service with Guardrails:** Developers can provision environments and databases on demand without filing Jira tickets to ops, while automated policy engines (OPA/Kyverno) prevent security violations.
+4. **Cognitive Load Reduction:** Modern cloud infrastructure (Kubernetes, IAM, Helm, Istio, Prometheus) overwhelms developers. The IDP hides low-level YAML behind clean declarative interfaces.
 
-"https://hemantjain.medium.com/how-platform-engineering-differ-from-devops-and-sre-723c63716d96"
+---
 
-"https://medium.com/@mbianchidev/2023-devops-is-terrible-ec88162c86d7"
+## 2. Platform Engineering vs DevOps vs SRE
 
-"https://thenewstack.io/devops-is-dead-embrace-platform-engineering/"
+| Discipline                             | Primary Focus                          | Key Metric                                  | Core Output                                  |
+| :------------------------------------- | :------------------------------------- | :------------------------------------------ | :------------------------------------------- |
+| **DevOps**                             | Cultural philosophy and automation     | Deployment frequency, Lead time for changes | CI/CD pipelines, automated tests             |
+| **SRE (Site Reliability Engineering)** | Production availability and resilience | SLOs, SLIs, Error Budgets, MTTR             | Incident response, runbooks, monitoring      |
+| **Platform Engineering**               | Developer velocity and cognitive load  | Time to onboard, self-service adoption      | Internal Developer Platform (IDP), templates |
 
-"https://www.youtube.com/watch?v=0txypCU9DEU&list=WL&index=69&t=1974s"
+---
 
-"https://www.youtube.com/watch?v=9_v77YiSGEY&list=WL&index=158"
+## 3. Related Links & Deep Dives
 
-<figure><img src="../../.gitbook/assets/image (37).png" alt=""><figcaption></figcaption></figure>
+- [[DevOps/platform-engineering/README|Platform Engineering in DevOps]]: Comprehensive architectural module covering IDP control planes, GitOps integration, and developer portals.

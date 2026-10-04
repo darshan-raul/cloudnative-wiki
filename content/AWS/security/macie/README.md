@@ -30,13 +30,13 @@ Macie scans S3:
 
 ## Macie Classic vs Macie v2
 
-| Feature | Macie Classic | Macie v2 (Current) |
-|---------|---------------|-------------------|
-| Scope | All S3 buckets in account | Specific buckets or all |
-| Classification | One-time or scheduled | Continuous (jobs) |
-| Pricing | Per object scanned | Per GB classified |
-| Custom identifiers | No | Yes |
-| Integrations | CloudWatch | Security Hub, EventBridge |
+| Feature            | Macie Classic             | Macie v2 (Current)        |
+| ------------------ | ------------------------- | ------------------------- |
+| Scope              | All S3 buckets in account | Specific buckets or all   |
+| Classification     | One-time or scheduled     | Continuous (jobs)         |
+| Pricing            | Per object scanned        | Per GB classified         |
+| Custom identifiers | No                        | Yes                       |
+| Integrations       | CloudWatch                | Security Hub, EventBridge |
 
 ## Enabling Macie
 
@@ -75,11 +75,11 @@ aws macie2 create-classification-job \
 
 Macie assigns a sensitivity score (0-100) to each S3 object:
 
-| Score | Classification |
-|-------|---------------|
-| 0-49 | Low — no sensitive data |
-| 50-69 | Medium — some sensitive data |
-| 70-89 | High — significant sensitive data |
+| Score  | Classification                             |
+| ------ | ------------------------------------------ |
+| 0-49   | Low — no sensitive data                    |
+| 50-69  | Medium — some sensitive data               |
+| 70-89  | High — significant sensitive data          |
 | 90-100 | Critical — large amounts of sensitive data |
 
 ## Finding Types
@@ -93,14 +93,18 @@ Macie assigns a sensitivity score (0-100) to each S3 object:
   "title": "PII detected in S3 object",
   "description": "Amazon Macie detected 5 occurrences of Social Security Numbers (US) in my-bucket/finance/employees.csv",
   "resourcesAffected": {
-    "s3Bucket": {"name": "my-bucket", "arn": "arn:aws:s3:::my-bucket"},
-    "s3Object": {"key": "finance/employees.csv", "size": 1024, "versionId": "xxx"}
+    "s3Bucket": { "name": "my-bucket", "arn": "arn:aws:s3:::my-bucket" },
+    "s3Object": {
+      "key": "finance/employees.csv",
+      "size": 1024,
+      "versionId": "xxx"
+    }
   },
   "classificationDetails": {
     "detectedAt": "2024-01-15T10:00:00Z",
     "jobId": "xxxxx",
     "result": {
-      "sensitiveData": [{"category": "PII", "occurrences": 5}],
+      "sensitiveData": [{ "category": "PII", "occurrences": 5 }],
       "customDataIdentifiers": null
     }
   }
@@ -135,6 +139,7 @@ aws macie2 list-findings \
 ```
 
 Macie alerts on:
+
 - S3 bucket made public
 - S3 bucket policy changed to allow external access
 - S3 bucket shared with another AWS account
@@ -177,7 +182,7 @@ aws events put-targets \
 def lambda_handler(event, context):
     bucket = event['detail']['resourcesAffected']['s3Bucket']['name']
     key = event['detail']['resourcesAffected']['s3Object']['key']
-    
+
     # Block public access
     s3 = boto3.client('s3')
     s3.put_public_access_block(
@@ -189,7 +194,7 @@ def lambda_handler(event, context):
             'RestrictPublicBuckets': True
         }
     )
-    
+
     # Move to quarantine prefix
     s3.copy_object(
         Bucket=bucket,
@@ -197,7 +202,7 @@ def lambda_handler(event, context):
         CopySource={'Bucket': bucket, 'Key': key}
     )
     s3.delete_object(Bucket=bucket, Key=key)
-    
+
     # Notify
     sns.publish(
         TopicArn='arn:aws:sns:us-east-1:123456789012:sensitive-data-alerts',
@@ -207,21 +212,21 @@ def lambda_handler(event, context):
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Classification (first 10GB/month) | Free |
-| Classification (after 10GB) | $0.10/GB |
-| Custom data identifiers | Free |
-| S3 policy monitoring | Free |
+| Component                         | Cost     |
+| --------------------------------- | -------- |
+| Classification (first 10GB/month) | Free     |
+| Classification (after 10GB)       | $0.10/GB |
+| Custom data identifiers           | Free     |
+| S3 policy monitoring              | Free     |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Classification jobs | 20 per account |
+| Resource                | Limit          |
+| ----------------------- | -------------- |
+| Classification jobs     | 20 per account |
 | Custom data identifiers | 50 per account |
-| S3 buckets | Unlimited |
-| Objects per job | Unlimited |
+| S3 buckets              | Unlimited      |
+| Objects per job         | Unlimited      |
 
 ## References
 

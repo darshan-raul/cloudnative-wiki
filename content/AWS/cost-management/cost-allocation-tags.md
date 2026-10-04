@@ -16,19 +16,20 @@ Cost allocation tags let you categorize AWS resources by metadata, then group an
 
 These are automatically applied by AWS to supported resources. They start with `aws:` prefix:
 
-| Tag | What it tracks |
-|-----|---------------|
-| `aws:createdBy` | IAM user/role that created the resource |
+| Tag                             | What it tracks                                 |
+| ------------------------------- | ---------------------------------------------- |
+| `aws:createdBy`                 | IAM user/role that created the resource        |
 | `aws:cloudformation:stack-name` | CloudFormation stack that created the resource |
-| `aws:cloudformation:logical-id` | CloudFormation logical resource ID |
-| `aws:RequestId` | The API request that created the resource |
-| `aws:region` | Region (implicit in the resource metadata) |
+| `aws:cloudformation:logical-id` | CloudFormation logical resource ID             |
+| `aws:RequestId`                 | The API request that created the resource      |
+| `aws:region`                    | Region (implicit in the resource metadata)     |
 
 AWS-generated tags are automatically activated for cost allocation — you don't need to enable them.
 
 ### User-Defined Tags
 
 Custom tags you apply yourself. Common examples:
+
 ```
 Environment = {prod, staging, dev, qa}
 Application = {api, frontend, payments, auth}
@@ -59,6 +60,7 @@ Tags do NOT automatically inherit from parent resources:
 **Implication:** If you tag your prod VPC `Environment=prod`, the RDS instance inside it won't automatically show `Environment=prod` in Cost Explorer unless you explicitly tag the RDS instance.
 
 **Exceptions (automatic inheritance):**
+
 - Resources created by CloudFormation inherit stack-level tags
 - Resources created by Terraform can inherit tags from the provider
 - Some services support resource group propagation
@@ -95,6 +97,7 @@ This blocks any resource creation that doesn't include `Environment` tag. More s
 ### AWS Config Rules
 
 AWS Config can detect non-compliant resources:
+
 - `required-tags` managed rule checks for presence of specified tags
 - `aws-config-rules` can auto-remediate by applying tags when resources are created
 - Non-compliant resources can trigger SNS notifications
@@ -102,6 +105,7 @@ AWS Config can detect non-compliant resources:
 ### CI/CD Tag Injection
 
 In CI/CD pipelines (CodePipeline, GitHub Actions), tag resources at creation time:
+
 - Terraform `tags` block applies tags to all resources
 - CloudFormation `Tags` property on each resource
 - AWS CLI `--tag` flags on `run-instances`, `create-db-instance`, etc.

@@ -11,13 +11,13 @@ Google Cloud Platform security services and configuration.
 
 ## Core Services
 
-| Service | Purpose |
-|---------|---------|
+| Service                           | Purpose                                      |
+| --------------------------------- | -------------------------------------------- |
 | **Security Command Center (SCC)** | GCP's CSPM — centralized security monitoring |
-| **Chronicle** | Google's SIEM + threat intel platform |
-| **Workload Identity Federation** | OIDC/SAML-based access to GCP without keys |
-| **Cloud Armor** | DDoS protection and WAF |
-| **Binary Authorization** | Verify container images before deployment |
+| **Chronicle**                     | Google's SIEM + threat intel platform        |
+| **Workload Identity Federation**  | OIDC/SAML-based access to GCP without keys   |
+| **Cloud Armor**                   | DDoS protection and WAF                      |
+| **Binary Authorization**          | Verify container images before deployment    |
 
 ## Security Command Center (SCC)
 
@@ -61,4 +61,4 @@ gcloud iam workload-identity-pools add-iam-policy-binding aws-pool \
 ## Related
 
 - [[Security/cloud-security/README|Cloud Security Hub]]
-- [[GCP/identity|GCP IAM]]
+- [[GCP/identity/README|GCP IAM]]

@@ -36,15 +36,15 @@ Output columns: `USER` (owner), `PID`, `%CPU`, `%MEM`, `VSZ` (virtual memory), `
 
 ### Process States (STAT column)
 
-| State | Meaning                                   |
-|-------|------------------------------------------|
-| R     | Running or runnable                       |
-| S     | Interruptible sleep (waiting for event)  |
-| D     | Uninterruptible sleep (I/O)              |
+| State | Meaning                                 |
+| ----- | --------------------------------------- |
+| R     | Running or runnable                     |
+| S     | Interruptible sleep (waiting for event) |
+| D     | Uninterruptible sleep (I/O)             |
 | T     | Stopped (SIGSTOP/Ctrl+Z)                |
 | Z     | Zombie (dead, not reaped)               |
 | X     | Dead (shouldn't see this)               |
-| I     | Idle kernel thread                       |
+| I     | Idle kernel thread                      |
 
 State modifiers: `s` (session leader), `+` (foreground process group), `l` (multi-threaded).
 
@@ -113,6 +113,7 @@ dup2(0, 1); dup2(0, 2);            // stdout/stderr → null
 ```
 
 Key properties of a daemon:
+
 - Parent is PID 1 (or init)
 - No controlling terminal (`setsid()`)
 - Not a session leader (second fork prevents this)

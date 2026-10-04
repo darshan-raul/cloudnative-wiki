@@ -50,7 +50,7 @@ All GCP resources reside in a strict tree hierarchy. IAM policies are inherited 
 
 1. **Organization:** Represents the company (tied 1:1 to a Google Workspace or Cloud Identity domain). Top-level root for Org Policies and centralized billing.
 2. **Folders:** Organizational units to group projects by department, environment (prod vs non-prod), or regulatory boundary. Can be nested up to 10 levels deep.
-3. **Projects:** The fundamental boundary for billing, enabled APIs, quotas, and permissions. Resources *must* belong to exactly one project.
+3. **Projects:** The fundamental boundary for billing, enabled APIs, quotas, and permissions. Resources _must_ belong to exactly one project.
 4. **Resources:** The actual infrastructure components (VM instances, Cloud Storage buckets, BigQuery datasets).
 
 ---
@@ -61,23 +61,23 @@ All GCP resources reside in a strict tree hierarchy. IAM policies are inherited 
 
 GCP does not maintain standalone "IAM Users" inside a project. Instead, identities come from external identity providers or GCP-managed services:
 
-* `user:{email}` — A Google Account or Google Workspace / Cloud Identity account (e.g., `user:alice@company.com`).
-* `group:{email}` — A Google Group. **Best Practice:** Always grant permissions to groups, never directly to individual users.
-* `serviceAccount:{email}` — An application identity for machine-to-machine workloads.
-* `domain:{domain}` — All identities within an entire Google Workspace/Cloud Identity domain.
-* `principalSet://...` — Workload Identity Federation pools (GitHub Actions, AWS roles, Azure AD).
-* `allAuthenticatedUsers` — Any identity with a valid Google account worldwide (rarely used, high risk).
-* `allUsers` — Anyone on the public internet (used for public GCS assets or public Cloud Run endpoints).
+- `user:{email}` — A Google Account or Google Workspace / Cloud Identity account (e.g., `user:alice@company.com`).
+- `group:{email}` — A Google Group. **Best Practice:** Always grant permissions to groups, never directly to individual users.
+- `serviceAccount:{email}` — An application identity for machine-to-machine workloads.
+- `domain:{domain}` — All identities within an entire Google Workspace/Cloud Identity domain.
+- `principalSet://...` — Workload Identity Federation pools (GitHub Actions, AWS roles, Azure AD).
+- `allAuthenticatedUsers` — Any identity with a valid Google account worldwide (rarely used, high risk).
+- `allUsers` — Anyone on the public internet (used for public GCS assets or public Cloud Run endpoints).
 
 ### 2. Roles (What Permissions)
 
 Permissions in GCP take the form `<service>.<resource>.<action>` (e.g., `compute.instances.start`, `storage.objects.get`). Permissions are **never** granted individually; they are bundled into roles:
 
-| Role Category | Description | Example | Production Guidance |
-| :--- | :--- | :--- | :--- |
-| **Primitive / Basic** | Legacy roles (`Owner`, `Editor`, `Viewer`). Extremely broad. | `roles/editor` | **NEVER use in production.** `Editor` can delete nearly all resources; `Owner` can manage billing and IAM. |
-| **Predefined** | Curated by Google for specific job functions per service. Granular and maintained. | `roles/storage.objectViewer`, `roles/container.admin` | **Default choice** for most infrastructure and deployment needs. |
-| **Custom Roles** | User-defined bundles of specific permissions at Project or Org level. | `projects/my-proj/roles/customDeployer` | Use when predefined roles grant too much privilege (Principle of Least Privilege). Cannot include permissions marked "supported: false" for custom roles. |
+| Role Category         | Description                                                                        | Example                                               | Production Guidance                                                                                                                                       |
+| :-------------------- | :--------------------------------------------------------------------------------- | :---------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Primitive / Basic** | Legacy roles (`Owner`, `Editor`, `Viewer`). Extremely broad.                       | `roles/editor`                                        | **NEVER use in production.** `Editor` can delete nearly all resources; `Owner` can manage billing and IAM.                                                |
+| **Predefined**        | Curated by Google for specific job functions per service. Granular and maintained. | `roles/storage.objectViewer`, `roles/container.admin` | **Default choice** for most infrastructure and deployment needs.                                                                                          |
+| **Custom Roles**      | User-defined bundles of specific permissions at Project or Org level.              | `projects/my-proj/roles/customDeployer`               | Use when predefined roles grant too much privilege (Principle of Least Privilege). Cannot include permissions marked "supported: false" for custom roles. |
 
 ### 3. Policy Structure & Conditions
 
@@ -88,9 +88,7 @@ An IAM Allow Policy consists of bindings:
   "bindings": [
     {
       "role": "roles/storage.objectAdmin",
-      "members": [
-        "group:data-platform@company.com"
-      ]
+      "members": ["group:data-platform@company.com"]
     },
     {
       "role": "roles/compute.instanceAdmin.v1",
@@ -107,7 +105,7 @@ An IAM Allow Policy consists of bindings:
 }
 ```
 
-* **IAM Conditions:** Expressed in Common Expression Language (CEL). Evaluate attributes like `request.time`, `resource.name`, `request.auth.claims`, or destination IP ranges.
+- **IAM Conditions:** Expressed in Common Expression Language (CEL). Evaluate attributes like `request.time`, `resource.name`, `request.auth.claims`, or destination IP ranges.
 
 ### 4. Policy Evaluation Algorithm
 
@@ -133,8 +131,8 @@ An IAM Allow Policy consists of bindings:
          └── NO  ──► ACCESS DENIED
 ```
 
-* **Inheritance is strictly additive:** Permissions granted at a parent cannot be removed or restricted by an allow policy at a child. If a user is `Editor` at the Folder, giving them `Viewer` at the child Project does **not** downgrade their access.
-* **Deny Policies:** Introduced to explicitly override inherited allow permissions. Evaluated before any allow policy.
+- **Inheritance is strictly additive:** Permissions granted at a parent cannot be removed or restricted by an allow policy at a child. If a user is `Editor` at the Folder, giving them `Viewer` at the child Project does **not** downgrade their access.
+- **Deny Policies:** Introduced to explicitly override inherited allow permissions. Evaluated before any allow policy.
 
 ---
 
@@ -146,14 +144,14 @@ A Service Account is a special account used by an application or compute workloa
 ### Service Account Types
 
 1. **Default Service Accounts:**
-   * Compute Engine default: `<project-number>-compute@developer.gserviceaccount.com`
-   * Automatically created when APIs are enabled.
-   * **Massive Gotcha:** Historically created with the primitive `Editor` role! Always disable default service accounts or remove the `Editor` binding immediately.
+   - Compute Engine default: `<project-number>-compute@developer.gserviceaccount.com`
+   - Automatically created when APIs are enabled.
+   - **Massive Gotcha:** Historically created with the primitive `Editor` role! Always disable default service accounts or remove the `Editor` binding immediately.
 2. **Google-Managed Service Accounts (Service Agents):**
-   * Format: `service-<project-number>@compute-system.iam.gserviceaccount.com`
-   * Used internally by GCP services to act on your behalf (e.g., Cloud Build deploying to Cloud Run).
+   - Format: `service-<project-number>@compute-system.iam.gserviceaccount.com`
+   - Used internally by GCP services to act on your behalf (e.g., Cloud Build deploying to Cloud Run).
 3. **User-Managed Service Accounts:**
-   * Created manually for dedicated applications with least-privilege predefined roles.
+   - Created manually for dedicated applications with least-privilege predefined roles.
 
 ### Eliminating Long-Lived Service Account Keys
 
@@ -189,12 +187,12 @@ curl -H "Metadata-Flavor: Google" \
 
 A critical distinction in GCP governance:
 
-| Dimension | IAM Policy | Organization Policy |
-| :--- | :--- | :--- |
-| **Focus** | **Who** can do **what** on which resource | **What configurations** are permitted across resources |
-| **Question** | "Can Bob create a public GCS bucket?" | "Are public GCS buckets allowed anywhere in this Org?" |
-| **Enforcement** | Evaluates identity and roles | Evaluates resource attributes and constraints |
-| **Key Constraints** | N/A | `constraints/storage.publicAccessPrevention`<br>`constraints/iam.disableServiceAccountKeyCreation`<br>`constraints/compute.vmExternalIpAccess` |
+| Dimension           | IAM Policy                                | Organization Policy                                                                                                                            |
+| :------------------ | :---------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Focus**           | **Who** can do **what** on which resource | **What configurations** are permitted across resources                                                                                         |
+| **Question**        | "Can Bob create a public GCS bucket?"     | "Are public GCS buckets allowed anywhere in this Org?"                                                                                         |
+| **Enforcement**     | Evaluates identity and roles              | Evaluates resource attributes and constraints                                                                                                  |
+| **Key Constraints** | N/A                                       | `constraints/storage.publicAccessPrevention`<br>`constraints/iam.disableServiceAccountKeyCreation`<br>`constraints/compute.vmExternalIpAccess` |
 
 ---
 
@@ -255,38 +253,40 @@ gcloud resource-manager org-policies enable-enforce \
 
 ## Quotas & Limits
 
-| Resource / Action | Default Quota / Limit | Notes |
-| :--- | :--- | :--- |
-| **Max policy size** | 250 KB per policy | Max limit across all bindings and conditions on a single resource |
-| **Max condition length** | 1,024 characters per CEL expression | Keep condition logic concise |
-| **Max Service Accounts per project** | 100 | Can be raised via quota request |
-| **Service Account key expiration** | Indefinite (until revoked) | Why keys are dangerous; use impersonation instead |
-| **Token creator token lifetime** | Max 1 hour (default), up to 12 hours | Configurable via `max_token_lifetime` organization policy |
-| **Folder nesting depth** | Up to 10 levels deep | Organization root → Folder 1 → ... → Folder 10 |
+| Resource / Action                    | Default Quota / Limit                | Notes                                                             |
+| :----------------------------------- | :----------------------------------- | :---------------------------------------------------------------- |
+| **Max policy size**                  | 250 KB per policy                    | Max limit across all bindings and conditions on a single resource |
+| **Max condition length**             | 1,024 characters per CEL expression  | Keep condition logic concise                                      |
+| **Max Service Accounts per project** | 100                                  | Can be raised via quota request                                   |
+| **Service Account key expiration**   | Indefinite (until revoked)           | Why keys are dangerous; use impersonation instead                 |
+| **Token creator token lifetime**     | Max 1 hour (default), up to 12 hours | Configurable via `max_token_lifetime` organization policy         |
+| **Folder nesting depth**             | Up to 10 levels deep                 | Organization root → Folder 1 → ... → Folder 10                    |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/iam
-* **Documentation:** https://cloud.google.com/iam/docs
-* **Predefined Roles Reference:** https://cloud.google.com/iam/docs/understanding-roles
-* **Pricing:** https://cloud.google.com/iam/pricing (Core IAM is free; Policy Intelligence/Recommender incurs usage tiers)
+- **Homepage:** https://cloud.google.com/iam
+- **Documentation:** https://cloud.google.com/iam/docs
+- **Predefined Roles Reference:** https://cloud.google.com/iam/docs/understanding-roles
+- **Pricing:** https://cloud.google.com/iam/pricing (Core IAM is free; Policy Intelligence/Recommender incurs usage tiers)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Standard Enterprise IAM Usage
-* An organization with 50 projects, 400 developers, and 250 service accounts managing 10,000 resources.
-* **IAM Core Operations:** $0.00 (Authentication, role evaluation, policy binding, and service account tokens are completely free).
-* **Monthly Cost:** **$0.00 / month**.
+
+- An organization with 50 projects, 400 developers, and 250 service accounts managing 10,000 resources.
+- **IAM Core Operations:** $0.00 (Authentication, role evaluation, policy binding, and service account tokens are completely free).
+- **Monthly Cost:** **$0.00 / month**.
 
 ### Scenario 2: Security Governance with IAM Recommender & Policy Intelligence
-* A security operations team utilizes GCP Policy Intelligence to automatically detect over-privileged service accounts and unused permissions across 100 projects.
-* Policy Analyzer & IAM Recommender basic insights: Free.
-* Exporting audit logs and IAM change events to BigQuery / Cloud Storage: Standard Cloud Logging ingestion pricing applies (~$0.50/GiB after the first 50 GiB/month free tier).
-* **Estimated Cost:** **~$15 – $30 / month** in logging analytics.
+
+- A security operations team utilizes GCP Policy Intelligence to automatically detect over-privileged service accounts and unused permissions across 100 projects.
+- Policy Analyzer & IAM Recommender basic insights: Free.
+- Exporting audit logs and IAM change events to BigQuery / Cloud Storage: Standard Cloud Logging ingestion pricing applies (~$0.50/GiB after the first 50 GiB/month free tier).
+- **Estimated Cost:** **~$15 – $30 / month** in logging analytics.
 
 ---
 

@@ -57,28 +57,32 @@ By combining Azure CNI for IP Address Management (IPAM) with Cilium for packet r
 
 ### Why eBPF Outperforms `kube-proxy` + `iptables`
 
-| Dimension | `kube-proxy` (iptables Mode) | Azure CNI Powered by Cilium (eBPF) |
-| :--- | :--- | :--- |
-| **Lookup Algorithm** | **$O(N)$ Linear Scan:** Evaluates every rule sequentially | **$O(1)$ Hash Map:** Direct memory hash table lookup |
-| **Routing Overhead (10K Services)**| **~5 to 15 milliseconds** latency penalty | **< 10 microseconds** latency penalty |
-| **Control Plane Rule Updates**| Re-writes the entire `iptables` chain in kernel | Atomic BPF map update without flushing tables |
-| **CPU Utilization during Churn**| High (Kube-proxy consumes CPU during pod scaling)| Near Zero (BPF maps update asynchronously) |
-| **Network Policy Security** | IP/CIDR-based (vulnerable to IP reuse race conditions)| **Cryptographic Identity Labels** (e.g., `app=order`) |
-| **L7 DNS / FQDN Filtering** | Not supported natively | **Fully Supported** (Wildcard FQDN filtering) |
+| Dimension                           | `kube-proxy` (iptables Mode)                              | Azure CNI Powered by Cilium (eBPF)                    |
+| :---------------------------------- | :-------------------------------------------------------- | :---------------------------------------------------- |
+| **Lookup Algorithm**                | **$O(N)$ Linear Scan:** Evaluates every rule sequentially | **$O(1)$ Hash Map:** Direct memory hash table lookup  |
+| **Routing Overhead (10K Services)** | **~5 to 15 milliseconds** latency penalty                 | **< 10 microseconds** latency penalty                 |
+| **Control Plane Rule Updates**      | Re-writes the entire `iptables` chain in kernel           | Atomic BPF map update without flushing tables         |
+| **CPU Utilization during Churn**    | High (Kube-proxy consumes CPU during pod scaling)         | Near Zero (BPF maps update asynchronously)            |
+| **Network Policy Security**         | IP/CIDR-based (vulnerable to IP reuse race conditions)    | **Cryptographic Identity Labels** (e.g., `app=order`) |
+| **L7 DNS / FQDN Filtering**         | Not supported natively                                    | **Fully Supported** (Wildcard FQDN filtering)         |
 
 ---
 
 ## 2. Core Capabilities: WireGuard Encryption & Hubble
 
 ### 1. Transparent Node-to-Node Pod Encryption (WireGuard)
+
 Enterprise compliance regimes (HIPAA, PCI-DSS, FedRAMP) require end-to-end encryption in transit across all internal network links. Rather than burdening developers with Istio or Linkerd mTLS sidecars, Cilium integrates **kernel-space WireGuard encryption**:
+
 - Encryption occurs transparently at the Linux kernel boundary before packets leave the host VM.
 - Uses high-speed modern cryptographic primitives: **ChaCha20** for symmetric encryption and **Poly1305** for authentication.
 - Automatically handles key exchange and peer management between AKS nodes.
 - Pods experience **zero sidecar memory overhead**.
 
 ### 2. Hubble Deep Observability
+
 Hubble uses eBPF to monitor raw socket operations, providing zero-overhead distributed tracing, DNS query analytics, and flow logging:
+
 - Tracks HTTP status codes (`200 OK`, `500 Error`), latency percentiles (P95, P99), and TCP drops.
 - Exposes visual service dependency graphs via the Hubble UI and Prometheus metric endpoints.
 
@@ -134,25 +138,25 @@ spec:
     matchLabels:
       app: payment-processor
   egress:
-  # Allow CoreDNS resolution
-  - toEndpoints:
-    - matchLabels:
-        io.kubernetes.pod.namespace: kube-system
-        k8s-app: coredns
-    toPorts:
-    - ports:
-      - port: "53"
-        protocol: UDP
-      rules:
-        dns:
-        - matchPattern: "*"
-  # Allow egress ONLY to Stripe API via FQDN inspection
-  - toFQDNs:
-    - matchPattern: "*.stripe.com"
-    toPorts:
-    - ports:
-      - port: "443"
-        protocol: TCP
+    # Allow CoreDNS resolution
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: coredns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+          rules:
+            dns:
+              - matchPattern: "*"
+    # Allow egress ONLY to Stripe API via FQDN inspection
+    - toFQDNs:
+        - matchPattern: "*.stripe.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
 ```
 
 Apply the policy:
@@ -175,13 +179,13 @@ hubble observe --server localhost:4245 --verdict DROPPED --follow
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter / Capability | Metric / Limit | Production Impact |
-| :--- | :--- | :--- |
-| **Max Kubernetes Services** | **20,000+ Services** | $O(1)$ BPF hash map lookup eliminates latency scaling |
-| **WireGuard Throughput Penalty**| **< 3% CPU overhead** | Significantly faster and lighter than mTLS proxy sidecars |
-| **Max Network Policy Rules**| **Up to 100,000 rules** | Limited only by Linux kernel BPF map memory allocation |
-| **Hubble Event Buffer Size** | **4,096 events per CPU** | Ring buffer in kernel memory prevents packet drop during spikes|
-| **Supported OS Families** | **Ubuntu & Azure Linux 3**| Both include pre-compiled eBPF kernel headers |
+| Parameter / Capability           | Metric / Limit             | Production Impact                                               |
+| :------------------------------- | :------------------------- | :-------------------------------------------------------------- |
+| **Max Kubernetes Services**      | **20,000+ Services**       | $O(1)$ BPF hash map lookup eliminates latency scaling           |
+| **WireGuard Throughput Penalty** | **< 3% CPU overhead**      | Significantly faster and lighter than mTLS proxy sidecars       |
+| **Max Network Policy Rules**     | **Up to 100,000 rules**    | Limited only by Linux kernel BPF map memory allocation          |
+| **Hubble Event Buffer Size**     | **4,096 events per CPU**   | Ring buffer in kernel memory prevents packet drop during spikes |
+| **Supported OS Families**        | **Ubuntu & Azure Linux 3** | Both include pre-compiled eBPF kernel headers                   |
 
 ---
 
@@ -200,13 +204,13 @@ hubble observe --server localhost:4245 --verdict DROPPED --follow
 
 - **Architecture:** 50x `Standard_D8ds_v5` nodes running 2,500 pods and 5,000 internal services.
 - **Cost Comparison vs Service Mesh Sidecars:**
-  - *Option 1 (Istio Sidecars for mTLS & Metrics):* 2,500 pods × 128 MiB RAM sidecar overhead = **320 GiB RAM wasted** on sidecars (~5 extra VM nodes @ $1,400/mo).
-  - *Option 2 (Azure CNI Powered by Cilium):* **$0.00 extra VM spend**. WireGuard and Hubble operate inside the Linux kernel.
+  - _Option 1 (Istio Sidecars for mTLS & Metrics):_ 2,500 pods × 128 MiB RAM sidecar overhead = **320 GiB RAM wasted** on sidecars (~5 extra VM nodes @ $1,400/mo).
+  - _Option 2 (Azure CNI Powered by Cilium):_ **$0.00 extra VM spend**. WireGuard and Hubble operate inside the Linux kernel.
 - **Monthly Cost:**
   - Control Plane Fee: $0.10/hr × 730 hrs = **$73.00**
   - Compute Nodes: 50 × $0.384/hr × 730 hrs = **$14,016.00**
   - Cilium & WireGuard Surcharge: **$0.00 (Built into AKS)**.
-- **Total Monthly Cost:** **$14,089.00 / month** *(Delivering ~$1,400/mo in savings compared to sidecar meshes).*
+- **Total Monthly Cost:** **$14,089.00 / month** _(Delivering ~$1,400/mo in savings compared to sidecar meshes)._
 
 ### Scenario B: Regulatory Compliance Workload with FQDN Egress Auditing
 

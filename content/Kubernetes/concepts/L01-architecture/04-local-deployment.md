@@ -1,21 +1,28 @@
+---
+title: "Local Deployment"
+tags: ["kubernetes", "k8s-concepts", "architecture"]
+date: 2026-09-06
+description: "Local Deployment — Kubernetes reference and architecture guide."
+---
+
 # Local Deployment
 
-*"https://kubernetes.io/docs/tasks/tools/"*
+_"https://kubernetes.io/docs/tasks/tools/"_
 
 For development, learning, and CI, you want a **local Kubernetes cluster** that starts fast, is disposable, and lives on your laptop. This note compares the options, with notes on which to pick for which scenario.
 
 ## The options at a glance
 
-| Tool | Runtime | Multi-node | Speed | Realism | Best for |
-|---|---|---|---|---|---|
-| **k3d** | k3s in Docker | First-class | ~10s | Medium | Day-to-day dev, multi-node testing |
-| **kind** | kubeadm in Docker | First-class | ~30s | High | Testing k8s upgrades, real-cluster behavior |
-| **minikube** | kubeadm in VM/container | Second-class | ~30s | High | Single-node dev, addons |
-| **Docker Desktop** | k8s in Docker | No | ~30s | Low | Mac/Windows users who already use DD |
-| **Rancher Desktop** | k3s in containerd/VM | Limited | ~30s | Low | Docker Desktop replacement |
-| **OrbStack** | k3s | No | ~5s | Low | macOS, speed-obsessed |
-| **k3s (bare)** | k3s as systemd | First-class | ~10s | Medium | Raspberry Pi, edge, "real Linux" |
-| **microk8s** | snap-packaged k8s | First-class | ~30s | High | Ubuntu users, IoT |
+| Tool                | Runtime                 | Multi-node   | Speed | Realism | Best for                                    |
+| ------------------- | ----------------------- | ------------ | ----- | ------- | ------------------------------------------- |
+| **k3d**             | k3s in Docker           | First-class  | ~10s  | Medium  | Day-to-day dev, multi-node testing          |
+| **kind**            | kubeadm in Docker       | First-class  | ~30s  | High    | Testing k8s upgrades, real-cluster behavior |
+| **minikube**        | kubeadm in VM/container | Second-class | ~30s  | High    | Single-node dev, addons                     |
+| **Docker Desktop**  | k8s in Docker           | No           | ~30s  | Low     | Mac/Windows users who already use DD        |
+| **Rancher Desktop** | k3s in containerd/VM    | Limited      | ~30s  | Low     | Docker Desktop replacement                  |
+| **OrbStack**        | k3s                     | No           | ~5s   | Low     | macOS, speed-obsessed                       |
+| **k3s (bare)**      | k3s as systemd          | First-class  | ~10s  | Medium  | Raspberry Pi, edge, "real Linux"            |
+| **microk8s**        | snap-packaged k8s       | First-class  | ~30s  | High    | Ubuntu users, IoT                           |
 
 ## k3d — recommended for most
 
@@ -264,12 +271,12 @@ In CI, you want the **fastest possible start, the most disposable cluster, and p
 
 A rough guide for a 16GB / 8-core laptop:
 
-| Tool | Comfortable Pod count | Notes |
-|---|---|---|
-| k3d | 200-500 | k3s is light; overhead is mostly Docker |
-| kind | 100-300 | Real kubeadm is heavier than k3s |
-| minikube (docker driver) | 200-400 | Similar to k3d |
-| Docker Desktop | 100-200 | The VM eats memory |
+| Tool                     | Comfortable Pod count | Notes                                   |
+| ------------------------ | --------------------- | --------------------------------------- |
+| k3d                      | 200-500               | k3s is light; overhead is mostly Docker |
+| kind                     | 100-300               | Real kubeadm is heavier than k3s        |
+| minikube (docker driver) | 200-400               | Similar to k3d                          |
+| Docker Desktop           | 100-200               | The VM eats memory                      |
 
 Past ~500 Pods, your laptop will start swapping. Past ~1000, even simple `kubectl get` calls become slow.
 
@@ -277,25 +284,25 @@ For tests that need 1000s of Pods, use a remote cluster (EKS / GKE / k3s on a be
 
 ## Which should I pick?
 
-| Scenario | Pick |
-|---|---|
-| Day-to-day dev on macOS/Linux | **k3d** |
-| Testing k8s upgrades, multi-master, real behavior | **kind** |
-| Single-node, lots of addons, polish | **minikube** |
-| Already use Docker Desktop and don't want more tools | Docker Desktop's k8s |
-| macOS, hate waiting for clusters | OrbStack |
-| Learning k8s deeply | kind + `kubectl explain` for everything |
-| CI / automated tests | **kind** |
-| Raspberry Pi / edge / bare Linux | k3s directly |
-| Ubuntu everywhere | microk8s |
+| Scenario                                             | Pick                                    |
+| ---------------------------------------------------- | --------------------------------------- |
+| Day-to-day dev on macOS/Linux                        | **k3d**                                 |
+| Testing k8s upgrades, multi-master, real behavior    | **kind**                                |
+| Single-node, lots of addons, polish                  | **minikube**                            |
+| Already use Docker Desktop and don't want more tools | Docker Desktop's k8s                    |
+| macOS, hate waiting for clusters                     | OrbStack                                |
+| Learning k8s deeply                                  | kind + `kubectl explain` for everything |
+| CI / automated tests                                 | **kind**                                |
+| Raspberry Pi / edge / bare Linux                     | k3s directly                            |
+| Ubuntu everywhere                                    | microk8s                                |
 
 ## Gotchas (cross-cutting)
 
-* **Local clusters don't reflect production.** Single-node, no real HA, default CNI, no real ingress, no real autoscaling. Test on something that resembles prod before shipping.
-* **`kubectl context` is shared.** All your local clusters appear in the same kubeconfig. `kubectl config get-contexts`, `kubectl config use-context <name>`. Mistakenly applying a prod manifest to dev is a real outage.
-* **ImagePullBackOff on local images.** Forgot to `kind load docker-image` or push to the local registry. Pods sit in `ImagePullBackOff` forever.
-* **`StorageClass` defaults differ.** k3s uses `local-path`. kind uses nothing (you set it up). minikube uses `standard` (hostPath). PVCs that "just work" on k3s may not on kind.
-* **Resource limits matter even on laptops.** Forgetting `resources.requests` for a Deployment means the scheduler doesn't know how to place it; with one node, it works; with three, you get confused.
-* **Default namespaces exist in all of them**, but the set varies. Don't assume `kube-system` contains the same addons across all tools.
-* **"kubectl" in a CI job** is usually a separate binary. Pin the version. CI k8s versions should match production within ±1 minor.
-* **The "TLS cert expired after 365 days" gotcha.** Local k8s clusters use self-signed certs that last a year. If you have a long-lived dev cluster you haven't touched, certs may have expired. Just `kind delete cluster && kind create cluster` and move on.
+- **Local clusters don't reflect production.** Single-node, no real HA, default CNI, no real ingress, no real autoscaling. Test on something that resembles prod before shipping.
+- **`kubectl context` is shared.** All your local clusters appear in the same kubeconfig. `kubectl config get-contexts`, `kubectl config use-context <name>`. Mistakenly applying a prod manifest to dev is a real outage.
+- **ImagePullBackOff on local images.** Forgot to `kind load docker-image` or push to the local registry. Pods sit in `ImagePullBackOff` forever.
+- **`StorageClass` defaults differ.** k3s uses `local-path`. kind uses nothing (you set it up). minikube uses `standard` (hostPath). PVCs that "just work" on k3s may not on kind.
+- **Resource limits matter even on laptops.** Forgetting `resources.requests` for a Deployment means the scheduler doesn't know how to place it; with one node, it works; with three, you get confused.
+- **Default namespaces exist in all of them**, but the set varies. Don't assume `kube-system` contains the same addons across all tools.
+- **"kubectl" in a CI job** is usually a separate binary. Pin the version. CI k8s versions should match production within ±1 minor.
+- **The "TLS cert expired after 365 days" gotcha.** Local k8s clusters use self-signed certs that last a year. If you have a long-lived dev cluster you haven't touched, certs may have expired. Just `kind delete cluster && kind create cluster` and move on.

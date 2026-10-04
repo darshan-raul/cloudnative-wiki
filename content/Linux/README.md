@@ -29,37 +29,49 @@ The [[Linux/concepts/README|concepts section]] is a beginner curriculum — work
 ## Sections
 
 ### [[Linux/concepts/README|Concepts]] — Beginner curriculum
+
 Fundamentals: filesystem hierarchy, permissions, processes, users/groups, packages, services, boot, logging, networking, storage, shell, I/O redirection. Also: hardlinks/softlinks, ulimit, TTY/PTY, tmpfs, sockets, spool directory.
 
 ### [[Linux/kernel/README|Kernel]] — Kernel internals
+
 cgroups, /proc & /sys, signals, process management. Reference material for after you've gone through the concepts curriculum.
 
 ### [[Linux/networking/README|Networking]] — TCP/IP, firewall, DNS
+
 TCP/IP model, routing, iptables, firewalld, DNS resolution, ip command, dhcp, netplan, ss, network performance tuning.
 
 ### [[Linux/storage/README|Storage]] — Disks, LVM, filesystems
+
 Disks and partitions, LVM, RAID, filesystems (ext4, xfs, btrfs), mount and fstab, storage performance tuning.
 
 ### [[Linux/users-groups/README|Users & Groups]] — Identity and PAM
+
 User management, nologin accounts, sudo, /etc/passwd, /etc/shadow, /etc/group.
 
 ### [[Linux/boot-init/README|Boot & Init]] — Boot, systemd, scheduling
+
 Boot process, systemd, cron and anacron, systemd timers, systemd-tmpfiles, nohup and disown.
 
 ### [[Linux/security/README|Security]] — Hardening and access control
+
 Capabilities, seccomp, AppArmor, auditd, chattr/lsattr, core dumps, device files, sysctl tuning, systemd service hardening, Linux CIS hardening, container security.
 
 ### [[Linux/virtualization/README|Virtualization]] — Containers and hypervisors
+
 Container runtimes (runc, containerd), podman, namespaces (mount, user, network), overlayfs, systemd-nspawn, hypervisors, emulator vs virtualization.
 
 ### [[Linux/packaging/README|Packaging]] — apt, pacman
+
 apt, pacman — package management, repositories, AUR.
 
 ### [[Linux/observability/README|Observability]] — Monitoring and tracing
+
 top, vmstat, iostat, sar, strace, journalctl, log management.
 
 ### [[Linux/shell-scripting/README|Shell Scripting]] — Bash scripting
+
 bash cheatsheet, shell redirection, here-docs, process substitution, shell expansion, exit codes.
 
 ### [[Linux/troubleshooting/README|Troubleshooting]] — Debugging methodology
+
 Systematic debugging, common issues, diagnosis framework.

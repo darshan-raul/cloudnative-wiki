@@ -16,20 +16,20 @@ ElastiCache provides managed in-memory caching: **Redis** (advanced, supports da
 
 ## Redis vs Memcached
 
-| Feature | Redis | Memcached |
-|---------|-------|-----------|
-| Data structures | Strings, Lists, Sets, Hashes, Sorted Sets, Streams | Strings only |
-| Replication | Yes (read replicas) | No (single node only) |
-| Clustering | Yes (up to 90 shards) | Yes (auto-discovery) |
-| Persistence | RDB + AOF snapshots | No |
-| Pub/Sub | Yes | No |
-| Transactions | Yes (MULTI/EXEC) | No |
-| Sorted sets | Yes | No |
-| Geospatial | Yes | No |
-| Lua scripting | Yes | No |
-| TLS | Yes | Yes |
-| Auth | Yes (AUTH + ACLs) | Yes (SASL) |
-| Use case | Rich data, pub/sub, sessions | Simple key-value cache |
+| Feature         | Redis                                              | Memcached              |
+| --------------- | -------------------------------------------------- | ---------------------- |
+| Data structures | Strings, Lists, Sets, Hashes, Sorted Sets, Streams | Strings only           |
+| Replication     | Yes (read replicas)                                | No (single node only)  |
+| Clustering      | Yes (up to 90 shards)                              | Yes (auto-discovery)   |
+| Persistence     | RDB + AOF snapshots                                | No                     |
+| Pub/Sub         | Yes                                                | No                     |
+| Transactions    | Yes (MULTI/EXEC)                                   | No                     |
+| Sorted sets     | Yes                                                | No                     |
+| Geospatial      | Yes                                                | No                     |
+| Lua scripting   | Yes                                                | No                     |
+| TLS             | Yes                                                | Yes                    |
+| Auth            | Yes (AUTH + ACLs)                                  | Yes (SASL)             |
+| Use case        | Rich data, pub/sub, sessions                       | Simple key-value cache |
 
 ## Redis: Key Concepts
 
@@ -162,13 +162,13 @@ def get_user(user_id):
     user = redis.get(f"user:{user_id}")
     if user:
         return json.loads(user)
-    
+
     # 2. Cache miss — load from DB
     user = db.query("SELECT * FROM users WHERE id = ?", user_id)
-    
+
     # 3. Write to cache
     redis.setex(f"user:{user_id}", 3600, json.dumps(user))
-    
+
     return user
 ```
 
@@ -178,7 +178,7 @@ def get_user(user_id):
 def save_user(user_id, data):
     # 1. Write to DB
     db.execute("UPDATE users SET ... WHERE id = ?", user_id)
-    
+
     # 2. Update cache
     redis.setex(f"user:{user_id}", 3600, json.dumps(data))
 ```
@@ -268,6 +268,7 @@ aws cloudwatch get-metric-statistics \
 ```
 
 Key metrics:
+
 - `DatabaseMemoryUsagePercentage` — memory pressure (keep < 80%)
 - `CurrConnections` — connection count (spike = problem)
 - `Evictions` — items evicted (need more memory)
@@ -275,24 +276,24 @@ Key metrics:
 
 ## Pricing
 
-| Node Type | Cost/hr |
-|-----------|---------|
-| cache.t4g.micro | $0.016/hr (~$12/month) |
-| cache.r6g.large | $0.096/hr (~$69/month) |
+| Node Type        | Cost/hr                 |
+| ---------------- | ----------------------- |
+| cache.t4g.micro  | $0.016/hr (~$12/month)  |
+| cache.r6g.large  | $0.096/hr (~$69/month)  |
 | cache.r6g.xlarge | $0.192/hr (~$138/month) |
 
 Serverless: $0.00006 per request + $0.00012 per GB-hour.
 
 ## Use Cases
 
-| Use Case | Best Engine | Example |
-|----------|-------------|---------|
-| Session store | Redis | Web user sessions |
-| Leaderboard | Redis (Sorted Sets) | Gaming scores |
-| Chat/messaging | Redis (Pub/Sub) | Real-time chat |
-| Rate limiting | Redis | API rate limits |
-| Full-page cache | Redis or Memcached | Static content |
-| Distributed lock | Redis | Mutex, coordination |
+| Use Case         | Best Engine         | Example             |
+| ---------------- | ------------------- | ------------------- |
+| Session store    | Redis               | Web user sessions   |
+| Leaderboard      | Redis (Sorted Sets) | Gaming scores       |
+| Chat/messaging   | Redis (Pub/Sub)     | Real-time chat      |
+| Rate limiting    | Redis               | API rate limits     |
+| Full-page cache  | Redis or Memcached  | Static content      |
+| Distributed lock | Redis               | Mutex, coordination |
 
 ## References
 

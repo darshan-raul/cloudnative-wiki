@@ -18,6 +18,7 @@ Kinesis Data Streams is AWS's real-time ingestion service. You push data records
 A stream is the top-level resource. You configure its shard count, and AWS provisions underlying storage and throughput capacity.
 
 **Data flow:**
+
 ```
 Producer → Record (partition key + data) → Stream (ordered per shard) → Consumer
 ```
@@ -25,6 +26,7 @@ Producer → Record (partition key + data) → Stream (ordered per shard) → Co
 ### Shard
 
 A shard is the throughput unit. Each shard supports:
+
 - **1 MB/second** ingress (producer writes)
 - **2 MB/second** egress (consumer reads)
 - **1,000 records/second** write throughput
@@ -36,6 +38,7 @@ A shard is the throughput unit. Each shard supports:
 ### Records
 
 A record has three components:
+
 - **Partition key** — determines which shard handles the record
 - **Data blob** — your payload (up to 1 MB)
 - **Sequence number** — assigned by Kinesis, unique per shard
@@ -67,6 +70,7 @@ producer.flush()
 ```
 
 **Key features:**
+
 - **Aggregation:** Combine multiple application records into one Kinesis record → more records per second per shard
 - **Batching:** KPL batches records and uses HTTP chunked transfer to maximize throughput
 - **CloudWatch metrics:** Emits `UserRecordsPut`, `BytesPut`, `ErrorsByType`
@@ -90,6 +94,7 @@ kcl = KCL(
 ```
 
 **How it works:**
+
 1. KCL leases shards to consumer instances
 2. Each instance processes its assigned shards
 3. Checkpoints are stored in DynamoDB (you provide the table)
@@ -100,11 +105,13 @@ kcl = KCL(
 Standard consumers share read throughput across all consumers — 2MB/s per shard divided among all consumers. Enhanced fan-out gives each consumer its own 2MB/s per shard.
 
 **Use when:**
+
 - Multiple consumer applications read from the same stream
 - A consumer needs dedicated throughput (e.g., real-time dashboard + batch processor)
 - Latency requirements are strict (< 100ms from write to read)
 
 **How it works:**
+
 - Push-based delivery to registered consumers via HTTP/2
 - Each enhanced fan-out consumer registers with a consumer name
 - Kinesis delivers records directly to the consumer's registered endpoint
@@ -129,18 +136,21 @@ Example:
 ### On-Demand vs Provisioned
 
 **On-demand mode:**
+
 - AWS automatically scales shard count based on incoming traffic
 - Pay per stream-hour and per payload MB
 - Simpler, no capacity planning needed
 - Good for variable/unpredictable workloads
 
 **Provisioned mode:**
+
 - You specify shard count manually
 - Pay per shard-hour
 - You manage scaling (increase shards before traffic spikes)
 - Good for predictable, stable workloads
 
 **Scaling operations:**
+
 - **Split:** One shard → two shards (divide traffic, increase capacity)
 - **Merge:** Two shards → one shard (combine traffic, reduce cost)
 - Both are async, take time to complete

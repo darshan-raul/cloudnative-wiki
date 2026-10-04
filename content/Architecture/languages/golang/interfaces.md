@@ -1,18 +1,10 @@
 # Interfaces
 
-***
+---
 
-
-
-
-
-
-
-***
+---
 
 ### Advanced
-
-
 
 #### Struct having extra functions than interface
 
@@ -80,13 +72,13 @@ func main() {
 2. **Struct Definition**: The `Dog` struct implements the `Animal` interface by providing the `Speak` method. It also has an extra method `Bark`.
 3. **Assignment**: A `Dog` instance is assigned to an `Animal` interface variable. Since `Dog` implements `Animal`, this assignment is valid.
 4. **Calling Methods**:
-   * You can call the `Speak` method directly on the interface variable `a`.
-   * You cannot call the `Bark` method directly on the interface variable `a` because `Animal` does not have a `Bark` method.
+   - You can call the `Speak` method directly on the interface variable `a`.
+   - You cannot call the `Bark` method directly on the interface variable `a` because `Animal` does not have a `Bark` method.
 5. **Type Assertion**:
-   * Using type assertion, you can access the underlying `Dog` type and call the `Bark` method.
-   * The syntax `a.(Dog)` converts the interface variable back to the `Dog` type.
+   - Using type assertion, you can access the underlying `Dog` type and call the `Bark` method.
+   - The syntax `a.(Dog)` converts the interface variable back to the `Dog` type.
 6. **Type Conversion**:
-   * You can also use a type conversion directly to call the `Bark` method, but make sure that the conversion is safe and the type assertion succeeds.
+   - You can also use a type conversion directly to call the `Bark` method, but make sure that the conversion is safe and the type assertion succeeds.
 
 #### Summary
 

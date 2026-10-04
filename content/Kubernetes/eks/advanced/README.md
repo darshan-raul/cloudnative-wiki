@@ -14,12 +14,15 @@ Advanced topics for experienced EKS users including complex autoscaling, network
 ## Topics
 
 ### Autoscaling
+
 - [[Kubernetes/eks/advanced/autoscaling|Advanced Autoscaling]] - HPA, VPA, KEDA, Cluster Proportional Autoscaler
 
 ### Networking
+
 - [[Kubernetes/eks/advanced/advanced-networking|Advanced Networking]] - Complex VPC designs, custom CNI, multi-cluster networking
 
 ### Cost Optimization
+
 - [[Kubernetes/eks/advanced/cost-optimization|Cost Optimization]] - Reserved Capacity, Savings Plans, right-sizing
 
 ## References

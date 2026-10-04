@@ -25,29 +25,33 @@ Improving one often costs another. A solution architect's job is finding the rig
 
 Each NFR is covered in depth in its own file:
 
-| NFR | File | What it covers |
-|---|---|---|
-| [[performance|Performance]] | Latency, throughput, resource efficiency, caching, database performance patterns |
-| [[availability|Availability]] | The nines, redundancy, health checks, circuit breakers, SLOs vs SLAs |
-| [[scalability|Scalability]] | Vertical vs horizontal, stateless architecture, sharding, auto-scaling |
-| [[reliability|Reliability]] | Failure modes, fault tolerance patterns, MTTR, MTBF, observability |
-| [[security|Security]] | CIA triad, defense in depth, threat modeling, encryption, compliance |
-| [[maintainability|Maintainability]] | Modifiability, testability, operability, technical debt, CI/CD quality gates |
-| [[disaster-recovery|Disaster Recovery]] | RPO/RTO, backup/restore, pilot light, warm standby, active-active, failover testing |
-| [[capacity-planning|Capacity Planning]] | Resource dimensions, forecasting, cost modeling, right-sizing, monitoring |
+| NFR                 | File                | What it covers                                                                      |
+| ------------------- | ------------------- | ----------------------------------------------------------------------------------- |
+| [[performance       | Performance]]       | Latency, throughput, resource efficiency, caching, database performance patterns    |
+| [[availability      | Availability]]      | The nines, redundancy, health checks, circuit breakers, SLOs vs SLAs                |
+| [[scalability       | Scalability]]       | Vertical vs horizontal, stateless architecture, sharding, auto-scaling              |
+| [[reliability       | Reliability]]       | Failure modes, fault tolerance patterns, MTTR, MTBF, observability                  |
+| [[security          | Security]]          | CIA triad, defense in depth, threat modeling, encryption, compliance                |
+| [[maintainability   | Maintainability]]   | Modifiability, testability, operability, technical debt, CI/CD quality gates        |
+| [[disaster-recovery | Disaster Recovery]] | RPO/RTO, backup/restore, pilot light, warm standby, active-active, failover testing |
+| [[capacity-planning | Capacity Planning]] | Resource dimensions, forecasting, cost modeling, right-sizing, monitoring           |
 
 ## Cross-NFR Concerns
 
 ### Performance + Scalability
+
 High performance at low scale doesn't guarantee performance at high scale. Test at production-scale load.
 
 ### Availability + Disaster Recovery
+
 Availability targets regional failures. DR targets catastrophic failures. They require different architectural responses.
 
 ### Security + Usability
+
 Every security control adds friction. The art is adding the minimum friction for the maximum protection.
 
 ### Maintainability + Reliability
+
 A system you can't modify reliably is a system that degrades over time. Technical debt is a reliability risk.
 
 ## NFR Requirements Process
@@ -74,15 +78,15 @@ A system you can't modify reliably is a system that degrades over time. Technica
 
 ## Key Metrics Quick Reference
 
-| NFR | Common Metric | Target Range |
-|---|---|---|
-| Performance | p99 latency |< 200ms for APIs, < 2s for web |
-| Availability | Uptime % | 99.9% (consumer), 99.99% (enterprise) |
-| Scalability | Concurrent users | Design for 10x current |
-| Reliability | MTTR |< 1 hour for critical,< 4 hours for standard |
-| Security | Vulnerability age | Critical CVEs patched< 24h |
-| Disaster Recovery | RTO | < 4 hours (business), < 15 min (mission-critical) |
-| Capacity | Resource utilization | 60-70% sustained |
+| NFR               | Common Metric        | Target Range                                      |
+| ----------------- | -------------------- | ------------------------------------------------- |
+| Performance       | p99 latency          | < 200ms for APIs, < 2s for web                    |
+| Availability      | Uptime %             | 99.9% (consumer), 99.99% (enterprise)             |
+| Scalability       | Concurrent users     | Design for 10x current                            |
+| Reliability       | MTTR                 | < 1 hour for critical,< 4 hours for standard      |
+| Security          | Vulnerability age    | Critical CVEs patched< 24h                        |
+| Disaster Recovery | RTO                  | < 4 hours (business), < 15 min (mission-critical) |
+| Capacity          | Resource utilization | 60-70% sustained                                  |
 
 ## Related
 

@@ -27,14 +27,14 @@ No Auto Scaling, no complex VPC, no security groups (simplified firewall)
 
 ### Instance Plans
 
-| Plan | vCPU | RAM | SSD | Cost/mo |
-|------|------|-----|-----|---------|
-| Nano | 1 | 512 MB | 20 GB | $3.50 |
-| Small | 1 | 1 GB | 40 GB | $5.00 |
-| Medium | 1 | 2 GB | 80 GB | $10.00 |
-| Large | 2 | 4 GB | 160 GB | $20.00 |
-| XLarge | 2 | 8 GB | 320 GB | $40.00 |
-| 2XLarge | 4 | 16 GB | 640 GB | $80.00 |
+| Plan    | vCPU | RAM    | SSD    | Cost/mo |
+| ------- | ---- | ------ | ------ | ------- |
+| Nano    | 1    | 512 MB | 20 GB  | $3.50   |
+| Small   | 1    | 1 GB   | 40 GB  | $5.00   |
+| Medium  | 1    | 2 GB   | 80 GB  | $10.00  |
+| Large   | 2    | 4 GB   | 160 GB | $20.00  |
+| XLarge  | 2    | 8 GB   | 320 GB | $40.00  |
+| 2XLarge | 4    | 16 GB  | 640 GB | $80.00  |
 
 Plus database plans (MySQL, PostgreSQL, MongoDB) and load balancers.
 
@@ -169,19 +169,19 @@ Deploy containers without managing Kubernetes. Limited compared to EKS but simpl
 
 ## Limitations vs EC2
 
-| Feature | Lightsail | EC2 |
-|---------|-----------|-----|
-| Instance types | Fixed plans only | All families (T, M, C, R, etc.) |
-| Auto Scaling | No | Yes (ASG) |
-| VPC | Single VPC, simplified | Full VPC control |
-| Security Groups | Simplified firewall | Full SG control |
-| Load Balancer | Simple LB, limited | ALB/NLB/CLB |
-| EBS | Fixed sizes | All types (gp3, io2, etc.) |
-| Spot Instances | No | Yes |
-| Reserved Instances | No | Yes |
-| Placement Groups | No | Yes |
-| Nitro instances | No | Yes |
-| Max instances | 20 | 20 (default, can increase) |
+| Feature            | Lightsail              | EC2                             |
+| ------------------ | ---------------------- | ------------------------------- |
+| Instance types     | Fixed plans only       | All families (T, M, C, R, etc.) |
+| Auto Scaling       | No                     | Yes (ASG)                       |
+| VPC                | Single VPC, simplified | Full VPC control                |
+| Security Groups    | Simplified firewall    | Full SG control                 |
+| Load Balancer      | Simple LB, limited     | ALB/NLB/CLB                     |
+| EBS                | Fixed sizes            | All types (gp3, io2, etc.)      |
+| Spot Instances     | No                     | Yes                             |
+| Reserved Instances | No                     | Yes                             |
+| Placement Groups   | No                     | Yes                             |
+| Nitro instances    | No                     | Yes                             |
+| Max instances      | 20                     | 20 (default, can increase)      |
 
 ## Use Cases
 

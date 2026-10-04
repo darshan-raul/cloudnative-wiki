@@ -83,10 +83,10 @@ spec:
 
 ### 5. Storage Optimization
 
-| Strategy | Savings |
-|----------|---------|
-| Use gp3 instead of gp2 | ~20% cheaper |
-| Delete unused PVCs | $50-200/month |
+| Strategy                  | Savings               |
+| ------------------------- | --------------------- |
+| Use gp3 instead of gp2    | ~20% cheaper          |
+| Delete unused PVCs        | $50-200/month         |
 | Use S3 for object storage | vs EBS for large data |
 
 ### 6. Cluster Autoscaler
@@ -98,19 +98,19 @@ behavior:
   scaleDown:
     stabilizationWindowSeconds: 300
     policies:
-    - type: Percent
-      value: 10
-      periodSeconds: 60
+      - type: Percent
+        value: 10
+        periodSeconds: 60
 ```
 
 ### 7. Reserved Capacity / Savings Plans
 
-| Option | Savings | Flexibility |
-|--------|---------|------------|
-| On-Demand | Baseline | Highest |
-| 1yr Reserved | ~30% | Medium |
-| 3yr Reserved | ~60% | Low |
-| Savings Plans | ~30-60% | High |
+| Option        | Savings  | Flexibility |
+| ------------- | -------- | ----------- |
+| On-Demand     | Baseline | Highest     |
+| 1yr Reserved  | ~30%     | Medium      |
+| 3yr Reserved  | ~60%     | Low         |
+| Savings Plans | ~30-60%  | High        |
 
 ### 8. kubecost Monitoring
 

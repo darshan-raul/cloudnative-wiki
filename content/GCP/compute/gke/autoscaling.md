@@ -71,14 +71,16 @@ GKE decouples workload autoscaling (pods) from infrastructure autoscaling (nodes
 
 ### HPA v2 (Horizontal Pod Autoscaler)
 
-HPA scales the *number* of pod replicas horizontally based on metrics:
+HPA scales the _number_ of pod replicas horizontally based on metrics:
+
 - **Resource Metrics:** Target average CPU or Memory utilization (e.g., scale when average CPU $> 75\%$).
 - **Custom Metrics (GMP / Prometheus):** Scale on application-level metrics, such as HTTP requests per second (`http_requests_per_second > 500`) or active TCP sockets.
 - **External Metrics (Stackdriver / Cloud Monitoring):** Scale on external Google Cloud events, such as Cloud Pub/Sub unacknowledged message depth (`subscription/num_undelivered_messages > 1000`).
 
 ### VPA (Vertical Pod Autoscaler)
 
-VPA adjusts the *CPU and memory requests/limits* of a single container:
+VPA adjusts the _CPU and memory requests/limits_ of a single container:
+
 - **Modes:**
   - `Off`: Only provides recommendations without modifying pods.
   - `Initial`: Applies recommendations only when pods are first created.
@@ -89,13 +91,13 @@ VPA adjusts the *CPU and memory requests/limits* of a single container:
 
 ## 3. Node-Level Autoscaling: Cluster Autoscaler vs Node Auto-Provisioning (NAP)
 
-| Dimension | Cluster Autoscaler (CA) | Node Auto-Provisioning (NAP) |
-| :--- | :--- | :--- |
-| **Operational Paradigm** | Expands/contracts **pre-existing** node pools | Automatically **creates & destroys** node pools |
-| **Machine Shape Selection**| Fixed to the machine types defined in pools | Dynamically picks best machine shape (C3, N2, E2, GPU) |
-| **Autoscaling Boundaries**| Bound by per-pool `--min-nodes` / `--max-nodes` | Bound by global cluster resource limits (Total CPU/RAM) |
-| **Heterogeneous Workloads**| Requires manual node pool setup for GPUs/Spot | Automatically creates Spot or GPU pools on demand |
-| **Best Used For** | Predictable enterprise architectures | Diverse batch, AI/ML, and variable-shape workloads |
+| Dimension                   | Cluster Autoscaler (CA)                         | Node Auto-Provisioning (NAP)                            |
+| :-------------------------- | :---------------------------------------------- | :------------------------------------------------------ |
+| **Operational Paradigm**    | Expands/contracts **pre-existing** node pools   | Automatically **creates & destroys** node pools         |
+| **Machine Shape Selection** | Fixed to the machine types defined in pools     | Dynamically picks best machine shape (C3, N2, E2, GPU)  |
+| **Autoscaling Boundaries**  | Bound by per-pool `--min-nodes` / `--max-nodes` | Bound by global cluster resource limits (Total CPU/RAM) |
+| **Heterogeneous Workloads** | Requires manual node pool setup for GPUs/Spot   | Automatically creates Spot or GPU pools on demand       |
+| **Best Used For**           | Predictable enterprise architectures            | Diverse batch, AI/ML, and variable-shape workloads      |
 
 ---
 
@@ -153,42 +155,42 @@ spec:
   minReplicas: 3
   maxReplicas: 50
   metrics:
-  # Metric 1: CPU Utilization Threshold
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 75
-  # Metric 2: Cloud Pub/Sub Undelivered Messages (External Metric)
-  - type: External
-    external:
-      metric:
-        name: pubsub.googleapis.com|subscription|num_undelivered_messages
-        selector:
-          matchLabels:
-            resource.labels.subscription_id: "order-events-sub"
-      target:
-        type: AverageValue
-        averageValue: 50
+    # Metric 1: CPU Utilization Threshold
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+    # Metric 2: Cloud Pub/Sub Undelivered Messages (External Metric)
+    - type: External
+      external:
+        metric:
+          name: pubsub.googleapis.com|subscription|num_undelivered_messages
+          selector:
+            matchLabels:
+              resource.labels.subscription_id: "order-events-sub"
+        target:
+          type: AverageValue
+          averageValue: 50
   # Advanced Scaling Behavior (Anti-Flapping stabilization)
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 0
       policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 15
-      - type: Pods
-        value: 10
-        periodSeconds: 15
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 10
+          periodSeconds: 15
       selectPolicy: Max
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
-      - type: Percent
-        value: 10
-        periodSeconds: 60
+        - type: Percent
+          value: 10
+          periodSeconds: 60
       selectPolicy: Min
 ```
 
@@ -217,13 +219,13 @@ spec:
     updateMode: "Off" # Safely generate recommendations without evicting pods
   resourcePolicy:
     containerPolicies:
-    - containerName: "processor"
-      minAllowed:
-        cpu: "100m"
-        memory: "256Mi"
-      maxAllowed:
-        cpu: "4"
-        memory: "8Gi"
+      - containerName: "processor"
+        minAllowed:
+          cpu: "100m"
+          memory: "256Mi"
+        maxAllowed:
+          cpu: "4"
+          memory: "8Gi"
 ```
 
 Apply and inspect recommendations:
@@ -237,14 +239,14 @@ kubectl get vpa order-processor-vpa -n e-commerce -o yaml
 
 ## 5. Quotas, Performance, and Configuration Limits
 
-| Dimension / Parameter | Default Setting | Maximum / Scalability Boundary |
-| :--- | :--- | :--- |
-| **CA Scale-Up Latency** | ~60 to 90 seconds | Time for GCE VM provision + Kubelet bootstrap |
-| **CA Scale-Down Delay** | 10 minutes unneeded | 0 to 20 minutes via `--scale-down-unneeded-time` |
-| **Max Node Pools per Cluster**| 100 node pools | NAP creates pools dynamically within this quota |
-| **HPA Evaluation Cadence** | Every 15 seconds | Managed by `--horizontal-pod-autoscaler-sync-period` |
-| **HPA Metrics per Target** | 4 metrics | Evaluates all metrics and scales to highest target |
-| **Scale-Down Stabilization** | 300 seconds (5m) | Prevents rapid flapping on bursty traffic |
+| Dimension / Parameter          | Default Setting     | Maximum / Scalability Boundary                       |
+| :----------------------------- | :------------------ | :--------------------------------------------------- |
+| **CA Scale-Up Latency**        | ~60 to 90 seconds   | Time for GCE VM provision + Kubelet bootstrap        |
+| **CA Scale-Down Delay**        | 10 minutes unneeded | 0 to 20 minutes via `--scale-down-unneeded-time`     |
+| **Max Node Pools per Cluster** | 100 node pools      | NAP creates pools dynamically within this quota      |
+| **HPA Evaluation Cadence**     | Every 15 seconds    | Managed by `--horizontal-pod-autoscaler-sync-period` |
+| **HPA Metrics per Target**     | 4 metrics           | Evaluates all metrics and scales to highest target   |
+| **Scale-Down Stabilization**   | 300 seconds (5m)    | Prevents rapid flapping on bursty traffic            |
 
 ---
 
@@ -261,6 +263,7 @@ kubectl get vpa order-processor-vpa -n e-commerce -o yaml
 ## 7. Realistic Pricing Scenarios
 
 Autoscaling optimization directly impacts cloud spend:
+
 1. **Cluster Autoscaler:** Incurs $0 extra platform fee. Bills strictly for the underlying Compute Engine instances provisioned during scale-up.
 2. **Node Auto-Provisioning:** $0 platform fee.
 3. **Overprovisioning / Ballooning Pods:** Deliberate idle compute reserved to eliminate scale-up latency.
@@ -293,7 +296,7 @@ Autoscaling optimization directly impacts cloud spend:
    - A pod has local storage (`emptyDir` or `hostPath`) and lacks the annotation `"cluster-autoscaler.kubernetes.io/safe-to-evict": "true"`.
    - A pod lacks a `PodDisruptionBudget` or its PDB has `minAvailable = replicas`.
    - A pod is running in the `kube-system` namespace without a specialized PDB.
-   If one non-evictable pod is stuck on a 64-core node, that entire node remains running at 1% utilization forever. Always annotate batch pods with `safe-to-evict: "true"`.
+     If one non-evictable pod is stuck on a 64-core node, that entire node remains running at 1% utilization forever. Always annotate batch pods with `safe-to-evict: "true"`.
 3. **Autoscaling Profile `optimize-utilization` Can Cause Pod Eviction Churn:** The default autoscaling profile is `balanced`. If you switch to `optimize-utilization`, CA aggressively packs pods onto fewer nodes and terminates underutilized nodes after only a few minutes of low traffic. In bursty environments, this causes continuous eviction churn where nodes are repeatedly deleted and recreated every 15 minutes. Use `optimize-utilization` for batch/dev clusters; keep `balanced` for production web APIs.
 4. **HPA Scale-Down Flapping (Stabilization Window):** By default in Kubernetes, HPA waits 5 minutes (`stabilizationWindowSeconds: 300`) before executing a scale-down. If a developer overrides this to 0 seconds, a brief 30-second lull in incoming web traffic causes HPA to immediately delete 80% of your pods. When traffic spikes 10 seconds later, remaining pods are overwhelmed and crash. Always enforce a scale-down stabilization window of at least 300 seconds.
 5. **GCE Zone Quota Exhaustion Halts Cluster Autoscaler:** When HPA triggers pending pods, CA attempts to provision VMs in the cluster's node zones. If your GCP project exhausts its regional `CPUS_ALL_REGIONS` or zonal `N2_CPUS` compute quota, GCE rejects the VM creation request. Pods remain in `Pending` indefinitely, and `kubectl describe pod` outputs `FailedScaleUp: Pod group couldn't be scheduled on any node pool`. Always set up GCP quota alerting before scaling up production limits.

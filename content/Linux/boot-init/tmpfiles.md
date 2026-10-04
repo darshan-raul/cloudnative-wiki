@@ -47,18 +47,18 @@ C     /run/config           -    -      -      -      /etc/default/config
 
 ### Types
 
-| Type | Action |
-|------|--------|
-| `d` | Create directory if it doesn't exist |
-| `D` | Create directory, delete on boot (clean start) |
-| `f` | Create regular file |
-| `F` | Create regular file, truncate if exists |
-| `w` | Write the Argument string to the file |
-| `L` | Create symlink |
-| `c` | Create character device |
-| `b` | Create block device |
-| `p` | Create named pipe (FIFO) |
-| `C` | Copy directory tree recursively |
+| Type | Action                                         |
+| ---- | ---------------------------------------------- |
+| `d`  | Create directory if it doesn't exist           |
+| `D`  | Create directory, delete on boot (clean start) |
+| `f`  | Create regular file                            |
+| `F`  | Create regular file, truncate if exists        |
+| `w`  | Write the Argument string to the file          |
+| `L`  | Create symlink                                 |
+| `c`  | Create character device                        |
+| `b`  | Create block device                            |
+| `p`  | Create named pipe (FIFO)                       |
+| `C`  | Copy directory tree recursively                |
 
 ### Fields
 
@@ -137,6 +137,7 @@ systemctl list-timers tmpfiles-clean.timer
 ```
 
 The timer runs daily at `00:00:00`. The service runs:
+
 ```
 systemd-tmpfiles --clean
 ```
@@ -151,6 +152,7 @@ Files not accessed in the `Age` period are deleted.
 ```
 
 Default tmpfiles for both:
+
 ```bash
 # From /lib/tmpfiles.d/tmp.conf (Ubuntu default):
 q  /tmp  1777  root  root  -

@@ -71,12 +71,12 @@ The Filestore CSI driver decouples the Kubernetes PVC lifecycle from manual NFS 
 
 ## 2. Filestore Tier Matrix & Sizing Boundaries
 
-| Filestore Tier | Minimum Size | Max Throughput | Availability SLA | Supported Features |
-| :--- | :--- | :--- | :--- | :--- |
-| **Basic HDD** | 1 TiB | Up to 100 MB/s | 99.9% (Single Zone) | Backup targets, cold file shares |
-| **Basic SSD** | 2.5 TiB | Up to 1,200 MB/s | 99.9% (Single Zone) | General web hosting, CMS, CI/CD |
-| **Zonal (High Scale)**| 10 TiB | Up to 26,000 MB/s | 99.9% (Single Zone) | High-performance AI/ML, EDA, genomics |
-| **Enterprise** | **1 TiB** | Up to 1,200 MB/s | **99.99% (Multi-Zone)**| **Multi-share GKE packing, snapshots** |
+| Filestore Tier         | Minimum Size | Max Throughput    | Availability SLA        | Supported Features                     |
+| :--------------------- | :----------- | :---------------- | :---------------------- | :------------------------------------- |
+| **Basic HDD**          | 1 TiB        | Up to 100 MB/s    | 99.9% (Single Zone)     | Backup targets, cold file shares       |
+| **Basic SSD**          | 2.5 TiB      | Up to 1,200 MB/s  | 99.9% (Single Zone)     | General web hosting, CMS, CI/CD        |
+| **Zonal (High Scale)** | 10 TiB       | Up to 26,000 MB/s | 99.9% (Single Zone)     | High-performance AI/ML, EDA, genomics  |
+| **Enterprise**         | **1 TiB**    | Up to 1,200 MB/s  | **99.99% (Multi-Zone)** | **Multi-share GKE packing, snapshots** |
 
 ---
 
@@ -129,7 +129,7 @@ metadata:
   namespace: web-apps
 spec:
   accessModes:
-  - ReadWriteMany # RWX access mode
+    - ReadWriteMany # RWX access mode
   storageClassName: filestore-multishare
   resources:
     requests:
@@ -163,17 +163,17 @@ spec:
         app: cms
     spec:
       containers:
-      - name: nginx-php
-        image: wordpress:6-php8.2-apache
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - name: shared-uploads
-          mountPath: /var/www/html/wp-content/uploads
+        - name: nginx-php
+          image: wordpress:6-php8.2-apache
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: shared-uploads
+              mountPath: /var/www/html/wp-content/uploads
       volumes:
-      - name: shared-uploads
-        persistentVolumeClaim:
-          claimName: shared-web-assets-pvc
+        - name: shared-uploads
+          persistentVolumeClaim:
+            claimName: shared-web-assets-pvc
 ```
 
 Apply Deployment:
@@ -209,14 +209,14 @@ kubectl apply -f filestore-snapshot.yaml
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension / Parameter | Limit / Boundary | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Multi-Shares per Instance**| Up to 80 shares per instance | Allows 80 microservices per 1 TiB Filestore cluster |
-| **Minimum Provisioned Share** | 10 GiB per PVC | Fine-grained allocation |
-| **NFS Protocol Versions** | NFS v3 and NFS v4.1 | NFS v3 recommended for raw speed |
-| **Max Concurrent TCP Sockets** | Up to 10,000 clients | Connects thousands of pods simultaneously |
-| **Multi-Zone High Availability** | 99.99% SLA (Enterprise) | Synchronous mirroring across 2 zones in region |
-| **Private IP Requirement** | Requires reserved `/26` range | Allocated from VPC Service Networking |
+| Dimension / Parameter             | Limit / Boundary              | Engineering Guidance                                |
+| :-------------------------------- | :---------------------------- | :-------------------------------------------------- |
+| **Max Multi-Shares per Instance** | Up to 80 shares per instance  | Allows 80 microservices per 1 TiB Filestore cluster |
+| **Minimum Provisioned Share**     | 10 GiB per PVC                | Fine-grained allocation                             |
+| **NFS Protocol Versions**         | NFS v3 and NFS v4.1           | NFS v3 recommended for raw speed                    |
+| **Max Concurrent TCP Sockets**    | Up to 10,000 clients          | Connects thousands of pods simultaneously           |
+| **Multi-Zone High Availability**  | 99.99% SLA (Enterprise)       | Synchronous mirroring across 2 zones in region      |
+| **Private IP Requirement**        | Requires reserved `/26` range | Allocated from VPC Service Networking               |
 
 ---
 
@@ -233,6 +233,7 @@ kubectl apply -f filestore-snapshot.yaml
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **Filestore Enterprise Tier:** $0.66 per GiB-month (Includes synchronous multi-zone replication and 99.99% SLA).
 2. **Filestore Basic HDD:** $0.067 per GiB-month.
 3. **Filestore Basic SSD:** $0.17 per GiB-month.
@@ -247,7 +248,7 @@ Pricing components:
 - **Monthly Cost Calculation:**
   - 1 TiB Enterprise Instance (1,024 GiB): $1{,}024 \times \$0.66/\text{GiB} = \mathbf{\$675.84 / month}$.
   - Cost per microservice ($675.84 / 10$): **$67.58 / month per service**.
-*(Without multi-share, deploying 10 individual 1 TiB enterprise instances would cost $6,758.40/month—a **90% cost reduction**).*
+    _(Without multi-share, deploying 10 individual 1 TiB enterprise instances would cost $6,758.40/month—a **90% cost reduction**)._
 
 ### Scenario B: Shared CI/CD Build Cache (Basic SSD Tier)
 

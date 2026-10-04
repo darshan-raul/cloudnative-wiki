@@ -57,6 +57,7 @@ When GuardDuty generates a HIGH severity finding (e.g., `UnauthorizedAccess:IAMU
 ### Step 2: Explore the Graph
 
 Detective shows:
+
 - **Who** — IAM user, role, or service that performed the action
 - **What** — Which API was called, with what parameters
 - **Where** — Source IP, geographic location
@@ -82,12 +83,12 @@ Graph visualization:
 
 ## Finding Types Analyzed
 
-| Finding | What Detective Shows |
-|---------|---------------------|
-| IAMUser/ConsoleLogin | Timeline, source IP, geo-location, subsequent API calls |
+| Finding                 | What Detective Shows                                           |
+| ----------------------- | -------------------------------------------------------------- |
+| IAMUser/ConsoleLogin    | Timeline, source IP, geo-location, subsequent API calls        |
 | EC2/compromisedInstance | Network activity, processes, DNS queries, outgoing connections |
-| S3/data-exfiltration | Access patterns, data transfers, bucket policies |
-| Crypto-mining | Network activity, unusual processes, CPU spike correlation |
+| S3/data-exfiltration    | Access patterns, data transfers, bucket policies               |
+| Crypto-mining           | Network activity, unusual processes, CPU spike correlation     |
 
 ## Using the Console
 
@@ -112,21 +113,21 @@ Detective Console:
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Per GB of data ingested | $0.10/GB |
-| Data retained (30-90 days) | Included |
+| Component                   | Cost     |
+| --------------------------- | -------- |
+| Per GB of data ingested     | $0.10/GB |
+| Data retained (30-90 days)  | Included |
 | Data retained (91-365 days) | $0.05/GB |
 
 First 10GB/month free per account.
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Member accounts per master | 50 |
-| Data retention | 365 days |
-| Max investigation time | Unlimited |
+| Resource                   | Limit     |
+| -------------------------- | --------- |
+| Member accounts per master | 50        |
+| Data retention             | 365 days  |
+| Max investigation time     | Unlimited |
 
 ## References
 

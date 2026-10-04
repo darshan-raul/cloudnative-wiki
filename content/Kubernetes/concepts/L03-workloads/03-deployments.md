@@ -1,6 +1,13 @@
+---
+title: "Deployments"
+tags: ["kubernetes", "k8s-concepts", "workloads"]
+date: 2026-09-06
+description: "Deployments — Kubernetes reference and architecture guide."
+---
+
 # Deployments
 
-*"https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"*
+_"https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"_
 
 A Deployment is a **controller that manages a replicated set of Pods**, with **rolling updates**, **rollbacks**, **pauses**, and **scaling**. It owns one or more ReplicaSets; each ReplicaSet owns a set of Pods. This is the **default way to deploy a stateless service** in Kubernetes.
 
@@ -54,35 +61,35 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 25%              # can have 25% over desired during update
-      maxUnavailable: 25%        # can have 25% under desired during update
+      maxSurge: 25% # can have 25% over desired during update
+      maxUnavailable: 25% # can have 25% under desired during update
   template:
     metadata:
       labels:
         app: web
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.27
-        ports:
-        - containerPort: 80
-        resources:
-          requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
-            memory: 256Mi
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          periodSeconds: 5
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          periodSeconds: 30
+        - name: nginx
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 30
 ```
 
 This is the typical "web service" Deployment.
@@ -113,24 +120,24 @@ How the Deployment rolls out changes:
 
 ```yaml
 strategy:
-  type: RollingUpdate    # or "Recreate"
+  type: RollingUpdate # or "Recreate"
   rollingUpdate:
-    maxSurge: 25%        # how many Pods above replicas can exist during update
-    maxUnavailable: 25%  # how many Pods below replicas can be unavailable
+    maxSurge: 25% # how many Pods above replicas can exist during update
+    maxUnavailable: 25% # how many Pods below replicas can be unavailable
 ```
 
 **`RollingUpdate`** (default):
 
-* Old Pods are killed and replaced one at a time (controlled by `maxSurge` / `maxUnavailable`)
-* Zero downtime (assuming `maxUnavailable: 0` is not set)
-* Two RSes exist during the rollout
+- Old Pods are killed and replaced one at a time (controlled by `maxSurge` / `maxUnavailable`)
+- Zero downtime (assuming `maxUnavailable: 0` is not set)
+- Two RSes exist during the rollout
 
 **`Recreate`**:
 
-* All old Pods are killed at once
-* New Pods are created
-* **Causes downtime** but ensures no two versions run simultaneously
-* Useful for stateful apps that can't have two versions running
+- All old Pods are killed at once
+- New Pods are created
+- **Causes downtime** but ensures no two versions run simultaneously
+- Useful for stateful apps that can't have two versions running
 
 ### `spec.template`
 
@@ -140,8 +147,8 @@ The Pod template. **Any change here triggers a rollout.** The Deployment control
 template:
   spec:
     containers:
-    - name: nginx
-      image: nginx:1.28   # changed from 1.27 — triggers rollout
+      - name: nginx
+        image: nginx:1.28 # changed from 1.27 — triggers rollout
 ```
 
 The change is detected by comparing the template to the **last-applied** template. If anything differs, a rollout starts.
@@ -273,8 +280,8 @@ Both are **percentages or absolute numbers**:
 strategy:
   type: RollingUpdate
   rollingUpdate:
-    maxSurge: 25%             # or "1" (absolute)
-    maxUnavailable: 0         # or "0" — zero downtime
+    maxSurge: 25% # or "1" (absolute)
+    maxUnavailable: 0 # or "0" — zero downtime
 ```
 
 The math:
@@ -286,15 +293,15 @@ lowerBound = replicas - maxUnavailable (if percent, floor)
 
 At any time during the rollout:
 
-* Total available Pods ≥ `lowerBound`
-* Total ready Pods (old + new) ≤ `upperBound`
+- Total available Pods ≥ `lowerBound`
+- Total ready Pods (old + new) ≤ `upperBound`
 
 For a zero-downtime rollout:
 
 ```yaml
 rollingUpdate:
-  maxSurge: 25%        # can have some extra during the rollout
-  maxUnavailable: 0     # but never fewer than desired
+  maxSurge: 25% # can have some extra during the rollout
+  maxUnavailable: 0 # but never fewer than desired
 ```
 
 This is the **safest** for production. It can take longer (more cautious), but no requests fail.
@@ -320,8 +327,8 @@ Kills all old Pods before creating new ones. **Downtime = Pod startup time.**
 
 Useful for:
 
-* Apps that can't have two versions running (e.g. schema migrations)
-* Apps with shared state that conflicts during a rollout
+- Apps that can't have two versions running (e.g. schema migrations)
+- Apps with shared state that conflicts during a rollout
 
 Most apps should use `RollingUpdate`.
 
@@ -329,15 +336,16 @@ Most apps should use `RollingUpdate`.
 
 Deployments use **probes** to decide if a Pod is "rolled out":
 
-* `readinessProbe` — Pod is "Ready" when this passes
-* `livenessProbe` — Pod is restarted when this fails
-* `startupProbe` — Pod is "started" when this passes (disables liveness/readiness until then)
+- `readinessProbe` — Pod is "Ready" when this passes
+- `livenessProbe` — Pod is restarted when this fails
+- `startupProbe` — Pod is "started" when this passes (disables liveness/readiness until then)
 
 A Deployment considers a rollout complete when:
 
-* All new Pods are Ready (or have passed startup + readiness)
-* Old Pods are deleted
-- `minReadySeconds` has passed since the last new Pod became Ready
+- All new Pods are Ready (or have passed startup + readiness)
+- Old Pods are deleted
+
+* `minReadySeconds` has passed since the last new Pod became Ready
 
 **Without a readiness probe, the Deployment has no way to know if the new Pod is actually serving traffic.** It considers the Pod Ready as soon as the container starts. This is usually wrong.
 
@@ -383,13 +391,13 @@ The Deployment controller is in `kube-controller-manager`. It:
 
 1. Watches Deployments, ReplicaSets, Pods
 2. For each Deployment:
-   * Reconciles the current ReplicaSet(s) toward the desired state
-   * On template change: creates a new RS, scales it up, scales the old one down
-   * On deletion: deletes the owned ReplicaSets (which deletes the Pods)
+   - Reconciles the current ReplicaSet(s) toward the desired state
+   - On template change: creates a new RS, scales it up, scales the old one down
+   - On deletion: deletes the owned ReplicaSets (which deletes the Pods)
 3. Manages `status.conditions`:
-   * `Available` — Deployment has minimum availability
-   * `Progressing` — Deployment is making progress (or stuck)
-   * `ReplicaSetUpdated` — the latest rollout completed
+   - `Available` — Deployment has minimum availability
+   - `Progressing` — Deployment is making progress (or stuck)
+   - `ReplicaSetUpdated` — the latest rollout completed
 
 ```bash
 kubectl get deployment web -o yaml | grep -A 20 status
@@ -425,8 +433,8 @@ spec:
     metadata: { labels: { app: web, track: blue } }
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.27
+        - name: nginx
+          image: nginx:1.27
 ---
 # green (new)
 apiVersion: apps/v1
@@ -439,8 +447,8 @@ spec:
     metadata: { labels: { app: web, track: green } }
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.28
+        - name: nginx
+          image: nginx:1.28
 ---
 # Service routes to blue
 apiVersion: v1
@@ -449,7 +457,7 @@ metadata: { name: web }
 spec:
   selector: { app: web, track: blue }
   ports:
-  - port: 80
+    - port: 80
 ```
 
 To switch:
@@ -483,8 +491,8 @@ spec:
     metadata: { labels: { app: web, version: v1 } }
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.27
+        - name: nginx
+          image: nginx:1.27
 ---
 # canary: 1 replica of v2
 apiVersion: apps/v1
@@ -497,8 +505,8 @@ spec:
     metadata: { labels: { app: web, version: v2 } }
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.28
+        - name: nginx
+          image: nginx:1.28
 ```
 
 Both Deployments have selectors that match the Service. The Service round-robins to all matching Pods. With 9 v1 + 1 v2, ~10% of traffic goes to v2.
@@ -514,51 +522,51 @@ spec:
   template:
     spec:
       initContainers:
-      - name: migrate
-        image: migrate:1.0
-        command: ['./migrate.sh']
+        - name: migrate
+          image: migrate:1.0
+          command: ["./migrate.sh"]
       containers:
-      - name: app
-        image: app:1.0
+        - name: app
+          image: app:1.0
 ```
 
 The init container runs to completion before the app starts. If you have a one-shot migration to run on each rollout, this is where it goes.
 
 ## Gotchas
 
-* **The Deployment's selector is immutable.** You can't change it. If you need a different selector, create a new Deployment.
-* **Two Deployments can't have overlapping selectors.** This is enforced by the apiserver. If `web-v1` and `web-v2` both match `app: web`, the second `apply` will fail.
-* **A Deployment with no Pods is valid.** `replicas: 0` is fine. The Deployment is "scaled to zero".
-* **A Deployment with no `selector`** doesn't work. The selector is required.
-* **A Deployment's `replicas` is a hint.** The actual count is the sum of its RSes' replicas. Don't be surprised if you see the count differ briefly during a rollout.
-* **Pausing a Deployment does not pause the existing rollout.** It only prevents new rollouts from starting. The current one finishes.
-* **`maxSurge: 0` is a hard no-no** in most cases. You can't create new Pods before killing old ones, which means you can't deploy. Use `maxSurge: 25%` or similar.
-* **The Deployment controller is rate-limited.** With many Deployments, rollouts can be slow. Tune `--deployment-controller-sync-period` on the controller-manager.
-* **The `availableReplicas` field in status** is the count of Pods that are **Ready for at least `minReadySeconds`**. It's what you should alert on.
-* **`kubectl rollout restart` is the cleanest way to do a "no-change" restart** (e.g. to pick up a new image with the same tag, or to refresh Pods after a secret rotation).
-* **The `RollingUpdate` strategy assumes your app handles graceful shutdown.** If it doesn't, you have connection-during-rolling-update issues. Add a `preStop` hook and a `terminationGracePeriodSeconds`.
-* **HPA + manual scaling conflicts.** HPA overwrites `replicas` periodically. If you set `replicas: 5` manually with HPA enabled, the HPA will set it back to whatever the metric dictates.
-* **Deployments don't do "scale to zero on idle"** natively. Use HPA with `minReplicas: 0` or KEDA.
-* **A Deployment that owns a `HostPort`** can't have more replicas than nodes (the port is node-scoped). Use a Service or Ingress instead.
-* **The Deployment controller and the StatefulSet controller are similar but separate.** Mixing up which one to use leads to subtle bugs (e.g. PVCs not getting created with a Deployment, or no rolling update with a StatefulSet).
+- **The Deployment's selector is immutable.** You can't change it. If you need a different selector, create a new Deployment.
+- **Two Deployments can't have overlapping selectors.** This is enforced by the apiserver. If `web-v1` and `web-v2` both match `app: web`, the second `apply` will fail.
+- **A Deployment with no Pods is valid.** `replicas: 0` is fine. The Deployment is "scaled to zero".
+- **A Deployment with no `selector`** doesn't work. The selector is required.
+- **A Deployment's `replicas` is a hint.** The actual count is the sum of its RSes' replicas. Don't be surprised if you see the count differ briefly during a rollout.
+- **Pausing a Deployment does not pause the existing rollout.** It only prevents new rollouts from starting. The current one finishes.
+- **`maxSurge: 0` is a hard no-no** in most cases. You can't create new Pods before killing old ones, which means you can't deploy. Use `maxSurge: 25%` or similar.
+- **The Deployment controller is rate-limited.** With many Deployments, rollouts can be slow. Tune `--deployment-controller-sync-period` on the controller-manager.
+- **The `availableReplicas` field in status** is the count of Pods that are **Ready for at least `minReadySeconds`**. It's what you should alert on.
+- **`kubectl rollout restart` is the cleanest way to do a "no-change" restart** (e.g. to pick up a new image with the same tag, or to refresh Pods after a secret rotation).
+- **The `RollingUpdate` strategy assumes your app handles graceful shutdown.** If it doesn't, you have connection-during-rolling-update issues. Add a `preStop` hook and a `terminationGracePeriodSeconds`.
+- **HPA + manual scaling conflicts.** HPA overwrites `replicas` periodically. If you set `replicas: 5` manually with HPA enabled, the HPA will set it back to whatever the metric dictates.
+- **Deployments don't do "scale to zero on idle"** natively. Use HPA with `minReplicas: 0` or KEDA.
+- **A Deployment that owns a `HostPort`** can't have more replicas than nodes (the port is node-scoped). Use a Service or Ingress instead.
+- **The Deployment controller and the StatefulSet controller are similar but separate.** Mixing up which one to use leads to subtle bugs (e.g. PVCs not getting created with a Deployment, or no rolling update with a StatefulSet).
 
 ## When to use a Deployment
 
-* **Stateless services** — the default
-* **Stateful services that can use a ReplicaSet pattern** — some databases (with careful management)
-* **Anything that needs rolling updates and rollbacks** — basically everything
+- **Stateless services** — the default
+- **Stateful services that can use a ReplicaSet pattern** — some databases (with careful management)
+- **Anything that needs rolling updates and rollbacks** — basically everything
 
 ## When NOT to use a Deployment
 
-* **Stable network identity required** — use a StatefulSet
-* **One Pod per node** — use a DaemonSet
-* **Run-to-completion tasks** — use a Job
-* **Scheduled tasks** — use a CronJob
-* **Truly stateful with persistent volume per replica** — use a StatefulSet
+- **Stable network identity required** — use a StatefulSet
+- **One Pod per node** — use a DaemonSet
+- **Run-to-completion tasks** — use a Job
+- **Scheduled tasks** — use a CronJob
+- **Truly stateful with persistent volume per replica** — use a StatefulSet
 
 ## See also
 
-* [[Kubernetes/concepts/L03-workloads/02-replicaset|ReplicaSet]] — the lower-level controller
-* [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — when you need stable identity
-* [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — automated scaling
-* [[Kubernetes/concepts/L08-operations/01-troubleshooting|Troubleshooting]] — when a Deployment is acting up
+- [[Kubernetes/concepts/L03-workloads/02-replicaset|ReplicaSet]] — the lower-level controller
+- [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — when you need stable identity
+- [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — automated scaling
+- [[Kubernetes/concepts/L08-operations/01-troubleshooting|Troubleshooting]] — when a Deployment is acting up

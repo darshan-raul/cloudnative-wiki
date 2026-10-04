@@ -1,7 +1,18 @@
 ---
 title: "0.2 — Encoding, Signing, and Verification Demystified"
 author: darshan
-tags: [authentication, stage-0, encoding, base64, base64url, signing, verification, jcs, signature-malleability]
+tags:
+  [
+    authentication,
+    stage-0,
+    encoding,
+    base64,
+    base64url,
+    signing,
+    verification,
+    jcs,
+    signature-malleability,
+  ]
 date: 2026-06-13
 description: Base64 vs Base64URL, JSON canonicalization, signing flows, signature malleability, and how to verify without trusting the algorithm header
 ---
@@ -35,12 +46,12 @@ description: Base64 vs Base64URL, JSON canonicalization, signing flows, signatur
 
 Three operations that look similar but are completely different:
 
-| Operation | Reversible without key? | Purpose | Example |
-|-----------|-------------------------|---------|---------|
-| **Encoding** | Yes | Represent data in a different format | Base64, hex, URL-encoding |
-| **Hashing** | No (in theory) | One-way fingerprint | SHA-256, bcrypt |
-| **Encryption** | Only with key | Confidentiality | AES, RSA-OAEP |
-| **Signing** | Public key can verify | Integrity + authenticity | RS256, EdDSA |
+| Operation      | Reversible without key? | Purpose                              | Example                   |
+| -------------- | ----------------------- | ------------------------------------ | ------------------------- |
+| **Encoding**   | Yes                     | Represent data in a different format | Base64, hex, URL-encoding |
+| **Hashing**    | No (in theory)          | One-way fingerprint                  | SHA-256, bcrypt           |
+| **Encryption** | Only with key           | Confidentiality                      | AES, RSA-OAEP             |
+| **Signing**    | Public key can verify   | Integrity + authenticity             | RS256, EdDSA              |
 
 JWT (specifically JWS) is **signed** — not encrypted. Anyone with the token can read the payload. This is a deliberate design choice (see Stage 1.1 for why), but it surprises people constantly.
 
@@ -75,6 +86,7 @@ Encrypting → "I want only the recipient to be able to read this"
 **Base64** encodes arbitrary bytes as text using a 64-character alphabet. It was designed for email (RFC 4648).
 
 **Base64URL** is Base64 with two modifications for URL safety:
+
 - `+` → `-`
 - `/` → `_`
 - Padding `=` is sometimes omitted (JWT omits it)
@@ -99,6 +111,7 @@ url = base64.urlsafe_b64encode(original).decode()
 ```
 
 **Why JWT uses Base64URL:**
+
 - JWTs travel in URLs (in the `?code=...` query param of OAuth callbacks)
 - `+` in a URL means a space after percent-decoding — destroys the token
 - `/` is a path separator — would split the token
@@ -130,6 +143,7 @@ print("Signature (hex):", decode_jwt_part(s).hex())
 ```
 
 Output:
+
 ```
 Header:  {'alg': 'HS256', 'typ': 'JWT'}
 Payload: {'sub': 'alice', 'admin': True}
@@ -193,13 +207,14 @@ Signing input (the bytes the signature is computed over):
 
 ```json
 {
-  "alg": "HS256",      // algorithm
-  "typ": "JWT",        // type (always JWT in practice)
+  "alg": "HS256", // algorithm
+  "typ": "JWT", // type (always JWT in practice)
   "kid": "key-2024-01" // key ID — used to find the right verification key
 }
 ```
 
 Other fields you might see:
+
 - `cty` — content type (use `JWT` for nested signed-then-encrypted)
 - `x5t` / `x5t#S256` — X.509 certificate thumbprint (for cert-bound keys)
 - `jku` / `x5u` — URL for the JWK Set or X.509 chain (dangerous — see attacks)
@@ -241,6 +256,7 @@ Here's a subtle point that bites people. JSON has multiple valid representations
 ```
 
 If your signature is computed over the JSON **text**, then:
+
 - These produce different signatures
 - An attacker could change `{"sub":"alice"}` to `{"sub":"alice","role":"admin"}` and re-sign with their own key — but if the verifier hashes based on the parsed object, they might compare different things
 
@@ -396,7 +412,7 @@ import json, base64, hmac, hashlib, time
 def b64url_decode(s: str) -> bytes:
     return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
 
-def verify_hs256(token: str, key: bytes, *, 
+def verify_hs256(token: str, key: bytes, *,
                  issuer: str, audience: str,
                  allowed_algs: set = {"HS256"},
                  leeway: int = 0) -> dict:
@@ -477,7 +493,7 @@ def verify_rs256(token: str, *, issuer: str, audience: str) -> dict:
     )
 ```
 
-**Use a library. Don't write your own.** PyJWT, python-jose, jose (Node), golang-jwt/jwt — all have had bugs but they have audits and CVE processes. A from-scratch implementation will have *new* bugs.
+**Use a library. Don't write your own.** PyJWT, python-jose, jose (Node), golang-jwt/jwt — all have had bugs but they have audits and CVE processes. A from-scratch implementation will have _new_ bugs.
 
 ---
 
@@ -507,7 +523,7 @@ If you use the signature as part of an idempotency key or audit trail:
 
 ```
 Test for malleability in your own code:
-  
+
   1. Sign a message
   2. Compute s' = n - s
   3. Verify (r, s) — should pass
@@ -524,13 +540,13 @@ Test for malleability in your own code:
 
 **The summary:**
 
-| Algorithm | Malleable? | Fix |
-|-----------|------------|-----|
-| HS256 | No | — |
-| RS256 | No | — |
-| PS256 | No | — |
-| ES256 | **Yes** | Enforce low-S at sign and verify |
-| EdDSA | No | — |
+| Algorithm | Malleable? | Fix                              |
+| --------- | ---------- | -------------------------------- |
+| HS256     | No         | —                                |
+| RS256     | No         | —                                |
+| PS256     | No         | —                                |
+| ES256     | **Yes**    | Enforce low-S at sign and verify |
+| EdDSA     | No         | —                                |
 
 ---
 
@@ -565,6 +581,7 @@ if hmac.compare_digest(token_sig, expected_sig):
 ```
 
 This is the **only** safe way to compare cryptographic material in Python. Other languages:
+
 - Node: `crypto.timingSafeEqual(a, b)`
 - Go: `subtle.ConstantTimeCompare(a, b) == 1`
 - Java: `MessageDigest.isEqual(a, b)`
@@ -646,6 +663,7 @@ If you skip step 4 ("seal check"), steps 5-9 are theatre.
 ## 10. Attacks & Pitfalls
 
 ### P1. Reusing the nonce in ECDSA (revisit)
+
 Already covered in [[01-crypto-primitives#a3-ecdsa-nonce-reuse|0.1 — A3]]. Use EdDSA or a library that gets nonce generation right.
 
 ### P2. Signing the wrong bytes
@@ -773,28 +791,37 @@ If you naively generate a new key on every process start, every restart rotates 
 ## 11. Exercises
 
 ### Exercise 1: Decode a real JWT by hand
+
 Take this token (paste from any OIDC provider you've used):
+
 ```
 eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjEyMzQ1Njc4In0.eyJpc3MiOiJodHRwczovL2lkcC5leGFtcGxlLmNvbSIsInN1YiI6InVzZXItMTIzIiwiYXVkIjoiaHR0cHM6Ly9hcGkuZXhhbXBsZS5jb20iLCJleHAiOjE3MDAwMDAwMDAsImlhdCI6MTY5OTk5OTYwMCwibmFtZSI6IkFsaWNlIFNtaXRoIn0.signature_goes_here
 ```
+
 Decode header and payload using only `base64` and `json`. What are the algorithm, issuer, subject, audience, expiration, and a custom claim?
 
 ### Exercise 2: Forge a token with `alg=none`
+
 Use the verification code from Section 6. Bypass it by crafting a token with `alg=none` and an empty signature. Did the fix (algorithm allowlist) catch it?
 
 ### Exercise 3: Compare signing inputs
+
 Sign the same payload with HS256 in two different libraries (e.g., PyJWT and a hand-rolled HMAC). Print the signing input. They MUST be byte-identical. If they're not, figure out why (usually whitespace or ordering).
 
 ### Exercise 4: Test ECDSA malleability
+
 Using Python's `cryptography` library, sign a message with ECDSA. Compute `s' = n - s` (you can get `n` from the curve object). Construct a new signature `(r, s')` and verify it. If both `(r, s)` and `(r, s')` verify, your library is malleable. (The Python `cryptography` library does NOT enforce low-S by default — you have to do it explicitly.)
 
 ### Exercise 5: Constant-time comparison demo
+
 Time `==` vs `hmac.compare_digest` for two strings that share a long prefix but differ at the end. The difference is small but measurable. Now think: across a network, with millions of attempts, what can an attacker learn?
 
 ### Exercise 6: Build a minimal JWT validator
+
 Write a 30-line function that takes a token + secret + expected issuer + expected audience + allowed algorithms, and returns the payload or raises. No library. Use only `hmac`, `hashlib`, `base64`, `json`, `time`. Then run it against the buggy examples in this module.
 
 ### Exercise 7: Read a CVE
+
 Pick a real JWT CVE from the last 5 years (search "JWT CVE" in your preferred CVE database). Identify which category from Section 10 it falls into. How was it fixed? Would the code in Section 6 have been vulnerable?
 
 ---
@@ -806,6 +833,7 @@ You can now hand-craft, sign, verify, and tamper with JWS. Next we look at JWT s
 → [[../stage1/01-jwt-anatomy|Stage 1.1 — JWT Anatomy: Header.Payload.Signature]]
 
 **Before you move on, verify you can answer these:**
+
 1. What's the difference between Base64 and Base64URL? When does it matter?
 2. What is the signing input for a JWS in compact serialization?
 3. Why is `==` wrong for signature comparison? What's the right way?

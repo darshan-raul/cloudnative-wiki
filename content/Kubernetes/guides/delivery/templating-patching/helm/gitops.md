@@ -424,17 +424,17 @@ spec:
 
 ## ArgoCD vs Flux Comparison
 
-| Feature | ArgoCD | Flux |
-|---------|--------|------|
-| Helm Support | Native | Native |
-| Application Definition | CRD + UI | CRD only |
-| Multi-cluster | ApplicationSet | Kustomization + SOPS |
-| GitOps | Declarative | Declarative |
-| Dashboard | Web UI | CLI + Weave GitOps |
-| Secret Management | External Secrets + Sealed Secrets | External Secrets + SOPS |
-| Drift Detection | Yes | Yes |
-| Rollback | Yes | Yes |
-| Progressive Delivery | + Argo Rollouts | Flagger |
+| Feature                | ArgoCD                            | Flux                    |
+| ---------------------- | --------------------------------- | ----------------------- |
+| Helm Support           | Native                            | Native                  |
+| Application Definition | CRD + UI                          | CRD only                |
+| Multi-cluster          | ApplicationSet                    | Kustomization + SOPS    |
+| GitOps                 | Declarative                       | Declarative             |
+| Dashboard              | Web UI                            | CLI + Weave GitOps      |
+| Secret Management      | External Secrets + Sealed Secrets | External Secrets + SOPS |
+| Drift Detection        | Yes                               | Yes                     |
+| Rollback               | Yes                               | Yes                     |
+| Progressive Delivery   | + Argo Rollouts                   | Flagger                 |
 
 ## GitOps Workflows
 
@@ -461,7 +461,7 @@ metadata:
   name: myapp-staging
 spec:
   source:
-    targetRevision: staging  # Branch or tag
+    targetRevision: staging # Branch or tag
     path: charts/myapp
     helm:
       valueFiles:
@@ -477,7 +477,7 @@ metadata:
   name: myapp-prod
 spec:
   source:
-    targetRevision: v1.2.0  # Specific version
+    targetRevision: v1.2.0 # Specific version
     path: charts/myapp
     helm:
       valueFiles:
@@ -498,9 +498,9 @@ spec:
     canary:
       steps:
         - setWeight: 10
-        - pause: {duration: 5m}
+        - pause: { duration: 5m }
         - setWeight: 50
-        - pause: {duration: 10m}
+        - pause: { duration: 10m }
         - analysis:
             templates:
               - templateName: success-rate
@@ -617,8 +617,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'charts/**'
-      - 'environments/**'
+      - "charts/**"
+      - "environments/**"
 
 jobs:
   notify:

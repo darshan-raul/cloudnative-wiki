@@ -290,14 +290,14 @@ edge_packager.create_model(
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Notebook instances | $0.05-$4.50/hr (per instance type) |
-| Training (CPU) | $0.05-$0.25/hr per instance |
-| Training (GPU) | $1.01-$37.50/hr per instance |
-| Inference (real-time) | $0.10-$4.50/hr per instance |
+| Component              | Cost                                  |
+| ---------------------- | ------------------------------------- |
+| Notebook instances     | $0.05-$4.50/hr (per instance type)    |
+| Training (CPU)         | $0.05-$0.25/hr per instance           |
+| Training (GPU)         | $1.01-$37.50/hr per instance          |
+| Inference (real-time)  | $0.10-$4.50/hr per instance           |
 | Inference (serverless) | $0.00002/inference + $0.0002/GB-model |
-| Model Monitor | $0.50/GB monitored data |
+| Model Monitor          | $0.50/GB monitored data               |
 | Feature Store (online) | $0.105/1000 writes, $0.05/10000 reads |
 
 ## References

@@ -12,6 +12,7 @@ Argo Workflows is a **container-native workflow engine** for k8s. Each step in a
 ## When to use Argo Workflows
 
 **Use it for:**
+
 - CI/CD pipelines (build, test, scan, push, deploy)
 - ML training and inference pipelines
 - ETL / data processing
@@ -21,6 +22,7 @@ Argo Workflows is a **container-native workflow engine** for k8s. Each step in a
 - Any DAG of long-running, parallel, or retryable tasks
 
 **Don't use it for:**
+
 - HTTP APIs (use a service)
 - Long-running services (use a Deployment)
 - Simple cron jobs (use CronJob)
@@ -65,92 +67,92 @@ metadata:
 spec:
   entrypoint: ci-pipeline
   serviceAccountName: argo-workflow-sa
-  
+
   templates:
-  - name: ci-pipeline
-    dag:
-      tasks:
-      - name: checkout
-        template: git-checkout
-      
-      - name: test
-        dependencies: [checkout]
-        template: run-tests
-      
-      - name: build
-        dependencies: [test]
-        template: build-image
-      
-      - name: scan
-        dependencies: [build]
-        template: scan-image
-      
-      - name: push
-        dependencies: [scan]
-        template: push-image
-  
-  - name: git-checkout
-    container:
-      image: alpine/git:v2.42.0
-      workingDir: /workspace
-      command: [sh, -c]
-      args:
-      - |
-        git clone --depth 1 https://github.com/myorg/myapp.git .
-        git checkout $GIT_REF
-        echo "checked out $GIT_REF"
-      env:
-      - name: GIT_REF
-        value: "main"
-    volumeMounts:
-    - name: workspace
-      mountPath: /workspace
-  
-  - name: run-tests
-    container:
-      image: myregistry/myapp:ci
-      workingDir: /workspace
-      command: [sh, -c]
-      args: ["make test"]
-    volumeMounts:
-    - name: workspace
-      mountPath: /workspace
-  
-  - name: build-image
-    container:
-      image: gcr.io/kaniko-project/executor:debug
-      workingDir: /workspace
-      command: [sh, -c]
-      args:
-      - |
-        /kaniko/executor \
-          --context /workspace \
-          --dockerfile /workspace/Dockerfile \
-          --destination myregistry/myapp:$BUILD_TAG \
-          --cache=true
-      env:
-      - name: BUILD_TAG
-        value: "v1.2.3"
-    volumeMounts:
-    - name: workspace
-      mountPath: /workspace
-  
-  - name: scan-image
-    container:
-      image: aquasec/trivy:0.48.0
-      command: [sh, -c]
-      args:
-      - trivy image --exit-code 1 --severity HIGH,CRITICAL myregistry/myapp:v1.2.3
-  
-  - name: push-image
-    # push already done by kaniko
-    container:
-      image: alpine:3.19
-      command: [echo, "pushed"]
-  
+    - name: ci-pipeline
+      dag:
+        tasks:
+          - name: checkout
+            template: git-checkout
+
+          - name: test
+            dependencies: [checkout]
+            template: run-tests
+
+          - name: build
+            dependencies: [test]
+            template: build-image
+
+          - name: scan
+            dependencies: [build]
+            template: scan-image
+
+          - name: push
+            dependencies: [scan]
+            template: push-image
+
+    - name: git-checkout
+      container:
+        image: alpine/git:v2.42.0
+        workingDir: /workspace
+        command: [sh, -c]
+        args:
+          - |
+            git clone --depth 1 https://github.com/myorg/myapp.git .
+            git checkout $GIT_REF
+            echo "checked out $GIT_REF"
+        env:
+          - name: GIT_REF
+            value: "main"
+      volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+
+    - name: run-tests
+      container:
+        image: myregistry/myapp:ci
+        workingDir: /workspace
+        command: [sh, -c]
+        args: ["make test"]
+      volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+
+    - name: build-image
+      container:
+        image: gcr.io/kaniko-project/executor:debug
+        workingDir: /workspace
+        command: [sh, -c]
+        args:
+          - |
+            /kaniko/executor \
+              --context /workspace \
+              --dockerfile /workspace/Dockerfile \
+              --destination myregistry/myapp:$BUILD_TAG \
+              --cache=true
+        env:
+          - name: BUILD_TAG
+            value: "v1.2.3"
+      volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+
+    - name: scan-image
+      container:
+        image: aquasec/trivy:0.48.0
+        command: [sh, -c]
+        args:
+          - trivy image --exit-code 1 --severity HIGH,CRITICAL myregistry/myapp:v1.2.3
+
+    - name: push-image
+      # push already done by kaniko
+      container:
+        image: alpine:3.19
+        command: [echo, "pushed"]
+
   volumes:
-  - name: workspace
-    emptyDir: {}
+    - name: workspace
+      emptyDir: {}
 ```
 
 **Run it:**
@@ -166,14 +168,14 @@ argo submit --serviceaccount argo-workflow-sa -n argo -f workflow.yaml
 ```yaml
 - name: sequential
   steps:
-  - - name: step-1
-      template: task-a
-  - - name: step-2
-      template: task-b
-    - name: step-3
-      template: task-c
-  - - name: step-4
-      template: task-d
+    - - name: step-1
+        template: task-a
+    - - name: step-2
+        template: task-b
+      - name: step-3
+        template: task-c
+    - - name: step-4
+        template: task-d
 ```
 
 - `-` is a sequential boundary
@@ -188,17 +190,17 @@ So this is: step-1 → (step-2, step-3 in parallel) → step-4.
 - name: dag
   dag:
     tasks:
-    - name: a
-      template: task-a
-    - name: b
-      template: task-b
-      dependencies: [a]
-    - name: c
-      template: task-task-c
-      dependencies: [a]
-    - name: d
-      template: task-d
-      dependencies: [b, c]
+      - name: a
+        template: task-a
+      - name: b
+        template: task-b
+        dependencies: [a]
+      - name: c
+        template: task-task-c
+        dependencies: [a]
+      - name: d
+        template: task-d
+        dependencies: [b, c]
 ```
 
 `a` runs first. `b` and `c` run after `a`, in parallel. `d` runs after `b` and `c`.
@@ -221,11 +223,11 @@ So this is: step-1 → (step-2, step-3 in parallel) → step-4.
         cpu: 500m
         memory: 512Mi
     env:
-    - name: VAR
-      value: "value"
+      - name: VAR
+        value: "value"
     volumeMounts:
-    - name: data
-      mountPath: /data
+      - name: data
+        mountPath: /data
 ```
 
 A single pod running the container. Most steps are this.
@@ -241,8 +243,8 @@ A single pod running the container. Most steps are this.
       import os
       print(f"hello {os.environ.get('NAME', 'world')}")
     env:
-    - name: NAME
-      value: "alice"
+      - name: NAME
+        value: "alice"
 ```
 
 Convenience wrapper. Same as container, but writes a source script and runs it.
@@ -290,17 +292,17 @@ spec:
   entrypoint: ci
   arguments:
     parameters:
-    - name: image-tag
-      value: "v1.0.0"
-  
-  templates:
-  - name: ci
-    inputs:
-      parameters:
       - name: image-tag
-    container:
-      image: alpine:3.19
-      args: ["echo {{inputs.parameters.image-tag}}"]
+        value: "v1.0.0"
+
+  templates:
+    - name: ci
+      inputs:
+        parameters:
+          - name: image-tag
+      container:
+        image: alpine:3.19
+        args: ["echo {{inputs.parameters.image-tag}}"]
 ```
 
 Pass at submit time:
@@ -315,9 +317,9 @@ argo submit -f workflow.yaml -p image-tag=v1.2.3
 - name: produce
   outputs:
     parameters:
-    - name: result
-      valueFrom:
-        path: /tmp/result.txt
+      - name: result
+        valueFrom:
+          path: /tmp/result.txt
   container:
     image: alpine:3.19
     command: [sh, -c]
@@ -328,8 +330,8 @@ argo submit -f workflow.yaml -p image-tag=v1.2.3
 - name: consume
   inputs:
     parameters:
-    - name: prev-result
-      value: "{{tasks.produce.outputs.parameters.result}}"
+      - name: prev-result
+        value: "{{tasks.produce.outputs.parameters.result}}"
 ```
 
 ## Artifacts
@@ -340,8 +342,8 @@ For passing files between steps (vs. volumes).
 - name: producer
   outputs:
     artifacts:
-    - name: source
-      path: /workspace
+      - name: source
+        path: /workspace
   container:
     image: alpine:3.19
     command: [sh, -c]
@@ -352,8 +354,8 @@ For passing files between steps (vs. volumes).
 - name: consumer
   inputs:
     artifacts:
-    - name: source
-      path: /workspace
+      - name: source
+        path: /workspace
   container:
     image: alpine:3.19
     command: [cat, /workspace/file.txt]
@@ -384,27 +386,27 @@ data:
 - name: process-items
   inputs:
     parameters:
-    - name: items
-      value: "item1,item2,item3"
+      - name: items
+        value: "item1,item2,item3"
   steps:
-  - - name: process
-      template: process-one
-      arguments:
-        parameters:
-        - name: item
-          value: "{{item}}"
-      withItems:
-      - item1
-      - item2
-      - item3
+    - - name: process
+        template: process-one
+        arguments:
+          parameters:
+            - name: item
+              value: "{{item}}"
+        withItems:
+          - item1
+          - item2
+          - item3
 ```
 
 Or with a JSON list:
 
 ```yaml
 withItems:
-- { x: "1", y: "2" }
-- { x: "3", y: "4" }
+  - { x: "1", y: "2" }
+  - { x: "3", y: "4" }
 ```
 
 **withSequence** for ranges:
@@ -419,9 +421,9 @@ withSequence:
 ```yaml
 arguments:
   parameters:
-  - name: items
-    value: |
-      ["item1", "item2", "item3"]
+    - name: items
+      value: |
+        ["item1", "item2", "item3"]
 ```
 
 ## Retries and timeouts
@@ -442,7 +444,7 @@ arguments:
 
 ```yaml
 - name: long-running
-  activeDeadlineSeconds: 3600   # timeout
+  activeDeadlineSeconds: 3600 # timeout
   container:
     image: myapp:v1
     command: [sh, -c]
@@ -459,20 +461,21 @@ metadata:
 spec:
   schedule: "0 2 * * *"
   timezone: "America/Los_Angeles"
-  concurrencyPolicy: "Replace"  # Forbid, Replace, Allow
+  concurrencyPolicy: "Replace" # Forbid, Replace, Allow
   startingDeadlineSeconds: 0
-  
+
   workflowSpec:
     entrypoint: backup
     templates:
-    - name: backup
-      container:
-        image: backup:latest
-        command: [sh, -c]
-        args: ["./backup.sh"]
+      - name: backup
+        container:
+          image: backup:latest
+          command: [sh, -c]
+          args: ["./backup.sh"]
 ```
 
 **Concurrency policies:**
+
 - `Allow` — multiple runs OK
 - `Forbid` — skip if previous is running
 - `Replace` — cancel previous, start new
@@ -484,12 +487,12 @@ For complex orchestration:
 ```yaml
 - name: submit-child
   steps:
-  - - name: trigger
-      template: submit
-      arguments:
-        parameters:
-        - name: workflow-name
-          value: child-workflow
+    - - name: trigger
+        template: submit
+        arguments:
+          parameters:
+            - name: workflow-name
+              value: child-workflow
 
 - name: submit
   resource:
@@ -516,21 +519,21 @@ metadata:
   namespace: argo
 spec:
   templates:
-  - name: build-and-push
-    inputs:
-      parameters:
-      - name: repo
-      - name: tag
-    container:
-      image: gcr.io/kaniko-project/executor:debug
-      command: [sh, -c]
-      args:
-      - /kaniko/executor --context=$REPO --destination=myregistry/myapp:$TAG
-      env:
-      - name: REPO
-        value: "{{inputs.parameters.repo}}"
-      - name: TAG
-        value: "{{inputs.parameters.tag}}"
+    - name: build-and-push
+      inputs:
+        parameters:
+          - name: repo
+          - name: tag
+      container:
+        image: gcr.io/kaniko-project/executor:debug
+        command: [sh, -c]
+        args:
+          - /kaniko/executor --context=$REPO --destination=myregistry/myapp:$TAG
+        env:
+          - name: REPO
+            value: "{{inputs.parameters.repo}}"
+          - name: TAG
+            value: "{{inputs.parameters.tag}}"
 ```
 
 ```bash
@@ -550,11 +553,11 @@ metadata:
   name: shared-build
 spec:
   templates:
-  - name: build
-    container:
-      image: alpine:3.19
-      command: [sh, -c]
-      args: ["echo shared"]
+    - name: build
+      container:
+        image: alpine:3.19
+        command: [sh, -c]
+        args: ["echo shared"]
 ```
 
 ## The Argo Events integration
@@ -578,29 +581,29 @@ spec:
   template:
     serviceAccountName: operate-workflow-sa
   dependencies:
-  - name: github-event
-    eventSourceName: github
-    eventName: push
-    filters:
-      data:
-      - path: body.ref
-        type: string
-        comparator: "="
-        value:
-        - "refs/heads/main"
+    - name: github-event
+      eventSourceName: github
+      eventName: push
+      filters:
+        data:
+          - path: body.ref
+            type: string
+            comparator: "="
+            value:
+              - "refs/heads/main"
   triggers:
-  - template:
-      name: run-ci
-      k8s:
-        group: argoproj.io
-        version: v1alpha1
-        resource: workflows
-        operation: create
-        parameters:
-        - src:
-            dependencyName: github-event
-            dataKey: body.head_commit.id
-          dest: metadata.labels.commit-id
+    - template:
+        name: run-ci
+        k8s:
+          group: argoproj.io
+          version: v1alpha1
+          resource: workflows
+          operation: create
+          parameters:
+            - src:
+                dependencyName: github-event
+                dataKey: body.head_commit.id
+              dest: metadata.labels.commit-id
 ```
 
 ## Workflow status and UI
@@ -643,9 +646,9 @@ metadata:
   name: workflow-runner
   namespace: my-app
 rules:
-- apiGroups: [""]
-  resources: ["pods", "configmaps", "secrets"]
-  verbs: ["get", "list", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["pods", "configmaps", "secrets"]
+    verbs: ["get", "list", "create", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -653,9 +656,9 @@ metadata:
   name: workflow-runner
   namespace: my-app
 subjects:
-- kind: ServiceAccount
-  name: argo-workflow-sa
-  namespace: argo
+  - kind: ServiceAccount
+    name: argo-workflow-sa
+    namespace: argo
 roleRef:
   kind: Role
   name: workflow-runner
@@ -680,30 +683,30 @@ See [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] for c
 
 ## Common gotchas
 
-* **Each step is a pod.** Pulling 50 large images is slow. Use a small base image.
-* **EmptyDir volumes are per-pod.** Use artifact repositories for cross-step data.
-* **`workflow.status` is not in the manifest.** You can only see it via `argo get` or the UI.
-* **CronWorkflow timezone** must be set explicitly, otherwise UTC.
-* **Retries count against the workflow's overall deadline.** Set `activeDeadlineSeconds` high enough.
-* **`generateName` makes names unique.** If you need a stable name, use `name`.
-* **The `argo` namespace must exist** before installing.
-* **Garbage collection** is on by default; completed workflows are deleted. Set `ttlSecondsAfterFinished`.
-* **Resource limits** in container template apply to the step pod. Set sensible defaults.
-* **Service account permissions** are critical. The workflow pod uses the SA, not the submitter's.
-* **Parallel steps with shared resources** can race. Use mutexes (`synchronization`).
-* **Suspend templates** wait for `argo resume` or timeout. Don't suspend forever in production.
-* **Workflow of Workflows** is powerful but complex. Prefer templates and reuse over deep nesting.
+- **Each step is a pod.** Pulling 50 large images is slow. Use a small base image.
+- **EmptyDir volumes are per-pod.** Use artifact repositories for cross-step data.
+- **`workflow.status` is not in the manifest.** You can only see it via `argo get` or the UI.
+- **CronWorkflow timezone** must be set explicitly, otherwise UTC.
+- **Retries count against the workflow's overall deadline.** Set `activeDeadlineSeconds` high enough.
+- **`generateName` makes names unique.** If you need a stable name, use `name`.
+- **The `argo` namespace must exist** before installing.
+- **Garbage collection** is on by default; completed workflows are deleted. Set `ttlSecondsAfterFinished`.
+- **Resource limits** in container template apply to the step pod. Set sensible defaults.
+- **Service account permissions** are critical. The workflow pod uses the SA, not the submitter's.
+- **Parallel steps with shared resources** can race. Use mutexes (`synchronization`).
+- **Suspend templates** wait for `argo resume` or timeout. Don't suspend forever in production.
+- **Workflow of Workflows** is powerful but complex. Prefer templates and reuse over deep nesting.
 
 ## Performance tips
 
-* **Use a small base image.** Every step is a pod; pulling 1GB per step is slow.
-* **Cache images on nodes.** Use DaemonSet-based registry mirrors.
-* **Use pod garbage collection** to clean up completed pods.
-* **Use WorkflowTemplate** for reusability — same image, less cold start.
-* **Set resource requests/limits** so the scheduler can place pods efficiently.
-* **Use `withItems`** for parallelism, not sequential loops.
-* **Set `parallelism`** to limit concurrent pods.
-* **Use emptyDir for cross-step data** within a single workflow, not artifacts.
+- **Use a small base image.** Every step is a pod; pulling 1GB per step is slow.
+- **Cache images on nodes.** Use DaemonSet-based registry mirrors.
+- **Use pod garbage collection** to clean up completed pods.
+- **Use WorkflowTemplate** for reusability — same image, less cold start.
+- **Set resource requests/limits** so the scheduler can place pods efficiently.
+- **Use `withItems`** for parallelism, not sequential loops.
+- **Set `parallelism`** to limit concurrent pods.
+- **Use emptyDir for cross-step data** within a single workflow, not artifacts.
 
 ## A worked CI/CD pipeline
 
@@ -718,93 +721,93 @@ metadata:
 spec:
   entrypoint: pipeline
   serviceAccountName: ci-workflow-sa
-  
+
   templates:
-  - name: pipeline
-    inputs:
-      parameters:
-      - name: repo-url
-      - name: branch
-        value: "main"
-      - name: image-tag
-    dag:
-      tasks:
-      - name: checkout
-        template: checkout
-        arguments:
-          parameters:
-          - {name: repo-url, value: "{{inputs.parameters.repo-url}}"}
-          - {name: branch, value: "{{inputs.parameters.branch}}"}
-      
-      - name: test
-        dependencies: [checkout]
-        template: test
-        arguments:
-          parameters:
-          - {name: tag, value: "{{inputs.parameters.image-tag}}"}
-      
-      - name: build
-        dependencies: [test]
-        template: build
-        arguments:
-          parameters:
-          - {name: tag, value: "{{inputs.parameters.image-tag}}"}
-      
-      - name: scan
-        dependencies: [build]
-        template: scan
-        arguments:
-          parameters:
-          - {name: tag, value: "{{inputs.parameters.image-tag}}"}
-      
-      - name: update-gitops
-        dependencies: [scan]
-        template: update-gitops
-        arguments:
-          parameters:
-          - {name: tag, value: "{{inputs.parameters.image-tag}}"}
-  
-  - name: checkout
-    # ... as before
-  - name: test
-    # ... as before
-  - name: build
-    # ... as before
-  - name: scan
-    # ... as before
-  
-  - name: update-gitops
-    container:
-      image: alpine/git:v2.42.0
-      workingDir: /workspace
-      command: [sh, -c]
-      args:
-      - |
-        set -e
-        git clone https://oauth2:$GITOPS_TOKEN@github.com/myorg/gitops-repo.git
-        cd gitops-repo
-        git config user.email "ci@example.com"
-        git config user.name "CI Bot"
-        # use kustomize to update the image tag
-        cd overlays/dev
-        kustomize edit set image myregistry/myapp=myregistry/myapp:$IMAGE_TAG
-        git commit -am "ci: bump myapp to $IMAGE_TAG"
-        git push
-      env:
-      - name: GITOPS_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: gitops-token
-            key: token
-      - name: IMAGE_TAG
-        value: "{{inputs.parameters.tag}}"
+    - name: pipeline
+      inputs:
+        parameters:
+          - name: repo-url
+          - name: branch
+            value: "main"
+          - name: image-tag
+      dag:
+        tasks:
+          - name: checkout
+            template: checkout
+            arguments:
+              parameters:
+                - { name: repo-url, value: "{{inputs.parameters.repo-url}}" }
+                - { name: branch, value: "{{inputs.parameters.branch}}" }
+
+          - name: test
+            dependencies: [checkout]
+            template: test
+            arguments:
+              parameters:
+                - { name: tag, value: "{{inputs.parameters.image-tag}}" }
+
+          - name: build
+            dependencies: [test]
+            template: build
+            arguments:
+              parameters:
+                - { name: tag, value: "{{inputs.parameters.image-tag}}" }
+
+          - name: scan
+            dependencies: [build]
+            template: scan
+            arguments:
+              parameters:
+                - { name: tag, value: "{{inputs.parameters.image-tag}}" }
+
+          - name: update-gitops
+            dependencies: [scan]
+            template: update-gitops
+            arguments:
+              parameters:
+                - { name: tag, value: "{{inputs.parameters.image-tag}}" }
+
+    - name: checkout
+      # ... as before
+    - name: test
+      # ... as before
+    - name: build
+      # ... as before
+    - name: scan
+      # ... as before
+
+    - name: update-gitops
+      container:
+        image: alpine/git:v2.42.0
+        workingDir: /workspace
+        command: [sh, -c]
+        args:
+          - |
+            set -e
+            git clone https://oauth2:$GITOPS_TOKEN@github.com/myorg/gitops-repo.git
+            cd gitops-repo
+            git config user.email "ci@example.com"
+            git config user.name "CI Bot"
+            # use kustomize to update the image tag
+            cd overlays/dev
+            kustomize edit set image myregistry/myapp=myregistry/myapp:$IMAGE_TAG
+            git commit -am "ci: bump myapp to $IMAGE_TAG"
+            git push
+        env:
+          - name: GITOPS_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: gitops-token
+                key: token
+          - name: IMAGE_TAG
+            value: "{{inputs.parameters.tag}}"
 ```
 
 **Triggered by Argo Events on push to main.**
 
 ## See also
 
-* [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — what Argo Workflows deploys to
-* [[Kubernetes/guides/delivery/templating-patching/helm/cicd|helm-cicd]] — Helm in pipelines
-* [[Kubernetes/guides/delivery/pipeline-workflows/tekton-pipelines|tekton-pipelines]] — alternative
-* [Argo Workflows docs](https://argoproj.github.io/argo-workflows/)
+- [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — what Argo Workflows deploys to
+- [[Kubernetes/guides/delivery/templating-patching/helm/cicd|helm-cicd]] — Helm in pipelines
+- [[Kubernetes/guides/delivery/pipeline-workflows/tekton-pipelines|tekton-pipelines]] — alternative
+- [Argo Workflows docs](https://argoproj.github.io/argo-workflows/)

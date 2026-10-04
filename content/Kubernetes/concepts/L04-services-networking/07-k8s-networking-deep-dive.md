@@ -1,3 +1,10 @@
+---
+title: "Kubernetes Networking — Deep Dive"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Kubernetes Networking — Deep Dive — Kubernetes reference and architecture guide."
+---
+
 # Kubernetes Networking — Deep Dive
 
 A comprehensive technical guide to networking in Kubernetes — from the three independent IP spaces, through pod network namespaces, veth pairs, CNI plugins, kube-proxy, CoreDNS, and Ingress. Written as detailed explanatory prose to accompany the interactive visualization at `k8s-networking.html`.
@@ -19,12 +26,14 @@ These three ranges must not overlap. If the pod CIDR overlaps with the node netw
 The **node network** is the physical (or virtual) network that the Kubernetes nodes themselves use for communication. This is the network your nodes get their IP addresses from — typically via DHCP or static assignment by your infrastructure team.
 
 This network handles:
+
 - Node-to-node communication (control plane to worker, etcd traffic)
 - Node-to-API-server communication
 - Node-to-external-storage communication
 - Any traffic that originates or terminates outside the cluster
 
 Examples:
+
 - AWS VPC subnet: `10.0.0.0/24` — nodes get IPs like `10.0.0.10`, `10.0.0.11`
 - On-prem: `192.168.1.0/24`
 - GCE: `10.142.0.0/20`
@@ -38,6 +47,7 @@ Nodes use these IPs for their control plane communication. The API server listen
 The **pod CIDR** is the IP range from which pod IP addresses are allocated. This is the range you specify when initializing the cluster with kubeadm (`--pod-network-cidr`) or when configuring your CNI plugin.
 
 Each **node** receives a **subnet** carved out of the cluster-wide pod CIDR. For example, with a cluster pod CIDR of `10.244.0.0/16`:
+
 - Node A receives `10.244.0.0/24` (256 pod IPs: `10.244.0.1` through `10.244.0.254`)
 - Node B receives `10.244.1.0/24`
 - Node C receives `10.244.2.0/24`
@@ -55,6 +65,7 @@ The **service CIDR** is the IP range from which Kubernetes **Services** get thei
 **Crucially, service IPs are purely virtual.** No network interface in the cluster ever has a service IP. There is no device with address `10.96.0.1` — instead, the kube-proxy running on every node creates iptables (or IPVS) rules that intercept traffic destined for `10.96.0.1` and redirect it to the backing pods. The service IP exists only as a rule in the kernel's netfilter tables.
 
 When you create a Service with the default ClusterIP type:
+
 1. The API server picks the next available IP from the service CIDR
 2. It stores that mapping in etcd
 3. Every node's kube-proxy sees the update and programs rules
@@ -68,13 +79,14 @@ The first IP in the service CIDR is always reserved — `10.96.0.1` by default r
 
 When planning a cluster, you must choose three non-overlapping CIDR ranges. Here's a common and correct example:
 
-| Range | Example | Size | Used For |
-|-------|---------|------|----------|
-| Node Network | `192.168.1.0/24` | 254 nodes max | Physical/Virtual machine IPs |
-| Pod CIDR | `10.244.0.0/16` | 65,536 pods | Container IPs via CNI |
-| Service CIDR | `10.96.0.0/12` | 65,536 services | Virtual service IPs |
+| Range        | Example          | Size            | Used For                     |
+| ------------ | ---------------- | --------------- | ---------------------------- |
+| Node Network | `192.168.1.0/24` | 254 nodes max   | Physical/Virtual machine IPs |
+| Pod CIDR     | `10.244.0.0/16`  | 65,536 pods     | Container IPs via CNI        |
+| Service CIDR | `10.96.0.0/12`   | 65,536 services | Virtual service IPs          |
 
 The three ranges are completely independent:
+
 - `192.168.1.0/24` lives on physical network interfaces — nodes use these IPs for external communication
 - `10.244.0.0/16` lives inside the cluster's CNI overlay — pod IPs exist only within k8s
 - `10.96.0.0/12` exists only as iptables rules on each node
@@ -90,6 +102,7 @@ You can verify a node's IP with `kubectl get nodes -o jsonpath='{.items[*].statu
 ## 2.1 Linux Network Namespaces
 
 A **network namespace** is a Linux kernel feature that provides an isolated view of the network stack. A network namespace has its own:
+
 - Network interfaces (eth0, lo, veth pairs)
 - Routing tables
 - ARP tables
@@ -99,6 +112,7 @@ A **network namespace** is a Linux kernel feature that provides an isolated view
 Linux creates one network namespace per pod in Kubernetes. Every container inside the pod shares that namespace. This is fundamentally different from Docker's default behavior where each container has its own network namespace — in k8s, containers within a pod co-own a single namespace.
 
 You can explore network namespaces on a node with:
+
 ```bash
 # List all network namespaces on the host
 ip netns list
@@ -113,6 +127,7 @@ nsenter -t <pod-pid> --net ip route
 When kubelet creates a pod, the first thing it does is create a **pause container**. The pause container (also called the sandbox container) is a tiny, static image (`k8s.gcr.io/pause:3.x`, less than 1MB) whose only purpose is to hold the network namespace.
 
 The pause container:
+
 1. Starts with a new network namespace (created by the container runtime, typically containerd or CRI-O)
 2. Runs a single `pause` process that simply blocks forever
 3. Holds the network namespace open as long as the pod exists
@@ -121,6 +136,7 @@ The pause container:
 **Why does this matter?** Because containers in a pod can crash and restart without the network namespace being destroyed. If you had no pause container and your nginx container crashed, the network namespace would be reclaimed and the pod's IP would be lost. With the pause container holding the namespace, the IP persists across container restarts — the pause container itself never restarts (it's designed to be immortal).
 
 All application containers in the pod share the network namespace that the pause container owns. This means:
+
 - Container A and Container B both see `eth0` as the same interface (pointing to the pod's veth pair on the host)
 - Both containers share the same IP address
 - Both containers share the same port space (nginx on port 80 and redis on port 6379 can coexist without conflict because there's only one network namespace)
@@ -151,6 +167,7 @@ The complete flow from pod creation to network setup involves three distinct lay
 The CRI interface (defined in `runtime/v1alpha2.proto` and later versions) uses the concept of a **PodSandbox** — an abstract representation of the pause container and its network namespace. CNI operates on the sandbox's network namespace path.
 
 On pod deletion:
+
 1. kubelet calls CNI `DEL` with the container ID
 2. CNI removes the veth pair, releases the IP back to IPAM
 3. CRI removes the pause container and its network namespace
@@ -168,6 +185,7 @@ ip link add veth0 type veth peer name veth1
 ```
 
 In Kubernetes networking, every pod gets one veth pair:
+
 - **Pod side** (inside the pod's network namespace): renamed to `eth0` — the pod's primary network interface
 - **Host side** (on the node): kept as `veth{unique-id}` (e.g., `veth-abc123`, `cali123456`)
 
@@ -189,6 +207,7 @@ ip link show cni0
 ```
 
 The bridge functions as a learning switch:
+
 - It maintains a **MAC address table** mapping MAC addresses to bridge ports
 - When it receives a frame, it looks up the destination MAC
 - If the MAC is known → forwards to the corresponding port
@@ -263,6 +282,7 @@ The **Container Network Interface (CNI)** is a specification and a set of librar
 The key design goal of CNI is **plugin interoperability**: any CNI plugin can work with any CNI-compliant container runtime. This means you can swap flannel for calico without changing anything in the container runtime or in your pod specifications.
 
 The specification defines:
+
 - A JSON schema for network configuration files
 - A set of operations: ADD, DEL, CHECK, VERSION
 - The contract between the container runtime (caller) and the CNI plugin (callee)
@@ -274,12 +294,14 @@ Reference implementations exist in `github.com/containernetworking/cni`. Kuberne
 The CNI plugin must implement four operations:
 
 **ADD (CNI_ADD)**: Called when kubelet needs to set up networking for a container. Kubelet passes:
+
 - `container_id`: unique identifier for the container
 - `netns`: filesystem path to the container's network namespace (e.g., `/var/run/netns/cni-xxxx`)
 - `ifname`: the interface name to create inside the container (always `eth0` by convention)
 - `network_name`: which network from the CNI config to use
 
 The plugin should:
+
 1. Read the network configuration from `/etc/cni/net.d/`
 2. Allocate an IP address (using its IPAM)
 3. Set up the veth pair (one end inside netns as `ifname`, one on host)
@@ -287,6 +309,7 @@ The plugin should:
 5. Return the assigned IP, gateway, and any DNS configuration to kubelet
 
 **DEL (CNI_DEL)**: Called when a container is being deleted. The plugin should:
+
 1. Remove the veth pair
 2. Release the IP address back to the IPAM pool
 3. Clean up any routes or rules it created
@@ -308,6 +331,7 @@ ls /etc/cni/net.d/
 ```
 
 The configuration file format is typically JSON (`.conflist` for plugins that support network lists, `.conf` for basic plugins). The file specifies:
+
 - The plugin binary to invoke
 - The plugin's configuration options (e.g., bridge name, CNI subnet, IPAM settings)
 
@@ -340,11 +364,13 @@ CNI plugins can be categorized by their function:
 The plugins above are building blocks. Full CNI solutions combine one or more of these with their own IPAM, overlay encapsulation, and policy enforcement:
 
 **Flannel**: Simple and widely used. Backend can be:
+
 - `vxlan`: uses VXLAN encapsulation to tunnel pod traffic between nodes. Works everywhere (doesn't require L2 adjacency). Performance: moderate (kernel-level, but UDP overhead).
 - `host-gw`: directly routes traffic by setting up a per-node subnet. No encapsulation. Requires nodes to be layer-2 adjacent or have BGP. Highest performance.
 - `wireguard`: encrypted tunnel (alpha as of recent versions).
 
 **Calico**: Powerful and flexible. Modes:
+
 - **BGP mode** (calico node): no encapsulation. Nodes exchange routes via BGP. Pods are reachable via node IPs, with routes for pod CIDRs. Highest performance, but requires nodes be reachable (L2 or BGP-peered).
 - **IPIP mode**: encapsulates pod traffic in IP-in-IP tunnels. Single mode (IPIP only) or double mode (IPIP + BGP fallback). Works over any network.
 - **eBPF mode** ( Cilium backend): attaches eBPF programs to kernel hooks for very high performance, bypassing iptables entirely. Cilium is the reference implementation.
@@ -374,14 +400,13 @@ Here's a typical bridge plugin configuration:
   "ipam": {
     "type": "host-local",
     "subnet": "10.244.0.0/16",
-    "routes": [
-      { "dst": "0.0.0.0/0" }
-    ]
+    "routes": [{ "dst": "0.0.0.0/0" }]
   }
 }
 ```
 
 Breaking this down:
+
 - `cniVersion`: which CNI spec version this config uses
 - `name`: arbitrary name for this network (kubelet can reference it from `k8s.v1.cni.cncf.io/networks` annotation)
 - `type`: which binary to invoke (`bridge`)
@@ -400,6 +425,7 @@ Breaking this down:
 IPAM (IP Address Management) is the component within a CNI plugin responsible for **allocating** IP addresses to containers and **tracking** which IPs are currently in use so they aren't double-assigned. When a pod is created, the CNI plugin asks its IPAM for an IP. When a pod is deleted, the IP is returned to the IPAM pool.
 
 IPAM is pluggable — different plugins use different strategies:
+
 - **host-local**: allocates from a per-node file-based pool
 - **DHCP**: requests IPs from an external DHCP server
 - **static**: manually assigned, no dynamic allocation
@@ -490,11 +516,13 @@ This means the overlay is effectively a **virtual network on top of the physical
 **VXLAN** is the most common overlay protocol used in Kubernetes. It's a UDP-based encapsulation protocol (port 4789) that creates virtual layer 2 networks on top of layer 3 infrastructure.
 
 Key concepts:
+
 - **VTEP** (VXLAN Tunnel Endpoint): the component that encapsulates and decapsulates packets. In k8s, the VTEP runs on each node (part of the CNI plugin's network stack).
 - **VNI** (VXLAN Network Identifier): a 24-bit identifier (16 million possible values) that distinguishes one VXLAN virtual network from another. Most k8s CNI plugins use VNI 1 for the default network.
 - **UDP 4789**: the destination port for VXLAN packets. Firewalls must allow this port between nodes.
 
 VXLAN works by:
+
 1. **Encapsulation**: When Node 1 needs to send a packet to Pod B on Node 2, it wraps the original packet (src=pod IP, dst=pod IP) inside a new VXLAN header (with VNI) and a UDP/IP header (src=Node1 IP, dst=Node2 IP).
 2. **Transport**: The outer packet travels over the physical network using normal IP routing. Any IP router between Node 1 and Node 2 can forward it — they only see the outer IP, not the pod IPs inside.
 3. **Decapsulation**: Node 2 receives the VXLAN packet, strips the outer headers, and delivers the original pod packet to Pod B.
@@ -545,18 +573,21 @@ The key insight is that the overlay makes the physical network irrelevant to pod
 Flannel supports several backends, selectable at cluster setup time:
 
 **VXLAN backend** (`--backend-type=vxlan`):
+
 - Encapsulates pod traffic in VXLAN packets
 - Works over any network infrastructure
 - Performance: moderate (kernel-level VXLAN is efficient, but UDP encapsulation adds overhead)
 - Use case: general purpose, works in cloud and on-prem
 
 **host-gw backend** (`--backend-type=host-gw`):
+
 - No encapsulation — directly routes traffic using the physical network
 - Requires nodes to be on the same L2 broadcast domain (or have BGP peering)
 - Performance: best — pure L3 routing, no encapsulation overhead
 - Use case: performance-critical workloads on flat networks, bare metal
 
 **wireguard backend** (`--backend-type=wireguard`, alpha):
+
 - Encrypted tunnel using WireGuard
 - Performance: very good (WireGuard is highly optimized)
 - Use case: security-sensitive workloads requiring in-transit encryption
@@ -566,6 +597,7 @@ Flannel supports several backends, selectable at cluster setup time:
 Calico is more flexible than Flannel, offering several modes:
 
 **BGP mode** (no encapsulation):
+
 - Nodes run a BGP daemon (bird) that announces pod CIDR routes to peers
 - Other nodes install these routes in their kernel routing tables
 - Pod traffic goes over the physical network using pod IPs as source/destination
@@ -573,6 +605,7 @@ Calico is more flexible than Flannel, offering several modes:
 - Doesn't work across NAT or over the internet
 
 **IPIP mode**:
+
 - Encapsulates pod traffic inside IP-in-IP tunnels (protocol 4)
 - Works over any network (nodes just need IP reachability)
 - Single mode: always uses IPIP
@@ -580,6 +613,7 @@ Calico is more flexible than Flannel, offering several modes:
 - Lower overhead than VXLAN (IP header only, no UDP), but still encapsulation
 
 **eBPF mode** (via Cilium):
+
 - Uses eBPF programs attached to network interfaces
 - Can implement encapsulation (VXLAN) or direct routing (no encapsulation)
 - Bypasses iptables for routing and policy enforcement
@@ -592,11 +626,13 @@ Calico is more flexible than Flannel, offering several modes:
 Cilium is the reference implementation for eBPF-based networking in Kubernetes. Rather than using iptables rules or overlay tunnels, Cilium attaches **eBPF programs** directly to kernel hooks on network interfaces (including `eth0`, `cilium_host`, veth pairs, etc.).
 
 When a packet arrives:
+
 1. The kernel passes it through eBPF programs
 2. Cilium's eBPF program can inspect, modify, redirect, or drop the packet
 3. Policy enforcement happens at the kernel level — no userspace context switch
 
 Benefits:
+
 - **Performance**: No iptables chain traversal, no userspace encapsulation. Packets are processed in the kernel.
 - **Observability**: Hubble provides per-pod flow visualization without sidecars or service meshes
 - **Security**: Per-pod network policy enforcement at L7 in some cases, not just L3/L4
@@ -604,22 +640,23 @@ Benefits:
 - **Scalability**: Doesn't degrade as cluster size grows (no iptables scaling issues)
 
 Cilium can operate in:
+
 - **Overlay mode** (VXLAN or Geneve): encapsulation, works anywhere
 - **Native routing mode** (no encapsulation): direct routing, requires L2 or BGP, highest performance
 
 ## 6.7 Overlay Comparison Table
 
-| Solution | Encapsulation | Data Path | Performance | Encryption | Notes |
-|---|---|---|---|---|---|
-| Flannel VXLAN | VXLAN (UDP 4789) | kernel | medium | none | Simplest overlay, works everywhere |
-| Flannel host-gw | none | kernel | highest | none | Requires L2 adjency |
-| Calico BGP | none | kernel | highest | none | Requires BGP infrastructure |
-| Calico IPIP | IP-in-IP | kernel | medium | none | Falls back when BGP fails |
-| Cilium eBPF + VXLAN | VXLAN | kernel | high | WireGuard (optional) | Best observability |
-| Cilium eBPF (native) | none | kernel | highest | WireGuard (optional) | Requires L2 or BGP |
-| Antrea | VXLAN / Geneve | kernel | high | IPsec (optional) | OVS-based |
-| Weave sleeve | UDP encapsulation | userspace | low | optional | Self-healing mesh |
-| Weave fastdp | WireGuard | kernel | medium-high | built-in | Better performance |
+| Solution             | Encapsulation     | Data Path | Performance | Encryption           | Notes                              |
+| -------------------- | ----------------- | --------- | ----------- | -------------------- | ---------------------------------- |
+| Flannel VXLAN        | VXLAN (UDP 4789)  | kernel    | medium      | none                 | Simplest overlay, works everywhere |
+| Flannel host-gw      | none              | kernel    | highest     | none                 | Requires L2 adjency                |
+| Calico BGP           | none              | kernel    | highest     | none                 | Requires BGP infrastructure        |
+| Calico IPIP          | IP-in-IP          | kernel    | medium      | none                 | Falls back when BGP fails          |
+| Cilium eBPF + VXLAN  | VXLAN             | kernel    | high        | WireGuard (optional) | Best observability                 |
+| Cilium eBPF (native) | none              | kernel    | highest     | WireGuard (optional) | Requires L2 or BGP                 |
+| Antrea               | VXLAN / Geneve    | kernel    | high        | IPsec (optional)     | OVS-based                          |
+| Weave sleeve         | UDP encapsulation | userspace | low         | optional             | Self-healing mesh                  |
+| Weave fastdp         | WireGuard         | kernel    | medium-high | built-in             | Better performance                 |
 
 ---
 
@@ -630,6 +667,7 @@ Cilium can operate in:
 A Kubernetes **Service** is an abstraction that provides a stable virtual IP (ClusterIP) and DNS name for a set of backing pods. The key problem it solves is that **pod IPs are ephemeral** — when a pod restarts, it gets a new IP. Without a Service, every consumer would need to track pod IPs manually and update their configuration whenever a pod was rescheduled.
 
 Services work through label selectors:
+
 ```yaml
 apiVersion: v1
 kind: Service
@@ -639,8 +677,8 @@ spec:
   selector:
     app: nginx
   ports:
-  - port: 80        # Service port (ClusterIP port)
-    targetPort: 80  # Container port
+    - port: 80 # Service port (ClusterIP port)
+      targetPort: 80 # Container port
 ```
 
 The selector `app: nginx` matches all pods with label `app: nginx`. The Kubernetes **endpoint controller** automatically creates and maintains an **Endpoints** object containing the IP:port of every matching pod.
@@ -652,6 +690,7 @@ The selector `app: nginx` matches all pods with label `app: nginx`. The Kubernet
 kube-proxy does not route traffic itself — it programs the Linux kernel's **netfilter** (iptables or IPVS) subsystem. The actual packet interception and forwarding happens in the kernel, which is why kube-proxy has minimal CPU overhead.
 
 Modes of operation:
+
 - **iptables mode** (default, legacy): Programs iptables NAT rules
 - **IPVS mode** (opt-in): Programs IPVS load-balancing rules
 - **kernelspace mode** (Windows only): Uses the Windows kernel's routing stack
@@ -662,6 +701,7 @@ Modes of operation:
 In iptables mode, kube-proxy creates a hierarchy of chains in the **NAT table** to intercept Service traffic and DNAT it to backing pod IPs.
 
 The chain structure:
+
 - `KUBE-SERVICES`: The entry point. Matches destination IP:port against all Service ClusterIPs.
 - `KUBE-SVC-XXXXX`: Per-Service dispatcher chain. Uses `statistic mode random probability` to select one of the service's endpoints.
 - `KUBE-SEP-XXXXX`: Per-endpoint chain. Performs the actual DNAT to the pod IP:port.
@@ -704,6 +744,7 @@ ipvsadm -ln
 ```
 
 Supported load balancing algorithms in IPVS:
+
 - **round-robin (rr)**: each connection goes to the next endpoint
 - **weighted round-robin (wrr)**: like rr but respects weights
 - **least connections (lc)**: sends to endpoint with fewest active connections
@@ -712,6 +753,7 @@ Supported load balancing algorithms in IPVS:
 - **destination hash (dh)**: consistent hashing based on destination IP
 
 To enable IPVS mode:
+
 ```yaml
 # kube-proxy ConfigMap
 apiVersion: v1
@@ -728,39 +770,43 @@ data:
 
 ## 7.5 Comparison: iptables vs IPVS
 
-| | iptables | IPVS |
-|---|---|---|
-| Data structure | Chain traversal | Hash table |
-| Lookup complexity | O(n) per packet | O(1) per packet |
-| Load balancing algorithms | Random only (probability chains) | RR, WRR, LC, WLC, SH, DH |
-| Connection tracking | Full connection tracking | Can be stateless or stateful |
-| Scale | Degrades with many services | O(1) regardless of scale |
-| Default | Yes (legacy) | No (opt-in) |
-| Session affinity | No (each packet independently routed) | Yes (with SH/DH) |
-| Graceful handle endpoint changes | Full conntrack migration | Requires new connection |
-| Minimum kernel | Any | 4.1+ for full feature set |
+|                                  | iptables                              | IPVS                         |
+| -------------------------------- | ------------------------------------- | ---------------------------- |
+| Data structure                   | Chain traversal                       | Hash table                   |
+| Lookup complexity                | O(n) per packet                       | O(1) per packet              |
+| Load balancing algorithms        | Random only (probability chains)      | RR, WRR, LC, WLC, SH, DH     |
+| Connection tracking              | Full connection tracking              | Can be stateless or stateful |
+| Scale                            | Degrades with many services           | O(1) regardless of scale     |
+| Default                          | Yes (legacy)                          | No (opt-in)                  |
+| Session affinity                 | No (each packet independently routed) | Yes (with SH/DH)             |
+| Graceful handle endpoint changes | Full conntrack migration              | Requires new connection      |
+| Minimum kernel                   | Any                                   | 4.1+ for full feature set    |
 
 For small clusters (< 1000 services), iptables is fine. At scale, IPVS provides significantly better performance.
 
 ## 7.6 Service Types Deep Dive
 
 **ClusterIP** (default):
+
 - Virtual IP from service CIDR, only reachable within the cluster
 - Most common type for internal-only services
 - No external access
 
 **NodePort**:
+
 - Exposes the service on each node's IP at a static port (30000-32767)
 - `my-svc.default.svc:80` → `<node-ip>:30080`
 - External traffic hits any node (which forwards to the service via kube-proxy)
 - Useful for development or simple exposures without a cloud LB
 
 **LoadBalancer**:
+
 - Provisions an external load balancer (cloud provider: AWS ELB, GCP LB, Azure LB; bare metal: MetalLB)
 - Traffic from external LB → NodePort → kube-proxy → pods
 - Cloud controllers auto-configure the LB to point to the NodePort
 
 **ExternalName**:
+
 - Maps the service to an external DNS name (CNAME)
 - `my-svc.default.svc.cluster.local` → `api.external.com`
 - Used for importing external services into k8s DNS namespace
@@ -770,11 +816,13 @@ For small clusters (< 1000 services), iptables is fine. At scale, IPVS provides 
 When external traffic enters via NodePort or LoadBalancer, kube-proxy has two options for which pods to forward to:
 
 **`externalTrafficPolicy: Cluster`** (default):
+
 - kube-proxy can forward to any pod, anywhere in the cluster
 - Causes an extra network hop if the selected pod is on a different node (SNAT preserves source IP, but latency increases)
 - Preserves source IP (with SNAT)
 
 **`externalTrafficPolicy: Local`**:
+
 - kube-proxy only selects pods running on the same node as the ingress node
 - No extra hop, optimal routing
 - Client IP is preserved (no SNAT needed)
@@ -818,10 +866,11 @@ spec:
   selector:
     app: my-app
   ports:
-  - port: 80
+    - port: 80
 ```
 
 This must be:
+
 - Within the service CIDR
 - Not already allocated to another service
 - Not the reserved IP (`10.96.0.1`)
@@ -831,10 +880,12 @@ This is useful when migrating from one service to another, or when an applicatio
 ## 8.4 ClusterIP Is Virtual — No Interface
 
 This is the most important mental model to internalize: **Service ClusterIPs do not correspond to any network interface**. Running `ip addr show` on any node will not reveal any service IP. The IP exists only in:
+
 - The Kubernetes API server's etcd database
 - The iptables or IPVS rules on every node
 
 When a packet is sent to a ClusterIP:
+
 1. `PREROUTING` chain in the NAT table intercepts it (for service-to-service)
 2. `INPUT` chain also intercepts it (for local processes sending to ClusterIP)
 3. The iptables rule matches on destination IP and rewrites (DNATs) the destination to a backing pod IP
@@ -851,6 +902,7 @@ This is why you can use a ClusterIP that doesn't exist on any network — the ip
 An **Endpoints** object is a Kubernetes resource that tracks the IP addresses and ports of all pods that back a service. It exists because Services need to know which pods to send traffic to.
 
 The endpoint controller (running in kube-controller-manager) continuously reconciles the Endpoints object for each Service:
+
 - When a pod with matching labels is created → its IP:port is added to Endpoints
 - When a matching pod is deleted → its IP:port is removed from Endpoints
 - When a pod's IP changes → the Endpoints entry is updated
@@ -864,6 +916,7 @@ kubectl get endpoints nginx-svc
 ## 9.2 EndpointSlices (Kubernetes 1.16+)
 
 Before EndpointSlices, all endpoints for a Service were stored in a single Endpoints object. For large Services with hundreds of pods, this caused:
+
 - Large etcd objects (slow reads/writes)
 - Large API responses (watch bandwidth)
 - High memory usage in kube-proxy (storing all rules)
@@ -898,6 +951,7 @@ The `endpointslice.kubernetes.io/managed-by` label identifies which controller m
 ## 9.4 Headless Services
 
 A **headless Service** is declared with `spec.clusterIP: "None"`. In this case:
+
 - No ClusterIP is allocated from the service CIDR
 - No kube-proxy rules are created
 - DNS returns **A records for all backing pod IPs** directly
@@ -912,10 +966,11 @@ spec:
   selector:
     app: database
   ports:
-  - port: 5432
+    - port: 5432
 ```
 
 Querying DNS for `headless-svc.default.svc.cluster.local` returns all three pod IPs:
+
 ```
 10.244.0.2
 10.244.0.5
@@ -923,6 +978,7 @@ Querying DNS for `headless-svc.default.svc.cluster.local` returns all three pod 
 ```
 
 Clients must implement their own load balancing or pick a specific IP. Headless Services are used for:
+
 - **StatefulSets** (etcd, Cassandra, Kafka) where pods need to discover each other's IPs directly
 - **Database clusters** where the application manages replication
 - **Custom service meshes** where the sidecar handles discovery and load balancing
@@ -934,11 +990,13 @@ Clients must implement their own load balancing or pick a specific IP. Headless 
 ## 10.1 Evolution: kube-dns to CoreDNS
 
 Before Kubernetes 1.12, DNS was provided by **kube-dns**, which consisted of three components:
+
 - **SkyDNS**: the DNS server
 - **kube2sky**: a bridge that watched the Kubernetes API and updated SkyDNS
 - **dnsmasq**: a caching DNS proxy on each node
 
 This stack was fragile and hard to configure. In Kubernetes 1.12, **CoreDNS** became the default DNS provider. CoreDNS is:
+
 - A single binary (no sidecars)
 - Configured entirely via a ConfigMap
 - Performs DNS resolution for cluster-local names and forwards everything else to upstream DNS
@@ -1014,6 +1072,7 @@ data:
 ```
 
 Key parts:
+
 - `kubernetes cluster.local`: answers queries for the cluster domain
 - `pods insecure`: enables pod A record lookups (can also use `pods verified` for stricter validation against actual pod IPs)
 - `fallthrough in-addr.arpa ip6.arpa`: for reverse DNS lookups, falls through to next plugin
@@ -1031,6 +1090,7 @@ When a pod runs `nslookup nginx-svc.default.svc.cluster.local`:
 6. **Response**: Returns A record: `nginx-svc.default.svc.cluster.local → 10.96.0.5`
 
 For a headless service:
+
 - CoreDNS finds no ClusterIP (clusterIP is "None")
 - CoreDNS looks up the Endpoints for the service
 - Returns A records for all pod IPs directly
@@ -1038,32 +1098,40 @@ For a headless service:
 ## 10.6 DNS Record Types
 
 **A records** (standard Service):
+
 ```
 nginx-svc.default.svc.cluster.local. 30 IN A 10.96.0.5
 ```
 
 **A records** (headless Service — multiple):
+
 ```
 headless-svc.default.svc.cluster.local. 30 IN A 10.244.0.2
 headless-svc.default.svc.cluster.local. 30 IN A 10.244.0.5
 ```
 
 **A records** (Pod FQDN — when `pods verified` mode):
+
 ```
 pod-ip.default.pod.svc.cluster.local → single A record
 ```
+
 For a pod `nginx-abc123` in `default` namespace with IP `10.244.0.7`:
+
 ```
 nginx-abc123.default.pod.svc.cluster.local. 300 IN A 10.244.0.7
 ```
+
 This requires `pods verified` mode in CoreDNS, which validates the pod exists by querying the Kubernetes API before returning the record.
 
 **SRV records** (named ports):
+
 ```
 _http._tcp.nginx-svc.default.svc.cluster.local. 30 IN SRV 0 100 80 nginx-svc.default.svc.cluster.local.
 ```
 
 **CNAME records** (ExternalName Service):
+
 ```
 external-svc.default.svc.cluster.local. 30 IN CNAME api.external.com.
 ```
@@ -1078,7 +1146,7 @@ kind: Pod
 metadata:
   name: nginx-0
   namespace: default
-  subdomain: my-headless-svc  # points to headless service "my-headless-svc"
+  subdomain: my-headless-svc # points to headless service "my-headless-svc"
 spec:
   hostname: nginx-0
   subdomain: my-headless-svc
@@ -1142,6 +1210,7 @@ This enables corporate DNS integration: queries for `*.company.internal` go to t
 ## 11.1 What Is Ingress?
 
 **Ingress** is a Kubernetes API object (stable since Kubernetes 1.19) that provides HTTP/HTTPS routing from outside the cluster to Services inside the cluster. It supports:
+
 - Path-based routing (e.g., `/api` → Service A, `/admin` → Service B)
 - Host-based routing (e.g., `api.example.com` → Service A, `dashboard.example.com` → Service B)
 - TLS termination (HTTPS traffic is decrypted at the Ingress controller, then forwarded to backends)
@@ -1161,23 +1230,24 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-  - hosts:
-    - api.example.com
-    secretName: api-tls
+    - hosts:
+        - api.example.com
+      secretName: api-tls
   rules:
-  - host: api.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: api-svc
-            port:
-              number: 80
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-svc
+                port:
+                  number: 80
 ```
 
 Key fields:
+
 - `ingressClassName`: which IngressClass (controller) handles this Ingress (replaces the deprecated `kubernetes.io/ingress.class` annotation)
 - `spec.tls`: TLS certificates and keys stored as Secrets, referenced by name
 - `spec.rules`: host-based routing rules
@@ -1189,26 +1259,31 @@ Key fields:
 The Ingress spec is just an API object. The actual HTTP server that handles traffic is the **Ingress controller**. Several controllers exist:
 
 **nginx-ingress-controller** (NGINX Inc.):
+
 - The most widely used Ingress controller
 - Implements load balancing, TLS termination, rewrite rules, rate limiting
 - Configured via Ingress annotations and ConfigMaps
 
 **Contour** (Envoy-based, Heptio/VMware):
+
 - Envoy proxy as the data plane
 - Supports Ingress, Gateway API, and CRDs for advanced routing
 - Good for multi-team ingress delegation
 
 **Traefik** (Containous):
+
 - Reverse proxy and load balancer
 - Native support for Let's Encrypt, canary deployments, A/B testing
 - Configuration via Ingress annotations or separate CRDs
 
 **GKE Ingress Controller** (Google Cloud):
+
 - Provisions Google Cloud Load Balancers automatically
 - Manages SSL certificates via Google Certificate Manager
 - Cloud-native integration
 
 **Ambassador** / **Emissary-ingress** (Datawire):
+
 - Envoy-based, API gateway capabilities
 - Supports REST and gRPC, rate limiting, authentication
 
@@ -1282,12 +1357,14 @@ The **Gateway API** (stable in Kubernetes 1.19 as `gateway.networking.k8s.io/v1`
 - **HTTPRoute**, **TCPRoute**, **UDPRoute**, **GRPCRoute**: route resources that attach to a Gateway
 
 Key improvements:
+
 - Route resources can be managed by different teams than the Gateway owner
 - Multiple route types beyond HTTP
 - Better semantics for traffic splitting, retries, and timeouts
 - Built for multi-tenancy
 
 Example HTTPRoute:
+
 ```yaml
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -1295,14 +1372,14 @@ metadata:
   name: api-route
 spec:
   parentRefs:
-  - name: my-gateway
-    namespace: ingress
+    - name: my-gateway
+      namespace: ingress
   hostnames:
-  - api.example.com
+    - api.example.com
   rules:
-  - backendRefs:
-    - name: api-svc
-      port: 80
+    - backendRefs:
+        - name: api-svc
+          port: 80
 ```
 
 ---
@@ -1330,24 +1407,24 @@ spec:
     matchLabels:
       app: api
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: frontend
-    ports:
-    - protocol: TCP
-      port: 8080
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: database
-    ports:
-    - protocol: TCP
-      port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: database
+      ports:
+        - protocol: TCP
+          port: 5432
 ```
 
 - `podSelector`: which pods this policy applies to
@@ -1362,6 +1439,7 @@ spec:
 When a NetworkPolicy with `policyTypes` is applied to a namespace, any pod not matched by an `ingress` rule has all ingress blocked, and any pod not matched by an `egress` rule has all egress blocked.
 
 This means you must explicitly allow:
+
 - DNS egress (to `kube-dns` service IP, port 53) — otherwise pods can't resolve names
 - API server egress (to `kubernetes.default.svc`, port 443) — otherwise pods can't talk to the API
 
@@ -1380,43 +1458,44 @@ spec:
     matchLabels:
       app: my-app
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  - to:
-    - podSelector:
-        matchLabels:
-          app: database
-    ports:
-    - protocol: TCP
-      port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: database
+      ports:
+        - protocol: TCP
+          port: 5432
 # ❌ DNS is blocked — pod can't resolve names
 ```
 
 A corrected policy must allow DNS:
+
 ```yaml
 egress:
-- to:
-  - namespaceSelector: {}   # all namespaces (including kube-system)
-  - podSelector:
-      matchLabels:
-        k8s-app: kube-dns
-  ports:
-  - protocol: UDP
-    port: 53
-  - protocol: TCP
-    port: 53
+  - to:
+      - namespaceSelector: {} # all namespaces (including kube-system)
+      - podSelector:
+          matchLabels:
+            k8s-app: kube-dns
+    ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
 ```
 
 ## 12.5 CNI Plugin Support
 
-| Plugin | NetworkPolicy Support | Implementation |
-|---|---|---|
-| Calico | Yes | Per-pod eBPF or iptables rules |
-| Cilium | Yes | eBPF-based L7 policy |
-| Antrea | Yes | OVS ACLs |
-| Weave | Yes | Network policy rules in weave daemon |
-| Flannel | No | Requires additional plugin (e.g., Calico for policy) |
-| Multus | Depends on attached plugin | Policy handled by whichever CNI is active |
+| Plugin  | NetworkPolicy Support      | Implementation                                       |
+| ------- | -------------------------- | ---------------------------------------------------- |
+| Calico  | Yes                        | Per-pod eBPF or iptables rules                       |
+| Cilium  | Yes                        | eBPF-based L7 policy                                 |
+| Antrea  | Yes                        | OVS ACLs                                             |
+| Weave   | Yes                        | Network policy rules in weave daemon                 |
+| Flannel | No                         | Requires additional plugin (e.g., Calico for policy) |
+| Multus  | Depends on attached plugin | Policy handled by whichever CNI is active            |
 
 When evaluating CNI plugins for a security-sensitive cluster, verify that NetworkPolicy is fully supported and tested.
 
@@ -1426,12 +1505,12 @@ When evaluating CNI plugins for a security-sensitive cluster, verify that Networ
 
 ## IP Ranges in a Default Cluster
 
-| Range | Example | Used By |
-|---|---|---|
-| Node Network | (infrastructure-dependent) | kubelet, API server, etcd |
-| Pod CIDR | `10.244.0.0/16` (flannel default) | Pod IPs via CNI |
-| Service CIDR | `10.96.0.0/12` (default) | Service ClusterIPs |
-| kube-dns | `100.64.0.10` (default) | CoreDNS service |
+| Range        | Example                           | Used By                   |
+| ------------ | --------------------------------- | ------------------------- |
+| Node Network | (infrastructure-dependent)        | kubelet, API server, etcd |
+| Pod CIDR     | `10.244.0.0/16` (flannel default) | Pod IPs via CNI           |
+| Service CIDR | `10.96.0.0/12` (default)          | Service ClusterIPs        |
+| kube-dns     | `100.64.0.10` (default)           | CoreDNS service           |
 
 ## Key Commands
 
@@ -1472,19 +1551,19 @@ ip link show | grep veth
 
 ## Key Ports
 
-| Port | Protocol | Used By |
-|---|---|---|
-| 4789 | UDP | VXLAN overlay |
-| 8472 | UDP | Flannel VXLAN (old port) |
-| 6443 | TCP | Kubernetes API server |
-| 2379 | TCP | etcd client |
-| 2380 | TCP | etcd peer-to-peer |
-| 10250 | TCP | kubelet API (authenticated) |
-| 10251 | TCP | kube-scheduler |
-| 10252 | TCP | kube-controller-manager |
-| 9153 | TCP | CoreDNS metrics |
-| 30000-32767 | TCP | NodePort range |
+| Port        | Protocol | Used By                     |
+| ----------- | -------- | --------------------------- |
+| 4789        | UDP      | VXLAN overlay               |
+| 8472        | UDP      | Flannel VXLAN (old port)    |
+| 6443        | TCP      | Kubernetes API server       |
+| 2379        | TCP      | etcd client                 |
+| 2380        | TCP      | etcd peer-to-peer           |
+| 10250       | TCP      | kubelet API (authenticated) |
+| 10251       | TCP      | kube-scheduler              |
+| 10252       | TCP      | kube-controller-manager     |
+| 9153        | TCP      | CoreDNS metrics             |
+| 30000-32767 | TCP      | NodePort range              |
 
 ---
 
-*This document accompanies `k8s-networking.html` — the interactive visualization. See the HTML file for visual diagrams and animations of the concepts described here.*
+_This document accompanies `k8s-networking.html` — the interactive visualization. See the HTML file for visual diagrams and animations of the concepts described here._

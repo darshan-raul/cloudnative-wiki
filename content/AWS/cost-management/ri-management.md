@@ -22,14 +22,15 @@ Coverage = (Instance hours covered by RI/SP) / (Total instance hours) × 100
 
 **Coverage targets by environment:**
 
-| Environment | Target Coverage | Rationale |
-|------------|----------------|-----------|
-| Production (stable) | 80-90% | Predictable baseline, always-on |
-| Production (variable) | 60-80% | Unpredictable growth, leave room |
-| Staging | 40-60% | Test environments that might change |
-| Development | 0-20% | Unpredictable, use Savings Plans instead |
+| Environment           | Target Coverage | Rationale                                |
+| --------------------- | --------------- | ---------------------------------------- |
+| Production (stable)   | 80-90%          | Predictable baseline, always-on          |
+| Production (variable) | 60-80%          | Unpredictable growth, leave room         |
+| Staging               | 40-60%          | Test environments that might change      |
+| Development           | 0-20%           | Unpredictable, use Savings Plans instead |
 
 **Low coverage signals:**
+
 - New instance families added that weren't covered
 - Workload migration in progress
 - RIs expiring and not being renewed
@@ -47,11 +48,13 @@ Utilization = (Hours of RI capacity actually used) / (Hours of RI capacity purch
 **Where to see it:** Cost Explorer → RI & Savings Plan Coverage → Utilization tab
 
 **What low utilization means:**
+
 - You bought more RI capacity than you used
 - The unused portion is still charged — you paid for it and it sat idle
 - Common during migrations when you buy RIs for a workload you then migrate to a different instance family
 
 **Example:**
+
 ```
 You buy 100 m6i.large RIs.
 Your actual usage averages 60 instances (40% of purchased).
@@ -64,10 +67,12 @@ You paid for 100 RIs but only used 60.
 ## Instance Size Flexibility
 
 For zonal Standard RIs, instance size flexibility automatically applies within the same instance family and AZ. This means:
+
 - Buying an m6i.large RI covers any m6i instance size in that AZ
 - Buying m6i.2xlarge RI covers 2 m6i.large equivalents
 
 **How it works:**
+
 ```
 You buy 10 x m6i.large RIs in us-east-1a.
 
@@ -91,6 +96,7 @@ Alternatively:
 If your workload changes mid-term and you no longer need certain RIs, you can sell them on the RI Marketplace.
 
 **Requirements to sell:**
+
 - At least 30 days remaining on the RI term
 - No more than 3 years total remaining
 - Account in good standing
@@ -98,6 +104,7 @@ If your workload changes mid-term and you no longer need certain RIs, you can se
 **What you get:** The buyer pays for the remaining RI term. You recover some of the upfront cost.
 
 **Limitations:**
+
 - The marketplace isn't very liquid — finding a buyer for a specific instance type in a specific AZ can be hard
 - You typically recover 30-70% of the remaining value depending on market demand
 - Convertible RIs cannot be sold (but can be exchanged for different instance configurations)
@@ -119,18 +126,21 @@ RI terms run for 1 or 3 years. As RIs approach expiration, you need a decision:
 ## RI vs Savings Plan Decision Framework
 
 **Use RIs when:**
+
 - You need capacity reservation in a specific AZ
 - You're buying for RDS, ElastiCache, or Redshift (SPs don't cover these)
 - You want the highest possible discount for stable, predictable baseline
 - You have a specific instance type and AZ that won't change for 1-3 years
 
 **Use Savings Plans when:**
+
 - You want flexibility to change instance families
 - You use Lambda or Fargate
 - You want regional (not AZ-specific) coverage
 - You're buying for a workload that might evolve
 
 **Common strategy:**
+
 ```
 Baseline: RIs for RDS, ElastiCache, stable production EC2 baseline
 Variable: Savings Plans for compute that might shift families
@@ -146,9 +156,10 @@ In Organizations with multiple linked accounts, RI coverage and utilization repo
 - Use coverage reports to decide whether teams need to buy more RI
 
 **Per-account RI utilization:**
+
 ```sql
 -- Athena query against CUR for RI utilization by account
-SELECT 
+SELECT
   line_item_usage_account_id,
   product_instance_type,
   pricing_unit,

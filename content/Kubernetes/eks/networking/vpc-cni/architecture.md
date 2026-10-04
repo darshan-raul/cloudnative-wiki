@@ -124,6 +124,7 @@ As of v1.12.0, ipamd persists state to `/var/run/aws-node/ipam.json`:
 ### ipamd Initialization
 
 On startup, ipamd:
+
 1. Reads existing ENIs from EC2 metadata
 2. Reconciles with local state file
 3. Calculates warm pool needs based on `WARM_*_TARGET` settings
@@ -133,6 +134,7 @@ On startup, ipamd:
 ### Background Reconciliation
 
 ipamd runs continuous reconciliation:
+
 - Every 60 seconds: Checks if warm pool needs replenishment
 - Every 60 seconds: Cleans up leaked ENIs (if any)
 - Every 5 minutes: Full EC2 state sync
@@ -140,6 +142,7 @@ ipamd runs continuous reconciliation:
 ## VPC Resource Controller
 
 Running on EKS control plane (not on nodes), this controller manages:
+
 - **Trunk ENI attachment** - Attaches trunk ENIs to instances for SGP
 - **Branch ENI provisioning** - Creates branch ENIs for pods with security groups
 - **Extended resources** - Advertises `vpc.amazonaws.com/pod-enis` capacity
@@ -217,10 +220,10 @@ When using Security Groups for Pods:
 
 ## Memory and CPU Usage
 
-| Component | Memory (Typical) | CPU |
-|-----------|-----------------|-----|
-| aws-cni (CNI plugin) | ~20MB | Burst during pod creation |
-| aws-node (ipamd) | ~100MB | Low (background) |
+| Component            | Memory (Typical) | CPU                       |
+| -------------------- | ---------------- | ------------------------- |
+| aws-cni (CNI plugin) | ~20MB            | Burst during pod creation |
+| aws-node (ipamd)     | ~100MB           | Low (background)          |
 
 ## References
 

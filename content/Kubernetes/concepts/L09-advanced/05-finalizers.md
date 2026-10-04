@@ -1,6 +1,7 @@
 ---
 title: "Finalizers & Asynchronous Deletion"
-tags: [kubernetes, advanced, finalizers, garbage-collection, controllers, deletion]
+tags:
+  [kubernetes, advanced, finalizers, garbage-collection, controllers, deletion]
 date: 2026-09-06
 description: Understanding finalizers, the metadata.deletionTimestamp lifecycle, asynchronous resource cleanup, and resolving stuck terminating objects.
 aliases:
@@ -8,9 +9,10 @@ aliases:
 ---
 
 # Finalizers
+
 Kubernetes finalizers are a powerful mechanism that allow you to control the deletion lifecycle of resources. They ensure that specific cleanup operations are completed before a resource is permanently removed from the cluster.([Zesty](https://zesty.co/finops-glossary/kubernetes-finalizers/?utm_source=chatgpt.com))
 
-***
+---
 
 #### 🔍 What Are Finalizers?
 
@@ -24,7 +26,7 @@ Finalizers are strings added to the `metadata.finalizers` field of a Kubernetes 
 
 This mechanism prevents premature deletion and ensures that dependent resources or external systems are properly handled before the object is gone. ([Medium](https://medium.com/better-programming/stop-messing-with-kubernetes-finalizers-b849511b2329?utm_source=chatgpt.com))
 
-***
+---
 
 #### 🛠️ How to Use Finalizers
 
@@ -53,49 +55,45 @@ If you're developing a custom controller (e.g., using Kubebuilder), you can mana
 
 This pattern ensures that your controller can clean up external resources or perform other necessary actions before the Kubernetes object is deleted. ([Medium](https://medium.com/better-programming/stop-messing-with-kubernetes-finalizers-b849511b2329?utm_source=chatgpt.com))
 
-***
+---
 
 #### 🧪 Common Use Cases
 
-* **Persistent Volumes:** Finalizers like `kubernetes.io/pv-protection` prevent deletion of PersistentVolume objects that are still in use.
-* **Custom Resources:** Operators managing external resources (e.g., cloud infrastructure) use finalizers to ensure those resources are deleted before the Kubernetes object is removed.
-* **Namespace Deletion:** Finalizers can delay namespace deletion until all resources within the namespace are cleaned up.([Kubernetes](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/?utm_source=chatgpt.com))
+- **Persistent Volumes:** Finalizers like `kubernetes.io/pv-protection` prevent deletion of PersistentVolume objects that are still in use.
+- **Custom Resources:** Operators managing external resources (e.g., cloud infrastructure) use finalizers to ensure those resources are deleted before the Kubernetes object is removed.
+- **Namespace Deletion:** Finalizers can delay namespace deletion until all resources within the namespace are cleaned up.([Kubernetes](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/?utm_source=chatgpt.com))
 
-***
+---
 
 #### ⚠️ Important Considerations
 
-* **Stuck Resources:** If a finalizer is not removed (e.g., due to a controller crash), the resource will remain in a terminating state indefinitely.
-* **Manual Removal:** While you can manually remove finalizers to force deletion, this should be done with caution, as it may leave external resources orphaned.
-* **Idempotency:** Ensure that your cleanup logic is idempotent, meaning it can be safely retried without adverse effects.([Kubernetes](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/?utm_source=chatgpt.com), [Kubebuilder](https://kubebuilder.io/reference/using-finalizers?utm_source=chatgpt.com))
+- **Stuck Resources:** If a finalizer is not removed (e.g., due to a controller crash), the resource will remain in a terminating state indefinitely.
+- **Manual Removal:** While you can manually remove finalizers to force deletion, this should be done with caution, as it may leave external resources orphaned.
+- **Idempotency:** Ensure that your cleanup logic is idempotent, meaning it can be safely retried without adverse effects.([Kubernetes](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/?utm_source=chatgpt.com), [Kubebuilder](https://kubebuilder.io/reference/using-finalizers?utm_source=chatgpt.com))
 
-***
+---
 
 #### 📚 Further Reading
 
-* [Kubernetes Documentation: Finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
-* [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/)
-* [Kubebuilder Book: Using Finalizers](https://book.kubebuilder.io/reference/using-finalizers)
+- [Kubernetes Documentation: Finalizers](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
+- [Using Finalizers to Control Deletion](https://kubernetes.io/blog/2021/05/14/using-finalizers-to-control-deletion/)
+- [Kubebuilder Book: Using Finalizers](https://book.kubebuilder.io/reference/using-finalizers)
 
 Finalizers are a crucial tool for managing resource lifecycles in Kubernetes, especially when dealing with external systems or complex dependencies. By properly implementing and handling finalizers, you can ensure that resources are cleaned up safely and predictably.
 
-
-
-***
+---
 
 ## Examples
 
-
-
 Here are **real, production-grade examples of finalizers** used across core Kubernetes resources. These are finalizers you will actually see in real clusters and the scenarios they protect.
 
-***
+---
 
 ## ✅ 1. PersistentVolume (PV) Finalizers
 
 #### Finalizers:
 
-* **`kubernetes.io/pv-protection`**
+- **`kubernetes.io/pv-protection`**
 
 #### Scenario:
 
@@ -109,42 +107,43 @@ This avoids losing storage for a running workload.
     ```bash
     kubectl delete pv mypv
     ```
-2. Kubernetes adds a `deletionTimestamp`, but the finalizer blocks deletion while **PVC is still bound**.
-3. Only after the PV is safely released/unbound, the controller removes the finalizer.
-4. PV is fully deleted.
+
+2.  Kubernetes adds a `deletionTimestamp`, but the finalizer blocks deletion while **PVC is still bound**.
+3.  Only after the PV is safely released/unbound, the controller removes the finalizer.
+4.  PV is fully deleted.
 
 **Why?**\
 Without this, deleting a PV while a Pod is using it could instantly wipe disk data from the cluster’s view (and in cloud environments trigger storage deletion).
 
-***
+---
 
 ## ✅ 2. PersistentVolumeClaim (PVC) Finalizers
 
 #### Finalizers:
 
-* **`kubernetes.io/pvc-protection`**
+- **`kubernetes.io/pvc-protection`**
 
 #### Scenario:
 
 Prevents a PVC from being deleted while:
 
-* a Pod still references it, or
-* the namespace is being torn down but Pods aren’t terminated yet.
+- a Pod still references it, or
+- the namespace is being torn down but Pods aren’t terminated yet.
 
 #### How handled:
 
-* Finalizer stays until **ALL Pods using the PVC are deleted / detached**.
-* Then finalizer is removed, PVC can be deleted.
+- Finalizer stays until **ALL Pods using the PVC are deleted / detached**.
+- Then finalizer is removed, PVC can be deleted.
 
-***
+---
 
 ## ✅ 3. Namespace Finalizers
 
 #### Finalizers:
 
-* **`kubernetes`**
-* **`kubernetes.io/metadata-protection`**
-* **Custom finalizers from operators inside the namespace**
+- **`kubernetes`**
+- **`kubernetes.io/metadata-protection`**
+- **Custom finalizers from operators inside the namespace**
 
 #### Scenario:
 
@@ -160,7 +159,7 @@ Namespace deletion must wait until **all resources inside the namespace are dele
 **Problem scenario:**\
 A CRD stuck with a bad finalizer → the namespace becomes “stuck terminating”.
 
-***
+---
 
 ## ✅ 4. Deployments / ReplicaSets Finalizers
 
@@ -169,24 +168,24 @@ But **Deployer controllers** may add these:
 
 #### Common finalizers:
 
-* `apps.openshift.io/deployment-finalizer` (OpenShift)
-* `controller.kubernetes.io/pod-garbage-collector`
+- `apps.openshift.io/deployment-finalizer` (OpenShift)
+- `controller.kubernetes.io/pod-garbage-collector`
 
 #### Scenario:
 
 Ensure things like:
 
-* All child ReplicaSets are cleaned up
-* Pods are garbage-collected properly
+- All child ReplicaSets are cleaned up
+- Pods are garbage-collected properly
 
-***
+---
 
 ## ✅ 5. Services Finalizers
 
 #### Finalizers:
 
-* **`kubernetes.io/service-account-token`** (actually for ServiceAccounts)
-* **`service.kubernetes.io/load-balancer-cleanup`** (cloud provider)
+- **`kubernetes.io/service-account-token`** (actually for ServiceAccounts)
+- **`service.kubernetes.io/load-balancer-cleanup`** (cloud provider)
 
 Cloud-provider controllers add finalizers to **LoadBalancer Services**.
 
@@ -194,34 +193,34 @@ Cloud-provider controllers add finalizers to **LoadBalancer Services**.
 
 When you delete a `Service` of type `LoadBalancer`:
 
-* It must delete the cloud load balancer (ELB, ALB, NLB, GCE LB).
-* If deletion is async, the Service should not vanish until cleanup is safely done.
+- It must delete the cloud load balancer (ELB, ALB, NLB, GCE LB).
+- If deletion is async, the Service should not vanish until cleanup is safely done.
 
 #### Example for AWS:
 
-*   Finalizer might look like:
+- Finalizer might look like:
 
-    ```
-    service.kubernetes.io/aws-load-balancer-controller
-    ```
+  ```
+  service.kubernetes.io/aws-load-balancer-controller
+  ```
 
 #### How handled:
 
 1. `kubectl delete svc mylb`
 2. Service gets stuck in **Terminating**.
 3. AWS load balancer controller deletes:
-   * ELB resources
-   * Security groups
-   * Target groups
+   - ELB resources
+   - Security groups
+   - Target groups
 4. When done, controller removes finalizer → Service fully deletes.
 
-***
+---
 
 ## ✅ 6. ServiceAccount Finalizers
 
 #### Finalizers:
 
-* **`kubernetes.io/service-account-token`**
+- **`kubernetes.io/service-account-token`**
 
 #### Scenario:
 
@@ -229,17 +228,17 @@ When a ServiceAccount is removed, Kubernetes must remove **all auto-generated to
 
 #### How handled:
 
-* Token controller deletes associated Secrets
-* After cleanup, finalizer is removed
+- Token controller deletes associated Secrets
+- After cleanup, finalizer is removed
 
-***
+---
 
 ## ✅ 7. CustomResourceDefinitions (CRDs) Finalizers
 
 #### Finalizers:
 
-* **`custom-resource-definition-finalizer`**
-* **`apiextensions.k8s.io/finalizer`**
+- **`custom-resource-definition-finalizer`**
+- **`apiextensions.k8s.io/finalizer`**
 
 #### Scenario:
 
@@ -249,48 +248,48 @@ Imagine you delete a CRD while 500 CRs still exist → that would leave orphaned
 
 #### How handled:
 
-* Kubernetes waits for all CRs to be deleted
-* Only then removes CRD finalizer
+- Kubernetes waits for all CRs to be deleted
+- Only then removes CRD finalizer
 
-***
+---
 
 ## ✅ 8. NetworkPolicy/Ingress Finalizers (Cloud provider or addon)
 
 Calico, Cilium, AWS ALB Ingress Controller, GKE Ingress Controller, etc add finalizers such as:
 
-* `finalizer.projectcalico.org`
-* `ingress.k8s.aws/resources`
-* `gke.ingress.finalizer`
+- `finalizer.projectcalico.org`
+- `ingress.k8s.aws/resources`
+- `gke.ingress.finalizer`
 
 #### Scenario:
 
 Ensure cleanup of:
 
-* Ingress load balancers
-* Firewall rules / security groups
-* ENIs
-* BGP routes
-* IP allocations
+- Ingress load balancers
+- Firewall rules / security groups
+- ENIs
+- BGP routes
+- IP allocations
 
 #### Example for AWS ALB:
 
 Deleting an Ingress must first delete:
 
-* ALB
-* Target Groups
-* Listeners
-* SG rules
+- ALB
+- Target Groups
+- Listeners
+- SG rules
 
 Only after that finalizer is removed.
 
-***
+---
 
 ## ✅ 9. VolumeSnapshot / CSI Drivers Finalizers
 
 CSI Snapshot controllers commonly add:
 
-* `snapshot.storage.kubernetes.io/controller-finalizer`
-* `snapshot.storage.kubernetes.io/create-snapshot`
+- `snapshot.storage.kubernetes.io/controller-finalizer`
+- `snapshot.storage.kubernetes.io/create-snapshot`
 
 #### Scenario:
 
@@ -302,7 +301,7 @@ Ensure underlying cloud storage snapshots are deleted safely.
 2. Snapshot controller talks to the CSI driver, deletes cloud snapshot.
 3. Then removes finalizer → K8s deletes the object.
 
-***
+---
 
 ## ✅ 10. Jobs / Pods Finalizers (special case)
 
@@ -310,27 +309,27 @@ Pods rarely have finalizers except in special operators:
 
 #### Example:
 
-* **`kubernetes.io/pod-preemption`**
-* **`batch.kubernetes.io/job-tracking`**
+- **`kubernetes.io/pod-preemption`**
+- **`batch.kubernetes.io/job-tracking`**
 
 Jobs:
 
-* Finalizers ensure Pod tracking and cleanup logic.
+- Finalizers ensure Pod tracking and cleanup logic.
 
-***
+---
 
 ## ✅ 11. Network Interface / IPAM Controllers
 
 Examples:
 
-* `whereabouts.network.k8s.io`
-* `k8s.cni.cncf.io/networks`
+- `whereabouts.network.k8s.io`
+- `k8s.cni.cncf.io/networks`
 
 #### Scenario:
 
 Ensure cleanup of allocated IPs or ENIs before object deletion.
 
-***
+---
 
 ## ✅ Quick Summary Table
 
@@ -347,5 +346,4 @@ Ensure cleanup of allocated IPs or ENIs before object deletion.
 | Calico/Cilium  | network finalizers        | cleanup BGP/IP allocations            |
 | Pods/Jobs      | job tracking finalizers   | ensure cleanup logic                  |
 
-***
-
+---

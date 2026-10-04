@@ -1,7 +1,8 @@
 ---
 title: "0.3 — HTTP & TLS Foundations Every Auth Engineer Must Know"
 author: darshan
-tags: [authentication, stage-0, http, tls, mtls, cookies, cors, samesite, preflight]
+tags:
+  [authentication, stage-0, http, tls, mtls, cookies, cors, samesite, preflight]
 date: 2026-06-13
 description: TLS 1.2 vs 1.3, mTLS, cookies vs Authorization header, CORS preflight, SameSite — the transport-layer alphabet for auth
 ---
@@ -35,11 +36,11 @@ description: TLS 1.2 vs 1.3, mTLS, cookies vs Authorization header, CORS preflig
 
 Three jobs, three layers:
 
-| Layer | Job | Examples |
-|-------|-----|----------|
-| **TLS** (transport) | Encrypt the wire. Server proves its identity. Optionally client proves its. | TLS 1.3, mTLS |
-| **HTTP** (application protocol) | Move requests around. Carry auth headers/cookies. | HTTP/1.1, HTTP/2, HTTP/3 |
-| **Auth protocol** (application logic) | Issue, validate, refresh, revoke. | OAuth, OIDC, SAML |
+| Layer                                 | Job                                                                         | Examples                 |
+| ------------------------------------- | --------------------------------------------------------------------------- | ------------------------ |
+| **TLS** (transport)                   | Encrypt the wire. Server proves its identity. Optionally client proves its. | TLS 1.3, mTLS            |
+| **HTTP** (application protocol)       | Move requests around. Carry auth headers/cookies.                           | HTTP/1.1, HTTP/2, HTTP/3 |
+| **Auth protocol** (application logic) | Issue, validate, refresh, revoke.                                           | OAuth, OIDC, SAML        |
 
 **The cardinal rule:** if you skip TLS, none of the rest matters. A signed JWT in plaintext HTTP is a signed JWT that anyone on the network can read AND copy AND replay.
 
@@ -132,15 +133,16 @@ The naming in 1.3 is also much shorter — it only specifies the symmetric ciphe
 
 ### What TLS gives you
 
-| Property | What it means | How |
-|----------|---------------|-----|
-| **Confidentiality** | Nobody can read the traffic | Symmetric encryption (AES-GCM, ChaCha20-Poly1305) |
-| **Integrity** | Nobody can modify the traffic in flight | Authenticated encryption (AEAD) |
-| **Server authentication** | Client knows it's talking to the real server | X.509 certificate chain to a trusted CA |
-| **(Optional) Client authentication** | Server knows who's calling | Client certificate (mTLS) |
+| Property                             | What it means                                | How                                               |
+| ------------------------------------ | -------------------------------------------- | ------------------------------------------------- |
+| **Confidentiality**                  | Nobody can read the traffic                  | Symmetric encryption (AES-GCM, ChaCha20-Poly1305) |
+| **Integrity**                        | Nobody can modify the traffic in flight      | Authenticated encryption (AEAD)                   |
+| **Server authentication**            | Client knows it's talking to the real server | X.509 certificate chain to a trusted CA           |
+| **(Optional) Client authentication** | Server knows who's calling                   | Client certificate (mTLS)                         |
 
 **What TLS does NOT give you:**
-- Identity of the *user* (only the *server*, and optionally the *client* as a system)
+
+- Identity of the _user_ (only the _server_, and optionally the _client_ as a system)
 - Session management (you build that on top)
 - Authorization (TLS doesn't know what the user can do)
 
@@ -225,7 +227,7 @@ Don't use mTLS when:
   - Client is a browser (browsers don't have client certs by default)
   - You need to revoke identity in seconds (cert revocation is slow)
   - You have thousands of clients (cert issuance/distribution is heavy)
-  
+
 For browser-facing services, mTLS is too heavy.
 For workload-to-workload in a mesh, mTLS is the default.
 ```
@@ -256,7 +258,7 @@ metadata:
   namespace: production
 spec:
   mtls:
-    mode: STRICT  # reject any plaintext or non-mTLS connection
+    mode: STRICT # reject any plaintext or non-mTLS connection
 ```
 
 **mTLS vs OIDC for service identity:**
@@ -268,7 +270,7 @@ mTLS:
   ❌ Cert lifecycle is heavy
   ❌ Doesn't carry user identity (only workload identity)
   ❌ Browser-hostile
-  
+
 OIDC/JWT:
   ✅ Works for browsers, mobile, APIs, CLI
   ✅ Carries user identity + claims
@@ -296,18 +298,18 @@ The browser stores `session=abc123` and resends it on requests matching the path
 
 ### The flags you MUST get right
 
-| Flag | Effect | Why it matters |
-|------|--------|----------------|
-| **`Secure`** | Only sent over HTTPS | Without this, the cookie goes over plaintext HTTP. Trivially sniffable on a coffee-shop WiFi. |
-| **`HttpOnly`** | JavaScript can't read it (`document.cookie` excludes it) | Without this, any XSS bug in your app gives the attacker the session cookie. |
-| **`SameSite=Strict`** | Never sent on cross-site requests | Without this, you're vulnerable to CSRF (see Section 7). |
-| **`SameSite=Lax`** | Sent on top-level cross-site GETs only | Compromise — most cross-site flows still work, CSRF on POSTs is blocked. |
-| **`SameSite=None`** | Always sent on cross-site requests | Required for some third-party cookies, must also have `Secure` (browsers reject `None` without `Secure`). |
-| **`Path=/`** | Cookie sent for any path on this domain | The default if you don't set it. Be specific if you have multiple apps on one domain. |
-| **`Domain=.example.com`** | Sent to any subdomain | Be careful — `Domain=.example.com` leaks the cookie to `evil.example.com` if that subdomain is compromised. |
-| **`Max-Age=3600`** | Expires in 1 hour | Or `Expires=Wed, 21 Oct 2026 07:28:00 GMT`. Use one, not both. |
-| **`__Host-` prefix** | Browser enforces: must have `Secure`, no `Domain`, `Path=/` | A free hardening layer. Use `__Host-sessionid=...` if you can. |
-| **`__Secure-` prefix** | Browser enforces: must have `Secure` | Weaker than `__Host-` (doesn't enforce path or absence of domain). |
+| Flag                      | Effect                                                      | Why it matters                                                                                              |
+| ------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **`Secure`**              | Only sent over HTTPS                                        | Without this, the cookie goes over plaintext HTTP. Trivially sniffable on a coffee-shop WiFi.               |
+| **`HttpOnly`**            | JavaScript can't read it (`document.cookie` excludes it)    | Without this, any XSS bug in your app gives the attacker the session cookie.                                |
+| **`SameSite=Strict`**     | Never sent on cross-site requests                           | Without this, you're vulnerable to CSRF (see Section 7).                                                    |
+| **`SameSite=Lax`**        | Sent on top-level cross-site GETs only                      | Compromise — most cross-site flows still work, CSRF on POSTs is blocked.                                    |
+| **`SameSite=None`**       | Always sent on cross-site requests                          | Required for some third-party cookies, must also have `Secure` (browsers reject `None` without `Secure`).   |
+| **`Path=/`**              | Cookie sent for any path on this domain                     | The default if you don't set it. Be specific if you have multiple apps on one domain.                       |
+| **`Domain=.example.com`** | Sent to any subdomain                                       | Be careful — `Domain=.example.com` leaks the cookie to `evil.example.com` if that subdomain is compromised. |
+| **`Max-Age=3600`**        | Expires in 1 hour                                           | Or `Expires=Wed, 21 Oct 2026 07:28:00 GMT`. Use one, not both.                                              |
+| **`__Host-` prefix**      | Browser enforces: must have `Secure`, no `Domain`, `Path=/` | A free hardening layer. Use `__Host-sessionid=...` if you can.                                              |
+| **`__Secure-` prefix**    | Browser enforces: must have `Secure`                        | Weaker than `__Host-` (doesn't enforce path or absence of domain).                                          |
 
 ### The `__Host-` prefix trick
 
@@ -334,7 +336,7 @@ A cookie set with Domain=.example.com is sent to:
 A cookie set without Domain is sent to:
   ✓ the exact host that set it
   ✗ other subdomains
-  
+
 If you set Domain=.example.com and one of your subdomains is compromised,
 the attacker reads the cookie and replays it on api.example.com.
 DON'T set Domain unless you absolutely need cross-subdomain auth.
@@ -377,14 +379,14 @@ The `Authorization` header carries credentials in a single request — no cookie
 
 ### Common schemes
 
-| Scheme | Format | Used for |
-|--------|--------|----------|
-| **`Bearer`** | `Authorization: Bearer eyJhbGci...` | OAuth 2.0 access tokens, OIDC ID tokens, JWTs |
-| **`Basic`** | `Authorization: Basic dXNlcjpwYXNz` (base64 of `user:pass`) | Legacy HTTP Basic auth (still common in admin UIs, internal tools) |
-| **`Digest`** | `Authorization: Digest username="...", realm="...", ...` | Legacy, more secure than Basic, mostly replaced by Bearer |
-| **Mutual** | (client cert, not in header) | mTLS |
-| **API Key** | `Authorization: ApiKey abc123` or `X-Api-Key: abc123` | Vendor-specific (Stripe, AWS, etc.) |
-| **`HOBA`** | (not widely deployed) | HTTP Origin-Bound Authentication (RFC 7486) |
+| Scheme       | Format                                                      | Used for                                                           |
+| ------------ | ----------------------------------------------------------- | ------------------------------------------------------------------ |
+| **`Bearer`** | `Authorization: Bearer eyJhbGci...`                         | OAuth 2.0 access tokens, OIDC ID tokens, JWTs                      |
+| **`Basic`**  | `Authorization: Basic dXNlcjpwYXNz` (base64 of `user:pass`) | Legacy HTTP Basic auth (still common in admin UIs, internal tools) |
+| **`Digest`** | `Authorization: Digest username="...", realm="...", ...`    | Legacy, more secure than Basic, mostly replaced by Bearer          |
+| **Mutual**   | (client cert, not in header)                                | mTLS                                                               |
+| **API Key**  | `Authorization: ApiKey abc123` or `X-Api-Key: abc123`       | Vendor-specific (Stripe, AWS, etc.)                                |
+| **`HOBA`**   | (not widely deployed)                                       | HTTP Origin-Bound Authentication (RFC 7486)                        |
 
 ### Bearer token mechanics
 
@@ -427,7 +429,7 @@ Web SPA:
 
 Server-to-server:
   - Bearer token in Authorization header
-  
+
 Mobile:
   - Access + refresh tokens in OS keychain (Keychain on iOS, Keystore on Android)
 ```
@@ -443,6 +445,7 @@ Authorization: Basic dXNlcjpwYXNz
 ```
 
 **The problem:** base64 is encoding, not encryption. The username and password are recoverable by anyone who sees the header. With TLS this is fine (the wire is encrypted), but you should still:
+
 - Use it only over TLS
 - Use it only for service-to-service or admin tools, never for end users
 - Prefer Bearer (OAuth) for anything user-facing
@@ -505,39 +508,39 @@ Authorization: Bearer eyJ...
 
 ### CORS headers cheat sheet
 
-| Header | Sent by | Meaning |
-|--------|---------|---------|
-| `Origin` | Browser (always) | Where the request is coming from |
-| `Access-Control-Request-Method` | Browser (preflight) | Method the real request will use |
-| `Access-Control-Request-Headers` | Browser (preflight) | Custom headers the real request will use |
-| `Access-Control-Allow-Origin` | Server | Allowed origins. `*` (wildcard) or specific origin. |
-| `Access-Control-Allow-Methods` | Server (preflight) | Allowed methods |
-| `Access-Control-Allow-Headers` | Server (preflight) | Allowed request headers |
-| `Access-Control-Allow-Credentials` | Server | `true` to allow cookies/auth headers |
-| `Access-Control-Max-Age` | Server (preflight) | How long the browser can cache the preflight response (seconds) |
-| `Access-Control-Expose-Headers` | Server | Which response headers the browser can read |
+| Header                             | Sent by             | Meaning                                                         |
+| ---------------------------------- | ------------------- | --------------------------------------------------------------- |
+| `Origin`                           | Browser (always)    | Where the request is coming from                                |
+| `Access-Control-Request-Method`    | Browser (preflight) | Method the real request will use                                |
+| `Access-Control-Request-Headers`   | Browser (preflight) | Custom headers the real request will use                        |
+| `Access-Control-Allow-Origin`      | Server              | Allowed origins. `*` (wildcard) or specific origin.             |
+| `Access-Control-Allow-Methods`     | Server (preflight)  | Allowed methods                                                 |
+| `Access-Control-Allow-Headers`     | Server (preflight)  | Allowed request headers                                         |
+| `Access-Control-Allow-Credentials` | Server              | `true` to allow cookies/auth headers                            |
+| `Access-Control-Max-Age`           | Server (preflight)  | How long the browser can cache the preflight response (seconds) |
+| `Access-Control-Expose-Headers`    | Server              | Which response headers the browser can read                     |
 
 ### The CORS gotchas
 
 ```
 ❌  Access-Control-Allow-Origin: *
     Access-Control-Allow-Credentials: true
-    
+
     Browsers REJECT this. You can't have wildcard origin with credentials.
     Either use a specific origin, or don't allow credentials.
-    
+
 ❌  Access-Control-Allow-Origin: https://app.example.com
     Access-Control-Allow-Origin: https://other.example.com
-    
+
     Browsers REJECT duplicate headers. Pick one origin per request.
-    
+
 ❌  Building the origin dynamically from the request:
     Access-Control-Allow-Origin: <whatever the request's Origin header was>
-    
+
     This is a "reflected origin" attack. If the server reflects ANY
     Origin header back, attacker sites can make credentialed requests
     to your API.
-    
+
 ✅  Static list of allowed origins, per environment:
     dev:      http://localhost:3000
     staging:  https://staging.example.com
@@ -553,7 +556,7 @@ The chain of defense:
   Bearer token validation    → stops anyone without a valid token
   Token scopes/permissions   → stops valid tokens from doing things they shouldn't
   Server-side input validation → stops malformed requests
-  
+
 If your security depends on CORS, you have no security.
 If your security depends on token validation alone, you're fine.
 CORS is UX, not security.
@@ -563,7 +566,7 @@ CORS is UX, not security.
 
 ## 7. CSRF: The Cookie-Auth Attack
 
-**CSRF (Cross-Site Request Forgery)** is the canonical attack against cookie-based auth. It works because cookies are *automatically* attached by the browser to requests matching their origin/path — and the browser doesn't know whether the request was initiated by you or by JavaScript on a malicious site.
+**CSRF (Cross-Site Request Forgery)** is the canonical attack against cookie-based auth. It works because cookies are _automatically_ attached by the browser to requests matching their origin/path — and the browser doesn't know whether the request was initiated by you or by JavaScript on a malicious site.
 
 ### The attack
 
@@ -586,7 +589,7 @@ When the form submits:
   - Money moves.
 ```
 
-**The vulnerability:** the cookie is sent automatically. The browser doesn't know the request was initiated by `evil.com` — the form submission is a top-level navigation, the request *looks* normal.
+**The vulnerability:** the cookie is sent automatically. The browser doesn't know the request was initiated by `evil.com` — the form submission is a top-level navigation, the request _looks_ normal.
 
 ### The defenses
 
@@ -604,7 +607,7 @@ SameSite=Lax:
   Cookie IS sent on top-level cross-site GETs (links, redirects).
   Cookie is NOT sent on cross-site POSTs, XHR, iframes, etc.
   This is the browser default since Chrome 80, Firefox 69, Safari 13.1.
-  
+
   For OIDC auth code flow:
     - User on idp.example.com clicks "Allow" → redirects to app.example.com/callback
     - Top-level navigation = GET
@@ -683,7 +686,7 @@ Modern auth architecture (CSRF-free):
         fetch('https://api.example.com/users/me', {
           headers: { 'Authorization': 'Bearer ' + accessToken }
         })
-        
+
         No CSRF token needed.
         No SameSite=None needed.
         The access token is sent explicitly by JS, not auto-attached by the browser.
@@ -725,6 +728,7 @@ Logout
 ```
 
 **Characteristics:**
+
 - ✅ Server has full control — can revoke instantly
 - ✅ Cookie is opaque — no info leak
 - ✅ Simple mental model
@@ -756,6 +760,7 @@ Logout
 ```
 
 **Characteristics:**
+
 - ✅ Stateless — server doesn't need to store anything
 - ✅ Works across domains naturally
 - ✅ Works for mobile / native / CLI
@@ -794,23 +799,24 @@ Use BOTH (hybrid):
 
 Imagine a corporate office building.
 
-| Concept | Office equivalent |
-|---------|-------------------|
-| **TLS** | The encrypted radio between the front desk and the visitor's car. Eavesdroppers hear static. |
-| **Server cert** | The front desk's employee ID badge. Verified against the company's HR records (CA chain). |
-| **Client cert (mTLS)** | The visitor's ID badge. Also verified against the company directory. |
-| **Cookie** | A visitor sticker the front desk gives you. You flash it on subsequent visits — they recognize the sticker, not you. |
-| **`HttpOnly` cookie** | A sticker that the visitor can't physically take off and show anyone else. Stays on your lapel. |
-| **`Secure` cookie** | A sticker that only works in the main lobby (HTTPS). Useless if you walk into the parking lot (HTTP). |
-| **`SameSite=Strict` cookie** | A sticker that only works if you entered through the front door of THIS building. Doesn't work if you came from a connecting skybridge from another building. |
-| **`Authorization: Bearer` header** | A security code you speak aloud. Anyone within earshot who knows the code is you. |
-| **CORS** | The building policy: "if a request comes from a person standing in the parking lot of building B, you must check the visitor's invite before letting them in." |
-| **CSRF** | Attacker tricks you into walking from building B to building A and submitting a form on your behalf. The sticker goes with you automatically. |
-| **Session** | A paper log at the front desk: "visitor ID, name, signed in at, signed out at." |
-| **Token (JWT)** | A tamper-evident badge you print yourself at check-in. Has your name + expiry. Front desk verifies the badge, not the log. |
-| **OIDC** | A single sign-on system: one central check-in desk (the IdP) that issues badges accepted by all the other buildings (SPs). |
+| Concept                            | Office equivalent                                                                                                                                              |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TLS**                            | The encrypted radio between the front desk and the visitor's car. Eavesdroppers hear static.                                                                   |
+| **Server cert**                    | The front desk's employee ID badge. Verified against the company's HR records (CA chain).                                                                      |
+| **Client cert (mTLS)**             | The visitor's ID badge. Also verified against the company directory.                                                                                           |
+| **Cookie**                         | A visitor sticker the front desk gives you. You flash it on subsequent visits — they recognize the sticker, not you.                                           |
+| **`HttpOnly` cookie**              | A sticker that the visitor can't physically take off and show anyone else. Stays on your lapel.                                                                |
+| **`Secure` cookie**                | A sticker that only works in the main lobby (HTTPS). Useless if you walk into the parking lot (HTTP).                                                          |
+| **`SameSite=Strict` cookie**       | A sticker that only works if you entered through the front door of THIS building. Doesn't work if you came from a connecting skybridge from another building.  |
+| **`Authorization: Bearer` header** | A security code you speak aloud. Anyone within earshot who knows the code is you.                                                                              |
+| **CORS**                           | The building policy: "if a request comes from a person standing in the parking lot of building B, you must check the visitor's invite before letting them in." |
+| **CSRF**                           | Attacker tricks you into walking from building B to building A and submitting a form on your behalf. The sticker goes with you automatically.                  |
+| **Session**                        | A paper log at the front desk: "visitor ID, name, signed in at, signed out at."                                                                                |
+| **Token (JWT)**                    | A tamper-evident badge you print yourself at check-in. Has your name + expiry. Front desk verifies the badge, not the log.                                     |
+| **OIDC**                           | A single sign-on system: one central check-in desk (the IdP) that issues badges accepted by all the other buildings (SPs).                                     |
 
 **The TL;DR for sysadmins:**
+
 - **TLS** is the encrypted radio. Use it. Always.
 - **Cookies** are stickers. Use `HttpOnly` + `Secure` + `SameSite=Strict` (or `Lax` if you need cross-site GETs to work).
 - **`Authorization: Bearer`** is a spoken code. Use it for APIs. Use `localStorage` for the access token only if you accept the XSS trade-off (covered in Stage 5.2).
@@ -846,7 +852,7 @@ If attacker compromises:
   - blog.example.com (WordPress, 3-year-old plugin)
   - staging.example.com (developer left a key)
   - any old subdomain nobody remembered
-  
+
 They get the session cookie sent to api.example.com.
 ```
 
@@ -920,13 +926,13 @@ Test: external monitoring (not just from inside the network).
 Old server config:
   ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
   ssl_ciphers HIGH:!aNULL:!MD5;
-  
+
 "HIGH" includes a lot of bad stuff. Use Mozilla's intermediate profile:
   ssl_protocols TLSv1.2 TLSv1.3;
   ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305;
 ```
 
-Or just use a maintained config: [[https://ssl-config.mozilla.org|Mozilla SSL Config Generator]].
+Or just use a maintained config: [Mozilla SSL Config Generator](https://ssl-config.mozilla.org).
 
 ### A8. JWT in a cookie (cross-site + no SameSite)
 
@@ -950,7 +956,7 @@ the attacker exfiltrates the JWT via fetch to their server.
 ```
 Reverse proxy (nginx) access log:
   $request = "GET /api/users/me HTTP/1.1"
-  
+
 If you log $request, the JWT is in your logs.
 Logs go to: ELK, S3, CloudWatch, anywhere.
 Anyone with log access has every user's token.
@@ -992,15 +998,19 @@ If you set HSTS:
 ## 11. Exercises
 
 ### Exercise 1: Inspect your browser's cookies
+
 Open DevTools → Application → Cookies. For each cookie on a site you're logged into, check: Secure? HttpOnly? SameSite? Domain? Path? Expiry? Are they all correct? What would break if you set SameSite=Strict on the session cookie?
 
 ### Exercise 2: Decode a real request
+
 ```bash
 curl -v https://httpbin.org/headers
 ```
+
 Look at the request and response headers. What's the TLS version? Cipher suite? HSTS? CORS headers?
 
 ### Exercise 3: Trigger a CORS preflight
+
 ```bash
 # Simple request — no preflight
 curl -v https://api.example.com/users
@@ -1010,9 +1020,11 @@ curl -v -X GET https://api.example.com/users \
      -H "Authorization: Bearer abc" \
      -H "Origin: https://app.example.com"
 ```
+
 Compare the OPTIONS preflight to the actual GET.
 
 ### Exercise 4: Test your TLS config
+
 ```bash
 # Quick check
 openssl s_client -connect yourdomain.com:443 -tls1_3 </dev/null 2>&1 | grep -E "Protocol|Cipher"
@@ -1023,41 +1035,45 @@ openssl s_client -connect yourdomain.com:443 -tls1_3 </dev/null 2>&1 | grep -E "
 ```
 
 ### Exercise 5: Build a cookie-based session (Node.js, 20 lines)
+
 ```javascript
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const crypto = require('crypto');
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const crypto = require("crypto");
 const app = express();
 app.use(cookieParser());
 
 const sessions = new Map();
 
-app.post('/login', (req, res) => {
-  const sessionId = crypto.randomBytes(32).toString('hex');
-  sessions.set(sessionId, { user: 'alice', created: Date.now() });
-  res.cookie('session', sessionId, {
+app.post("/login", (req, res) => {
+  const sessionId = crypto.randomBytes(32).toString("hex");
+  sessions.set(sessionId, { user: "alice", created: Date.now() });
+  res.cookie("session", sessionId, {
     httpOnly: true,
-    secure: true,         // HTTPS only
-    sameSite: 'strict',   // no cross-site
-    maxAge: 3600000,      // 1 hour
+    secure: true, // HTTPS only
+    sameSite: "strict", // no cross-site
+    maxAge: 3600000, // 1 hour
   });
-  res.send('logged in');
+  res.send("logged in");
 });
 
-app.get('/me', (req, res) => {
+app.get("/me", (req, res) => {
   const session = sessions.get(req.cookies.session);
-  if (!session) return res.status(401).send('unauthorized');
+  if (!session) return res.status(401).send("unauthorized");
   res.json(session);
 });
 
 app.listen(3000);
 ```
+
 Run it, hit `/login`, hit `/me`, examine the `Set-Cookie` header. Try accessing `/me` from a different origin (with `Origin: https://evil.com`) — does `SameSite=Strict` block it? (SameSite only affects browsers, not curl, but you get the idea.)
 
 ### Exercise 6: Read a CVSS 9.0 TLS CVE
+
 Find a recent TLS-related CVE. Was it protocol-level (TLS 1.0/1.1), implementation-level (OpenSSL, BoringSSL), or configuration-level (weak cipher suite)? What was the fix? What's the modern equivalent?
 
 ### Exercise 7: Audit your own auth flow
+
 Pick a web app you've built. Draw the request flow: where does the user authenticate? Where does the token live? How does it get to the API? Is TLS enforced? Are cookies configured correctly? Is CORS configured with a static allowlist? If you find issues, you have a 5-item backlog.
 
 ---
@@ -1069,6 +1085,7 @@ You now have the cryptographic alphabet (Stage 0.1), the encoding/signing mechan
 → [[../stage1/01-jwt-anatomy|Stage 1.1 — JWT Anatomy: Header.Payload.Signature]]
 
 **Before you move on, verify you can answer these:**
+
 1. What's the difference between TLS 1.2 and TLS 1.3 in one sentence?
 2. What does mTLS add on top of normal TLS, and when do you use it?
 3. What are the three flags you should always set on a session cookie, and what do they do?

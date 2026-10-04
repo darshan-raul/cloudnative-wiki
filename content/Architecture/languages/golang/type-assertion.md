@@ -130,17 +130,17 @@ claims, ok := token.Claims.(jwt.MapClaims)
 ```
 
 1. **`token.Claims`**:
-   * `Claims` is an interface field in the `token` object.
+   - `Claims` is an interface field in the `token` object.
 2. **Type Assertion**:
-   * `token.Claims.(jwt.MapClaims)` is a type assertion. It checks if `token.Claims` is of type `jwt.MapClaims`.
-   * `jwt.MapClaims` is a type alias for `map[string]interface{}`.
+   - `token.Claims.(jwt.MapClaims)` is a type assertion. It checks if `token.Claims` is of type `jwt.MapClaims`.
+   - `jwt.MapClaims` is a type alias for `map[string]interface{}`.
 3. **Double-Value Assertion**:
-   * The result of the type assertion is captured in two variables: `claims` and `ok`.
-   * `claims` will hold the concrete value if the assertion is successful.
-   * `ok` will be `true` if the assertion is successful, otherwise `false`.
+   - The result of the type assertion is captured in two variables: `claims` and `ok`.
+   - `claims` will hold the concrete value if the assertion is successful.
+   - `ok` will be `true` if the assertion is successful, otherwise `false`.
 4. **Usage**:
-   * If `ok` is `true`, you can safely use `claims` as a `jwt.MapClaims`.
-   * If `ok` is `false`, the assertion failed, meaning `token.Claims` is not of type `jwt.MapClaims`.
+   - If `ok` is `true`, you can safely use `claims` as a `jwt.MapClaims`.
+   - If `ok` is `false`, the assertion failed, meaning `token.Claims` is not of type `jwt.MapClaims`.
 
 #### Summary
 

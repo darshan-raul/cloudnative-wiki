@@ -1,6 +1,13 @@
+---
+title: "Runtime Sandboxing (gVisor, Kata Containers)"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Runtime Sandboxing (gVisor, Kata Containers) — Kubernetes reference and architecture guide."
+---
+
 # Runtime Sandboxing (gVisor, Kata Containers)
 
-*"https://gvisor.dev/ | https://katacontainers.io/"*
+_"https://gvisor.dev/ | https://katacontainers.io/"_
 
 By default, a container runs as a regular Linux process with kernel-level isolation (namespaces, cgroups, capabilities). For **multi-tenant** or **untrusted workloads**, this isn't enough — a kernel exploit in the container can compromise the host. **Runtime sandboxing** (gVisor, Kata Containers) is a stronger isolation layer: the container runs in a **user-space kernel** (gVisor) or a **hardware-virtualized microVM** (Kata). The container thinks it has a kernel, but the actual kernel is a layer removed. This is the **strongest workload isolation** available in k8s.
 
@@ -32,8 +39,8 @@ For **multi-tenant clusters** (you don't trust the workload) or **untrusted code
 
 Runtime sandboxing provides that:
 
-* **gVisor** — a user-space kernel. The workload's syscalls are intercepted and re-implemented in user space. The host kernel sees the gVisor process, not the workload.
-* **Kata Containers** — a microVM (QEMU / Cloud Hypervisor). The workload runs in a separate VM. The host kernel is the hypervisor, not the workload's kernel.
+- **gVisor** — a user-space kernel. The workload's syscalls are intercepted and re-implemented in user space. The host kernel sees the gVisor process, not the workload.
+- **Kata Containers** — a microVM (QEMU / Cloud Hypervisor). The workload runs in a separate VM. The host kernel is the hypervisor, not the workload's kernel.
 
 In both cases, **a kernel exploit in the workload compromises the sandbox, not the host**.
 
@@ -41,21 +48,21 @@ In both cases, **a kernel exploit in the workload compromises the sandbox, not t
 
 The "kernel exploit" threat model:
 
-* The workload is untrusted (or treated as such).
-* The workload has a vulnerability that allows kernel-level code execution.
-* The default container runtime (runc) executes the kernel code, which compromises the host.
+- The workload is untrusted (or treated as such).
+- The workload has a vulnerability that allows kernel-level code execution.
+- The default container runtime (runc) executes the kernel code, which compromises the host.
 
 With runtime sandboxing:
 
-* The workload has the same vulnerability.
-* The sandbox intercepts the kernel code before it reaches the host kernel.
-* The exploit is contained within the sandbox.
+- The workload has the same vulnerability.
+- The sandbox intercepts the kernel code before it reaches the host kernel.
+- The exploit is contained within the sandbox.
 
 This is **the strongest practical defense** against kernel exploits. It does NOT protect against:
 
-* **Application-level exploits** — the app's own bugs.
-* **Network-level exploits** — the workload can still make network calls.
-* **Side-channel attacks** — Spectre / Meltdown style.
+- **Application-level exploits** — the app's own bugs.
+- **Network-level exploits** — the workload can still make network calls.
+- **Side-channel attacks** — Spectre / Meltdown style.
 
 ## 2. The Default Container Runtime (runc)
 
@@ -82,7 +89,7 @@ The downside: **no defense against kernel exploits**. A container escape is a ho
 
 ## 3. gVisor — the User-Space Kernel
 
-*"https://gvisor.dev/"*
+_"https://gvisor.dev/"_
 
 **gVisor** (from Google) is a **user-space kernel** written in Go. The container's process makes syscalls, but they go to **gVisor**, not the host kernel. gVisor re-implements the syscalls in user space, then makes a small set of calls to the host kernel (the "actual" syscalls are a curated subset).
 
@@ -108,9 +115,9 @@ The Sentry is gVisor's user-space kernel. It re-implements ~250 syscalls. The ho
 
 ### 3.1 gVisor's components
 
-* **`runsc`** — the OCI runtime. Replaces `runc` in containerd / CRI-O.
-* **`Sentry`** — the user-space kernel. Re-implements syscalls.
-* **`Gofer`** — the file system proxy. The container's filesystem operations go through Gofer to the host.
+- **`runsc`** — the OCI runtime. Replaces `runc` in containerd / CRI-O.
+- **`Sentry`** — the user-space kernel. Re-implements syscalls.
+- **`Gofer`** — the file system proxy. The container's filesystem operations go through Gofer to the host.
 
 The container is unaware. It sees a Linux environment, with a kernel, with a filesystem. The actual kernel and filesystem are gVisor's, on top of the host.
 
@@ -130,9 +137,9 @@ The host kernel sees only the `Gofer`'s syscalls. The container's `open` doesn't
 
 gVisor is **slower** than runc for syscall-heavy workloads:
 
-* **CPU-intensive** — small overhead (~5-10%).
-* **Syscall-heavy** (DB, network servers) — 1.5x-2x slower.
-* **I/O-heavy** (file ops) — 2x-3x slower.
+- **CPU-intensive** — small overhead (~5-10%).
+- **Syscall-heavy** (DB, network servers) — 1.5x-2x slower.
+- **I/O-heavy** (file ops) — 2x-3x slower.
 
 The gVisor team has been optimizing. The `runsc` runtime is now quite fast, but it's still a layer.
 
@@ -140,7 +147,7 @@ For **multi-tenant** workloads, the slowdown is acceptable (security > performan
 
 ## 4. Kata Containers — the Hardware Virtualization
 
-*"https://katacontainers.io/"*
+_"https://katacontainers.io/"_
 
 **Kata Containers** (merger of Intel Clear Containers and Hyper runV) is a **microVM-based** runtime. The container runs in a **separate VM** with its own kernel. The host sees a QEMU / Cloud Hypervisor process.
 
@@ -169,9 +176,9 @@ The container has its own kernel. The host kernel is the hypervisor. A kernel ex
 
 A "microVM" is a VM with a minimal footprint:
 
-* **Fast startup** — ~100ms (vs. seconds for traditional VMs).
-* **Small memory** — ~50 MB minimum.
-* **Minimal kernel** — the guest kernel is small and focused.
+- **Fast startup** — ~100ms (vs. seconds for traditional VMs).
+- **Small memory** — ~50 MB minimum.
+- **Minimal kernel** — the guest kernel is small and focused.
 
 The hypervisor (QEMU or Cloud Hypervisor) is what runs the microVM. Cloud Hypervisor (from Intel) is the modern choice; it has less overhead than QEMU.
 
@@ -183,9 +190,9 @@ Inside the guest, the **kata-agent** is the equivalent of kubelet for the microV
 
 Kata is **slower than runc** but **faster than gVisor** for some workloads:
 
-* **CPU-intensive** — small overhead (~5-10%, similar to gVisor).
-* **Syscall-heavy** — small overhead (the guest kernel is real, not user-space). Faster than gVisor.
-* **I/O-heavy** — virtio overhead, similar to gVisor.
+- **CPU-intensive** — small overhead (~5-10%, similar to gVisor).
+- **Syscall-heavy** — small overhead (the guest kernel is real, not user-space). Faster than gVisor.
+- **I/O-heavy** — virtio overhead, similar to gVisor.
 
 Kata is **closer to native** than gVisor for most workloads. The trade-off is **memory overhead** (each container has its own guest kernel + memory).
 
@@ -217,30 +224,30 @@ metadata: { name: myapp }
 spec:
   runtimeClassName: gvisor
   containers:
-  - name: app
-    image: myapp:1.0
+    - name: app
+      image: myapp:1.0
 ```
 
 The kubelet sees `runtimeClassName: gvisor`, looks up the RuntimeClass, gets `runsc`, and asks containerd to start the container with `runsc` (instead of `runc`).
 
 ## 6. Choosing a Sandbox Runtime
 
-| | runc (default) | gVisor | Kata |
-|---|---|---|---|
-| **Isolation** | Linux primitives (namespaces, cgroups, capabilities, seccomp) | User-space kernel | Hardware virtualization (microVM) |
-| **Strength** | Default, well-understood | Strong against kernel exploits | Strongest (full kernel separation) |
-| **Weakness** | Kernel exploits are node-compromising | Slow for syscall-heavy workloads | Memory overhead per container |
-| **Performance** | Native | 1.5-2x slower for syscall-heavy | 1.1-1.3x slower for most |
-| **Memory overhead** | None | Small (~10-50 MB) | Larger (~50-200 MB per microVM) |
-| **Boot time** | <1s | ~1s | ~100-500ms |
-| **Compatibility** | All Linux apps | Most (some syscalls not implemented) | All (full kernel) |
-| **Use case** | Trusted workloads | Multi-tenant, untrusted | Highest isolation needs |
+|                     | runc (default)                                                | gVisor                               | Kata                               |
+| ------------------- | ------------------------------------------------------------- | ------------------------------------ | ---------------------------------- |
+| **Isolation**       | Linux primitives (namespaces, cgroups, capabilities, seccomp) | User-space kernel                    | Hardware virtualization (microVM)  |
+| **Strength**        | Default, well-understood                                      | Strong against kernel exploits       | Strongest (full kernel separation) |
+| **Weakness**        | Kernel exploits are node-compromising                         | Slow for syscall-heavy workloads     | Memory overhead per container      |
+| **Performance**     | Native                                                        | 1.5-2x slower for syscall-heavy      | 1.1-1.3x slower for most           |
+| **Memory overhead** | None                                                          | Small (~10-50 MB)                    | Larger (~50-200 MB per microVM)    |
+| **Boot time**       | <1s                                                           | ~1s                                  | ~100-500ms                         |
+| **Compatibility**   | All Linux apps                                                | Most (some syscalls not implemented) | All (full kernel)                  |
+| **Use case**        | Trusted workloads                                             | Multi-tenant, untrusted              | Highest isolation needs            |
 
 The decision:
 
-* **runc** for trusted workloads (most production clusters).
-* **gVisor** for multi-tenant or untrusted code, where the performance hit is acceptable.
-* **Kata** for the highest isolation needs (e.g. running untrusted code that needs near-native performance).
+- **runc** for trusted workloads (most production clusters).
+- **gVisor** for multi-tenant or untrusted code, where the performance hit is acceptable.
+- **Kata** for the highest isolation needs (e.g. running untrusted code that needs near-native performance).
 
 ## 7. The Performance Tradeoff
 
@@ -248,25 +255,25 @@ Both gVisor and Kata add overhead. The cost:
 
 ### 7.1 gVisor overhead
 
-* **Syscall-heavy workloads** — 1.5-2x slower. Network servers, databases, language runtimes with frequent syscalls.
-* **I/O-heavy** — 2-3x slower. File servers, build systems.
-* **CPU-heavy** — small (~5%) overhead. The Sentry's syscall interception is cheap.
-* **Memory** — small (~10-50 MB per container) for the Sentry and Gofer.
+- **Syscall-heavy workloads** — 1.5-2x slower. Network servers, databases, language runtimes with frequent syscalls.
+- **I/O-heavy** — 2-3x slower. File servers, build systems.
+- **CPU-heavy** — small (~5%) overhead. The Sentry's syscall interception is cheap.
+- **Memory** — small (~10-50 MB per container) for the Sentry and Gofer.
 
 ### 7.2 Kata overhead
 
-* **Syscall-heavy** — small (~5-10%) overhead. The guest kernel is real; the host kernel sees only the hypervisor's calls.
-* **I/O-heavy** — virtio overhead. Slower than runc, comparable to gVisor.
-* **Memory** — larger (~50-200 MB per microVM) for the guest kernel and minimal userspace.
-* **Boot time** — ~100-500ms per microVM. Not a concern for long-running, but noticeable for short-lived.
+- **Syscall-heavy** — small (~5-10%) overhead. The guest kernel is real; the host kernel sees only the hypervisor's calls.
+- **I/O-heavy** — virtio overhead. Slower than runc, comparable to gVisor.
+- **Memory** — larger (~50-200 MB per microVM) for the guest kernel and minimal userspace.
+- **Boot time** — ~100-500ms per microVM. Not a concern for long-running, but noticeable for short-lived.
 
 ### 7.3 The benchmark reality
 
 For most production workloads, the overhead is **manageable**. The exceptions:
 
-* **High-RPS services** (>10k RPS) — the syscall overhead is per-request. 1.5x slowdown is 1.5x more nodes.
-* **DB servers** — Postgres, MySQL have high syscall rates. 1.5x slowdown is real.
-* **Real-time apps** — sub-millisecond latency is hard with an extra layer.
+- **High-RPS services** (>10k RPS) — the syscall overhead is per-request. 1.5x slowdown is 1.5x more nodes.
+- **DB servers** — Postgres, MySQL have high syscall rates. 1.5x slowdown is real.
+- **Real-time apps** — sub-millisecond latency is hard with an extra layer.
 
 For **most other workloads** (web apps, batch jobs, async workers), the overhead is small.
 
@@ -276,11 +283,11 @@ For **most other workloads** (web apps, batch jobs, async workers), the overhead
 
 gVisor re-implements ~250 syscalls. The gaps:
 
-* **No `ioctl`** with arbitrary commands. gVisor implements a subset.
-* **No raw sockets** (some networking apps).
-* **No `bpf()`** (eBPF programs from inside the container).
-* **Limited `ptrace`** (debugging tools that use ptrace may not work).
-* **No `/proc/<pid>/mem`** reads from outside the container (used by some debuggers).
+- **No `ioctl`** with arbitrary commands. gVisor implements a subset.
+- **No raw sockets** (some networking apps).
+- **No `bpf()`** (eBPF programs from inside the container).
+- **Limited `ptrace`** (debugging tools that use ptrace may not work).
+- **No `/proc/<pid>/mem`** reads from outside the container (used by some debuggers).
 
 Most apps work. Some specialized apps (eBPF, debuggers, certain language runtimes) may not.
 
@@ -288,9 +295,9 @@ Most apps work. Some specialized apps (eBPF, debuggers, certain language runtime
 
 Kata has a **full kernel** in the guest. Most apps work. The exceptions:
 
-* **Kernel modules** — the guest kernel is minimal; no loading of modules.
-* **Direct hardware access** — the guest sees virtio devices, not real hardware.
-* **Nested virtualization** — running a VM inside the container doesn't work.
+- **Kernel modules** — the guest kernel is minimal; no loading of modules.
+- **Direct hardware access** — the guest sees virtio devices, not real hardware.
+- **Nested virtualization** — running a VM inside the container doesn't work.
 
 For **most app containers** (web apps, services, batch), Kata works.
 
@@ -300,16 +307,16 @@ The networking model in sandboxed runtimes is **the same as runc** from the clus
 
 The difference is **inside the sandbox**:
 
-* **gVisor** — networking is via a TAP device. The container's network stack is the host's (gVisor uses the host's TCP/IP). The Sentry handles the application-level protocols.
-* **Kata** — networking is via a virtio-net device. The guest has its own network stack; the host is a bridge.
+- **gVisor** — networking is via a TAP device. The container's network stack is the host's (gVisor uses the host's TCP/IP). The Sentry handles the application-level protocols.
+- **Kata** — networking is via a virtio-net device. The guest has its own network stack; the host is a bridge.
 
 For the application, **networking is transparent**. The Pod has an IP, traffic flows in and out.
 
 For advanced networking (eBPF, host networking, custom CNI), there are caveats:
 
-* **gVisor + Cilium** — works (Cilium's eBPF is on the host; gVisor uses the host's network stack).
-* **Kata + eBPF** — works (eBPF is on the host; Kata uses virtio-net).
-* **gVisor + hostNetwork** — the container shares the host's network namespace. gVisor's interception is bypassed (syscalls go directly to the host).
+- **gVisor + Cilium** — works (Cilium's eBPF is on the host; gVisor uses the host's network stack).
+- **Kata + eBPF** — works (eBPF is on the host; Kata uses virtio-net).
+- **gVisor + hostNetwork** — the container shares the host's network namespace. gVisor's interception is bypassed (syscalls go directly to the host).
 
 ## 10. Resource Overhead
 
@@ -317,19 +324,20 @@ Sandbox runtimes add resource overhead:
 
 ### 10.1 gVisor
 
-* **Memory** — ~10-50 MB per container (Sentry + Gofer).
-* **CPU** — small overhead per syscall.
-* **Disk** — small (the gVisor binary itself).
+- **Memory** — ~10-50 MB per container (Sentry + Gofer).
+- **CPU** — small overhead per syscall.
+- **Disk** — small (the gVisor binary itself).
 
 ### 10.2 Kata
 
-* **Memory** — ~50-200 MB per microVM (guest kernel + minimal userspace).
-* **CPU** — small overhead per virtio call.
-* **Disk** — small (the kata-agent + qemu binary + guest kernel image).
+- **Memory** — ~50-200 MB per microVM (guest kernel + minimal userspace).
+- **CPU** — small overhead per virtio call.
+- **Disk** — small (the kata-agent + qemu binary + guest kernel image).
 
 For a 100-Pod cluster:
-* **gVisor** — 1-5 GB overhead total.
-* **Kata** — 5-20 GB overhead total.
+
+- **gVisor** — 1-5 GB overhead total.
+- **Kata** — 5-20 GB overhead total.
 
 This is **per-container overhead**. For high-density clusters (many small Pods), Kata's overhead is significant. gVisor's is more reasonable.
 
@@ -511,7 +519,7 @@ crictl logs <container-id>
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — the standard hardening
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level filters
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detecting exploits even in sandboxes
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — reduce the attack surface before runtime
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — the standard hardening
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level filters
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detecting exploits even in sandboxes
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — reduce the attack surface before runtime

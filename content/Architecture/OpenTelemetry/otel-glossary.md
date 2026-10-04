@@ -39,13 +39,13 @@ Your Code
 
 ## Component Definitions
 
-| Component | What it is | Lives in |
-|-----------|-----------|----------|
-| **API** | Interfaces only — `Tracer`, `Meter`, `Logger`. No-op by default. You write to this. | Your app code |
-| **SDK** | Implementation of the API. Adds sampling, batching, resource attributes. When you call `NewTracerProvider()`, that's the SDK. | Your app (dependency) |
-| **Protocol** (OTLP) | How data is encoded on the wire — protobuf/JSON over gRPC/HTTP. The wire format spec. | Between SDK ↔ Collector ↔ Backend |
-| **Exporter** | Sends SDK data somewhere. Can be inside your app (SDK-side) or inside the Collector. | SDK process OR Collector |
-| **Collector** | Standalone process. Receives → Processes → Exports. Does not run in your app process. | Separate deployment (K8s daemonset/deployment) |
+| Component           | What it is                                                                                                                    | Lives in                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **API**             | Interfaces only — `Tracer`, `Meter`, `Logger`. No-op by default. You write to this.                                           | Your app code                                  |
+| **SDK**             | Implementation of the API. Adds sampling, batching, resource attributes. When you call `NewTracerProvider()`, that's the SDK. | Your app (dependency)                          |
+| **Protocol** (OTLP) | How data is encoded on the wire — protobuf/JSON over gRPC/HTTP. The wire format spec.                                         | Between SDK ↔ Collector ↔ Backend              |
+| **Exporter**        | Sends SDK data somewhere. Can be inside your app (SDK-side) or inside the Collector.                                          | SDK process OR Collector                       |
+| **Collector**       | Standalone process. Receives → Processes → Exports. Does not run in your app process.                                         | Separate deployment (K8s daemonset/deployment) |
 
 ## Key Distinctions
 

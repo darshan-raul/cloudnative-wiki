@@ -31,15 +31,15 @@ spec:
     matchLabels:
       app: api
   policyTypes:
-  - Ingress
+    - Ingress
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: web
-    ports:
-    - protocol: TCP
-      port: 8080
+    - from:
+        - podSelector:
+            matchLabels:
+              app: web
+      ports:
+        - protocol: TCP
+          port: 8080
 ```
 
 ## Default Deny All
@@ -52,8 +52,8 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
 ```
 
 ## Allow DNS Egress
@@ -66,15 +66,15 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: kube-system
-    ports:
-    - protocol: UDP
-      port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
 ```
 
 ## References

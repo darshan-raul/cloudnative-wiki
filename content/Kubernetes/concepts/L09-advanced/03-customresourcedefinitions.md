@@ -9,7 +9,7 @@ aliases:
 
 # CustomResourceDefinitions (CRDs)
 
->*"https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/"*
+> _"https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/"_
 
 A CRD is how you **add a new object type to the Kubernetes API**. Once registered, your custom resource is first-class — `kubectl get` it, apply RBAC to it, watch it like any other object. The CRD just defines the schema; a controller (or operator) does the actual work.
 
@@ -40,13 +40,13 @@ A CRD is how you **add a new object type to the Kubernetes API**. Once registere
 
 Built-in k8s objects (Pod, Service, ConfigMap) cover the basics. CRDs let you extend the API with your own types:
 
-| Use case | Example CRs |
-|----------|-------------|
-| Application infra | `Redis`, `PostgresCluster`, `Kafka`, `MySQL` |
-| Platform primitives | `IngressRoute`, `Gateway`, `Certificate`, `Tenant` |
-| GitOps / delivery | `AppProject`, `Application`, `Pipeline` |
-| Policy | `Policy`, `ComplianceReport`, `SecurityBaseline` |
-| Infra | `Machine`, `MachineSet`, `Cluster` (capm3, EKS Blueprints) |
+| Use case            | Example CRs                                                |
+| ------------------- | ---------------------------------------------------------- |
+| Application infra   | `Redis`, `PostgresCluster`, `Kafka`, `MySQL`               |
+| Platform primitives | `IngressRoute`, `Gateway`, `Certificate`, `Tenant`         |
+| GitOps / delivery   | `AppProject`, `Application`, `Pipeline`                    |
+| Policy              | `Policy`, `ComplianceReport`, `SecurityBaseline`           |
+| Infra               | `Machine`, `MachineSet`, `Cluster` (capm3, EKS Blueprints) |
 
 Without CRDs, you'd use a separate database or config store — and lose kubectl, RBAC, the watch loop, and every tool that understands k8s objects.
 
@@ -60,34 +60,34 @@ kind: CustomResourceDefinition
 metadata:
   name: crontabs.stable.example.com
 spec:
-  group: stable.example.com          # API group: /apis/<group>/<version>
+  group: stable.example.com # API group: /apis/<group>/<version>
   names:
-    plural: crontabs                  # URL path: /apis/stable.example.com/v1/crontabs
+    plural: crontabs # URL path: /apis/stable.example.com/v1/crontabs
     singular: crontab
-    shortNames: [ct]                 # kubectl get ct
-    kind: CronTab                    # Go type name (PascalCase)
-    listKind: CronTabList            # List type name
-    categories: [all]                # kubectl get all (groups this with built-ins)
-  scope: Namespaced                  # or Cluster (like Node / PersistentVolume)
+    shortNames: [ct] # kubectl get ct
+    kind: CronTab # Go type name (PascalCase)
+    listKind: CronTabList # List type name
+    categories: [all] # kubectl get all (groups this with built-ins)
+  scope: Namespaced # or Cluster (like Node / PersistentVolume)
   versions:
-  - name: v1
-    served: true                     # serve this version via the API
-    storage: true                   # use this version for persistence in etcd
-    schema:                         # OpenAPI v3 validation (required in v1)
-      openAPIV3Schema:
-        type: object
-        properties:
-          spec:
-            type: object
-            properties:
-              cronSpec:
-                type: string
-              image:
-                type: string
-              replicas:
-                type: integer
-                minimum: 1
-                maximum: 10
+    - name: v1
+      served: true # serve this version via the API
+      storage: true # use this version for persistence in etcd
+      schema: # OpenAPI v3 validation (required in v1)
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                cronSpec:
+                  type: string
+                image:
+                  type: string
+                replicas:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
 ```
 
 After apply:
@@ -126,12 +126,12 @@ If you change the stored representation, you need a **conversion webhook** (see 
 versions:
   - name: v1
     served: true
-    storage: true      # this one is written to etcd
+    storage: true # this one is written to etcd
   - name: v1beta1
     served: true
-    storage: false     # not persisted
+    storage: false # not persisted
   - name: v1alpha1
-    served: false      # hidden from discovery
+    served: false # hidden from discovery
     storage: false
 ```
 
@@ -145,7 +145,7 @@ The `openAPIV3Schema` validates objects at admission time. If validation fails, 
 schema:
   openAPIV3Schema:
     type: object
-    required: [spec]               # required top-level fields
+    required: [spec] # required top-level fields
     properties:
       apiVersion:
         type: string
@@ -158,7 +158,7 @@ schema:
           name:
             type: string
             maxLength: 63
-            pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+            pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
           labels:
             type: object
             additionalProperties:
@@ -171,10 +171,10 @@ schema:
             type: integer
             minimum: 1
             maximum: 100
-            default: 1              # default if not specified
+            default: 1 # default if not specified
           image:
             type: string
-            pattern: '^[a-z0-9.-]+/[a-z0-9./-:]+$'
+            pattern: "^[a-z0-9.-]+/[a-z0-9./-:]+$"
           env:
             type: array
             items:
@@ -218,7 +218,7 @@ versions:
     served: true
     storage: true
     subresources:
-      status: {}                    # enables .status on the CR
+      status: {} # enables .status on the CR
 ```
 
 Without `subresources: status`, any change to `.status` is treated as a change to `.spec` and triggers a full reconciliation — causing loops.
@@ -256,7 +256,7 @@ additionalPrinterColumns:
     type: string
     jsonPath: .spec.cronSpec
     description: The cron schedule
-    priority: 0                         # 0 = standard column, 1 = wide-only
+    priority: 0 # 0 = standard column, 1 = wide-only
   - name: Replicas
     type: integer
     jsonPath: .spec.replicas
@@ -266,7 +266,7 @@ additionalPrinterColumns:
   - name: Status
     type: string
     jsonPath: .status.phase
-    priority: 1                        # hidden in kubectl (wide only)
+    priority: 1 # hidden in kubectl (wide only)
 ```
 
 Priority `0` shows in `kubectl get` by default. Priority `1` shows only with `kubectl get -o wide`.
@@ -282,7 +282,7 @@ names:
   shortNames: [ct]
   kind: CronTab
   listKind: CronTabList
-  categories: [all, example]         # kubectl get all, kubectl get example
+  categories: [all, example] # kubectl get all, kubectl get example
 ```
 
 ```bash
@@ -300,17 +300,17 @@ scope: Namespaced        # like Deployment, lives in a namespace
 scope: Cluster           # like Node, ClusterRole, PersistentVolume — cluster-wide
 ```
 
-| Scope | RBAC verb | Default namespace |
-|-------|-----------|-------------------|
-| Namespaced | `get`, `list`, `watch`, `create`, `delete`, `deletecollection`, `patch`, `update` in a namespace | Yes |
-| Cluster | Same verbs, no namespace | N/A (no namespace) |
+| Scope      | RBAC verb                                                                                        | Default namespace  |
+| ---------- | ------------------------------------------------------------------------------------------------ | ------------------ |
+| Namespaced | `get`, `list`, `watch`, `create`, `delete`, `deletecollection`, `patch`, `update` in a namespace | Yes                |
+| Cluster    | Same verbs, no namespace                                                                         | N/A (no namespace) |
 
 ```yaml
 # Cluster-scoped: no namespace in metadata
 apiVersion: stable.example.com/v1
 kind: Zoo
 metadata:
-  name: my-zoo          # name must be unique cluster-wide
+  name: my-zoo # name must be unique cluster-wide
 spec:
   capacity: 100
 ```
@@ -335,7 +335,7 @@ spec:
   conversion:
     strategy: Webhook
     webhook:
-      conversionReviewVersions: [v1, v1beta1]   # CRD calls your webhook with these
+      conversionReviewVersions: [v1, v1beta1] # CRD calls your webhook with these
       clientConfig:
         service:
           name: my-crd-converter
@@ -379,10 +379,10 @@ The conversion is bidirectional: your webhook must handle `v1 → v1alpha1` and 
 
 #### Conversion strategies compared
 
-| Strategy | Use when |
-|----------|----------|
-| None (default) | Single version only |
-| Webhook | Schema changes between multiple served versions |
+| Strategy       | Use when                                        |
+| -------------- | ----------------------------------------------- |
+| None (default) | Single version only                             |
+| Webhook        | Schema changes between multiple served versions |
 
 ---
 
@@ -423,15 +423,15 @@ Frameworks: **Kubebuilder** and **Operator SDK** both scaffold CRD + controller 
 
 ### 11. CRDs vs aggregated API servers
 
-| | CRD | Aggregated API Server |
-|---|---|---|
-| Storage | etcd (via kube-apiserver) | Custom (you choose) |
-| Served by | kube-apiserver | Separate pod |
-| Authentication | RBAC, same as k8s | Custom or delegated |
-| Schema | OpenAPI v3 | Protobuf / OpenAPI |
-| Performance | Good for low/moderate volume | Better for very high QPS |
-| Operational burden | Low | High — run a full API server |
-| When to use | 99% of cases | When you need a different storage backend, custom auth, or subresources |
+|                    | CRD                          | Aggregated API Server                                                   |
+| ------------------ | ---------------------------- | ----------------------------------------------------------------------- |
+| Storage            | etcd (via kube-apiserver)    | Custom (you choose)                                                     |
+| Served by          | kube-apiserver               | Separate pod                                                            |
+| Authentication     | RBAC, same as k8s            | Custom or delegated                                                     |
+| Schema             | OpenAPI v3                   | Protobuf / OpenAPI                                                      |
+| Performance        | Good for low/moderate volume | Better for very high QPS                                                |
+| Operational burden | Low                          | High — run a full API server                                            |
+| When to use        | 99% of cases                 | When you need a different storage backend, custom auth, or subresources |
 
 **Start with CRDs.** Move to aggregated API servers when CRDs genuinely can't do what you need.
 
@@ -493,7 +493,7 @@ schema:
         properties:
           replicas:
             type: integer
-            default: 1          # applied on CREATE if not specified
+            default: 1 # applied on CREATE if not specified
 ```
 
 Defaults are set by the CRD admission plugin when `spec.preserveUnknownFields` is not used (deprecated in 1.16+).
@@ -504,7 +504,7 @@ By default, CRDs **prune unknown fields** — fields in the YAML that aren't in 
 
 ```yaml
 spec:
-  preserveUnknownFields: false    # default — strips unknown fields on write
+  preserveUnknownFields: false # default — strips unknown fields on write
 ```
 
 Set to `true` only if you need forward compatibility with future versions.
@@ -542,23 +542,23 @@ kubectl get crontabs -l app=my-app
 
 ### 16. CRD field reference
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `spec.group` | Yes | API group, e.g. `stable.example.com` |
-| `spec.names.plural` | Yes | URL-safe plural name |
-| `spec.names.kind` | Yes | CamelCase type name |
-| `spec.scope` | Yes | `Namespaced` or `Cluster` |
-| `spec.versions[].name` | Yes | Version string, e.g. `v1`, `v1beta1` |
-| `spec.versions[].served` | Yes | Whether to serve this version |
-| `spec.versions[].storage` | Yes | Exactly one `true` — the stored version |
-| `spec.versions[].schema` | Yes (v1) | OpenAPI v3 schema |
-| `spec.versions[].subresources.status` | No | Enables `.status` |
-| `spec.versions[].subresources.scale` | No | Enables HPA targeting |
-| `spec.versions[].additionalPrinterColumns` | No | `kubectl get` column config |
-| `spec.conversion.strategy` | No | `None` (default) or `Webhook` |
-| `spec.names.shortNames` | No | Short aliases |
-| `spec.names.categories` | No | Group with `kubectl get all` |
-| `spec.names.listKind` | Yes | List type name |
+| Field                                      | Required | Description                             |
+| ------------------------------------------ | -------- | --------------------------------------- |
+| `spec.group`                               | Yes      | API group, e.g. `stable.example.com`    |
+| `spec.names.plural`                        | Yes      | URL-safe plural name                    |
+| `spec.names.kind`                          | Yes      | CamelCase type name                     |
+| `spec.scope`                               | Yes      | `Namespaced` or `Cluster`               |
+| `spec.versions[].name`                     | Yes      | Version string, e.g. `v1`, `v1beta1`    |
+| `spec.versions[].served`                   | Yes      | Whether to serve this version           |
+| `spec.versions[].storage`                  | Yes      | Exactly one `true` — the stored version |
+| `spec.versions[].schema`                   | Yes (v1) | OpenAPI v3 schema                       |
+| `spec.versions[].subresources.status`      | No       | Enables `.status`                       |
+| `spec.versions[].subresources.scale`       | No       | Enables HPA targeting                   |
+| `spec.versions[].additionalPrinterColumns` | No       | `kubectl get` column config             |
+| `spec.conversion.strategy`                 | No       | `None` (default) or `Webhook`           |
+| `spec.names.shortNames`                    | No       | Short aliases                           |
+| `spec.names.categories`                    | No       | Group with `kubectl get all`            |
+| `spec.names.listKind`                      | Yes      | List type name                          |
 
 ---
 
@@ -601,22 +601,22 @@ kubectl get --raw /apis/stable.example.com/v1/crontabs
 
 ### 18. Gotchas
 
-* **Once `Established`, removing a CRD deletes all instances.** The data is gone. Always back up before deleting.
-* **`schema` is required in CRD v1** (`apiextensions.k8s.io/v1`, k8s 1.16+). Old `v1beta1` CRDs without a schema are rejected.
-* **CRD validation happens at admission.** It won't catch relationships between objects (e.g. "this Secret must exist") — use a validating webhook for that.
-* **A CRD defines a type; it doesn't do anything.** You need a controller/operator to act on CR instances.
-* **`preserveUnknownFields: true` breaks schema evolution.** It allows fields not in the schema to be stored, making future schema changes harder. Avoid it.
-* **Status updates without `subresources: status`** trigger a full spec reconciliation — controllers that update `.status` frequently can cause update storms.
-* **Multiple CRD versions need a conversion webhook** to maintain data integrity. The webhook must be written and deployed.
-* **`kubectl explain <kind>`** works for CRDs if the CRD has schema — gives you the field tree.
-* **`kubectl get` columns come from `additionalPrinterColumns`**, not from the schema. Without it, `kubectl get` shows only NAME/AGE.
-* **The `categories: [all]` trick** makes `kubectl get all` show your CRs — useful for GitOps tools that use `kubectl get all`.
+- **Once `Established`, removing a CRD deletes all instances.** The data is gone. Always back up before deleting.
+- **`schema` is required in CRD v1** (`apiextensions.k8s.io/v1`, k8s 1.16+). Old `v1beta1` CRDs without a schema are rejected.
+- **CRD validation happens at admission.** It won't catch relationships between objects (e.g. "this Secret must exist") — use a validating webhook for that.
+- **A CRD defines a type; it doesn't do anything.** You need a controller/operator to act on CR instances.
+- **`preserveUnknownFields: true` breaks schema evolution.** It allows fields not in the schema to be stored, making future schema changes harder. Avoid it.
+- **Status updates without `subresources: status`** trigger a full spec reconciliation — controllers that update `.status` frequently can cause update storms.
+- **Multiple CRD versions need a conversion webhook** to maintain data integrity. The webhook must be written and deployed.
+- **`kubectl explain <kind>`** works for CRDs if the CRD has schema — gives you the field tree.
+- **`kubectl get` columns come from `additionalPrinterColumns`**, not from the schema. Without it, `kubectl get` shows only NAME/AGE.
+- **The `categories: [all]` trick** makes `kubectl get all` show your CRs — useful for GitOps tools that use `kubectl get all`.
 
 ---
 
 ## See also
 
-* [[Kubernetes/concepts/L09-advanced/01-operators|Operators]] — CRD + controller + domain knowledge
-* [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — the watch/reconcile loop
-* [[Kubernetes/concepts/L09-advanced/07-aggregation-layer|Aggregation Layer]] — when CRDs aren't enough
-* [[Kubernetes/concepts/L09-advanced/04-admission-controllers|Admission Controllers]] — for policies that should block/mutate CRs
+- [[Kubernetes/concepts/L09-advanced/01-operators|Operators]] — CRD + controller + domain knowledge
+- [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — the watch/reconcile loop
+- [[Kubernetes/concepts/L09-advanced/07-aggregation-layer|Aggregation Layer]] — when CRDs aren't enough
+- [[Kubernetes/concepts/L09-advanced/04-admission-controllers|Admission Controllers]] — for policies that should block/mutate CRs

@@ -12,7 +12,7 @@ tags:
 
 # GCP Private Service Connect (PSC) 🔌🔒
 
-Google Cloud Private Service Connect (PSC) allows consumers to access managed services (such as Google APIs, third-party SaaS platforms like Snowflake/MongoDB Atlas, or internal microservices in other projects) privately from their own VPC network. 
+Google Cloud Private Service Connect (PSC) allows consumers to access managed services (such as Google APIs, third-party SaaS platforms like Snowflake/MongoDB Atlas, or internal microservices in other projects) privately from their own VPC network.
 
 By leveraging software-defined proxy translation, PSC solves the two greatest pain points of VPC Network Peering: **it completely eliminates RFC 1918 IP address overlap conflicts** and **preserves strict administrative isolation** between producer and consumer networks.
 
@@ -45,7 +45,7 @@ By leveraging software-defined proxy translation, PSC solves the two greatest pa
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **Zero IP Overlap Conflicts:** Both the consumer and producer VPCs can use the exact same CIDR block (`10.0.0.0/16`). Because PSC terminates traffic on a private endpoint and translates it through a dedicated NAT subnet, no IP routing collision can ever occur!
+- **Zero IP Overlap Conflicts:** Both the consumer and producer VPCs can use the exact same CIDR block (`10.0.0.0/16`). Because PSC terminates traffic on a private endpoint and translates it through a dedicated NAT subnet, no IP routing collision can ever occur!
 
 ---
 
@@ -53,30 +53,31 @@ By leveraging software-defined proxy translation, PSC solves the two greatest pa
 
 ### 1. Private Service Connect vs. VPC Network Peering
 
-| Dimension | VPC Network Peering | Private Service Connect (PSC) |
-| :--- | :--- | :--- |
-| **IP Address Constraints** | **Strictly Forbidden to Overlap:** Both VPC CIDRs must be mutually exclusive | **Overlapping CIDRs Fully Supported:** No coordination needed |
-| **Routing Domain** | Merges routing domains; both networks see all routes | **Strict Isolation:** Consumer only sees a single private IP address |
-| **Transitive Routing** | Non-transitive | **Fully Accessible:** Reachable from peered VNets, on-prem VPN, and Interconnect |
-| **Data Exfiltration Risk**| High (entire remote VPC is routable) | **Zero Exfiltration:** Traffic cannot flow backward from producer to consumer |
-| **SaaS Publishing** | Impossible to peer with hundreds of customers | **Ideal for Multi-Tenant SaaS:** Scale to thousands of consumers |
+| Dimension                  | VPC Network Peering                                                          | Private Service Connect (PSC)                                                    |
+| :------------------------- | :--------------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| **IP Address Constraints** | **Strictly Forbidden to Overlap:** Both VPC CIDRs must be mutually exclusive | **Overlapping CIDRs Fully Supported:** No coordination needed                    |
+| **Routing Domain**         | Merges routing domains; both networks see all routes                         | **Strict Isolation:** Consumer only sees a single private IP address             |
+| **Transitive Routing**     | Non-transitive                                                               | **Fully Accessible:** Reachable from peered VNets, on-prem VPN, and Interconnect |
+| **Data Exfiltration Risk** | High (entire remote VPC is routable)                                         | **Zero Exfiltration:** Traffic cannot flow backward from producer to consumer    |
+| **SaaS Publishing**        | Impossible to peer with hundreds of customers                                | **Ideal for Multi-Tenant SaaS:** Scale to thousands of consumers                 |
 
 ### 2. PSC Endpoints vs. PSC Backends
 
-* **PSC Endpoint (Forwarding Rule):**
-  * Allocates a dedicated private IP from the consumer's local subnet.
-  * Workloads query this IP directly or via internal DNS.
-  * Best for internal database access, private Google APIs (`storage.p.googleapis.com`), and SaaS consumption.
-* **PSC Backend:**
-  * Uses a PSC Network Endpoint Group (NEG) as a backend for a Google Cloud Load Balancer.
-  * Allows you to place Cloud Armor WAF, Cloud CDN, and custom URL routing maps directly in front of cross-project or multi-tenant services.
+- **PSC Endpoint (Forwarding Rule):**
+  - Allocates a dedicated private IP from the consumer's local subnet.
+  - Workloads query this IP directly or via internal DNS.
+  - Best for internal database access, private Google APIs (`storage.p.googleapis.com`), and SaaS consumption.
+- **PSC Backend:**
+  - Uses a PSC Network Endpoint Group (NEG) as a backend for a Google Cloud Load Balancer.
+  - Allows you to place Cloud Armor WAF, Cloud CDN, and custom URL routing maps directly in front of cross-project or multi-tenant services.
 
 ### 3. The Producer NAT Subnet
 
 When publishing a service via PSC, the producer must create a specialized subnet:
-* **Subnet Purpose:** `PRIVATE_SERVICE_CONNECT`
-* All consumer packets arriving at the producer's internal load balancer have their source IP translated (SNAT) to an IP from this NAT subnet.
-* Enables the producer's firewalls and backend servers to accept traffic without knowing the consumer's internal IP ranges.
+
+- **Subnet Purpose:** `PRIVATE_SERVICE_CONNECT`
+- All consumer packets arriving at the producer's internal load balancer have their source IP translated (SNAT) to an IP from this NAT subnet.
+- Enables the producer's firewalls and backend servers to accept traffic without knowing the consumer's internal IP ranges.
 
 ---
 
@@ -138,38 +139,40 @@ gcloud compute forwarding-rules create psc-google-apis \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **PSC Endpoints per VPC** | Up to 50 endpoints | Can request quota increases |
-| **Service Attachments per project** | Up to 50 attachments | For publishing enterprise SaaS |
-| **Max connections per Service Attachment**| 1,000 connections | Accept automatically or via project whitelist |
-| **NAT Subnet sizing** | Recommended minimum `/24` | 1 NAT IP supports thousands of connections |
+| Parameter                                  | Limit                     | Production Notes                              |
+| :----------------------------------------- | :------------------------ | :-------------------------------------------- |
+| **PSC Endpoints per VPC**                  | Up to 50 endpoints        | Can request quota increases                   |
+| **Service Attachments per project**        | Up to 50 attachments      | For publishing enterprise SaaS                |
+| **Max connections per Service Attachment** | 1,000 connections         | Accept automatically or via project whitelist |
+| **NAT Subnet sizing**                      | Recommended minimum `/24` | 1 NAT IP supports thousands of connections    |
 
 ---
 
 ## References
 
-* **Private Service Connect Overview:** https://cloud.google.com/vpc/docs/private-service-connect
-* **Publishing Services Guide:** https://cloud.google.com/vpc/docs/configure-private-service-connect-services
-* **Accessing Google APIs via PSC:** https://cloud.google.com/vpc/docs/configure-private-service-connect-apis
-* **Pricing:** https://cloud.google.com/vpc/pricing#private-service-connect
+- **Private Service Connect Overview:** https://cloud.google.com/vpc/docs/private-service-connect
+- **Publishing Services Guide:** https://cloud.google.com/vpc/docs/configure-private-service-connect-services
+- **Accessing Google APIs via PSC:** https://cloud.google.com/vpc/docs/configure-private-service-connect-apis
+- **Pricing:** https://cloud.google.com/vpc/pricing#private-service-connect
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Private Google APIs Access via PSC Endpoint
-* 1 PSC Endpoint connecting an entire private VPC to Google APIs (Cloud Storage, BigQuery, Pub/Sub).
-* Fixed endpoint hourly rate: $0.01 / hour × 730 hrs = **$7.30 / month**.
-* Data processed: 10 TB / month ($0.01 / GB = **$100.00 / month**).
-* **Total Monthly Cost:** **~$107.30 / month** (Guarantees zero internet exposure for sensitive data queries).
+
+- 1 PSC Endpoint connecting an entire private VPC to Google APIs (Cloud Storage, BigQuery, Pub/Sub).
+- Fixed endpoint hourly rate: $0.01 / hour × 730 hrs = **$7.30 / month**.
+- Data processed: 10 TB / month ($0.01 / GB = **$100.00 / month**).
+- **Total Monthly Cost:** **~$107.30 / month** (Guarantees zero internet exposure for sensitive data queries).
 
 ### Scenario 2: Multi-Tenant Enterprise Microservice Publishing
-* Central payments team publishing their API to 20 internal consumer projects via Service Attachment.
-* Service Attachment hosting: **$0.00** (Free for producers).
-* Consumer endpoint fee: 20 endpoints × $7.30 / month = **$146.00 / month** (Billed to individual consumer projects).
-* Data transfer processed: Negligible ($0.01/GB).
-* **Total Monthly Bill:** **~$146.00 / month** across all 20 consumer business units.
+
+- Central payments team publishing their API to 20 internal consumer projects via Service Attachment.
+- Service Attachment hosting: **$0.00** (Free for producers).
+- Consumer endpoint fee: 20 endpoints × $7.30 / month = **$146.00 / month** (Billed to individual consumer projects).
+- Data transfer processed: Negligible ($0.01/GB).
+- **Total Monthly Bill:** **~$146.00 / month** across all 20 consumer business units.
 
 ---
 

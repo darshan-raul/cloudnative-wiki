@@ -14,10 +14,13 @@ Regular cluster upgrades ensure you have the latest features, security patches, 
 ## Topics
 
 ### [[Kubernetes/eks/cluster-upgrades/upgrade-process|Upgrade Process]]
+
 Step-by-step guide for upgrading EKS clusters
 
 ### [[Kubernetes/eks/cluster-upgrades/upgrade-journey|Upgrade Journey Series]]
+
 Real-world upgrade experiences from Marcincuber's blog series
+
 - [1.23 to 1.24](https://marcincuber.medium.com/amazon-eks-upgrade-journey-from-1-23-to-1-24-b7b0b1afa5b4)
 - [1.25 to 1.26](https://marcincuber.medium.com/amazon-eks-upgrade-journey-from-1-25-to-1-26-electrifying-79b287084eef)
 - [1.26 to 1.27](https://marcincuber.medium.com/amazon-eks-upgrade-journey-from-1-26-to-1-27-chill-vibes-46f3f979afac)
@@ -27,10 +30,10 @@ Real-world upgrade experiences from Marcincuber's blog series
 
 ## Version Support
 
-| Support Type | Duration |
-|--------------|----------|
-| Standard | ~14 months (3 K8s versions) |
-| Extended | ~26 months (additional 12 months) |
+| Support Type | Duration                          |
+| ------------ | --------------------------------- |
+| Standard     | ~14 months (3 K8s versions)       |
+| Extended     | ~26 months (additional 12 months) |
 
 ## References
 

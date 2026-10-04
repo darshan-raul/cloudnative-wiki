@@ -27,14 +27,14 @@ EBS is network-attached — not like a local SSD. Latency is ~0.5-2ms vs local N
 
 ### Volume Types
 
-| Type | Performance | Use Case | Cost (per GB/mo) |
-|------|-------------|----------|-------------------|
-| gp3 | 3,000 IOPS, 125 MB/s (base) | General purpose, lower cost | ~$0.08 |
-| gp2 | 3,000 IOPS burst | Legacy general purpose | ~$0.10 |
-| io2 | 256,000 IOPS, 1,000 MB/s | High-performance databases | ~$0.125 |
-| io2 Block Express | 256,000 IOPS, 4,000 MB/s | Ultra-performance | ~$0.125 |
-| st1 | 500 IOPS, 250 MB/s | Throughput-intensive (Hadoop, log processing) | ~$0.045 |
-| sc1 | 250 IOPS, 250 MB/s | Infrequent access | ~$0.025 |
+| Type              | Performance                 | Use Case                                      | Cost (per GB/mo) |
+| ----------------- | --------------------------- | --------------------------------------------- | ---------------- |
+| gp3               | 3,000 IOPS, 125 MB/s (base) | General purpose, lower cost                   | ~$0.08           |
+| gp2               | 3,000 IOPS burst            | Legacy general purpose                        | ~$0.10           |
+| io2               | 256,000 IOPS, 1,000 MB/s    | High-performance databases                    | ~$0.125          |
+| io2 Block Express | 256,000 IOPS, 4,000 MB/s    | Ultra-performance                             | ~$0.125          |
+| st1               | 500 IOPS, 250 MB/s          | Throughput-intensive (Hadoop, log processing) | ~$0.045          |
+| sc1               | 250 IOPS, 250 MB/s          | Infrequent access                             | ~$0.025          |
 
 ### gp3 vs gp2
 
@@ -154,6 +154,7 @@ io2: 256,000 IOPS (Block Express: 256,000)
 ### Volume Size and Performance (gp2/gp3)
 
 gp2 and gp3 IOPS scale with volume size:
+
 - < 1TB → 3,000 IOPS
 - 1-2TB → 6,000 IOPS
 - 2-3TB → 9,000 IOPS
@@ -176,6 +177,7 @@ aws cloudwatch get-metric-statistics \
 ```
 
 Key metrics:
+
 - `VolumeReadOps` / `VolumeWriteOps` — I/O operations
 - `VolumeQueueLength` — wait time (should be < 10 for good performance)
 - `VolumeBurstBalance` (gp2 only) — burst IOPS remaining
@@ -195,25 +197,25 @@ Use case: Oracle RAC (shared disk cluster), Windows Scale-Out File Server. Requi
 
 ## Instance Store vs EBS
 
-| | Instance Store | EBS |
-|--|--|--|
-| Location | Local to host (NVMe) | Network attached |
-| Durability | 0 (ephemeral) | 99.999% (replicated in AZ) |
-| Size | Limited by instance type | Up to 16TB |
-| Performance | Very high (0.1ms) | High (0.5-2ms) |
-| Cost | Included in instance price | Additional cost |
-| Use | Temporary, non-critical data | Persistent data |
+|             | Instance Store               | EBS                        |
+| ----------- | ---------------------------- | -------------------------- |
+| Location    | Local to host (NVMe)         | Network attached           |
+| Durability  | 0 (ephemeral)                | 99.999% (replicated in AZ) |
+| Size        | Limited by instance type     | Up to 16TB                 |
+| Performance | Very high (0.1ms)            | High (0.5-2ms)             |
+| Cost        | Included in instance price   | Additional cost            |
+| Use         | Temporary, non-critical data | Persistent data            |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Volumes per account | 5,000 (soft limit) |
-| Max volume size | 16TB |
-| Max IOPS (gp3) | 16,000 (independent of size) |
-| Max IOPS (io2 Block Express) | 256,000 |
-| Max throughput (gp3) | 1,000 MB/s |
-| Snapshots per volume | Unlimited |
+| Resource                     | Limit                        |
+| ---------------------------- | ---------------------------- |
+| Volumes per account          | 5,000 (soft limit)           |
+| Max volume size              | 16TB                         |
+| Max IOPS (gp3)               | 16,000 (independent of size) |
+| Max IOPS (io2 Block Express) | 256,000                      |
+| Max throughput (gp3)         | 1,000 MB/s                   |
+| Snapshots per volume         | Unlimited                    |
 
 ## References
 

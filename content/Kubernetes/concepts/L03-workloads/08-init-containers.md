@@ -131,96 +131,97 @@ metadata:
   name: app
 spec:
   initContainers:
-  - name: wait-for-db
-    image: busybox:1.36
-    command: ['sh', '-c', 'until nc -z db 5432; do echo waiting; sleep 2; done']
-  - name: migrate
-    image: myorg/app:2.1
-    command: ['./manage', 'migrate']
-  - name: fetch-config
-    image: myorg/config-fetcher:1.0
-    command: ['./fetch', '--output=/config/app.yaml']
-    volumeMounts:
-    - name: config
-      mountPath: /config
+    - name: wait-for-db
+      image: busybox:1.36
+      command:
+        ["sh", "-c", "until nc -z db 5432; do echo waiting; sleep 2; done"]
+    - name: migrate
+      image: myorg/app:2.1
+      command: ["./manage", "migrate"]
+    - name: fetch-config
+      image: myorg/config-fetcher:1.0
+      command: ["./fetch", "--output=/config/app.yaml"]
+      volumeMounts:
+        - name: config
+          mountPath: /config
   containers:
-  - name: app
-    image: myorg/app:2.1
-    command: ['./serve']
-    volumeMounts:
-    - name: config
-      mountPath: /etc/app
-      readOnly: true
-    readinessProbe:
-      exec:
-        command: ['/bin/sh', '-c', 'cat /tmp/ready']
-      initialDelaySeconds: 5
-      periodSeconds: 5
+    - name: app
+      image: myorg/app:2.1
+      command: ["./serve"]
+      volumeMounts:
+        - name: config
+          mountPath: /etc/app
+          readOnly: true
+      readinessProbe:
+        exec:
+          command: ["/bin/sh", "-c", "cat /tmp/ready"]
+        initialDelaySeconds: 5
+        periodSeconds: 5
   volumes:
-  - name: config
-    emptyDir: {}
+    - name: config
+      emptyDir: {}
 ```
 
 Full field reference for an init container (it's a regular container spec, with some restrictions):
 
 ```yaml
 initContainers:
-- name: my-init
-  image: myorg/init:1.0
-  imagePullPolicy: IfNotPresent
-  command: ["./init.sh"]
-  args: ["--config=/etc/config"]
-  workingDir: /app
-  env:
-  - name: LOG_LEVEL
-    value: debug
-  envFrom:
-  - configMapRef:
-      name: app-config
-  resources:                     # independent budget
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-  volumeMounts:
-  - name: shared
-    mountPath: /shared
-  securityContext:               # independent of app container's
-    runAsNonRoot: true
-    capabilities:
-      add: ["NET_ADMIN"]         # init needs this; app shouldn't have it
-  lifecycle:                     # postStart/preStop are NOT supported on init containers
-    # postStart: ❌ ignored
-    # preStop:  ❌ ignored
-  livenessProbe:                 # NOT supported on init containers
-    # ❌ ignored
-  readinessProbe:                # NOT supported on init containers
-    # ❌ ignored
-  startupProbe:                  # NOT supported on init containers
-    # ❌ ignored
+  - name: my-init
+    image: myorg/init:1.0
+    imagePullPolicy: IfNotPresent
+    command: ["./init.sh"]
+    args: ["--config=/etc/config"]
+    workingDir: /app
+    env:
+      - name: LOG_LEVEL
+        value: debug
+    envFrom:
+      - configMapRef:
+          name: app-config
+    resources: # independent budget
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    volumeMounts:
+      - name: shared
+        mountPath: /shared
+    securityContext: # independent of app container's
+      runAsNonRoot: true
+      capabilities:
+        add: ["NET_ADMIN"] # init needs this; app shouldn't have it
+    lifecycle: # postStart/preStop are NOT supported on init containers
+      # postStart: ❌ ignored
+      # preStop:  ❌ ignored
+    livenessProbe: # NOT supported on init containers
+      # ❌ ignored
+    readinessProbe: # NOT supported on init containers
+      # ❌ ignored
+    startupProbe: # NOT supported on init containers
+      # ❌ ignored
 ```
 
 ### What init containers support
 
-| Field | Supported | Notes |
-|---|---|---|
-| `image` | ✅ | |
-| `command`, `args` | ✅ | |
-| `env`, `envFrom` | ✅ | |
-| `resources` | ✅ | Independent budget |
-| `volumeMounts` | ✅ | Shares Pod's volumes |
-| `securityContext` | ✅ | Independent of app container's |
-| `workingDir` | ✅ | |
-| `imagePullPolicy` | ✅ | |
-| `lifecycle.postStart` | ❌ | Init must exit; no post-start needed |
-| `lifecycle.preStop` | ❌ | Init must exit; no pre-stop needed |
-| `livenessProbe` | ❌ | Init must exit; no liveness check |
-| `readinessProbe` | ❌ | Init is binary (running or done) |
-| `startupProbe` | ❌ | Same reason |
-| `stdin`, `tty` | ✅ | Unusual but valid |
-| `ports` | ⚠️ | Allowed but unusual; init shouldn't be a server |
+| Field                 | Supported | Notes                                           |
+| --------------------- | --------- | ----------------------------------------------- |
+| `image`               | ✅        |                                                 |
+| `command`, `args`     | ✅        |                                                 |
+| `env`, `envFrom`      | ✅        |                                                 |
+| `resources`           | ✅        | Independent budget                              |
+| `volumeMounts`        | ✅        | Shares Pod's volumes                            |
+| `securityContext`     | ✅        | Independent of app container's                  |
+| `workingDir`          | ✅        |                                                 |
+| `imagePullPolicy`     | ✅        |                                                 |
+| `lifecycle.postStart` | ❌        | Init must exit; no post-start needed            |
+| `lifecycle.preStop`   | ❌        | Init must exit; no pre-stop needed              |
+| `livenessProbe`       | ❌        | Init must exit; no liveness check               |
+| `readinessProbe`      | ❌        | Init is binary (running or done)                |
+| `startupProbe`        | ❌        | Same reason                                     |
+| `stdin`, `tty`        | ✅        | Unusual but valid                               |
+| `ports`               | ⚠️        | Allowed but unusual; init shouldn't be a server |
 
 ### Why probes and lifecycle hooks are not supported
 
@@ -238,16 +239,16 @@ The most common pattern. The app needs a database (or cache, message broker, etc
 
 ```yaml
 initContainers:
-- name: wait-for-db
-  image: busybox:1.36
-  command:
-  - sh
-  - -c
-  - |
-    until nc -z db 5432; do
-      echo "waiting for db..."
-      sleep 2
-    done
+  - name: wait-for-db
+    image: busybox:1.36
+    command:
+      - sh
+      - -c
+      - |
+        until nc -z db 5432; do
+          echo "waiting for db..."
+          sleep 2
+        done
 ```
 
 Variations:
@@ -274,15 +275,15 @@ Run a migration before the app starts. The migration is part of the app's image 
 
 ```yaml
 initContainers:
-- name: migrate
-  image: myorg/app:2.1
-  command: ['./manage', 'migrate']
-  env:
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: db-credentials
-        key: url
+  - name: migrate
+    image: myorg/app:2.1
+    command: ["./manage", "migrate"]
+    env:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            name: db-credentials
+            key: url
 ```
 
 Critical: the migration must be **idempotent** (running it twice should be safe) or you must be sure it only runs once per app version. Otherwise a Pod restart will re-run the migration and may corrupt the database.
@@ -306,27 +307,32 @@ Pull configs from a remote source. Useful for environments where ConfigMaps are 
 
 ```yaml
 initContainers:
-- name: fetch-config
-  image: myorg/config-fetcher:1.0
-  command: ['./fetch', '--url=https://config.internal/app.yaml', '--output=/config/app.yaml']
-  env:
-  - name: CONFIG_TOKEN
-    valueFrom:
-      secretKeyRef:
-        name: config-fetcher-token
-        key: token
-  volumeMounts:
-  - name: config
-    mountPath: /config
+  - name: fetch-config
+    image: myorg/config-fetcher:1.0
+    command:
+      [
+        "./fetch",
+        "--url=https://config.internal/app.yaml",
+        "--output=/config/app.yaml",
+      ]
+    env:
+      - name: CONFIG_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: config-fetcher-token
+            key: token
+    volumeMounts:
+      - name: config
+        mountPath: /config
 containers:
-- name: app
-  volumeMounts:
-  - name: config
-    mountPath: /etc/app
-    readOnly: true
+  - name: app
+    volumeMounts:
+      - name: config
+        mountPath: /etc/app
+        readOnly: true
 volumes:
-- name: config
-  emptyDir: {}
+  - name: config
+    emptyDir: {}
 ```
 
 The fetched config is written to a shared `emptyDir` volume. The app reads it as a read-only mount.
@@ -337,29 +343,29 @@ Prepare a volume with the right ownership, generate certs, or populate a directo
 
 ```yaml
 initContainers:
-- name: setup-data
-  image: busybox:1.36
-  command:
-  - sh
-  - -c
-  - |
-    mkdir -p /data
-    chown 1000:1000 /data
-    # Generate a self-signed cert
-    openssl req -x509 -newkey rsa:4096 -nodes \
-      -keyout /data/tls.key -out /data/tls.crt \
-      -days 365 -subj "/CN=app"
-  volumeMounts:
-  - name: data
-    mountPath: /data
+  - name: setup-data
+    image: busybox:1.36
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /data
+        chown 1000:1000 /data
+        # Generate a self-signed cert
+        openssl req -x509 -newkey rsa:4096 -nodes \
+          -keyout /data/tls.key -out /data/tls.crt \
+          -days 365 -subj "/CN=app"
+    volumeMounts:
+      - name: data
+        mountPath: /data
 containers:
-- name: app
-  volumeMounts:
-  - name: data
-    mountPath: /var/lib/app
+  - name: app
+    volumeMounts:
+      - name: data
+        mountPath: /var/lib/app
 volumes:
-- name: data
-  emptyDir: {}
+  - name: data
+    emptyDir: {}
 ```
 
 The init container can run as root (or with elevated capabilities) to do privileged setup, while the app runs as a non-root user. The fsGroup ensures the data is owned correctly.
@@ -370,19 +376,20 @@ Register the Pod with Consul, an external load balancer, or a service registry o
 
 ```yaml
 initContainers:
-- name: register
-  image: myorg/registrar:1.0
-  command: ['./register', '--service=my-app', '--host=$(POD_IP)', '--port=8080']
-  env:
-  - name: POD_IP
-    valueFrom:
-      fieldRef:
-        fieldPath: status.podIP
-  - name: CONSUL_HTTP_TOKEN
-    valueFrom:
-      secretKeyRef:
-        name: consul-token
-        key: token
+  - name: register
+    image: myorg/registrar:1.0
+    command:
+      ["./register", "--service=my-app", "--host=$(POD_IP)", "--port=8080"]
+    env:
+      - name: POD_IP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      - name: CONSUL_HTTP_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: consul-token
+            key: token
 ```
 
 This is an anti-pattern in modern k8s. Use Services and Endpoints instead. But for legacy systems that require explicit registration, it works.
@@ -393,15 +400,15 @@ For dev environments, seed the database with test data on first startup.
 
 ```yaml
 initContainers:
-- name: seed
-  image: myorg/seed:1.0
-  command: ['./seed', '--if-empty']
-  env:
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: db-credentials
-        key: url
+  - name: seed
+    image: myorg/seed:1.0
+    command: ["./seed", "--if-empty"]
+    env:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            name: db-credentials
+            key: url
 ```
 
 The `--if-empty` flag makes the seed script a no-op if the database is already populated. Combined with `restartPolicy: OnFailure`, the init won't re-seed on every restart.
@@ -412,16 +419,16 @@ The `--if-empty` flag makes the seed script a no-op if the database is already p
 
 The choice between an init container and a sidecar comes down to **lifetime**:
 
-| Aspect | Init container | Sidecar |
-|---|---|---|
-| Lifetime | Until success (run-to-completion) | Same as the app (long-lived) |
-| Started when | Before app containers | Alongside app containers |
-| Restarted when | Failed (per Pod's restartPolicy) | Per Pod's restartPolicy |
-| Resources | Independent budget | Independent budget |
-| Network namespace | Shared with Pod | Shared with Pod |
-| Volumes | Shared with Pod | Shared with Pod |
-| Probes | ❌ | ✅ |
-| Lifecycle hooks | ❌ | ✅ |
+| Aspect            | Init container                    | Sidecar                      |
+| ----------------- | --------------------------------- | ---------------------------- |
+| Lifetime          | Until success (run-to-completion) | Same as the app (long-lived) |
+| Started when      | Before app containers             | Alongside app containers     |
+| Restarted when    | Failed (per Pod's restartPolicy)  | Per Pod's restartPolicy      |
+| Resources         | Independent budget                | Independent budget           |
+| Network namespace | Shared with Pod                   | Shared with Pod              |
+| Volumes           | Shared with Pod                   | Shared with Pod              |
+| Probes            | ❌                                | ✅                           |
+| Lifecycle hooks   | ❌                                | ✅                           |
 
 ### Decision rule
 
@@ -485,24 +492,24 @@ Each init container has its own `resources` block. They are **not** summed with 
 
 ```yaml
 initContainers:
-- name: migrate
-  image: myorg/app:2.1
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: 1
-      memory: 1Gi
+  - name: migrate
+    image: myorg/app:2.1
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 1
+        memory: 1Gi
 containers:
-- name: app
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
+  - name: app
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
 ```
 
 The Pod's effective `requests` for scheduling:
@@ -599,17 +606,18 @@ In k8s 1.29, a new feature was added: **native sidecars** via `restartPolicy: Al
 ```yaml
 spec:
   initContainers:
-  - name: log-shipper                  # ❌ old way: init container
-    image: fluent/fluent-bit:3.0
-    # The container exits when the work is "done" — but you want it to keep running
-    # Workaround: tail -f /dev/null
-    command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
+    - name: log-shipper # ❌ old way: init container
+      image: fluent/fluent-bit:3.0
+      # The container exits when the work is "done" — but you want it to keep running
+      # Workaround: tail -f /dev/null
+      command:
+        ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
   # vs.
   containers:
-  - name: log-shipper                  # ✅ new way: native sidecar
-    image: fluent/fluent-bit:3.0
-    restartPolicy: Always             # k8s 1.29+ sidecar primitive
-    command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
+    - name: log-shipper # ✅ new way: native sidecar
+      image: fluent/fluent-bit:3.0
+      restartPolicy: Always # k8s 1.29+ sidecar primitive
+      command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
 ```
 
 ### What a native sidecar gets
@@ -621,14 +629,14 @@ spec:
 
 ### The old way vs the new way
 
-| Aspect | Init container with `sleep infinity` | Native sidecar (k8s 1.29+) |
-|---|---|---|
-| Ordered start | ✅ | ✅ |
-| Ordered stop | ❌ (init exits immediately, sidecar is "done") | ✅ |
-| Status reporting | ❌ (init shows as `Terminated`) | ✅ (regular `Running` state) |
-| Probes | ❌ | ✅ |
-| Resources | Independent | Independent |
-| Restart on failure | Per Pod's restartPolicy | Per Pod's restartPolicy |
+| Aspect             | Init container with `sleep infinity`           | Native sidecar (k8s 1.29+)   |
+| ------------------ | ---------------------------------------------- | ---------------------------- |
+| Ordered start      | ✅                                             | ✅                           |
+| Ordered stop       | ❌ (init exits immediately, sidecar is "done") | ✅                           |
+| Status reporting   | ❌ (init shows as `Terminated`)                | ✅ (regular `Running` state) |
+| Probes             | ❌                                             | ✅                           |
+| Resources          | Independent                                    | Independent                  |
+| Restart on failure | Per Pod's restartPolicy                        | Per Pod's restartPolicy      |
 
 ### The migration
 
@@ -636,22 +644,22 @@ If you have:
 
 ```yaml
 initContainers:
-- name: log-shipper
-  image: fluent/fluent-bit:3.0
-  command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
+  - name: log-shipper
+    image: fluent/fluent-bit:3.0
+    command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
 ```
 
 Change to:
 
 ```yaml
-initContainers: []   # remove the init container
+initContainers: [] # remove the init container
 containers:
-- name: app
-  # ... main app
-- name: log-shipper
-  image: fluent/fluent-bit:3.0
-  restartPolicy: Always    # this makes it a native sidecar
-  command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
+  - name: app
+    # ... main app
+  - name: log-shipper
+    image: fluent/fluent-bit:3.0
+    restartPolicy: Always # this makes it a native sidecar
+    command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
 ```
 
 The behavior is the same, but the sidecar is now a first-class container with proper lifecycle.
@@ -670,31 +678,31 @@ For multi-container Pod patterns in general, see [[Kubernetes/concepts/L03-workl
 
 ```yaml
 initContainers:
-- name: wait-for-db
-  image: busybox:1.36
-  command:
-  - sh
-  - -c
-  - |
-    until nc -z db 5432; do
-      echo "waiting for db at db:5432..."
-      sleep 2
-    done
+  - name: wait-for-db
+    image: busybox:1.36
+    command:
+      - sh
+      - -c
+      - |
+        until nc -z db 5432; do
+          echo "waiting for db at db:5432..."
+          sleep 2
+        done
 ```
 
 ### Recipe 2: Wait for multiple dependencies
 
 ```yaml
 initContainers:
-- name: wait-for-db
-  image: busybox:1.36
-  command: ['sh', '-c', 'until nc -z db 5432; do sleep 2; done']
-- name: wait-for-cache
-  image: busybox:1.36
-  command: ['sh', '-c', 'until nc -z cache 6379; do sleep 2; done']
-- name: wait-for-broker
-  image: busybox:1.36
-  command: ['sh', '-c', 'until nc -z broker 9092; do sleep 2; done']
+  - name: wait-for-db
+    image: busybox:1.36
+    command: ["sh", "-c", "until nc -z db 5432; do sleep 2; done"]
+  - name: wait-for-cache
+    image: busybox:1.36
+    command: ["sh", "-c", "until nc -z cache 6379; do sleep 2; done"]
+  - name: wait-for-broker
+    image: busybox:1.36
+    command: ["sh", "-c", "until nc -z broker 9092; do sleep 2; done"]
 ```
 
 Init containers run sequentially, so the Pod waits for all three.
@@ -703,82 +711,87 @@ Init containers run sequentially, so the Pod waits for all three.
 
 ```yaml
 initContainers:
-- name: migrate
-  image: myorg/app:2.1
-  command: ['./manage', 'migrate']
-  env:
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: db-credentials
-        key: url
-  resources:
-    requests:
-      memory: 512Mi
-      cpu: 500m
+  - name: migrate
+    image: myorg/app:2.1
+    command: ["./manage", "migrate"]
+    env:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            name: db-credentials
+            key: url
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 500m
 containers:
-- name: app
-  image: myorg/app:2.1
-  command: ['./serve']
+  - name: app
+    image: myorg/app:2.1
+    command: ["./serve"]
 ```
 
 ### Recipe 4: Generate TLS cert
 
 ```yaml
 initContainers:
-- name: generate-cert
-  image: alpine:3.19
-  command:
-  - sh
-  - -c
-  - |
-    apk add --no-cache openssl
-    openssl req -x509 -newkey rsa:4096 -nodes \
-      -keyout /certs/tls.key -out /certs/tls.crt \
-      -days 365 -subj "/CN=$(POD_NAME)"
-  env:
-  - name: POD_NAME
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.name
-  volumeMounts:
-  - name: certs
-    mountPath: /certs
+  - name: generate-cert
+    image: alpine:3.19
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache openssl
+        openssl req -x509 -newkey rsa:4096 -nodes \
+          -keyout /certs/tls.key -out /certs/tls.crt \
+          -days 365 -subj "/CN=$(POD_NAME)"
+    env:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+    volumeMounts:
+      - name: certs
+        mountPath: /certs
 containers:
-- name: app
-  volumeMounts:
-  - name: certs
-    mountPath: /etc/app/certs
-    readOnly: true
+  - name: app
+    volumeMounts:
+      - name: certs
+        mountPath: /etc/app/certs
+        readOnly: true
 volumes:
-- name: certs
-  emptyDir: {}
+  - name: certs
+    emptyDir: {}
 ```
 
 ### Recipe 5: Permission setup with different security contexts
 
 ```yaml
 initContainers:
-- name: setup-data
-  image: busybox:1.36
-  command: ['sh', '-c', 'mkdir -p /data && chown 1000:1000 /data && touch /data/ready']
-  securityContext:
-    runAsUser: 0      # needs root to chown
-  volumeMounts:
-  - name: data
-    mountPath: /data
+  - name: setup-data
+    image: busybox:1.36
+    command:
+      [
+        "sh",
+        "-c",
+        "mkdir -p /data && chown 1000:1000 /data && touch /data/ready",
+      ]
+    securityContext:
+      runAsUser: 0 # needs root to chown
+    volumeMounts:
+      - name: data
+        mountPath: /data
 containers:
-- name: app
-  image: myorg/app:2.1
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-  volumeMounts:
-  - name: data
-    mountPath: /var/lib/app
+  - name: app
+    image: myorg/app:2.1
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+    volumeMounts:
+      - name: data
+        mountPath: /var/lib/app
 volumes:
-- name: data
-  emptyDir: {}
+  - name: data
+    emptyDir: {}
 ```
 
 The init container runs as root to chown the volume; the app runs as non-root.
@@ -787,39 +800,39 @@ The init container runs as root to chown the volume; the app runs as non-root.
 
 ```yaml
 initContainers:
-- name: fetch-config
-  image: amazon/aws-cli:2.15.0
-  command:
-  - sh
-  - -c
-  - |
-    aws s3 cp s3://my-config-bucket/app.yaml /config/app.yaml
-  env:
-  - name: AWS_REGION
-    value: us-east-1
-  - name: AWS_ACCESS_KEY_ID
-    valueFrom:
-      secretKeyRef:
-        name: aws-creds
-        key: access-key
-  - name: AWS_SECRET_ACCESS_KEY
-    valueFrom:
-      secretKeyRef:
-        name: aws-creds
-        key: secret-key
-  volumeMounts:
-  - name: config
-    mountPath: /config
+  - name: fetch-config
+    image: amazon/aws-cli:2.15.0
+    command:
+      - sh
+      - -c
+      - |
+        aws s3 cp s3://my-config-bucket/app.yaml /config/app.yaml
+    env:
+      - name: AWS_REGION
+        value: us-east-1
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: aws-creds
+            key: access-key
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: aws-creds
+            key: secret-key
+    volumeMounts:
+      - name: config
+        mountPath: /config
 containers:
-- name: app
-  image: myorg/app:2.1
-  volumeMounts:
-  - name: config
-    mountPath: /etc/app
-    readOnly: true
+  - name: app
+    image: myorg/app:2.1
+    volumeMounts:
+      - name: config
+        mountPath: /etc/app
+        readOnly: true
 volumes:
-- name: config
-  emptyDir: {}
+  - name: config
+    emptyDir: {}
 ```
 
 ### Recipe 7: Native sidecar (k8s 1.29+)
@@ -833,24 +846,24 @@ spec:
   template:
     spec:
       containers:
-      - name: app
-        image: myorg/app:2.1
-        # ... main app ...
-      - name: log-shipper
-        image: fluent/fluent-bit:3.0
-        restartPolicy: Always        # native sidecar primitive
-        command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
-        volumeMounts:
-        - name: logs
-          mountPath: /var/log/app
-          readOnly: true
-      - name: app
-        volumeMounts:
-        - name: logs
-          mountPath: /var/log/app
+        - name: app
+          image: myorg/app:2.1
+          # ... main app ...
+        - name: log-shipper
+          image: fluent/fluent-bit:3.0
+          restartPolicy: Always # native sidecar primitive
+          command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
+          volumeMounts:
+            - name: logs
+              mountPath: /var/log/app
+              readOnly: true
+        - name: app
+          volumeMounts:
+            - name: logs
+              mountPath: /var/log/app
       volumes:
-      - name: logs
-        emptyDir: {}
+        - name: logs
+          emptyDir: {}
 ```
 
 ---
@@ -927,20 +940,20 @@ Add a timeout to the init:
 
 ```yaml
 initContainers:
-- name: wait-for-db
-  image: busybox:1.36
-  command:
-  - sh
-  - -c
-  - |
-    end=$((SECONDS+60))
-    until nc -z db 5432; do
-      if [ $SECONDS -ge $end ]; then
-        echo "timed out waiting for db"
-        exit 1
-      fi
-      sleep 2
-    done
+  - name: wait-for-db
+    image: busybox:1.36
+    command:
+      - sh
+      - -c
+      - |
+        end=$((SECONDS+60))
+        until nc -z db 5432; do
+          if [ $SECONDS -ge $end ]; then
+            echo "timed out waiting for db"
+            exit 1
+          fi
+          sleep 2
+        done
 ```
 
 This makes the init fail after 60 seconds instead of waiting forever.
@@ -978,6 +991,7 @@ If you change **only** the app's image (not the init's), the init is **not re-ru
 If you change the init's image, the Pod is recreated, and the init runs from scratch.
 
 For migrations, this means:
+
 - App image bump → migration doesn't re-run (good, idempotent)
 - Migration image bump → migration re-runs (potentially dangerous if not idempotent)
 
@@ -993,14 +1007,14 @@ Some init containers need root to do their work (e.g., `chown`, generating certs
 
 ```yaml
 initContainers:
-- name: setup
-  securityContext:
-    runAsUser: 0      # needs root
+  - name: setup
+    securityContext:
+      runAsUser: 0 # needs root
 containers:
-- name: app
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
+  - name: app
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
 ```
 
 This is a valid pattern, but audit the init's permissions carefully. A compromised init container with root can do anything in the Pod.
@@ -1009,14 +1023,15 @@ This is a valid pattern, but audit the init's permissions carefully. A compromis
 
 ```yaml
 initContainers:
-- name: wait-for-db
-  command: ['sh', '-c', 'until nc -z db 5432; do sleep 2; done']
+  - name: wait-for-db
+    command: ["sh", "-c", "until nc -z db 5432; do sleep 2; done"]
 ```
 
 If `db` is not resolvable, this loops forever. The Pod is in `Init:0/1` until the kubelet gives up. Add a timeout:
 
 ```yaml
-command: ['sh', '-c', 'timeout 300 sh -c "until nc -z db 5432; do sleep 2; done"']
+command:
+  ["sh", "-c", 'timeout 300 sh -c "until nc -z db 5432; do sleep 2; done"']
 ```
 
 Or use a custom timeout in the script.
@@ -1026,6 +1041,7 @@ Or use a custom timeout in the script.
 A migration init container runs on every Pod creation. If the migration is not idempotent, the second run will fail.
 
 Mitigations:
+
 - Use a separate Job for migrations (gated by CI)
 - Make the migration script idempotent (`CREATE TABLE IF NOT EXISTS`, `IF NOT EXISTS` clauses)
 - Use a flag file (write `/shared/migrated` after success; skip if exists)
@@ -1052,12 +1068,12 @@ For migrations, prefer a separate Job (not an init container in a Deployment's P
 
 ## 13. Related Notes
 
-| Topic | Note |
-|---|---|
-| Pods (init containers are a Pod field) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] |
-| Multi-container Pods (sidecars) | [[Kubernetes/concepts/L03-workloads/09-multi-container-pods\|09 — Multi-Container Pods]] |
-| Probes (not supported on init) | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]] |
-| Jobs (run-to-completion) | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]] |
-| Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
-| Volumes (shared with init) | [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim\|L05 — PersistentVolumeClaim]] |
+| Topic                                  | Note                                                                                                           |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Pods (init containers are a Pod field) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]]                                                       |
+| Multi-container Pods (sidecars)        | [[Kubernetes/concepts/L03-workloads/09-multi-container-pods\|09 — Multi-Container Pods]]                       |
+| Probes (not supported on init)         | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]]                                                   |
+| Jobs (run-to-completion)               | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]]                                                         |
+| Resource requests and limits           | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
+| Security context                       | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]]        |
+| Volumes (shared with init)             | [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim\|L05 — PersistentVolumeClaim]]               |

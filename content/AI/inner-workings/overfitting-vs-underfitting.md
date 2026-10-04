@@ -6,26 +6,26 @@ Two fundamental concepts in machine learning:
 
 Overfitting occurs when a model is too complex and learns the training data too well, including the noise and random fluctuations. As a result:
 
-* The model performs extremely well on the training data.
-* But it fails to generalize well to new, unseen data.
+- The model performs extremely well on the training data.
+- But it fails to generalize well to new, unseen data.
 
 Symptoms:
 
-* High training accuracy.
-* Low test accuracy.
-* Model is too complex (e.g., too many parameters).
+- High training accuracy.
+- Low test accuracy.
+- Model is too complex (e.g., too many parameters).
 
 ### Underfitting
 
 Underfitting occurs when a model is too simple and fails to capture the underlying patterns in the training data. As a result:
 
-* The model performs poorly on both the training and test data.
+- The model performs poorly on both the training and test data.
 
 Symptoms:
 
-* Low training accuracy.
-* Low test accuracy.
-* Model is too simple (e.g., too few parameters).
+- Low training accuracy.
+- Low test accuracy.
+- Model is too simple (e.g., too few parameters).
 
 ### The Goal
 

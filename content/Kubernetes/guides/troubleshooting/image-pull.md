@@ -220,11 +220,11 @@ kubectl patch sa default -p '{
 
 **Common gotchas:**
 
-* **Secret is in the wrong namespace.** `imagePullSecrets` is namespaced. A secret in `kube-system` doesn't help a pod in `my-ns`.
-* **Secret was deleted.** Someone ran `kubectl delete secret regcred`. Pods that were already running keep their images cached; new pods fail to pull.
-* **The registry requires a different auth method.** AWS ECR uses temporary tokens (refreshed every 12h). Azure ACR uses different formats. GCR uses JSON keys or workload identity.
-* **The secret was created from a working `~/.docker/config.json` but the JSON has `auths` at the wrong level** (k8s expects `auths.<server>.auth` and `auths.<server>.username`).
-* **Using `kubernetes.io/dockerconfigjson` but the secret has the wrong type.**
+- **Secret is in the wrong namespace.** `imagePullSecrets` is namespaced. A secret in `kube-system` doesn't help a pod in `my-ns`.
+- **Secret was deleted.** Someone ran `kubectl delete secret regcred`. Pods that were already running keep their images cached; new pods fail to pull.
+- **The registry requires a different auth method.** AWS ECR uses temporary tokens (refreshed every 12h). Azure ACR uses different formats. GCR uses JSON keys or workload identity.
+- **The secret was created from a working `~/.docker/config.json` but the JSON has `auths` at the wrong level** (k8s expects `auths.<server>.auth` and `auths.<server>.username`).
+- **Using `kubernetes.io/dockerconfigjson` but the secret has the wrong type.**
   ```bash
   kubectl get secret regcred -o jsonpath='{.type}'
   # should be: kubernetes.io/dockerconfigjson
@@ -236,14 +236,14 @@ kubectl patch sa default -p '{
 
 The image has a registry prefix that resolves to the wrong place. Common cases:
 
-| Image | Resolves to |
-|-------|-------------|
-| `nginx` | `docker.io/library/nginx` |
-| `myorg/web` | `docker.io/myorg/web` |
-| `registry.example.com/myorg/web` | `registry.example.com/myorg/web` |
-| `gcr.io/myproj/web` | `gcr.io/myproj/web` |
-| `1234.dkr.ecr.us-east-1.amazonaws.com/web` | ECR registry |
-| `quay.io/myorg/web` | `quay.io/myorg/web` |
+| Image                                      | Resolves to                      |
+| ------------------------------------------ | -------------------------------- |
+| `nginx`                                    | `docker.io/library/nginx`        |
+| `myorg/web`                                | `docker.io/myorg/web`            |
+| `registry.example.com/myorg/web`           | `registry.example.com/myorg/web` |
+| `gcr.io/myproj/web`                        | `gcr.io/myproj/web`              |
+| `1234.dkr.ecr.us-east-1.amazonaws.com/web` | ECR registry                     |
+| `quay.io/myorg/web`                        | `quay.io/myorg/web`              |
 
 **Signatures:**
 
@@ -302,6 +302,7 @@ $ nslookup registry.example.com
    Fix: configure the kubelet's `--http-proxy` flag, or set `HTTPS_PROXY` in the containerd/CRI-O config.
 
 3. **NetworkPolicy blocks egress to the registry.** Default-deny NetworkPolicy without an egress allow.
+
    ```yaml
    apiVersion: networking.k8s.io/v1
    kind: NetworkPolicy
@@ -310,6 +311,7 @@ $ nslookup registry.example.com
      policyTypes: [Egress, Ingress]
      # no egress rules = no egress allowed
    ```
+
    Fix: add an egress rule for the registry.
 
 4. **Registry is on a private network the cluster can't reach.** Common with on-prem or hybrid setups.
@@ -551,26 +553,26 @@ And for containerd:
 
 ## Common gotchas
 
-* **`ImagePullBackOff` is normal for typos** — the kubelet will keep retrying for a long time. If you've fixed the issue, `kubectl delete pod <name>` to force an immediate re-pull.
-* **The "latest" tag is a liar.** `image: myorg/web:latest` doesn't mean "the newest stable version" — it means "whatever was tagged as `latest` at pull time." Use specific tags (e.g., `v2.1.4` or a SHA digest `myorg/web@sha256:abc123...`).
-* **Multi-arch images need a manifest list.** If you only built for one platform, the image won't pull on the other.
-* **The default service account has no imagePullSecrets by default.** You have to add them.
-* **Don't put credentials in your image name.** `image: myorg/web:v2?token=xxx` doesn't work; the kubelet doesn't parse query strings. Use `imagePullSecrets`.
-* **Pull policies** — `imagePullPolicy: IfNotPresent` (default) skips pull if image is cached. `Always` re-pulls every time. `Never` never pulls (assumes cached).
+- **`ImagePullBackOff` is normal for typos** — the kubelet will keep retrying for a long time. If you've fixed the issue, `kubectl delete pod <name>` to force an immediate re-pull.
+- **The "latest" tag is a liar.** `image: myorg/web:latest` doesn't mean "the newest stable version" — it means "whatever was tagged as `latest` at pull time." Use specific tags (e.g., `v2.1.4` or a SHA digest `myorg/web@sha256:abc123...`).
+- **Multi-arch images need a manifest list.** If you only built for one platform, the image won't pull on the other.
+- **The default service account has no imagePullSecrets by default.** You have to add them.
+- **Don't put credentials in your image name.** `image: myorg/web:v2?token=xxx` doesn't work; the kubelet doesn't parse query strings. Use `imagePullSecrets`.
+- **Pull policies** — `imagePullPolicy: IfNotPresent` (default) skips pull if image is cached. `Always` re-pulls every time. `Never` never pulls (assumes cached).
   ```yaml
   containers:
-  - name: web
-    image: myorg/web:v2
-    imagePullPolicy: Always   # useful for `:latest` to ensure freshness
+    - name: web
+      image: myorg/web:v2
+      imagePullPolicy: Always # useful for `:latest` to ensure freshness
   ```
-* **Cached images don't get cleaned up automatically.** Nodes accumulate old images. Use a tool like `image-gc` or `crictl rmi` to clean.
-* **Pulling from one registry, pushing to another.** Multi-cluster setups often have a local mirror. Make sure image references match the local mirror's path, not the source registry's.
-* **Pod sandbox image.** Even if your container image pulls fine, the pod needs a sandbox image (e.g., `registry.k8s.io/pause:3.9`). If the sandbox image is blocked, the pod fails to start.
-* **A failed `imagePullBackOff` is a "kicked off but eventually failed" — the kubelet might keep retrying for hours.** If you don't see an event for a while, that's the backoff. Force a re-pull with `kubectl delete pod`.
+- **Cached images don't get cleaned up automatically.** Nodes accumulate old images. Use a tool like `image-gc` or `crictl rmi` to clean.
+- **Pulling from one registry, pushing to another.** Multi-cluster setups often have a local mirror. Make sure image references match the local mirror's path, not the source registry's.
+- **Pod sandbox image.** Even if your container image pulls fine, the pod needs a sandbox image (e.g., `registry.k8s.io/pause:3.9`). If the sandbox image is blocked, the pod fails to start.
+- **A failed `imagePullBackOff` is a "kicked off but eventually failed" — the kubelet might keep retrying for hours.** If you don't see an event for a while, that's the backoff. Force a re-pull with `kubectl delete pod`.
 
 ## See also
 
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the image is fine, the app crashes
-* [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — when the pod can't even start scheduling
-* [[Kubernetes/guides/tools/kubectl|kubectl]] — the CLI
-* [[Kubernetes/concepts/L05-config-storage/02-secrets|secrets]] — imagePullSecrets are secrets
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when the image is fine, the app crashes
+- [[Kubernetes/guides/troubleshooting/pod-pending|pod-pending]] — when the pod can't even start scheduling
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — the CLI
+- [[Kubernetes/concepts/L05-config-storage/02-secrets|secrets]] — imagePullSecrets are secrets

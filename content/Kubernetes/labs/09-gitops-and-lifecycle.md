@@ -116,6 +116,7 @@ commonLabels:
 ### Step 2: Define the Development & Production Overlays
 
 #### Development Overlay (`overlays/dev/kustomization.yaml`):
+
 For development, we route to a dedicated `podinfo-dev` namespace and inject custom environment variables:
 
 ```yaml
@@ -140,6 +141,7 @@ patches:
 ```
 
 #### Production Overlay (`overlays/prod/kustomization.yaml`):
+
 For production, we scale to 3 replicas, add high-availability resources, and enforce resource limits:
 
 ```yaml
@@ -308,6 +310,7 @@ kubectl get deployment,svc -n podinfo-prod
 ```
 
 **Expected output:**
+
 - `podinfo-dev`: 1 replica (`dev-podinfo`).
 - `podinfo-prod`: 3 replicas (`prod-podinfo`).
 
@@ -318,6 +321,7 @@ kubectl get deployment,svc -n podinfo-prod
 What happens when an engineer makes an ad-hoc, manual change directly to the cluster (manual configuration drift)?
 
 ### Step 1: Simulate Configuration Drift
+
 Manually scale the production deployment down to 1 replica and change its image:
 
 ```bash
@@ -334,6 +338,7 @@ kubectl get deployment prod-podinfo -n podinfo-prod
 The cluster has now **drifted** from the declared Git repository intent (`replicas: 3`, `image: podinfo`).
 
 ### Step 2: Reconcile Drift with Declarative GitOps
+
 In a GitOps architecture (e.g. Argo CD or Flux), the reconciliation loop periodically applies the Git source of truth. Re-run Kustomize apply:
 
 ```bash
@@ -341,6 +346,7 @@ kubectl apply -k /tmp/k8s-gitops/overlays/prod --server-side
 ```
 
 **Output:**
+
 ```
 deployment.apps/prod-podinfo serverside-applied
 service/prod-podinfo serverside-applied
@@ -379,6 +385,7 @@ Notice that `Ingress` is at `networking.k8s.io/v1` (stable), and `Gateway` is at
 Simulate a catastrophic disaster: an entire namespace is accidentally deleted.
 
 ### Step 1: Declarative Backup
+
 Because our infrastructure is defined as code in Kustomize, our "backup" is already stored in Git! For dynamic resources, export current manifests:
 
 ```bash
@@ -386,6 +393,7 @@ kubectl get configmap,secrets -n podinfo-prod -o yaml > /tmp/prod-data-backup.ya
 ```
 
 ### Step 2: Simulate Disaster
+
 Accidentally delete the production namespace:
 
 ```bash

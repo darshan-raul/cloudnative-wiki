@@ -66,15 +66,15 @@ metadata:
   name: app-with-ebs
 spec:
   containers:
-  - name: app
-    image: nginx
-    volumeMounts:
-    - mountPath: /data
-      name: ebs-volume
+    - name: app
+      image: nginx
+      volumeMounts:
+        - mountPath: /data
+          name: ebs-volume
   volumes:
-  - name: ebs-volume
-    persistentVolumeClaim:
-      claimName: ebs-claim
+    - name: ebs-volume
+      persistentVolumeClaim:
+        claimName: ebs-claim
 ```
 
 ## Volume Snapshots

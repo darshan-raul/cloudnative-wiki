@@ -47,10 +47,10 @@ spec:
     metadata: { labels: { app: dual-target } }
     spec:
       containers:
-      - name: dual-target
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "dual: ok" }]
-        ports: [{ containerPort: 8080 }]
+        - name: dual-target
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "dual: ok" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -60,8 +60,8 @@ metadata:
 spec:
   selector: { app: dual-target }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 # The Gateway has TWO listeners
 apiVersion: gateway.networking.k8s.io/v1
@@ -74,21 +74,21 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces: { from: All }
-  - name: https
-    port: 443
-    protocol: HTTPS
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - kind: Secret
-        name: dual-tls
-    allowedRoutes:
-      namespaces: { from: All }
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces: { from: All }
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: dual-tls
+      allowedRoutes:
+        namespaces: { from: All }
 ---
 # HTTP route: just redirect to HTTPS
 apiVersion: gateway.networking.k8s.io/v1
@@ -98,18 +98,18 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg-dual
-    namespace: infra
-    sectionName: http
+    - name: eg-dual
+      namespace: infra
+      sectionName: http
   hostnames: ["dual.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    filters:
-    - type: RequestRedirect
-      requestRedirect:
-        statusCode: 308
-        scheme: https
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      filters:
+        - type: RequestRedirect
+          requestRedirect:
+            statusCode: 308
+            scheme: https
 ---
 # HTTPS route: actually serve traffic
 apiVersion: gateway.networking.k8s.io/v1
@@ -119,16 +119,16 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg-dual
-    namespace: infra
-    sectionName: https
+    - name: eg-dual
+      namespace: infra
+      sectionName: https
   hostnames: ["dual.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: dual-target
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: dual-target
+          port: 80
 ---
 apiVersion: v1
 kind: Service
@@ -141,11 +141,11 @@ spec:
     app.kubernetes.io/name: eg-dual
     gateway.envoyproxy.io/owning-gateway-name: eg-dual
   ports:
-  - name: http
-    port: 80
-    targetPort: 8080
-    nodePort: 30000
-  - name: https
-    port: 443
-    targetPort: 8443
-    nodePort: 30001
+    - name: http
+      port: 80
+      targetPort: 8080
+      nodePort: 30000
+    - name: https
+      port: 443
+      targetPort: 8443
+      nodePort: 30001

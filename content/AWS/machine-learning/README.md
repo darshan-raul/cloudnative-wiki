@@ -13,14 +13,14 @@ AWS offers ML services across the spectrum — from pre-trained AI APIs ( Rekogn
 
 ## Service Map
 
-| Service | Type | Use Case |
-|---------|------|----------|
-| [[ai-services/README\|AI Services]] | Pre-trained APIs | Vision, NLP, speech, document, contact center |
-| [[bedrock/README\|Bedrock]] | Foundation Models | LLMs, RAG, agents, image generation |
-| [[sagemaker/README\|SageMaker]] | ML Platform | Build, train, deploy custom models |
-| [[sagemaker-canvas/README\|SageMaker Canvas]] | No-Code ML | Business analyst predictions |
-| [[rekognition/README\|Rekognition]] | Vision AI | Image/video analysis, face comparison |
-| [[comprehend/README\|Comprehend]] | NLP AI | Text extraction, sentiment, entities, topics |
+| Service                                       | Type              | Use Case                                      |
+| --------------------------------------------- | ----------------- | --------------------------------------------- |
+| [[ai-services/README\|AI Services]]           | Pre-trained APIs  | Vision, NLP, speech, document, contact center |
+| [[bedrock/README\|Bedrock]]                   | Foundation Models | LLMs, RAG, agents, image generation           |
+| [[sagemaker/README\|SageMaker]]               | ML Platform       | Build, train, deploy custom models            |
+| [[sagemaker-canvas/README\|SageMaker Canvas]] | No-Code ML        | Business analyst predictions                  |
+| [[rekognition/README\|Rekognition]]           | Vision AI         | Image/video analysis, face comparison         |
+| [[comprehend/README\|Comprehend]]             | NLP AI            | Text extraction, sentiment, entities, topics  |
 
 ## ML Stack
 
@@ -58,25 +58,25 @@ Do you need to build a custom model?
 
 ## Security and Compliance
 
-| Consideration | Implementation |
-|--------------|----------------|
-| Data residency | SageMaker processing jobs run in your VPC |
-| Model ownership | You own your models and data |
-| Encryption | KMS for models at rest, TLS in transit |
-| Access control | IAM for API access, SageMaker for notebook access |
-| Audit | CloudTrail for API calls, SageMaker for training jobs |
-| Compliance | HIPAA, GDPR, FedRAMP (varies by service) |
+| Consideration   | Implementation                                        |
+| --------------- | ----------------------------------------------------- |
+| Data residency  | SageMaker processing jobs run in your VPC             |
+| Model ownership | You own your models and data                          |
+| Encryption      | KMS for models at rest, TLS in transit                |
+| Access control  | IAM for API access, SageMaker for notebook access     |
+| Audit           | CloudTrail for API calls, SageMaker for training jobs |
+| Compliance      | HIPAA, GDPR, FedRAMP (varies by service)              |
 
 ## Cost Optimization
 
-| Strategy | How |
-|----------|-----|
-| Spot instances | Training jobs: 60-70% savings |
-| Managed spot | SageMaker managed spot: `MaxRuntimeInSeconds` |
-| Inference endpoints | Auto-scaling + GPU switching (P4 → T4) |
-| Multi-model endpoints | Deploy 100s of models on one endpoint |
-| Serverless inference | SageMaker Serverless: pay per call |
-| AI Services | Pay per API call, no idle cost |
+| Strategy              | How                                           |
+| --------------------- | --------------------------------------------- |
+| Spot instances        | Training jobs: 60-70% savings                 |
+| Managed spot          | SageMaker managed spot: `MaxRuntimeInSeconds` |
+| Inference endpoints   | Auto-scaling + GPU switching (P4 → T4)        |
+| Multi-model endpoints | Deploy 100s of models on one endpoint         |
+| Serverless inference  | SageMaker Serverless: pay per call            |
+| AI Services           | Pay per API call, no idle cost                |
 
 ## References
 

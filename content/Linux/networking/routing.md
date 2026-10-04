@@ -20,13 +20,13 @@ ip route show
 
 Each line is a **route entry**:
 
-| Field | Meaning |
-|-------|---------|
-| `default` | Destination network (0.0.0.0/0 = any) |
-| `via 192.168.1.1` | Next hop gateway IP |
-| `dev eth0` | Outgoing interface |
-| `proto dhcp` | How route was learned (dhcp, kernel, static) |
-| `scope link` | Scope: link-local (direct), global (routable) |
+| Field             | Meaning                                       |
+| ----------------- | --------------------------------------------- |
+| `default`         | Destination network (0.0.0.0/0 = any)         |
+| `via 192.168.1.1` | Next hop gateway IP                           |
+| `dev eth0`        | Outgoing interface                            |
+| `proto dhcp`      | How route was learned (dhcp, kernel, static)  |
+| `scope link`      | Scope: link-local (direct), global (routable) |
 
 ## Routing Decision
 
@@ -137,6 +137,7 @@ ip route show | grep 172.17
 ```
 
 Kubernetes pods on a CNI bridge have similar routes:
+
 ```
 10.244.0.0/24 dev cni0 proto kernel scope link src 10.244.0.1
 default via 10.244.0.1 dev cni0    (traffic to external networks)

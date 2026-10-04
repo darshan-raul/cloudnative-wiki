@@ -11,13 +11,13 @@ Microsoft Azure security services and configuration.
 
 ## Core Services
 
-| Service | Purpose |
-|---------|---------|
-| **Microsoft Defender for Cloud** | Cloud security posture management (CSPM) |
-| **Microsoft Entra ID** | Identity and access management (formerly Azure AD) |
-| **Microsoft Sentinel** | Cloud-native SIEM (Azure's SIEM solution) |
-| **Azure Firewall** | Managed firewall-as-a-service |
-| **Azure Bastion** | Secure RDP/SSH access without public IPs |
+| Service                          | Purpose                                            |
+| -------------------------------- | -------------------------------------------------- |
+| **Microsoft Defender for Cloud** | Cloud security posture management (CSPM)           |
+| **Microsoft Entra ID**           | Identity and access management (formerly Azure AD) |
+| **Microsoft Sentinel**           | Cloud-native SIEM (Azure's SIEM solution)          |
+| **Azure Firewall**               | Managed firewall-as-a-service                      |
+| **Azure Bastion**                | Secure RDP/SSH access without public IPs           |
 
 ## Defender for Cloud
 

@@ -74,6 +74,7 @@ Multi-cluster networking on GKE leverages Google Cloud **Fleets** (formerly Anth
 ## 2. Global Load Balancing & Proximity Routing Mechanics
 
 MCI routes incoming requests based on **geographical proximity** and **backend capacity**:
+
 1. **Edge Anycast Termination:** A client in London terminates TLS at Google's London edge PoP.
 2. **Proximity Forwarding:** The load balancer prefers routing to the local `europe-west1` cluster.
 3. **Spillover & Capacity Awareness:** If the `europe-west1` cluster reaches maximum configured capacity (max queries per second or max connections) or becomes unhealthy, traffic seamlessly spills over to the `us-east4` cluster over Google's internal private fiber backbone without dropping TCP connections.
@@ -132,8 +133,8 @@ spec:
   selector:
     app: payment-processor
   ports:
-  - port: 8080
-    targetPort: 8080
+    - port: 8080
+      targetPort: 8080
 ---
 apiVersion: net.gke.io/v1
 kind: ServiceExport
@@ -196,9 +197,9 @@ spec:
       selector:
         app: storefront-ui
       ports:
-      - name: http
-        port: 80
-        targetPort: 8080
+        - name: http
+          port: 80
+          targetPort: 8080
 ```
 
 Apply to Config Cluster:
@@ -211,13 +212,13 @@ kubectl apply -f mci-deployment.yaml --context=gke-prod-us
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Limit | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Clusters per Fleet** | Up to 100 clusters | Multi-region, multi-cloud unified fleet |
-| **Cross-Cluster Latency** | Governed by GCP backbone | Sub-millisecond jitter; zero public internet |
-| **ServiceExport Propagation**| ~10 to 30 seconds | Time for DNS zone update in peer clusters |
-| **MCI VIP Allocation** | Global IPv4 Anycast | Routes to nearest region with available pods |
-| **VPC Requirement** | Shared VPC or Flat Peering | Requires non-overlapping Pod and Service CIDRs |
+| Parameter / Dimension         | Default Limit              | Engineering Guidance                           |
+| :---------------------------- | :------------------------- | :--------------------------------------------- |
+| **Max Clusters per Fleet**    | Up to 100 clusters         | Multi-region, multi-cloud unified fleet        |
+| **Cross-Cluster Latency**     | Governed by GCP backbone   | Sub-millisecond jitter; zero public internet   |
+| **ServiceExport Propagation** | ~10 to 30 seconds          | Time for DNS zone update in peer clusters      |
+| **MCI VIP Allocation**        | Global IPv4 Anycast        | Routes to nearest region with available pods   |
+| **VPC Requirement**           | Shared VPC or Flat Peering | Requires non-overlapping Pod and Service CIDRs |
 
 ---
 
@@ -234,6 +235,7 @@ kubectl apply -f mci-deployment.yaml --context=gke-prod-us
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **Multi-Cluster Ingress (MCI):** Included in GKE Enterprise (Anthos) tier, or billed as a standalone feature ($0.50 per cluster-hour across all registered clusters = ~$365/month per cluster).
 2. **Google Cloud Global Application Load Balancer:** Standard forwarding rules ($18.25/mo) + $0.008/GB processed.
 3. **Cross-Region Network Traffic:** Standard GCP inter-regional data transfer ($0.02 - $0.05/GB) when requests cross regional boundaries.
@@ -269,8 +271,8 @@ Pricing components:
 ## 7. Battle-Tested Nuggets & Production Gotchas
 
 1. **The Overlapping Pod CIDR Disaster:** Multi-Cluster Services (MCS) routes traffic directly from a pod in Cluster A to a pod in Cluster B over the Google Cloud VPC network without Network Address Translation (NAT). If both clusters were provisioned with the default Pod IP range `10.4.0.0/14`, **pods will have identical IP addresses across clusters**. When a pod in Cluster A attempts to route to Cluster B, the Linux kernel detects the destination IP as local and drops the packet. **Every cluster participating in an MCS Fleet must have completely distinct, non-overlapping Pod and Service secondary subnet CIDRs.**
-2. **The Single Config Cluster Single-Point-of-Failure Myth:** When deploying Multi-Cluster Ingress (MCI), one cluster is designated as the `config-membership` cluster. If that config cluster goes down, the existing Global Load Balancer **continues to route traffic to healthy pods in all other clusters without interruption**. You only lose the ability to deploy *new* MCI manifests or modify routing rules until the config cluster recovers.
+2. **The Single Config Cluster Single-Point-of-Failure Myth:** When deploying Multi-Cluster Ingress (MCI), one cluster is designated as the `config-membership` cluster. If that config cluster goes down, the existing Global Load Balancer **continues to route traffic to healthy pods in all other clusters without interruption**. You only lose the ability to deploy _new_ MCI manifests or modify routing rules until the config cluster recovers.
 3. **CoreDNS Stub Domain Caching Gotcha:** MCS creates a custom DNS domain `clusterset.local`. If you have heavily customized in-cluster CoreDNS configurations or upstream DNS forwarders that do not forward `.clusterset.local` to the GKE MCS DNS provider, workloads will receive `NXDOMAIN` when attempting to query cross-cluster services.
 4. **Namespace Sameness Enforcement:** In GKE Fleets, if a service is exported in namespace `analytics`, the receiving pods in another cluster must also reside in namespace `analytics`. If team A deploys in `analytics-prod` and exports a service, team B cannot import it into namespace `reporting`. Design your enterprise namespace naming conventions uniformly across all clusters from day one.
 5. **Session Affinity Does Not Span Clusters:** While GKE load balancers support cookie-based or client-IP-based session affinity, session affinity is pinned to a specific backend service within a specific cluster. If an application requires sticky server sessions and the primary regional cluster experiences performance degradation, MCI will reroute traffic to the secondary cluster, breaking the user's session and forcing re-authentication. State must be externalized (e.g., in Memorystore Redis) for multi-cluster architectures.
-6. **Firewall Rules for Cross-Cluster Health Checking:** When using Multi-Cluster Ingress, Google Cloud health check probers (`130.211.0.0/22` and `35.191.0.0/16`) must be able to reach the node ports and pod ports of *all* member clusters. If a cluster's VPC firewall rule only whitelists traffic from its own subnet, the global load balancer will declare all backends in that cluster `UNHEALTHY` and refuse to route traffic to it.
+6. **Firewall Rules for Cross-Cluster Health Checking:** When using Multi-Cluster Ingress, Google Cloud health check probers (`130.211.0.0/22` and `35.191.0.0/16`) must be able to reach the node ports and pod ports of _all_ member clusters. If a cluster's VPC firewall rule only whitelists traffic from its own subnet, the global load balancer will declare all backends in that cluster `UNHEALTHY` and refuse to route traffic to it.

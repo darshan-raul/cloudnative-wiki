@@ -71,21 +71,21 @@ A Job is a one-shot. Once it reaches its target number of successful completions
 
 The Job's `status.conditions` reflects the state:
 
-| Condition | Meaning |
-|---|---|
-| `Complete` | All `completions` succeeded |
-| `Failed` | `backoffLimit` reached OR `activeDeadlineSeconds` exceeded |
+| Condition  | Meaning                                                    |
+| ---------- | ---------------------------------------------------------- |
+| `Complete` | All `completions` succeeded                                |
+| `Failed`   | `backoffLimit` reached OR `activeDeadlineSeconds` exceeded |
 
 ### What a Job does NOT do
 
-| Capability | Job | CronJob | Deployment |
-|---|---|---|---|
-| Run to completion | ✅ | ✅ (via Job) | ❌ |
-| Schedule | ❌ | ✅ | ❌ |
-| Run forever (long-lived) | ❌ | ❌ | ✅ |
-| Rollback | ❌ | ❌ | ✅ |
-| Pause / resume | ✅ (`suspend`) | ✅ (`suspend`) | ✅ |
-| Indexed work assignment (k8s 1.21+) | ✅ | ❌ | ❌ |
+| Capability                          | Job            | CronJob        | Deployment |
+| ----------------------------------- | -------------- | -------------- | ---------- |
+| Run to completion                   | ✅             | ✅ (via Job)   | ❌         |
+| Schedule                            | ❌             | ✅             | ❌         |
+| Run forever (long-lived)            | ❌             | ❌             | ✅         |
+| Rollback                            | ❌             | ❌             | ✅         |
+| Pause / resume                      | ✅ (`suspend`) | ✅ (`suspend`) | ✅         |
+| Indexed work assignment (k8s 1.21+) | ✅             | ❌             | ❌         |
 
 A Job is "do this work, exactly N times successfully, then stop." A Deployment is "keep N copies running, forever." A CronJob is "create Jobs on a schedule."
 
@@ -104,10 +104,10 @@ spec:
   template:
     spec:
       containers:
-      - name: hello
-        image: busybox:1.36
-        command: ["echo", "hello world"]
-      restartPolicy: OnFailure    # required for Jobs (or Never)
+        - name: hello
+          image: busybox:1.36
+          command: ["echo", "hello world"]
+      restartPolicy: OnFailure # required for Jobs (or Never)
 ```
 
 Full anatomy:
@@ -121,74 +121,74 @@ metadata:
   labels:
     app: data-processor
 spec:
-  completions: 10              # total successful Pods required
-  parallelism: 3               # max running at once
-  completionMode: NonIndexed   # or Indexed
-  backoffLimit: 4              # retries before marking failed
-  activeDeadlineSeconds: 3600  # max runtime
+  completions: 10 # total successful Pods required
+  parallelism: 3 # max running at once
+  completionMode: NonIndexed # or Indexed
+  backoffLimit: 4 # retries before marking failed
+  activeDeadlineSeconds: 3600 # max runtime
   ttlSecondsAfterFinished: 600 # auto-delete Job 10 min after completion
-  suspend: false               # pause/resume
-  selector:                    # auto-generated if omitted
+  suspend: false # pause/resume
+  selector: # auto-generated if omitted
     matchLabels:
       controller-uid: <uid>
-  manualSelector: false        # true = you provide selector (advanced)
+  manualSelector: false # true = you provide selector (advanced)
   template:
     metadata:
       labels:
-        app: data-processor    # Job adds controller-uid label
+        app: data-processor # Job adds controller-uid label
     spec:
       restartPolicy: OnFailure # required: OnFailure or Never
-      activeDeadlineSeconds: 3600  # per-Pod deadline
-      backoffLimit: 4          # per-Pod retry limit
+      activeDeadlineSeconds: 3600 # per-Pod deadline
+      backoffLimit: 4 # per-Pod retry limit
       serviceAccountName: data-processor-sa
       containers:
-      - name: processor
-        image: myorg/processor:2.1
-        env:
-        - name: JOB_COMPLETION_INDEX
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
-        resources:
-          requests:
-            cpu: 500m
-            memory: 512Mi
-          limits:
-            cpu: 2
-            memory: 2Gi
+        - name: processor
+          image: myorg/processor:2.1
+          env:
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2
+              memory: 2Gi
 status:
-  active: 3                    # currently running Pods
-  succeeded: 7                 # total successful completions
-  failed: 0                    # total failed Pods
+  active: 3 # currently running Pods
+  succeeded: 7 # total successful completions
+  failed: 0 # total failed Pods
   startTime: "2025-05-24T10:00:00Z"
   completionTime: "2025-05-24T10:15:00Z"
   conditions:
-  - type: Complete
-    status: "True"
-    lastProbeTime: "2025-05-24T10:15:00Z"
-  - type: JobFailure
-    status: "False"
+    - type: Complete
+      status: "True"
+      lastProbeTime: "2025-05-24T10:15:00Z"
+    - type: JobFailure
+      status: "False"
 ```
 
 ### Required fields
 
-| Field | Required | Why |
-|---|---|---|
-| `apiVersion` | yes | Always `batch/v1` |
-| `kind` | yes | Must be `Job` |
-| `metadata.name` | yes | DNS-1123 label |
-| `spec.template` | yes | Pod spec |
+| Field                              | Required          | Why                                                 |
+| ---------------------------------- | ----------------- | --------------------------------------------------- |
+| `apiVersion`                       | yes               | Always `batch/v1`                                   |
+| `kind`                             | yes               | Must be `Job`                                       |
+| `metadata.name`                    | yes               | DNS-1123 label                                      |
+| `spec.template`                    | yes               | Pod spec                                            |
 | `spec.template.spec.restartPolicy` | yes (in template) | Must be `OnFailure` or `Never`. **Never `Always`.** |
 
 ### The `restartPolicy` constraint
 
 A Job's Pod template **must** have `restartPolicy: OnFailure` or `restartPolicy: Never`. The API server rejects any other value.
 
-| `restartPolicy` | Behavior |
-|---|---|
-| `OnFailure` | Failed container is restarted **in place** (same Pod, same UID). Useful for transient errors. |
-| `Never` | Failed Pod is left for you to inspect. A **new** Pod is created. Useful for debugging. |
-| `Always` | **Rejected by the API server.** A Job is supposed to terminate. |
+| `restartPolicy` | Behavior                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| `OnFailure`     | Failed container is restarted **in place** (same Pod, same UID). Useful for transient errors. |
+| `Never`         | Failed Pod is left for you to inspect. A **new** Pod is created. Useful for debugging.        |
+| `Always`        | **Rejected by the API server.** A Job is supposed to terminate.                               |
 
 For most workloads, `OnFailure` is the right choice. `Never` is useful when you want to inspect the failed Pod before the next attempt.
 
@@ -202,35 +202,35 @@ These three fields control how a Job runs. Get them wrong and the Job doesn't do
 
 The total number of **successful** Pods required for the Job to be Complete.
 
-| Value | Meaning |
-|---|---|
-| `completions: 1` | Run one Pod, succeed once, Job is done. Most common for one-shot tasks. |
-| `completions: 10` | Run 10 successful Pods. The controller creates Pods until 10 succeed. |
+| Value               | Meaning                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `completions: 1`    | Run one Pod, succeed once, Job is done. Most common for one-shot tasks.                                                                                        |
+| `completions: 10`   | Run 10 successful Pods. The controller creates Pods until 10 succeed.                                                                                          |
 | `completions: null` | Special case: with `parallelism > 0` and `completionMode: NonIndexed`, this is a "one Pod at a time" pattern. The Job runs forever (no termination condition). |
-| Omitted | Defaults to 1. |
+| Omitted             | Defaults to 1.                                                                                                                                                 |
 
 ### `parallelism`
 
 The maximum number of Pods that may run **at the same time**.
 
-| Value | Meaning |
-|---|---|
-| `parallelism: 1` | Sequential. One Pod at a time, wait for it to finish, then the next. |
-| `parallelism: 3` | Up to 3 Pods running concurrently. |
-| `parallelism: null` | Defaults to 1. |
-| `parallelism: 0` | **Suspended.** No new Pods are created, but the Job is still tracked. |
+| Value               | Meaning                                                               |
+| ------------------- | --------------------------------------------------------------------- |
+| `parallelism: 1`    | Sequential. One Pod at a time, wait for it to finish, then the next.  |
+| `parallelism: 3`    | Up to 3 Pods running concurrently.                                    |
+| `parallelism: null` | Defaults to 1.                                                        |
+| `parallelism: 0`    | **Suspended.** No new Pods are created, but the Job is still tracked. |
 
 ### The combinator matrix
 
-| `completions` | `parallelism` | Behavior |
-|---|---|---|
-| 1 | 1 | One Pod, run it, Job done. The simple case. |
-| 10 | 1 | Sequential. One at a time, total 10. Slow but deterministic. |
-| 10 | 5 | Two batches of 5 concurrent. Total wall time is roughly 2× one batch. |
-| 10 | 10 | All 10 in parallel. Fastest, but heaviest load. |
-| 10 | 0 | Suspended. No Pods run until you set `parallelism > 0` or remove it. |
-| null | 5 | Run 5 Pods in parallel, never complete. The Job runs forever (until you delete it). |
-| 10 | null | Defaults parallelism to 1. Sequential. |
+| `completions` | `parallelism` | Behavior                                                                            |
+| ------------- | ------------- | ----------------------------------------------------------------------------------- |
+| 1             | 1             | One Pod, run it, Job done. The simple case.                                         |
+| 10            | 1             | Sequential. One at a time, total 10. Slow but deterministic.                        |
+| 10            | 5             | Two batches of 5 concurrent. Total wall time is roughly 2× one batch.               |
+| 10            | 10            | All 10 in parallel. Fastest, but heaviest load.                                     |
+| 10            | 0             | Suspended. No Pods run until you set `parallelism > 0` or remove it.                |
+| null          | 5             | Run 5 Pods in parallel, never complete. The Job runs forever (until you delete it). |
+| 10            | null          | Defaults parallelism to 1. Sequential.                                              |
 
 ### The classic "fan-out" pattern
 
@@ -238,7 +238,7 @@ The maximum number of Pods that may run **at the same time**.
 
 ```yaml
 spec:
-  completions: 10            # actually... we use Indexed for this
+  completions: 10 # actually... we use Indexed for this
   parallelism: 10
   completionMode: Indexed
 ```
@@ -249,11 +249,11 @@ For "10,000 files, 10 workers, work-stealing queue" you'd need an external work 
 
 The number of times a Pod is **retried** before the Job is marked Failed.
 
-| Value | Meaning |
-|---|---|
-| `backoffLimit: 4` | Default. After 4 failed Pods (4 different attempts), the Job is Failed. |
-| `backoffLimit: 0` | No retries. Any failure fails the Job. |
-| `backoffLimit: 100` | Tolerate 100 failures. Useful for flaky networks. |
+| Value               | Meaning                                                                 |
+| ------------------- | ----------------------------------------------------------------------- |
+| `backoffLimit: 4`   | Default. After 4 failed Pods (4 different attempts), the Job is Failed. |
+| `backoffLimit: 0`   | No retries. Any failure fails the Job.                                  |
+| `backoffLimit: 100` | Tolerate 100 failures. Useful for flaky networks.                       |
 
 A "failure" is a Pod that exits non-zero (with `restartPolicy: Never`) or a Pod that the kubelet restarted too many times (with `restartPolicy: OnFailure` — counts as 1 failure per restart cycle, capped by `backoffLimit`).
 
@@ -325,14 +325,14 @@ When a Pod fails, the Job controller:
 ### The exact backoff timing
 
 | Failure # | Wait before next attempt |
-|---|---|
-| 1 | 10s |
-| 2 | 20s |
-| 3 | 40s |
-| 4 | 80s |
-| 5 | 160s |
-| 6 | 300s |
-| 7+ | 600s (cap) |
+| --------- | ------------------------ |
+| 1         | 10s                      |
+| 2         | 20s                      |
+| 3         | 40s                      |
+| 4         | 80s                      |
+| 5         | 160s                     |
+| 6         | 300s                     |
+| 7+        | 600s (cap)               |
 
 So a Job with `backoffLimit: 4` can take up to ~2.5 minutes of backoff time before failing.
 
@@ -342,10 +342,10 @@ So a Job with `backoffLimit: 4` can take up to ~2.5 minutes of backoff time befo
 status:
   failed: 2
   conditions:
-  - type: JobFailure
-    status: "True"
-    reason: BackoffLimitExceeded
-    message: "Job has reached the specified backoff limit"
+    - type: JobFailure
+      status: "True"
+      reason: BackoffLimitExceeded
+      message: "Job has reached the specified backoff limit"
 ```
 
 When `JobFailure: True`, the Job is not retried. It is permanently failed. To retry, delete the Job and create a new one (or use a CronJob that creates a new Job on each schedule).
@@ -389,6 +389,7 @@ spec:
 ```
 
 The Pods get:
+
 - `JOB_COMPLETION_INDEX=0` ... `JOB_COMPLETION_INDEX=9`
 - Annotation: `batch.kubernetes.io/job-completion-index: "0"` ... `9`
 
@@ -412,14 +413,14 @@ spec:
   template:
     spec:
       containers:
-      - name: migrate-shard
-        image: myorg/migrator:1.0
-        command: ["./migrate", "--shard=$(JOB_COMPLETION_INDEX)"]
-        env:
-        - name: JOB_COMPLETION_INDEX
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+        - name: migrate-shard
+          image: myorg/migrator:1.0
+          command: ["./migrate", "--shard=$(JOB_COMPLETION_INDEX)"]
+          env:
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
 ```
 
 ### NonIndexed with `completions: null`
@@ -440,15 +441,15 @@ kind: Job
 metadata:
   name: backup
 spec:
-  backoffLimit: 0            # no retries; backup should succeed first try or alert
-  ttlSecondsAfterFinished: 86400  # delete after 24h
+  backoffLimit: 0 # no retries; backup should succeed first try or alert
+  ttlSecondsAfterFinished: 86400 # delete after 24h
   template:
     spec:
       restartPolicy: Never
       containers:
-      - name: backup
-        image: backup:1.0
-        command: ["./backup.sh"]
+        - name: backup
+          image: backup:1.0
+          command: ["./backup.sh"]
 ```
 
 ### Pattern 2: Parallel work queue (worker pool)
@@ -462,14 +463,14 @@ metadata:
   name: sqs-worker
 spec:
   parallelism: 10
-  completions: null           # run forever
+  completions: null # run forever
   template:
     spec:
       restartPolicy: OnFailure
       containers:
-      - name: worker
-        image: myorg/worker:1.0
-        command: ["./worker", "--queue=my-queue"]
+        - name: worker
+          image: myorg/worker:1.0
+          command: ["./worker", "--queue=my-queue"]
 ```
 
 This is the "Kubernetes as a worker pool" pattern. To stop, `kubectl delete job sqs-worker`. To scale, edit `parallelism`.
@@ -485,14 +486,14 @@ spec:
     spec:
       restartPolicy: OnFailure
       containers:
-      - name: shard-processor
-        image: myorg/processor:1.0
-        env:
-        - name: SHARD_INDEX
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
-        command: ["./process-shard", "--shard=$(SHARD_INDEX)"]
+        - name: shard-processor
+          image: myorg/processor:1.0
+          env:
+            - name: SHARD_INDEX
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+          command: ["./process-shard", "--shard=$(SHARD_INDEX)"]
 ```
 
 ### Pattern 4: Sequential pipeline
@@ -507,14 +508,14 @@ spec:
     spec:
       restartPolicy: OnFailure
       containers:
-      - name: step
-        image: myorg/pipeline:1.0
-        command: ["./step", "--index=$(JOB_COMPLETION_INDEX)"]
-        env:
-        - name: JOB_COMPLETION_INDEX
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+        - name: step
+          image: myorg/pipeline:1.0
+          command: ["./step", "--index=$(JOB_COMPLETION_INDEX)"]
+          env:
+            - name: JOB_COMPLETION_INDEX
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
 ```
 
 (This requires Indexed. With NonIndexed, you can't reliably pass the step number to the script.)
@@ -523,23 +524,23 @@ spec:
 
 ```yaml
 spec:
-  backoffLimit: 1            # don't retry migrations; they may be non-idempotent
+  backoffLimit: 1 # don't retry migrations; they may be non-idempotent
   activeDeadlineSeconds: 600
   ttlSecondsAfterFinished: 3600
   template:
     spec:
-      restartPolicy: Never    # see the failure
+      restartPolicy: Never # see the failure
       serviceAccountName: migration-runner
       containers:
-      - name: migrate
-        image: myorg/app:2.1.0
-        command: ["./manage", "migrate"]
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-credentials
-              key: url
+        - name: migrate
+          image: myorg/app:2.1.0
+          command: ["./manage", "migrate"]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: url
 ```
 
 **Critical:** Make sure your migrations are **idempotent** or that you have a way to detect and recover from partial migrations. Otherwise a Pod that crashes mid-migration can leave the DB in a half-migrated state.
@@ -563,24 +564,24 @@ kind: Job
 metadata:
   name: test-runner
 spec:
-  backoffLimit: 0           # no retries; CI should fail fast
-  activeDeadlineSeconds: 1800  # 30 min max
+  backoffLimit: 0 # no retries; CI should fail fast
+  activeDeadlineSeconds: 1800 # 30 min max
   ttlSecondsAfterFinished: 3600
   template:
     spec:
       restartPolicy: Never
       serviceAccountName: ci-runner
       containers:
-      - name: test
-        image: myorg/app-ci:1.0
-        command: ["./run-tests"]
-        resources:
-          requests:
-            cpu: 1
-            memory: 2Gi
-          limits:
-            cpu: 4
-            memory: 8Gi
+        - name: test
+          image: myorg/app-ci:1.0
+          command: ["./run-tests"]
+          resources:
+            requests:
+              cpu: 1
+              memory: 2Gi
+            limits:
+              cpu: 4
+              memory: 8Gi
 ```
 
 For CI, the Job is typically created by the CI system (Jenkins, GitHub Actions runner) and cleaned up by `ttlSecondsAfterFinished`.
@@ -680,7 +681,7 @@ You can also set `activeDeadlineSeconds` on the Pod spec:
 spec:
   template:
     spec:
-      activeDeadlineSeconds: 600   # each Pod may run at most 10 minutes
+      activeDeadlineSeconds: 600 # each Pod may run at most 10 minutes
 ```
 
 This bounds the time a single attempt can take. Different from the Job's `activeDeadlineSeconds`, which bounds the total wall time.
@@ -1010,13 +1011,13 @@ kubectl delete pod <pod> --force --grace-period=0
 
 ## 14. Related Notes
 
-| Topic | Note |
-|---|---|
-| Pods (what a Job runs) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] |
-| CronJob (scheduled Jobs) | [[Kubernetes/concepts/L03-workloads/07-cronjob\|07 — CronJob]] |
-| Deployment (long-running) | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]] |
-| Init containers (run before app) | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]] |
-| Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Taints and tolerations | [[Kubernetes/concepts/L06-scheduling-scaling\|L06 — Scheduling and Scaling]] |
-| TTL controller (advanced) | [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|L09 — Garbage Collection]] |
-| Finalizers (advanced) | [[Kubernetes/concepts/L09-advanced/05-finalizers\|L09 — Finalizers]] |
+| Topic                            | Note                                                                                                           |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Pods (what a Job runs)           | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]]                                                       |
+| CronJob (scheduled Jobs)         | [[Kubernetes/concepts/L03-workloads/07-cronjob\|07 — CronJob]]                                                 |
+| Deployment (long-running)        | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]]                                         |
+| Init containers (run before app) | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]]                                 |
+| Resource requests and limits     | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
+| Taints and tolerations           | [[Kubernetes/concepts/L06-scheduling-scaling/00-README\|L06 — Scheduling and Scaling]]                         |
+| TTL controller (advanced)        | [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|L09 — Garbage Collection]]                           |
+| Finalizers (advanced)            | [[Kubernetes/concepts/L09-advanced/05-finalizers\|L09 — Finalizers]]                                           |

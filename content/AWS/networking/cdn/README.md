@@ -37,14 +37,14 @@ A distribution is a CloudFront configuration. Two types:
 
 An origin is the source of the content CloudFront caches:
 
-| Origin Type | Use Case |
-|------------|----------|
-| S3 bucket | Static assets (images, videos, documents) |
-| ALB | Dynamic content, API responses, authenticated content |
-| EC2 | Direct to web server (not recommended — use ALB) |
-| Custom HTTP origin | Non-AWS HTTP servers |
-| MediaPackage channel | Live streaming |
-| SageMaker endpoint | ML inference at the edge |
+| Origin Type          | Use Case                                              |
+| -------------------- | ----------------------------------------------------- |
+| S3 bucket            | Static assets (images, videos, documents)             |
+| ALB                  | Dynamic content, API responses, authenticated content |
+| EC2                  | Direct to web server (not recommended — use ALB)      |
+| Custom HTTP origin   | Non-AWS HTTP servers                                  |
+| MediaPackage channel | Live streaming                                        |
+| SageMaker endpoint   | ML inference at the edge                              |
 
 ### Caching Behaviors
 
@@ -112,14 +112,14 @@ CloudFront → Origin: HTTP or HTTPS (configurable)
 
 Two ways to run code at CloudFront edge locations:
 
-| Feature | CloudFront Functions | Lambda@Edge |
-|---------|--------------------|-----------|
-| Runtime | JavaScript only | Node.js, Python |
-| Max execution time | < 3ms | 5-30 seconds |
-| Pricing | Free tier + $0.10/million invocations | Paid per invocation + duration |
-| Use case | Request/response manipulation | Complex logic, third-party auth |
-| Can modify | Request headers, URL, query string | All headers, body, cookies |
-| Access to | Request data only | Full AWS SDK |
+| Feature            | CloudFront Functions                  | Lambda@Edge                     |
+| ------------------ | ------------------------------------- | ------------------------------- |
+| Runtime            | JavaScript only                       | Node.js, Python                 |
+| Max execution time | < 3ms                                 | 5-30 seconds                    |
+| Pricing            | Free tier + $0.10/million invocations | Paid per invocation + duration  |
+| Use case           | Request/response manipulation         | Complex logic, third-party auth |
+| Can modify         | Request headers, URL, query string    | All headers, body, cookies      |
+| Access to          | Request data only                     | Full AWS SDK                    |
 
 ### CloudFront Functions Use Cases
 
@@ -147,6 +147,7 @@ Two ways to run code at CloudFront edge locations:
 ## AWS Shield (Included with CloudFront)
 
 CloudFront automatically includes AWS Shield Standard:
+
 - **DDoS protection** forLayer 3/4/7 attacks
 - **Automatic mitigation** of common DDoS attacks
 - **No extra cost**
@@ -209,14 +210,14 @@ Browser → CloudFront → /static/* → S3 (static assets)
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Distributions per account | 200 |
-| Cache behaviors per distribution | 25 |
-| Origins per distribution | 25 |
-| Files per invalidation | 1,000 (CLI), 3,000 (console) |
-| Invalidation paths | 3,000 max per distribution |
-| Alternate domain names | 100 per distribution |
+| Resource                         | Limit                        |
+| -------------------------------- | ---------------------------- |
+| Distributions per account        | 200                          |
+| Cache behaviors per distribution | 25                           |
+| Origins per distribution         | 25                           |
+| Files per invalidation           | 1,000 (CLI), 3,000 (console) |
+| Invalidation paths               | 3,000 max per distribution   |
+| Alternate domain names           | 100 per distribution         |
 
 ## References
 

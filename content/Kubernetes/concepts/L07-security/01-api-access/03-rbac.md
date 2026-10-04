@@ -1,6 +1,13 @@
+---
+title: "RBAC (Role-Based Access Control)"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "RBAC (Role-Based Access Control) — Kubernetes reference and architecture guide."
+---
+
 # RBAC (Role-Based Access Control)
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/rbac/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/rbac/"_
 
 RBAC is the **standard authorization model** in Kubernetes. It defines who can do what via four resource types: **Role**, **ClusterRole**, **RoleBinding**, **ClusterRoleBinding**. Every action in the apiserver — every `kubectl`, every controller reconciliation, every admission webhook — is checked against RBAC. This note covers the full picture: the four objects, the verbs, the built-in roles, the aggregation mechanism, the impersonation rules, the kubelet's Node authorizer, and the operational patterns.
 
@@ -34,19 +41,19 @@ RBAC is the **standard authorization model** in Kubernetes. It defines who can d
 
 ## 1. The Four Objects
 
-| Object | Scope | What it does |
-|---|---|---|
-| **Role** | Namespaced | Set of allowed verbs on resources, within one namespace |
-| **ClusterRole** | Cluster-wide | Same, but cluster-wide (or for cluster-scoped resources) |
-| **RoleBinding** | Namespaced | Assigns a Role to a User / Group / ServiceAccount, within one namespace |
-| **ClusterRoleBinding** | Cluster-wide | Assigns a ClusterRole cluster-wide |
+| Object                 | Scope        | What it does                                                            |
+| ---------------------- | ------------ | ----------------------------------------------------------------------- |
+| **Role**               | Namespaced   | Set of allowed verbs on resources, within one namespace                 |
+| **ClusterRole**        | Cluster-wide | Same, but cluster-wide (or for cluster-scoped resources)                |
+| **RoleBinding**        | Namespaced   | Assigns a Role to a User / Group / ServiceAccount, within one namespace |
+| **ClusterRoleBinding** | Cluster-wide | Assigns a ClusterRole cluster-wide                                      |
 
 A **Role** is a set of allowed verbs. A **RoleBinding** is who gets that Role. The two are separate so you can reuse Roles across bindings.
 
 A **ClusterRole** is the cluster-scoped counterpart to a Role. It can be:
 
-* **Bound cluster-wide** via a `ClusterRoleBinding`.
-* **Bound in a single namespace** via a `RoleBinding` (this is the most useful pattern).
+- **Bound cluster-wide** via a `ClusterRoleBinding`.
+- **Bound in a single namespace** via a `RoleBinding` (this is the most useful pattern).
 
 The `RoleBinding` can reference a `ClusterRole`. The result: the **ClusterRole's rules apply in the RoleBinding's namespace**.
 
@@ -60,9 +67,9 @@ metadata:
   name: pod-reader
   namespace: default
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
 ---
 # a RoleBinding: "alice is a pod-reader in the default namespace"
 apiVersion: rbac.authorization.k8s.io/v1
@@ -71,12 +78,12 @@ metadata:
   name: read-pods
   namespace: default
 subjects:
-- kind: User
-  name: alice
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: developers
-  apiGroup: rbac.authorization.k8s.io
+  - kind: User
+    name: alice
+    apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: developers
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
   name: pod-reader
@@ -91,18 +98,18 @@ Alice can `get` / `list` / `watch` Pods in `default`. The "developers" group can
 
 ```yaml
 rules:
-- apiGroups: [""]
-  resources: ["pods"]
-  resourceNames: ["my-specific-pod"]   # optional, limit to specific instances
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["apps"]
-  resources: ["deployments"]
-  verbs: ["get", "list", "watch", "update", "patch"]
-- apiGroups: ["batch"]
-  resources: ["jobs"]
-  verbs: ["*"]                         # all verbs
-- nonResourceURLs: ["/healthz", "/readyz"]
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    resourceNames: ["my-specific-pod"] # optional, limit to specific instances
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["*"] # all verbs
+  - nonResourceURLs: ["/healthz", "/readyz"]
+    verbs: ["get"]
 ```
 
 A Role can have multiple `rules`. Each rule is a list of (apiGroups, resources, verbs) tuples. The Role allows the union of all rules.
@@ -112,33 +119,33 @@ A Role can have multiple `rules`. Each rule is a list of (apiGroups, resources, 
 ```yaml
 aggregationRule:
   clusterRoleSelectors:
-  - matchLabels:
-      rbac.example.com/aggregate-to-monitoring: "true"
+    - matchLabels:
+        rbac.example.com/aggregate-to-monitoring: "true"
 ```
 
 The ClusterRole's permissions are the **union** of all ClusterRoles that match the selector. Used for building modular role hierarchies.
 
 ## 4. The API Groups Reference
 
-| API Group | Resources |
-|---|---|
-| `""` (empty) | Pod, Service, ConfigMap, Secret, Event, Namespace, Node, PersistentVolume, PersistentVolumeClaim, ServiceAccount, Endpoints, ResourceQuota, LimitRange, etc. (the core group) |
-| `apps` | Deployment, StatefulSet, DaemonSet, ReplicaSet, ControllerRevision |
-| `batch` | Job, CronJob |
-| `rbac.authorization.k8s.io` | Role, ClusterRole, RoleBinding, ClusterRoleBinding |
-| `networking.k8s.io` | NetworkPolicy, Ingress, IngressClass |
-| `storage.k8s.io` | StorageClass, CSIDriver, VolumeAttachment, CSINode |
-| `apiextensions.k8s.io` | CustomResourceDefinition |
-| `policy` | PodDisruptionBudget, PodSecurityPolicy (deprecated) |
-| `admissionregistration.k8s.io` | MutatingWebhookConfiguration, ValidatingWebhookConfiguration |
-| `events.k8s.io` | Event |
-| `coordination.k8s.io` | Lease |
-| `node.k8s.io` | RuntimeClass |
-| `flowcontrol.apiserver.k8s.io` | FlowSchema, PriorityLevelConfiguration |
-| `certificates.k8s.io` | CertificateSigningRequest |
-| `authentication.k8s.io` | TokenReview, SubjectAccessReview |
-| `authorization.k8s.io` | (in apiVersions) SubjectAccessReview |
-| `autoscaling` | HorizontalPodAutoscaler, Scale |
+| API Group                      | Resources                                                                                                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `""` (empty)                   | Pod, Service, ConfigMap, Secret, Event, Namespace, Node, PersistentVolume, PersistentVolumeClaim, ServiceAccount, Endpoints, ResourceQuota, LimitRange, etc. (the core group) |
+| `apps`                         | Deployment, StatefulSet, DaemonSet, ReplicaSet, ControllerRevision                                                                                                            |
+| `batch`                        | Job, CronJob                                                                                                                                                                  |
+| `rbac.authorization.k8s.io`    | Role, ClusterRole, RoleBinding, ClusterRoleBinding                                                                                                                            |
+| `networking.k8s.io`            | NetworkPolicy, Ingress, IngressClass                                                                                                                                          |
+| `storage.k8s.io`               | StorageClass, CSIDriver, VolumeAttachment, CSINode                                                                                                                            |
+| `apiextensions.k8s.io`         | CustomResourceDefinition                                                                                                                                                      |
+| `policy`                       | PodDisruptionBudget, PodSecurityPolicy (deprecated)                                                                                                                           |
+| `admissionregistration.k8s.io` | MutatingWebhookConfiguration, ValidatingWebhookConfiguration                                                                                                                  |
+| `events.k8s.io`                | Event                                                                                                                                                                         |
+| `coordination.k8s.io`          | Lease                                                                                                                                                                         |
+| `node.k8s.io`                  | RuntimeClass                                                                                                                                                                  |
+| `flowcontrol.apiserver.k8s.io` | FlowSchema, PriorityLevelConfiguration                                                                                                                                        |
+| `certificates.k8s.io`          | CertificateSigningRequest                                                                                                                                                     |
+| `authentication.k8s.io`        | TokenReview, SubjectAccessReview                                                                                                                                              |
+| `authorization.k8s.io`         | (in apiVersions) SubjectAccessReview                                                                                                                                          |
+| `autoscaling`                  | HorizontalPodAutoscaler, Scale                                                                                                                                                |
 
 For custom resources (CRDs), the API group is the CRD's `spec.group`.
 
@@ -146,17 +153,17 @@ Use `kubectl api-resources` to see the full list for your cluster.
 
 ## 5. The Verbs in Depth
 
-| Verb | What it does | When you need it |
-|---|---|---|
-| `get` | Read a single resource (by name) | `kubectl get pod <name>` |
-| `list` | Read multiple resources (by selector) | `kubectl get pods` |
-| `watch` | Receive updates | controllers, `kubectl get -w` |
-| `create` | Make a new one | controllers, kubectl apply (for new objects) |
-| `update` | Replace entirely | `kubectl replace` |
-| `patch` | Partial modify | `kubectl patch` |
-| `delete` | Remove one | `kubectl delete pod <name>` |
-| `deletecollection` | Remove all matching | garbage collection |
-| `*` | All verbs | admin roles |
+| Verb               | What it does                          | When you need it                             |
+| ------------------ | ------------------------------------- | -------------------------------------------- |
+| `get`              | Read a single resource (by name)      | `kubectl get pod <name>`                     |
+| `list`             | Read multiple resources (by selector) | `kubectl get pods`                           |
+| `watch`            | Receive updates                       | controllers, `kubectl get -w`                |
+| `create`           | Make a new one                        | controllers, kubectl apply (for new objects) |
+| `update`           | Replace entirely                      | `kubectl replace`                            |
+| `patch`            | Partial modify                        | `kubectl patch`                              |
+| `delete`           | Remove one                            | `kubectl delete pod <name>`                  |
+| `deletecollection` | Remove all matching                   | garbage collection                           |
+| `*`                | All verbs                             | admin roles                                  |
 
 For **read**, you need `get` + `list` + `watch` (3 verbs). For **write**, add `create` + `update` + `patch` + `delete` (4 more).
 
@@ -164,12 +171,12 @@ For **read**, you need `get` + `list` + `watch` (3 verbs). For **write**, add `c
 
 Some resources have **special verbs** beyond the standard ones:
 
-* **`bind`** — for `roles` and `clusterroles`. Allows creating a RoleBinding / ClusterRoleBinding that references this Role.
-* **`escalate`** — for `roles` and `clusterroles`. Allows modifying a Role's rules to grant more permissions.
-* **`approve`** / **`sign`** — for `certificatesigningrequests`. Allows approving or signing CSRs.
-* **`use`** — for `subjectaccessreviews` and `tokenreviews`. Allows creating them.
-* **`impersonate`** — for `users`, `groups`, `serviceaccounts`. Allows acting as another identity.
-* **`create`** / **`patch`** / **`update`** on `pods/eviction` subresource. The eviction API.
+- **`bind`** — for `roles` and `clusterroles`. Allows creating a RoleBinding / ClusterRoleBinding that references this Role.
+- **`escalate`** — for `roles` and `clusterroles`. Allows modifying a Role's rules to grant more permissions.
+- **`approve`** / **`sign`** — for `certificatesigningrequests`. Allows approving or signing CSRs.
+- **`use`** — for `subjectaccessreviews` and `tokenreviews`. Allows creating them.
+- **`impersonate`** — for `users`, `groups`, `serviceaccounts`. Allows acting as another identity.
+- **`create`** / **`patch`** / **`update`** on `pods/eviction` subresource. The eviction API.
 
 The `bind` and `escalate` verbs are **sensitive** — they let a user modify RBAC. Don't grant them to untrusted users.
 
@@ -177,49 +184,49 @@ The `bind` and `escalate` verbs are **sensitive** — they let a user modify RBA
 
 ```yaml
 rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  resourceNames: ["my-app-secret"]   # only this Secret
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["my-app-secret"] # only this Secret
+    verbs: ["get"]
 ```
 
 `resourceNames` limits the rule to specific resource instances. It works for:
 
-* **Most named resources** — `secrets`, `configmaps`, `pods`, `services`, etc.
-* **Cluster-scoped resources** — `nodes`, `namespaces`, `persistentvolumes`, etc.
+- **Most named resources** — `secrets`, `configmaps`, `pods`, `services`, etc.
+- **Cluster-scoped resources** — `nodes`, `namespaces`, `persistentvolumes`, etc.
 
 It does **NOT** work for:
 
-* **Subresources** — `pods/log`, `pods/exec`, `deployments/scale`, `pods/eviction`.
-* **Resources without names** — `bindings`, `componentstatuses` (very few).
+- **Subresources** — `pods/log`, `pods/exec`, `deployments/scale`, `pods/eviction`.
+- **Resources without names** — `bindings`, `componentstatuses` (very few).
 
 The `resourceNames` field is the **right way to limit access to a specific Secret or ConfigMap**. A Role with `resourceNames: ["my-app-secret"]` and `verbs: ["get"]` only allows reading that one Secret.
 
 ## 7. Subresources
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/authorization/#referring-to-subresources"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/authorization/#referring-to-subresources"_
 
 Some resources have **subresources**:
 
-* `pods/log` — Pod logs.
-* `pods/exec` — `kubectl exec`.
-* `pods/portforward` — `kubectl port-forward`.
-* `pods/eviction` — the eviction API.
-* `pods/status` — Pod status updates (used by kubelet).
-* `pods/proxy` — `kubectl proxy`.
-* `deployments/scale` — `kubectl scale`.
-* `deployments/status` — Deployment status.
-* `replicasets/scale`, `statefulsets/scale`, etc.
-* `nodes/status` — Node status updates.
-* `nodes/metrics`, `nodes/proxy` — Node-level access.
+- `pods/log` — Pod logs.
+- `pods/exec` — `kubectl exec`.
+- `pods/portforward` — `kubectl port-forward`.
+- `pods/eviction` — the eviction API.
+- `pods/status` — Pod status updates (used by kubelet).
+- `pods/proxy` — `kubectl proxy`.
+- `deployments/scale` — `kubectl scale`.
+- `deployments/status` — Deployment status.
+- `replicasets/scale`, `statefulsets/scale`, etc.
+- `nodes/status` — Node status updates.
+- `nodes/metrics`, `nodes/proxy` — Node-level access.
 
 Subresources are referenced in RBAC:
 
 ```yaml
 rules:
-- apiGroups: [""]
-  resources: ["pods/log"]
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
 ```
 
 For `pods/log`, the standard pattern:
@@ -248,39 +255,39 @@ The `create` verb on `pods/eviction` is what allows calling the eviction API. Th
 
 k8s ships with these built-in ClusterRoles:
 
-| ClusterRole | What it allows |
-|---|---|
-| `cluster-admin` | Everything. `*` on `*` for `*`. Use sparingly. |
-| `admin` | Most things in a namespace. `*` on most resources. Doesn't allow Role / RoleBinding modification or custom resource access. |
-| `edit` | Read/write most resources in a namespace. No Role / RoleBinding, no NetworkPolicy, no ResourceQuota, no CRD, no SecurityContext... wait, it allows SecurityContext. But not PSS / PSA. |
-| `view` | Read most resources in a namespace. No Secrets (Secrets are sensitive), no write. |
-| `system:masters` | Implicit. Anyone in this group is cluster-admin. |
-| `system:node` | Used by kubelets (legacy, before Node authorizer). |
-| `system:node-proxier` | For kube-proxy (update Services, Endpoints). |
-| `system:kube-controller-manager` | For kube-controller-manager (bound to the system SA). |
-| `system:kube-scheduler` | For kube-scheduler. |
-| `system:kube-dns` | For kube-dns / CoreDNS. |
-| `system:public-info-viewer` | Anonymous read access to non-sensitive info (ClusterInfo, etc.). |
-| `system:discovery` | Read access for service discovery (used by all SAs by default, until k8s 1.16+). |
-| `system:basic-user` | Read access to the user's own info. |
-| `system:authenticated` | Implicit. Anyone authenticated is in this group. |
-| `system:unauthenticated` | Implicit. Anonymous users. |
-| `system:serviceaccounts` | All SAs cluster-wide. |
-| `system:serviceaccounts:<ns>` | All SAs in a namespace. |
-| `system:nodes` | All kubelets. |
+| ClusterRole                      | What it allows                                                                                                                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cluster-admin`                  | Everything. `*` on `*` for `*`. Use sparingly.                                                                                                                                         |
+| `admin`                          | Most things in a namespace. `*` on most resources. Doesn't allow Role / RoleBinding modification or custom resource access.                                                            |
+| `edit`                           | Read/write most resources in a namespace. No Role / RoleBinding, no NetworkPolicy, no ResourceQuota, no CRD, no SecurityContext... wait, it allows SecurityContext. But not PSS / PSA. |
+| `view`                           | Read most resources in a namespace. No Secrets (Secrets are sensitive), no write.                                                                                                      |
+| `system:masters`                 | Implicit. Anyone in this group is cluster-admin.                                                                                                                                       |
+| `system:node`                    | Used by kubelets (legacy, before Node authorizer).                                                                                                                                     |
+| `system:node-proxier`            | For kube-proxy (update Services, Endpoints).                                                                                                                                           |
+| `system:kube-controller-manager` | For kube-controller-manager (bound to the system SA).                                                                                                                                  |
+| `system:kube-scheduler`          | For kube-scheduler.                                                                                                                                                                    |
+| `system:kube-dns`                | For kube-dns / CoreDNS.                                                                                                                                                                |
+| `system:public-info-viewer`      | Anonymous read access to non-sensitive info (ClusterInfo, etc.).                                                                                                                       |
+| `system:discovery`               | Read access for service discovery (used by all SAs by default, until k8s 1.16+).                                                                                                       |
+| `system:basic-user`              | Read access to the user's own info.                                                                                                                                                    |
+| `system:authenticated`           | Implicit. Anyone authenticated is in this group.                                                                                                                                       |
+| `system:unauthenticated`         | Implicit. Anonymous users.                                                                                                                                                             |
+| `system:serviceaccounts`         | All SAs cluster-wide.                                                                                                                                                                  |
+| `system:serviceaccounts:<ns>`    | All SAs in a namespace.                                                                                                                                                                |
+| `system:nodes`                   | All kubelets.                                                                                                                                                                          |
 
 The **standard pattern**:
 
-* Bind `view` to read-only groups.
-* Bind `edit` to developers in their namespace.
-* Bind `admin` to namespace owners.
-* Bind `cluster-admin` to operators (rarely).
+- Bind `view` to read-only groups.
+- Bind `edit` to developers in their namespace.
+- Bind `admin` to namespace owners.
+- Bind `cluster-admin` to operators (rarely).
 
 The built-in `view` role does **NOT** include `watch` on Secrets. Secrets are sensitive. To allow reading a specific Secret, create a custom Role with `resourceNames`.
 
 ## 9. The Aggregation Rule (ClusterRole)
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/rbac/#aggregated-clusterroles"_
 
 A ClusterRole can **aggregate** rules from other ClusterRoles. The `aggregationRule` defines a selector; all ClusterRoles that match the selector are **merged** into this one.
 
@@ -291,9 +298,9 @@ metadata:
   name: monitoring
 aggregationRule:
   clusterRoleSelectors:
-  - matchLabels:
-      rbac.example.com/aggregate-to-monitoring: "true"
-rules: []   # the aggregated rules (filled in by the apiserver)
+    - matchLabels:
+        rbac.example.com/aggregate-to-monitoring: "true"
+rules: [] # the aggregated rules (filled in by the apiserver)
 ```
 
 Any ClusterRole with the label `rbac.example.com/aggregate-to-monitoring: "true"` is included.
@@ -306,9 +313,9 @@ metadata:
   labels:
     rbac.example.com/aggregate-to-monitoring: "true"
 rules:
-- apiGroups: [""]
-  resources: ["pods", "services", "endpoints"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
 ```
 
 The `prometheus` ClusterRole is now part of the `monitoring` ClusterRole. **A user with `monitoring` gets `prometheus`'s rules.**
@@ -341,8 +348,8 @@ roleRef:
   kind: ClusterRole
   name: edit
 subjects:
-- kind: Group
-  name: team-a
+  - kind: Group
+    name: team-a
 ```
 
 This gives "team-a" the `edit` ClusterRole's permissions in the `team-a` namespace. The `edit` ClusterRole itself is cluster-scoped, but the binding scopes it to a namespace.
@@ -353,21 +360,21 @@ This is the **standard pattern**: bind built-in ClusterRoles to groups in namesp
 
 A `RoleBinding`'s `subjects` can be:
 
-* **`User`** — a username. `alice`, `alice@example.com`, `system:serviceaccount:default:my-sa`.
-* **`Group`** — a group name. `developers`, `system:authenticated`, `system:masters`.
-* **`ServiceAccount`** — a SA. Format: `kind: ServiceAccount, name: <sa>, namespace: <ns>`.
+- **`User`** — a username. `alice`, `alice@example.com`, `system:serviceaccount:default:my-sa`.
+- **`Group`** — a group name. `developers`, `system:authenticated`, `system:masters`.
+- **`ServiceAccount`** — a SA. Format: `kind: ServiceAccount, name: <sa>, namespace: <ns>`.
 
 ```yaml
 subjects:
-- kind: User
-  name: alice
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: developers
-  apiGroup: rbac.authorization.k8s.io
-- kind: ServiceAccount
-  name: my-app
-  namespace: default
+  - kind: User
+    name: alice
+    apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: developers
+    apiGroup: rbac.authorization.k8s.io
+  - kind: ServiceAccount
+    name: my-app
+    namespace: default
 ```
 
 The `apiGroup` is `rbac.authorization.k8s.io` for User and Group. For ServiceAccount, the `namespace` is required (and is **where the SA is**, not where the binding is).
@@ -381,9 +388,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: ci-deploy, namespace: prod }
 subjects:
-- kind: ServiceAccount
-  name: ci
-  namespace: ci                # SA in ci namespace
+  - kind: ServiceAccount
+    name: ci
+    namespace: ci # SA in ci namespace
 roleRef:
   kind: Role
   name: deploy
@@ -394,7 +401,7 @@ The `ci` SA in `ci` namespace can deploy in `prod` namespace. The binding's name
 
 ## 13. The Impersonation Verbs
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation"_
 
 To allow a user to impersonate another, grant the `impersonate` verb:
 
@@ -424,16 +431,16 @@ The user being impersonated becomes the new "user" in the apiserver. The origina
 
 Two verbs that allow modifying RBAC:
 
-* **`escalate`** — modify a Role's rules (escalate the permissions).
-* **`bind`** — create a RoleBinding / ClusterRoleBinding that references a Role.
+- **`escalate`** — modify a Role's rules (escalate the permissions).
+- **`bind`** — create a RoleBinding / ClusterRoleBinding that references a Role.
 
 ```yaml
 # allow alice to escalate the "deploy" Role
 rules:
-- apiGroups: ["rbac.authorization.k8s.io"]
-  resources: ["roles"]
-  resourceNames: ["deploy"]
-  verbs: ["escalate"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles"]
+    resourceNames: ["deploy"]
+    verbs: ["escalate"]
 ```
 
 A user with `escalate` on a Role can **add more permissions to that Role**. If alice has `escalate` on `deploy`, alice can add `create secrets` to the `deploy` Role — and alice then has `create secrets` (via the binding to `deploy`).
@@ -448,16 +455,16 @@ A special case: the **Node authorizer** is enabled by default and restricts what
 
 A kubelet (identified by `system:node:<node-name>`) can only:
 
-* Read its own Node object.
-* Read Pods assigned to it.
-* Update the status of Pods assigned to it.
-* Create Events related to its Pods.
+- Read its own Node object.
+- Read Pods assigned to it.
+- Update the status of Pods assigned to it.
+- Create Events related to its Pods.
 
 It **cannot**:
 
-* Read other Nodes' secrets.
-* Modify Pods not assigned to it.
-* Do anything outside its lane.
+- Read other Nodes' secrets.
+- Modify Pods not assigned to it.
+- Do anything outside its lane.
 
 This is enforced by the Node authorizer and the NodeRestriction admission plugin. See [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] and [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] for details.
 
@@ -465,9 +472,9 @@ This is enforced by the Node authorizer and the NodeRestriction admission plugin
 
 The control plane components (`kube-controller-manager`, `kube-scheduler`, `cloud-controller-manager`) run as `system:serviceaccount:kube-system:<name>`. They have **cluster-scoped permissions** via built-in ClusterRoleBindings:
 
-* `system:kube-controller-manager` is bound to `cluster-admin` (yes, full access — it needs to manage every resource).
-* `system:kube-scheduler` is bound to `system:kube-scheduler` (its own custom ClusterRole).
-* `cloud-controller-manager` is bound to `system:cloud-controller-manager`.
+- `system:kube-controller-manager` is bound to `cluster-admin` (yes, full access — it needs to manage every resource).
+- `system:kube-scheduler` is bound to `system:kube-scheduler` (its own custom ClusterRole).
+- `cloud-controller-manager` is bound to `system:cloud-controller-manager`.
 
 These are **system ClusterRoleBindings** — created by the apiserver at startup. **Don't modify them.**
 
@@ -475,7 +482,7 @@ The controller-manager runs with `--use-service-account-credentials=true` (k8s 1
 
 ## 17. The SubjectAccessReview API
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/authorization/#checking-api-access"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/authorization/#checking-api-access"_
 
 The `SubjectAccessReview` (SAR) API is a way to **check** whether a user can do an action. It's used by `kubectl auth can-i`:
 
@@ -514,9 +521,9 @@ To allow a user to **create** SARs, grant the `create` verb on `subjectaccessrev
 
 ```yaml
 rules:
-- apiGroups: ["authorization.k8s.io"]
-  resources: ["subjectaccessreviews"]
-  verbs: ["create"]
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["subjectaccessreviews"]
+    verbs: ["create"]
 ```
 
 This is what `kubectl auth can-i` does — it uses the user's own credentials to create a SAR.
@@ -538,9 +545,9 @@ RBAC for the CRD's resources:
 
 ```yaml
 rules:
-- apiGroups: ["apiextensions.crossplane.io"]
-  resources: ["compositions"]
-  verbs: ["get", "list"]
+  - apiGroups: ["apiextensions.crossplane.io"]
+    resources: ["compositions"]
+    verbs: ["get", "list"]
 ```
 
 The `apiGroup` is the CRD's group. The `resources` is the CRD's plural name.
@@ -551,9 +558,9 @@ For **subresources of a CRD** (e.g. `compositions/status`), use the subresource 
 
 ```yaml
 rules:
-- apiGroups: ["apiextensions.crossplane.io"]
-  resources: ["compositions", "compositions/status"]
-  verbs: ["get", "update", "patch"]
+  - apiGroups: ["apiextensions.crossplane.io"]
+    resources: ["compositions", "compositions/status"]
+    verbs: ["get", "update", "patch"]
 ```
 
 ## 19. The kubebuilder / controller-gen RBAC Markers
@@ -583,20 +590,20 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: deploy, namespace: app-prod }
 rules:
-- apiGroups: ["apps"]
-  resources: ["deployments"]
-  verbs: ["get", "list", "watch", "update", "patch"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: ci, namespace: app-prod }
 subjects:
-- kind: ServiceAccount
-  name: ci
-  namespace: ci
+  - kind: ServiceAccount
+    name: ci
+    namespace: ci
 roleRef:
   kind: Role
   name: deploy
@@ -612,9 +619,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: view, namespace: production }
 subjects:
-- kind: Group
-  name: production-readers
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: production-readers
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
   name: view
@@ -630,9 +637,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata: { name: ops-read }
 subjects:
-- kind: Group
-  name: ops
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: ops
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
   name: view
@@ -650,17 +657,17 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: leader-election, namespace: default }
 rules:
-- apiGroups: ["coordination.k8s.io"]
-  resources: ["leases"]
-  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: leader-election, namespace: default }
 subjects:
-- kind: ServiceAccount
-  name: my-controller
-  namespace: default
+  - kind: ServiceAccount
+    name: my-controller
+    namespace: default
 roleRef:
   kind: Role
   name: leader-election
@@ -676,10 +683,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: read-app-secret, namespace: default }
 rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  resourceNames: ["app-secret"]
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["app-secret"]
+    verbs: ["get"]
 ```
 
 The Role allows reading **only** the `app-secret` Secret. The user / SA can't read other Secrets.
@@ -838,8 +845,8 @@ kubectl api-resources | grep <crd-name>
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|AuthN/AuthZ]] — the bigger picture
-* [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — the in-cluster identity
-* [[Kubernetes/concepts/L07-security/07-security|Security Overview]] — the security model end-to-end
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the workload-side complement
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+- [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|AuthN/AuthZ]] — the bigger picture
+- [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — the in-cluster identity
+- [[Kubernetes/concepts/L07-security/07-security|Security Overview]] — the security model end-to-end
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the workload-side complement
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags

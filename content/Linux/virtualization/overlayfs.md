@@ -157,14 +157,14 @@ echo "changed" >> /overlay/merged/hardlink_pair
 
 ## Performance Characteristics
 
-| Operation      | Performance | Notes                                       |
-|---------------|-------------|---------------------------------------------|
-| Read (cache hit) | Fast     | Kernel page cache serves from RAM          |
-| Read (first time) | Moderate | Must traverse upper → lower                 |
-| Write (new file)  | Fast     | Direct write to upperdir                   |
-| Write (copy-up)   | Slow     | Must copy entire file from lower to upper  |
-| Delete            | Fast     | Just creates whiteout, no data move       |
-| Many small writes | Slower   | Each copy-up copies a whole file          |
+| Operation         | Performance | Notes                                     |
+| ----------------- | ----------- | ----------------------------------------- |
+| Read (cache hit)  | Fast        | Kernel page cache serves from RAM         |
+| Read (first time) | Moderate    | Must traverse upper → lower               |
+| Write (new file)  | Fast        | Direct write to upperdir                  |
+| Write (copy-up)   | Slow        | Must copy entire file from lower to upper |
+| Delete            | Fast        | Just creates whiteout, no data move       |
+| Many small writes | Slower      | Each copy-up copies a whole file          |
 
 ## Checking Overlay Mounts
 

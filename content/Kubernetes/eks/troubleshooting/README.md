@@ -10,9 +10,11 @@ description: Common EKS issues and how to resolve them
 ## Common Issues
 
 ### [[Kubernetes/eks/troubleshooting/common-issues|Common Issues and Solutions]]
+
 Frequently encountered EKS problems and resolutions
 
 ### [[Kubernetes/eks/troubleshooting/support-resources|Support Resources]]
+
 AWS support, documentation, and community resources
 
 ## Quick Diagnostics

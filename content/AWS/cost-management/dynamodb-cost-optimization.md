@@ -14,21 +14,25 @@ DynamoDB pricing has two capacity modes and a separate accelerator layer. Gettin
 ## On-Demand vs Provisioned
 
 **On-Demand:**
+
 - Pay per request: $1.25 per million write request units, $0.25 per million read request units
 - No capacity planning required
 - Scales instantly to any traffic level
 
 **Provisioned:**
+
 - You reserve WCU (Write Capacity Units) and RCU (Read Capacity Units)
 - 1 WCU = 1 write per second for items up to 1KB
 - 1 RCU = 2 reads per second for items up to 1KB
 - Charged per WCU/RCU per hour
 
 **Which to use:**
+
 - On-Demand: New tables, unpredictable traffic, development, traffic spikes
 - Provisioned: Stable predictable traffic where you can commit to capacity
 
 **Cost comparison:**
+
 ```
 1,000 writes/second average, 1KB items, 30-day month:
 On-Demand: 1,000 × 60 × 60 × 24 × 30 = 2.59B writes/month
@@ -44,11 +48,13 @@ Provisioned is ~85% cheaper at sustained 1,000 writes/second. But if traffic dro
 ## Auto Scaling
 
 DynamoDB Auto Scaling adjusts provisioned capacity automatically based on CloudWatch metrics. You set:
+
 - **Minimum:** Floor capacity (never goes below this)
 - **Maximum:** Ceiling (never goes above this)
 - **Target utilization:** ~70% — when utilization exceeds this, scale up
 
 **Behavior:**
+
 - Scales up when consumed capacity exceeds 70% of provisioned for 2 consecutive minutes
 - Scales down when consumed capacity is below 60% of provisioned for 15 consecutive minutes
 - Has a scaling cooldown period (60 seconds up, 300 seconds down)
@@ -60,16 +66,19 @@ DynamoDB Auto Scaling adjusts provisioned capacity automatically based on CloudW
 DynamoDB Reserved Capacity lets you commit to a specific WCU/RCU amount for 1 or 3 years, in exchange for up to 60% savings vs on-demand provisioned pricing.
 
 **Use when:**
+
 - You have predictable, sustained traffic
 - You're migrating from on-premises and know the exact capacity requirements
 - You want cost predictability for budgeting
 
 **How it works:**
+
 - You buy "units" of reserved capacity (e.g., 100 WCU reserved)
 - Any usage above reserved is billed at normal provisioned rates
 - Unused reserved capacity is wasted — you paid for it whether you use it or not
 
 **Calculation:**
+
 ```
 100 WCU reserved for 3-year = $0.00045/WCU/hour × 100 × 24 × 365 × 3 = $1,183
 On-demand equivalent: $0.00065/WCU/hour × 100 × 24 × 365 × 3 = $1,708
@@ -81,15 +90,18 @@ Savings: 30%
 DAX is an in-memory cache that sits in front of DynamoDB. It caches reads (eventual consistency) and reduces read request costs by ~85%.
 
 **Cost model:**
+
 - Node instance hours (similar to ElastiCache)
 - Per request markup on top of DynamoDB read costs
 
 **When DAX saves money:**
+
 - High read-to-write ratio (90% reads, 10% writes)
 - Hot key patterns (same key accessed frequently)
 - Applications that need sub-millisecond read latency
 
 **When DAX doesn't help:**
+
 - Write-heavy workloads
 - Strongly consistent reads (DAX only supports eventual consistency)
 - Random access patterns where caching doesn't help
@@ -97,17 +109,20 @@ DAX is an in-memory cache that sits in front of DynamoDB. It caches reads (event
 ## GSI and LSI Cost Implications
 
 **GSI (Global Secondary Index):**
+
 - You define a separate partition key and sort key
 - Writes to the base table also write to the GSI (consumed WCU)
 - Reads from GSI consume RCU on the GSI
 - **Cost trap:** If you project attributes into a GSI and then filter them out with `Select=SPECIFIC_ATTRIBUTES`, DynamoDB still reads the full index item
 
 **LSI (Local Secondary Index):**
+
 - Same partition key as base table, different sort key
 - Shares the base table partition key — no additional read/write capacity cost
 - Only available at table creation time (can't add later)
 
 **Cost optimization:**
+
 - Avoid over-indexing. Every GSI adds write overhead to every item write
 - Use `Select=COUNT` for debugging instead of fetching full items
 - Delete unused GSIs — they cost money even if not queried

@@ -1,6 +1,13 @@
+---
+title: "etcd Encryption"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "etcd Encryption — Kubernetes reference and architecture guide."
+---
+
 # etcd Encryption
 
-*"https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/"*
+_"https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/"_
 
 By default, **k8s Secrets are stored in etcd as base64-encoded plaintext** (not encrypted at rest). Anyone with `etcdctl` access can read them. **etcd encryption** is the mechanism that lets you encrypt data at rest in etcd, using an `EncryptionConfiguration`. The encryption is **envelope encryption** — the keys are in an external KMS, and etcd encrypts / decrypts on the fly. Without etcd encryption, your secrets are one etcd backup away from being public.
 
@@ -26,15 +33,15 @@ By default, **k8s Secrets are stored in etcd as base64-encoded plaintext** (not 
 
 etcd encryption protects against:
 
-* **etcd backup exposure** — an attacker who steals an etcd backup sees ciphertext.
-* **Insider threat** — a cluster operator with etcd access can't read secrets.
-* **Storage compromise** — if etcd's disk is stolen, secrets are encrypted.
+- **etcd backup exposure** — an attacker who steals an etcd backup sees ciphertext.
+- **Insider threat** — a cluster operator with etcd access can't read secrets.
+- **Storage compromise** — if etcd's disk is stolen, secrets are encrypted.
 
 It does **not** protect against:
 
-* **Compromised apiserver** — the apiserver has the keys; it decrypts on the fly.
-* **Compromised workload** — the workload has the secret in memory; etcd encryption doesn't help.
-* **Compromised RBAC** — anyone with `get` on Secrets can read them in plaintext (the apiserver decrypts for them).
+- **Compromised apiserver** — the apiserver has the keys; it decrypts on the fly.
+- **Compromised workload** — the workload has the secret in memory; etcd encryption doesn't help.
+- **Compromised RBAC** — anyone with `get` on Secrets can read them in plaintext (the apiserver decrypts for them).
 
 The threat model: **protect data at rest, not data in use**. Encryption at rest + RBAC + audit logs = layered defense.
 
@@ -42,9 +49,9 @@ The threat model: **protect data at rest, not data in use**. Encryption at rest 
 
 The `EncryptionConfiguration` controls encryption of:
 
-* **Secrets** — by default.
-* **ConfigMaps** — optional.
-* **Anything else** — ConfigMap can be added; other resources typically aren't.
+- **Secrets** — by default.
+- **ConfigMaps** — optional.
+- **Anything else** — ConfigMap can be added; other resources typically aren't.
 
 **Pods, Deployments, etc. are NOT encrypted** by default. The `EncryptionConfiguration` only encrypts what's listed in the `resources` section. If you want Pods encrypted, you add them to the config.
 
@@ -56,25 +63,25 @@ The `EncryptionConfiguration` is a file on the apiserver's node. It's not a k8s 
 apiVersion: apiserver.config.k8s.io/v1
 kind: EncryptionConfiguration
 resources:
-- resources:
-  - secrets
-  providers:
-  - kms:
-      name: aws-kms-provider
-      endpoint: unix:///var/run/kmsplugin/socket.sock
-      cachesize: 1000
-      timeout: 3s
-  - aescbc:
-      keys:
-      - name: key1
-        secret: <base64-encoded-32-byte-key>
-  - identity: {}
+  - resources:
+      - secrets
+    providers:
+      - kms:
+          name: aws-kms-provider
+          endpoint: unix:///var/run/kmsplugin/socket.sock
+          cachesize: 1000
+          timeout: 3s
+      - aescbc:
+          keys:
+            - name: key1
+              secret: <base64-encoded-32-byte-key>
+      - identity: {}
 ```
 
 The structure:
 
-* **`resources`** — list of resources to encrypt.
-* **`providers`** — list of encryption providers, in priority order. The **first** provider is used for encryption. All providers are tried for decryption (so old keys still work).
+- **`resources`** — list of resources to encrypt.
+- **`providers`** — list of encryption providers, in priority order. The **first** provider is used for encryption. All providers are tried for decryption (so old keys still work).
 
 The file is passed to the apiserver via `--encryption-provider-config`:
 
@@ -93,8 +100,8 @@ The apiserver reads the file on startup. Changes to the file require an apiserve
 
 The `identity` provider is a no-op — data is stored as-is. It's used:
 
-* As a placeholder (the file must have at least one provider).
-* To **decrypt** data encrypted by a previous provider (after rotation, the new provider is the first; the old provider is below it; if decryption with the new fails, it falls through).
+- As a placeholder (the file must have at least one provider).
+- To **decrypt** data encrypted by a previous provider (after rotation, the new provider is the first; the old provider is below it; if decryption with the new fails, it falls through).
 
 When you rotate keys, you add the new key at the top, keep the old key below it, then re-encrypt the data, then remove the old key.
 
@@ -103,8 +110,8 @@ When you rotate keys, you add the new key at the top, keep the old key below it,
 ```yaml
 - aescbc:
     keys:
-    - name: key1
-      secret: <base64-encoded-32-byte-key>
+      - name: key1
+        secret: <base64-encoded-32-byte-key>
 ```
 
 The `aescbc` provider is **AES-CBC with PKCS#7 padding**. The key is a 32-byte key (AES-256), base64-encoded.
@@ -130,8 +137,8 @@ For production, use **KMS** (the next sections).
 ```yaml
 - secretbox:
     keys:
-    - name: key1
-      secret: <base64-encoded-32-byte-key>
+      - name: key1
+        secret: <base64-encoded-32-byte-key>
 ```
 
 The `secretbox` provider uses **XSalsa20-Poly1305** (a NaCl crypto primitive). It's similar to `aescbc` but uses a different cipher.
@@ -199,10 +206,10 @@ The Vault plugin calls Vault's transit engine. The plugin handles auth, renews t
 
 The KMS plugin is **not built into k8s**. It's a separate binary you deploy. The most common:
 
-* **aws-encryption-provider** (Kubernetes SIG) — for AWS KMS.
-* **gcp-kms-provider** — for GCP KMS.
-* **azure-keyvault-provider** — for Azure.
-* **vault-kms-plugin** — for HashiCorp Vault.
+- **aws-encryption-provider** (Kubernetes SIG) — for AWS KMS.
+- **gcp-kms-provider** — for GCP KMS.
+- **azure-keyvault-provider** — for Azure.
+- **vault-kms-plugin** — for HashiCorp Vault.
 
 The plugin is a long-running process that exposes a gRPC API over a Unix socket. The apiserver calls the plugin for every encrypt / decrypt operation.
 
@@ -234,16 +241,16 @@ The **DEK** is per-Secret. The **KEK** is the master key in KMS. The DEK is encr
 
 This is the standard pattern for cloud-native encryption. It allows:
 
-* **Encryption without round-trips to KMS for every read** — the DEK is cached (with TTL).
-* **Rotation** — rotate the KEK; new DEKs are encrypted with the new KEK; old DEKs are still encrypted with the old KEK; the apiserver tries both.
-* **KMS-side audit** — every DEK decrypt is logged in the KMS (e.g. CloudTrail).
+- **Encryption without round-trips to KMS for every read** — the DEK is cached (with TTL).
+- **Rotation** — rotate the KEK; new DEKs are encrypted with the new KEK; old DEKs are still encrypted with the old KEK; the apiserver tries both.
+- **KMS-side audit** — every DEK decrypt is logged in the KMS (e.g. CloudTrail).
 
 ### 7.1 The cache
 
 The apiserver caches the DEKs. The `cachesize` and `timeout` fields control the cache:
 
-* `cachesize: 1000` — cache up to 1000 DEKs.
-* `timeout: 3s` — DEK is valid for 3s after decryption (to limit the time a stolen DEK is useful).
+- `cachesize: 1000` — cache up to 1000 DEKs.
+- `timeout: 3s` — DEK is valid for 3s after decryption (to limit the time a stolen DEK is useful).
 
 The cache is in-memory. Restart the apiserver, the cache is empty.
 
@@ -285,9 +292,10 @@ The "re-encrypt all data" step is important. After Phase 1, new data is encrypte
 If you're using KMS, the KEK is rotated in the KMS itself. AWS KMS, for example, has automatic key rotation (yearly) or you can do it manually.
 
 When the KEK rotates:
-* New DEKs are encrypted with the new KEK.
-* Old DEKs are still encrypted with the old KEK.
-* The KMS plugin handles decryption with both.
+
+- New DEKs are encrypted with the new KEK.
+- Old DEKs are still encrypted with the old KEK.
+- The KMS plugin handles decryption with both.
 
 The apiserver's KMS provider config doesn't change (it still points to the same KMS key ID). The rotation is in the KMS, transparent to the apiserver.
 
@@ -329,15 +337,15 @@ etcd backups (`etcdctl snapshot save`) **include the encrypted data**, not the p
 
 But:
 
-* The **EncryptionConfiguration** is needed to decrypt. Without it (or the KMS access), the backup is useless.
-* The **DEK cache** doesn't help with backups — it's in the apiserver, not the backup.
-* The **KMS access** is needed to decrypt DEKs. If the KMS is gone (or the keys are revoked), the backup is unreadable.
+- The **EncryptionConfiguration** is needed to decrypt. Without it (or the KMS access), the backup is useless.
+- The **DEK cache** doesn't help with backups — it's in the apiserver, not the backup.
+- The **KMS access** is needed to decrypt DEKs. If the KMS is gone (or the keys are revoked), the backup is unreadable.
 
 **Disaster recovery implications:**
 
-* Back up the **EncryptionConfiguration** alongside the etcd backup.
-* Back up the **KMS credentials** (or store them in a separate KMS).
-* Test the **decryption** periodically — `etcdctl snapshot restore` + `etcdctl get` to verify the data is readable.
+- Back up the **EncryptionConfiguration** alongside the etcd backup.
+- Back up the **KMS credentials** (or store them in a separate KMS).
+- Test the **decryption** periodically — `etcdctl snapshot restore` + `etcdctl get` to verify the data is readable.
 
 ## 11. Performance and Storage Overhead
 
@@ -345,9 +353,9 @@ But:
 
 Encryption adds:
 
-* **CPU** — AES-256-GCM is fast (~1 GB/s on modern CPUs with AES-NI). KMS round-trips are slower (10-100ms over the network).
-* **Latency** — first read of a Secret is ~10-100ms slower (KMS round-trip). Cached reads are fast.
-* **Storage** — the EDEK is small (~200 bytes for a 32-byte DEK). The encrypted Secret is the same size as the plaintext (AES is a stream cipher for this purpose, with the IV prepended).
+- **CPU** — AES-256-GCM is fast (~1 GB/s on modern CPUs with AES-NI). KMS round-trips are slower (10-100ms over the network).
+- **Latency** — first read of a Secret is ~10-100ms slower (KMS round-trip). Cached reads are fast.
+- **Storage** — the EDEK is small (~200 bytes for a 32-byte DEK). The encrypted Secret is the same size as the plaintext (AES is a stream cipher for this purpose, with the IV prepended).
 
 ### 11.2 The cache
 
@@ -481,6 +489,6 @@ ls -la /var/run/kmsplugin/socket.sock
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — the higher-level view
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for encryption events
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — etcd access control
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — the higher-level view
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for encryption events
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — etcd access control

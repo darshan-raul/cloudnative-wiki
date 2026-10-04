@@ -65,18 +65,18 @@ iptables -P OUTPUT ACCEPT
 
 ## Targets (Actions)
 
-| Target        | What it does                                          |
-|---------------|------------------------------------------------------|
-| ACCEPT        | Allow the packet                                     |
-| DROP          | Silently discard (no response)                      |
-| REJECT        | Send ICMP error back (e.g., port unreachable)        |
-| LOG           | Log to syslog (then continue to next rule!)         |
-| MASQUERADE    | NAT: replace source IP with egress interface IP       |
-| SNAT          | NAT: replace source IP with specified IP             |
-| DNAT          | NAT: replace dest IP with specified IP               |
-| REDIRECT      | NAT: redirect to local port or another port           |
-| MARK          | Mark packet (for tc/routing policy)                  |
-| RETURN        | Stop traversing this chain, return to calling chain   |
+| Target     | What it does                                        |
+| ---------- | --------------------------------------------------- |
+| ACCEPT     | Allow the packet                                    |
+| DROP       | Silently discard (no response)                      |
+| REJECT     | Send ICMP error back (e.g., port unreachable)       |
+| LOG        | Log to syslog (then continue to next rule!)         |
+| MASQUERADE | NAT: replace source IP with egress interface IP     |
+| SNAT       | NAT: replace source IP with specified IP            |
+| DNAT       | NAT: replace dest IP with specified IP              |
+| REDIRECT   | NAT: redirect to local port or another port         |
+| MARK       | Mark packet (for tc/routing policy)                 |
+| RETURN     | Stop traversing this chain, return to calling chain |
 
 ## Connection Tracking (Stateful Firewall)
 

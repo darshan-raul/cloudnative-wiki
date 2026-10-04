@@ -22,10 +22,10 @@ The Kubernetes **API is the product**. Everything you do — `kubectl apply`, a 
 
 ## Notes in this level
 
-| Note | Status | What's in it |
-|------|--------|--------------|
-| [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|Kubernetes Objects]] | ✅ | The universal object shape, manifest anatomy, dry-run, field selectors, apiGroups |
-| [[Kubernetes/concepts/L02-objects/02-downward-api\|Downward API]] | ✅ | Injecting pod metadata into containers — env vars, volume mounts, field ref path syntax |
+| Note                                                                          | Status | What's in it                                                                            |
+| ----------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------- |
+| [[Kubernetes/concepts/L02-objects/01-kubernetes-objects\|Kubernetes Objects]] | ✅     | The universal object shape, manifest anatomy, dry-run, field selectors, apiGroups       |
+| [[Kubernetes/concepts/L02-objects/02-downward-api\|Downward API]]             | ✅     | Injecting pod metadata into containers — env vars, volume mounts, field ref path syntax |
 
 ## Suggested reading order
 
@@ -34,4 +34,4 @@ The Kubernetes **API is the product**. Everything you do — `kubectl apply`, a 
 
 ## Where to go next
 
-→ [[Kubernetes/concepts/L03-workloads|L03 — Workloads]]: the object model only gets useful when you start creating workload objects.
+→ [[Kubernetes/concepts/L03-workloads/00-README|L03 — Workloads]]: the object model only gets useful when you start creating workload objects.

@@ -9,6 +9,7 @@ The strangler fig pattern is a migration strategy for replacing a legacy system 
 ## When to Use It
 
 The strangler fig is the right pattern when:
+
 - **Replacing a monolithic legacy system** — too risky to rewrite in one pass
 - **No big-bang rewrite acceptable** — business can't tolerate downtime or migration risk
 - **The legacy system is a black box** — no documentation, no tests, unknown behavior
@@ -47,6 +48,7 @@ User → Proxy
 ### Step 3: Repeat Until Legacy is Strangled
 
 Each iteration:
+
 1. Identify another piece of functionality
 2. Build it in the new system
 3. Route that traffic to new system
@@ -100,15 +102,15 @@ metadata:
   name: api
 spec:
   hosts:
-  - api.example.com
+    - api.example.com
   http:
-  - route:
-    - destination:
-        host: legacy-system
-        weight: 95
-    - destination:
-        host: new-system
-        weight: 5
+    - route:
+        - destination:
+            host: legacy-system
+            weight: 95
+        - destination:
+            host: new-system
+            weight: 5
 ```
 
 ## Data Migration with Strangler Fig
@@ -203,11 +205,11 @@ A system with 50 features migrated but 90% of traffic still hitting legacy is no
 
 ## Strangler Fig vs Other Patterns
 
-| Pattern | When to use |
-|---|---|
-| **Strangler fig** | Replacing a legacy monolith incrementally |
-| **Blue-green** | Deploying a new version of the same system |
-| **Expand-contract** | Evolving a shared API or schema |
+| Pattern              | When to use                                             |
+| -------------------- | ------------------------------------------------------- |
+| **Strangler fig**    | Replacing a legacy monolith incrementally               |
+| **Blue-green**       | Deploying a new version of the same system              |
+| **Expand-contract**  | Evolving a shared API or schema                         |
 | **Big-bang rewrite** | Legacy is small enough to replace in one release (rare) |
 
 ## Related

@@ -14,10 +14,10 @@ tags:
 
 Two layers, different tradeoffs:
 
-| Layer | What | How | Speed | Cost |
-|---|---|---|---|---|
-| **Unit** | Graph, routing, tool schemas | `FakeListChatModel` | Fast | Free |
-| **Integration** | Model calls, HTTP layer | `pytest-httpx` mocking LiteLLM | Slow | Real cost |
+| Layer           | What                         | How                            | Speed | Cost      |
+| --------------- | ---------------------------- | ------------------------------ | ----- | --------- |
+| **Unit**        | Graph, routing, tool schemas | `FakeListChatModel`            | Fast  | Free      |
+| **Integration** | Model calls, HTTP layer      | `pytest-httpx` mocking LiteLLM | Slow  | Real cost |
 
 Unit tests cover most of your logic. Integration tests verify the
 model behaves correctly with real prompts.
@@ -326,19 +326,19 @@ with patch_langchain_environment():
 LangChain has been reorganized across versions. Import from the
 right package:
 
-| What | Import from |
-|---|---|
-| `Runnable`, `RunnableLambda`, `RunnableSequence` | `langchain_core.runnables` |
-| Messages (`HumanMessage`, `AIMessage`, `ToolMessage`) | `langchain_core.messages` |
-| `@tool` | `langchain_core.tools` |
-| `FakeListChatModel`, `FakeMessagesListChatModel` | `langchain_core.language_models.fake_chat_models` |
-| `ChatPromptTemplate`, `PromptTemplate` | `langchain_core.prompts` |
-| `StrOutputParser`, `PydanticOutputParser` | `langchain_core.output_parsers` |
-| `BaseCallbackHandler` | `langchain_core.callbacks` |
-| `set_llm_cache` | `langchain_core.globals` |
-| `InMemoryCache` | `langchain_core.caches` |
-| `ChatOpenAI` | `langchain_openai` |
-| `ChatAnthropic` | `langchain_anthropic` |
+| What                                                  | Import from                                       |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| `Runnable`, `RunnableLambda`, `RunnableSequence`      | `langchain_core.runnables`                        |
+| Messages (`HumanMessage`, `AIMessage`, `ToolMessage`) | `langchain_core.messages`                         |
+| `@tool`                                               | `langchain_core.tools`                            |
+| `FakeListChatModel`, `FakeMessagesListChatModel`      | `langchain_core.language_models.fake_chat_models` |
+| `ChatPromptTemplate`, `PromptTemplate`                | `langchain_core.prompts`                          |
+| `StrOutputParser`, `PydanticOutputParser`             | `langchain_core.output_parsers`                   |
+| `BaseCallbackHandler`                                 | `langchain_core.callbacks`                        |
+| `set_llm_cache`                                       | `langchain_core.globals`                          |
+| `InMemoryCache`                                       | `langchain_core.caches`                           |
+| `ChatOpenAI`                                          | `langchain_openai`                                |
+| `ChatAnthropic`                                       | `langchain_anthropic`                             |
 
 **Never use:** `from langchain.tools import tool` (legacy),
 `from langchain.chat_models import ChatOpenAI` (deprecated),

@@ -1,6 +1,13 @@
+---
+title: "KEDA (Kubernetes Event-Driven Autoscaling)"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "KEDA (Kubernetes Event-Driven Autoscaling) — Kubernetes reference and architecture guide."
+---
+
 # KEDA (Kubernetes Event-Driven Autoscaling)
 
-*"https://keda.sh/"*
+_"https://keda.sh/"_
 
 KEDA is an **event-driven autoscaler** for Kubernetes. It extends HPA with **scalers** that can watch external sources — Kafka lag, RabbitMQ queue depth, SQS message count, Redis lists, Prometheus metrics, cron schedules, and 60+ others. KEDA scales a Deployment / StatefulSet / Job from zero to N replicas based on the source's metric, and back to zero when there's no work.
 
@@ -25,12 +32,12 @@ KEDA is an **event-driven autoscaler** for Kubernetes. It extends HPA with **sca
 
 HPA scales on **k8s metrics** (CPU, memory, custom metrics). But many real workloads are driven by **external signals** that HPA can't see:
 
-* A **Kafka consumer** that should scale on consumer lag.
-* A **SQS worker** that should scale on message count.
-* A **RabbitMQ consumer** that should scale on queue depth.
-* A **cron job** that should run at a specific time.
-* A **Prometheus alert** that says "the DB connection pool is saturated, scale up".
-* A **Redis list** that should be processed by a worker pool.
+- A **Kafka consumer** that should scale on consumer lag.
+- A **SQS worker** that should scale on message count.
+- A **RabbitMQ consumer** that should scale on queue depth.
+- A **cron job** that should run at a specific time.
+- A **Prometheus alert** that says "the DB connection pool is saturated, scale up".
+- A **Redis list** that should be processed by a worker pool.
 
 KEDA plugs into HPA. You write a `ScaledObject` (or `ScaledJob`), and KEDA:
 
@@ -91,9 +98,9 @@ The operator and metrics server are the two most important. The admission webhoo
 
 KEDA **creates and manages an HPA** for each `ScaledObject`. You don't write the HPA — KEDA does. The HPA:
 
-* Targets the Deployment you specify.
-* Has the min / max replicas you specify.
-* Has the custom metric you specify (KEDA's metric).
+- Targets the Deployment you specify.
+- Has the min / max replicas you specify.
+- Has the custom metric you specify (KEDA's metric).
 
 You can also have an HPA already (in "fallback" mode — see section 8). KEDA can take over when an external source is active, and back off to the existing HPA when it's not.
 
@@ -110,12 +117,12 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: kafka-consumer
-  pollingInterval: 30           # how often KEDA checks the source (seconds)
-  cooldownPeriod: 300           # how long to wait before scaling to zero (seconds)
-  idleReplicaCount: 0           # when source is "empty", scale to this
-  minReplicaCount: 0            # also the floor
+  pollingInterval: 30 # how often KEDA checks the source (seconds)
+  cooldownPeriod: 300 # how long to wait before scaling to zero (seconds)
+  idleReplicaCount: 0 # when source is "empty", scale to this
+  minReplicaCount: 0 # also the floor
   maxReplicaCount: 100
-  fallback:                     # fallback if the external source is unreachable
+  fallback: # fallback if the external source is unreachable
     failureThreshold: 3
     replicas: 6
   advanced:
@@ -124,24 +131,24 @@ spec:
         scaleDown:
           stabilizationWindowSeconds: 300
   triggers:
-  - type: kafka
-    metadata:
-      bootstrapServers: kafka.svc:9092
-      consumerGroup: my-consumer
-      lagThreshold: "100"       # 100 lag = 1 replica (formula below)
-      offsetResetPolicy: earliest
-    authenticationRef:
-      name: kafka-auth          # TriggerAuthentication
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.svc:9092
+        consumerGroup: my-consumer
+        lagThreshold: "100" # 100 lag = 1 replica (formula below)
+        offsetResetPolicy: earliest
+      authenticationRef:
+        name: kafka-auth # TriggerAuthentication
 ```
 
 This ScaledObject:
 
-* Watches the `kafka-consumer` Deployment.
-* Checks Kafka lag every 30s.
-* When lag = 0, scales to 0 replicas.
-* When lag > 100, scales up (lag / 100 = replicas, capped at 100).
-* After 5 min of no activity, scales to 0.
-* If Kafka is unreachable for 3 checks, falls back to 6 replicas.
+- Watches the `kafka-consumer` Deployment.
+- Checks Kafka lag every 30s.
+- When lag = 0, scales to 0 replicas.
+- When lag > 100, scales up (lag / 100 = replicas, capped at 100).
+- After 5 min of no activity, scales to 0.
+- If Kafka is unreachable for 3 checks, falls back to 6 replicas.
 
 ### 3.1 The `lagThreshold` formula
 
@@ -151,9 +158,9 @@ This ScaledObject:
 desiredReplicas = ceil(currentLag / lagThreshold)
 ```
 
-* `lag = 50, lagThreshold = 100` → 1 replica
-* `lag = 500, lagThreshold = 100` → 5 replicas
-* `lag = 0, lagThreshold = 100` → 0 replicas (if `minReplicaCount: 0`)
+- `lag = 50, lagThreshold = 100` → 1 replica
+- `lag = 500, lagThreshold = 100` → 5 replicas
+- `lag = 0, lagThreshold = 100` → 0 replicas (if `minReplicaCount: 0`)
 
 ### 3.2 The `activationLagThreshold`
 
@@ -161,10 +168,10 @@ For scaling **from zero**, you can set a different threshold:
 
 ```yaml
 triggers:
-- type: kafka
-  metadata:
-    lagThreshold: "100"
-    activationLagThreshold: "1"   # need at least 1 lag to scale from 0
+  - type: kafka
+    metadata:
+      lagThreshold: "100"
+      activationLagThreshold: "1" # need at least 1 lag to scale from 0
 ```
 
 `activationLagThreshold` is the **minimum value to scale from zero**. If lag = 0.5 (less than 1), KEDA stays at 0. If lag = 1.5, KEDA scales up to 1 replica.
@@ -186,8 +193,8 @@ spec:
     template:
       spec:
         containers:
-        - name: worker
-          image: my-worker:1.0
+          - name: worker
+            image: my-worker:1.0
         restartPolicy: Never
         completionMode: Indexed
         completions: 1
@@ -197,21 +204,21 @@ spec:
   failedJobsHistoryLimit: 5
   maxReplicaCount: 50
   triggers:
-  - type: aws-sqs-queue
-    metadata:
-      queueURL: https://sqs.us-east-1.amazonaws.com/123456789012/my-queue
-      queueLength: "5"            # 5 messages per replica
-      activationQueueLength: "1"
-      awsRegion: us-east-1
-    authenticationRef:
-      name: aws-auth
+    - type: aws-sqs-queue
+      metadata:
+        queueURL: https://sqs.us-east-1.amazonaws.com/123456789012/my-queue
+        queueLength: "5" # 5 messages per replica
+        activationQueueLength: "1"
+        awsRegion: us-east-1
+      authenticationRef:
+        name: aws-auth
 ```
 
 A ScaledJob:
 
-* Creates Jobs based on the source metric.
-* Each Job processes some work (`queueLength` items per replica).
-* When the queue is empty, no new Jobs are created.
+- Creates Jobs based on the source metric.
+- Each Job processes some work (`queueLength` items per replica).
+- When the queue is empty, no new Jobs are created.
 
 **ScaledJob is different from a Deployment HPA**: it's about **batch processing** (one Job per replica), not **long-running services**.
 
@@ -221,65 +228,65 @@ KEDA has **60+ built-in scalers**. The full list is in the [KEDA docs](https://k
 
 ### 5.1 Messaging
 
-| Scaler | What it scales on |
-|---|---|
-| `kafka` | Consumer lag (per topic / partition) |
-| `rabbitmq-queue` | Queue depth |
-| `aws-sqs-queue` | SQS message count |
-| `aws-kinesis-stream` | Stream iterator age |
-| `azure-servicebus` | Queue or topic message count |
-| `gcp-pubsub` | Subscription backlog |
-| `nats-jetstream` | Consumer lag |
-| `pulsar` | Backlog size |
+| Scaler               | What it scales on                    |
+| -------------------- | ------------------------------------ |
+| `kafka`              | Consumer lag (per topic / partition) |
+| `rabbitmq-queue`     | Queue depth                          |
+| `aws-sqs-queue`      | SQS message count                    |
+| `aws-kinesis-stream` | Stream iterator age                  |
+| `azure-servicebus`   | Queue or topic message count         |
+| `gcp-pubsub`         | Subscription backlog                 |
+| `nats-jetstream`     | Consumer lag                         |
+| `pulsar`             | Backlog size                         |
 
 ### 5.2 Databases and caches
 
-| Scaler | What it scales on |
-|---|---|
-| `redis` | List length, sorted set cardinality, stream length |
-| `mysql` | Query result (e.g. `SELECT COUNT(*) FROM jobs WHERE pending=1`) |
-| `postgresql` | Query result |
-| `mongodb` | Collection document count |
-| `elasticsearch` | Search query backlog |
+| Scaler          | What it scales on                                               |
+| --------------- | --------------------------------------------------------------- |
+| `redis`         | List length, sorted set cardinality, stream length              |
+| `mysql`         | Query result (e.g. `SELECT COUNT(*) FROM jobs WHERE pending=1`) |
+| `postgresql`    | Query result                                                    |
+| `mongodb`       | Collection document count                                       |
+| `elasticsearch` | Search query backlog                                            |
 
 ### 5.3 Metrics and observability
 
-| Scaler | What it scales on |
-|---|---|
-| `prometheus` | Any Prometheus query result |
-| `datadog` | Datadog metric value |
-| `influxdb` | InfluxDB query result |
+| Scaler        | What it scales on           |
+| ------------- | --------------------------- |
+| `prometheus`  | Any Prometheus query result |
+| `datadog`     | Datadog metric value        |
+| `influxdb`    | InfluxDB query result       |
 | `stackdriver` | GCP Cloud Monitoring metric |
 
 ### 5.4 Cloud-specific
 
-| Scaler | What it scales on |
-|---|---|
-| `aws-cloudwatch` | CloudWatch alarm state / metric |
-| `aws-dynamodb` | Table item count |
-| `aws-dynamodb-streams` | Stream iterator age |
-| `aws-kinesis-stream` | Iterator age |
-| `azure-blob` | Container blob count |
-| `azure-eventhub` | Event Hub consumer group lag |
-| `gcp-storage` | GCS object count |
+| Scaler                 | What it scales on               |
+| ---------------------- | ------------------------------- |
+| `aws-cloudwatch`       | CloudWatch alarm state / metric |
+| `aws-dynamodb`         | Table item count                |
+| `aws-dynamodb-streams` | Stream iterator age             |
+| `aws-kinesis-stream`   | Iterator age                    |
+| `azure-blob`           | Container blob count            |
+| `azure-eventhub`       | Event Hub consumer group lag    |
+| `gcp-storage`          | GCS object count                |
 
 ### 5.5 Cron and rate
 
-| Scaler | What it scales on |
-|---|---|
+| Scaler | What it scales on                         |
+| ------ | ----------------------------------------- |
 | `cron` | Schedule (scale up at X, scale down at Y) |
-| `rate` | Static rate (e.g. 10 messages/sec) |
+| `rate` | Static rate (e.g. 10 messages/sec)        |
 
 ### 5.6 The `cron` scaler
 
 ```yaml
 triggers:
-- type: cron
-  metadata:
-    timezone: America/New_York
-    start: 0 9 * * *        # 9am EST
-    end: 0 17 * * *         # 5pm EST
-    desiredReplicas: "10"
+  - type: cron
+    metadata:
+      timezone: America/New_York
+      start: 0 9 * * * # 9am EST
+      end: 0 17 * * * # 5pm EST
+      desiredReplicas: "10"
 ```
 
 Scale to 10 replicas from 9am to 5pm, then back to 0. Useful for business-hours workloads.
@@ -296,27 +303,27 @@ metadata:
   namespace: default
 spec:
   secretTargetRef:
-  - parameter: sasl          # the auth parameter in the scaler
-    name: kafka-credentials
-    key: username
-  - parameter: username
-    name: kafka-credentials
-    key: username
-  - parameter: password
-    name: kafka-credentials
-    key: password
+    - parameter: sasl # the auth parameter in the scaler
+      name: kafka-credentials
+      key: username
+    - parameter: username
+      name: kafka-credentials
+      key: username
+    - parameter: password
+      name: kafka-credentials
+      key: password
 ```
 
 ```yaml
 # In the ScaledObject
 triggers:
-- type: kafka
-  metadata:
-    bootstrapServers: kafka.svc:9092
-    consumerGroup: my-consumer
-    lagThreshold: "100"
-  authenticationRef:
-    name: kafka-auth
+  - type: kafka
+    metadata:
+      bootstrapServers: kafka.svc:9092
+      consumerGroup: my-consumer
+      lagThreshold: "100"
+    authenticationRef:
+      name: kafka-auth
 ```
 
 The ScaledObject references the TriggerAuthentication. KEDA passes the credentials to the scaler when querying the source.
@@ -330,21 +337,21 @@ metadata:
   name: aws-shared
 spec:
   secretTargetRef:
-  - parameter: awsAccessKeyID
-    name: aws-credentials
-    key: access-key
-  - parameter: awsSecretAccessKey
-    name: aws-credentials
-    key: secret-key
+    - parameter: awsAccessKeyID
+      name: aws-credentials
+      key: access-key
+    - parameter: awsSecretAccessKey
+      name: aws-credentials
+      key: secret-key
 ```
 
 ```yaml
 # In the ScaledObject
 triggers:
-- type: aws-sqs-queue
-  authenticationRef:
-    name: aws-shared
-    kind: ClusterTriggerAuthentication
+  - type: aws-sqs-queue
+    authenticationRef:
+      name: aws-shared
+      kind: ClusterTriggerAuthentication
 ```
 
 ## 7. Scaling to Zero and From Zero
@@ -355,8 +362,8 @@ KEDA's killer feature: **scale to zero when there's no work, scale up when work 
 
 ```yaml
 spec:
-  minReplicaCount: 0    # the floor — KEDA can scale to 0
-  idleReplicaCount: 0   # when the source is "empty", scale to this
+  minReplicaCount: 0 # the floor — KEDA can scale to 0
+  idleReplicaCount: 0 # when the source is "empty", scale to this
 ```
 
 If both are 0, KEDA scales to 0 when the source is empty (e.g. Kafka lag = 0).
@@ -367,10 +374,10 @@ If both are 0, KEDA scales to 0 when the source is empty (e.g. Kafka lag = 0).
 
 When scaling from 0, KEDA has to **start a Pod**. This takes time:
 
-* Image pull (10-30s if cached, 1-2 min if not).
-* Container start (1-5s).
-* Readiness probe (5-10s).
-* Service routing update (5-10s).
+- Image pull (10-30s if cached, 1-2 min if not).
+- Container start (1-5s).
+- Readiness probe (5-10s).
+- Service routing update (5-10s).
 
 Total: **5-30s** typically. **The first request after a scale-to-zero incurs this latency.** Plan for it.
 
@@ -378,7 +385,7 @@ Total: **5-30s** typically. **The first request after a scale-to-zero incurs thi
 
 ```yaml
 spec:
-  cooldownPeriod: 300     # wait 5 min of "empty" before scaling to 0
+  cooldownPeriod: 300 # wait 5 min of "empty" before scaling to 0
 ```
 
 After the source goes empty, KEDA waits `cooldownPeriod` seconds before scaling to 0. This prevents **scale-to-zero thrashing** — a brief gap in messages doesn't kill the Pods.
@@ -387,7 +394,7 @@ After the source goes empty, KEDA waits `cooldownPeriod` seconds before scaling 
 
 ```yaml
 spec:
-  pollingInterval: 30     # check the source every 30s
+  pollingInterval: 30 # check the source every 30s
 ```
 
 How often KEDA queries the source. Higher = less load on the source, slower reaction. Lower = more load, faster reaction.
@@ -401,7 +408,7 @@ KEDA can **fall back** to a fixed replica count if the external source is unreac
 ```yaml
 spec:
   fallback:
-    failureThreshold: 3     # 3 failed checks = fallback
+    failureThreshold: 3 # 3 failed checks = fallback
     replicas: 6
 ```
 
@@ -411,10 +418,10 @@ If KEDA can't reach Kafka (or whatever) for 3 consecutive checks, it scales the 
 
 KEDA can coexist with an existing HPA on the same Deployment. The pattern:
 
-* The existing HPA scales on CPU (or another k8s metric).
-* KEDA scales on the external source.
-* **KEDA's HPA takes priority** when the source is active.
-* The existing HPA takes over when the source is empty (KEDA scales to 0, but the other HPA might keep 1+ replicas).
+- The existing HPA scales on CPU (or another k8s metric).
+- KEDA scales on the external source.
+- **KEDA's HPA takes priority** when the source is active.
+- The existing HPA takes over when the source is empty (KEDA scales to 0, but the other HPA might keep 1+ replicas).
 
 This is the **"HPA with external metrics" pattern**. KEDA implements the external metrics API.
 
@@ -428,12 +435,12 @@ spec:
   minReplicas: 1
   maxReplicas: 20
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 60
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
 ---
 # KEDA ScaledObject
 apiVersion: keda.sh/v1alpha1
@@ -444,8 +451,8 @@ spec:
   minReplicaCount: 0
   maxReplicaCount: 100
   triggers:
-  - type: kafka
-    metadata: { ... }
+    - type: kafka
+      metadata: { ... }
 ```
 
 **Only one HPA actually drives the replicas at a time.** KEDA's HPA "wins" when the source has data; the CPU HPA wins when KEDA is at zero or the source is empty.
@@ -465,13 +472,13 @@ spec:
   minReplicaCount: 0
   maxReplicaCount: 50
   triggers:
-  - type: kafka
-    metadata:
-      bootstrapServers: kafka.svc.cluster.local:9092
-      consumerGroup: my-group
-      lagThreshold: "50"
-      activationLagThreshold: "1"
-      offsetResetPolicy: earliest
+    - type: kafka
+      metadata:
+        bootstrapServers: kafka.svc.cluster.local:9092
+        consumerGroup: my-group
+        lagThreshold: "50"
+        activationLagThreshold: "1"
+        offsetResetPolicy: earliest
 ```
 
 50 lag per replica. Scale from 0 when lag ≥ 1.
@@ -488,22 +495,22 @@ spec:
       spec:
         restartPolicy: Never
         containers:
-        - name: worker
-          image: my-worker:1.0
-          env:
-          - name: QUEUE_URL
-            value: https://sqs.us-east-1.amazonaws.com/123/my-queue
+          - name: worker
+            image: my-worker:1.0
+            env:
+              - name: QUEUE_URL
+                value: https://sqs.us-east-1.amazonaws.com/123/my-queue
   pollingInterval: 20
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   maxReplicaCount: 30
   triggers:
-  - type: aws-sqs-queue
-    metadata:
-      queueURL: https://sqs.us-east-1.amazonaws.com/123/my-queue
-      queueLength: "5"
-      awsRegion: us-east-1
-    authenticationRef: { name: aws-auth }
+    - type: aws-sqs-queue
+      metadata:
+        queueURL: https://sqs.us-east-1.amazonaws.com/123/my-queue
+        queueLength: "5"
+        awsRegion: us-east-1
+      authenticationRef: { name: aws-auth }
 ```
 
 5 messages per Job. Max 30 parallel Jobs.
@@ -512,13 +519,13 @@ spec:
 
 ```yaml
 triggers:
-- type: prometheus
-  metadata:
-    serverAddress: http://prometheus.monitoring.svc:9090
-    query: |
-      sum(rate(http_requests_total{status="500"}[5m]))
-    threshold: "0.1"
-    activationThreshold: "0.05"
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus.monitoring.svc:9090
+      query: |
+        sum(rate(http_requests_total{status="500"}[5m]))
+      threshold: "0.1"
+      activationThreshold: "0.05"
 ```
 
 Scale on the rate of 500 errors. When error rate is high, scale up.
@@ -527,12 +534,12 @@ Scale on the rate of 500 errors. When error rate is high, scale up.
 
 ```yaml
 triggers:
-- type: cron
-  metadata:
-    timezone: UTC
-    start: 0 2 * * *       # 2am
-    end: 0 4 * * *         # 4am
-    desiredReplicas: "20"
+  - type: cron
+    metadata:
+      timezone: UTC
+      start: 0 2 * * * # 2am
+      end: 0 4 * * * # 4am
+      desiredReplicas: "20"
 ```
 
 Scale to 20 replicas at 2am, scale to 0 at 4am. Run a nightly batch.
@@ -541,20 +548,20 @@ Scale to 20 replicas at 2am, scale to 0 at 4am. Run a nightly batch.
 
 If a built-in scaler doesn't fit, you can write your own. The `keda-metrics-apiserver` exposes the `keda.sh/v1alpha1.ExternalMetric` API. A custom scaler is a **gRPC server** that:
 
-* Receives a `GetMetricsRequest` with the trigger metadata.
-* Queries the external source.
-* Returns a `GetMetricsResponse` with the metric value.
+- Receives a `GetMetricsRequest` with the trigger metadata.
+- Queries the external source.
+- Returns a `GetMetricsResponse` with the metric value.
 
 The gRPC server is a separate deployment (your code). KEDA's `external scaler` type references it:
 
 ```yaml
 triggers:
-- type: external
-  metadata:
-    scalerAddress: my-custom-scaler.default.svc:50051
-    metricName: my-metric
-    threshold: "100"
-    query: some-query-string
+  - type: external
+    metadata:
+      scalerAddress: my-custom-scaler.default.svc:50051
+      metricName: my-metric
+      threshold: "100"
+      query: some-query-string
 ```
 
 Custom scalers are an advanced pattern. For most needs, the 60+ built-in scalers are enough.
@@ -657,7 +664,7 @@ kubectl get hpa <name>
 
 13. **The Prometheus scaler queries the Prometheus server directly.** The Prometheus server must be reachable from the keda-metrics-apiserver.
 
-14. **KEDA's fallback only triggers on a *consecutive* failure threshold.** A single failed check doesn't trigger fallback.
+14. **KEDA's fallback only triggers on a _consecutive_ failure threshold.** A single failed check doesn't trigger fallback.
 
 15. **KEDA + HPA on the same metric is fine, KEDA + VPA on the same metric fights.** Pick one.
 
@@ -693,7 +700,7 @@ kubectl get hpa <name>
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — the underlying autoscaler KEDA extends
-* [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
-* [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — the vertical counterpart
-* [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — node autoscaling
+- [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — the underlying autoscaler KEDA extends
+- [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
+- [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — the vertical counterpart
+- [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — node autoscaling

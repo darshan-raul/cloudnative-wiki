@@ -18,13 +18,13 @@ implement the `Runnable` interface — `invoke`, `stream`, `ainvoke`,
 
 The main ones:
 
-| Class | Package | When to use |
-|---|---|---|
-| `ChatOpenAI` | `langchain_openai` | OpenAI, or any OpenAI-compatible endpoint (LiteLLM, vLLM, Ollama) |
-| `ChatAnthropic` | `langchain_anthropic` | Direct Anthropic |
-| `ChatBedrock` | `langchain_aws` | AWS Bedrock |
-| `ChatOllama` | `langchain_ollama` | Local Ollama |
-| `FakeListChatModel` | `langchain_core.language_models.fake_chat_models` | Tests only |
+| Class               | Package                                           | When to use                                                       |
+| ------------------- | ------------------------------------------------- | ----------------------------------------------------------------- |
+| `ChatOpenAI`        | `langchain_openai`                                | OpenAI, or any OpenAI-compatible endpoint (LiteLLM, vLLM, Ollama) |
+| `ChatAnthropic`     | `langchain_anthropic`                             | Direct Anthropic                                                  |
+| `ChatBedrock`       | `langchain_aws`                                   | AWS Bedrock                                                       |
+| `ChatOllama`        | `langchain_ollama`                                | Local Ollama                                                      |
+| `FakeListChatModel` | `langchain_core.language_models.fake_chat_models` | Tests only                                                        |
 
 All expose `bind_tools`, `with_structured_output`, `with_retry`,
 `with_fallbacks`, and `with_config`.
@@ -64,14 +64,14 @@ model = ChatOpenAI(
 
 ### Common constructor kwargs
 
-| Kwarg | Default | What |
-|---|---|---|
-| `model` | (required) | Provider-specific model name/alias |
+| Kwarg         | Default          | What                                                    |
+| ------------- | ---------------- | ------------------------------------------------------- |
+| `model`       | (required)       | Provider-specific model name/alias                      |
 | `temperature` | provider default | 0 = deterministic, 1 = creative. 0.2–0.5 for most tasks |
-| `max_tokens` | provider default | Cap on output tokens |
-| `timeout` | provider default | HTTP timeout in seconds |
-| `max_retries` | `6` | SDK retries transient errors (429, 5xx) |
-| `streaming` | `False` | Whether `stream`/`astream` yield chunks |
+| `max_tokens`  | provider default | Cap on output tokens                                    |
+| `timeout`     | provider default | HTTP timeout in seconds                                 |
+| `max_retries` | `6`              | SDK retries transient errors (429, 5xx)                 |
+| `streaming`   | `False`          | Whether `stream`/`astream` yield chunks                 |
 
 ```python
 model = ChatOpenAI(
@@ -152,7 +152,7 @@ What the model sees in the API request (serialized from the tool):
     "description": "Get the current weather for a city. Use this when the user asks about the weather in a specific city.",
     "parameters": {
       "type": "object",
-      "properties": {"city": {"type": "string"}},
+      "properties": { "city": { "type": "string" } },
       "required": ["city"]
     }
   }
@@ -168,13 +168,13 @@ llm = ChatOpenAI(model="gpt-4o-mini").bind_tools(
 )
 ```
 
-| `tool_choice` | Behavior |
-|---|---|
-| `"auto"` | Model decides whether to call a tool. |
-| `"any"` | Model must call at least one tool (any of them). |
-| `"none"` | Model is not allowed to call a tool. |
-| `"get_weather"` | Model must call that specific tool. |
-| `{"type": "function", "function": {"name": "get_weather"}}` | Same as the string form. |
+| `tool_choice`                                               | Behavior                                         |
+| ----------------------------------------------------------- | ------------------------------------------------ |
+| `"auto"`                                                    | Model decides whether to call a tool.            |
+| `"any"`                                                     | Model must call at least one tool (any of them). |
+| `"none"`                                                    | Model is not allowed to call a tool.             |
+| `"get_weather"`                                             | Model must call that specific tool.              |
+| `{"type": "function", "function": {"name": "get_weather"}}` | Same as the string form.                         |
 
 Use `"any"` when you want to force the model to commit to a tool
 before proceeding (e.g., confirmation flows).
@@ -289,6 +289,7 @@ The retry wraps the `invoke`/`ainvoke` call. It does **not** re-run
 your node; from the graph's perspective it's one call.
 
 **When to use this vs. LiteLLM retries:**
+
 - Use **LiteLLM retries** when you want a single place to configure
   retries for all models (recommended for most setups).
 - Use **`with_retry`** when you want per-call control — e.g., one

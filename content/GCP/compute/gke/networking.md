@@ -50,7 +50,7 @@ Networking in Google Kubernetes Engine (GKE) is deeply integrated into Google Cl
     └───────────────────────────────┘         └───────────────────────────────┘
 ```
 
-* **Zero Overlay Encapsulation:** Pod A speaks to Pod B using raw IP packets directly across Google's physical network switches. There is no GRE or VXLAN header overhead, delivering bare-metal network throughput.
+- **Zero Overlay Encapsulation:** Pod A speaks to Pod B using raw IP packets directly across Google's physical network switches. There is no GRE or VXLAN header overhead, delivering bare-metal network throughput.
 
 ---
 
@@ -58,30 +58,33 @@ Networking in Google Kubernetes Engine (GKE) is deeply integrated into Google Cl
 
 ### 1. VPC-Native vs. Routes-Based Networking
 
-| Feature | Routes-Based (Legacy) | VPC-Native (Modern Standard) |
-| :--- | :--- | :--- |
-| **Mechanisms** | Custom static routes in VPC routing table pointing to Node VMs | Subnet **Secondary IP Ranges (Alias IPs)** allocated directly to Pods |
-| **Pod IP Scope** | Virtual overlay; invisible to the rest of the VPC | **Real, routable RFC 1918 IPs** visible to the entire VPC |
-| **Max Cluster Size** | Limited by VPC route limit (max ~500 nodes) | Scales to **15,000 nodes** |
-| **Load Balancing** | Double-hop: LB ──► Node VM (NodePort) ──► Pod | **Single-hop:** LB ──► Zonal NEG ──► Direct Pod IP |
+| Feature              | Routes-Based (Legacy)                                          | VPC-Native (Modern Standard)                                          |
+| :------------------- | :------------------------------------------------------------- | :-------------------------------------------------------------------- |
+| **Mechanisms**       | Custom static routes in VPC routing table pointing to Node VMs | Subnet **Secondary IP Ranges (Alias IPs)** allocated directly to Pods |
+| **Pod IP Scope**     | Virtual overlay; invisible to the rest of the VPC              | **Real, routable RFC 1918 IPs** visible to the entire VPC             |
+| **Max Cluster Size** | Limited by VPC route limit (max ~500 nodes)                    | Scales to **15,000 nodes**                                            |
+| **Load Balancing**   | Double-hop: LB ──► Node VM (NodePort) ──► Pod                  | **Single-hop:** LB ──► Zonal NEG ──► Direct Pod IP                    |
 
 ### 2. Datapath V2 (Cilium & eBPF Engine)
 
 Datapath V2 is GKE's modern networking dataplane based on open-source **Cilium** and the Linux kernel's **extended Berkeley Packet Filter (eBPF)**:
 
 #### Why `kube-proxy` iptables Fails at Scale:
+
 Traditional Kubernetes uses `kube-proxy` to write `iptables` rules for every Service. Because iptables evaluates rules **sequentially** ($O(N)$ algorithmic complexity), a cluster with 5,000 Services creates over 25,000 iptables rules. Every network packet must iterate through thousands of rules, causing severe CPU spikes and packet latency during deployments.
 
 #### The Datapath V2 eBPF Advantage:
-* **$O(1)$ Hash Map Lookups:** Datapath V2 replaces iptables with BPF hash tables in the Linux kernel. Service lookups complete in constant time ($O(1)$), regardless of whether the cluster has 10 Services or 50,000 Services.
-* **Native NetworkPolicy Enforcement:** Enforces Kubernetes `NetworkPolicy` rules natively in the kernel without installing Calico or third-party daemonsets.
-* **Deep Observability:** Integrates with **Hubble**, providing live visibility into DNS lookups, dropped packets, and HTTP layer latency.
+
+- **$O(1)$ Hash Map Lookups:** Datapath V2 replaces iptables with BPF hash tables in the Linux kernel. Service lookups complete in constant time ($O(1)$), regardless of whether the cluster has 10 Services or 50,000 Services.
+- **Native NetworkPolicy Enforcement:** Enforces Kubernetes `NetworkPolicy` rules natively in the kernel without installing Calico or third-party daemonsets.
+- **Deep Observability:** Integrates with **Hubble**, providing live visibility into DNS lookups, dropped packets, and HTTP layer latency.
 
 ### 3. Container-Native Load Balancing (Zonal NEGs)
 
 In traditional Kubernetes, an external load balancer targets Node VMs on a high `NodePort` (e.g. 32000). The node receives the packet and uses `kube-proxy` NAT to forward it across the cluster network to the actual Pod on another node:
-* **The Double Hop Problem:** Incurs extra network latency and obscures client source IP addresses.
-* **Zonal NEGs (Container-Native):** The Google Cloud Load Balancer directly registers the individual Pod IP addresses into a **Network Endpoint Group (NEG)**. Incoming traffic travels directly from Google Front End (GFE) proxies to the Pod container without hitting intermediate nodes!
+
+- **The Double Hop Problem:** Incurs extra network latency and obscures client source IP addresses.
+- **Zonal NEGs (Container-Native):** The Google Cloud Load Balancer directly registers the individual Pod IP addresses into a **Network Endpoint Group (NEG)**. Incoming traffic travels directly from Google Front End (GFE) proxies to the Pod container without hitting intermediate nodes!
 
 ```
 Traditional Ingress (Double Hop):
@@ -99,11 +102,11 @@ The Kubernetes **Gateway API** is the modern successor to traditional Ingress, s
 
 ### GKE GatewayClasses
 
-| GatewayClass | Scope | Target Load Balancer |
-| :--- | :--- | :--- |
-| `gke-l7-global-external-managed` | Global | Global External Application Load Balancer (Anycast IP, Cloud Armor, CDN) |
-| `gke-l7-regional-external-managed`| Regional | Regional External Application Load Balancer |
-| `gke-l7-rilb` | Regional | Regional Internal Application Load Balancer (Private VPC traffic) |
+| GatewayClass                       | Scope    | Target Load Balancer                                                     |
+| :--------------------------------- | :------- | :----------------------------------------------------------------------- |
+| `gke-l7-global-external-managed`   | Global   | Global External Application Load Balancer (Anycast IP, Cloud Armor, CDN) |
+| `gke-l7-regional-external-managed` | Regional | Regional External Application Load Balancer                              |
+| `gke-l7-rilb`                      | Regional | Regional Internal Application Load Balancer (Private VPC traffic)        |
 
 ### Production Gateway & HTTPRoute Configuration
 
@@ -182,47 +185,49 @@ gcloud container clusters create prod-dataplane-cluster \
   --max-nodes=10
 ```
 
-* `--default-max-pods-per-node=32`: Allocates a `/26` (64 IPs) per node rather than the wasteful default `/24` (256 IPs), saving 75% of your secondary Pod CIDR space!
+- `--default-max-pods-per-node=32`: Allocates a `/26` (64 IPs) per node rather than the wasteful default `/24` (256 IPs), saving 75% of your secondary Pod CIDR space!
 
 ---
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Guidance |
-| :--- | :--- | :--- |
-| **Max pods per cluster** | 300,000 pods | Bound by secondary CIDR size |
-| **Max nodes per cluster** | 15,000 nodes | Supported in VPC-native mode |
-| **Secondary IP ranges per subnet** | 30 ranges | Plan Pod & Service CIDRs before launch |
-| **Master IPv4 CIDR** | Exactly `/28` | Cannot overlap any VPC or VPN CIDR |
-| **Default max pods per node** | 110 (allocates `/24`) | Reduce to 32 or 64 for CIDR efficiency |
+| Parameter                          | Limit                 | Production Guidance                    |
+| :--------------------------------- | :-------------------- | :------------------------------------- |
+| **Max pods per cluster**           | 300,000 pods          | Bound by secondary CIDR size           |
+| **Max nodes per cluster**          | 15,000 nodes          | Supported in VPC-native mode           |
+| **Secondary IP ranges per subnet** | 30 ranges             | Plan Pod & Service CIDRs before launch |
+| **Master IPv4 CIDR**               | Exactly `/28`         | Cannot overlap any VPC or VPN CIDR     |
+| **Default max pods per node**      | 110 (allocates `/24`) | Reduce to 32 or 64 for CIDR efficiency |
 
 ---
 
 ## References
 
-* **GKE Networking Overview:** https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview
-* **VPC-Native Clusters Guide:** https://cloud.google.com/kubernetes-engine/docs/how-to/alias-ips
-* **Datapath V2 Documentation:** https://cloud.google.com/kubernetes-engine/docs/concepts/about-dataplane-v2
-* **Gateway API on GKE:** https://cloud.google.com/kubernetes-engine/docs/concepts/gateway-api
-* **Pricing:** https://cloud.google.com/kubernetes-engine/pricing
+- **GKE Networking Overview:** https://cloud.google.com/kubernetes-engine/docs/concepts/network-overview
+- **VPC-Native Clusters Guide:** https://cloud.google.com/kubernetes-engine/docs/how-to/alias-ips
+- **Datapath V2 Documentation:** https://cloud.google.com/kubernetes-engine/docs/concepts/about-dataplane-v2
+- **Gateway API on GKE:** https://cloud.google.com/kubernetes-engine/docs/concepts/gateway-api
+- **Pricing:** https://cloud.google.com/kubernetes-engine/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Production Multi-Zone GKE Networking Footprint
-* 3-Zone GKE cluster running 30 nodes with 600 pods in `us-central1`.
-* In-cluster pod-to-pod networking (same zone): **$0.00** (Free).
-* Cross-zone internal pod communication: 10 TB / month ($0.01 / GB = **$100.00 / month**).
-* Datapath V2 / eBPF Engine: **$0.00** (Included with GKE).
-* Container-Native Zonal NEGs: **$0.00** (Included with Cloud Load Balancing).
-* **Total Internal Networking Surcharge:** **~$100.00 / month**.
+
+- 3-Zone GKE cluster running 30 nodes with 600 pods in `us-central1`.
+- In-cluster pod-to-pod networking (same zone): **$0.00** (Free).
+- Cross-zone internal pod communication: 10 TB / month ($0.01 / GB = **$100.00 / month**).
+- Datapath V2 / eBPF Engine: **$0.00** (Included with GKE).
+- Container-Native Zonal NEGs: **$0.00** (Included with Cloud Load Balancing).
+- **Total Internal Networking Surcharge:** **~$100.00 / month**.
 
 ### Scenario 2: High-Volume Gateway API Ingress
-* 1 Global Gateway API Load Balancer handling 250 million HTTP requests / month.
-* Ingress and TLS offload: ~$150.00 / month based on processed data volume.
-* Elimination of intermediate NodePort hops saves ~15% in intra-cluster cross-zone traffic ($30–$50/mo savings).
-* **Net Monthly Cost:** **~$110.00 / month**.
+
+- 1 Global Gateway API Load Balancer handling 250 million HTTP requests / month.
+- Ingress and TLS offload: ~$150.00 / month based on processed data volume.
+- Elimination of intermediate NodePort hops saves ~15% in intra-cluster cross-zone traffic ($30–$50/mo savings).
+- **Net Monthly Cost:** **~$110.00 / month**.
 
 ---
 

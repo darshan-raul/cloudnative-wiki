@@ -104,16 +104,16 @@ sudo journalctl _SYSTEMD_UNIT=nginx.service
 
 Syslog and journald use the same priority levels:
 
-| Level | Name | When to use |
-|-------|------|-------------|
-| 0 | emerg | System unusable |
-| 1 | alert | Must act immediately |
-| 2 | crit | Critical condition |
-| 3 | err | Non-critical error |
-| 4 | warning | Warning |
-| 5 | notice | Normal but significant |
-| 6 | info | Informational |
-| 7 | debug | Debug messages |
+| Level | Name    | When to use            |
+| ----- | ------- | ---------------------- |
+| 0     | emerg   | System unusable        |
+| 1     | alert   | Must act immediately   |
+| 2     | crit    | Critical condition     |
+| 3     | err     | Non-critical error     |
+| 4     | warning | Warning                |
+| 5     | notice  | Normal but significant |
+| 6     | info    | Informational          |
+| 7     | debug   | Debug messages         |
 
 ## Reading /var/log Files
 

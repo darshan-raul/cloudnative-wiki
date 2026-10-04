@@ -13,14 +13,14 @@ AWS monitoring is built around CloudWatch — a centralized service for metrics,
 
 ## Service Map
 
-| Service | What It Does | When to Use |
-|---------|-------------|-------------|
-| [[cloudwatch-metrics/README|Metrics]] | Time-series data for AWS and custom resources | Every service emits metrics — query with GetMetricData |
-| [[cloudwatch-logs/README|Logs]] | Centralized log storage and management | Every application should stream logs here |
-| [[cloudwatch-alarms/README|Alarms]] | Alerting based on metric thresholds | Alert when latency spikes, error rate rises |
-| [[cloudwatch-dashboards/README|Dashboards]] | Custom metric visualization | Build custom views for business/SRE metrics |
-| [[cloudwatch-events/README|Events]] | Event-driven automation via rules | React to AWS API events, schedules |
-| [[cloudwatch-insights/README|Insights]] | Log query language for CloudWatch Logs | Debug production issues, search logs |
+| Service                        | What It Does | When to Use                                   |
+| ------------------------------ | ------------ | --------------------------------------------- | ------------------------------------------------------ |
+| [[cloudwatch-metrics/README    | Metrics]]    | Time-series data for AWS and custom resources | Every service emits metrics — query with GetMetricData |
+| [[cloudwatch-logs/README       | Logs]]       | Centralized log storage and management        | Every application should stream logs here              |
+| [[cloudwatch-alarms/README     | Alarms]]     | Alerting based on metric thresholds           | Alert when latency spikes, error rate rises            |
+| [[cloudwatch-dashboards/README | Dashboards]] | Custom metric visualization                   | Build custom views for business/SRE metrics            |
+| [[cloudwatch-events/README     | Events]]     | Event-driven automation via rules             | React to AWS API events, schedules                     |
+| [[cloudwatch-insights/README   | Insights]]   | Log query language for CloudWatch Logs        | Debug production issues, search logs                   |
 
 ## Three Pillars of Observability
 
@@ -64,11 +64,11 @@ AvailabilityZone    → NetworkIn per AZ
 
 ### Resolution
 
-| Resolution | Retention |
-|-----------|-----------|
-| Basic (5 min) | 15 days |
-| High (1 min) | 15 days |
-| Detailed (1 sec) | 3 hours |
+| Resolution       | Retention |
+| ---------------- | --------- |
+| Basic (5 min)    | 15 days   |
+| High (1 min)     | 15 days   |
+| Detailed (1 sec) | 3 hours   |
 
 ## Architecture: Unified Monitoring Stack
 
@@ -97,6 +97,7 @@ CloudWatch Logs
 ## AWS Services Organized by Category
 
 **CloudWatch Core**
+
 - [[cloudwatch-metrics/README|Metrics]] — Time-series data, GetMetricData API, custom metrics
 - [[cloudwatch-logs/README|Logs]] — Log groups, streams, CloudWatch Agent, retention
 - [[cloudwatch-alarms/README|Alarms]] — Metric alarms, composite alarms, anomaly detection

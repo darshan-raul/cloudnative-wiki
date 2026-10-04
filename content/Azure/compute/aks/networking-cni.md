@@ -51,23 +51,25 @@ Benefit: ZERO corporate VNet IP exhaustion. Scales to 5,000 nodes on a /24 subne
 
 ## 2. Comprehensive Network Plugin Comparison Matrix
 
-| Architectural Parameter | Kubenet | Traditional Azure CNI | Azure CNI (Pod Subnet) | Azure CNI Overlay (Recommended) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Pod IP Source** | User-defined overlay CIDR | **Host Node Subnet** | Dedicated Pod Subnet | **Independent Overlay CIDR** |
-| **VNet IP Consumption** | Nodes only (e.g., 50 IPs) | **Nodes + All Pods** (e.g., 5,550 IPs)| **Nodes + Pods** (Dual subnets) | **Nodes only** (e.g., 50 IPs) |
-| **Corporate Subnet Sizing**| `/24` (251 usable IPs) | **`/19` or `/18` (8,000+ IPs)** | Node `/24`, Pod `/18` | **`/24` (251 usable IPs)** |
-| **Pod-to-Pod Cross-Node** | Linux Bridge + UDR routes | Native VNet wire-speed | Native VNet wire-speed | **Encapsulated Geneve/VXLAN** |
-| **Pod Reachable from VNet**| No (requires NAT / Ingress)| **Yes (Directly routable)** | **Yes (Directly routable)** | No (Requires Service / Ingress)|
-| **Max Cluster Scale** | 400 nodes (UDR limit) | Subnet IP bound | Subnet IP bound | **5,000 nodes** |
-| **Dual-Stack IPv6** | No | Yes | No | **Yes (GA)** |
-| **Cilium eBPF Support** | No | No | Yes | **Yes (Native)** |
+| Architectural Parameter     | Kubenet                     | Traditional Azure CNI                  | Azure CNI (Pod Subnet)          | Azure CNI Overlay (Recommended) |
+| :-------------------------- | :-------------------------- | :------------------------------------- | :------------------------------ | :------------------------------ |
+| **Pod IP Source**           | User-defined overlay CIDR   | **Host Node Subnet**                   | Dedicated Pod Subnet            | **Independent Overlay CIDR**    |
+| **VNet IP Consumption**     | Nodes only (e.g., 50 IPs)   | **Nodes + All Pods** (e.g., 5,550 IPs) | **Nodes + Pods** (Dual subnets) | **Nodes only** (e.g., 50 IPs)   |
+| **Corporate Subnet Sizing** | `/24` (251 usable IPs)      | **`/19` or `/18` (8,000+ IPs)**        | Node `/24`, Pod `/18`           | **`/24` (251 usable IPs)**      |
+| **Pod-to-Pod Cross-Node**   | Linux Bridge + UDR routes   | Native VNet wire-speed                 | Native VNet wire-speed          | **Encapsulated Geneve/VXLAN**   |
+| **Pod Reachable from VNet** | No (requires NAT / Ingress) | **Yes (Directly routable)**            | **Yes (Directly routable)**     | No (Requires Service / Ingress) |
+| **Max Cluster Scale**       | 400 nodes (UDR limit)       | Subnet IP bound                        | Subnet IP bound                 | **5,000 nodes**                 |
+| **Dual-Stack IPv6**         | No                          | Yes                                    | No                              | **Yes (GA)**                    |
+| **Cilium eBPF Support**     | No                          | No                                     | Yes                             | **Yes (Native)**                |
 
 ---
 
 ## 3. Engineering Mechanics: Inside the Linux Datapath
 
 ### Azure CNI Overlay Datapath
+
 When Pod A on Node 1 (`192.168.1.15`) communicates with Pod B on Node 2 (`192.168.2.20`):
+
 1. **Local Egress:** Pod A pushes packets into its network namespace virtual ethernet interface (`eth0`).
 2. **Host Routing:** The host kernel inspects the destination IP (`192.168.2.20`). The Linux routing table matches the route installed by Azure CNI:
    ```bash
@@ -142,14 +144,14 @@ kubectl get nodes -o custom-columns=NAME:.metadata.name,POD_CIDR:.spec.podCIDR,I
 
 ## 5. Quotas, Performance & Configuration Limits
 
-| Dimension / Metric | Hard Limit | Production Impact |
-| :--- | :--- | :--- |
-| **Max Nodes (Overlay)** | **5,000 nodes** | Single cluster capacity without VNet IP exhaustion |
-| **Max Nodes (Kubenet)** | **400 nodes** | Azure Route Table (UDR) limit of 400 routes |
-| **Default Max Pods per Node**| **110 pods** (Azure CNI) / **30** (Kubenet)| Configurable between 10 and 250 pods/node |
-| **Pod Subnet CIDR Sizing** | Minimum `/24` per node pool | Must contain sufficient IPs for `nodeCount × maxPods` |
-| **Encapsulation Overhead** | **~50 bytes** (Geneve/VXLAN header)| AKS automatically configures MTU to **1450** |
-| **Overlay IP Space** | Private non-overlapping CIDR | e.g., `192.168.0.0/16` or `100.64.0.0/10` (CGNAT) |
+| Dimension / Metric            | Hard Limit                                  | Production Impact                                     |
+| :---------------------------- | :------------------------------------------ | :---------------------------------------------------- |
+| **Max Nodes (Overlay)**       | **5,000 nodes**                             | Single cluster capacity without VNet IP exhaustion    |
+| **Max Nodes (Kubenet)**       | **400 nodes**                               | Azure Route Table (UDR) limit of 400 routes           |
+| **Default Max Pods per Node** | **110 pods** (Azure CNI) / **30** (Kubenet) | Configurable between 10 and 250 pods/node             |
+| **Pod Subnet CIDR Sizing**    | Minimum `/24` per node pool                 | Must contain sufficient IPs for `nodeCount × maxPods` |
+| **Encapsulation Overhead**    | **~50 bytes** (Geneve/VXLAN header)         | AKS automatically configures MTU to **1450**          |
+| **Overlay IP Space**          | Private non-overlapping CIDR                | e.g., `192.168.0.0/16` or `100.64.0.0/10` (CGNAT)     |
 
 ---
 

@@ -56,14 +56,14 @@ kubectl describe pod <POD_NAME> -n <NAMESPACE> | grep -A 10 Events:
 
 ### Exit Code Decision Table
 
-| Exit Code | Root Cause | Engineering Remediation |
-| :--- | :--- | :--- |
-| **`137`** | **OOMKilled (Out Of Memory)** | Process exceeded cgroup memory limit (`limits.memory`); kernel sent `SIGKILL`. Increase memory limit or tune JVM heap (`-XX:MaxRAMPercentage=75.0`). |
-| **`139`** | **Segmentation Fault (`SIGSEGV`)** | Application attempted to read/write unallocated memory. Debug C/C++/Go/Rust binary or native library bindings. |
-| **`143`** | **Graceful Shutdown (`SIGTERM`)** | Container was asked to stop (e.g., node drain or preemption) but exceeded `terminationGracePeriodSeconds` and was killed. |
-| **`1`** | **Application Exception** | Uncaught Python, Java, or Node runtime error (missing environment variable, bad config, database connection refusal). |
-| **`126`** | **Command Cannot Be Executed** | File permissions issue (`chmod +x entrypoint.sh` missing) or bad binary format. |
-| **`127`** | **File / Command Not Found** | Entrypoint script does not exist, or shebang line points to missing shell (`#!/bin/bash` in Alpine container). |
+| Exit Code | Root Cause                         | Engineering Remediation                                                                                                                              |
+| :-------- | :--------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`137`** | **OOMKilled (Out Of Memory)**      | Process exceeded cgroup memory limit (`limits.memory`); kernel sent `SIGKILL`. Increase memory limit or tune JVM heap (`-XX:MaxRAMPercentage=75.0`). |
+| **`139`** | **Segmentation Fault (`SIGSEGV`)** | Application attempted to read/write unallocated memory. Debug C/C++/Go/Rust binary or native library bindings.                                       |
+| **`143`** | **Graceful Shutdown (`SIGTERM`)**  | Container was asked to stop (e.g., node drain or preemption) but exceeded `terminationGracePeriodSeconds` and was killed.                            |
+| **`1`**   | **Application Exception**          | Uncaught Python, Java, or Node runtime error (missing environment variable, bad config, database connection refusal).                                |
+| **`126`** | **Command Cannot Be Executed**     | File permissions issue (`chmod +x entrypoint.sh` missing) or bad binary format.                                                                      |
+| **`127`** | **File / Command Not Found**       | Entrypoint script does not exist, or shebang line points to missing shell (`#!/bin/bash` in Alpine container).                                       |
 
 ---
 
@@ -95,6 +95,7 @@ sudo journalctl -u containerd -n 100 --no-pager
 ```
 
 ### Common Triggers
+
 - **Kernel OOM Starvation:** Pods without memory limits exhausted all physical RAM, forcing the Linux kernel OOM killer to terminate system daemons like `systemd-resolved` or `kubelet`.
 - **Node Disk Pressure:** Root filesystem (`/dev/sda1`) reached 100% capacity due to massive unrotated Docker logs in `/var/log/pods`. Kubelet begins aggressive pod eviction.
 
@@ -105,6 +106,7 @@ sudo journalctl -u containerd -n 100 --no-pager
 In GKE VPC-native clusters, each node receives an entire `/24` CIDR block (256 Pod IPs) from the subnet's secondary IP range by default.
 
 ### Symptom
+
 When the cluster attempts to scale up, new nodes fail to initialize, and `gcloud container clusters describe` outputs:
 `PXC_K8S_POD_IP_RANGE_EXHAUSTED: Pod CIDR range does not have enough available addresses.`
 
@@ -141,6 +143,7 @@ gcloud container clusters update prod-regional-cluster \
 When a stateful pod (e.g., Kafka or PostgreSQL) fails over to another node, the pod sits in `ContainerCreating` indefinitely.
 
 ### Diagnostic Command
+
 ```bash
 kubectl describe pod <POD_NAME> -n <NAMESPACE> | grep -A 10 Events:
 # Output:
@@ -149,12 +152,14 @@ kubectl describe pod <POD_NAME> -n <NAMESPACE> | grep -A 10 Events:
 ```
 
 ### Remediation Procedure
+
 1. **Root Cause:** The old node crashed or lost network connectivity. The GCE Compute API still records the disk as attached to the dead VM. The Kubernetes `attach-detach-controller` will not attach a disk to a new VM while GCE reports it as attached elsewhere.
 2. **Step 1: Verify the dead node status:**
    ```bash
    kubectl get node <DEAD_NODE>
    ```
 3. **Step 2: Force detach disk via GCE CLI:**
+
    ```bash
    # Identify disk name
    DISK_NAME=$(kubectl get pv <PV_NAME> -o jsonpath='{.spec.csi.volumeHandle}')
@@ -165,6 +170,7 @@ kubectl describe pod <POD_NAME> -n <NAMESPACE> | grep -A 10 Events:
        --zone=<ZONE> \
        --project=core-infrastructure-prod
    ```
+
 4. **Step 3:** The GKE CSI attacher will immediately detect the disk as free and attach it to the new node within 15 seconds.
 
 ---
@@ -172,11 +178,13 @@ kubectl describe pod <POD_NAME> -n <NAMESPACE> | grep -A 10 Events:
 ## 6. Failure Signature 5: Control Plane Latency & etcd Contention
 
 ### Symptoms
+
 - `kubectl get pods` takes 5 to 20 seconds to respond.
 - Deployments fail to scale; HPA reports `unable to fetch metrics`.
 - In-cluster admission webhooks time out.
 
 ### Root Cause Analysis in Cloud Logging
+
 Execute this query in Google Cloud Logging:
 
 ```sql
@@ -186,6 +194,7 @@ jsonPayload.message=~"slow request" OR jsonPayload.message=~"etcd server call to
 ```
 
 ### Common Triggers & Remediation
+
 1. **High-Frequency CRD Watchers:** A broken controller or rogue deployment is querying `kube-apiserver` with full-cluster polling (`ResourceVersion=0`) without pagination. Inspect top API consumers in Cloud Monitoring (`apiserver_request_total`).
 2. **Overloaded Secrets / ConfigMaps:** Hundreds of microservices mounting 50 MB ConfigMaps. Transition heavy configuration to GCS FUSE or external storage.
 3. **Regional Master Failover:** In a regional cluster, if Zone A's master VM encounters maintenance, API traffic temporarily concentrates on the remaining two master replicas. GKE will automatically balance load within minutes.
@@ -197,14 +206,14 @@ jsonPayload.message=~"slow request" OR jsonPayload.message=~"etcd server call to
 During a P1 Outage on GKE, follow this structured runbook:
 
 - [ ] **Step 1: Check Master API Health**
-  `kubectl get --raw='/readyz?verbose'`
+      `kubectl get --raw='/readyz?verbose'`
 - [ ] **Step 2: Check Node Status**
-  `kubectl get nodes -o wide | grep -v Ready`
+      `kubectl get nodes -o wide | grep -v Ready`
 - [ ] **Step 3: Check Cluster Autoscaler Logs**
-  `kubectl get configmap cluster-autoscaler-status -n kube-system -o yaml`
+      `kubectl get configmap cluster-autoscaler-status -n kube-system -o yaml`
 - [ ] **Step 4: Check Pods Across All Namespaces in Non-Running State**
-  `kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded`
+      `kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded`
 - [ ] **Step 5: Check GKE Datapath V2 (Cilium) Pod Status**
-  `kubectl get pods -n kube-system -l k8s-app=cilium`
+      `kubectl get pods -n kube-system -l k8s-app=cilium`
 - [ ] **Step 6: Check Quota Availability in GCP Console**
-  Verify `CPUS_ALL_REGIONS` and `IN_USE_ADDRESSES` are below 90% utilization.
+      Verify `CPUS_ALL_REGIONS` and `IN_USE_ADDRESSES` are below 90% utilization.

@@ -15,11 +15,13 @@ Network namespaces isolate the entire **network stack** — interfaces, routing 
 ## The Core Concept
 
 Without network namespaces:
+
 - All processes share `eth0`, `lo`, routing table, iptables rules
 - One process binding port 80 blocks everyone else from binding 80
 - There's one `/proc/sys/net/` for the whole system
 
 With network namespaces:
+
 ```
 Host namespace:
   eth0 (physical)
@@ -119,15 +121,15 @@ ip link show docker0
 
 Each namespace has its own:
 
-| Resource            | Isolated? | Notes                                          |
-|--------------------|-----------|------------------------------------------------|
-| Network interfaces | Yes       | `lo`, `eth0`, etc. are per-namespace          |
-| IP addresses       | Yes       | Each interface has its own addr                |
-| Routing table      | Yes       | `ip route` output differs per namespace       |
-| iptables rules     | Yes       | NAT, filter, mangle tables are per-namespace  |
-| `/proc/sys/net/`  | Yes       | TCP/UDP tuning parameters                     |
+| Resource           | Isolated? | Notes                                                     |
+| ------------------ | --------- | --------------------------------------------------------- |
+| Network interfaces | Yes       | `lo`, `eth0`, etc. are per-namespace                      |
+| IP addresses       | Yes       | Each interface has its own addr                           |
+| Routing table      | Yes       | `ip route` output differs per namespace                   |
+| iptables rules     | Yes       | NAT, filter, mangle tables are per-namespace              |
+| `/proc/sys/net/`   | Yes       | TCP/UDP tuning parameters                                 |
 | Port bindings      | Yes       | Port 80 can be bound in host and container simultaneously |
-| ARP table          | Yes       | Separate neighbor table per namespace          |
+| ARP table          | Yes       | Separate neighbor table per namespace                     |
 
 ## The Loopback Device
 

@@ -26,6 +26,7 @@ cat /etc/passwd
 ```
 
 Fields:
+
 - **username** — login name
 - **password** — `x` means the real hash is in `/etc/shadow`
 - **UID** — numeric user ID (0 = root, 1-999 = system accounts, 1000+ = regular users)
@@ -48,6 +49,7 @@ sudo cat /etc/shadow
 ```
 
 Fields:
+
 - **password** — `$algo$salt$hash` or `!` (locked) or `*` (no login)
 - **last_change** — days since Jan 1 1970 since password last changed
 - **min_age** — days before password can be changed

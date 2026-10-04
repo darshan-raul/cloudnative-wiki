@@ -90,13 +90,13 @@ Every change event has the same structure regardless of the database:
 
 ## Tooling
 
-| Tool | Database | Delivery | Notes |
-|---|---|---|---|
-| **Debezium** | Postgres, MySQL, MongoDB, SQL Server, Oracle | Kafka, Webhook | Open source, Apache license |
-| **AWS DMS** | 20+ sources | S3, Kafka, Redshift, etc. | Managed, no-code setup |
-| **Oracle GoldenGate** | Oracle, SQL Server, etc. | Proprietary | Enterprise, expensive |
-| **Fivetran** | 100+ connectors | Data warehouse | SaaS, pricing per row |
-| **Maxwell** | MySQL binlog | Kafka | Lightweight, open source |
+| Tool                  | Database                                     | Delivery                  | Notes                       |
+| --------------------- | -------------------------------------------- | ------------------------- | --------------------------- |
+| **Debezium**          | Postgres, MySQL, MongoDB, SQL Server, Oracle | Kafka, Webhook            | Open source, Apache license |
+| **AWS DMS**           | 20+ sources                                  | S3, Kafka, Redshift, etc. | Managed, no-code setup      |
+| **Oracle GoldenGate** | Oracle, SQL Server, etc.                     | Proprietary               | Enterprise, expensive       |
+| **Fivetran**          | 100+ connectors                              | Data warehouse            | SaaS, pricing per row       |
+| **Maxwell**           | MySQL binlog                                 | Kafka                     | Lightweight, open source    |
 
 ### Debezium Example
 
@@ -241,12 +241,12 @@ Estimate: snapshot at 10,000 rows/second for a 100M row table = 2.7 hours, then 
 
 ## CDC vs. Other Patterns
 
-| Pattern | Approach | Latency | Data Scope |
-|---|---|---|---|
-| **CDC** | Event-driven (log) | Seconds | Changes only |
-| **Polling** | Query-based (batch) | Minutes to hours | Full table or incremental column |
-| **Dual-write** | Application-level | Synchronous | Every write explicitly sent |
-| **Trigger-to-table** | DB triggers | Near-real-time | Changes only |
+| Pattern              | Approach            | Latency          | Data Scope                       |
+| -------------------- | ------------------- | ---------------- | -------------------------------- |
+| **CDC**              | Event-driven (log)  | Seconds          | Changes only                     |
+| **Polling**          | Query-based (batch) | Minutes to hours | Full table or incremental column |
+| **Dual-write**       | Application-level   | Synchronous      | Every write explicitly sent      |
+| **Trigger-to-table** | DB triggers         | Near-real-time   | Changes only                     |
 
 CDC sits between polling (slow, batch) and dual-write (fast but application-level耦合). Log-based CDC is the best of all worlds — real-time, no application code changes, no performance hit — but requires database support for transaction log access.
 

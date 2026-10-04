@@ -4,10 +4,10 @@
 
 A forward proxy server is an intermediary server that sits between client applications and the internet. The proxy server receives requests from the clients, forwards them to the destination server, and then returns the responses to the clients. This setup is often used to:
 
-* **Improve security** by hiding the client's IP address.
-* **Control access** to the internet.
-* **Cache content** to improve performance.
-* **Monitor and log** internet usage.
+- **Improve security** by hiding the client's IP address.
+- **Control access** to the internet.
+- **Cache content** to improve performance.
+- **Monitor and log** internet usage.
 
 #### Setting Up a Forward Proxy Server in Linux
 
@@ -29,6 +29,7 @@ One of the most popular software packages for setting up a forward proxy server 
     ```bash
     sudo yum install squid
     ```
+
 2.  **Configure Squid:**
 
     The main configuration file for Squid is located at `/etc/squid/squid.conf`. You can edit this file to set up the desired configurations.
@@ -46,12 +47,14 @@ One of the most popular software packages for setting up a forward proxy server 
     acl allowed_ips src 192.168.1.0/24  # Replace with your network
     http_access allow allowed_ips
     ```
+
 3.  **Start and Enable Squid:**
 
     ```bash
     sudo systemctl start squid
     sudo systemctl enable squid
     ```
+
 4.  **Configure Clients to Use the Proxy:**
 
     On the client machine, configure the web browser or system settings to use the proxy server. For example, set the proxy address to `http://<proxy-server-ip>:3128`.
@@ -66,12 +69,14 @@ Squid provides a variety of controls to manage and restrict internet usage. Here
     acl blocked_sites dstdomain .facebook.com .youtube.com
     http_access deny blocked_sites
     ```
+
 2.  **Block Specific File Types:**
 
     ```conf
     acl blocked_files url_regex -i \.mp3$ \.exe$ \.mp4$
     http_access deny blocked_files
     ```
+
 3.  **Require Authentication:**
 
     ```bash
@@ -89,6 +94,7 @@ Squid provides a variety of controls to manage and restrict internet usage. Here
     acl authenticated proxy_auth REQUIRED
     http_access allow authenticated
     ```
+
 4.  **Limit Bandwidth:**
 
     ```conf
@@ -98,6 +104,7 @@ Squid provides a variety of controls to manage and restrict internet usage. Here
     acl all src 0.0.0.0/0
     delay_access 1 allow all
     ```
+
 5.  **Cache Management:**
 
     ```conf
@@ -105,6 +112,7 @@ Squid provides a variety of controls to manage and restrict internet usage. Here
     maximum_object_size 4096 KB
     minimum_object_size 0 KB
     ```
+
 6.  **Log Internet Usage:**
 
     Squid logs can be found in `/var/log/squid/access.log`. You can use tools like `sarg` (Squid Analysis Report Generator) to analyze these logs.
@@ -126,7 +134,7 @@ Squid provides a variety of controls to manage and restrict internet usage. Here
 
 Setting up a forward proxy server with Squid on a Linux machine is straightforward. Squid’s configuration is highly flexible, allowing you to implement various controls to manage and restrict internet access according to your requirements. By following the steps and examples provided, you can effectively set up and customize a forward proxy server for your network.
 
-***
+---
 
 After setting up a forward proxy server like Squid, you need to configure your client machines to route their internet traffic through the proxy server. This will ensure that all HTTP requests are passed through the proxy. Here's how you can achieve that and address non-HTTP requests:
 
@@ -135,15 +143,15 @@ After setting up a forward proxy server like Squid, you need to configure your c
 **For Web Browsers:**
 
 1. **Google Chrome/Chromium:**
-   * Go to `Settings`.
-   * Scroll down and click `Advanced`.
-   * Under `System`, click `Open proxy settings`.
-   * In the `Internet Properties` window, go to the `Connections` tab and click `LAN settings`.
-   * Check `Use a proxy server for your LAN` and enter the IP address and port of your Squid proxy server (e.g., `192.168.1.100:3128`).
+   - Go to `Settings`.
+   - Scroll down and click `Advanced`.
+   - Under `System`, click `Open proxy settings`.
+   - In the `Internet Properties` window, go to the `Connections` tab and click `LAN settings`.
+   - Check `Use a proxy server for your LAN` and enter the IP address and port of your Squid proxy server (e.g., `192.168.1.100:3128`).
 2. **Firefox:**
-   * Go to `Options`.
-   * Scroll down to `Network Settings` and click `Settings`.
-   * Select `Manual proxy configuration` and enter the IP address and port of your Squid proxy server.
+   - Go to `Options`.
+   - Scroll down to `Network Settings` and click `Settings`.
+   - Select `Manual proxy configuration` and enter the IP address and port of your Squid proxy server.
 
 **For the Entire System (Linux):**
 
@@ -154,12 +162,14 @@ To route all HTTP and HTTPS traffic through the proxy server, you need to set en
     ```bash
     sudo nano /etc/profile
     ```
+
 2.  Add the following lines to set the proxy for all users:
 
     ```bash
     export http_proxy="http://192.168.1.100:3128"
     export https_proxy="http://192.168.1.100:3128"
     ```
+
 3.  Save the file and apply the changes:
 
     ```bash
@@ -177,31 +187,35 @@ For non-HTTP requests (like FTP, SSH, etc.), Squid may not handle these directly
     acl CONNECT method CONNECT
     http_access allow CONNECT SSL_ports
     ```
+
 2.  **FTP Requests:** Squid can be configured to handle FTP requests as well:
 
     ```conf
     acl FTP proto FTP
     http_access allow FTP
     ```
+
 3.  **Non-Proxy Aware Applications:** For applications that do not natively support proxies (e.g., SSH, certain database clients), you can use tools like `tsocks` or `proxychains` to route their traffic through the proxy.
 
     **Using proxychains:**
-
     1.  Install proxychains:
 
         ```bash
         sudo apt-get install proxychains
         ```
+
     2.  Edit the proxychains configuration file:
 
         ```bash
         sudo nano /etc/proxychains.conf
         ```
+
     3.  Add your Squid proxy server details at the end:
 
         ```conf
         http 192.168.1.100 3128
         ```
+
     4.  Use proxychains to run applications through the proxy:
 
         ```bash
@@ -217,6 +231,7 @@ If you want to enforce proxy usage without client-side configuration, you can se
     ```bash
     echo 1 > /proc/sys/net/ipv4/ip_forward
     ```
+
 2.  **Configure `iptables`:**
 
     ```bash

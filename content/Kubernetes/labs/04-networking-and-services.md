@@ -82,12 +82,14 @@ kubectl get service podinfo -o wide
 ```
 
 **Expected output:**
+
 ```
 NAME      TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE   SELECTOR
 podinfo   ClusterIP   10.96.140.85   <none>        9898/TCP   10s   app.kubernetes.io/name=podinfo
 ```
 
 Notice:
+
 - `10.96.140.85` is a **virtual IP (VIP)** managed by `kube-proxy` (via `nftables` or `iptables`).
 - It does **not** belong to any physical or virtual network interface on any node. You cannot ping it with ICMP; it only responds to TCP connections on the specified port.
 
@@ -100,6 +102,7 @@ kubectl get endpointslices -l kubernetes.io/service-name=podinfo -o wide
 ```
 
 **Expected output:**
+
 ```
 NAME            ADDRESSTYPE   PORTS   ENDPOINTS                     AGE
 podinfo-xxxxx   IPv4          9898    10.244.1.5,10.244.2.8         30s
@@ -128,6 +131,7 @@ nslookup podinfo
 ```
 
 **Expected output:**
+
 ```
 Server:    10.96.0.10
 Address:   10.96.0.10#53
@@ -146,6 +150,7 @@ done
 
 **Expected output:**
 Notice the requests alternating between the two pod hostnames:
+
 ```
 "hostname":"podinfo-5b5c97bd5c-2p8xm"
 "hostname":"podinfo-5b5c97bd5c-v9lks"
@@ -162,6 +167,7 @@ Type `exit` to exit and automatically delete the `curl-client` pod.
 What happens when a typo enters a Service's `spec.selector`?
 
 ### Trigger the failure:
+
 Patch the Service with an incorrect selector label:
 
 ```bash
@@ -169,6 +175,7 @@ kubectl patch service podinfo -p '{"spec":{"selector":{"app.kubernetes.io/name":
 ```
 
 ### Observe the symptom:
+
 Launch our debug curl client again:
 
 ```bash
@@ -176,6 +183,7 @@ kubectl run curl-test --image=curlimages/curl:8.10.1 --rm -it --restart=Never --
 ```
 
 **Observed error:**
+
 ```
 curl: (28) Failed to connect to podinfo port 9898 after 3001 ms: Couldn't connect to server
 ```
@@ -183,6 +191,7 @@ curl: (28) Failed to connect to podinfo port 9898 after 3001 ms: Couldn't connec
 The request times out completely! Why? DNS resolved the Service IP successfully, but the connection was dropped.
 
 ### Root Cause Diagnosis:
+
 Whenever a Service times out or rejects connections, **always check its endpoints first**:
 
 ```bash
@@ -190,6 +199,7 @@ kubectl get endpointslices -l kubernetes.io/service-name=podinfo
 ```
 
 **Observed output:**
+
 ```
 NAME            ADDRESSTYPE   PORTS   ENDPOINTS   AGE
 podinfo-xxxxx   IPv4          9898    <unset>     3m
@@ -216,6 +226,7 @@ Endpoints:         <none>                                 <-- NO PODS MATCH!
 The Service controller performs a loose label match. If no Pods match the selector, or if matching Pods are not `Ready` (failing readiness probes), the Service will have **0 endpoints**. Kube-proxy installs no routing rules for it, and packets are dropped.
 
 ### Recovery:
+
 Re-apply the correct selector:
 
 ```bash

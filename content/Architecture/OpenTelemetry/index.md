@@ -34,14 +34,14 @@ Unified telemetry for cloud-native applications. Traces, metrics, and logs under
 
 ## Quick Reference
 
-| Component | Role |
-|-----------|------|
-| **Signal** | Trace, Metric, or Log |
-| **Span** | Single unit of work in a trace |
-| **Tracer** | Creates spans |
-| **Meter** | Creates metrics |
+| Component     | Role                                   |
+| ------------- | -------------------------------------- |
+| **Signal**    | Trace, Metric, or Log                  |
+| **Span**      | Single unit of work in a trace         |
+| **Tracer**    | Creates spans                          |
+| **Meter**     | Creates metrics                        |
 | **Collector** | Receives, processes, exports telemetry |
-| **OTLP** | Protocol for telemetry transport |
+| **OTLP**      | Protocol for telemetry transport       |
 
 ## References
 

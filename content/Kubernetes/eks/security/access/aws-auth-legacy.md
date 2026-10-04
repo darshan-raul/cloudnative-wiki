@@ -48,15 +48,15 @@ mapRoles: |
       - system:nodes
 ```
 
-| Group | Purpose |
-|-------|---------|
+| Group                  | Purpose                           |
+| ---------------------- | --------------------------------- |
 | `system:bootstrappers` | Required for kubelet to bootstrap |
-| `system:nodes` | Required for node registration |
+| `system:nodes`         | Required for node registration    |
 
 ### Template Variable
 
-| Variable | Resolves To |
-|----------|-------------|
+| Variable                | Resolves To             |
+| ----------------------- | ----------------------- |
 | `{{EC2PrivateDNSName}}` | Node's private DNS name |
 
 ## mapUsers - Human Access
@@ -73,30 +73,31 @@ mapUsers: |
       - view  # Built-in read-only role
 ```
 
-| Built-in RBAC Role | Access Level |
-|--------------------|--------------|
-| `system:masters` | Full cluster access (superuser) |
-| `system:node` | Node-specific operations |
-| `view` | Read-only to all resources (except secrets) |
-| `edit` | Read/write to most resources (except role bindings) |
-| `admin` | Read/write plus ability to create roles/bindings |
+| Built-in RBAC Role | Access Level                                        |
+| ------------------ | --------------------------------------------------- |
+| `system:masters`   | Full cluster access (superuser)                     |
+| `system:node`      | Node-specific operations                            |
+| `view`             | Read-only to all resources (except secrets)         |
+| `edit`             | Read/write to most resources (except role bindings) |
+| `admin`            | Read/write plus ability to create roles/bindings    |
 
 ## Why Cluster Access API is Preferred
 
-| Aspect | aws-auth ConfigMap | Cluster Access API |
-|--------|-------------------|---------------------|
-| Management | Manual kubectl edit | AWS API/Console |
-| Audit trail | None | CloudTrail logging |
-| Validation | None (silent failures) | AWS validates inputs |
-| Lifecycle | Manual | Managed with cluster |
-| Migration | N/A | Clean separation |
-| Deletion | kubectl delete | AWS API call |
+| Aspect      | aws-auth ConfigMap     | Cluster Access API   |
+| ----------- | ---------------------- | -------------------- |
+| Management  | Manual kubectl edit    | AWS API/Console      |
+| Audit trail | None                   | CloudTrail logging   |
+| Validation  | None (silent failures) | AWS validates inputs |
+| Lifecycle   | Manual                 | Managed with cluster |
+| Migration   | N/A                    | Clean separation     |
+| Deletion    | kubectl delete         | AWS API call         |
 
 ### Audit Trail Comparison
 
 **aws-auth:** No audit trail for ConfigMap changes
 
 **Cluster Access API:**
+
 ```bash
 # CloudTrail logs
 aws cloudtrail lookup-events \
@@ -197,12 +198,12 @@ With this enabled, EKS automatically adds node entries and you don't need to man
 
 ## Security Considerations
 
-| Risk | Mitigation |
-|------|-----------|
-| No audit trail | Use Cluster Access API for new grants |
-| Manual errors | Cluster Access API validates inputs |
-| Overly broad access | Follow least-privilege in RBAC groups |
-| Deleted users still in ConfigMap | Regular audit of aws-auth entries |
+| Risk                             | Mitigation                            |
+| -------------------------------- | ------------------------------------- |
+| No audit trail                   | Use Cluster Access API for new grants |
+| Manual errors                    | Cluster Access API validates inputs   |
+| Overly broad access              | Follow least-privilege in RBAC groups |
+| Deleted users still in ConfigMap | Regular audit of aws-auth entries     |
 
 ## Viewing Current Configuration
 

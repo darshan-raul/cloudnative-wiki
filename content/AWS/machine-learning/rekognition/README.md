@@ -15,15 +15,15 @@ Rekognition provides pre-trained computer vision models for image and video anal
 
 ## Image vs Video
 
-| Feature | Image API | Video API |
-|---------|----------|----------|
-| DetectLabels | Yes | Yes |
-| DetectFaces | Yes | Yes |
-| CompareFaces | Yes | No |
-| DetectText | Yes | Yes |
-| DetectModerationLabels | Yes | Yes |
-| RecognizeCelebrities | Yes | Yes |
-| StartSegmentDetection | No | Yes |
+| Feature                | Image API | Video API |
+| ---------------------- | --------- | --------- |
+| DetectLabels           | Yes       | Yes       |
+| DetectFaces            | Yes       | Yes       |
+| CompareFaces           | Yes       | No        |
+| DetectText             | Yes       | Yes       |
+| DetectModerationLabels | Yes       | Yes       |
+| RecognizeCelebrities   | Yes       | Yes       |
+| StartSegmentDetection  | No        | Yes       |
 
 ## Image Analysis
 
@@ -139,7 +139,7 @@ import time
 while True:
     result = rekognition.get_label_detection(JobId=job_id)
     status = result['VideoMetadata']['Status']
-    
+
     if status == 'SUCCEEDED':
         for label in result['Labels']:
             print(f"{label['Label']['Name']} ({label['Label']['Confidence']:.1f}%)")
@@ -148,7 +148,7 @@ while True:
     elif status == 'FAILED':
         print(f"Job failed: {result['VideoMetadata']['FailureReason']}")
         break
-    
+
     time.sleep(5)
 ```
 
@@ -194,17 +194,17 @@ rekognition.start_project_version(
 
 ## Pricing
 
-| Operation | Cost |
-|-----------|------|
-| Image (DetectLabels, DetectFaces, etc.) | $0.0012/image |
-| Video (StartLabelDetection) | $0.10/minute |
-| Video (StartPersonTracking) | $0.10/minute |
-| Video (StartFaceDetection) | $0.10/minute |
-| Video (StartCelebrityRecognition) | $0.12/minute |
-| Video (StartContentModeration) | $0.10/minute |
-| Video (StartSegmentDetection) | $0.035/minute |
-| CompareFaces | $0.0012/comparison |
-| Custom Labels | $4.00/hr training, $0.40/hr inference |
+| Operation                               | Cost                                  |
+| --------------------------------------- | ------------------------------------- |
+| Image (DetectLabels, DetectFaces, etc.) | $0.0012/image                         |
+| Video (StartLabelDetection)             | $0.10/minute                          |
+| Video (StartPersonTracking)             | $0.10/minute                          |
+| Video (StartFaceDetection)              | $0.10/minute                          |
+| Video (StartCelebrityRecognition)       | $0.12/minute                          |
+| Video (StartContentModeration)          | $0.10/minute                          |
+| Video (StartSegmentDetection)           | $0.035/minute                         |
+| CompareFaces                            | $0.0012/comparison                    |
+| Custom Labels                           | $4.00/hr training, $0.40/hr inference |
 
 ## References
 

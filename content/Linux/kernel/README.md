@@ -10,7 +10,7 @@ tags:
 
 The kernel is the core of every Linux system. It manages hardware, enforces security boundaries between processes, schedules CPU time across thousands of concurrent processes, and exposes system state through the /proc and /sys virtual filesystems.
 
-This section is reference material — read it after completing the [[../concepts/README|concepts curriculum]], particularly the process and filesystem sections. The concepts here explain *how* Linux works under the hood.
+This section is reference material — read it after completing the [[../concepts/README|concepts curriculum]], particularly the process and filesystem sections. The concepts here explain _how_ Linux works under the hood.
 
 ## cgroups — Control Groups
 

@@ -6,10 +6,10 @@ Database normalization is the process of organizing data in a database to reduce
 
 **Definition**: A table is in 1NF if:
 
-* It only contains atomic (indivisible) values.
-* Each column contains values of a single type.
-* Each column has a unique name.
-* The order in which data is stored does not matter.
+- It only contains atomic (indivisible) values.
+- Each column contains values of a single type.
+- Each column has a unique name.
+- The order in which data is stored does not matter.
 
 **Example**: Consider a table of students with subjects they are enrolled in.
 
@@ -33,8 +33,8 @@ Database normalization is the process of organizing data in a database to reduce
 
 **Definition**: A table is in 2NF if:
 
-* It is in 1NF.
-* All non-key attributes are fully functional dependent on the primary key (no partial dependency).
+- It is in 1NF.
+- All non-key attributes are fully functional dependent on the primary key (no partial dependency).
 
 **Example**: Consider a table of student enrollments with a composite primary key.
 
@@ -77,8 +77,8 @@ Separate into two tables: **Students**
 
 **Definition**: A table is in 3NF if:
 
-* It is in 2NF.
-* All the attributes are functionally dependent only on the primary key (no transitive dependency).
+- It is in 2NF.
+- All the attributes are functionally dependent only on the primary key (no transitive dependency).
 
 **Example**: Consider a table with student information and department details.
 
@@ -109,8 +109,8 @@ Separate into two tables: **Students**
 
 **Definition**: A table is in BCNF if:
 
-* It is in 3NF.
-* For every non-trivial functional dependency X -> Y, X is a super key.
+- It is in 3NF.
+- For every non-trivial functional dependency X -> Y, X is a super key.
 
 **Example**: Consider a table where an instructor can only teach one subject.
 
@@ -143,8 +143,8 @@ Separate into two tables: **Instructors**
 
 **Definition**: A table is in 4NF if:
 
-* It is in BCNF.
-* It has no multi-valued dependencies.
+- It is in BCNF.
+- It has no multi-valued dependencies.
 
 **Example**: Consider a table where a student can have multiple hobbies and multiple phone numbers.
 
@@ -176,8 +176,8 @@ Separate into two tables: **StudentHobbies**
 
 **Definition**: A table is in 5NF if:
 
-* It is in 4NF.
-* It cannot be decomposed into smaller tables without losing data (no join dependency).
+- It is in 4NF.
+- It cannot be decomposed into smaller tables without losing data (no join dependency).
 
 **Example**: Consider a table where projects have multiple tasks and each task can be handled by multiple teams.
 
@@ -212,4 +212,3 @@ Separate into three tables: **ProjectsTasks**
 | --------- | ------ |
 | 1         | A      |
 | 1         | B      |
-

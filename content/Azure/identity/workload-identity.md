@@ -57,7 +57,7 @@ By leveraging **Federated Identity Credentials**, Entra ID trusts external OpenI
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **Elimination of AAD Pod Identity:** The legacy `aad-pod-identity` used a Node-Managed Identity (NMI) daemonset that intercepted IMDS traffic on the node's loopback interface, introducing 10–30 second token latencies and severe iptables scaling bottlenecks. Modern Azure Workload Identity operates entirely via Kubernetes mutating webhooks and standard OIDC tokens.
+- **Elimination of AAD Pod Identity:** The legacy `aad-pod-identity` used a Node-Managed Identity (NMI) daemonset that intercepted IMDS traffic on the node's loopback interface, introducing 10–30 second token latencies and severe iptables scaling bottlenecks. Modern Azure Workload Identity operates entirely via Kubernetes mutating webhooks and standard OIDC tokens.
 
 ---
 
@@ -65,19 +65,20 @@ By leveraging **Federated Identity Credentials**, Entra ID trusts external OpenI
 
 ### 1. AKS Workload Identity vs. Node Managed Identity
 
-| Dimension | Legacy AAD Pod Identity (Deprecated) | Azure Workload Identity (Modern Standard) |
-| :--- | :--- | :--- |
-| **Mechanism** | Intercepts node IMDS (`169.254.169.254`) via NMI DaemonSet | Injects projected service account tokens via admission webhook |
-| **Performance** | High latency (10–40s initial token acquisition) | **Sub-second** instant token acquisition |
-| **Cluster Scaling** | Heavy iptables manipulation; crashed on large clusters | Lightweight; uses native Kubernetes projected volumes |
-| **Security Scope** | Node-level; potential token leaks across co-located pods | **Pod-level isolation**: Tokens signed strictly for specific service accounts |
+| Dimension           | Legacy AAD Pod Identity (Deprecated)                       | Azure Workload Identity (Modern Standard)                                     |
+| :------------------ | :--------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| **Mechanism**       | Intercepts node IMDS (`169.254.169.254`) via NMI DaemonSet | Injects projected service account tokens via admission webhook                |
+| **Performance**     | High latency (10–40s initial token acquisition)            | **Sub-second** instant token acquisition                                      |
+| **Cluster Scaling** | Heavy iptables manipulation; crashed on large clusters     | Lightweight; uses native Kubernetes projected volumes                         |
+| **Security Scope**  | Node-level; potential token leaks across co-located pods   | **Pod-level isolation**: Tokens signed strictly for specific service accounts |
 
 ### 2. Federated Identity Credentials for GitHub Actions
 
 Allows GitHub Actions workflows to deploy directly to Azure without saving an Azure Service Principal password/secret in repository settings:
-* **Issuer:** `https://token.actions.githubusercontent.com`
-* **Subject identifier:** `repo:<org>/<repo>:ref:refs/heads/main` or `repo:<org>/<repo>:environment:<env>`
-* **Audience:** `api://AzureADTokenExchange`
+
+- **Issuer:** `https://token.actions.githubusercontent.com`
+- **Subject identifier:** `repo:<org>/<repo>:ref:refs/heads/main` or `repo:<org>/<repo>:environment:<env>`
+- **Audience:** `api://AzureADTokenExchange`
 
 ---
 
@@ -161,34 +162,36 @@ az ad app federated-credential create \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Federated credentials per Managed Identity** | 20 credentials | Create separate managed identities if scale exceeds 20 |
-| **Federated credentials per App Registration** | 20 credentials | Can link to multiple repos or environments |
-| **Subject identifier length** | Max 600 characters | Exact string match on OIDC `sub` claim |
-| **Token lifetime** | 1 hour | Handled and renewed automatically by Azure SDKs |
+| Parameter                                      | Limit              | Production Notes                                       |
+| :--------------------------------------------- | :----------------- | :----------------------------------------------------- |
+| **Federated credentials per Managed Identity** | 20 credentials     | Create separate managed identities if scale exceeds 20 |
+| **Federated credentials per App Registration** | 20 credentials     | Can link to multiple repos or environments             |
+| **Subject identifier length**                  | Max 600 characters | Exact string match on OIDC `sub` claim                 |
+| **Token lifetime**                             | 1 hour             | Handled and renewed automatically by Azure SDKs        |
 
 ---
 
 ## References
 
-* **AKS Workload Identity Documentation:** https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview
-* **Entra ID Workload Identity Federation:** https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
-* **GitHub Actions Azure Login:** https://github.com/Azure/login
-* **Pricing:** Free (Included with Microsoft Entra ID and AKS)
+- **AKS Workload Identity Documentation:** https://learn.microsoft.com/en-us/azure/aks/workload-identity-overview
+- **Entra ID Workload Identity Federation:** https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation
+- **GitHub Actions Azure Login:** https://github.com/Azure/login
+- **Pricing:** Free (Included with Microsoft Entra ID and AKS)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Enterprise Microservices Fleet
-* 80 Microservices deployed across 4 AKS clusters in East US and West US.
-* Each pod authenticates to Azure Key Vault, Azure SQL, and Azure Service Bus via Workload Identity.
-* **Monthly Workload Identity Cost:** **$0.00 / month** (No charges for token exchanges, projected tokens, or federated credentials).
+
+- 80 Microservices deployed across 4 AKS clusters in East US and West US.
+- Each pod authenticates to Azure Key Vault, Azure SQL, and Azure Service Bus via Workload Identity.
+- **Monthly Workload Identity Cost:** **$0.00 / month** (No charges for token exchanges, projected tokens, or federated credentials).
 
 ### Scenario 2: High-Velocity GitHub Actions CI/CD Pipeline
-* 50 GitHub repositories executing 1,000 builds per day authenticating to Azure ARM via federated credentials.
-* **Monthly Credential Management Cost:** **$0.00 / month** (Saves hundreds of engineering hours otherwise lost to manual client secret renewal).
+
+- 50 GitHub repositories executing 1,000 builds per day authenticating to Azure ARM via federated credentials.
+- **Monthly Credential Management Cost:** **$0.00 / month** (Saves hundreds of engineering hours otherwise lost to manual client secret renewal).
 
 ---
 

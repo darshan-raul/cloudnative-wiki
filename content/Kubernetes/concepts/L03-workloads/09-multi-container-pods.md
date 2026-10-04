@@ -1,6 +1,15 @@
 ---
 title: Multi-Container Pods — Sidecar, Ambassador, Adapter
-tags: [kubernetes, workloads, multi-container, sidecar, ambassador, adapter, core-concepts]
+tags:
+  [
+    kubernetes,
+    workloads,
+    multi-container,
+    sidecar,
+    ambassador,
+    adapter,
+    core-concepts,
+  ]
 date: 2026-06-07
 description: The three patterns for putting multiple containers in one Pod. Network and IPC sharing, when to use each pattern, native sidecars (k8s 1.29+), and when NOT to use multiple containers.
 ---
@@ -106,17 +115,17 @@ A multi-container Pod enforces all four: same node, same network ns, same volume
 
 ### What's shared
 
-| Resource | Shared | Notes |
-|---|---|---|
-| **Network namespace** | ✅ | Same IP, same `localhost`, same ports (conflict!) |
-| **IPC namespace** | ✅ | System V IPC, POSIX shared memory |
-| **UTS namespace** | ✅ | Same hostname (the Pod's name) |
-| **Volumes** | ✅ | Mounts at any path in any container |
-| **Lifecycle** | ✅ | Started together, terminated together |
-| **Node** | ✅ | Always on the same node |
-| **CPU/memory cgroup** | ❌ | Each container has its own cgroup |
-| **PID namespace** | ⚠️ | Optional — see `shareProcessNamespace` |
-| **Security context** | ❌ | Each container has its own |
+| Resource              | Shared | Notes                                             |
+| --------------------- | ------ | ------------------------------------------------- |
+| **Network namespace** | ✅     | Same IP, same `localhost`, same ports (conflict!) |
+| **IPC namespace**     | ✅     | System V IPC, POSIX shared memory                 |
+| **UTS namespace**     | ✅     | Same hostname (the Pod's name)                    |
+| **Volumes**           | ✅     | Mounts at any path in any container               |
+| **Lifecycle**         | ✅     | Started together, terminated together             |
+| **Node**              | ✅     | Always on the same node                           |
+| **CPU/memory cgroup** | ❌     | Each container has its own cgroup                 |
+| **PID namespace**     | ⚠️     | Optional — see `shareProcessNamespace`            |
+| **Security context**  | ❌     | Each container has its own                        |
 
 ### The `shareProcessNamespace` flag
 
@@ -126,10 +135,10 @@ By default, containers in a Pod do **not** see each other's processes. The `app`
 spec:
   shareProcessNamespace: true
   containers:
-  - name: app
-    # ...
-  - name: sidecar
-    # ...
+    - name: app
+      # ...
+    - name: sidecar
+      # ...
 ```
 
 With this flag, both containers see the same process list. Use it for:
@@ -172,11 +181,11 @@ The official k8s docs define three standard patterns. They're not types — ther
 
 ### Pattern summary
 
-| Pattern | Helper's role | Direction | Examples |
-|---|---|---|---|
-| **Sidecar** | Extends or enhances the main app | Both directions, often pull (e.g., reads logs) | Log shipper, metrics exporter, service mesh proxy |
-| **Ambassador** | Proxies network traffic for the main app | Egress (app → ambassador → real destination) | Legacy migration, broker abstraction |
-| **Adapter** | Normalizes the main app's output | Ingress (app emits → adapter reads and rewrites) | Log format conversion, metrics normalization |
+| Pattern        | Helper's role                            | Direction                                        | Examples                                          |
+| -------------- | ---------------------------------------- | ------------------------------------------------ | ------------------------------------------------- |
+| **Sidecar**    | Extends or enhances the main app         | Both directions, often pull (e.g., reads logs)   | Log shipper, metrics exporter, service mesh proxy |
+| **Ambassador** | Proxies network traffic for the main app | Egress (app → ambassador → real destination)     | Legacy migration, broker abstraction              |
+| **Adapter**    | Normalizes the main app's output         | Ingress (app emits → adapter reads and rewrites) | Log format conversion, metrics normalization      |
 
 The same container can fit multiple patterns. A Fluent Bit log shipper is both a sidecar (extends the app's observability) and an adapter (converts logs to a standard format). The categorization is about the helper's primary role.
 
@@ -206,16 +215,16 @@ The most common pattern. A helper container that extends or enhances the main ap
 
 ### Common examples
 
-| Sidecar | What it does |
-|---|---|
-| **Fluent Bit / Promtail / Vector** | Reads the app's logs (stdout or shared volume) and ships to a central backend |
+| Sidecar                                    | What it does                                                                     |
+| ------------------------------------------ | -------------------------------------------------------------------------------- |
+| **Fluent Bit / Promtail / Vector**         | Reads the app's logs (stdout or shared volume) and ships to a central backend    |
 | **Istio / Linkerd / Consul Connect proxy** | Service mesh sidecar; handles mTLS, retries, observability for the app's traffic |
-| **node-exporter / Datadog agent** | (Usually a DaemonSet, not a sidecar, but can be a sidecar for per-app metrics) |
-| **Dapr sidecar** | Provides service invocation, state management, pub/sub, etc. for the app |
-| **OpenTelemetry collector** | Receives traces/metrics from the app and exports to a backend |
-| **Vault agent** | Fetches and rotates secrets, mounts them as files in the app |
-| **cert-manager's csi-driver-spiffe** | Mounts SPIFFE identities as files in the app |
-| **AWS LB controller pod webhook** | Registers Pods with an external load balancer on startup |
+| **node-exporter / Datadog agent**          | (Usually a DaemonSet, not a sidecar, but can be a sidecar for per-app metrics)   |
+| **Dapr sidecar**                           | Provides service invocation, state management, pub/sub, etc. for the app         |
+| **OpenTelemetry collector**                | Receives traces/metrics from the app and exports to a backend                    |
+| **Vault agent**                            | Fetches and rotates secrets, mounts them as files in the app                     |
+| **cert-manager's csi-driver-spiffe**       | Mounts SPIFFE identities as files in the app                                     |
+| **AWS LB controller pod webhook**          | Registers Pods with an external load balancer on startup                         |
 
 ### Example: log shipper sidecar
 
@@ -226,29 +235,29 @@ metadata:
   name: app-with-sidecar
 spec:
   containers:
-  - name: app
-    image: myorg/app:2.1
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log/app
-    - name: shared-config
-      mountPath: /etc/app
-      readOnly: true
-  - name: log-shipper
-    image: fluent/fluent-bit:3.0
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log/app
-      readOnly: true
-    - name: shared-config
-      mountPath: /etc/fluent-bit
-      readOnly: true
+    - name: app
+      image: myorg/app:2.1
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log/app
+        - name: shared-config
+          mountPath: /etc/app
+          readOnly: true
+    - name: log-shipper
+      image: fluent/fluent-bit:3.0
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log/app
+          readOnly: true
+        - name: shared-config
+          mountPath: /etc/fluent-bit
+          readOnly: true
   volumes:
-  - name: logs
-    emptyDir: {}
-  - name: shared-config
-    configMap:
-      name: app-and-shipper-config
+    - name: logs
+      emptyDir: {}
+    - name: shared-config
+      configMap:
+        name: app-and-shipper-config
 ```
 
 The app writes logs to `/var/log/app/`. The log shipper reads from the same path (read-only) and forwards to the central backend. The shared `emptyDir` is the channel between them.
@@ -262,36 +271,36 @@ The injected Pod looks like:
 ```yaml
 spec:
   containers:
-  - name: app
-    image: myorg/app:2.1
-    # ... app config ...
-  - name: istio-proxy
-    image: docker.io/istio/proxyv2:1.20
-    args:
-    - proxy
-    - sidecar
-    - --domain
-    - $(POD_NAMESPACE).svc.cluster.local
-    - --proxyLogLevel=warning
-    - --proxyComponentLogLevel=misc:error
-    - --log_output_level=default:info
-    env:
-    - name: POD_NAME
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.name
-    - name: POD_NAMESPACE
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.namespace
-    securityContext:
-      capabilities:
-        drop:
-        - ALL
-      runAsNonRoot: false
-      privileged: false
-      readOnlyRootFilesystem: true
-    # ... a lot more config ...
+    - name: app
+      image: myorg/app:2.1
+      # ... app config ...
+    - name: istio-proxy
+      image: docker.io/istio/proxyv2:1.20
+      args:
+        - proxy
+        - sidecar
+        - --domain
+        - $(POD_NAMESPACE).svc.cluster.local
+        - --proxyLogLevel=warning
+        - --proxyComponentLogLevel=misc:error
+        - --log_output_level=default:info
+      env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      securityContext:
+        capabilities:
+          drop:
+            - ALL
+        runAsNonRoot: false
+        privileged: false
+        readOnlyRootFilesystem: true
+      # ... a lot more config ...
 ```
 
 The Istio sidecar handles all of the app's inbound and outbound traffic, applying mTLS, retries, circuit breaking, and observability. The app is unaware of the sidecar — it just sees network traffic flowing.
@@ -353,15 +362,16 @@ metadata:
   name: app-with-ambassador
 spec:
   containers:
-  - name: app
-    image: myorg/app:2.1
-    command: ["./app", "--broker=localhost:9092"]
-  - name: kafka-ambassador
-    image: myorg/kafka-ambassador:1.0
-    command: ["./ambassador", "--listen=localhost:9092", "--target=$(BROKER_URL)"]
-    env:
-    - name: BROKER_URL
-      value: kafka-prod.internal:9092
+    - name: app
+      image: myorg/app:2.1
+      command: ["./app", "--broker=localhost:9092"]
+    - name: kafka-ambassador
+      image: myorg/kafka-ambassador:1.0
+      command:
+        ["./ambassador", "--listen=localhost:9092", "--target=$(BROKER_URL)"]
+      env:
+        - name: BROKER_URL
+          value: kafka-prod.internal:9092
 ```
 
 If you want to change the broker, edit the ambassador's `BROKER_URL` env var, not the app's code.
@@ -428,13 +438,13 @@ metadata:
   name: app-with-adapter
 spec:
   containers:
-  - name: app
-    image: myorg/legacy-app:1.0     # writes "INFO: started" format logs
-  - name: log-adapter
-    image: fluent/fluent-bit:3.0
-    # Reads the app's stdout (via shared volume or tail)
-    # Converts to JSON
-    # Forwards to Loki
+    - name: app
+      image: myorg/legacy-app:1.0 # writes "INFO: started" format logs
+    - name: log-adapter
+      image: fluent/fluent-bit:3.0
+      # Reads the app's stdout (via shared volume or tail)
+      # Converts to JSON
+      # Forwards to Loki
 ```
 
 The app's logs go to a shared `emptyDir` volume. The adapter tails the log file, parses the custom format, and emits JSON.
@@ -472,15 +482,17 @@ In k8s 1.29, a new feature was added: **native sidecars** via `restartPolicy: Al
 ```yaml
 spec:
   initContainers:
-  - name: log-shipper
-    image: fluent/fluent-bit:3.0
-    # The container exits when the work is "done"
-    # But you want it to keep running
-    # Workaround: tail -f /dev/null
-    command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
+    - name: log-shipper
+      image: fluent/fluent-bit:3.0
+      # The container exits when the work is "done"
+      # But you want it to keep running
+      # Workaround: tail -f /dev/null
+      command:
+        ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
 ```
 
 This works but has problems:
+
 - The init shows as `Terminated` (because it "completed")
 - The kubelet doesn't know if the sidecar is healthy
 - No probes, no proper lifecycle
@@ -490,13 +502,13 @@ This works but has problems:
 ```yaml
 spec:
   containers:
-  - name: app
-    image: myorg/app:2.1
-    # ... main app ...
-  - name: log-shipper
-    image: fluent/fluent-bit:3.0
-    restartPolicy: Always    # native sidecar primitive
-    command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
+    - name: app
+      image: myorg/app:2.1
+      # ... main app ...
+    - name: log-shipper
+      image: fluent/fluent-bit:3.0
+      restartPolicy: Always # native sidecar primitive
+      command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
 ```
 
 ### What a native sidecar gets
@@ -513,16 +525,16 @@ If you have an init container that does `sleep infinity` after starting the actu
 ```yaml
 # Before
 initContainers:
-- name: log-shipper
-  image: fluent/fluent-bit:3.0
-  command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
+  - name: log-shipper
+    image: fluent/fluent-bit:3.0
+    command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
 
 # After (k8s 1.29+)
 containers:
-- name: log-shipper
-  image: fluent/fluent-bit:3.0
-  restartPolicy: Always
-  command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
+  - name: log-shipper
+    image: fluent/fluent-bit:3.0
+    restartPolicy: Always
+    command: ["fluent-bit", "-c", "/etc/fluent-bit.conf"]
 ```
 
 For more on init containers and the relationship to native sidecars, see [[Kubernetes/concepts/L03-workloads/08-init-containers|08 — Init Containers]].
@@ -537,13 +549,13 @@ Since containers share a network namespace, they reach each other on `localhost`
 
 ```yaml
 containers:
-- name: app
-  image: myorg/app:2.1
-  ports:
-  - containerPort: 8080
-- name: cache-warmup
-  image: myorg/warmer:1.0
-  command: ["sh", "-c", "curl -fs http://localhost:8080/warmup"]
+  - name: app
+    image: myorg/app:2.1
+    ports:
+      - containerPort: 8080
+  - name: cache-warmup
+    image: myorg/warmer:1.0
+    command: ["sh", "-c", "curl -fs http://localhost:8080/warmup"]
 ```
 
 The cache-warmup talks to the app on `localhost:8080`. No DNS lookup, no Service routing. Direct.
@@ -552,22 +564,23 @@ The cache-warmup talks to the app on `localhost:8080`. No DNS lookup, no Service
 
 ```yaml
 containers:
-- name: writer
-  image: myorg/writer:1.0
-  volumeMounts:
-  - name: shared
-    mountPath: /shared
-  command: ["sh", "-c", "while true; do echo $(date) >> /shared/log; sleep 1; done"]
-- name: reader
-  image: myorg/reader:1.0
-  volumeMounts:
-  - name: shared
-    mountPath: /shared
-    readOnly: true
-  command: ["sh", "-c", "tail -f /shared/log"]
+  - name: writer
+    image: myorg/writer:1.0
+    volumeMounts:
+      - name: shared
+        mountPath: /shared
+    command:
+      ["sh", "-c", "while true; do echo $(date) >> /shared/log; sleep 1; done"]
+  - name: reader
+    image: myorg/reader:1.0
+    volumeMounts:
+      - name: shared
+        mountPath: /shared
+        readOnly: true
+    command: ["sh", "-c", "tail -f /shared/log"]
 volumes:
-- name: shared
-  emptyDir: {}
+  - name: shared
+    emptyDir: {}
 ```
 
 The writer appends to `/shared/log`; the reader tails it. Both see the same file because they share the volume.
@@ -596,12 +609,12 @@ With `shareProcessNamespace: true`, one container can signal another:
 spec:
   shareProcessNamespace: true
   containers:
-  - name: app
-    # ...
-  - name: reloader
-    image: myorg/reloader:1.0
-    command: ["sh", "-c", "while true; do sleep 60; kill -USR1 1; done"]
-    # Periodically sends SIGUSR1 to PID 1 (the app's main process)
+    - name: app
+      # ...
+    - name: reloader
+      image: myorg/reloader:1.0
+      command: ["sh", "-c", "while true; do sleep 60; kill -USR1 1; done"]
+      # Periodically sends SIGUSR1 to PID 1 (the app's main process)
 ```
 
 This is a niche pattern. Most apps use HTTP endpoints (e.g., POST `/reload`) for cross-container signaling, which doesn't require PID sharing.
@@ -616,9 +629,9 @@ Containers start in **declared order** in the manifest:
 
 ```yaml
 containers:
-- name: app                # starts first
-- name: log-shipper        # starts second
-- name: metrics-exporter   # starts third
+  - name: app # starts first
+  - name: log-shipper # starts second
+  - name: metrics-exporter # starts third
 ```
 
 But "starts" doesn't mean "is ready." The kubelet starts them in order, but each one takes time to initialize. The next container may start before the previous is fully ready.
@@ -637,9 +650,9 @@ Containers stop in **reverse declared order**:
 
 ```yaml
 containers:
-- name: app                # stopped last
-- name: log-shipper        # stopped second-to-last
-- name: metrics-exporter   # stopped first
+  - name: app # stopped last
+  - name: log-shipper # stopped second-to-last
+  - name: metrics-exporter # stopped first
 ```
 
 This is generally good: the helper sidecars are stopped first, after which the app can finish its work (flush logs, drain connections). But it's also **not guaranteed** — the kubelet sends SIGTERM to all containers in parallel, then waits for the grace period.
@@ -652,16 +665,16 @@ Each container can have its own `preStop` hook:
 
 ```yaml
 containers:
-- name: app
-  lifecycle:
-    preStop:
-      exec:
-        command: ["sh", "-c", "sleep 5"]   # drain traffic
-- name: log-shipper
-  lifecycle:
-    preStop:
-      exec:
-        command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf --quit"]  # flush
+  - name: app
+    lifecycle:
+      preStop:
+        exec:
+          command: ["sh", "-c", "sleep 5"] # drain traffic
+  - name: log-shipper
+    lifecycle:
+      preStop:
+        exec:
+          command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf --quit"] # flush
 ```
 
 The order of `preStop` execution is the same as the order of container start: app first, then log shipper. But the kubelet doesn't wait between them — they run in parallel.
@@ -678,22 +691,22 @@ Each container has its own resource requests and limits. They are summed for the
 
 ```yaml
 containers:
-- name: app
-  resources:
-    requests:
-      cpu: 200m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-- name: log-shipper
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 100m
-      memory: 128Mi
+  - name: app
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+  - name: log-shipper
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
 ```
 
 Effective Pod `requests`: 250m CPU, 320Mi memory. The Pod is scheduled onto a node that has at least that much available.
@@ -714,24 +727,24 @@ The kernel's OOM killer picks the container with the highest memory usage when t
 Each container can have its own `securityContext`:
 
 ```yaml
-initContainers: []   # no init
+initContainers: [] # no init
 containers:
-- name: app
-  securityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop: ["ALL"]
-- name: log-shipper
-  securityContext:
-    runAsNonRoot: false           # fluent-bit needs root to read /var/log
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop: ["ALL"]
-      add: ["DAC_READ_SEARCH"]    # needed to read arbitrary files
+  - name: app
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+  - name: log-shipper
+    securityContext:
+      runAsNonRoot: false # fluent-bit needs root to read /var/log
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+        add: ["DAC_READ_SEARCH"] # needed to read arbitrary files
 ```
 
 The app runs as non-root; the log shipper can run as root (because it needs to read `/var/log`). The Pod has a mix of security postures, and that's fine.
@@ -754,12 +767,12 @@ Multi-container Pods share the same node, network, and lifecycle. This is a **ti
 
 ### When to use a separate Deployment
 
-| Need | Why NOT multi-container |
-|---|---|
-| Helper scales independently | Two Deployments, two HPA configs |
+| Need                                  | Why NOT multi-container                                        |
+| ------------------------------------- | -------------------------------------------------------------- |
+| Helper scales independently           | Two Deployments, two HPA configs                               |
 | Helper has different security profile | Two Pods, different ServiceAccounts, different NetworkPolicies |
-| Helper has different release cadence | Two Deployments, independent rollouts |
-| Helper is shared across many apps | A separate Deployment, possibly a DaemonSet |
+| Helper has different release cadence  | Two Deployments, independent rollouts                          |
+| Helper is shared across many apps     | A separate Deployment, possibly a DaemonSet                    |
 
 ### The "sidecar sprawl" anti-pattern
 
@@ -817,26 +830,26 @@ metadata:
   name: app-with-log-shipper
 spec:
   containers:
-  - name: app
-    image: myorg/app:2.1
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log/app
-  - name: fluentbit
-    image: fluent/fluent-bit:3.0
-    volumeMounts:
-    - name: logs
-      mountPath: /var/log/app
-      readOnly: true
-    - name: fb-config
-      mountPath: /fluent-bit/etc
-      readOnly: true
+    - name: app
+      image: myorg/app:2.1
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log/app
+    - name: fluentbit
+      image: fluent/fluent-bit:3.0
+      volumeMounts:
+        - name: logs
+          mountPath: /var/log/app
+          readOnly: true
+        - name: fb-config
+          mountPath: /fluent-bit/etc
+          readOnly: true
   volumes:
-  - name: logs
-    emptyDir: {}
-  - name: fb-config
-    configMap:
-      name: fluent-bit-config
+    - name: logs
+      emptyDir: {}
+    - name: fb-config
+      configMap:
+        name: fluent-bit-config
 ```
 
 ### Recipe 2: Service mesh sidecar (Istio)
@@ -853,24 +866,24 @@ Then every Pod created in `my-namespace` has the Istio sidecar injected. You don
 
 ```yaml
 containers:
-- name: app
-  image: myorg/app:2.1
-  env:
-  - name: OTEL_EXPORTER_OTLP_ENDPOINT
-    value: http://localhost:4318
-- name: otel-collector
-  image: otel/opentelemetry-collector-contrib:0.95.0
-  args: ["--config=/etc/otel/config.yaml"]
-  ports:
-  - containerPort: 4318    # OTLP HTTP
-  - containerPort: 4317    # OTLP gRPC
-  volumeMounts:
-  - name: otel-config
-    mountPath: /etc/otel
+  - name: app
+    image: myorg/app:2.1
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://localhost:4318
+  - name: otel-collector
+    image: otel/opentelemetry-collector-contrib:0.95.0
+    args: ["--config=/etc/otel/config.yaml"]
+    ports:
+      - containerPort: 4318 # OTLP HTTP
+      - containerPort: 4317 # OTLP gRPC
+    volumeMounts:
+      - name: otel-config
+        mountPath: /etc/otel
 volumes:
-- name: otel-config
-  configMap:
-    name: otel-collector-config
+  - name: otel-config
+    configMap:
+      name: otel-collector-config
 ```
 
 The app exports telemetry to `localhost:4318`; the sidecar receives, batches, and exports to the backend.
@@ -880,15 +893,15 @@ The app exports telemetry to `localhost:4318`; the sidecar receives, batches, an
 ```yaml
 spec:
   containers:
-  - name: app
-    image: myorg/app:2.1
-  - name: log-shipper
-    image: fluent/fluent-bit:3.0
-    restartPolicy: Always    # native sidecar primitive
-    lifecycle:
-      preStop:
-        exec:
-          command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf --quit"]
+    - name: app
+      image: myorg/app:2.1
+    - name: log-shipper
+      image: fluent/fluent-bit:3.0
+      restartPolicy: Always # native sidecar primitive
+      lifecycle:
+        preStop:
+          exec:
+            command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf --quit"]
 ```
 
 ### Recipe 5: Dapr sidecar
@@ -897,17 +910,17 @@ Dapr uses the same multi-container pattern but is typically managed by the Dapr 
 
 ```yaml
 containers:
-- name: app
-  image: myorg/app:2.1
-- name: daprd
-  image: docker.io/daprio/daprd:1.12
-  args:
-  - --app-id=my-app
-  - --app-port=8080
-  - --dapr-http-port=3500
-  - --dapr-grpc-port=50001
-  - --components-path=/components
-  - --log-level=info
+  - name: app
+    image: myorg/app:2.1
+  - name: daprd
+    image: docker.io/daprio/daprd:1.12
+    args:
+      - --app-id=my-app
+      - --app-port=8080
+      - --dapr-http-port=3500
+      - --dapr-grpc-port=50001
+      - --components-path=/components
+      - --log-level=info
 ```
 
 The app talks to Dapr on `localhost:3500` (HTTP) or `localhost:50001` (gRPC). Dapr handles service invocation, state, pub/sub, secrets, etc.
@@ -1019,8 +1032,8 @@ You wrote a sidecar as an init container:
 
 ```yaml
 initContainers:
-- name: log-shipper
-  command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
+  - name: log-shipper
+    command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
 ```
 
 This works but the sidecar shows as `Terminated` (the init "completed"). If you're on k8s 1.29+, convert to a native sidecar. Otherwise, accept the workaround.
@@ -1082,6 +1095,7 @@ To opt out:
 ### "All the patterns at once" gotcha
 
 Some Pods have:
+
 - 2 init containers
 - 3 main containers
 - 1 native sidecar
@@ -1089,6 +1103,7 @@ Some Pods have:
 - 1 adapter
 
 This is too much. Refactor:
+
 - Init containers for setup (one is usually enough)
 - Sidecars for the cross-cutting concerns (logs, metrics, mesh)
 - Drop the ambassador and adapter if they're not strictly needed
@@ -1116,11 +1131,12 @@ The classic mistake:
 
 ```yaml
 initContainers:
-- name: log-shipper
-  command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
+  - name: log-shipper
+    command: ["sh", "-c", "fluent-bit -c /etc/fluent-bit.conf & sleep infinity"]
 ```
 
 This works, but:
+
 - The init shows as `Terminated` (not `Running`)
 - The kubelet doesn't know if the sidecar is healthy
 - No probes
@@ -1132,13 +1148,13 @@ If you're on k8s 1.29+, use a native sidecar. Otherwise, accept the workaround o
 
 ## 15. Related Notes
 
-| Topic | Note |
-|---|---|
-| Pods (multi-container is a Pod field) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] |
-| Init containers (run before app) | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]] |
-| Probes (liveness, readiness) | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]] |
-| DaemonSet (per-node helpers) | [[Kubernetes/concepts/L03-workloads/05-daemonset\|05 — DaemonSet]] |
-| Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Security context | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]] |
-| Service mesh (Istio/Linkerd) | [[Kubernetes/guides/networking/service-mesh/README\|Guides — Service Mesh]] |
-| Pod networking (CNI, Pod IPs) | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]] |
+| Topic                                 | Note                                                                                                           |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Pods (multi-container is a Pod field) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]]                                                       |
+| Init containers (run before app)      | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]]                                 |
+| Probes (liveness, readiness)          | [[Kubernetes/concepts/L03-workloads/10-probes\|10 — Probes]]                                                   |
+| DaemonSet (per-node helpers)          | [[Kubernetes/concepts/L03-workloads/05-daemonset\|05 — DaemonSet]]                                             |
+| Resource requests and limits          | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
+| Security context                      | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]]        |
+| Service mesh (Istio/Linkerd)          | [[Kubernetes/guides/networking/service-mesh/README\|Guides — Service Mesh]]                                    |
+| Pod networking (CNI, Pod IPs)         | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]]                                |

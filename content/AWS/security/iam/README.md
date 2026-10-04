@@ -15,12 +15,12 @@ IAM is the foundation of AWS security — it controls WHO can access WHAT resour
 
 ### Users, Groups, Roles
 
-| Entity | Purpose | Credential Type |
-|--------|---------|----------------|
-| IAM User | Long-term credentials for humans | Access keys, passwords, MFA |
-| IAM Group | Collection of users with shared permissions | N/A (groups don't have credentials) |
-| IAM Role | Temporary credentials for services/users | No long-term credentials — assume role |
-| Service Role | Role used by an AWS service | EC2, Lambda, etc. |
+| Entity       | Purpose                                     | Credential Type                        |
+| ------------ | ------------------------------------------- | -------------------------------------- |
+| IAM User     | Long-term credentials for humans            | Access keys, passwords, MFA            |
+| IAM Group    | Collection of users with shared permissions | N/A (groups don't have credentials)    |
+| IAM Role     | Temporary credentials for services/users    | No long-term credentials — assume role |
+| Service Role | Role used by an AWS service                 | EC2, Lambda, etc.                      |
 
 ### Access Types
 
@@ -42,15 +42,18 @@ Role-based access (temporary)
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Effect": "Allow",          // Allow or Deny
-      "Action": [                  // Which actions
+      "Effect": "Allow", // Allow or Deny
+      "Action": [
+        // Which actions
         "s3:GetObject",
         "s3:PutObject"
       ],
-      "Resource": [                // Which resources
+      "Resource": [
+        // Which resources
         "arn:aws:s3:::my-bucket/*"
       ],
-      "Condition": {               // Optional conditions
+      "Condition": {
+        // Optional conditions
         "IpAddress": {
           "aws:SourceIp": "203.0.113.0/24"
         }
@@ -141,13 +144,15 @@ aws iam attach-group-policy \
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "ec2.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 ```
 
@@ -195,14 +200,16 @@ aws ec2 run-instances \
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {"AWS": "arn:aws:iam::111122223333:root"},
-    "Action": "sts:AssumeRole",
-    "Condition": {
-      "StringEquals": {"aws:RequestedRegion": ["us-east-1", "us-west-2"]}
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::111122223333:root" },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": { "aws:RequestedRegion": ["us-east-1", "us-west-2"] }
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -223,19 +230,22 @@ SCPs are applied at the Organization or OU level:
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Deny",
-    "Action": [
-      "s3:PutBucketPublicAccessBlock",
-      "iam:CreateUser",
-      "iam:DeleteUser"
-    ],
-    "Resource": "*"
-  }]
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Action": [
+        "s3:PutBucketPublicAccessBlock",
+        "iam:CreateUser",
+        "iam:DeleteUser"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 ```
 
 SCP blocks all accounts in the OU from:
+
 - Disabling public access blocks
 - Creating IAM users
 
@@ -296,27 +306,27 @@ aws sso-admin create-permission-set \
 
 ## Security Best Practices
 
-| Practice | Description |
-|----------|-------------|
-| Enable MFA | On root account and all users |
-| Use roles | Don't share access keys |
-| Least privilege | Grant minimum permissions needed |
-| Rotate credentials | Access keys every 90 days |
-| Use groups | Assign permissions to groups, not users |
-| Regular audits | Use Access Advisor to remove unused permissions |
-| No root | Use root only for initial setup |
-| SCPs | Apply at Organization level for guardrails |
+| Practice           | Description                                     |
+| ------------------ | ----------------------------------------------- |
+| Enable MFA         | On root account and all users                   |
+| Use roles          | Don't share access keys                         |
+| Least privilege    | Grant minimum permissions needed                |
+| Rotate credentials | Access keys every 90 days                       |
+| Use groups         | Assign permissions to groups, not users         |
+| Regular audits     | Use Access Advisor to remove unused permissions |
+| No root            | Use root only for initial setup                 |
+| SCPs               | Apply at Organization level for guardrails      |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Users per account | 5000 |
-| Groups per user | 10 |
-| Roles per account | 1000 |
-| Policies per role | 10 |
-| Policy size | 6,144 characters (IAM), 5,120 (service role) |
-| Attached policies per entity | 10 (managed) |
+| Resource                     | Limit                                        |
+| ---------------------------- | -------------------------------------------- |
+| Users per account            | 5000                                         |
+| Groups per user              | 10                                           |
+| Roles per account            | 1000                                         |
+| Policies per role            | 10                                           |
+| Policy size                  | 6,144 characters (IAM), 5,120 (service role) |
+| Attached policies per entity | 10 (managed)                                 |
 
 ## References
 

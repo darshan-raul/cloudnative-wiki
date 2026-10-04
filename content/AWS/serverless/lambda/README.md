@@ -14,15 +14,15 @@ Lambda is a serverless compute service. Upload your code (or bring a container) 
 
 ## Runtimes
 
-| Runtime | Version |
-|---------|---------|
-| Node.js | 18.x, 20.x, 22.x |
-| Python | 3.9, 3.10, 3.11, 3.12 |
-| Java | 11, 17, 21 |
-| .NET | 6, 8 |
-| Ruby | 3.2 |
-| Go | 1.x |
-| Custom Runtime | Bring your own |
+| Runtime        | Version               |
+| -------------- | --------------------- |
+| Node.js        | 18.x, 20.x, 22.x      |
+| Python         | 3.9, 3.10, 3.11, 3.12 |
+| Java           | 11, 17, 21            |
+| .NET           | 6, 8                  |
+| Ruby           | 3.2                   |
+| Go             | 1.x                   |
+| Custom Runtime | Bring your own        |
 
 ## Creating a Function
 
@@ -54,15 +54,15 @@ import boto3
 def handler(event, context):
     # event contains the trigger data
     print(f"Received event: {json.dumps(event)}")
-    
+
     # context has runtime info
     print(f"Function: {context.function_name}")
     print(f"Memory: {context.memory_limit_in_mb}")
     print(f"Request ID: {context.aws_request_id")
-    
+
     # Your logic here
     result = process(event)
-    
+
     return {
         'statusCode': 200,
         'body': json.dumps(result)
@@ -77,19 +77,19 @@ def process(event):
 
 ```javascript
 exports.handler = async (event, context) => {
-    console.log(`Received event: ${JSON.stringify(event)}`);
-    
-    const result = await processEvent(event);
-    
-    return {
-        statusCode: 200,
-        body: JSON.stringify(result)
-    };
+  console.log(`Received event: ${JSON.stringify(event)}`);
+
+  const result = await processEvent(event);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result),
+  };
 };
 
 async function processEvent(event) {
-    // Business logic
-    return { message: 'success', data: event.data };
+  // Business logic
+  return { message: "success", data: event.data };
 }
 ```
 
@@ -131,7 +131,7 @@ def handler(event, context):
         body = json.loads(record['body'])
         print(f"Processing: {body}")
         process_message(body)
-    
+
     return {'processed': len(event['Records'])}
 ```
 
@@ -226,12 +226,12 @@ aws lambda put-provisioned-concurrency-config \
 
 ## Cost
 
-| Component | Cost |
-|-----------|------|
-| Requests | $0.20/million |
-| Duration (GB-second) | $0.0000166667/GB-second |
-| Provisioned concurrency | $0.000015/GB-second |
-| Duration (ARM Graviton2) | 20% cheaper |
+| Component                | Cost                    |
+| ------------------------ | ----------------------- |
+| Requests                 | $0.20/million           |
+| Duration (GB-second)     | $0.0000166667/GB-second |
+| Provisioned concurrency  | $0.000015/GB-second     |
+| Duration (ARM Graviton2) | 20% cheaper             |
 
 **Free tier:** 400K GB-seconds and 1M requests/month.
 
@@ -250,13 +250,13 @@ Total: $8.53/month
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Memory | 128MB to 10GB |
-| Timeout | Up to 15 minutes |
-| Deployment package | 50MB (zipped), 250MB (uncompressed) |
-| Concurrent executions | 1000 (default, adjustable) |
-| Event size | 6MB (sync), 256KB (async) |
+| Resource              | Limit                               |
+| --------------------- | ----------------------------------- |
+| Memory                | 128MB to 10GB                       |
+| Timeout               | Up to 15 minutes                    |
+| Deployment package    | 50MB (zipped), 250MB (uncompressed) |
+| Concurrent executions | 1000 (default, adjustable)          |
+| Event size            | 6MB (sync), 256KB (async)           |
 
 ## References
 

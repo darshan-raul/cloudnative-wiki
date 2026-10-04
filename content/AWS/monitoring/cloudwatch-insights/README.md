@@ -40,10 +40,18 @@ fields        → Extract specific fields
 ### Log Format Example (JSON)
 
 ```json
-{"timestamp":"2024-01-15T10:30:00Z","level":"ERROR","service":"checkout","message":"Database connection failed","error":"Connection refused","duration_ms":5000}
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "level": "ERROR",
+  "service": "checkout",
+  "message": "Database connection failed",
+  "error": "Connection refused",
+  "duration_ms": 5000
+}
 ```
 
 Query:
+
 ```sql
 fields @timestamp, service, message, duration_ms
 | filter level = "ERROR"
@@ -53,13 +61,13 @@ fields @timestamp, service, message, duration_ms
 
 ## Field Reference
 
-| Field | Description |
-|-------|-------------|
-| `@timestamp` | When the log event was ingested |
+| Field            | Description                      |
+| ---------------- | -------------------------------- |
+| `@timestamp`     | When the log event was ingested  |
 | `@ingestionTime` | When CloudWatch received the log |
-| `@message` | The raw log message (string) |
-| `@log` | Full log group/stream path |
-| `@logStream` | The log stream name |
+| `@message`       | The raw log message (string)     |
+| `@log`           | Full log group/stream path       |
+| `@logStream`     | The log stream name              |
 
 ## Query Commands
 
@@ -78,6 +86,7 @@ fields @timestamp, @message
 ```
 
 Filter operators:
+
 - `=` `!=` `>=` `<=` `>` `<`
 - `like` `not like` (regex)
 - `contains` `not contains`
@@ -101,6 +110,7 @@ fields @timestamp, service, latency_ms
 ```
 
 Aggregation functions:
+
 - `count()` — number of log lines
 - `avg()` `min()` `max()` `sum()`
 - `percentile()` `distinct()`
@@ -231,7 +241,10 @@ Add Logs Insights queries to CloudWatch Dashboards:
 ```json
 {
   "type": "logInsights",
-  "x": 0, "y": 0, "width": 24, "height": 9,
+  "x": 0,
+  "y": 0,
+  "width": 24,
+  "height": 9,
   "properties": {
     "title": "Error Rate",
     "logGroupNames": ["/aws/lambda/checkout", "/aws/lambda/payment"],
@@ -249,6 +262,7 @@ Add Logs Insights queries to CloudWatch Dashboards:
 ## Visualization
 
 Insights results can be displayed as:
+
 - **Table** — Default, rows and columns
 - **Line chart** — Time series (when using `bin()`)
 - **Bar chart** — Aggregation by category
@@ -256,12 +270,12 @@ Insights results can be displayed as:
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Query runtime | 60 minutes (async) |
-| Results returned | 1,000 lines (sync), 10,000 (async) |
-| Queries per account (concurrent) | 10 |
-| Saved queries per account | 500 |
+| Resource                         | Limit                              |
+| -------------------------------- | ---------------------------------- |
+| Query runtime                    | 60 minutes (async)                 |
+| Results returned                 | 1,000 lines (sync), 10,000 (async) |
+| Queries per account (concurrent) | 10                                 |
+| Saved queries per account        | 500                                |
 
 ## References
 

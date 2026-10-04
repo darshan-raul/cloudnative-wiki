@@ -67,17 +67,17 @@ Clustered by customer_id within Partition: 15 GB scanned ($0.09 query)
 └────────────────────────────────────────────────────────┘
 ```
 
-* **Partitioning:** Segregates data into physical date, timestamp, or integer-range blocks (up to 4,000 partitions per table).
-* **Clustering:** Automatically sorts data based on the contents of up to four specified columns (e.g., `customer_id`, `country`). BigQuery skips unneeded blocks during query execution.
+- **Partitioning:** Segregates data into physical date, timestamp, or integer-range blocks (up to 4,000 partitions per table).
+- **Clustering:** Automatically sorts data based on the contents of up to four specified columns (e.g., `customer_id`, `country`). BigQuery skips unneeded blocks during query execution.
 
 ### 2. Pricing Models: On-Demand vs. Editions (Capacity)
 
-| Dimension | On-Demand (Per-Query) | BigQuery Editions (Slots) |
-| :--- | :--- | :--- |
-| **Billing Basis** | Billed on **bytes scanned** by queries ($6.25 per TB) | Billed per **Slot-Hour** (CPU/RAM compute workers) |
-| **Concurrency** | Shared pool of up to 2,000 burst slots | Dedicated or autoscaling slots allocated to reservations |
-| **Predictability** | High variability (one runaway query can scan 20 TB) | Predictable, capped monthly infrastructure spend |
-| **Best For** | Ad-hoc analytics, small datasets, variable dev teams | Enterprise ETL, continuous streaming ingestion, BI dashboards |
+| Dimension          | On-Demand (Per-Query)                                 | BigQuery Editions (Slots)                                     |
+| :----------------- | :---------------------------------------------------- | :------------------------------------------------------------ |
+| **Billing Basis**  | Billed on **bytes scanned** by queries ($6.25 per TB) | Billed per **Slot-Hour** (CPU/RAM compute workers)            |
+| **Concurrency**    | Shared pool of up to 2,000 burst slots                | Dedicated or autoscaling slots allocated to reservations      |
+| **Predictability** | High variability (one runaway query can scan 20 TB)   | Predictable, capped monthly infrastructure spend              |
+| **Best For**       | Ad-hoc analytics, small datasets, variable dev teams  | Enterprise ETL, continuous streaming ingestion, BI dashboards |
 
 ### 3. BigQuery ML (Machine Learning via SQL)
 
@@ -119,7 +119,7 @@ OPTIONS(
 );
 ```
 
-* `--require_partition_filter = TRUE`: **Critical guardrail** that prevents developers from accidentally running `SELECT *` without a `WHERE date >= ...` filter.
+- `--require_partition_filter = TRUE`: **Critical guardrail** that prevents developers from accidentally running `SELECT *` without a `WHERE date >= ...` filter.
 
 ### 2. Running a Dry-Run to Predict Query Cost Before Execution
 
@@ -135,45 +135,47 @@ bq query \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max partitions per table** | 4,000 partitions | E.g. ~10 years of daily partitions |
-| **Max columns per table** | 10,000 columns | Supports wide schema designs |
-| **Max query execution time** | 6 hours | Queries exceeding 6 hrs are aborted |
-| **Concurrent on-demand queries** | 300 concurrent queries | Queued automatically if limit exceeded |
-| **Free Tier Allowance** | 1 TB query scans + 10 GB storage | Free every month per billing account |
+| Parameter                        | Limit                            | Production Notes                       |
+| :------------------------------- | :------------------------------- | :------------------------------------- |
+| **Max partitions per table**     | 4,000 partitions                 | E.g. ~10 years of daily partitions     |
+| **Max columns per table**        | 10,000 columns                   | Supports wide schema designs           |
+| **Max query execution time**     | 6 hours                          | Queries exceeding 6 hrs are aborted    |
+| **Concurrent on-demand queries** | 300 concurrent queries           | Queued automatically if limit exceeded |
+| **Free Tier Allowance**          | 1 TB query scans + 10 GB storage | Free every month per billing account   |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/bigquery
-* **Documentation:** https://cloud.google.com/bigquery/docs
-* **Partitioning & Clustering Guide:** https://cloud.google.com/bigquery/docs/partitioned-tables
-* **BigQuery Editions (Slots):** https://cloud.google.com/bigquery/docs/editions-intro
-* **Pricing:** https://cloud.google.com/bigquery/pricing
+- **Homepage:** https://cloud.google.com/bigquery
+- **Documentation:** https://cloud.google.com/bigquery/docs
+- **Partitioning & Clustering Guide:** https://cloud.google.com/bigquery/docs/partitioned-tables
+- **BigQuery Editions (Slots):** https://cloud.google.com/bigquery/docs/editions-intro
+- **Pricing:** https://cloud.google.com/bigquery/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Optimized On-Demand Analytics Team
-* 20 Data Analysts executing ad-hoc reporting queries.
-* Total unoptimized potential scan: 250 TB / month.
-* With partition pruning and clustering, actual scanned bytes reduced by 90% to 25 TB.
-* Query Cost: 25 TB × $6.25 / TB = **$156.25 / month**.
-* Active Storage: 5 TB active × $0.02 / GB = $102.40 / month.
-* Long-Term Storage (untouched for 90 days): 15 TB × $0.01 / GB = $153.60 / month.
-* **Total Monthly Cost:** **~$412.25 / month**.
+
+- 20 Data Analysts executing ad-hoc reporting queries.
+- Total unoptimized potential scan: 250 TB / month.
+- With partition pruning and clustering, actual scanned bytes reduced by 90% to 25 TB.
+- Query Cost: 25 TB × $6.25 / TB = **$156.25 / month**.
+- Active Storage: 5 TB active × $0.02 / GB = $102.40 / month.
+- Long-Term Storage (untouched for 90 days): 15 TB × $0.01 / GB = $153.60 / month.
+- **Total Monthly Cost:** **~$412.25 / month**.
 
 ### Scenario 2: Enterprise BigQuery Edition (Autoscaling Slots)
-* Large enterprise running mission-critical real-time BI dashboards with continuous Looker queries.
-* **Enterprise Edition Reservation:** 100 baseline slots with autoscaling up to 300 slots during peak hours.
-* Average usage: 150 slot-hours continuously throughout the month (109,500 slot-hours).
-* Enterprise slot-hour rate: ~$0.06 / slot-hour.
-* Compute cost: 109,500 × $0.06 = **$6,570.00 / month**.
-* Storage (50 TB): ~$1,000.00.
-* **Total Monthly Bill:** **~$7,570.00 / month** (Eliminates all per-query byte charges; unlimited ad-hoc scans).
+
+- Large enterprise running mission-critical real-time BI dashboards with continuous Looker queries.
+- **Enterprise Edition Reservation:** 100 baseline slots with autoscaling up to 300 slots during peak hours.
+- Average usage: 150 slot-hours continuously throughout the month (109,500 slot-hours).
+- Enterprise slot-hour rate: ~$0.06 / slot-hour.
+- Compute cost: 109,500 × $0.06 = **$6,570.00 / month**.
+- Storage (50 TB): ~$1,000.00.
+- **Total Monthly Bill:** **~$7,570.00 / month** (Eliminates all per-query byte charges; unlimited ad-hoc scans).
 
 ---
 
@@ -183,4 +185,4 @@ bq query \
 2. **Long-Term Storage Automatic 50% Discount:** If a table or partition remains unmodified for **90 consecutive days**, BigQuery automatically drops its storage price by **50%** (from $0.020/GB to $0.010/GB) with zero degradation in read performance. However, performing an `UPDATE` or appending a row to a 3-year-old partition resets the 90-day timer back to day zero!
 3. **Partition Limits and Granularity:** BigQuery caps tables at 4,000 partitions. If you partition by hour instead of day, you will exhaust your partition ceiling in under 166 days (`4000 / 24`). Use hourly partitioning only for high-throughput, short-retention ingestion buffers.
 4. **Streaming Ingestion Buffer Latency:** Data inserted via the Storage Write API or legacy streaming buffer is immediately available for querying in real time. However, data in the streaming buffer is held in temporary memory before being compacted into Capacitor files on Colossus; during this 90-minute window, `UPDATE` and `DELETE` operations on those specific streaming rows will fail with `UPDATE or DELETE statement over table would affect rows in the streaming buffer`.
-5. **Clustering Column Order Matters:** When clustering by multiple columns (e.g. `CLUSTER BY department, employee_id`), column order determines filter efficiency. Queries filtering on `department` will efficiently prune blocks, but queries filtering *only* on `employee_id` without specifying `department` will see significantly less clustering optimization.
+5. **Clustering Column Order Matters:** When clustering by multiple columns (e.g. `CLUSTER BY department, employee_id`), column order determines filter efficiency. Queries filtering on `department` will efficiently prune blocks, but queries filtering _only_ on `employee_id` without specifying `department` will see significantly less clustering optimization.

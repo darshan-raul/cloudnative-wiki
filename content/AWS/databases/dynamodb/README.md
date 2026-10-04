@@ -27,26 +27,31 @@ Table
 ### Primary Key
 
 **Partition Key (PK) only:**
+
 ```
 UserID (PK) → Hash function → Partition
 ```
+
 All items with the same PK are stored together.
 
 **Partition Key + Sort Key (SK):**
+
 ```
 UserID (PK) + OrderID (SK) → Partition
 ```
+
 Items are sorted within a partition. Allows efficient range queries within a partition.
 
 ### Example Table: Orders
 
-| UserID (PK) | OrderID (SK) | Date | Total | Status |
-|-------------|--------------|------|-------|--------|
-| user123 | order-001 | 2024-01-15 | 99.99 | shipped |
-| user123 | order-002 | 2024-02-20 | 149.99 | pending |
-| user456 | order-001 | 2024-01-10 | 29.99 | delivered |
+| UserID (PK) | OrderID (SK) | Date       | Total  | Status    |
+| ----------- | ------------ | ---------- | ------ | --------- |
+| user123     | order-001    | 2024-01-15 | 99.99  | shipped   |
+| user123     | order-002    | 2024-02-20 | 149.99 | pending   |
+| user456     | order-001    | 2024-01-10 | 29.99  | delivered |
 
 Query: Get all orders for user123:
+
 ```bash
 aws dynamodb query \
   --table-name Orders \
@@ -176,6 +181,7 @@ aws dynamodb update-table \
 ```
 
 Query GSI:
+
 ```bash
 aws dynamodb query \
   --table-name Orders \
@@ -213,14 +219,14 @@ aws dynamodb create-table \
 
 ### GSI vs LSI
 
-| | GSI | LSI |
-|--|--|--|
-| PK | Different from base table | Same as base table |
-| SK | Different (optional) | Different |
-| Throughput | Own provisioned capacity | Shares base table capacity |
-| Size limit | 10GB per partition key value | No limit |
-| Projections | ALL, KEYS_ONLY, INCLUDE | ALL, KEYS_ONLY, INCLUDE |
-| Use when | Need different PK access patterns | Need different SK with same PK |
+|             | GSI                               | LSI                            |
+| ----------- | --------------------------------- | ------------------------------ |
+| PK          | Different from base table         | Same as base table             |
+| SK          | Different (optional)              | Different                      |
+| Throughput  | Own provisioned capacity          | Shares base table capacity     |
+| Size limit  | 10GB per partition key value      | No limit                       |
+| Projections | ALL, KEYS_ONLY, INCLUDE           | ALL, KEYS_ONLY, INCLUDE        |
+| Use when    | Need different PK access patterns | Need different SK with same PK |
 
 ## DynamoDB Streams
 
@@ -236,6 +242,7 @@ aws dynamodb update-table \
 ```
 
 `StreamViewType` options:
+
 - `KEYS_ONLY` — only PK/SK
 - `NEW_IMAGE` — entire new item
 - `OLD_IMAGE` — entire old item
@@ -283,6 +290,7 @@ PK Hash (MD5) → 0 to 2^128 → Partition
 ```
 
 Each partition supports:
+
 - Up to 1,000 WCUs
 - Up to 3,000 RCUs
 - 10GB of data
@@ -299,19 +307,19 @@ If one PK gets more traffic than others (celebrity problem):
 
 ### On-Demand Mode
 
-| | Cost |
-|--|--|
-| WCU (write) | $1.25 per million |
-| RCU (read) | $0.25 per million (strongly consistent), $0.125 (eventually consistent) |
-| Data storage | $0.25/GB/month |
+|              | Cost                                                                    |
+| ------------ | ----------------------------------------------------------------------- |
+| WCU (write)  | $1.25 per million                                                       |
+| RCU (read)   | $0.25 per million (strongly consistent), $0.125 (eventually consistent) |
+| Data storage | $0.25/GB/month                                                          |
 
 ### Provisioned Mode
 
-| | Cost |
-|--|--|
-| WCU | $0.00065 per hour |
-| RCU | $0.00013 per hour |
-| Data storage | $0.25/GB/month |
+|              | Cost              |
+| ------------ | ----------------- |
+| WCU          | $0.00065 per hour |
+| RCU          | $0.00013 per hour |
+| Data storage | $0.25/GB/month    |
 
 ### Reserved Capacity
 

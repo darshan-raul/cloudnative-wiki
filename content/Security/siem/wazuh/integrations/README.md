@@ -232,10 +232,13 @@ const alert = $nodeData;
 const srcip = alert.srcip;
 
 // Check AlienVault OTX for IP reputation
-const otxApiKey = '<your-otx-api-key>';
-const response = await fetch(`https://otx.alienvault.com/api/v1/indicators/IPv4/${srcip}/general`, {
-  headers: { 'X-OTX-API-KEY': otxApiKey }
-});
+const otxApiKey = "<your-otx-api-key>";
+const response = await fetch(
+  `https://otx.alienvault.com/api/v1/indicators/IPv4/${srcip}/general`,
+  {
+    headers: { "X-OTX-API-KEY": otxApiKey },
+  },
+);
 const data = await response.json();
 
 return {
@@ -244,7 +247,7 @@ return {
   pulse_count: data.pulse_count || 0,
   is_malicious: data.pulse_count > 0,
   tags: data.tags || [],
-  geo: data.geo || null
+  geo: data.geo || null,
 };
 ```
 
@@ -255,23 +258,25 @@ return {
 const srcip = $json.srcip;
 
 // AWS: Block via Security Group (for Wazuh running on AWS)
-const awsRegion = 'us-east-1';
-const securityGroupId = 'sg-xxxxxxxx';
+const awsRegion = "us-east-1";
+const securityGroupId = "sg-xxxxxxxx";
 
 const params = {
   GroupId: securityGroupId,
-  IpPermissions: [{
-    IpProtocol: '-1',
-    IpRanges: [{ CidrIp: `${srcip}/32` }]
-  }]
+  IpPermissions: [
+    {
+      IpProtocol: "-1",
+      IpRanges: [{ CidrIp: `${srcip}/32` }],
+    },
+  ],
 };
 
 // Note: In production, use IAM role with describe/authorize-sg permissions
 return {
-  action: 'block_ip',
+  action: "block_ip",
   ip: srcip,
-  reason: 'Wazuh brute force alert',
-  timestamp: new Date().toISOString()
+  reason: "Wazuh brute force alert",
+  timestamp: new Date().toISOString(),
 };
 ```
 
@@ -297,6 +302,7 @@ Wazuh → n8n webhook → n8n PagerDuty node (with incident routing based on sev
 ```
 
 Benefits:
+
 - One webhook from Wazuh
 - n8n handles routing logic (severity → different PD services/teams)
 - Enrich alert data before creating PD incident
@@ -317,6 +323,7 @@ Benefits:
 ### n8n → Slack (Recommended for you)
 
 Benefits over native:
+
 - Rich formatting with blocks
 - Thread management (group related alerts)
 - Channel routing based on alert type
@@ -346,9 +353,7 @@ Benefits over native:
     "level": 8,
     "description": "AWS Console login from external IP",
     "groups": ["aws", "cloudtrail", "authentication"],
-    "mitre": [
-      { "id": "T1078.004", "tactic": "Defense Evasion" }
-    ]
+    "mitre": [{ "id": "T1078.004", "tactic": "Defense Evasion" }]
   },
   "agent": {
     "id": "002",
@@ -386,6 +391,7 @@ Benefits over native:
 ```
 
 Or use n8n enrichment node to:
+
 1. Query OTX for indicator (IP, domain, hash)
 2. Add pulse/reputation data to alert
 3. Route accordingly
@@ -396,20 +402,20 @@ Or use n8n enrichment node to:
 // n8n MISP enrichment node
 const indicator = $json.srcip || $json.file_hash;
 
-const mispUrl = 'https://misp.example.com';
-const mispKey = '<your-misp-api-key>';
+const mispUrl = "https://misp.example.com";
+const mispKey = "<your-misp-api-key>";
 
 const response = await fetch(`${mispUrl}/events/restSearch`, {
-  method: 'POST',
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': mispKey
+    "Content-Type": "application/json",
+    Authorization: mispKey,
   },
   body: JSON.stringify({
-    "returnFormat": "json",
-    "value": indicator,
-    "typeAttribute": ["ip-src", "md5", "domain"]
-  })
+    returnFormat: "json",
+    value: indicator,
+    typeAttribute: ["ip-src", "md5", "domain"],
+  }),
 });
 
 const data = await response.json();
@@ -419,7 +425,7 @@ return {
   indicator,
   misp_events: events.length,
   threat_level: events[0]?.threat_level_id || 0,
-  tags: events[0]?.Event?.Tag || []
+  tags: events[0]?.Event?.Tag || [],
 };
 ```
 
@@ -436,22 +442,27 @@ const alertAccountId = alert.data?.aws_account_id;
 const srcip = alert.src_ip;
 
 // Get all alerts from same IP in last 24h (Wazuh query via API)
-const wazuhApiUrl = 'https://wazuh-server:55000';
-const credentials = { username: 'wazuh-api-user', password: 'xxx' };
+const wazuhApiUrl = "https://wazuh-server:55000";
+const credentials = { username: "wazuh-api-user", password: "xxx" };
 
 // Query Wazuh for same source IP across all accounts
-const queryResponse = await fetch(`${wazuhApiUrl}/alerts?q=srcip:${srcip}&from=now-24h`, {
-  headers: { 'Authorization': `Basic ${Buffer.from(credentials).toString('base64')}` }
-});
+const queryResponse = await fetch(
+  `${wazuhApiUrl}/alerts?q=srcip:${srcip}&from=now-24h`,
+  {
+    headers: {
+      Authorization: `Basic ${Buffer.from(credentials).toString("base64")}`,
+    },
+  },
+);
 const crossAccountAlerts = await queryResponse.json();
 
 // If IP seen across 3+ accounts, it's likely a compromised credential
 if (crossAccountAlerts.total > 3) {
   return {
-    severity: 'critical',
+    severity: "critical",
     cross_account: true,
     account_count: crossAccountAlerts.total,
-    action: 'block_ip_create_ticket'
+    action: "block_ip_create_ticket",
   };
 }
 ```

@@ -174,16 +174,16 @@ find / -name nginx.conf  # find a file anywhere on the system
 
 ## The TL;DR
 
-| Path | What it's for |
-|------|--------------|
-| `/etc` | Configuration — static system and app settings |
-| `/var` | Variable data — logs, caches, databases, queues |
-| `/home` | Regular users' files |
-| `/root` | Root's home directory |
-| `/usr` | Installed software (from packages) |
-| `/opt` | Optional/third-party software (manual installs) |
-| `/tmp` | Temporary files (cleared on reboot) |
-| `/var/tmp` | Temporary files (preserved across reboots) |
-| `/dev` | Device files — hardware as files |
-| `/proc` | Kernel's view of processes and state |
-| `/sys` | Kernel's view of hardware and parameters |
+| Path       | What it's for                                   |
+| ---------- | ----------------------------------------------- |
+| `/etc`     | Configuration — static system and app settings  |
+| `/var`     | Variable data — logs, caches, databases, queues |
+| `/home`    | Regular users' files                            |
+| `/root`    | Root's home directory                           |
+| `/usr`     | Installed software (from packages)              |
+| `/opt`     | Optional/third-party software (manual installs) |
+| `/tmp`     | Temporary files (cleared on reboot)             |
+| `/var/tmp` | Temporary files (preserved across reboots)      |
+| `/dev`     | Device files — hardware as files                |
+| `/proc`    | Kernel's view of processes and state            |
+| `/sys`     | Kernel's view of hardware and parameters        |

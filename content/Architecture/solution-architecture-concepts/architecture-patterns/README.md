@@ -19,17 +19,17 @@ Proven structural solutions to recurring architectural problems. Patterns are no
 
 ## Common Patterns Quick Reference
 
-| Pattern | What It Solves | Example |
-|---------|---------------|---------|
-| **Strangler Fig** | Incremental migration from legacy | Route traffic to new system piece by piece |
-| **Sidecar** | Attach utilities to services without modifying them | Logging sidecar, metrics exporter |
-| **Circuit Breaker** | Prevent cascading failures | Hystrix, Envoy circuit breaker |
-| **CQRS** | Separate read and write models | Event-sourced systems |
-| **Event Sourcing** | Store state changes as events | Audit trails, temporal queries |
-| **Saga** | Distributed transactions without2PC | Choreography vs orchestration |
-| **Bulkhead** | Isolate failures | Separate thread pools per dependency |
-| **Leader Election** | Single-writer coordination | etcd, Zookeeper |
-| **Write-Ahead Log** | Durability before acknowledgment | Kafka, PostgreSQL WAL |
+| Pattern             | What It Solves                                      | Example                                    |
+| ------------------- | --------------------------------------------------- | ------------------------------------------ |
+| **Strangler Fig**   | Incremental migration from legacy                   | Route traffic to new system piece by piece |
+| **Sidecar**         | Attach utilities to services without modifying them | Logging sidecar, metrics exporter          |
+| **Circuit Breaker** | Prevent cascading failures                          | Hystrix, Envoy circuit breaker             |
+| **CQRS**            | Separate read and write models                      | Event-sourced systems                      |
+| **Event Sourcing**  | Store state changes as events                       | Audit trails, temporal queries             |
+| **Saga**            | Distributed transactions without2PC                 | Choreography vs orchestration              |
+| **Bulkhead**        | Isolate failures                                    | Separate thread pools per dependency       |
+| **Leader Election** | Single-writer coordination                          | etcd, Zookeeper                            |
+| **Write-Ahead Log** | Durability before acknowledgment                    | Kafka, PostgreSQL WAL                      |
 
 ---
 

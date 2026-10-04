@@ -9,11 +9,12 @@ description: Architecture, performance, and configuration of kube-proxy IPVS mod
 
 > [!WARNING] Deprecation Notice (Kubernetes v1.35+)
 > The **IPVS mode for `kube-proxy` is formally deprecated** as of Kubernetes v1.35 and is subject to removal in a future release.
+>
 > - `kube-proxy` emits a warning when `mode: "ipvs"` is configured.
 > - Upstream Kubernetes has adopted **`nftables`** as the modern, high-performance successor to both `iptables` and `ipvs` on Linux nodes.
 > - For new high-scale clusters, use the `nftables` proxy mode or an eBPF-based data plane (such as Cilium).
 
->*"https://kubernetes.io/docs/reference/networking/virtual-ips/"*
+> _"https://kubernetes.io/docs/reference/networking/virtual-ips/"_
 
 IPVS (IP Virtual Server) is one of the modes **kube-proxy can use to implement Service virtual IPs**. It's a Linux kernel feature that does L4 load balancing more efficiently than iptables for large clusters.
 
@@ -53,13 +54,13 @@ The default kube-proxy mode is **iptables**. For each Service, kube-proxy instal
 
 Problems at scale:
 
-| Problem | Symptom |
-|---------|---------|
+| Problem                    | Symptom                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------- |
 | **Linear chain traversal** | Each packet for Service X walks the full KUBE-SVC chain, then KUBE-SEP chain |
-| **O(n) updates** | Adding/removing an endpoint rewrites the chain — on the hot path |
-| **CPU overhead** | At 10,000+ Services, CPU spent in netfilter/iptables is measurable |
-| **No consistent hashing** | `random --probability` is statistical, not deterministic |
-| **Memory pressure** | Large iptables rulesets use significant kernel memory |
+| **O(n) updates**           | Adding/removing an endpoint rewrites the chain — on the hot path             |
+| **CPU overhead**           | At 10,000+ Services, CPU spent in netfilter/iptables is measurable           |
+| **No consistent hashing**  | `random --probability` is statistical, not deterministic                     |
+| **Memory pressure**        | Large iptables rulesets use significant kernel memory                        |
 
 The breaking point is roughly **1,000–5,000 Services**. Below that, iptables is fine.
 
@@ -194,21 +195,21 @@ ipvsadm -L -n
 
 ### 6. IPVS schedulers
 
-| Scheduler | Name | Description | Best for |
-|-----------|------|-------------|----------|
-| Round-robin | `rr` | Distributes evenly in turn | Default, most cases |
-| Weighted round-robin | `wrr` | Distributes by weight | Heterogeneous backends |
-| Least connection | `lc` | Picks least busy backend | Long-lived connections (HTTP keepalive) |
-| Weighted least connection | `lblc` | LC + virtual server weight | |
-| Destination hashing | `dh` | Hashes destination IP | Sticky to a specific backend |
-| Source hashing | `sh` | Hashes source IP | Client stickiness |
-| Shortest expected delay | `sed` | Minimizes (active_conns+1)/weight | |
-| Never queue | `nq` | Never queue — assign idle backend first | Latency-sensitive |
+| Scheduler                 | Name   | Description                             | Best for                                |
+| ------------------------- | ------ | --------------------------------------- | --------------------------------------- |
+| Round-robin               | `rr`   | Distributes evenly in turn              | Default, most cases                     |
+| Weighted round-robin      | `wrr`  | Distributes by weight                   | Heterogeneous backends                  |
+| Least connection          | `lc`   | Picks least busy backend                | Long-lived connections (HTTP keepalive) |
+| Weighted least connection | `lblc` | LC + virtual server weight              |                                         |
+| Destination hashing       | `dh`   | Hashes destination IP                   | Sticky to a specific backend            |
+| Source hashing            | `sh`   | Hashes source IP                        | Client stickiness                       |
+| Shortest expected delay   | `sed`  | Minimizes (active_conns+1)/weight       |                                         |
+| Never queue               | `nq`   | Never queue — assign idle backend first | Latency-sensitive                       |
 
 ```yaml
 # Set scheduler in kube-proxy ConfigMap
 ipvs:
-  scheduler: sh      # source-hashing for client stickiness
+  scheduler: sh # source-hashing for client stickiness
 ```
 
 For session affinity (`sh` or `dh`), the same client always hits the same backend — useful when the backend maintains local state.
@@ -286,17 +287,17 @@ For most clusters (not using BGP Pod routing), `strictARP: false` is fine.
 
 ### 9. Comparison: iptables vs IPVS vs IPVS+Firecracker
 
-| | iptables | IPVS | Notes |
-|---|---|---|---|
-| **Lookup** | O(n) chain | O(1) hash | |
-| **Setup** | Always works | Needs kernel modules | |
-| **Algorithms** | Random/probability | rr, wrr, lc, dh, sh, sed, nq | |
-| **Update cost** | High (rewrite chains) | Low (hash update) | |
-| **CPU at scale** | High | Low | |
-| **Conntrack** | Required | Required | Both use it |
-| **Session affinity** | Limited (probability) | Deterministic (sh/dh) | |
-| **L7 proxy** | No | No | For L7, use a service mesh |
-| **Debugging** | `iptables -L -n -v` | `ipvsadm -L -n` | |
+|                      | iptables              | IPVS                         | Notes                      |
+| -------------------- | --------------------- | ---------------------------- | -------------------------- |
+| **Lookup**           | O(n) chain            | O(1) hash                    |                            |
+| **Setup**            | Always works          | Needs kernel modules         |                            |
+| **Algorithms**       | Random/probability    | rr, wrr, lc, dh, sh, sed, nq |                            |
+| **Update cost**      | High (rewrite chains) | Low (hash update)            |                            |
+| **CPU at scale**     | High                  | Low                          |                            |
+| **Conntrack**        | Required              | Required                     | Both use it                |
+| **Session affinity** | Limited (probability) | Deterministic (sh/dh)        |                            |
+| **L7 proxy**         | No                    | No                           | For L7, use a service mesh |
+| **Debugging**        | `iptables -L -n -v`   | `ipvsadm -L -n`              |                            |
 
 IPVS is the right choice for large clusters (1000+ Services) or when you need deterministic session affinity.
 
@@ -307,12 +308,12 @@ IPVS is the right choice for large clusters (1000+ Services) or when you need de
 Rough CPU impact of kube-proxy at scale (measured on a 3-node cluster with 50/50 split between data and control plane):
 
 | Services | Endpoints | iptables CPU (extra) | IPVS CPU (extra) |
-|----------|-----------|---------------------|-----------------|
-| 100 | 1,000 | ~0.5% per node | ~0.5% |
-| 1,000 | 10,000 | ~3-5% per node | ~0.5% |
-| 5,000 | 50,000 | ~15-20% per node | ~1% |
-| 10,000 | 100,000 | ~30%+ per node | ~2% |
-| 50,000 | 500,000 | Kernel OOM possible | ~5-10% |
+| -------- | --------- | -------------------- | ---------------- |
+| 100      | 1,000     | ~0.5% per node       | ~0.5%            |
+| 1,000    | 10,000    | ~3-5% per node       | ~0.5%            |
+| 5,000    | 50,000    | ~15-20% per node     | ~1%              |
+| 10,000   | 100,000   | ~30%+ per node       | ~2%              |
+| 50,000   | 500,000   | Kernel OOM possible  | ~5-10%           |
 
 The crossover point where IPVS clearly wins is **1,000–5,000 Services**.
 
@@ -439,17 +440,18 @@ modinfo ip_vs
 
 ### 14. CNI compatibility
 
-| CNI | Works with IPVS? | Notes |
-|-----|-----------------|-------|
-| Calico (BGP) | ✅ Yes | Set `strictARP: true` on nodes |
-| Calico (eBPF) | ✅ Yes | Calico's eBPF dataplane replaces kube-proxy entirely |
-| Cilium | ✅ Yes | Cilium replaces kube-proxy in IPVS mode |
-| Flannel | ✅ Yes | |
-| Weave | ✅ Yes | |
-| AWS VPC CNI | ✅ Yes | EKS uses this by default |
-| GKE VPC CNI | ✅ Yes | |
+| CNI           | Works with IPVS? | Notes                                                |
+| ------------- | ---------------- | ---------------------------------------------------- |
+| Calico (BGP)  | ✅ Yes           | Set `strictARP: true` on nodes                       |
+| Calico (eBPF) | ✅ Yes           | Calico's eBPF dataplane replaces kube-proxy entirely |
+| Cilium        | ✅ Yes           | Cilium replaces kube-proxy in IPVS mode              |
+| Flannel       | ✅ Yes           |                                                      |
+| Weave         | ✅ Yes           |                                                      |
+| AWS VPC CNI   | ✅ Yes           | EKS uses this by default                             |
+| GKE VPC CNI   | ✅ Yes           |                                                      |
 
 CNIs that **don't need kube-proxy at all**:
+
 - Cilium (replaces kube-proxy entirely with eBPF)
 - Calico with eBPF mode
 
@@ -487,35 +489,35 @@ IPVS rules persist until the next kube-proxy sync or node reboot. The rollback i
 
 ### 16. When to use each mode
 
-| Use case | Mode |
-|----------|------|
-| < 1,000 Services, simple cluster | iptables (default) |
-| > 1,000 Services | IPVS |
-| Need deterministic session affinity | IPVS (`sh` or `dh` scheduler) |
-| Long-lived connections (gRPC, websockets) | IPVS (`lc` scheduler) |
-| Using Cilium or Calico eBPF | eBPF replaces kube-proxy entirely |
-| Embedded/home-lab cluster | iptables |
-| Multi-tenant with many NodePort services | IPVS |
+| Use case                                  | Mode                              |
+| ----------------------------------------- | --------------------------------- |
+| < 1,000 Services, simple cluster          | iptables (default)                |
+| > 1,000 Services                          | IPVS                              |
+| Need deterministic session affinity       | IPVS (`sh` or `dh` scheduler)     |
+| Long-lived connections (gRPC, websockets) | IPVS (`lc` scheduler)             |
+| Using Cilium or Calico eBPF               | eBPF replaces kube-proxy entirely |
+| Embedded/home-lab cluster                 | iptables                          |
+| Multi-tenant with many NodePort services  | IPVS                              |
 
 ---
 
 ### 17. Gotchas
 
-* **`kube-ipvs0` dummy interface is the key.** If it's missing, ClusterIPs aren't routable. Check with `ip addr show kube-ipvs0`.
-* **The iptables rules are mostly empty in IPVS mode.** kube-proxy doesn't install Service rules in iptables — they're in IPVS. `iptables -L KUBE-SERVICES` will be sparse.
-* **IPVS uses conntrack.** Don't disable conntrack — it's required for hairpin mode and return traffic handling.
-* **The kernel modules must be loaded.** Some container-optimized OS images don't load them by default. Add to `/etc/modules-load.d/` to persist.
-* **`strictARP: true` is needed for BGP-mode CNIs.** Without it, nodes may answer ARP for Pod IPs that belong to other nodes.
-* **Rolling back to iptables is safe** — but old IPVS rules linger until kube-proxy restarts or syncs. They won't cause conflicts.
-* **IPVS doesn't do health checking of backends** — that's still kube-proxy's job. If a Pod becomes unready, kube-proxy removes it from the IPVS real server list.
-* **`ipvsadm -C` clears all rules** and will break cluster networking. Never run it in production without a rollback plan.
-* **IPVS and IPv6 dual-stack** works, but ensure `nf_conntrack_ipv6` is loaded alongside the IPv4 modules.
-* **`scheduler: rr` is the default and rarely wrong.** Changing schedulers is an optimization — measure before changing.
+- **`kube-ipvs0` dummy interface is the key.** If it's missing, ClusterIPs aren't routable. Check with `ip addr show kube-ipvs0`.
+- **The iptables rules are mostly empty in IPVS mode.** kube-proxy doesn't install Service rules in iptables — they're in IPVS. `iptables -L KUBE-SERVICES` will be sparse.
+- **IPVS uses conntrack.** Don't disable conntrack — it's required for hairpin mode and return traffic handling.
+- **The kernel modules must be loaded.** Some container-optimized OS images don't load them by default. Add to `/etc/modules-load.d/` to persist.
+- **`strictARP: true` is needed for BGP-mode CNIs.** Without it, nodes may answer ARP for Pod IPs that belong to other nodes.
+- **Rolling back to iptables is safe** — but old IPVS rules linger until kube-proxy restarts or syncs. They won't cause conflicts.
+- **IPVS doesn't do health checking of backends** — that's still kube-proxy's job. If a Pod becomes unready, kube-proxy removes it from the IPVS real server list.
+- **`ipvsadm -C` clears all rules** and will break cluster networking. Never run it in production without a rollback plan.
+- **IPVS and IPv6 dual-stack** works, but ensure `nf_conntrack_ipv6` is loaded alongside the IPv4 modules.
+- **`scheduler: rr` is the default and rarely wrong.** Changing schedulers is an optimization — measure before changing.
 
 ---
 
 ## See also
 
-* [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — what IPVS implements
-* [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the network layer below
-* [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — how Pods land on nodes
+- [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — what IPVS implements
+- [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the network layer below
+- [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — how Pods land on nodes

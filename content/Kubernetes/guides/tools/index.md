@@ -11,10 +11,10 @@ Day-to-day command-line tools, terminal user interfaces, and context managers fo
 
 ## Tool Guides
 
-| Tool / Workflow | Focus | Type |
-| :--- | :--- | :--- |
-| [[Kubernetes/guides/tools/kubectl\|kubectl]] | Essential command workflows, JSONPath queries, server-side apply, and debugging | CLI |
-| [[Kubernetes/guides/tools/k9s\|k9s]] | Terminal UI navigation, hotkeys, log streaming, and resource inspection | TUI |
-| [[Kubernetes/guides/tools/context-switching\|Context Switching]] | Fast kubeconfig switching with `kubectx`, `kubens`, and shell integrations | Workflow |
-| [[Kubernetes/guides/tools/multi-cluster\|Multi-Cluster Management]] | Operating clusters across environments, regions, and cloud providers | Architecture |
-| [[Kubernetes/guides/tools/lens\|Lens]] | Desktop IDE inspection, metrics monitoring, and cluster overview | GUI |
+| Tool / Workflow                                                     | Focus                                                                           | Type         |
+| :------------------------------------------------------------------ | :------------------------------------------------------------------------------ | :----------- |
+| [[Kubernetes/guides/tools/kubectl\|kubectl]]                        | Essential command workflows, JSONPath queries, server-side apply, and debugging | CLI          |
+| [[Kubernetes/guides/tools/k9s\|k9s]]                                | Terminal UI navigation, hotkeys, log streaming, and resource inspection         | TUI          |
+| [[Kubernetes/guides/tools/context-switching\|Context Switching]]    | Fast kubeconfig switching with `kubectx`, `kubens`, and shell integrations      | Workflow     |
+| [[Kubernetes/guides/tools/multi-cluster\|Multi-Cluster Management]] | Operating clusters across environments, regions, and cloud providers            | Architecture |
+| [[Kubernetes/guides/tools/lens\|Lens]]                              | Desktop IDE inspection, metrics monitoring, and cluster overview                | GUI          |

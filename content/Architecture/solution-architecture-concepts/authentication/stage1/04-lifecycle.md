@@ -1,7 +1,18 @@
 ---
 title: "1.4 — JWT Lifecycle: Issuance, Rotation, Revocation, Replay Protection"
 author: darshan
-tags: [authentication, stage-1, jwt, lifecycle, rotation, revocation, refresh-tokens, replay-protection, denylist]
+tags:
+  [
+    authentication,
+    stage-1,
+    jwt,
+    lifecycle,
+    rotation,
+    revocation,
+    refresh-tokens,
+    replay-protection,
+    denylist,
+  ]
 date: 2026-06-13
 description: How JWTs are issued, how long they live, how they're refreshed, rotated, revoked, and protected against replay
 ---
@@ -39,6 +50,7 @@ description: How JWTs are issued, how long they live, how they're refreshed, rot
 A JWT, once issued, is **valid until it expires**. The signature is fine. The claims are correct. The verifier has no reason to reject it.
 
 **The problem:** the user might:
+
 - Log out (and we want the token dead immediately)
 - Be fired (and we want all their tokens dead immediately)
 - Have their token stolen (and we want that one token dead immediately)
@@ -104,14 +116,14 @@ import jwt
 import time
 import uuid
 
-def issue_access_token(*, sub: str, scopes: list[str], 
+def issue_access_token(*, sub: str, scopes: list[str],
                        issuer: str, audience: str,
                        signing_key: bytes | str, algorithm: str,
                        ttl_seconds: int = 900,  # 15 min default
                        extra_claims: dict = None) -> str:
     """
     Issue a short-lived access token.
-    
+
     Returns: signed JWT string
     """
     now = int(time.time())
@@ -127,7 +139,7 @@ def issue_access_token(*, sub: str, scopes: list[str],
     }
     if extra_claims:
         payload.update(extra_claims)
-    
+
     return jwt.encode(payload, signing_key, algorithm=algorithm,
                       headers={"kid": get_current_kid()})
 ```
@@ -289,7 +301,7 @@ If an attacker steals A and uses it first:
   Attacker uses A, gets B
   Legitimate user tries A, gets rejection
   If system revokes the family on A reuse, attacker is locked out too
-  
+
 If the legitimate user uses A first and then attacker uses A:
   Attacker tries A, gets rejection (already used)
   If system revokes the family on A reuse, legitimate user is also locked out
@@ -330,14 +342,14 @@ def rotate_refresh_token(old_jti: str, sub: str) -> dict:
         # CRITICAL: check the family for reuse detection
         check_reuse_violation(old_jti)
         raise TokenReuseError("token invalid")
-    
+
     if record.get("revoked") == "1":
         raise TokenRevokedError("token revoked")
-    
+
     # 2. Mark the old token as used (set rotated_at)
     r.hset(key, "rotated_at", int(time.time()))
     r.expire(key, 30 * 24 * 3600)  # keep for audit
-    
+
     # 3. Issue a new refresh token
     new_jti = f"rt-{secrets.token_urlsafe(32)}"
     new_record = {
@@ -352,7 +364,7 @@ def rotate_refresh_token(old_jti: str, sub: str) -> dict:
     }
     r.hset(f"rt:{new_jti}", mapping=new_record)
     r.expire(f"rt:{new_jti}", 30 * 24 * 3600)
-    
+
     return new_record
 
 
@@ -379,7 +391,7 @@ def revoke_token_family(family_id: str, reason: str = "user_logout"):
     for jti in get_family_tokens(family_id):
         r.hset(f"rt:{jti}", "revoked", "1")
         r.hset(f"rt:{jti}", "revoked_reason", reason)
-    
+
     # Audit log
     log_security_event("refresh_token_family_revoked", {
         "family_id": family_id,
@@ -502,16 +514,16 @@ class JTIDenylist:
     def __init__(self, redis_client, namespace: str = "jwt:revoked"):
         self.r = redis_client
         self.ns = namespace
-    
+
     def revoke(self, jti: str, ttl_seconds: int):
         """Add a JTI to the denylist. Auto-expires when token would have died."""
         key = f"{self.ns}:{jti}"
         self.r.set(key, "1", ex=max(ttl_seconds, 1))
-    
+
     def is_revoked(self, jti: str) -> bool:
         """Check if a JTI is in the denylist. O(1)."""
         return self.r.exists(f"{self.ns}:{jti}") > 0
-    
+
     def revoke_all_for_user(self, sub: str, all_jtis: list[str]):
         """Revoke a batch of JTIs at once."""
         pipe = self.r.pipeline()
@@ -558,7 +570,7 @@ The right answer depends on your threat model:
   - Banking: fail closed (security > availability)
   - Internal tool: fail open (availability > security)
   - Public SaaS: fail open with alerting (use short token TTL to limit exposure)
-  
+
 If your access tokens are 5 min and Redis is down for 5 min:
   - Worst case: an attacker has 5 min of extra access
   - Probably acceptable
@@ -590,7 +602,7 @@ Some operations use a "single-use" token:
   - Email verification: "click this link to verify"
   - Password reset: "click this link to reset"
   - High-value action: "confirm this transfer"
-  
+
 The token is presented once, the action is performed, the token is consumed.
 If presented again, it's rejected.
 ```
@@ -639,7 +651,7 @@ def consume_one_time_token(jti: str, action: str, ttl_seconds: int = 3600):
 ```
 Scenario: an attacker captures a valid access token (e.g., from a
 referer header leak), waits 1 hour, then uses it.
-  
+
   The token is still valid (1 hour access token, 1 hour replay delay).
   Replay succeeds. Bad.
 
@@ -668,14 +680,14 @@ A **sender-constrained token** is one that can only be used by the client it was
 Standard Bearer access token:
   Token: eyJ...
   Request: Authorization: Bearer eyJ...
-  
+
   Anyone with the token can use it.
-  
+
 DPoP:
   Token: eyJ... + jkt claim (JWK thumbprint of the client's key)
   Request: Authorization: DPoP eyJ...
            DPoP: <signed JWT over (method + URL + timestamp + nonce)>
-  
+
   The client signs a DPoP proof with their private key.
   The server verifies the proof matches the jkt in the token.
   Attacker with the token but not the key: rejected.
@@ -707,6 +719,7 @@ DPoP:
 ```
 
 The server verifies:
+
 1. The token's `jkt` matches the DPoP proof's `jwk` thumbprint
 2. The DPoP proof signature is valid (with the public key from `jwk`)
 3. The `htm` (HTTP method) and `htu` (HTTP URI) match the actual request
@@ -722,10 +735,10 @@ At the TLS handshake:
   - Server presents cert (proves server identity)
   - Client presents cert (proves client identity)
   - TLS session is bound to both certs
-  
+
 Access token:
   - Issued with cnf claim: {"cnf": {"x5t#S256": "<cert thumbprint>"}}
-  
+
 Request:
   - Client makes request over the mTLS connection
   - Server checks: the client cert on this connection matches the
@@ -743,7 +756,7 @@ DPoP:
   ✓ High-value APIs where replay is a real risk
   ✓ OAuth 2.1+ compliant systems
   ✗ Legacy systems that don't support it
-  
+
 mTLS:
   ✓ Service-to-service in a zero-trust network
   ✓ Internal workloads (k8s, service mesh)
@@ -760,7 +773,7 @@ Both DPoP and mTLS use the `cnf` (confirmation) claim to bind a token to a key:
 {
   "sub": "user-123",
   "cnf": {
-    "jkt": "<jwk-thumbprint>"           // for DPoP
+    "jkt": "<jwk-thumbprint>" // for DPoP
   }
 }
 ```
@@ -769,7 +782,7 @@ Both DPoP and mTLS use the `cnf` (confirmation) claim to bind a token to a key:
 {
   "sub": "service-a",
   "cnf": {
-    "x5t#S256": "<cert-sha256-thumbprint>"   // for mTLS
+    "x5t#S256": "<cert-sha256-thumbprint>" // for mTLS
   }
 }
 ```
@@ -786,7 +799,7 @@ Two strategies for "when does the user have to log in again?"
 
 ```
 Each request with a valid refresh token extends the session.
-  
+
   Day 0: log in, refresh expires Day 30
   Day 5: make a request, refresh extended to Day 35
   Day 10: request, refresh extended to Day 40
@@ -802,7 +815,7 @@ Compliance: bad for "max session length" requirements
 
 ```
 User MUST re-authenticate at a fixed deadline, no matter what.
-  
+
   Day 0: log in, must re-authenticate by Day 30
   Day 5: make a request, deadline still Day 30
   Day 25: make a request, deadline still Day 30
@@ -817,7 +830,7 @@ Cons: user gets logged out even if they're actively using the system
 
 ```
 Sliding with absolute maximum:
-  
+
   - Sliding: as long as you use it within 7 days, you stay logged in
   - Absolute: must re-authenticate every 30 days no matter what
   - Re-auth: password + MFA, or biometric, or "trusted device" check
@@ -923,21 +936,21 @@ def issue_tokens(sub: str, scopes: list[str]) -> dict:
     family_id = f"fam-{secrets.token_urlsafe(16)}"
     access_jti = f"at-{secrets.token_urlsafe(16)}"
     refresh_jti = f"rt-{secrets.token_urlsafe(16)}"
-    
+
     access = jwt.encode({
         "iss": ISSUER, "sub": sub, "aud": AUDIENCE,
         "exp": now + ACCESS_TTL, "iat": now, "nbf": now,
         "jti": access_jti, "scope": " ".join(scopes),
         "token_type": "access",
     }, SIGNING_KEY, algorithm=ALGORITHM, headers={"kid": "key-2024-01"})
-    
+
     refresh = jwt.encode({
         "iss": ISSUER, "sub": sub, "aud": AUDIENCE,
         "exp": now + REFRESH_TTL, "iat": now, "nbf": now,
         "jti": refresh_jti, "family_id": family_id,
         "token_type": "refresh",
     }, SIGNING_KEY, algorithm=ALGORITHM, headers={"kid": "key-2024-01"})
-    
+
     # Store refresh token metadata
     r.hset(f"rt:{refresh_jti}", mapping={
         "jti": refresh_jti, "sub": sub, "family_id": family_id,
@@ -945,10 +958,10 @@ def issue_tokens(sub: str, scopes: list[str]) -> dict:
         "rotated_at": "", "revoked": "0",
     })
     r.expire(f"rt:{refresh_jti}", REFRESH_TTL)
-    
+
     # Track family for bulk revoke
     r.sadd(f"family:{family_id}", refresh_jti)
-    
+
     return {
         "access_token": access,
         "refresh_token": refresh,
@@ -965,14 +978,14 @@ def refresh_tokens(refresh_token: str) -> dict:
                             issuer=ISSUER, audience=AUDIENCE)
     except jwt.InvalidTokenError as e:
         raise InvalidTokenError(f"refresh token invalid: {e}")
-    
+
     if claims.get("token_type") != "refresh":
         raise InvalidTokenError("not a refresh token")
-    
+
     old_jti = claims["jti"]
     sub = claims["sub"]
     family_id = claims["family_id"]
-    
+
     # Check if the token still exists (hasn't been used)
     record = r.hgetall(f"rt:{old_jti}")
     if not record:
@@ -980,18 +993,18 @@ def refresh_tokens(refresh_token: str) -> dict:
         # But: if there's a "rotated_at" timestamp, this is REUSE
         # The hash still exists with the rotated_at field, just expired
         raise TokenReuseError("token already used or expired")
-    
+
     if record.get("revoked") == "1":
         raise InvalidTokenError(f"token revoked: {record.get('revoked_reason', 'unknown')}")
-    
+
     # Mark old as rotated
     r.hset(f"rt:{old_jti}", "rotated_at", int(time.time()))
-    
+
     # Issue new pair
     new_tokens = issue_tokens(sub, claims.get("scope", "").split())
     # But issue_tokens creates a new family. We want the same family.
     # (See note below for the cleaner version.)
-    
+
     return new_tokens
 
 
@@ -1024,6 +1037,7 @@ class TokenReuseError(Exception): pass
 ```
 
 This is 80 lines for the complete lifecycle. Production code would add:
+
 - Metrics
 - Structured logging
 - Tracing
@@ -1039,18 +1053,18 @@ But the 80 lines are the core pattern.
 
 Imagine a hotel with electronic keycards.
 
-| JWT concept | Hotel equivalent |
-|-------------|------------------|
-| **Access token** | The keycard itself — opens the door for 24 hours |
-| **Refresh token** | The "extend your stay" token at the front desk — let you get a new keycard |
-| **Rotation** | Old keycard stops working the moment you get a new one |
-| **Reuse detection** | If the same "extend" token is presented twice, the hotel assumes it's stolen and locks the room |
-| **JTI denylist** | The "do not honor" list at the front desk |
-| **Revocation by jti** | The front desk cancels that specific keycard |
-| **Revocation by family** | The front desk cancels ALL keycards for that room |
-| **Key rotation** | The hotel re-keys every door in the building (nuclear option) |
-| **Sender-constrained (DPoP)** | The keycard only works for the specific person whose biometric is enrolled |
-| **mTLS** | The room can only be opened by the person who has both the keycard AND a fingerprint match |
+| JWT concept                   | Hotel equivalent                                                                                |
+| ----------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Access token**              | The keycard itself — opens the door for 24 hours                                                |
+| **Refresh token**             | The "extend your stay" token at the front desk — let you get a new keycard                      |
+| **Rotation**                  | Old keycard stops working the moment you get a new one                                          |
+| **Reuse detection**           | If the same "extend" token is presented twice, the hotel assumes it's stolen and locks the room |
+| **JTI denylist**              | The "do not honor" list at the front desk                                                       |
+| **Revocation by jti**         | The front desk cancels that specific keycard                                                    |
+| **Revocation by family**      | The front desk cancels ALL keycards for that room                                               |
+| **Key rotation**              | The hotel re-keys every door in the building (nuclear option)                                   |
+| **Sender-constrained (DPoP)** | The keycard only works for the specific person whose biometric is enrolled                      |
+| **mTLS**                      | The room can only be opened by the person who has both the keycard AND a fingerprint match      |
 
 **The operational pattern:**
 
@@ -1086,7 +1100,7 @@ The damage from a stolen token: up to the lifetime.
 If you find yourself wanting a 24-hour access token, you want:
   - 15-minute access token
   - 7-day refresh token (rotated)
-  
+
 Use the right tool for the right job.
 ```
 
@@ -1141,7 +1155,7 @@ Without jti, you can't:
   - Revoke a specific token
   - Detect refresh token reuse
   - Audit "this specific token did X at time T"
-  
+
 ALWAYS include jti on refresh tokens. For access tokens, include it
 if you might need to revoke them.
 ```
@@ -1261,7 +1275,9 @@ Mitigations:
 ## 14. Exercises
 
 ### Exercise 1: Design the lifetimes
+
 For each scenario, pick access token TTL and refresh token TTL, justify in 2 sentences:
+
 - (a) Banking web app, strict compliance
 - (b) Social media mobile app
 - (c) Internal admin tool, used 8 hours/day by employees
@@ -1269,26 +1285,34 @@ For each scenario, pick access token TTL and refresh token TTL, justify in 2 sen
 - (e) IoT device fleet, 10M devices, firmware updates monthly
 
 ### Exercise 2: Build the denylist
+
 Implement `JTIDenylist` with Redis. Test:
+
 - Revoke a jti, verify is_revoked returns True
 - Wait for TTL, verify the entry expires
 - Bulk-revoke 100 jtis at once
 
 ### Exercise 3: Implement reuse detection
+
 Build the rotation logic. On reuse:
+
 - Throw an error
 - Revoke the family
 - Log a security event
-Test with: legitimate use, then attacker uses the same old token.
+  Test with: legitimate use, then attacker uses the same old token.
 
 ### Exercise 4: Add metrics
+
 Instrument the lifecycle: tokens issued, refreshes, reuses detected, revocations. Plot over time. What does "normal" look like? What does "an attack" look like?
 
 ### Exercise 5: DPoP proof
+
 Sign a DPoP proof in your language of choice. Include method, URL, timestamp, and a JWK. Send it to a test server (or mock) and verify the proof is validated.
 
 ### Exercise 6: GDPR delete
+
 User invokes right-to-be-forgotten. Write the function that:
+
 - Revokes all their refresh tokens
 - Adds all their access tokens to the denylist
 - Deletes the denylist entries (because the user wants the data gone)
@@ -1296,21 +1320,26 @@ User invokes right-to-be-forgotten. Write the function that:
 - Returns: "all data and tokens purged"
 
 ### Exercise 7: Logout everywhere
+
 Implement "log out everywhere" — user clicks a button, all their devices lose their sessions. Test with 3 simulated devices.
 
 ### Exercise 8: Race condition
+
 Two tabs, simultaneous 401s, both try to refresh. What happens? Implement the fix (single in-flight refresh promise).
 
 ### Exercise 9: Audit your existing systems
+
 For every system you have that issues tokens:
+
 - What's the access token TTL?
 - What's the refresh token TTL?
 - Is there a denylist? Where?
 - Is rotation implemented?
 - What happens on user delete?
-Write a one-page report with improvements.
+  Write a one-page report with improvements.
 
 ### Exercise 10: Family revoke blast radius
+
 Scenario: a refresh token family has 100 active tokens (100 devices). Reuse is detected. The family is revoked. What's the user experience? Document the comms plan.
 
 ---
@@ -1322,6 +1351,7 @@ You can now design, implement, and operate a token lifecycle. Next, we round out
 → [[../stage1/05-jose-family|Stage 1.5 — JWS/JWE/JWK/JWKS: The JOSE Family]]
 
 **Before you move on, verify you can answer these:**
+
 1. Why are access tokens short-lived and refresh tokens long-lived? What's the trade-off?
 2. What is refresh token rotation, and what does reuse detection do?
 3. What are the 5 ways to revoke a JWT, and when do you use each?

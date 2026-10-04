@@ -128,15 +128,15 @@ mount -o remount,size=5G /tmp
 
 ## tmpfs vs ramfs
 
-| Feature       | tmpfs                          | ramfs                          |
-|--------------|-------------------------------|-------------------------------|
-| Backing store | RAM + swap                     | RAM only (no swap)             |
-| Size limit   | Yes (enforced)                 | No (grows until OOM)           |
-| Fixed size   | Can remount to change size     | Cannot change size             |
-| OOM behavior | Writes fail at size limit      | OOM killer triggers             |
-| Disk quotas  | Supported                      | Not supported                  |
-| Persistence  | Lost on reboot                 | Lost on reboot                 |
-| Swappiness   | Can use swap                   | Cannot use swap                |
+| Feature       | tmpfs                      | ramfs                |
+| ------------- | -------------------------- | -------------------- |
+| Backing store | RAM + swap                 | RAM only (no swap)   |
+| Size limit    | Yes (enforced)             | No (grows until OOM) |
+| Fixed size    | Can remount to change size | Cannot change size   |
+| OOM behavior  | Writes fail at size limit  | OOM killer triggers  |
+| Disk quotas   | Supported                  | Not supported        |
+| Persistence   | Lost on reboot             | Lost on reboot       |
+| Swappiness    | Can use swap               | Cannot use swap      |
 
 ## tmpfs and Containers
 

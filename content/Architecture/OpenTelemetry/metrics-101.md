@@ -15,14 +15,14 @@ draft: false
 
 OTel defines 6 instruments in 3 categories:
 
-| Instrument | Sync/Async | Use | Example |
-|------------|-------------|-----|---------|
-| **Counter** | Sync | Counts that only go up | `requests_total`, `orders_processed_total` |
-| **UpDownCounter** | Sync | Counts up AND down | `active_connections`, `queue_size` |
-| **Histogram** | Sync | Distribution of values | `request_duration_ms`, `payload_size_bytes` |
-| **ObservableCounter** | Async | Same as counter but from pulled data | CPU usage from `/proc/stat` |
-| **ObservableUpDownCounter** | Async | Like UpDownCounter but pulled | `memory_used_bytes` |
-| **ObservableGauge** | Async | Point-in-time value | `temperature`, `queue_depth` |
+| Instrument                  | Sync/Async | Use                                  | Example                                     |
+| --------------------------- | ---------- | ------------------------------------ | ------------------------------------------- |
+| **Counter**                 | Sync       | Counts that only go up               | `requests_total`, `orders_processed_total`  |
+| **UpDownCounter**           | Sync       | Counts up AND down                   | `active_connections`, `queue_size`          |
+| **Histogram**               | Sync       | Distribution of values               | `request_duration_ms`, `payload_size_bytes` |
+| **ObservableCounter**       | Async      | Same as counter but from pulled data | CPU usage from `/proc/stat`                 |
+| **ObservableUpDownCounter** | Async      | Like UpDownCounter but pulled        | `memory_used_bytes`                         |
+| **ObservableGauge**         | Async      | Point-in-time value                  | `temperature`, `queue_depth`                |
 
 **Sync** instruments: your code calls `.Add()` or `.Record()` directly.
 **Async** instruments: OTel SDK calls a callback function you provide, periodically.
@@ -116,10 +116,10 @@ A **Counter** only increments (monotonically). Use for things that only go up.
 
 ### Monotonic vs Non-Monotonic
 
-| Type | Behavior | Use Case |
-|------|---------|---------|
-| `Int64Counter` / `Float64Counter` | Monotonic (always increases) | `requests_total`, `bytes_sent` |
-| `Int64UpDownCounter` / `Float64UpDownCounter` | Non-monotonic (up or down) | `active_connections`, `queue_size` |
+| Type                                          | Behavior                     | Use Case                           |
+| --------------------------------------------- | ---------------------------- | ---------------------------------- |
+| `Int64Counter` / `Float64Counter`             | Monotonic (always increases) | `requests_total`, `bytes_sent`     |
+| `Int64UpDownCounter` / `Float64UpDownCounter` | Non-monotonic (up or down)   | `active_connections`, `queue_size` |
 
 ### Go: Counter
 
@@ -302,10 +302,10 @@ Rule: attribute values should have **low cardinality** (≤ 100 unique values).
 
 **Temporality** determines whether metrics are exported as cumulative (total since start) or delta (change since last export).
 
-| Temporality | What it means | Use case |
-|-------------|---------------|---------|
-| **Cumulative** (default) | Each export includes all values since app start | General use |
-| **Delta** | Each export is only the delta since last export | Prometheus remote write |
+| Temporality              | What it means                                   | Use case                |
+| ------------------------ | ----------------------------------------------- | ----------------------- |
+| **Cumulative** (default) | Each export includes all values since app start | General use             |
+| **Delta**                | Each export is only the delta since last export | Prometheus remote write |
 
 ### Delta Temporality (Go)
 
@@ -501,18 +501,18 @@ The `MetricReader` controls **when** metrics are read and exported. Different re
 
 ### Reader Types
 
-| Reader | Pattern | Use Case |
-|--------|---------|----------|
-| `PeriodicExportingMetricReader` | **Push** — SDK pushes every interval | Most backends (SigNoz, Grafana, etc.) |
-| `PeriodicBatchMetricReader` | **Push** — batches, then pushes | High throughput, reduced export calls |
-| `PrometheusRemoteWriteReader` | **Push** — sends to Prometheus remote write endpoint | Prometheus, Grafana Mimir |
-| `MetricReader` (base) | Custom | Building custom exporters |
+| Reader                          | Pattern                                              | Use Case                              |
+| ------------------------------- | ---------------------------------------------------- | ------------------------------------- |
+| `PeriodicExportingMetricReader` | **Push** — SDK pushes every interval                 | Most backends (SigNoz, Grafana, etc.) |
+| `PeriodicBatchMetricReader`     | **Push** — batches, then pushes                      | High throughput, reduced export calls |
+| `PrometheusRemoteWriteReader`   | **Push** — sends to Prometheus remote write endpoint | Prometheus, Grafana Mimir             |
+| `MetricReader` (base)           | Custom                                               | Building custom exporters             |
 
 ### PeriodicExportingMetricReader (Go)
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `WithInterval(d)` | 10s | How often to read and export |
+| Option                        | Default    | Description                        |
+| ----------------------------- | ---------- | ---------------------------------- |
+| `WithInterval(d)`             | 10s        | How often to read and export       |
 | `WithTemporalitySelector(fn)` | Cumulative | Delta or Cumulative per instrument |
 
 ```go
@@ -568,12 +568,12 @@ The `MetricExporter` serializes and sends aggregated metric data.
 
 ### Go Exporters
 
-| Exporter | Package | Config |
-|----------|---------|--------|
-| **OTLP** (gRPC) | `go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc` | `WithEndpoint()`, `WithInsecure()` |
-| **OTLP** (HTTP) | `go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp` | `WithEndpoint()`, `WithInsecure()` |
-| **Prometheus** | `go.opentelemetry.io/otel/exporters/prometheus` | Serves `:2222`/metrics for Prometheus pull |
-| **Console** | `go.opentelemetry.io/otel/exporters/stdout/stdoutmetric` | Dev/debug |
+| Exporter        | Package                                                             | Config                                     |
+| --------------- | ------------------------------------------------------------------- | ------------------------------------------ |
+| **OTLP** (gRPC) | `go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc` | `WithEndpoint()`, `WithInsecure()`         |
+| **OTLP** (HTTP) | `go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp` | `WithEndpoint()`, `WithInsecure()`         |
+| **Prometheus**  | `go.opentelemetry.io/otel/exporters/prometheus`                     | Serves `:2222`/metrics for Prometheus pull |
+| **Console**     | `go.opentelemetry.io/otel/exporters/stdout/stdoutmetric`            | Dev/debug                                  |
 
 ```go
 import (
@@ -599,11 +599,11 @@ exporter, _ := stdoutmetric.New(stdoutmetric.WithPrettyPrint())
 
 ### Python Exporters
 
-| Exporter | Package | Config |
-|----------|---------|--------|
-| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp` | `endpoint`, `insecure` |
-| **Prometheus** | `opentelemetry-exporter-prometheus` | Serves `:2222`/metrics |
-| **Console** | `opentelemetry-sdk` (built-in) | Dev only |
+| Exporter             | Package                             | Config                 |
+| -------------------- | ----------------------------------- | ---------------------- |
+| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp`       | `endpoint`, `insecure` |
+| **Prometheus**       | `opentelemetry-exporter-prometheus` | Serves `:2222`/metrics |
+| **Console**          | `opentelemetry-sdk` (built-in)      | Dev only               |
 
 ```python
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
@@ -625,6 +625,7 @@ exporter = OTLPMetricExporter()  # Prometheus reader handles /metrics
 A `View` controls **how** instruments are aggregated and which attributes are retained. Views are the customization layer between instruments and output.
 
 Use views to:
+
 - Rename metric instruments (e.g., `http_server_requests` → `http_requests`)
 - Drop high-cardinality attributes (e.g., `user_id`, `request_id`) to reduce cardinality
 - Configure histogram bucket boundaries

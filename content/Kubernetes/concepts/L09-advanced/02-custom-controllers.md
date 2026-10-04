@@ -147,17 +147,17 @@ func (r *MyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 
 The **return values** are important:
 
-* `ctrl.Result{}` — done, don't requeue
-* `ctrl.Result{Requeue: true}` — done, requeue immediately
-* `ctrl.Result{RequeueAfter: 30 * time.Second}` — done, requeue in 30s
-* `(result, err)` with `err != nil` — failed, requeue with backoff
+- `ctrl.Result{}` — done, don't requeue
+- `ctrl.Result{Requeue: true}` — done, requeue immediately
+- `ctrl.Result{RequeueAfter: 30 * time.Second}` — done, requeue in 30s
+- `(result, err)` with `err != nil` — failed, requeue with backoff
 
 ### 4. Owner references
 
 When the controller creates sub-resources (Deployments, Services, etc.), it sets **`metadata.ownerReferences`** to the parent CR. This makes garbage collection work:
 
-* When the parent CR is deleted, the sub-resources are deleted automatically
-* The controller's finalizer logic runs before deletion (see below)
+- When the parent CR is deleted, the sub-resources are deleted automatically
+- The controller's finalizer logic runs before deletion (see below)
 
 ```go
 dep := &appsv1.Deployment{...}
@@ -246,18 +246,18 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata: { name: my-controller }
 rules:
-- apiGroups: [mygroup.example.com]
-  resources: [myresources, myresources/status]
-  verbs: [get, list, watch, update, patch]
-- apiGroups: [apps]
-  resources: [deployments]
-  verbs: [get, list, watch, create, update, patch, delete]
-- apiGroups: [""]
-  resources: [services, configmaps, secrets]
-  verbs: [get, list, watch, create, update, patch, delete]
-- apiGroups: [coordination.k8s.io]
-  resources: [leases]
-  verbs: [get, list, watch, create, update, patch, delete]  # for leader election
+  - apiGroups: [mygroup.example.com]
+    resources: [myresources, myresources/status]
+    verbs: [get, list, watch, update, patch]
+  - apiGroups: [apps]
+    resources: [deployments]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [""]
+    resources: [services, configmaps, secrets]
+    verbs: [get, list, watch, create, update, patch, delete]
+  - apiGroups: [coordination.k8s.io]
+    resources: [leases]
+    verbs: [get, list, watch, create, update, patch, delete] # for leader election
 ```
 
 The blast radius of a controller is its RBAC. Keep it minimal.
@@ -342,16 +342,16 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 spec:
   versions:
-  - name: v1
-    subresources:
-      status: {}      # <-- this enables the subresource
+    - name: v1
+      subresources:
+        status: {} # <-- this enables the subresource
 ```
 
 With this:
 
-* Users PUT to `.spec` (to change the desired state)
-* The controller PUTs to `.status` (to report the actual state)
-* They're separate operations, so a user updating `.spec` doesn't accidentally clobber `.status`
+- Users PUT to `.spec` (to change the desired state)
+- The controller PUTs to `.status` (to report the actual state)
+- They're separate operations, so a user updating `.spec` doesn't accidentally clobber `.status`
 
 ## Generation and observed generation
 
@@ -406,11 +406,11 @@ r.Recorder.Eventf(foo, corev1.EventTypeWarning, "Failed", "Could not create Serv
 
 Controllers should expose Prometheus metrics. The most common:
 
-* `controller_runtime_reconcile_total` — total reconciles by result (success / error)
-* `controller_runtime_reconcile_errors_total` — errors
-* `controller_runtime_reconcile_time_seconds` — histogram of reconcile duration
-* `workqueue_depth` — current workqueue depth
-* `workqueue_latency_seconds` — time in workqueue
+- `controller_runtime_reconcile_total` — total reconciles by result (success / error)
+- `controller_runtime_reconcile_errors_total` — errors
+- `controller_runtime_reconcile_time_seconds` — histogram of reconcile duration
+- `workqueue_depth` — current workqueue depth
+- `workqueue_latency_seconds` — time in workqueue
 
 These are the basics; a custom controller can add more (e.g. `foo_replicas_desired`, `foo_replicas_ready`).
 
@@ -493,21 +493,21 @@ If `.status` never updates, users can't tell if the controller is working. Updat
 
 ## When to write a controller
 
-* **You have a custom resource that needs to do something** — write a controller
-* **You're managing an application's lifecycle** — write a controller
-* **You want to extend k8s with new behavior** — write a controller
-* **You have automation that runs in CI** — it can be a controller, but it might not need to be
+- **You have a custom resource that needs to do something** — write a controller
+- **You're managing an application's lifecycle** — write a controller
+- **You want to extend k8s with new behavior** — write a controller
+- **You have automation that runs in CI** — it can be a controller, but it might not need to be
 
 ## When NOT to write a controller
 
-* **You can do it with a CronJob + kubectl** — don't write a controller
-* **You can do it with an admission webhook** — admission is sync, controllers are async
-* **The upstream project provides one** — use it
-* **You don't have Go / Python / Java skills on the team** — find an operator that does what you need
+- **You can do it with a CronJob + kubectl** — don't write a controller
+- **You can do it with an admission webhook** — admission is sync, controllers are async
+- **The upstream project provides one** — use it
+- **You don't have Go / Python / Java skills on the team** — find an operator that does what you need
 
 ## See also
 
-* [[Kubernetes/concepts/L09-advanced/01-operators|Operators]] — when controllers encode operational knowledge
-* [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — the API extension
-* [[Kubernetes/concepts/L09-advanced/05-finalizers|Finalizers]] — for cleanup
-* [[Kubernetes/concepts/L09-advanced/06-garbage-collection|Garbage Collection]] — owner references
+- [[Kubernetes/concepts/L09-advanced/01-operators|Operators]] — when controllers encode operational knowledge
+- [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CRDs]] — the API extension
+- [[Kubernetes/concepts/L09-advanced/05-finalizers|Finalizers]] — for cleanup
+- [[Kubernetes/concepts/L09-advanced/06-garbage-collection|Garbage Collection]] — owner references

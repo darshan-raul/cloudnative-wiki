@@ -9,15 +9,19 @@ Data migration is the process of moving data from one system, format, or storage
 ## The Four Migration Types
 
 ### 1. Storage Migration
+
 Moving data from one storage system to another (e.g., from on-prem NFS to cloud S3).
 
 ### 2. Database Migration
+
 Changing the database engine, schema, or structure (e.g., from MySQL to PostgreSQL, from monolith DB to microservice DBs).
 
 ### 3. Platform Migration
+
 Moving from one platform to another (e.g., from EC2 to Lambda, from on-prem to cloud).
 
 ### 4. Application Migration
+
 Moving from one application to another (e.g., from legacy ERP to SaaS ERP, from custom CMS to managed CMS).
 
 All four types share common patterns and risks.
@@ -26,12 +30,12 @@ All four types share common patterns and risks.
 
 Every data migration has two risks:
 
-| Risk | What happens | Mitigation |
-|---|---|---|
-| **Data loss** | Some data doesn't make it to the new system | Verification, checksums, reconciliation |
-| **Downtime** | System is unavailable during migration | Zero-downtime patterns (see below) |
-| **Corruption** | Data arrives but is wrong (wrong format, truncated) | Schema validation, sampling |
-| **Rollback need** | Migration fails and you need to go back | Keep old system running, test first |
+| Risk              | What happens                                        | Mitigation                              |
+| ----------------- | --------------------------------------------------- | --------------------------------------- |
+| **Data loss**     | Some data doesn't make it to the new system         | Verification, checksums, reconciliation |
+| **Downtime**      | System is unavailable during migration              | Zero-downtime patterns (see below)      |
+| **Corruption**    | Data arrives but is wrong (wrong format, truncated) | Schema validation, sampling             |
+| **Rollback need** | Migration fails and you need to go back             | Keep old system running, test first     |
 
 ## Zero-Downtime Migration Strategy
 
@@ -168,10 +172,17 @@ CREATE TABLE orders_2024_01 PARTITION OF orders
 db.orders.aggregate([
   { $match: { phone: { $exists: false } } },
   { $limit: 10000 },
-  { $lookup: { from: "email_lookup", localField: "email", foreignField: "email", as: "lookup" } },
+  {
+    $lookup: {
+      from: "email_lookup",
+      localField: "email",
+      foreignField: "email",
+      as: "lookup",
+    },
+  },
   { $unwind: "$lookup" },
-  { $merge: { into: "orders", whenMatched: "merge" } }
-])
+  { $merge: { into: "orders", whenMatched: "merge" } },
+]);
 ```
 
 ### MySQL to PostgreSQL Migration
@@ -179,6 +190,7 @@ db.orders.aggregate([
 Tools: AWS DMS, Debezium, custom ETL
 
 Key differences to handle:
+
 - Auto-increment (MySQL) vs SERIAL (Postgres)
 - VARCHAR(255) vs VARCHAR(n) — Postgres requires length
 - ENUM types — different syntax

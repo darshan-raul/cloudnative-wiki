@@ -28,7 +28,7 @@ metadata:
 spec:
   secretName: edge-tls
   dnsNames:
-  - edge.example.com
+    - edge.example.com
   issuerRef:
     name: selfsigned
     kind: Issuer
@@ -46,10 +46,10 @@ spec:
     metadata: { labels: { app: edge-target } }
     spec:
       containers:
-      - name: edge-target
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "edge: ok" }]
-        ports: [{ containerPort: 8080 }]
+        - name: edge-target
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "edge: ok" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -59,8 +59,8 @@ metadata:
 spec:
   selector: { app: edge-target }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 # A separate Gateway with an HTTPS listener (alongside the existing HTTP listener
 # on the baseline Gateway). TLS is terminated here.
@@ -74,17 +74,17 @@ metadata:
 spec:
   gatewayClassName: eg
   listeners:
-  - name: https
-    port: 443
-    protocol: HTTPS
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - kind: Secret
-        name: edge-tls
-    allowedRoutes:
-      namespaces:
-        from: All
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: edge-tls
+      allowedRoutes:
+        namespaces:
+          from: All
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -93,15 +93,15 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg-tls
-    namespace: infra
+    - name: eg-tls
+      namespace: infra
   hostnames: ["edge.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: edge-target
-      port: 80
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: edge-target
+          port: 80
 ---
 # A NodePort service exposing the new Gateway's data plane on host:443
 apiVersion: v1
@@ -115,7 +115,7 @@ spec:
     app.kubernetes.io/name: eg-tls
     gateway.envoyproxy.io/owning-gateway-name: eg-tls
   ports:
-  - name: https
-    port: 443
-    targetPort: 8443
-    nodePort: 30001
+    - name: https
+      port: 443
+      targetPort: 8443
+      nodePort: 30001

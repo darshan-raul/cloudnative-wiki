@@ -36,7 +36,7 @@ Google Cloud provides network-attached block storage decoupled from virtual mach
 └─────────────────┴─────────────────┴──────────────────┴─────────────────┘
 ```
 
-* **Network-Attached Architecture:** Disks are not physical drives plugged into the host motherboard; they are distributed block devices communicated over Google's ultra-low-latency datacenter fabric.
+- **Network-Attached Architecture:** Disks are not physical drives plugged into the host motherboard; they are distributed block devices communicated over Google's ultra-low-latency datacenter fabric.
 
 ---
 
@@ -44,24 +44,25 @@ Google Cloud provides network-attached block storage decoupled from virtual mach
 
 ### 1. Zonal vs. Regional Persistent Disk
 
-* **Zonal Persistent Disk:** Replicated across multiple physical drives within a **single availability zone** for 99.999% component durability.
-* **Regional Persistent Disk (Active-Standby Storage Replication):**
-  * Data is synchronously mirrored across **two zones** within the same region.
-  * In the event of a total datacenter zone outage, the disk can be immediately force-attached to a VM in the secondary zone with **zero data loss (RPO = 0)**.
-  * Essential for stateful workloads (like PostgreSQL, MySQL, and single-replica Kafka) requiring high availability without application-level replication.
+- **Zonal Persistent Disk:** Replicated across multiple physical drives within a **single availability zone** for 99.999% component durability.
+- **Regional Persistent Disk (Active-Standby Storage Replication):**
+  - Data is synchronously mirrored across **two zones** within the same region.
+  - In the event of a total datacenter zone outage, the disk can be immediately force-attached to a VM in the secondary zone with **zero data loss (RPO = 0)**.
+  - Essential for stateful workloads (like PostgreSQL, MySQL, and single-replica Kafka) requiring high availability without application-level replication.
 
 ### 2. Next-Gen Hyperdisk Families
 
 Traditional PD ties IOPS and throughput directly to provisioned disk capacity (larger disks = more IOPS). **Hyperdisk decouples performance from capacity**:
-* **Hyperdisk Balanced:** Independently tune capacity, IOPS, and throughput for cost optimization.
-* **Hyperdisk Extreme:** Up to 500,000 IOPS for mission-critical SAP HANA and Oracle databases.
-* **Hyperdisk ML:** Delivers up to **1,200,000 IOPS** and **130 GB/s throughput** designed specifically for instant AI model weight loading onto NVIDIA GPUs.
+
+- **Hyperdisk Balanced:** Independently tune capacity, IOPS, and throughput for cost optimization.
+- **Hyperdisk Extreme:** Up to 500,000 IOPS for mission-critical SAP HANA and Oracle databases.
+- **Hyperdisk ML:** Delivers up to **1,200,000 IOPS** and **130 GB/s throughput** designed specifically for instant AI model weight loading onto NVIDIA GPUs.
 
 ### 3. Dynamic Online Volume Resizing
 
-* Disk capacity can be increased in real time **without unmounting the disk, rebooting the VM, or restarting containers**:
-  * Expand disk size via API/CLI: `gcloud compute disks resize`.
-  * Expand guest filesystem on the fly using `resize2fs` (ext4) or `xfs_growfs` (XFS).
+- Disk capacity can be increased in real time **without unmounting the disk, rebooting the VM, or restarting containers**:
+  - Expand disk size via API/CLI: `gcloud compute disks resize`.
+  - Expand guest filesystem on the fly using `resize2fs` (ext4) or `xfs_growfs` (XFS).
 
 ---
 
@@ -124,40 +125,42 @@ spec:
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max disk size (PD)** | 64 TB per individual disk | Minimum 10 GB |
-| **Max attached disks per VM** | 128 disks | Or 257 TB total attached capacity |
-| **Regional PD replica zones** | Exactly 2 zones | Cannot replicate across 3 zones |
-| **Snapshots per disk** | Up to 1,000 snapshots | Incremental differential storage |
+| Parameter                     | Limit                     | Production Notes                  |
+| :---------------------------- | :------------------------ | :-------------------------------- |
+| **Max disk size (PD)**        | 64 TB per individual disk | Minimum 10 GB                     |
+| **Max attached disks per VM** | 128 disks                 | Or 257 TB total attached capacity |
+| **Regional PD replica zones** | Exactly 2 zones           | Cannot replicate across 3 zones   |
+| **Snapshots per disk**        | Up to 1,000 snapshots     | Incremental differential storage  |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/persistent-disk
-* **Documentation:** https://cloud.google.com/compute/docs/disks
-* **Hyperdisk Overview:** https://cloud.google.com/compute/docs/disks/hyperdisk-overview
-* **GKE Persistent Volumes:** https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes
-* **Pricing:** https://cloud.google.com/compute/disks-image-pricing
+- **Homepage:** https://cloud.google.com/persistent-disk
+- **Documentation:** https://cloud.google.com/compute/docs/disks
+- **Hyperdisk Overview:** https://cloud.google.com/compute/docs/disks/hyperdisk-overview
+- **GKE Persistent Volumes:** https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes
+- **Pricing:** https://cloud.google.com/compute/disks-image-pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Standard Application Fleet Storage
-* 20 web and API VMs, each attached to a 50 GB `pd-balanced` boot disk.
-* Total provisioned storage: 1,000 GB (1 TB).
-* Monthly rate: 1,000 GB × $0.10 / GB = **$100.00 / month**.
+
+- 20 web and API VMs, each attached to a 50 GB `pd-balanced` boot disk.
+- Total provisioned storage: 1,000 GB (1 TB).
+- Monthly rate: 1,000 GB × $0.10 / GB = **$100.00 / month**.
 
 ### Scenario 2: High-Availability Database with Regional SSD
-* Production transactional database requiring synchronous cross-zone durability.
-* 1 TB Regional `pd-ssd` disk (`replica-zones=us-central1-a,us-central1-b`).
-* Regional disks duplicate raw storage across both zones:
-  * Regional `pd-ssd` rate: $0.34 / GB / month.
-  * 1,024 GB × $0.34 = **$348.16 / month**.
-* Daily snapshots (100 GB change rate retained for 30 days): ~$26.00.
-* **Total Monthly Cost:** **~$374.16 / month**.
+
+- Production transactional database requiring synchronous cross-zone durability.
+- 1 TB Regional `pd-ssd` disk (`replica-zones=us-central1-a,us-central1-b`).
+- Regional disks duplicate raw storage across both zones:
+  - Regional `pd-ssd` rate: $0.34 / GB / month.
+  - 1,024 GB × $0.34 = **$348.16 / month**.
+- Daily snapshots (100 GB change rate retained for 30 days): ~$26.00.
+- **Total Monthly Cost:** **~$374.16 / month**.
 
 ---
 

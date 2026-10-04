@@ -60,17 +60,18 @@ In large enterprise organizations, development teams deploy thousands of contain
 
 ## 2. Policy Enforcement Modes: Audit vs. Deny
 
-| Policy Mode | Operational Behavior | Impact on Production CI/CD | Recommended Phase |
-| :--- | :--- | :--- | :--- |
-| **Audit** | Flags non-compliant resources in Azure Policy compliance dashboard; allows pods to deploy | **Zero disruption to running applications** | Day 0–30: Discovery & Baselining |
-| **Deny** | Intercepts admission requests; immediately blocks non-compliant resources with HTTP 403 | **Blocks breaking deployments at deploy-time**| Day 31+: Production Enforcement |
-| **Disabled** | Completely turns off rule evaluation for targeted namespaces | Skips evaluation | Emergency Break-Glass |
+| Policy Mode  | Operational Behavior                                                                      | Impact on Production CI/CD                     | Recommended Phase                |
+| :----------- | :---------------------------------------------------------------------------------------- | :--------------------------------------------- | :------------------------------- |
+| **Audit**    | Flags non-compliant resources in Azure Policy compliance dashboard; allows pods to deploy | **Zero disruption to running applications**    | Day 0–30: Discovery & Baselining |
+| **Deny**     | Intercepts admission requests; immediately blocks non-compliant resources with HTTP 403   | **Blocks breaking deployments at deploy-time** | Day 31+: Production Enforcement  |
+| **Disabled** | Completely turns off rule evaluation for targeted namespaces                              | Skips evaluation                               | Emergency Break-Glass            |
 
 ---
 
 ## 3. Built-in Security Initiatives for AKS
 
 Microsoft packages hundreds of OPA Gatekeeper constraints into curated **Azure Policy Initiatives**:
+
 1. **Kubernetes cluster pod security baseline standards:** Restricts privilege escalation, host networking, host ports, and capabilities.
 2. **Kubernetes cluster pod security restricted standards:** Enforces rootless execution (`runAsNonRoot: true`), read-only root filesystems, and drops all Linux capabilities.
 3. **CIS Microsoft Azure Kubernetes Service (AKS) Benchmark:** Audits and enforces CIS Foundation security baselines.
@@ -176,13 +177,13 @@ kubectl run test-rogue-pod --image=nginx:alpine
 
 ## 5. Quotas, Performance & Configuration Limits
 
-| Dimension | Metric / Platform Limit | Production Rule |
-| :--- | :--- | :--- |
-| **Admission Webhook Latency** | **< 30 milliseconds** | In-memory Rego evaluation minimizes deploy overhead |
-| **Webhook Timeout Setting** | **3 to 5 seconds** | Webhooks time out if Gatekeeper is unresponsive |
-| **Audit Sync Interval** | **15 minutes** | Azure Policy reconciles compliance state periodically |
-| **Max Custom Constraints** | Up to **500 Constraints** | High rule counts consume node memory |
-| **Failure Policy** | `Ignore` (Fail-Open) / `Fail` (Fail-Closed) | Set `Ignore` in non-prod to avoid locking cluster |
+| Dimension                     | Metric / Platform Limit                     | Production Rule                                       |
+| :---------------------------- | :------------------------------------------ | :---------------------------------------------------- |
+| **Admission Webhook Latency** | **< 30 milliseconds**                       | In-memory Rego evaluation minimizes deploy overhead   |
+| **Webhook Timeout Setting**   | **3 to 5 seconds**                          | Webhooks time out if Gatekeeper is unresponsive       |
+| **Audit Sync Interval**       | **15 minutes**                              | Azure Policy reconciles compliance state periodically |
+| **Max Custom Constraints**    | Up to **500 Constraints**                   | High rule counts consume node memory                  |
+| **Failure Policy**            | `Ignore` (Fail-Open) / `Fail` (Fail-Closed) | Set `Ignore` in non-prod to avoid locking cluster     |
 
 ---
 
@@ -205,7 +206,7 @@ kubectl run test-rogue-pod --image=nginx:alpine
   - Azure Policy Add-on for AKS: **$0.00 (Completely Free Platform Service)**.
   - Gatekeeper Pod Resource Overhead (2 pods per cluster): 2 × 0.5 vCPU, 1 GiB RAM = **$0.00 extra cloud bill** (Absorbed by existing system node pool).
   - Azure Policy Compliance State Storage: **$0.00**.
-- **Total Monthly Governance Cost:** **$0.00 / month** *(Delivering 100% compliance automation without third-party licensing fees).*
+- **Total Monthly Governance Cost:** **$0.00 / month** _(Delivering 100% compliance automation without third-party licensing fees)._
 
 ### Scenario B: Regulatory Compliance Reporting via Microsoft Defender for Cloud
 

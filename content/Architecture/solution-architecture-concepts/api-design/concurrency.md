@@ -31,14 +31,14 @@ Parallel:     You wash dishes, your partner dries, your kid puts away.
 
 ## Concurrency vs Parallelism
 
-| Dimension | Concurrency | Parallelism |
-|-----------|-------------|-------------|
-| Definition | Structuring to handle multiple tasks at once | Executing multiple tasks simultaneously |
-| CPU requirement | 1 core enough | Multiple cores required |
-| Goal | Responsiveness, throughput | Raw speed |
-| Example | Async I/O, event loops | GPU compute, multiprocessing |
-| Python | `asyncio` | `multiprocessing`, `threading` |
-| Go | Goroutines (goroutines are concurrent) | GOMAXPROCS > 1 |
+| Dimension       | Concurrency                                  | Parallelism                             |
+| --------------- | -------------------------------------------- | --------------------------------------- |
+| Definition      | Structuring to handle multiple tasks at once | Executing multiple tasks simultaneously |
+| CPU requirement | 1 core enough                                | Multiple cores required                 |
+| Goal            | Responsiveness, throughput                   | Raw speed                               |
+| Example         | Async I/O, event loops                       | GPU compute, multiprocessing            |
+| Python          | `asyncio`                                    | `multiprocessing`, `threading`          |
+| Go              | Goroutines (goroutines are concurrent)       | GOMAXPROCS > 1                          |
 
 ---
 
@@ -135,9 +135,11 @@ async def main():
 ## Key Primitives
 
 ### Mutex / Lock
+
 Mutual exclusion — only one thread in critical section.
 
 ### Semaphore
+
 N concurrent accesses allowed.
 
 ```python
@@ -152,9 +154,11 @@ def make_request():
 ```
 
 ### Condition Variable
+
 Wait for a predicate to become true.
 
 ### Atomic Operations
+
 Lock-free operations on primitive types.
 
 ```python
@@ -165,19 +169,20 @@ counter.increment()  # thread-safe, no lock
 ```
 
 ### Channels
+
 Synchronous or buffered message passing.
 
 ---
 
 ## Concurrency Problems
 
-| Problem | What It Is | Solution |
-|---------|-----------|---------|
-| **Deadlock** | Threads waiting on each other forever | Lock ordering, timeouts |
-| **Livelock** | Threads actively running but making no progress | Random backoff |
-| **Race condition** | Outcome depends on timing | Atomic ops, locks, actors |
-| **Starvation** | Thread never gets CPU time | Fair schedulers |
-| **Priority inversion** | Low-priority thread holds lock that high-priority thread needs | Priority inheritance |
+| Problem                | What It Is                                                     | Solution                  |
+| ---------------------- | -------------------------------------------------------------- | ------------------------- |
+| **Deadlock**           | Threads waiting on each other forever                          | Lock ordering, timeouts   |
+| **Livelock**           | Threads actively running but making no progress                | Random backoff            |
+| **Race condition**     | Outcome depends on timing                                      | Atomic ops, locks, actors |
+| **Starvation**         | Thread never gets CPU time                                     | Fair schedulers           |
+| **Priority inversion** | Low-priority thread holds lock that high-priority thread needs | Priority inheritance      |
 
 ---
 
@@ -228,13 +233,13 @@ Phase 2 (Commit):   If all YES → send commit
 
 ## Go vs Python Concurrency
 
-| Feature | Go | Python |
-|---------|----|--------|
-| Model | Goroutines + channels | asyncio + coroutines |
-| Parallelism | GOMAXPROCS (real parallelism) | multiprocessing |
+| Feature        | Go                            | Python                        |
+| -------------- | ----------------------------- | ----------------------------- |
+| Model          | Goroutines + channels         | asyncio + coroutines          |
+| Parallelism    | GOMAXPROCS (real parallelism) | multiprocessing               |
 | Memory sharing | Share memory by communicating | Communicate via shared memory |
-| Cancellation | Context propagation | asyncio.CancelledError |
-| Blocking I/O | Non-blocking via channels | Native async/await |
+| Cancellation   | Context propagation           | asyncio.CancelledError        |
+| Blocking I/O   | Non-blocking via channels     | Native async/await            |
 
 ---
 

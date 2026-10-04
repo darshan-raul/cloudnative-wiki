@@ -40,6 +40,7 @@ options edns0 trust-ad
 - `options`: `edns0`, `timeout`, `attempts`, `rotate` (round-robin nameservers)
 
 **This file is often auto-generated** by NetworkManager or systemd-resolved. Edits may be overwritten on reboot or network change. To make permanent custom nameservers:
+
 - NetworkManager: set in connection profile
 - systemd-resolved: use `resolvectl` or `systemd-resolve --interface=`
 
@@ -92,6 +93,7 @@ cat /run/systemd/resolve/stub-resolv.conf
 ```
 
 systemd-resolved provides:
+
 - Local caching (DNS cache, reduces DNS queries)
 - Split-horizon DNS (different DNS based on interface)
 - DNSSEC validation

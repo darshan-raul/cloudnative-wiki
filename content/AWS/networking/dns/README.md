@@ -11,6 +11,7 @@ tags:
 # Amazon Route 53
 
 Route 53 is AWS's managed DNS service. It handles three functions:
+
 1. **Domain registration** — Buy and manage domain names
 2. **DNS routing** — Resolve DNS queries with routing policies
 3. **Health checking** — Monitor endpoint health and route around failures
@@ -30,20 +31,20 @@ Private: corp.internal → VPC-A, VPC-B (resolved via VPC DNS)
 
 ## DNS Record Types
 
-| Type | Purpose | Example |
-|------|---------|---------|
-| A | IPv4 address | `api.example.com` → `54.123.45.67` |
-| AAAA | IPv6 address | `api.example.com` → `2001:db8::1` |
-| CNAME | Canonical name (alias for another name) | `www.example.com` → `api.example.com` |
-| Alias | AWS-specific: points to AWS resource | `www.example.com` → ALB DNS name |
-| MX | Mail server | `example.com` → `10 mail.example.com` |
-| TXT | Text records (SPF, DKIM, verification) | `example.com` → `"v=spf1 include:_spf.example.com"` |
-| NS | Name server (delegation) | `example.com` → `ns-123.awsdns-45.com` |
-| SOA | Start of authority | Included automatically |
-| PTR | Reverse DNS (IP → hostname) | `67.45.123.54.in-addr.arpa` → `api.example.com` |
-| SPF | Sender Policy Framework (deprecated, use TXT) | |
-| SRV | Service locator | `_http._tcp.example.com` → `10 5 80 api.example.com` |
-| CAA | Certification Authority Authorization | `example.com` → `0 issue "letsencrypt.org"` |
+| Type  | Purpose                                       | Example                                              |
+| ----- | --------------------------------------------- | ---------------------------------------------------- |
+| A     | IPv4 address                                  | `api.example.com` → `54.123.45.67`                   |
+| AAAA  | IPv6 address                                  | `api.example.com` → `2001:db8::1`                    |
+| CNAME | Canonical name (alias for another name)       | `www.example.com` → `api.example.com`                |
+| Alias | AWS-specific: points to AWS resource          | `www.example.com` → ALB DNS name                     |
+| MX    | Mail server                                   | `example.com` → `10 mail.example.com`                |
+| TXT   | Text records (SPF, DKIM, verification)        | `example.com` → `"v=spf1 include:_spf.example.com"`  |
+| NS    | Name server (delegation)                      | `example.com` → `ns-123.awsdns-45.com`               |
+| SOA   | Start of authority                            | Included automatically                               |
+| PTR   | Reverse DNS (IP → hostname)                   | `67.45.123.54.in-addr.arpa` → `api.example.com`      |
+| SPF   | Sender Policy Framework (deprecated, use TXT) |                                                      |
+| SRV   | Service locator                               | `_http._tcp.example.com` → `10 5 80 api.example.com` |
+| CAA   | Certification Authority Authorization         | `example.com` → `0 issue "letsencrypt.org"`          |
 
 ## Alias Records vs CNAMEs
 
@@ -69,6 +70,7 @@ api.example.com → [54.123.45.67, 54.123.45.68]
 ### Weighted Routing
 
 Distributes traffic by ratio. Useful for:
+
 - A/B testing (send10% of traffic to new version)
 - Blue/green deployments (gradually shift traffic)
 - Multi-region routing (weight by region)
@@ -91,6 +93,7 @@ api.example.com → us-east-1 (latency-routing, weight: 1)
 ### Geolocation Routing
 
 Routes based on the DNS resolver's geographic location. Use for:
+
 - Content localization (serve region-specific content)
 - Legal compliance (block or allow specific regions)
 - Disaster recovery (redirect traffic away from a region)
@@ -185,14 +188,14 @@ Gradually increase green weight as confidence grows
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Hosted zones per account | 500 |
-| Records per hosted zone | 10,000 |
+| Resource                  | Limit                     |
+| ------------------------- | ------------------------- |
+| Hosted zones per account  | 500                       |
+| Records per hosted zone   | 10,000                    |
 | Health checks per account | 50 (can request increase) |
-| Domains per account | 50 |
-| TTL for alias records | 300 seconds (fixed) |
-| TTL for other records | 60-172800 seconds |
+| Domains per account       | 50                        |
+| TTL for alias records     | 300 seconds (fixed)       |
+| TTL for other records     | 60-172800 seconds         |
 
 ## References
 

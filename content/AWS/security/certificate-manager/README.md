@@ -15,13 +15,13 @@ ACM provisions, manages, and deploys TLS certificates for use with AWS services 
 
 ## Public vs Private Certificates
 
-| Feature | Public Certificate | Private Certificate |
-|---------|-------------------|-------------------|
-| Issuer | Public CA (DigiCert) | Your own Private CA (ACM PCA) |
-| Domain validation | DNS or Email | DNS only |
-| Cost | Free (AWS pays DigiCert) | $0.75/month per certificate |
-| Browser trusted | Yes (public CA in browsers) | No (requires private PKI) |
-| Use case | Public websites, APIs | Internal services, microservices |
+| Feature           | Public Certificate          | Private Certificate              |
+| ----------------- | --------------------------- | -------------------------------- |
+| Issuer            | Public CA (DigiCert)        | Your own Private CA (ACM PCA)    |
+| Domain validation | DNS or Email                | DNS only                         |
+| Cost              | Free (AWS pays DigiCert)    | $0.75/month per certificate      |
+| Browser trusted   | Yes (public CA in browsers) | No (requires private PKI)        |
+| Use case          | Public websites, APIs       | Internal services, microservices |
 
 ## Requesting a Public Certificate
 
@@ -205,21 +205,21 @@ aws cloudwatch put-metric-alarm \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Public certificates | Free (AWS pays DigiCert) |
-| Private certificates (ACM PCA) | $0.75/month per CA + $0.05/issuance |
-| Certificate issuance (private CA) | $0.05 per certificate |
-| Cross-region certificate copies | Free |
+| Component                         | Cost                                |
+| --------------------------------- | ----------------------------------- |
+| Public certificates               | Free (AWS pays DigiCert)            |
+| Private certificates (ACM PCA)    | $0.75/month per CA + $0.05/issuance |
+| Certificate issuance (private CA) | $0.05 per certificate               |
+| Cross-region certificate copies   | Free                                |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Public certificates per account | 25,000 |
-| Private CAs per account | 10 |
-| Subject Alternative Names per certificate | 100 |
-| Private certificates per CA | Unlimited |
+| Resource                                  | Limit     |
+| ----------------------------------------- | --------- |
+| Public certificates per account           | 25,000    |
+| Private CAs per account                   | 10        |
+| Subject Alternative Names per certificate | 100       |
+| Private certificates per CA               | Unlimited |
 
 ## References
 
@@ -229,7 +229,7 @@ aws cloudwatch put-metric-alarm \
 
 ## Pricing Examples
 
-**Scenario 1:** A public website with 1 certificate covering main domain + wildcard (e.g., example.com + *.example.com). Public certificates are free = $0/month. Compare to buying from DigiCert ($200-500/year).
+**Scenario 1:** A public website with 1 certificate covering main domain + wildcard (e.g., example.com + \*.example.com). Public certificates are free = $0/month. Compare to buying from DigiCert ($200-500/year).
 
 **Scenario 2:** An internal microservices platform with 50 services needing TLS. 50 private certificates × $0.75/month = $37.50/month. Plus $0.05 × 50/month issuance = $2.50/month. Total: $40/month. Compare to self-managed PKI: $0 software but significant operational overhead.
 

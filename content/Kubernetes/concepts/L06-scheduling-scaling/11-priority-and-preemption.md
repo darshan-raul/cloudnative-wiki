@@ -1,6 +1,13 @@
+---
+title: "PriorityClass and Preemption"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "PriorityClass and Preemption — Kubernetes reference and architecture guide."
+---
+
 # PriorityClass and Preemption
 
-*"https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/"*
+_"https://kubernetes.io/docs/concepts/scheduling-eviction/pod-priority-preemption/"_
 
 PriorityClass is the k8s mechanism for **ranking Pods by importance**. When the cluster is out of resources, the scheduler **preempts** (evicts) lower-priority Pods to make room for higher-priority ones. This is how you say "my critical monitoring Pod is more important than my batch workload" — and have the system enforce it.
 
@@ -30,7 +37,7 @@ Without priority:
    Pod A (Request: "give me 4 cores")
    Pod B (Request: "give me 4 cores")
    Pod C (Request: "give me 4 cores")
-   
+
    Cluster has 4 cores free.
    → Scheduler picks one, runs it. The other two stay Pending.
    → Which one? FIFO. Order of submission. Not "importance".
@@ -39,7 +46,7 @@ With priority:
    Pod A — priority 1000 (critical monitoring)
    Pod B — priority 100 (normal app)
    Pod C — priority 0 (batch)
-   
+
    Cluster has 4 cores free, but Pod B wants 4.
    → Pod B runs.
    → Pod A arrives, also wants 4 cores. Cluster is full.
@@ -54,9 +61,9 @@ With priority:
 
 You have a heterogeneous cluster with:
 
-* **Critical system Pods** (Prometheus, ingress controller, cert-manager) — must run.
-* **Production app Pods** (your main service) — should run.
-* **Dev / batch Pods** (CI jobs, dev environments) — run if there's room.
+- **Critical system Pods** (Prometheus, ingress controller, cert-manager) — must run.
+- **Production app Pods** (your main service) — should run.
+- **Dev / batch Pods** (CI jobs, dev environments) — run if there's room.
 
 When a node is full and a critical Pod needs to land, dev / batch Pods are preempted. The critical Pod runs. When load drops, the dev Pods are rescheduled.
 
@@ -71,8 +78,8 @@ apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
   name: high-priority
-value: 1000000              # higher = more important
-globalDefault: false        # if true, this is the default for Pods without priorityClassName
+value: 1000000 # higher = more important
+globalDefault: false # if true, this is the default for Pods without priorityClassName
 description: "Production critical services"
 ```
 
@@ -94,8 +101,8 @@ metadata:
 spec:
   priorityClassName: high-priority
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ```
 
 The Pod's priority is the value of the `high-priority` PriorityClass. The scheduler uses this for both queue ordering and preemption.
@@ -118,9 +125,9 @@ The evicted Pods are NOT gracefully shut down — they're **killed** (similar to
 
 Preempted Pods go through the **eviction API** — the same one that `kubectl drain` and Cluster Autoscaler use. This means:
 
-* **PDBs are respected** — preemption can't violate a PDB for the evicted Pods. (Or rather, it tries to; see section 9.)
-* **Graceful shutdown** is honored — the evicted Pod's `terminationGracePeriodSeconds` is used.
-* **Pod events are emitted** — the preempted Pod gets a "Preempted" event with the reason.
+- **PDBs are respected** — preemption can't violate a PDB for the evicted Pods. (Or rather, it tries to; see section 9.)
+- **Graceful shutdown** is honored — the evicted Pod's `terminationGracePeriodSeconds` is used.
+- **Pod events are emitted** — the preempted Pod gets a "Preempted" event with the reason.
 
 ### 3.2 Preemption is best-effort
 
@@ -162,21 +169,21 @@ You can change this with `--preemption-evaluation-timeout` on kube-scheduler.
 
 **Priority and QoS are completely different concepts.**
 
-| | Priority | QoS |
-|---|---|---|
-| **Determines** | Preemption order | Eviction order under node pressure |
-| **Set by** | `priorityClassName` (Pod spec) | `requests` and `limits` (Pod spec) |
-| **Triggers** | Preemption (PENDING Pod, scheduler evicts others) | Eviction (node is full, kubelet kills Pods) |
-| **When applied** | Scheduling time | Runtime, when node is under pressure |
-| **Number of classes** | Arbitrary (you define them) | 3 (Guaranteed, Burstable, BestEffort) |
-| **Resources needed** | A PriorityClass | Nothing (computed from resources) |
+|                       | Priority                                          | QoS                                         |
+| --------------------- | ------------------------------------------------- | ------------------------------------------- |
+| **Determines**        | Preemption order                                  | Eviction order under node pressure          |
+| **Set by**            | `priorityClassName` (Pod spec)                    | `requests` and `limits` (Pod spec)          |
+| **Triggers**          | Preemption (PENDING Pod, scheduler evicts others) | Eviction (node is full, kubelet kills Pods) |
+| **When applied**      | Scheduling time                                   | Runtime, when node is under pressure        |
+| **Number of classes** | Arbitrary (you define them)                       | 3 (Guaranteed, Burstable, BestEffort)       |
+| **Resources needed**  | A PriorityClass                                   | Nothing (computed from resources)           |
 
 A Pod can be:
 
-* **High priority + Guaranteed** — preempted last, evicted last.
-* **High priority + BestEffort** — preempted last, evicted first.
-* **Low priority + Guaranteed** — preempted first, evicted last.
-* **Low priority + BestEffort** — preempted first, evicted first.
+- **High priority + Guaranteed** — preempted last, evicted last.
+- **High priority + BestEffort** — preempted last, evicted first.
+- **Low priority + Guaranteed** — preempted first, evicted last.
+- **Low priority + BestEffort** — preempted first, evicted first.
 
 **Priority is about "what gets scheduled when resources are tight".** **QoS is about "what gets killed when the node runs out of memory".**
 
@@ -186,8 +193,8 @@ A Pod can be:
 
 k8s ships with two built-in PriorityClasses for system use:
 
-* `system-cluster-critical` (value: 2000000000) — for cluster-level critical Pods.
-* `system-node-critical` (value: 3000000000 / 2000000000 in older versions) — for node-level critical Pods.
+- `system-cluster-critical` (value: 2000000000) — for cluster-level critical Pods.
+- `system-node-critical` (value: 3000000000 / 2000000000 in older versions) — for node-level critical Pods.
 
 These are **reserved for system components** (kube-proxy, CNI, etc.). Don't assign them to user Pods.
 
@@ -237,17 +244,17 @@ The `globalDefault: true` on `best-effort` means Pods without `priorityClassName
 
 The k8s convention:
 
-* `system-*` — reserved for system Pods.
-* `cluster-critical`, `node-critical` — same, reserved.
-* Everything else — your own classes.
+- `system-*` — reserved for system Pods.
+- `cluster-critical`, `node-critical` — same, reserved.
+- Everything else — your own classes.
 
 A common pattern:
 
-* `tier-0-critical` (or `production-critical`)
-* `tier-1-standard` (or `production-standard`)
-* `tier-2-batch`
-* `tier-3-dev` (or `batch-low`)
-* `tier-4-best-effort` (globalDefault)
+- `tier-0-critical` (or `production-critical`)
+- `tier-1-standard` (or `production-standard`)
+- `tier-2-batch`
+- `tier-3-dev` (or `batch-low`)
+- `tier-4-best-effort` (globalDefault)
 
 ## 7. Critical Pods and the cluster-critical Marker
 
@@ -315,8 +322,8 @@ This is correct behavior. Preemption is **targeted at the lowest** to minimize d
 
 Preemption **respects PDBs** — it tries not to violate them. But "tries" is the operative word:
 
-* If a node has 3 Pods, all `minAvailable: 2`, and a high-priority Pod needs 1 of those evicted, **preemption skips the node**. The high-priority Pod stays Pending.
-* If the only preemptable candidates are protected by PDBs, **preemption fails**. The high-priority Pod stays Pending.
+- If a node has 3 Pods, all `minAvailable: 2`, and a high-priority Pod needs 1 of those evicted, **preemption skips the node**. The high-priority Pod stays Pending.
+- If the only preemptable candidates are protected by PDBs, **preemption fails**. The high-priority Pod stays Pending.
 
 The preemption algorithm prefers nodes where the **fewest PDBs are violated**. If no node can be preempted without violating a PDB, the high-priority Pod doesn't get scheduled.
 
@@ -324,7 +331,7 @@ The preemption algorithm prefers nodes where the **fewest PDBs are violated**. I
 
 ## 10. The PodSchedulingReadiness Gate
 
-*(See [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] for the deep dive.)*
+_(See [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] for the deep dive.)_
 
 A `schedulingGates` field on a Pod holds it back from scheduling until explicitly removed. This is the "Pod scheduling readiness" feature (k8s 1.27+).
 
@@ -334,10 +341,10 @@ kind: Pod
 metadata: { name: gated }
 spec:
   schedulingGates:
-  - name: ready-for-scheduling
+    - name: ready-for-scheduling
   containers:
-  - name: app
-    image: app:1.0
+    - name: app
+      image: app:1.0
 ```
 
 The Pod is created but not scheduled until the gate is removed:
@@ -352,9 +359,9 @@ kubectl patch pod gated -p '{"spec":{"schedulingGates":null}}' --type=merge
 
 This is useful for:
 
-* StatefulSet joins — wait for the previous Pod to be ready.
-* Coordinated deployments — wait for a signal before allowing scheduling.
-* Pre-deployment checks — verify cluster state before allowing the Pod to run.
+- StatefulSet joins — wait for the previous Pod to be ready.
+- Coordinated deployments — wait for a signal before allowing scheduling.
+- Pre-deployment checks — verify cluster state before allowing the Pod to run.
 
 ## 11. Operations and Debugging
 
@@ -406,10 +413,10 @@ kubectl describe node <node> | grep Allocatable
 
 If preemption is happening too frequently:
 
-* **Too many high-priority Pods.** Lower their priority.
-* **Not enough capacity.** Add nodes (CA / Karpenter).
-* **The high-priority Pods have high resource requests.** Lower them.
-* **PDBs are too tight.** Loosen the PDBs to allow eviction of low-priority Pods.
+- **Too many high-priority Pods.** Lower their priority.
+- **Not enough capacity.** Add nodes (CA / Karpenter).
+- **The high-priority Pods have high resource requests.** Lower them.
+- **PDBs are too tight.** Loosen the PDBs to allow eviction of low-priority Pods.
 
 ## 12. Gotchas and Common Mistakes
 
@@ -477,7 +484,7 @@ If preemption is happening too frequently:
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the broader scheduling context
-* [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the actual scheduling algorithm
-* [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] — holding Pods back from scheduling
-* [[Kubernetes/concepts/L06-scheduling-scaling/04-poddisruptionbudget|PDB]] — how PDBs interact with preemption
+- [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the broader scheduling context
+- [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the actual scheduling algorithm
+- [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] — holding Pods back from scheduling
+- [[Kubernetes/concepts/L06-scheduling-scaling/04-poddisruptionbudget|PDB]] — how PDBs interact with preemption

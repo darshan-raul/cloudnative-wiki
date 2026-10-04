@@ -27,26 +27,26 @@ Billing: Duration (ms) × Memory (GB) × $0.0000166667
 
 ### Supported Runtimes
 
-| Runtime | Version | Language |
-|---------|--------|----------|
-| Node.js | 18.x, 20.x | JavaScript |
-| Python | 3.9, 3.10, 3.11, 3.12 | Python |
-| Java | 11, 17, 21 | Java |
-| Go | 1.x | Go |
-| .NET | 6, 7, 8 | C#, F# |
-| Ruby | 3.2 | Ruby |
-| Custom | provided.al2, provided | Any (via container) |
+| Runtime | Version                | Language            |
+| ------- | ---------------------- | ------------------- |
+| Node.js | 18.x, 20.x             | JavaScript          |
+| Python  | 3.9, 3.10, 3.11, 3.12  | Python              |
+| Java    | 11, 17, 21             | Java                |
+| Go      | 1.x                    | Go                  |
+| .NET    | 6, 7, 8                | C#, F#              |
+| Ruby    | 3.2                    | Ruby                |
+| Custom  | provided.al2, provided | Any (via container) |
 
 ### Execution Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max execution time | 15 minutes |
-| Max memory | 10 GB |
-| Max ephemeral storage (/tmp) | 10 GB |
-| Max package size (ZIP) | 50 MB (direct), 250 MB (layer) |
-| Max container image | 10 GB |
-| Concurrent executions | 1,000 (soft limit) |
+| Resource                     | Limit                          |
+| ---------------------------- | ------------------------------ |
+| Max execution time           | 15 minutes                     |
+| Max memory                   | 10 GB                          |
+| Max ephemeral storage (/tmp) | 10 GB                          |
+| Max package size (ZIP)       | 50 MB (direct), 250 MB (layer) |
+| Max container image          | 10 GB                          |
+| Concurrent executions        | 1,000 (soft limit)             |
 
 ## Creating a Function
 
@@ -71,7 +71,7 @@ aws lambda create-function \
 
 ```yaml
 # template.yaml
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Resources:
   MyFunction:
@@ -120,7 +120,7 @@ Events:
   ScheduledEvent:
     Type: Schedule
     Properties:
-      Schedule: cron(0 */6 * * ? *)  # Every 6 hours
+      Schedule: cron(0 */6 * * ? *) # Every 6 hours
 ```
 
 ## Lambda Layers
@@ -142,6 +142,7 @@ aws lambda update-function-configuration \
 ```
 
 Layer structure:
+
 ```
 python/
   lib/
@@ -183,11 +184,11 @@ S3 trigger: 1 concurrent per event
 
 Cold starts happen when Lambda spins up a new execution context. Warm invocations are ~1ms; cold starts vary by runtime:
 
-| Runtime | Cold Start (ms) |
-|---------|-----------------|
-| Node.js/Python | 50-200 |
-| Java/.NET | 500-2000 |
-| Container image | 500-3000 |
+| Runtime         | Cold Start (ms) |
+| --------------- | --------------- |
+| Node.js/Python  | 50-200          |
+| Java/.NET       | 500-2000        |
+| Container image | 500-3000        |
 
 ### Reducing Cold Starts
 
@@ -198,12 +199,12 @@ Cold starts happen when Lambda spins up a new execution context. Warm invocation
 
 ## Pricing
 
-| Dimension | Cost |
-|-----------|------|
-| Request | $0.20 per 1M requests |
-| Duration (x86) | $0.0000166667 per GB-second |
-| Duration (arm64) | $0.0000133333 per GB-second |
-| Provisioned Concurrency | $0.0000166667 per GB-second |
+| Dimension                          | Cost                         |
+| ---------------------------------- | ---------------------------- |
+| Request                            | $0.20 per 1M requests        |
+| Duration (x86)                     | $0.0000166667 per GB-second  |
+| Duration (arm64)                   | $0.0000133333 per GB-second  |
+| Provisioned Concurrency            | $0.0000166667 per GB-second  |
 | Provisioned Concurrency (duration) | $0.00000999999 per GB-second |
 
 ### Free Tier
@@ -267,6 +268,7 @@ aws cloudwatch get-metric-statistics \
 ```
 
 Key metrics:
+
 - `Invocations` — total function calls
 - `Duration` — execution time (p50, p90, p99)
 - `Errors` — failed invocations

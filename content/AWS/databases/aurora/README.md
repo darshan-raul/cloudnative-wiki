@@ -43,26 +43,26 @@ Data is written to 6 of 6 nodes (quorum: 4 of 6). Data is read from 4 of 6 nodes
 
 ## Aurora MySQL vs Aurora PostgreSQL
 
-| | Aurora MySQL | Aurora PostgreSQL |
-|--|--|--|
-| MySQL compatible | 5.7, 8.0 | N/A |
-| PostgreSQL compatible | N/A | 13, 14, 15, 16 |
-| Parallel query | Yes | No |
-| Backtrack | Yes | No |
-| Serverless v2 | Yes | Yes |
-| Global Database | Yes | Yes |
-| ML integrations | Yes | Yes |
+|                       | Aurora MySQL | Aurora PostgreSQL |
+| --------------------- | ------------ | ----------------- |
+| MySQL compatible      | 5.7, 8.0     | N/A               |
+| PostgreSQL compatible | N/A          | 13, 14, 15, 16    |
+| Parallel query        | Yes          | No                |
+| Backtrack             | Yes          | No                |
+| Serverless v2         | Yes          | Yes               |
+| Global Database       | Yes          | Yes               |
+| ML integrations       | Yes          | Yes               |
 
 ## Endpoints
 
 Aurora has multiple endpoints for different use cases:
 
-| Endpoint | Use | Points To |
-|----------|-----|----------|
-| Cluster endpoint | Primary writes | Writer DB instance |
-| Reader endpoint | Read-only queries | All reader instances (load-balanced) |
-| Custom endpoint | Specific instance(s) | Named instances |
-| Instance endpoint | Specific instance | Single instance |
+| Endpoint          | Use                  | Points To                            |
+| ----------------- | -------------------- | ------------------------------------ |
+| Cluster endpoint  | Primary writes       | Writer DB instance                   |
+| Reader endpoint   | Read-only queries    | All reader instances (load-balanced) |
+| Custom endpoint   | Specific instance(s) | Named instances                      |
+| Instance endpoint | Specific instance    | Single instance                      |
 
 ```bash
 # Get all endpoints
@@ -124,11 +124,11 @@ aws rds modify-db-cluster \
 
 ### ACU Pricing
 
-| | Aurora Serverless v2 |
-|--|--|
-| Per ACU-hour | $0.12/hr |
-| Storage | $0.10/GB/month |
-| I/O | $0.20 per million requests |
+|              | Aurora Serverless v2       |
+| ------------ | -------------------------- |
+| Per ACU-hour | $0.12/hr                   |
+| Storage      | $0.10/GB/month             |
+| I/O          | $0.20 per million requests |
 
 ## Global Database (Cross-Region)
 
@@ -187,11 +187,11 @@ aws rds create-db-cluster \
 
 ## Performance
 
-| Metric | Aurora MySQL | Aurora PostgreSQL | Standard MySQL |
-|--------|-------------|------------------|----------------|
-| Throughput | 5x MySQL | 3x PostgreSQL | Baseline |
-| Max connections | 160,000 | 65,535 | 151 (default) |
-| Max storage | 128 TB | 128 TB | 64 TB |
+| Metric          | Aurora MySQL | Aurora PostgreSQL | Standard MySQL |
+| --------------- | ------------ | ----------------- | -------------- |
+| Throughput      | 5x MySQL     | 3x PostgreSQL     | Baseline       |
+| Max connections | 160,000      | 65,535            | 151 (default)  |
+| Max storage     | 128 TB       | 128 TB            | 64 TB          |
 
 ## Monitoring
 
@@ -203,6 +203,7 @@ aws cloudwatch list-metrics \
 ```
 
 Key Aurora-specific metrics:
+
 - `ServerlessDatabaseCapacity` — current ACU usage
 - `AuroraVolumeBytesChanged` — data written to storage
 - `RollbackSegmentInflation` — undo header inflation
@@ -210,13 +211,13 @@ Key Aurora-specific metrics:
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max storage | 128 TB |
-| Max instances per cluster | 1 writer + 15 readers |
-| Max connections | 160,000 (Aurora MySQL), 65,535 (Aurora PG) |
-| Backtrack window | 72 hours (MySQL only) |
-| Global database regions | 5 secondary regions |
+| Resource                  | Limit                                      |
+| ------------------------- | ------------------------------------------ |
+| Max storage               | 128 TB                                     |
+| Max instances per cluster | 1 writer + 15 readers                      |
+| Max connections           | 160,000 (Aurora MySQL), 65,535 (Aurora PG) |
+| Backtrack window          | 72 hours (MySQL only)                      |
+| Global database regions   | 5 secondary regions                        |
 
 ## References
 

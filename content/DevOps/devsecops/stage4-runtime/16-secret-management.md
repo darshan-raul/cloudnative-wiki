@@ -1,6 +1,16 @@
 ---
 title: "M16: Runtime Secret Management"
-tags: [devsecops, stage4, runtime, secrets, vault, external-secrets-operator, sealed-secrets, workload-identity]
+tags:
+  [
+    devsecops,
+    stage4,
+    runtime,
+    secrets,
+    vault,
+    external-secrets-operator,
+    sealed-secrets,
+    workload-identity,
+  ]
 date: 2026-06-16
 description: "Module 16 of 20 — runtime secret management for workloads. HashiCorp Vault, External Secrets Operator, Sealed Secrets, workload identity federation, and the patterns for keeping secrets out of config and env files."
 ---
@@ -13,22 +23,22 @@ The last place secrets should live is in the application's environment variables
 
 By the end of this module you should be able to:
 
-  - Replace every static secret in a workload with workload identity, Vault, or ESO
-  - Pick the right tool for the use case (workload identity vs. dynamic secrets vs. synced secrets)
-  - Rotate a runtime secret without downtime
-  - Audit secret access in Vault
-  - Implement a secrets-as-code pattern for K8s workloads
+- Replace every static secret in a workload with workload identity, Vault, or ESO
+- Pick the right tool for the use case (workload identity vs. dynamic secrets vs. synced secrets)
+- Rotate a runtime secret without downtime
+- Audit secret access in Vault
+- Implement a secrets-as-code pattern for K8s workloads
 
 ## 1. The Four Tiers (Review)
 
 From M06, the four tiers of secret management:
 
-| Tier | Mechanism | TTL | Use case |
-| ---- | --------- | --- | -------- |
-| 1 | Cloud workload identity (IRSA, WIF, Workload Identity) | 1h | Cloud API access |
-| 2 | Dynamic Vault secrets | 1h | DB, third-party API |
-| 3 | Long-lived Vault secrets | indefinite | Legacy |
-| 4 | Env vars, config files | until rotated | Avoid |
+| Tier | Mechanism                                              | TTL           | Use case            |
+| ---- | ------------------------------------------------------ | ------------- | ------------------- |
+| 1    | Cloud workload identity (IRSA, WIF, Workload Identity) | 1h            | Cloud API access    |
+| 2    | Dynamic Vault secrets                                  | 1h            | DB, third-party API |
+| 3    | Long-lived Vault secrets                               | indefinite    | Legacy              |
+| 4    | Env vars, config files                                 | until rotated | Avoid               |
 
 The goal: tier 4 → 0, tier 3 → tier 2 (over time), tier 2 → tier 1 where possible.
 
@@ -103,7 +113,7 @@ A sidecar (`azure-identity-token`) projects the federated token. The pod authent
 
 ## 3. HashiCorp Vault: The Generic Layer
 
-Vault is the de facto standard for runtime secrets that are *not* cloud credentials. Database passwords, third-party API keys, certificates, encryption keys.
+Vault is the de facto standard for runtime secrets that are _not_ cloud credentials. Database passwords, third-party API keys, certificates, encryption keys.
 
 ### Dynamic Database Credentials
 
@@ -138,8 +148,8 @@ The credentials expire in 1 hour. The next request gets a new user. No long-live
 
 For workloads that don't natively speak Vault, use Vault Agent:
 
-  - **Init container / sidecar** — fetches secrets at startup, writes to a shared volume, renews on TTL
-  - **Vault CSI Provider** — mounts secrets as files in the pod; automatic renewal
+- **Init container / sidecar** — fetches secrets at startup, writes to a shared volume, renews on TTL
+- **Vault CSI Provider** — mounts secrets as files in the pod; automatic renewal
 
 The CSI provider is the more modern pattern:
 
@@ -179,11 +189,11 @@ The pod gets `/etc/secrets/db-password` mounted as a file. The file is renewed a
 
 ### Vault Authentication
 
-How does the workload authenticate *to* Vault? Several options:
+How does the workload authenticate _to_ Vault? Several options:
 
-  - **Kubernetes auth** — the service account token is presented; Vault verifies via OIDC
-  - **AWS / GCP / Azure auth** — cloud instance metadata presented
-  - **AppRole** — workload has a static AppRole ID + secret (worse; avoid)
+- **Kubernetes auth** — the service account token is presented; Vault verifies via OIDC
+- **AWS / GCP / Azure auth** — cloud instance metadata presented
+- **AppRole** — workload has a static AppRole ID + secret (worse; avoid)
 
 K8s auth is the default:
 
@@ -361,46 +371,46 @@ Forbid `printenv`, `env | grep`, and `os.environ` in code review.
 
 Every secret access should be logged:
 
-  - **Vault audit log** — every read, every write, every auth
-  - **AWS CloudTrail** — every Secrets Manager call
-  - **K8s audit log** — every Secret read (configure audit policy)
-  - **Application logs** — do not log secret values; do log "secret X accessed by user Y at time Z"
+- **Vault audit log** — every read, every write, every auth
+- **AWS CloudTrail** — every Secrets Manager call
+- **K8s audit log** — every Secret read (configure audit policy)
+- **Application logs** — do not log secret values; do log "secret X accessed by user Y at time Z"
 
 Pipe to your SIEM. Anomalies (e.g., a workload reading 1000 secrets in 5 minutes) are signal.
 
 ## 10. Common Patterns and Anti-Patterns
 
-| Pattern | Use case |
-| ------- | -------- |
-| Workload identity for cloud APIs | S3, DynamoDB, SQS, etc. |
-| Vault dynamic for databases | Postgres, MySQL, Mongo, Redis |
-| Vault PKI for TLS | Internal services |
-| ESO for third-party API keys | Stripe, Twilio, etc. |
-| Cert-manager for public TLS | Let's Encrypt, internal CA |
-| Sealed Secrets for low-value config | Bootstrap configs |
+| Pattern                             | Use case                      |
+| ----------------------------------- | ----------------------------- |
+| Workload identity for cloud APIs    | S3, DynamoDB, SQS, etc.       |
+| Vault dynamic for databases         | Postgres, MySQL, Mongo, Redis |
+| Vault PKI for TLS                   | Internal services             |
+| ESO for third-party API keys        | Stripe, Twilio, etc.          |
+| Cert-manager for public TLS         | Let's Encrypt, internal CA    |
+| Sealed Secrets for low-value config | Bootstrap configs             |
 
-| Anti-pattern | Why it fails |
-| ------------ | ------------ |
-| Static AWS keys in env | The whole point of M12 is to avoid this |
-| Long-lived DB password in K8s Secret | Drift, no rotation, no audit |
-| Secret in container image | Image is distributed; secret is too |
-| Commit secret to git | Even Sealed Secrets loses to a bad decrypt key |
-| One secret for all environments | Blast radius = total |
-| Rotate the secret and forget to restart | Old process keeps using old secret |
+| Anti-pattern                            | Why it fails                                   |
+| --------------------------------------- | ---------------------------------------------- |
+| Static AWS keys in env                  | The whole point of M12 is to avoid this        |
+| Long-lived DB password in K8s Secret    | Drift, no rotation, no audit                   |
+| Secret in container image               | Image is distributed; secret is too            |
+| Commit secret to git                    | Even Sealed Secrets loses to a bad decrypt key |
+| One secret for all environments         | Blast radius = total                           |
+| Rotate the secret and forget to restart | Old process keeps using old secret             |
 
 ## 11. The 1-Quarter Migration Plan
 
-  - **Week 1** — Inventory: every secret in every workload. Classify by tier.
-  - **Week 2** — Set up Vault (or pick the secret store). Configure the first secret backend.
-  - **Week 3** — Migrate one workload end-to-end. Validate the rotation drill.
-  - **Weeks 4–8** — Migrate workloads in priority order. Tier 4 → tier 2/3 first.
-  - **Weeks 9–12** — Move tier 3 to tier 2 (dynamic). Set up tier 1 (workload identity) for cloud APIs.
+- **Week 1** — Inventory: every secret in every workload. Classify by tier.
+- **Week 2** — Set up Vault (or pick the secret store). Configure the first secret backend.
+- **Week 3** — Migrate one workload end-to-end. Validate the rotation drill.
+- **Weeks 4–8** — Migrate workloads in priority order. Tier 4 → tier 2/3 first.
+- **Weeks 9–12** — Move tier 3 to tier 2 (dynamic). Set up tier 1 (workload identity) for cloud APIs.
 
 ## 12. Self-Check
 
-  1. For each workload, what is the highest-tier secret it uses? If any is tier 4, that's your first migration.
-  2. When was the last time you ran the rotation drill? Did any workload fail to re-fetch?
-  3. Can you answer "which workload accessed which secret in the last 24 hours"? If not, enable audit logs.
+1. For each workload, what is the highest-tier secret it uses? If any is tier 4, that's your first migration.
+2. When was the last time you ran the rotation drill? Did any workload fail to re-fetch?
+3. Can you answer "which workload accessed which secret in the last 24 hours"? If not, enable audit logs.
 
 ## 13. Secret Reference Architecture for a Modern Stack
 
@@ -431,91 +441,91 @@ A quarterly rotation drill exercises the full process. The full version:
 
 ### Pre-Drill (Day -1)
 
-  - Announce the drill to on-call
-  - Identify the top 10 secrets in use
-  - Pick 3 for the drill (one from each tier: cloud, DB, third-party)
-  - Stage the runbook in the wiki
+- Announce the drill to on-call
+- Identify the top 10 secrets in use
+- Pick 3 for the drill (one from each tier: cloud, DB, third-party)
+- Stage the runbook in the wiki
 
 ### Drill (Day 0)
 
-  - 09:00 — Announce drill; assign roles (incident commander, scribe, executor)
-  - 09:05 — Rotate the first secret (cloud credential, simulated)
-  - 09:15 — Verify the old credential is dead
-  - 09:20 — Verify the new credential works
-  - 09:30 — Rotate the second secret (database, real)
-  - 09:45 — Database consumers reconnect automatically
-  - 10:00 — Rotate the third secret (third-party API, real)
-  - 10:15 — Verify the third-party integration works
-  - 10:30 — Debrief: what worked, what didn't
+- 09:00 — Announce drill; assign roles (incident commander, scribe, executor)
+- 09:05 — Rotate the first secret (cloud credential, simulated)
+- 09:15 — Verify the old credential is dead
+- 09:20 — Verify the new credential works
+- 09:30 — Rotate the second secret (database, real)
+- 09:45 — Database consumers reconnect automatically
+- 10:00 — Rotate the third secret (third-party API, real)
+- 10:15 — Verify the third-party integration works
+- 10:30 — Debrief: what worked, what didn't
 
 ### Post-Drill (Day +1)
 
-  - Document the drill in the postmortem template
-  - File improvement stories for each gap
-  - Update the runbook
-  - Schedule the next drill
+- Document the drill in the postmortem template
+- File improvement stories for each gap
+- Update the runbook
+- Schedule the next drill
 
 The drill surfaces the friction that exists in your secret management. The friction points are your improvement backlog.
 
 ## 15. Secret Management and Compliance
 
-| Framework | Control | Secret management |
-| --------- | ------- | ----------------- |
-| SOC 2 CC6.1 | Logical access | Vault audit, IAM logs |
-| SOC 2 CC6.7 | Data in transit | mTLS via cert-manager + SPIFFE |
-| SOC 2 CC7.1 | Vuln detection | Vault dynamic secrets reduce blast radius |
-| ISO A.5.15 | Access control | Vault policies, IAM |
-| ISO A.5.16 | Identity management | Workload identity, OIDC |
-| ISO A.8.24 | Cryptography | cert-manager, Vault PKI |
-| PCI 3.x | Protect stored data | Encryption keys from KMS via Vault |
-| PCI 8.x | Authenticate access | MFA, OIDC, Vault tokens |
-| FedRAMP AC-2 | Account management | Vault user management |
-| FedRAMP SC-12 | Crypto key management | Vault + KMS |
-| FedRAMP IA-5 | Authenticator management | Vault dynamic secrets |
+| Framework     | Control                  | Secret management                         |
+| ------------- | ------------------------ | ----------------------------------------- |
+| SOC 2 CC6.1   | Logical access           | Vault audit, IAM logs                     |
+| SOC 2 CC6.7   | Data in transit          | mTLS via cert-manager + SPIFFE            |
+| SOC 2 CC7.1   | Vuln detection           | Vault dynamic secrets reduce blast radius |
+| ISO A.5.15    | Access control           | Vault policies, IAM                       |
+| ISO A.5.16    | Identity management      | Workload identity, OIDC                   |
+| ISO A.8.24    | Cryptography             | cert-manager, Vault PKI                   |
+| PCI 3.x       | Protect stored data      | Encryption keys from KMS via Vault        |
+| PCI 8.x       | Authenticate access      | MFA, OIDC, Vault tokens                   |
+| FedRAMP AC-2  | Account management       | Vault user management                     |
+| FedRAMP SC-12 | Crypto key management    | Vault + KMS                               |
+| FedRAMP IA-5  | Authenticator management | Vault dynamic secrets                     |
 
 The audit asks "how do you manage secrets?" The answer is the audit log + rotation drill + tier model.
 
 ## 16. Secret Management Metrics
 
-| Metric | Target | Why |
-| ------ | ------ | --- |
-| % of workloads on tier 1 (workload identity) | >70% | Cloud access is short-lived |
-| % of workloads on tier 2 (Vault dynamic) | >25% | DB / third-party is short-lived |
-| % of workloads on tier 3 (Vault static) | <5% | Legacy; migrate away |
-| % of workloads on tier 4 (env vars) | 0% | The minimum acceptable |
-| Mean time to rotate a secret | <30 min | Incident response |
-| % of secret access logged | 100% | Audit trail |
-| Vault policy violations | 0 | Misconfiguration |
+| Metric                                       | Target  | Why                             |
+| -------------------------------------------- | ------- | ------------------------------- |
+| % of workloads on tier 1 (workload identity) | >70%    | Cloud access is short-lived     |
+| % of workloads on tier 2 (Vault dynamic)     | >25%    | DB / third-party is short-lived |
+| % of workloads on tier 3 (Vault static)      | <5%     | Legacy; migrate away            |
+| % of workloads on tier 4 (env vars)          | 0%      | The minimum acceptable          |
+| Mean time to rotate a secret                 | <30 min | Incident response               |
+| % of secret access logged                    | 100%    | Audit trail                     |
+| Vault policy violations                      | 0       | Misconfiguration                |
 
 If tier-4 is non-zero, you have a migration backlog. If tier-3 is rising, the migration is stalled.
 
 ## 17. Common Mistakes (Extended)
 
-| Mistake | Consequence | Fix |
-| ------- | ----------- | --- |
-| Mount secret in env, not file | Secret in crash dump, log, /proc | Mount as file, readOnly |
-| Mount secret in /tmp | World-readable on some systems | Mount in /etc/secrets, mode 0400 |
-| Use `chmod 777` in entrypoint | Defeats file mode | Set mode in manifest, not in entrypoint |
-| Restart pod on secret change | Long reload time | Use re-fetch pattern (Vault Agent) |
-| No webhook for secret refresh | Pod uses stale secret | Vault Agent with webhook |
-| Secret in shell history | Leaked via terminal logs | Use Vault CLI, not psql with -p |
-| Hardcoded test secrets in code | Reachable by SCA (M07) | Mock secrets in test; or use a sandbox |
-| "Read-only filesystem" but secret in env | Env is read via /proc, still leaks | Mount as file |
+| Mistake                                  | Consequence                        | Fix                                     |
+| ---------------------------------------- | ---------------------------------- | --------------------------------------- |
+| Mount secret in env, not file            | Secret in crash dump, log, /proc   | Mount as file, readOnly                 |
+| Mount secret in /tmp                     | World-readable on some systems     | Mount in /etc/secrets, mode 0400        |
+| Use `chmod 777` in entrypoint            | Defeats file mode                  | Set mode in manifest, not in entrypoint |
+| Restart pod on secret change             | Long reload time                   | Use re-fetch pattern (Vault Agent)      |
+| No webhook for secret refresh            | Pod uses stale secret              | Vault Agent with webhook                |
+| Secret in shell history                  | Leaked via terminal logs           | Use Vault CLI, not psql with -p         |
+| Hardcoded test secrets in code           | Reachable by SCA (M07)             | Mock secrets in test; or use a sandbox  |
+| "Read-only filesystem" but secret in env | Env is read via /proc, still leaks | Mount as file                           |
 
 ## 18. The Secret Management Team
 
 A small team owns the secret management platform:
 
-  - **Vault admin** — runs Vault, manages policies, audits access
-  - **Cloud IAM owner** — manages IRSA, WIF, Workload Identity
-  - **Cert manager** — runs cert-manager, renews internal CAs
-  - **Platform engineer** — integrates Vault with K8s (CSI, Agent)
+- **Vault admin** — runs Vault, manages policies, audits access
+- **Cloud IAM owner** — manages IRSA, WIF, Workload Identity
+- **Cert manager** — runs cert-manager, renews internal CAs
+- **Platform engineer** — integrates Vault with K8s (CSI, Agent)
 
 For a mid-size org: 1–2 FTE. The investment is small; the payoff is large.
 
 ## Related
 
-  - [[DevOps/devsecops/stage1-code/06-secrets-detection|M06: Secrets Detection]]
-  - [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC]]
-  - [[DevOps/devsecops/stage3-deploy/15-policy-as-code|M15: Policy-as-Code]]
-  - [[DevOps/devsecops/stage4-runtime/README|Stage 4 — Runtime]]
+- [[DevOps/devsecops/stage1-code/06-secrets-detection|M06: Secrets Detection]]
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC]]
+- [[DevOps/devsecops/stage3-deploy/15-policy-as-code|M15: Policy-as-Code]]
+- [[DevOps/devsecops/stage4-runtime/README|Stage 4 — Runtime]]

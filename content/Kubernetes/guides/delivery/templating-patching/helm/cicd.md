@@ -37,10 +37,10 @@ on:
   push:
     branches: [main]
     paths:
-      - 'charts/**'
+      - "charts/**"
   pull_request:
     paths:
-      - 'charts/**'
+      - "charts/**"
 
 jobs:
   lint:
@@ -93,7 +93,7 @@ name: Release Helm Chart
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release:
@@ -155,8 +155,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'charts/**'
-      - 'environments/**'
+      - "charts/**"
+      - "environments/**"
 
 env:
   REGISTRY: ghcr.io
@@ -646,7 +646,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'charts/**'
+      - "charts/**"
   pull_request:
 
 jobs:
@@ -711,15 +711,15 @@ jobs:
       - name: Run Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: 'charts/myapp'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          scan-type: "fs"
+          scan-ref: "charts/myapp"
+          format: "sarif"
+          output: "trivy-results.sarif"
 
       - name: Upload to GitHub Security
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 ```
 
 ### Helm Security Best Practices
@@ -804,10 +804,10 @@ jobs:
         run: |
           SHA=${{ github.sha }}
           SHORT_SHA=${SHA:0:7}
-          
+
           # Update values.yaml
           yq e '.image.tag = env(short_sha)' -i charts/myapp/values.yaml
-          
+
           # Or using sed
           sed -i "s/image:.*/image: myapp:${SHORT_SHA}/" charts/myapp/values.yaml
 
@@ -830,14 +830,14 @@ on:
   workflow_dispatch:
     inputs:
       from_env:
-        description: 'From environment'
+        description: "From environment"
         required: true
         type: choice
         options:
           - dev
           - staging
       to_env:
-        description: 'To environment'
+        description: "To environment"
         required: true
         type: choice
         options:
@@ -857,12 +857,12 @@ jobs:
         run: |
           # Get version from source env
           helm get values myapp -n myapp-${{ inputs.from_env }} -o yaml > values.yaml
-          
+
       - name: Update values
         run: |
           # Modify for target environment
           yq e '.replicaCount = 5' -i values.yaml
-          
+
       - name: Deploy to target
         run: |
           helm upgrade --install myapp charts/myapp \
@@ -935,13 +935,13 @@ helm get hooks myapp
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Chart not found | `helm repo update` and check repository |
-| Template syntax error | Use `--dry-run --debug` to debug |
-| Hooks failing | Check hook annotations and Job specs |
-| Image pull error | Verify image pull secrets exist |
-| Resource conflict | Use `--atomic` or `--force` |
+| Issue                 | Solution                                |
+| --------------------- | --------------------------------------- |
+| Chart not found       | `helm repo update` and check repository |
+| Template syntax error | Use `--dry-run --debug` to debug        |
+| Hooks failing         | Check hook annotations and Job specs    |
+| Image pull error      | Verify image pull secrets exist         |
+| Resource conflict     | Use `--atomic` or `--force`             |
 
 ### Debug CI Jobs
 

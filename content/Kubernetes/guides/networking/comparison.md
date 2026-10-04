@@ -14,22 +14,23 @@ How to pick between **Istio, Linkerd, and Cilium** for your cluster. The three a
 
 ## The three main options
 
-| | Istio | Linkerd | Cilium Service Mesh |
-|---|-------|---------|---------------------|
-| **Proxy** | Envoy (C++) | linkerd2-proxy (Rust) | eBPF (kernel) |
-| **Sidecar** | Yes | Yes | No (kernel-level) |
-| **mTLS** | ✅ | ✅ | ✅ |
-| **L7 routing** | ✅ Envoy | ✅ (limited) | ✅ (limited) |
-| **Multi-cluster** | ✅ | ✅ | ✅ ClusterMesh |
-| **Maturity** | CNCF Graduated | CNCF Graduated | CNCF Graduated |
-| **Resource overhead** | Higher | Lowest | Lowest |
-| **Latency overhead** | Higher | Low | Lowest |
-| **Complexity** | High | Medium | Medium |
-| **Best for** | Full-featured, complex routing | Simplicity, mTLS | Performance, eBPF |
+|                       | Istio                          | Linkerd               | Cilium Service Mesh |
+| --------------------- | ------------------------------ | --------------------- | ------------------- |
+| **Proxy**             | Envoy (C++)                    | linkerd2-proxy (Rust) | eBPF (kernel)       |
+| **Sidecar**           | Yes                            | Yes                   | No (kernel-level)   |
+| **mTLS**              | ✅                             | ✅                    | ✅                  |
+| **L7 routing**        | ✅ Envoy                       | ✅ (limited)          | ✅ (limited)        |
+| **Multi-cluster**     | ✅                             | ✅                    | ✅ ClusterMesh      |
+| **Maturity**          | CNCF Graduated                 | CNCF Graduated        | CNCF Graduated      |
+| **Resource overhead** | Higher                         | Lowest                | Lowest              |
+| **Latency overhead**  | Higher                         | Low                   | Lowest              |
+| **Complexity**        | High                           | Medium                | Medium              |
+| **Best for**          | Full-featured, complex routing | Simplicity, mTLS      | Performance, eBPF   |
 
 ## Istio in detail
 
 **Pros:**
+
 - Most feature-rich (Envoy's full power)
 - WASM-based custom filters
 - Strong Envoy community
@@ -37,6 +38,7 @@ How to pick between **Istio, Linkerd, and Cilium** for your cluster. The three a
 - Mature, large community
 
 **Cons:**
+
 - Heavier (Envoy per pod)
 - More complex to operate
 - Steeper learning curve
@@ -47,6 +49,7 @@ How to pick between **Istio, Linkerd, and Cilium** for your cluster. The three a
 ## Linkerd in detail
 
 **Pros:**
+
 - Lightest mesh (Rust proxy)
 - Easiest to install and operate
 - Excellent defaults (mTLS auto)
@@ -54,6 +57,7 @@ How to pick between **Istio, Linkerd, and Cilium** for your cluster. The three a
 - Best observability built-in
 
 **Cons:**
+
 - Less feature-rich (no Envoy)
 - Some features SMI-only (canary)
 - No WASM extensibility
@@ -64,6 +68,7 @@ How to pick between **Istio, Linkerd, and Cilium** for your cluster. The three a
 ## Cilium Service Mesh in detail
 
 **Pros:**
+
 - eBPF-based, no sidecar
 - Lowest resource overhead
 - Lowest latency overhead
@@ -71,6 +76,7 @@ How to pick between **Istio, Linkerd, and Cilium** for your cluster. The three a
 - Multi-cluster with ClusterMesh
 
 **Cons:**
+
 - Newer as a full mesh (was CNI first)
 - L7 routing less mature
 - Some features (e.g., fault injection) limited
@@ -110,52 +116,52 @@ Q: Do you need a full service mesh (mTLS, L7 routing, policy)?
 
 ### mTLS
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **Auto mTLS** | ✅ | ✅ | ✅ |
-| **Configurable** | ✅ (PeerAuth) | ✅ (Server CRD) | ✅ (CiliumNetworkPolicy) |
-| **Identity** | ServiceAccount | ServiceAccount | SPIFFE (Cilium) |
-| **Per-namespace** | ✅ | ✅ | ✅ |
-| **PERMISSIVE mode** | ✅ | ✅ | N/A |
+|                     | Istio          | Linkerd         | Cilium                   |
+| ------------------- | -------------- | --------------- | ------------------------ |
+| **Auto mTLS**       | ✅             | ✅              | ✅                       |
+| **Configurable**    | ✅ (PeerAuth)  | ✅ (Server CRD) | ✅ (CiliumNetworkPolicy) |
+| **Identity**        | ServiceAccount | ServiceAccount  | SPIFFE (Cilium)          |
+| **Per-namespace**   | ✅             | ✅              | ✅                       |
+| **PERMISSIVE mode** | ✅             | ✅              | N/A                      |
 
 **Winner:** all three. mTLS is a solved problem.
 
 ### Traffic management
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **L7 routing** | ✅ full (VirtualService) | ⚠️ basic (ServiceProfile) | ⚠️ basic (CiliumNetworkPolicy L7) |
-| **Weighted routing** | ✅ (weight in VS) | ✅ (TrafficSplit SMI) | ✅ (CiliumNetworkPolicy) |
-| **Header-based routing** | ✅ (match) | ❌ | ⚠️ partial |
-| **Fault injection** | ✅ (VS fault) | ⚠️ retry budgets only | ❌ |
-| **Traffic mirroring** | ✅ (VS mirror) | ⚠️ tap only | ❌ |
-| **Retries** | ✅ (VS) | ✅ (ServiceProfile) | ✅ (NetworkPolicy) |
-| **Timeouts** | ✅ (VS) | ✅ (ServiceProfile) | ✅ (NetworkPolicy) |
-| **Circuit breakers** | ✅ (DR outlier) | ⚠️ basic | ❌ |
+|                          | Istio                    | Linkerd                   | Cilium                            |
+| ------------------------ | ------------------------ | ------------------------- | --------------------------------- |
+| **L7 routing**           | ✅ full (VirtualService) | ⚠️ basic (ServiceProfile) | ⚠️ basic (CiliumNetworkPolicy L7) |
+| **Weighted routing**     | ✅ (weight in VS)        | ✅ (TrafficSplit SMI)     | ✅ (CiliumNetworkPolicy)          |
+| **Header-based routing** | ✅ (match)               | ❌                        | ⚠️ partial                        |
+| **Fault injection**      | ✅ (VS fault)            | ⚠️ retry budgets only     | ❌                                |
+| **Traffic mirroring**    | ✅ (VS mirror)           | ⚠️ tap only               | ❌                                |
+| **Retries**              | ✅ (VS)                  | ✅ (ServiceProfile)       | ✅ (NetworkPolicy)                |
+| **Timeouts**             | ✅ (VS)                  | ✅ (ServiceProfile)       | ✅ (NetworkPolicy)                |
+| **Circuit breakers**     | ✅ (DR outlier)          | ⚠️ basic                  | ❌                                |
 
 **Winner:** Istio. By a lot.
 
 ### Authorization
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **L4 policy** | ✅ AuthorizationPolicy | ✅ Server, AuthzPolicy | ✅ CiliumNetworkPolicy |
-| **L7 policy** | ✅ (request-level) | ⚠️ partial | ⚠️ partial |
-| **JWT validation** | ✅ (RequestAuthentication) | ⚠️ external only | ❌ |
-| **Default deny** | ✅ (empty AP) | ✅ (empty AuthzPolicy) | ✅ (default-deny) |
-| **Per-route policy** | ✅ | ⚠️ | ❌ |
+|                      | Istio                      | Linkerd                | Cilium                 |
+| -------------------- | -------------------------- | ---------------------- | ---------------------- |
+| **L4 policy**        | ✅ AuthorizationPolicy     | ✅ Server, AuthzPolicy | ✅ CiliumNetworkPolicy |
+| **L7 policy**        | ✅ (request-level)         | ⚠️ partial             | ⚠️ partial             |
+| **JWT validation**   | ✅ (RequestAuthentication) | ⚠️ external only       | ❌                     |
+| **Default deny**     | ✅ (empty AP)              | ✅ (empty AuthzPolicy) | ✅ (default-deny)      |
+| **Per-route policy** | ✅                         | ⚠️                     | ❌                     |
 
 **Winner:** Istio. Linkerd close second.
 
 ### Observability
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **Built-in metrics** | ✅ Prometheus | ✅ Prometheus | ✅ Prometheus |
-| **Distributed tracing** | ✅ (Jaeger) | ✅ (Jaeger) | ✅ (Hubble UI) |
-| **Service graph** | ✅ Kiali | ✅ linkerd viz | ✅ Hubble |
-| **Live traffic** | ✅ (Kiali) | ✅ (tap) | ✅ (Hubble) |
-| **Per-route metrics** | ✅ | ✅ (ServiceProfile) | ⚠️ partial |
+|                         | Istio         | Linkerd             | Cilium         |
+| ----------------------- | ------------- | ------------------- | -------------- |
+| **Built-in metrics**    | ✅ Prometheus | ✅ Prometheus       | ✅ Prometheus  |
+| **Distributed tracing** | ✅ (Jaeger)   | ✅ (Jaeger)         | ✅ (Hubble UI) |
+| **Service graph**       | ✅ Kiali      | ✅ linkerd viz      | ✅ Hubble      |
+| **Live traffic**        | ✅ (Kiali)    | ✅ (tap)            | ✅ (Hubble)    |
+| **Per-route metrics**   | ✅            | ✅ (ServiceProfile) | ⚠️ partial     |
 
 **Winner:** Linkerd, narrowly over Istio. Cilium is good but less rich.
 
@@ -163,13 +169,14 @@ Q: Do you need a full service mesh (mTLS, L7 routing, policy)?
 
 **Per pod, sidecar / proxy:**
 
-| | Istio (Envoy) | Linkerd | Cilium |
-|---|---------------|---------|--------|
-| **Memory** | 50-100 MB | 20-30 MB | 0 (kernel) |
-| **CPU** | 10-50 m | 5-20 m | 0 |
-| **Latency p99** | 1-3 ms | <1 ms | <0.5 ms |
+|                 | Istio (Envoy) | Linkerd  | Cilium     |
+| --------------- | ------------- | -------- | ---------- |
+| **Memory**      | 50-100 MB     | 20-30 MB | 0 (kernel) |
+| **CPU**         | 10-50 m       | 5-20 m   | 0          |
+| **Latency p99** | 1-3 ms        | <1 ms    | <0.5 ms    |
 
 **For 1000 pods:**
+
 - Istio: ~75 GB RAM, ~30 CPU
 - Linkerd: ~25 GB RAM, ~12 CPU
 - Cilium: ~0 (just kernel)
@@ -178,14 +185,14 @@ Q: Do you need a full service mesh (mTLS, L7 routing, policy)?
 
 ### Operational complexity
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **Install time** | 30 min | 10 min | 15 min |
-| **HA setup** | Manual | `--ha` flag | Default |
-| **Upgrade complexity** | High (control plane + sidecars) | Low | Medium |
-| **Debugging** | Hard (Envoy config) | Easy (linkerd CLI) | Easy (Hubble) |
-| **Documentation** | Excellent | Excellent | Good |
-| **Community** | Largest | Large | Growing |
+|                        | Istio                           | Linkerd            | Cilium        |
+| ---------------------- | ------------------------------- | ------------------ | ------------- |
+| **Install time**       | 30 min                          | 10 min             | 15 min        |
+| **HA setup**           | Manual                          | `--ha` flag        | Default       |
+| **Upgrade complexity** | High (control plane + sidecars) | Low                | Medium        |
+| **Debugging**          | Hard (Envoy config)             | Easy (linkerd CLI) | Easy (Hubble) |
+| **Documentation**      | Excellent                       | Excellent          | Good          |
+| **Community**          | Largest                         | Large              | Growing       |
 
 **Winner:** Linkerd. By a lot.
 
@@ -259,6 +266,7 @@ hubble observe -n my-app
 If you're already on Istio, switching is expensive. **Stay unless you have a specific reason to switch.**
 
 Reasons to consider switching from Istio:
+
 - Operational overhead too high
 - Resource consumption too high
 - Simpler requirements (mTLS only)
@@ -268,6 +276,7 @@ Reasons to consider switching from Istio:
 **Great choice.** Stay unless you need a feature Linkerd doesn't have.
 
 Reasons to consider switching from Linkerd:
+
 - Need Envoy's full power (WASM, complex routing)
 - Need L7 routing features (header-based, etc.)
 
@@ -276,6 +285,7 @@ Reasons to consider switching from Linkerd:
 If you're already on Cilium (eBPF), you have the lightest mesh. **Stay unless you need full Istio features.**
 
 Reasons to consider switching from Cilium:
+
 - Need fault injection
 - Need full L7 routing
 - Need more mature L7 authz
@@ -284,14 +294,14 @@ Reasons to consider switching from Cilium:
 
 The right starting point depends on your goals:
 
-| Goal | Mesh |
-|------|------|
-| Just mTLS | Linkerd (easiest) |
-| Performance | Cilium (best) |
-| Full features | Istio (most) |
-| Compliance | Linkerd (auto-mTLS) |
-| Multi-cluster | Any (all support) |
-| L7 routing | Istio (best) |
+| Goal          | Mesh                |
+| ------------- | ------------------- |
+| Just mTLS     | Linkerd (easiest)   |
+| Performance   | Cilium (best)       |
+| Full features | Istio (most)        |
+| Compliance    | Linkerd (auto-mTLS) |
+| Multi-cluster | Any (all support)   |
+| L7 routing    | Istio (best)        |
 
 ## The "specific scenarios" recommendations
 
@@ -314,6 +324,7 @@ The right starting point depends on your goals:
 ### A multi-cluster mesh
 
 All three support it. Pick based on primary needs:
+
 - **Linkerd** — simplest multi-cluster
 - **Cilium ClusterMesh** — most performant
 - **Istio** — most feature-rich (multi-primary, multi-network)
@@ -327,13 +338,13 @@ All three support it. Pick based on primary needs:
 
 ## The "common" anti-patterns
 
-* **Istio for mTLS only.** Too much overhead. Use Linkerd or cert-manager + NetworkPolicy.
-* **Linkerd for complex L7 routing.** Use Istio.
-* **Cilium for full mesh features.** Use Istio or Linkerd.
-* **No mesh + mTLS via service mesh sidecar**. Use Linkerd or Istio, properly.
-* **Mixing meshes** (Istio + Linkerd in same cluster). Pick one. Migrations are hard.
-* **Custom EnvoyFilters in production.** Hard to maintain, fragile.
-* **Sidecar-less and sidecar-full pods in the same namespace.** Inconsistent behavior.
+- **Istio for mTLS only.** Too much overhead. Use Linkerd or cert-manager + NetworkPolicy.
+- **Linkerd for complex L7 routing.** Use Istio.
+- **Cilium for full mesh features.** Use Istio or Linkerd.
+- **No mesh + mTLS via service mesh sidecar**. Use Linkerd or Istio, properly.
+- **Mixing meshes** (Istio + Linkerd in same cluster). Pick one. Migrations are hard.
+- **Custom EnvoyFilters in production.** Hard to maintain, fragile.
+- **Sidecar-less and sidecar-full pods in the same namespace.** Inconsistent behavior.
 
 ## The "I'm undecided" path
 
@@ -348,6 +359,7 @@ All three support it. Pick based on primary needs:
 **Hard. Really hard.** The mTLS configs differ, the policy CRDs differ, the CRDs can conflict.
 
 **Recommended path:**
+
 1. **Install new mesh in a separate namespace** (no sidecar injection yet)
 2. **Test with sample apps**
 3. **Migrate one namespace at a time** (remove old mesh, add new)
@@ -362,14 +374,14 @@ All three support it. Pick based on primary needs:
 
 Requirements: encryption in transit, RBAC, audit logging, network segmentation.
 
-| Requirement | Istio | Linkerd | Cilium |
-|-------------|-------|---------|--------|
-| **mTLS** | ✅ STRICT mode | ✅ automatic | ✅ wireguard/IPsec |
-| **AuthZ policies** | ✅ L4 + L7 | ✅ L4 | ✅ L4 + L7 |
-| **Audit logs** | ✅ Envoy access logs | ✅ proxy logs | ✅ Hubble logs |
-| **Network segmentation** | ✅ NetworkPolicy | ✅ NetworkPolicy | ✅ CiliumNetworkPolicy |
-| **Cert rotation** | ✅ automatic | ✅ automatic | ✅ automatic |
-| **Cert expiry monitoring** | ✅ via Prometheus | ✅ via Prometheus | ✅ via Prometheus |
+| Requirement                | Istio                | Linkerd           | Cilium                 |
+| -------------------------- | -------------------- | ----------------- | ---------------------- |
+| **mTLS**                   | ✅ STRICT mode       | ✅ automatic      | ✅ wireguard/IPsec     |
+| **AuthZ policies**         | ✅ L4 + L7           | ✅ L4             | ✅ L4 + L7             |
+| **Audit logs**             | ✅ Envoy access logs | ✅ proxy logs     | ✅ Hubble logs         |
+| **Network segmentation**   | ✅ NetworkPolicy     | ✅ NetworkPolicy  | ✅ CiliumNetworkPolicy |
+| **Cert rotation**          | ✅ automatic         | ✅ automatic      | ✅ automatic           |
+| **Cert expiry monitoring** | ✅ via Prometheus    | ✅ via Prometheus | ✅ via Prometheus      |
 
 **All three meet the requirements.** Linkerd is the simplest to audit. Istio has the most granular control. Cilium is the fastest.
 
@@ -377,21 +389,23 @@ Requirements: encryption in transit, RBAC, audit logging, network segmentation.
 
 For services handling 100k+ req/s:
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **Latency overhead** | 1-3 ms | <1 ms | <0.5 ms |
-| **Throughput reduction** | 5-10% | 1-3% | <1% |
-| **Per-pod memory** | 50-100 MB | 20-30 MB | 0 |
-| **Per-pod CPU** | 10-50 m | 5-20 m | 0 |
+|                          | Istio     | Linkerd  | Cilium  |
+| ------------------------ | --------- | -------- | ------- |
+| **Latency overhead**     | 1-3 ms    | <1 ms    | <0.5 ms |
+| **Throughput reduction** | 5-10%     | 1-3%     | <1%     |
+| **Per-pod memory**       | 50-100 MB | 20-30 MB | 0       |
+| **Per-pod CPU**          | 10-50 m   | 5-20 m   | 0       |
 
 **Cilium wins.** eBPF is the fastest.
 
 For Istio, the workarounds:
+
 - Ambient mesh (no sidecar)
 - Use `concurrency` tuning on Envoy
 - Reduce sidecar features
 
 For Linkerd, the workarounds:
+
 - Increase proxy resources
 - Disable unused features
 
@@ -399,12 +413,12 @@ For Linkerd, the workarounds:
 
 For 3+ regions with active traffic:
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **Multi-primary** | ✅ | ⚠️ (via federation) | ✅ ClusterMesh |
-| **Multi-network** | ✅ | ⚠️ | ✅ |
-| **Cross-cluster mTLS** | ✅ | ✅ | ✅ |
-| **Service discovery** | ✅ K8s clusters | ✅ K8s clusters | ✅ |
+|                        | Istio           | Linkerd             | Cilium         |
+| ---------------------- | --------------- | ------------------- | -------------- |
+| **Multi-primary**      | ✅              | ⚠️ (via federation) | ✅ ClusterMesh |
+| **Multi-network**      | ✅              | ⚠️                  | ✅             |
+| **Cross-cluster mTLS** | ✅              | ✅                  | ✅             |
+| **Service discovery**  | ✅ K8s clusters | ✅ K8s clusters     | ✅             |
 
 **For multi-region:** all three work. Cilium ClusterMesh is the most performant (kernel-level).
 
@@ -412,15 +426,16 @@ For 3+ regions with active traffic:
 
 ### A/B testing with real users
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
+|                          | Istio                   | Linkerd           | Cilium     |
+| ------------------------ | ----------------------- | ----------------- | ---------- |
 | **Header-based routing** | ✅ VirtualService match | ❌ (use external) | ⚠️ partial |
-| **Cookie-based** | ✅ | ❌ | ❌ |
-| **User attribute** | ✅ (with WASM) | ❌ | ❌ |
+| **Cookie-based**         | ✅                      | ❌                | ❌         |
+| **User attribute**       | ✅ (with WASM)          | ❌                | ❌         |
 
 **Winner:** Istio. The others don't have the routing primitives.
 
 If you need A/B testing, you can:
+
 - Use Istio for the mesh
 - Use feature flags in app code
 - Use a separate tool (LaunchDarkly, Split.io)
@@ -429,11 +444,11 @@ If you need A/B testing, you can:
 
 For services that talk to databases (high-volume, low-latency):
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **TCP routing** | ✅ | ✅ | ✅ |
-| **L7 protocol parsing** | ✅ (mysql, redis, mongo) | ❌ | ❌ |
-| **Connection pool** | ✅ DestinationRule | ⚠️ basic | ❌ |
+|                         | Istio                    | Linkerd  | Cilium |
+| ----------------------- | ------------------------ | -------- | ------ |
+| **TCP routing**         | ✅                       | ✅       | ✅     |
+| **L7 protocol parsing** | ✅ (mysql, redis, mongo) | ❌       | ❌     |
+| **Connection pool**     | ✅ DestinationRule       | ⚠️ basic | ❌     |
 
 **Istio** has L7 protocol filters for MySQL, MongoDB, Redis. Can do query-level routing, retries. **If you need this, Istio.**
 
@@ -443,10 +458,10 @@ For most DB workloads, the mesh just provides mTLS. L7 parsing is overkill.
 
 For short-lived pods (Knative, Argo Workflows):
 
-| | Istio | Linkerd | Cilium |
-|---|-------|---------|--------|
-| **Sidecar startup time** | ~5s | ~1s | 0 |
-| **Sidecar resource overhead** | 50-100 MB | 20-30 MB | 0 |
+|                               | Istio     | Linkerd  | Cilium |
+| ----------------------------- | --------- | -------- | ------ |
+| **Sidecar startup time**      | ~5s       | ~1s      | 0      |
+| **Sidecar resource overhead** | 50-100 MB | 20-30 MB | 0      |
 
 **Cilium wins** for serverless. No sidecar to start.
 
@@ -466,6 +481,7 @@ What if you picked Istio and need Linkerd's simplicity? Or picked Linkerd and ne
 6. **Cleanup:** uninstall old mesh
 
 **Time estimate:**
+
 - Small cluster (50 services): 2-4 weeks
 - Medium (200 services): 2-3 months
 - Large (1000+): 6-12 months
@@ -485,12 +501,14 @@ Sometimes you don't need a full mesh. Consider:
 ## The "mesh debt" question
 
 Once you have a mesh, you have mesh debt:
+
 - Upgrades to manage
 - CRDs to learn
 - Sidecar resource costs
 - Failure modes to understand
 
 **Avoid mesh debt** by:
+
 - Picking the right one for the long term
 - Not adding features you don't need
 - Upgrading regularly
@@ -500,13 +518,13 @@ Once you have a mesh, you have mesh debt:
 
 Mesh expertise is rare. Be honest about your team:
 
-| Team capability | Mesh |
-|-----------------|------|
-| **No k8s ops experience** | Don't use a mesh |
-| **Basic k8s** | Linkerd (easiest) |
-| **Strong k8s** | Istio (or Linkerd) |
-| **Service mesh expertise** | Any |
-| **eBPF expertise** | Cilium |
+| Team capability            | Mesh               |
+| -------------------------- | ------------------ |
+| **No k8s ops experience**  | Don't use a mesh   |
+| **Basic k8s**              | Linkerd (easiest)  |
+| **Strong k8s**             | Istio (or Linkerd) |
+| **Service mesh expertise** | Any                |
+| **eBPF expertise**         | Cilium             |
 
 **Don't pick Istio** because it's the most popular. Pick Linkerd if your team is mid-size. Pick Cilium if you're already on eBPF.
 
@@ -519,6 +537,7 @@ Each mesh's trajectory:
 - **Cilium:** Will keep gaining. eBPF is the future of k8s networking.
 
 **Predictions:**
+
 - Cilium's mesh features will catch up to Istio
 - Linkerd will stay simple and focused
 - Istio will keep dominating in size and complexity
@@ -538,6 +557,7 @@ The "I want everything" answer: **Cilium + Linkerd**. Cilium for CNI + encryptio
 ## The "what most teams pick" data
 
 From the CNCF surveys:
+
 - **Istio:** ~50% of mesh users
 - **Linkerd:** ~30%
 - **Cilium:** ~15%
@@ -547,8 +567,8 @@ But the user base is **large, complex organizations**. Smaller teams use Linkerd
 
 ## See also
 
-* [[Kubernetes/guides/networking/istio|istio]] — full-featured
-* [[Kubernetes/guides/networking/linkerd|linkerd]] — lightweight
-* [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — Gateway API
-* [[Kubernetes/guides/networking/traefik|traefik]] — ingress alternative
-* [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — security patterns
+- [[Kubernetes/guides/networking/istio|istio]] — full-featured
+- [[Kubernetes/guides/networking/linkerd|linkerd]] — lightweight
+- [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — Gateway API
+- [[Kubernetes/guides/networking/traefik|traefik]] — ingress alternative
+- [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — security patterns

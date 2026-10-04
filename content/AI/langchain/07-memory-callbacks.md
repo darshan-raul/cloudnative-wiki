@@ -28,13 +28,13 @@ Restart the process and the cache is gone. Good for dev and tests.
 
 ### The cache classes
 
-| Class | Backend | When to use |
-|---|---|---|
-| `InMemoryCache` | Python dict | Dev, tests, single-process |
-| `SQLiteCache` | SQLite file | Single-process, persistent |
-| `RedisCache` | Redis | Multi-process, multi-host |
-| `RedisSemanticCache` | Redis + embeddings | Similar but not identical queries |
-| `UpstashRedisCache` | Upstash serverless Redis | Edge / serverless |
+| Class                | Backend                  | When to use                       |
+| -------------------- | ------------------------ | --------------------------------- |
+| `InMemoryCache`      | Python dict              | Dev, tests, single-process        |
+| `SQLiteCache`        | SQLite file              | Single-process, persistent        |
+| `RedisCache`         | Redis                    | Multi-process, multi-host         |
+| `RedisSemanticCache` | Redis + embeddings       | Similar but not identical queries |
+| `UpstashRedisCache`  | Upstash serverless Redis | Edge / serverless                 |
 
 ```python
 # Persistent across restarts
@@ -113,16 +113,16 @@ model = ChatOpenAI(model="gpt-4o-mini").with_config(
 
 ### The key hooks
 
-| Hook | When | Common use |
-|---|---|---|
-| `on_chat_model_start` | Model called | Log request, add span context |
-| `on_chat_model_stream` | Token arrives | Stream to frontend, accumulate |
-| `on_chat_model_end` | Model done | Log tokens, record cost |
-| `on_tool_start` | Tool begins | Log which tool, with what args |
-| `on_tool_end` | Tool completes | Log result, duration |
-| `on_chain_start/end` | RunnableSequence starts/ends | Trace pipeline sections |
-| `on_error` | Exception raised | Alert, record error |
-| `on_retry` | Retry about to happen | Log backoff, cancel retry |
+| Hook                   | When                         | Common use                     |
+| ---------------------- | ---------------------------- | ------------------------------ |
+| `on_chat_model_start`  | Model called                 | Log request, add span context  |
+| `on_chat_model_stream` | Token arrives                | Stream to frontend, accumulate |
+| `on_chat_model_end`    | Model done                   | Log tokens, record cost        |
+| `on_tool_start`        | Tool begins                  | Log which tool, with what args |
+| `on_tool_end`          | Tool completes               | Log result, duration           |
+| `on_chain_start/end`   | RunnableSequence starts/ends | Trace pipeline sections        |
+| `on_error`             | Exception raised             | Alert, record error            |
+| `on_retry`             | Retry about to happen        | Log backoff, cancel retry      |
 
 ### `on_chat_model_stream` — token accumulation
 
@@ -252,6 +252,7 @@ agentExecutor = AgentExecutor.from_agent_and_tools(
 ```
 
 This pattern is deprecated. The modern replacement is:
+
 - **LangGraph checkpointer** for conversation state persistence
 - **Message list in the graph state** as the primary memory store
 

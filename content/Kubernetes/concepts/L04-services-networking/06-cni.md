@@ -1,6 +1,13 @@
+---
+title: "CNI (Container Network Interface)"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "CNI (Container Network Interface) — Kubernetes reference and architecture guide."
+---
+
 # CNI (Container Network Interface)
 
-*"https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/"*
+_"https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/"_
 
 CNI is the **specification and plugin model** that connects Pod networking. Kubernetes doesn't ship a network implementation itself — it delegates to a CNI plugin that runs on every node. The kubelet calls the CNI when a Pod is created, and the CNI does the actual work of giving the Pod an IP and wiring it into the cluster's network.
 
@@ -107,17 +114,17 @@ This is also why the IP-per-Pod model is so different from the VM model. In a VM
 
 ## 3. CNI Plugins: A Comparison
 
-| Plugin | Model | NetworkPolicy | L7 (L4) | Notes |
-|---|---|---|---|---|
-| **Flannel** | VXLAN / host-gw overlay | ❌ | ❌ | Easy to set up, no policy, no L7. Default in k3s. |
-| **Calico** | BGP / VXLAN / IPIP / eBPF | ✅ | ❌ | Full policy, scalable, common in production. eBPF mode (Calico eBPF or Calico VPP). |
-| **Cilium** | eBPF | ✅ | ✅ | L7 policy (HTTP/gRPC), can replace kube-proxy, Hubble for observability. |
-| **Weave Net** | Overlay | ✅ | ❌ | Simple, less common now. |
-| **AWS VPC CNI** | Native VPC ENIs | ❌ (unless paired with Calico) | ❌ | Pods get real VPC IPs. Default on EKS. |
-| **Azure CNI** | Native Azure VNet | ❌ (unless paired with Calico) | ❌ | Default on AKS. |
-| **GKE Dataplane V2** | eBPF (Cilium-based) | ✅ | ✅ | Default on GKE. |
-| **Antrea** | eBPF | ✅ | ✅ | VMware-led, on-prem focused. |
-| **Multus** | Meta-plugin | Depends on delegates | Depends | Multiple network interfaces per Pod. |
+| Plugin               | Model                     | NetworkPolicy                  | L7 (L4) | Notes                                                                               |
+| -------------------- | ------------------------- | ------------------------------ | ------- | ----------------------------------------------------------------------------------- |
+| **Flannel**          | VXLAN / host-gw overlay   | ❌                             | ❌      | Easy to set up, no policy, no L7. Default in k3s.                                   |
+| **Calico**           | BGP / VXLAN / IPIP / eBPF | ✅                             | ❌      | Full policy, scalable, common in production. eBPF mode (Calico eBPF or Calico VPP). |
+| **Cilium**           | eBPF                      | ✅                             | ✅      | L7 policy (HTTP/gRPC), can replace kube-proxy, Hubble for observability.            |
+| **Weave Net**        | Overlay                   | ✅                             | ❌      | Simple, less common now.                                                            |
+| **AWS VPC CNI**      | Native VPC ENIs           | ❌ (unless paired with Calico) | ❌      | Pods get real VPC IPs. Default on EKS.                                              |
+| **Azure CNI**        | Native Azure VNet         | ❌ (unless paired with Calico) | ❌      | Default on AKS.                                                                     |
+| **GKE Dataplane V2** | eBPF (Cilium-based)       | ✅                             | ✅      | Default on GKE.                                                                     |
+| **Antrea**           | eBPF                      | ✅                             | ✅      | VMware-led, on-prem focused.                                                        |
+| **Multus**           | Meta-plugin               | Depends on delegates           | Depends | Multiple network interfaces per Pod.                                                |
 
 ### 3.1 Flannel
 
@@ -130,10 +137,10 @@ The simplest. VXLAN or host-gw overlay between nodes. No NetworkPolicy (you'd ne
 
 The most common in production. Supports multiple modes:
 
-* **BGP + IPIP** — Pod IPs are routable in your datacenter, advertised via BGP. No encapsulation overhead.
-* **VXLAN** — Encapsulated overlay, like Flannel. Works without BGP-capable network equipment.
-* **eBPF (datapath)** — eBPF programs replace iptables for the data plane. Faster than iptables.
-* **VPP** — Vector Packet Processing. Less common.
+- **BGP + IPIP** — Pod IPs are routable in your datacenter, advertised via BGP. No encapsulation overhead.
+- **VXLAN** — Encapsulated overlay, like Flannel. Works without BGP-capable network equipment.
+- **eBPF (datapath)** — eBPF programs replace iptables for the data plane. Faster than iptables.
+- **VPP** — Vector Packet Processing. Less common.
 
 Calico supports **NetworkPolicy** (the standard k8s API), plus its own `GlobalNetworkPolicy` and `NetworkSet` for cluster-wide rules. It also supports `BGP peer` and `BGPConfiguration` for advanced routing.
 
@@ -146,12 +153,12 @@ The modern choice. **eBPF-based** — most of the data plane is in eBPF programs
 
 Key features:
 
-* **L3/L4 policy** (the standard k8s NetworkPolicy).
-* **L7 policy** — `cilium.NetworkPolicy` can match on HTTP path, gRPC method, Kafka topic, etc.
-* **Replaces kube-proxy** — Cilium's eBPF handles Service ClusterIP DNAT. No iptables rules.
-* **Hubble** — observability for the data plane. Flow logs, DNS observability, metrics.
-* **ClusterMesh** — multi-cluster connectivity.
-* **Service mesh** — Cilium Service Mesh (beta) provides mTLS, L7 routing without sidecars.
+- **L3/L4 policy** (the standard k8s NetworkPolicy).
+- **L7 policy** — `cilium.NetworkPolicy` can match on HTTP path, gRPC method, Kafka topic, etc.
+- **Replaces kube-proxy** — Cilium's eBPF handles Service ClusterIP DNAT. No iptables rules.
+- **Hubble** — observability for the data plane. Flow logs, DNS observability, metrics.
+- **ClusterMesh** — multi-cluster connectivity.
+- **Service mesh** — Cilium Service Mesh (beta) provides mTLS, L7 routing without sidecars.
 
 **Strengths:** performance (no iptables), L7 policy, observability, multi-cluster, mesh.
 **Weaknesses:** requires recent kernels (>= 5.4 for full features), more complex to operate, learning curve.
@@ -177,9 +184,9 @@ Same idea as AWS VPC CNI, on their respective clouds. GKE Dataplane V2 is Cilium
 
 A **meta-plugin**. Attaches multiple network interfaces to a Pod. Used for:
 
-* **Secondary networks** — a Pod with one interface for cluster traffic and another for a separate VLAN (e.g. legacy storage network).
-* **SR-IOV** — direct hardware access for high-performance networking.
-* **NFV** — network function virtualization, where a Pod acts as a router / firewall.
+- **Secondary networks** — a Pod with one interface for cluster traffic and another for a separate VLAN (e.g. legacy storage network).
+- **SR-IOV** — direct hardware access for high-performance networking.
+- **NFV** — network function virtualization, where a Pod acts as a router / firewall.
 
 Multus delegates to other CNIs (Flannel, Calico, etc.) for the primary interface.
 
@@ -254,27 +261,27 @@ eBPF (extended Berkeley Packet Filter) lets you run sandboxed programs in the Li
 
 ### 5.1 What eBPF gives you
 
-* **Faster Service DNAT** — eBPF hash lookups are O(1), iptables is O(n) chain walk.
-* **L7 visibility** — eBPF can parse HTTP / gRPC headers without a sidecar.
-* **Lower CPU usage** — no copying packets through iptables rules.
-* **Hubble integration** — flow logs from eBPF, not from packet sampling.
+- **Faster Service DNAT** — eBPF hash lookups are O(1), iptables is O(n) chain walk.
+- **L7 visibility** — eBPF can parse HTTP / gRPC headers without a sidecar.
+- **Lower CPU usage** — no copying packets through iptables rules.
+- **Hubble integration** — flow logs from eBPF, not from packet sampling.
 
 ### 5.2 What eBPF costs you
 
-* **Kernel version** — needs >= 5.4 for full features (5.10+ recommended). Older kernels fall back to a less featureful mode.
-* **Debugging complexity** — eBPF programs are harder to inspect than iptables rules. You need `bpftool` and Cilium's own tools.
-* **Smaller community** — fewer people know eBPF than iptables. Documentation is thinner.
+- **Kernel version** — needs >= 5.4 for full features (5.10+ recommended). Older kernels fall back to a less featureful mode.
+- **Debugging complexity** — eBPF programs are harder to inspect than iptables rules. You need `bpftool` and Cilium's own tools.
+- **Smaller community** — fewer people know eBPF than iptables. Documentation is thinner.
 
 ### 5.3 Cilium's data plane in detail
 
 Cilium's eBPF programs handle:
 
-* **Service ClusterIP DNAT** — replaces kube-proxy's iptables rules.
-* **NetworkPolicy** — enforced in the eBPF program, not iptables.
-* **L7 policy** — can match HTTP paths, gRPC methods, Kafka topics, etc.
-* **Conntrack** — connection tracking for stateful rules.
-* **Load balancing** — multiple algorithms (random, maglev, etc.).
-* **Host firewall** — Cilium's host firewall replaces or augments iptables for the host.
+- **Service ClusterIP DNAT** — replaces kube-proxy's iptables rules.
+- **NetworkPolicy** — enforced in the eBPF program, not iptables.
+- **L7 policy** — can match HTTP paths, gRPC methods, Kafka topics, etc.
+- **Conntrack** — connection tracking for stateful rules.
+- **Load balancing** — multiple algorithms (random, maglev, etc.).
+- **Host firewall** — Cilium's host firewall replaces or augments iptables for the host.
 
 Cilium **replaces kube-proxy** when used in this mode. The cluster runs without kube-proxy entirely.
 
@@ -293,9 +300,9 @@ Each node has a **slice** of the cluster's Pod CIDR. A node with `10.244.1.0/24`
 
 Multiple modes:
 
-* **Host-local** — same as Flannel.
-* **Calico IPAM** — a central IP pool, but allocation is per-Pod (the IP is "reserved" before the Pod is scheduled).
-* **Kubernetes IPAM** — uses the `v1.Node` spec's `podCIDR` field. Set by the apiserver or the controller-manager.
+- **Host-local** — same as Flannel.
+- **Calico IPAM** — a central IP pool, but allocation is per-Pod (the IP is "reserved" before the Pod is scheduled).
+- **Kubernetes IPAM** — uses the `v1.Node` spec's `podCIDR` field. Set by the apiserver or the controller-manager.
 
 ### 6.3 AWS VPC CNI IPAM
 
@@ -311,10 +318,10 @@ The CNI can request a **/28 prefix** (16 IPs) from the VPC and assign individual
 # aws-node ConfigMap
 spec:
   env:
-  - name: ENABLE_PREFIX_DELEGATION
-    value: "true"
-  - name: WARM_PREFIX_TARGET
-    value: "1"   # pre-allocate 1 prefix per node at startup
+    - name: ENABLE_PREFIX_DELEGATION
+      value: "true"
+    - name: WARM_PREFIX_TARGET
+      value: "1" # pre-allocate 1 prefix per node at startup
 ```
 
 Prefix delegation requires **Amazon VPC CNI >= 1.9** and **subnet routing tables** that support /28 routes (most do, but on-prem doesn't apply).
@@ -333,26 +340,28 @@ Total Pods per node: ~30.
 To run 100 nodes with 30 Pods each = 3000 Pods, you need 3000 VPC IPs. That's a `/22` subnet. **Doable, but tight.**
 
 For dense clusters (hundreds of Pods per node), you need:
-* Larger instance types (more ENIs / more secondary IPs per ENI).
-* Prefix delegation (multiplies the IP count).
-* A `/19` or `/18` subnet for the nodes.
+
+- Larger instance types (more ENIs / more secondary IPs per ENI).
+- Prefix delegation (multiplies the IP count).
+- A `/19` or `/18` subnet for the nodes.
 
 ### 7.2 The trade-off
 
 AWS VPC CNI is great for **most apps** (no MTU, no encapsulation, Pods are VPC citizens). But for **dense node pools** (e.g. a `c5.12xlarge` running 200 Pods), the IP math is hard.
 
 Alternatives:
-* **Calico on AWS** — overlay mode, no IP pressure, but adds encapsulation overhead.
-* **EKS Auto Mode** — newer, abstracts the IPAM (still uses VPC IPs but managed).
-* **Pod density limits** — limit Pods per node via `max-pods` on the kubelet.
+
+- **Calico on AWS** — overlay mode, no IP pressure, but adds encapsulation overhead.
+- **EKS Auto Mode** — newer, abstracts the IPAM (still uses VPC IPs but managed).
+- **Pod density limits** — limit Pods per node via `max-pods` on the kubelet.
 
 ## 8. CNI Installation and the "Pick Wisely" Decision
 
 ### 8.1 Installation patterns
 
-* **Managed k8s (EKS, GKE, AKS)** — CNI comes pre-installed. EKS uses AWS VPC CNI. GKE uses GKE Dataplane V2 (Cilium-based). AKS uses Azure CNI. You can usually choose a different one (with caveats).
-* **kubeadm** — you install the CNI yourself, usually via a manifest (DaemonSet, RBAC, etc.). Calico and Cilium both have documented install paths.
-* **k3s, k0s, kind** — comes bundled with a default CNI (Flannel for k3s, Calico for k0s, kind's default CNI).
+- **Managed k8s (EKS, GKE, AKS)** — CNI comes pre-installed. EKS uses AWS VPC CNI. GKE uses GKE Dataplane V2 (Cilium-based). AKS uses Azure CNI. You can usually choose a different one (with caveats).
+- **kubeadm** — you install the CNI yourself, usually via a manifest (DaemonSet, RBAC, etc.). Calico and Cilium both have documented install paths.
+- **k3s, k0s, kind** — comes bundled with a default CNI (Flannel for k3s, Calico for k0s, kind's default CNI).
 
 ### 8.2 Picking a CNI
 
@@ -396,9 +405,9 @@ If a Pod tries to send a 1500-byte packet over VXLAN, the kernel either fragment
 
 **Fixes:**
 
-* Set the Pod's MTU to 1450 (or the right value for your CNI).
-* Enable PMTUD (Path MTU Discovery) on the kernel — usually default.
-* Use jumbograms on the underlying network (MTU 9000) — common in on-prem, rare in cloud.
+- Set the Pod's MTU to 1450 (or the right value for your CNI).
+- Enable PMTUD (Path MTU Discovery) on the kernel — usually default.
+- Use jumbograms on the underlying network (MTU 9000) — common in on-prem, rare in cloud.
 
 Calico and Cilium configure the MTU automatically when installed. **If you change the CNI or the underlying network's MTU, update the CNI config.**
 
@@ -407,44 +416,46 @@ Calico and Cilium configure the MTU automatically when installed. **If you chang
 VXLAN encap/decap is CPU work. At 10 Gbps, the overhead is measurable. Cilium and Calico eBPF modes push this into the kernel's eBPF program, which is faster than userspace encap.
 
 For high-throughput workloads:
-* Use **eBPF-based CNIs** (Cilium, Calico eBPF).
-* Use **BGP mode** if you can (no encapsulation).
-* Use **SR-IOV** (hardware offload) for extreme cases.
+
+- Use **eBPF-based CNIs** (Cilium, Calico eBPF).
+- Use **BGP mode** if you can (no encapsulation).
+- Use **SR-IOV** (hardware offload) for extreme cases.
 
 ### 9.3 Pod-to-Pod latency
 
 A rough comparison (same region, same zone):
 
-| Mode | Typical p99 latency | Notes |
-|---|---|---|
-| VPC CNI (underlay) | ~0.5ms | Best |
-| Calico BGP (underlay, on-prem) | ~0.3ms | Best, on-prem |
-| Calico VXLAN (overlay) | ~0.7ms | Adds encap overhead |
-| Cilium eBPF (overlay) | ~0.5ms | Faster than VXLAN encap in userspace |
-| Cilium eBPF (chaining to VPC CNI) | ~0.5ms | Best of both worlds on AWS |
+| Mode                              | Typical p99 latency | Notes                                |
+| --------------------------------- | ------------------- | ------------------------------------ |
+| VPC CNI (underlay)                | ~0.5ms              | Best                                 |
+| Calico BGP (underlay, on-prem)    | ~0.3ms              | Best, on-prem                        |
+| Calico VXLAN (overlay)            | ~0.7ms              | Adds encap overhead                  |
+| Cilium eBPF (overlay)             | ~0.5ms              | Faster than VXLAN encap in userspace |
+| Cilium eBPF (chaining to VPC CNI) | ~0.5ms              | Best of both worlds on AWS           |
 
 ## 10. Dual-Stack (IPv4 + IPv6)
 
 ### 10.1 What's needed
 
-* **apiserver** feature gate: `--feature-gates=IPv6DualStack=true` (default in 1.21+).
-* **kubelet** flag: `--node-ip=<ipv4>,<ipv6>` — the node must have both addresses.
-* **CNI** that supports it: Calico, Cilium, Antrea. Not all do.
-* **Service CIDRs** for both families: `--service-cluster-ip-range=10.96.0.0/16,fd00::/108` on the apiserver.
-* **Pod CIDRs** for both families.
+- **apiserver** feature gate: `--feature-gates=IPv6DualStack=true` (default in 1.21+).
+- **kubelet** flag: `--node-ip=<ipv4>,<ipv6>` — the node must have both addresses.
+- **CNI** that supports it: Calico, Cilium, Antrea. Not all do.
+- **Service CIDRs** for both families: `--service-cluster-ip-range=10.96.0.0/16,fd00::/108` on the apiserver.
+- **Pod CIDRs** for both families.
 
 ### 10.2 What you get
 
-* Every Pod gets an IPv4 and an IPv6 address.
-* Every Service gets an IPv4 and an IPv6 ClusterIP.
-* DNS returns both (A and AAAA records).
+- Every Pod gets an IPv4 and an IPv6 address.
+- Every Service gets an IPv4 and an IPv6 ClusterIP.
+- DNS returns both (A and AAAA records).
 
 ### 10.3 The reality
 
 Most clusters are **still IPv4-only**. IPv6 is GA in k8s but adoption is slow because:
-* Cloud VPCs don't always have IPv6 enabled.
-* Most internal apps and services are IPv4.
-* The operational complexity is real.
+
+- Cloud VPCs don't always have IPv6 enabled.
+- Most internal apps and services are IPv4.
+- The operational complexity is real.
 
 If you have a specific IPv6 requirement (e.g. carrier-grade NAT, huge address space, regulatory), go for it. Otherwise, IPv4 is fine.
 
@@ -464,16 +475,16 @@ kubectl get networkpolicy -A
 
 CNI compatibility for NetworkPolicy:
 
-| CNI | NetworkPolicy | Notes |
-|---|---|---|
-| Flannel | ❌ | Use Calico or Cilium if you need policy |
-| Calico | ✅ | Full support, plus `GlobalNetworkPolicy` |
-| Cilium | ✅ | Full support, plus L7 policy |
-| Weave | ✅ | Full support |
-| AWS VPC CNI | ❌ alone, ✅ with Calico | Install Calico in "policy-only" mode |
-| Azure CNI | ❌ alone, ✅ with Calico / Cilium | Same as AWS |
-| GKE Dataplane V2 | ✅ | Built on Cilium |
-| Antrea | ✅ | Full support |
+| CNI              | NetworkPolicy                     | Notes                                    |
+| ---------------- | --------------------------------- | ---------------------------------------- |
+| Flannel          | ❌                                | Use Calico or Cilium if you need policy  |
+| Calico           | ✅                                | Full support, plus `GlobalNetworkPolicy` |
+| Cilium           | ✅                                | Full support, plus L7 policy             |
+| Weave            | ✅                                | Full support                             |
+| AWS VPC CNI      | ❌ alone, ✅ with Calico          | Install Calico in "policy-only" mode     |
+| Azure CNI        | ❌ alone, ✅ with Calico / Cilium | Same as AWS                              |
+| GKE Dataplane V2 | ✅                                | Built on Cilium                          |
+| Antrea           | ✅                                | Full support                             |
 
 ## 12. Operations and Debugging
 
@@ -640,8 +651,8 @@ ip route show
 
 ## See also
 
-* [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
-* [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — what the CNI supports
-* [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — needs a CNI that supports it
-* [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs
-* [[Kubernetes/concepts/L09-advanced/08-ipvs|IPVS]] — kube-proxy mode that some CNIs replace
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
+- [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — what the CNI supports
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — needs a CNI that supports it
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs
+- [[Kubernetes/concepts/L09-advanced/08-ipvs|IPVS]] — kube-proxy mode that some CNIs replace

@@ -25,11 +25,11 @@ flowchart TD
 
 Under node memory pressure, the Linux kernel OOM killer terminates processes based on their `oom_score_adj`:
 
-| QoS Class | Resource Criteria | OOM Priority | Production Role |
-| :--- | :--- | :--- | :--- |
-| **`Guaranteed`** | `requests == limits` for both CPU and Memory across all containers | **Last to be killed** (`oom_score_adj: -997`) | Critical databases, core APIs, stateful services. |
-| **`Burstable`** | `requests < limits` or only requests specified | **Killed if exceeding requests** | Standard business workloads, background workers. |
-| **`BestEffort`** | Zero requests or limits defined | **First to be killed** (`oom_score_adj: 1000`) | Development test pods, throwaway batch tasks. |
+| QoS Class        | Resource Criteria                                                  | OOM Priority                                   | Production Role                                   |
+| :--------------- | :----------------------------------------------------------------- | :--------------------------------------------- | :------------------------------------------------ |
+| **`Guaranteed`** | `requests == limits` for both CPU and Memory across all containers | **Last to be killed** (`oom_score_adj: -997`)  | Critical databases, core APIs, stateful services. |
+| **`Burstable`**  | `requests < limits` or only requests specified                     | **Killed if exceeding requests**               | Standard business workloads, background workers.  |
+| **`BestEffort`** | Zero requests or limits defined                                    | **First to be killed** (`oom_score_adj: 1000`) | Development test pods, throwaway batch tasks.     |
 
 ---
 
@@ -46,6 +46,7 @@ graph TD
 ```
 
 ### Golden Rule for Availability:
+
 Always define `topologySpreadConstraints` on production Deployments:
 
 ```yaml

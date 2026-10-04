@@ -15,11 +15,11 @@ Security is not a feature you add at the end — it's a **structural property** 
 
 Every security control serves at least one of:
 
-| Property | What It Means | Example Control |
-|----------|---------------|-----------------|
-| **Confidentiality** | Only authorized access | Encryption at rest, RBAC |
-| **Integrity** | Data not tampered with | Digital signatures, checksums |
-| **Availability** | System stays up | DDoS protection, redundancy |
+| Property            | What It Means          | Example Control               |
+| ------------------- | ---------------------- | ----------------------------- |
+| **Confidentiality** | Only authorized access | Encryption at rest, RBAC      |
+| **Integrity**       | Data not tampered with | Digital signatures, checksums |
+| **Availability**    | System stays up        | DDoS protection, redundancy   |
 
 ---
 
@@ -38,6 +38,7 @@ Traditional: Zero Trust:
 ```
 
 ### Core Rules
+
 1. **Identity is the perimeter** — not IP or network location
 2. **Least privilege** — minimum access required, always
 3. **Microsegmentation** — divide network into small zones
@@ -53,17 +54,17 @@ metadata:
   name: default
 spec:
   mtls:
-    mode: STRICT  # all traffic must be mTLS
+    mode: STRICT # all traffic must be mTLS
 ```
 
 ---
 
 ## Authentication vs Authorization
 
-| Concept | Question | Mechanism |
-|---------|----------|-----------|
-| **Authentication (AuthN)** | Who are you? | Password, OAuth2, mTLS, SSO |
-| **Authorization (AuthZ)** | What can you do? | RBAC, ABAC, OPA policies |
+| Concept                    | Question         | Mechanism                   |
+| -------------------------- | ---------------- | --------------------------- |
+| **Authentication (AuthN)** | Who are you?     | Password, OAuth2, mTLS, SSO |
+| **Authorization (AuthZ)**  | What can you do? | RBAC, ABAC, OPA policies    |
 
 **Rule:** AuthN without AuthZ is just a name tag. Both required.
 
@@ -127,18 +128,18 @@ Every security-relevant event: who, what, when, result.
 
 ## OWASP Top 10 (2021) — Architecture Relevance
 
-| Risk | Architecture Fix |
-|------|-----------------|
-| A01: Broken Access Control | AuthZ at every API boundary, not just UI |
-| A02: Cryptographic Failures | TLS 1.3+, AES-256 at rest, no custom crypto |
-| A03: Injection | Parameterized queries, input validation, output encoding |
-| A04: Insecure Design | Threat modeling in design phase, ADRs for security |
-| A05: Security Misconfiguration | Hardened images, CIS benchmarks, IaC scanning |
-| A06: Vulnerable Components | SBOM + dependency scanning in CI |
-| A07: AuthN/AuthZ Failures | Use standards (OAuth2, OIDC), no homegrown auth |
-| A08: Data Integrity Failures | Sigstore / cosign for supply chain integrity |
-| A09: Logging Failures | Structured logs → SIEM, not stdout |
-| A10: SSRF | Validate and sanitize all URL inputs, network segmentation |
+| Risk                           | Architecture Fix                                           |
+| ------------------------------ | ---------------------------------------------------------- |
+| A01: Broken Access Control     | AuthZ at every API boundary, not just UI                   |
+| A02: Cryptographic Failures    | TLS 1.3+, AES-256 at rest, no custom crypto                |
+| A03: Injection                 | Parameterized queries, input validation, output encoding   |
+| A04: Insecure Design           | Threat modeling in design phase, ADRs for security         |
+| A05: Security Misconfiguration | Hardened images, CIS benchmarks, IaC scanning              |
+| A06: Vulnerable Components     | SBOM + dependency scanning in CI                           |
+| A07: AuthN/AuthZ Failures      | Use standards (OAuth2, OIDC), no homegrown auth            |
+| A08: Data Integrity Failures   | Sigstore / cosign for supply chain integrity               |
+| A09: Logging Failures          | Structured logs → SIEM, not stdout                         |
+| A10: SSRF                      | Validate and sanitize all URL inputs, network segmentation |
 
 ---
 

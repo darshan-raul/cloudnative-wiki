@@ -16,6 +16,7 @@ Without network policies, all pods can communicate with all other pods ( AllowAl
 ## Calico / Cilium
 
 Network policies require a CNI that supports them:
+
 - **Calico** — Most widely used, native K8s NetworkPolicy support
 - **Cilium** — eBPF-based, also supports Layer 7 policies
 
@@ -34,13 +35,13 @@ spec:
     matchLabels:
       app: backend
   ingress:
-  - from:
-    - podSelector:
-        matchLabels:
-          app: frontend
-    ports:
-    - protocol: TCP
-      port: 8080
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
 ```
 
 ## Example: Lock Down Namespace Egress
@@ -54,20 +55,20 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  - to:
-    - podSelector: {}  # Allow DNS
-    ports:
-    - protocol: UDP
-      port: 53
-  - to:
-    - namespaceSelector:
-        matchLabels:
-          name: production
-    ports:
-    - protocol: TCP
-      port: 443
+    - to:
+        - podSelector: {} # Allow DNS
+      ports:
+        - protocol: UDP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: production
+      ports:
+        - protocol: TCP
+          port: 443
 ```
 
 ## EKS VPC CNI + Calico

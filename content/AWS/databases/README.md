@@ -12,17 +12,17 @@ AWS offers managed databases across all major categories: relational (RDS, Auror
 
 ## Service Map
 
-| Service | Type | Engine | Use Case |
-|---------|------|--------|----------|
-| [[rds/README|RDS]] | Relational | MySQL, PostgreSQL, MariaDB, Oracle, SQL Server | General OLTP, web apps |
-| [[aurora/README|Aurora]] | Relational (MySQL/PG compatible) | Aurora MySQL, Aurora PostgreSQL | High-scale, HA, serverless |
-| [[dynamodb/README|DynamoDB]] | NoSQL (key-value, document) | DynamoDB | High-scale, low-latency |
-| [[elasticache/README|ElastiCache]] | In-memory | Redis, Memcached | Caching, sessions, pub/sub |
-| [[redshift/README|Redshift]] | Data warehouse | Redshift (PostgreSQL-based) | Analytics, BI |
-| [[documentdb/README|DocumentDB]] | Document | MongoDB compatible | Semi-structured data |
-| [[neptune/README|Neptune]] | Graph | Gremlin, SPARQL, openCypher | Social, fraud, knowledge graphs |
-| [[qldb/README|QLDB]] | Ledger | Amazon Quantum Ledger Database | Audit trail, immutable |
-| [[timestream/README|Timestream]] | Time-series | Timestream | IoT, metrics, events |
+| Service              | Type          | Engine                           | Use Case                                       |
+| -------------------- | ------------- | -------------------------------- | ---------------------------------------------- | ------------------------------- |
+| [[rds/README         | RDS]]         | Relational                       | MySQL, PostgreSQL, MariaDB, Oracle, SQL Server | General OLTP, web apps          |
+| [[aurora/README      | Aurora]]      | Relational (MySQL/PG compatible) | Aurora MySQL, Aurora PostgreSQL                | High-scale, HA, serverless      |
+| [[dynamodb/README    | DynamoDB]]    | NoSQL (key-value, document)      | DynamoDB                                       | High-scale, low-latency         |
+| [[elasticache/README | ElastiCache]] | In-memory                        | Redis, Memcached                               | Caching, sessions, pub/sub      |
+| [[redshift/README    | Redshift]]    | Data warehouse                   | Redshift (PostgreSQL-based)                    | Analytics, BI                   |
+| [[documentdb/README  | DocumentDB]]  | Document                         | MongoDB compatible                             | Semi-structured data            |
+| [[neptune/README     | Neptune]]     | Graph                            | Gremlin, SPARQL, openCypher                    | Social, fraud, knowledge graphs |
+| [[qldb/README        | QLDB]]        | Ledger                           | Amazon Quantum Ledger Database                 | Audit trail, immutable          |
+| [[timestream/README  | Timestream]]  | Time-series                      | Timestream                                     | IoT, metrics, events            |
 
 ## Database Selection Decision Tree
 
@@ -117,22 +117,24 @@ Aurora Serverless (auto-scales ACU)
 ### Encryption at Rest
 
 All AWS managed databases support encryption at rest using KMS:
+
 - AWS managed keys (free)
 - Customer managed keys (CMK) — you pay for KMS
 
 ### Automated Backups
 
-| Database | Default Retention | Max Retention |
-|----------|------------------|---------------|
-| RDS MySQL/PG | 1 day | 35 days |
-| Aurora | 1 day (continuous) | 35 days |
-| DynamoDB | Incremental forever | Infinite (PITR) |
-| ElastiCache Redis | 1 day (RDB) | 35 days |
-| Redshift | 1 day | 35 days |
+| Database          | Default Retention   | Max Retention   |
+| ----------------- | ------------------- | --------------- |
+| RDS MySQL/PG      | 1 day               | 35 days         |
+| Aurora            | 1 day (continuous)  | 35 days         |
+| DynamoDB          | Incremental forever | Infinite (PITR) |
+| ElastiCache Redis | 1 day (RDB)         | 35 days         |
+| Redshift          | 1 day               | 35 days         |
 
 ### Maintenance Windows
 
 All databases have a weekly maintenance window (30 minutes):
+
 - Engine version upgrades
 - OS patches
 - Instance class changes

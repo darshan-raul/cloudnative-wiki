@@ -27,6 +27,7 @@ index=security action=failure | stats count by user src_ip
 ### Splunk Enterprise Security (ES)
 
 The ES app provides:
+
 - **Correlation searches** — Pre-built detection rules
 - **Notable events** — Alert triage interface
 - **Risk analysis** — Risk score per entity
@@ -34,13 +35,13 @@ The ES app provides:
 
 ## Splunk vs Wazuh
 
-| Feature | Splunk | Wazuh |
-|---------|--------|-------|
-| License | Proprietary (expensive) | Open source (free) |
-| SPL vs rules | Custom SPL search language | XML rules |
-| Scale | 10B+ events/day | ~1M events/day per manager |
-| Cloud-native | Yes (Splunk Cloud) | Self-hosted |
-| ML | Built-in MLTK | Via integration |
+| Feature      | Splunk                     | Wazuh                      |
+| ------------ | -------------------------- | -------------------------- |
+| License      | Proprietary (expensive)    | Open source (free)         |
+| SPL vs rules | Custom SPL search language | XML rules                  |
+| Scale        | 10B+ events/day            | ~1M events/day per manager |
+| Cloud-native | Yes (Splunk Cloud)         | Self-hosted                |
+| ML           | Built-in MLTK              | Via integration            |
 
 ## Your Context
 

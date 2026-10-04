@@ -89,6 +89,7 @@ aws dms create-replication-instance \
 ```
 
 **Sizing guide:**
+
 - `dms.t3.small` — Small databases (< 100GB), no CDC
 - `dms.t3.medium` — Medium databases (100GB-1TB), simple CDC
 - `dms.t3.large` — Large databases (1TB+), complex transformations
@@ -128,6 +129,7 @@ aws dms create-replication-instance \
 ```
 
 **Transformation examples:**
+
 - Rename tables (lowercase, remove prefixes)
 - Add columns (e.g., `migration_timestamp`)
 - Convert data types
@@ -160,6 +162,7 @@ Requires the Schema Conversion Tool (SCT) as a pre-processing step:
 ```
 
 **Typical heterogeneous scenarios:**
+
 - Oracle → PostgreSQL (RDS/Aurora)
 - SQL Server → PostgreSQL
 - Oracle → MySQL
@@ -181,6 +184,7 @@ aws dms create-replication-task \
 ### MySQL (binlog-based CDC)
 
 On the source MySQL:
+
 ```sql
 -- Ensure binlog is enabled
 SHOW VARIABLES LIKE 'log_bin';
@@ -200,6 +204,7 @@ GRANT SELECT ON orders.* TO 'dms_user'@'%';
 ### PostgreSQL (WAL-based CDC)
 
 On the source PostgreSQL:
+
 ```sql
 -- Enable logical replication
 ALTER DATABASE orders SET wal_level = logical;
@@ -217,6 +222,7 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO dms_user;
 ### Oracle (redo log-based CDC)
 
 Oracle uses Oracle LogMiner (built-in) or AWS XDB (more efficient for large volumes):
+
 ```sql
 -- Enable supplemental logging
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
@@ -251,6 +257,7 @@ aws dms describe-table-statistics \
 ```
 
 **Key metrics to watch:**
+
 - `CDCIncomingChanges` — if this grows continuously, the instance can't keep up
 - `FreeStorageSpace` — low space on replication instance = performance issues
 - `FreeMemory` — low memory = DMS struggling to handle data volume
@@ -285,6 +292,7 @@ aws dms reboot-instance --replication-instance-arn $REPL_ARN
 ```
 
 **Sizing tips:**
+
 - If source has many large tables, use higher ParallelThreads setting
 - If target is slow (indexes being built), reduce `MaxBatchSize`
 - Monitor replication instance CPU/memory — if consistently high, upgrade instance class

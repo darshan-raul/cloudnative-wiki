@@ -1,6 +1,13 @@
+---
+title: "Cluster Autoscaler (CA)"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Cluster Autoscaler (CA) — Kubernetes reference and architecture guide."
+---
+
 # Cluster Autoscaler (CA)
 
-*"https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler"*
+_"https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler"_
 
 The Cluster Autoscaler (CA) **adjusts the size of a cluster's node groups** based on the number of unschedulable Pods and the utilization of existing nodes. It's the **older, more conservative** alternative to Karpenter — predefines node groups, scales each between min and max, and works on every cloud.
 
@@ -53,26 +60,26 @@ CA is **mature, well-known, and works on every cloud**. It's not as fast or effi
 
 See [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] for the full comparison. Quick summary:
 
-| | CA | Karpenter |
-|---|---|---|
-| **Model** | Node groups with min/max | Pod-driven, dynamic instance selection |
-| **Cold start** | 2-3 min | 30-60s |
-| **Instance diversity** | Per node group | Across the whole NodePool |
-| **Consolidation** | Conservative | Aggressive |
-| **Cloud support** | All | AWS first; GKE, Azure in progress |
-| **Recommendation** | Stable, mature | New clusters, dynamic workloads |
+|                        | CA                       | Karpenter                              |
+| ---------------------- | ------------------------ | -------------------------------------- |
+| **Model**              | Node groups with min/max | Pod-driven, dynamic instance selection |
+| **Cold start**         | 2-3 min                  | 30-60s                                 |
+| **Instance diversity** | Per node group           | Across the whole NodePool              |
+| **Consolidation**      | Conservative             | Aggressive                             |
+| **Cloud support**      | All                      | AWS first; GKE, Azure in progress      |
+| **Recommendation**     | Stable, mature           | New clusters, dynamic workloads        |
 
 **Pick CA if:**
 
-* You have a stable workload pattern and want predictable node group sizes.
-* You're on a cloud where Karpenter isn't ready (e.g. on-prem, some clouds).
-* You need mature, well-tested behavior.
+- You have a stable workload pattern and want predictable node group sizes.
+- You're on a cloud where Karpenter isn't ready (e.g. on-prem, some clouds).
+- You need mature, well-tested behavior.
 
 **Pick Karpenter if:**
 
-* You have heterogeneous workloads (different instance types needed).
-* You want fast scale-up (30s vs 3 min).
-* You're on AWS.
+- You have heterogeneous workloads (different instance types needed).
+- You want fast scale-up (30s vs 3 min).
+- You're on AWS.
 
 ## 3. Architecture
 
@@ -103,9 +110,9 @@ CA is a **single binary** (no operator, no CRDs, no webhooks). Config is via fla
 
 CA is shipped as a container image. The cluster runs it as a Deployment with:
 
-* **ServiceAccount** with permission to read Pods, Nodes, and update node group sizes.
-* **IAM role** (cloud) with permission to call the autoscaling API.
-* **ConfigMap** (optional) for some tunings.
+- **ServiceAccount** with permission to read Pods, Nodes, and update node group sizes.
+- **IAM role** (cloud) with permission to call the autoscaling API.
+- **ConfigMap** (optional) for some tunings.
 
 ## 4. Node Groups and ASGs
 
@@ -120,12 +127,12 @@ resource "aws_autoscaling_group" "workers" {
   max_size            = 20
   desired_capacity    = 2
   vpc_zone_identifier = [var.subnet_a, var.subnet_b]
-  
+
   launch_template {
     id      = aws_launch_template.workers.id
     version = "$Latest"
   }
-  
+
   tag {
     key                 = "k8s.io/cluster-autoscaler/enabled"
     value               = "true"
@@ -144,12 +151,12 @@ resource "google_container_node_pool" "workers" {
   name       = "workers"
   cluster    = google_container_cluster.primary.name
   node_count = 1
-  
+
   autoscaling {
     min_node_count = 1
     max_node_count = 20
   }
-  
+
   management {
     auto_repair  = true
     auto_upgrade = true
@@ -167,7 +174,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "workers" {
   kubernetes_cluster_id = azurerm_kubernetes_cluster.main.id
   vm_size               = "Standard_D2s_v5"
   node_count            = 1
-  
+
   auto_scaling_enabled = true
   min_count            = 1
   max_count            = 20
@@ -195,12 +202,12 @@ CA scans for unschedulable Pods every `--scan-interval` (default 10s):
 1. **Find unschedulable Pods.** Pods that have been Pending for at least `--max-node-provision-time` (default 15 min, but configurable).
 2. **Simulate adding nodes from each node group.** For each group, assume one node is added; see how many Pods would be scheduled.
 3. **Pick the best node group** based on the configured `expander`:
-   * `least-waste` — minimizes wasted resources (default)
-   * `priority` — uses priority list (from a ConfigMap)
-   * `random` — random
-   * `most-pods` — maximizes Pods scheduled
-   * `price` — cheapest first (only on AWS)
-   * `cheapest` — also cheapest
+   - `least-waste` — minimizes wasted resources (default)
+   - `priority` — uses priority list (from a ConfigMap)
+   - `random` — random
+   - `most-pods` — maximizes Pods scheduled
+   - `price` — cheapest first (only on AWS)
+   - `cheapest` — also cheapest
 4. **Call the cloud API** to add the node.
 5. **Wait for the node to join.** The kubelet registers, the CNI sets up networking.
 6. **Pods get scheduled.**
@@ -224,9 +231,9 @@ Or set on a per-Pod basis with the `cluster-autoscaler.kubernetes.io/pod-scale-u
 
 CA simulates adding one node of a known type. If your workloads are heterogeneous, you'll end up with:
 
-* A `c5.4xlarge` node for the GPU workload (wasting 30 of 32 cores).
-* An `m5.large` node for the small service.
-* A separate `r5.2xlarge` node for the memory-hungry service.
+- A `c5.4xlarge` node for the GPU workload (wasting 30 of 32 cores).
+- An `m5.large` node for the small service.
+- A separate `r5.2xlarge` node for the memory-hungry service.
 
 Karpenter is better at this — it can pick any instance type for any Pod.
 
@@ -235,9 +242,9 @@ Karpenter is better at this — it can pick any instance type for any Pod.
 CA scans for underutilized nodes every `--scan-interval`:
 
 1. **Find nodes that are candidates for removal.** A node is a candidate if:
-   * It has been running for at least `--scale-down-delay-after-add` (default 10 min).
-   * It has been underutilized for at least `--scale-down-unneeded-time` (default 10 min).
-   * All its Pods can be rescheduled on other nodes.
+   - It has been running for at least `--scale-down-delay-after-add` (default 10 min).
+   - It has been underutilized for at least `--scale-down-unneeded-time` (default 10 min).
+   - All its Pods can be rescheduled on other nodes.
 2. **Simulate removing the node.** Re-schedule each Pod on remaining nodes (using the scheduler's actual logic).
 3. **If all Pods can be rescheduled**, drain and remove the node.
 
@@ -279,49 +286,49 @@ CA's configuration is mostly **flags** to the Deployment:
 ```yaml
 spec:
   containers:
-  - name: cluster-autoscaler
-    image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.30.0
-    command:
-    - ./cluster-autoscaler
-    - --v=4
-    - --cloud-provider=aws
-    - --cluster-name=my-cluster
-    - --region=us-east-1
-    - --expander=least-waste
-    - --balance-similar-node-groups=true
-    - --max-node-provision-time=2m
-    - --scale-down-delay-after-add=5m
-    - --scale-down-unneeded-time=5m
-    - --scale-down-utilization-threshold=0.5
-    - --skip-nodes-with-local-storage=false
-    - --skip-nodes-with-system-pods=true
+    - name: cluster-autoscaler
+      image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.30.0
+      command:
+        - ./cluster-autoscaler
+        - --v=4
+        - --cloud-provider=aws
+        - --cluster-name=my-cluster
+        - --region=us-east-1
+        - --expander=least-waste
+        - --balance-similar-node-groups=true
+        - --max-node-provision-time=2m
+        - --scale-down-delay-after-add=5m
+        - --scale-down-unneeded-time=5m
+        - --scale-down-utilization-threshold=0.5
+        - --skip-nodes-with-local-storage=false
+        - --skip-nodes-with-system-pods=true
 ```
 
 ### 7.1 Key flags
 
-| Flag | Default | What it does |
-|---|---|---|
-| `--cloud-provider` | (required) | `aws`, `gce`, `azure`, `digitalocean`, etc. |
-| `--cluster-name` | (required) | Used to find the right node groups |
-| `--expander` | `least-waste` | How to choose which node group to scale up |
-| `--max-node-provision-time` | `15m` | Ignore Pods Pending for less time |
-| `--scale-down-delay-after-add` | `10m` | Don't scale down nodes younger than this |
-| `--scale-down-unneeded-time` | `10m` | Don't scale down until node has been unneeded for this long |
-| `--scale-down-utilization-threshold` | `0.5` | Below this fraction of capacity, the node is "unneeded" |
-| `--balance-similar-node-groups` | `false` | Try to keep similar node groups balanced |
-| `--skip-nodes-with-local-storage` | `false` | Skip nodes with emptyDir / hostPath (Pods can't be rescheduled) |
-| `--skip-nodes-with-system-pods` | `true` | Skip nodes with kube-system Pods (don't drain control plane) |
+| Flag                                 | Default       | What it does                                                    |
+| ------------------------------------ | ------------- | --------------------------------------------------------------- |
+| `--cloud-provider`                   | (required)    | `aws`, `gce`, `azure`, `digitalocean`, etc.                     |
+| `--cluster-name`                     | (required)    | Used to find the right node groups                              |
+| `--expander`                         | `least-waste` | How to choose which node group to scale up                      |
+| `--max-node-provision-time`          | `15m`         | Ignore Pods Pending for less time                               |
+| `--scale-down-delay-after-add`       | `10m`         | Don't scale down nodes younger than this                        |
+| `--scale-down-unneeded-time`         | `10m`         | Don't scale down until node has been unneeded for this long     |
+| `--scale-down-utilization-threshold` | `0.5`         | Below this fraction of capacity, the node is "unneeded"         |
+| `--balance-similar-node-groups`      | `false`       | Try to keep similar node groups balanced                        |
+| `--skip-nodes-with-local-storage`    | `false`       | Skip nodes with emptyDir / hostPath (Pods can't be rescheduled) |
+| `--skip-nodes-with-system-pods`      | `true`        | Skip nodes with kube-system Pods (don't drain control plane)    |
 
 ### 7.2 The expander
 
 The `expander` chooses **which node group to scale up** when there are multiple choices:
 
-* `least-waste` (default) — minimizes wasted CPU/memory. **Best for cost.**
-* `priority` — uses a ConfigMap with priorities.
-* `random` — picks randomly.
-* `most-pods` — picks the group that schedules the most Pods.
-* `price` (AWS only) — picks the cheapest ASG.
-* `cheapest` (AWS only) — also cheapest.
+- `least-waste` (default) — minimizes wasted CPU/memory. **Best for cost.**
+- `priority` — uses a ConfigMap with priorities.
+- `random` — picks randomly.
+- `most-pods` — picks the group that schedules the most Pods.
+- `price` (AWS only) — picks the cheapest ASG.
+- `cheapest` (AWS only) — also cheapest.
 
 The `priority` expander needs a ConfigMap:
 
@@ -397,7 +404,7 @@ GPU workloads need a separate node group with the right instance type (e.g. `p3.
 resource "aws_autoscaling_group" "gpu" {
   name = "k8s-gpu"
   # ...
-  
+
   mixed_instances_policy {
     instances_distribution {
       on_demand_base_capacity = 0
@@ -412,9 +419,9 @@ resource "aws_autoscaling_group" "gpu" {
 
 The CA approach:
 
-* One node group per workload type (small / medium / large / GPU / ARM).
-* Each with its own min / max.
-* Pods use `nodeSelector` or `nodeAffinity` to land on the right group.
+- One node group per workload type (small / medium / large / GPU / ARM).
+- Each with its own min / max.
+- Pods use `nodeSelector` or `nodeAffinity` to land on the right group.
 
 This works but creates **node group sprawl**. Karpenter handles this with a single NodePool + requirements.
 
@@ -548,7 +555,7 @@ kubectl get pdb -A
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — the modern alternative
-* [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
-* [[Kubernetes/eks/compute/managed-node-groups/cluster-autoscaler|Cluster Autoscaler on EKS]] — EKS-specific install
-* [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — EKS-specific install
+- [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — the modern alternative
+- [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
+- [[Kubernetes/eks/compute/managed-node-groups/cluster-autoscaler|Cluster Autoscaler on EKS]] — EKS-specific install
+- [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — EKS-specific install

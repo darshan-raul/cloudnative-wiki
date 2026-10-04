@@ -67,6 +67,7 @@ The GCS FUSE CSI driver injects a lightweight user-space file system daemon alon
 ## 2. POSIX Compatibility Realities & Limitations
 
 While GCS FUSE presents objects as files and folders, Cloud Storage remains an **object store**, not a block device:
+
 - **Fast Sequential Reads:** Reading large continuous files (e.g., PyTorch `.pt` or Safetensors model weights) approaches wire-speed line rate.
 - **Append and Random Writes:** Overwriting the middle of an existing file is **not supported**. Writing to a file uploads the object sequentially via multipart upload; changes only become visible when `close()` or `fsync()` completes.
 - **Directory Emulation:** Object stores have flat key hierarchies. Folders are emulated using delimiter forward slashes (`/`). Renaming a folder containing 100,000 objects is not an atomic operation—it issues 100,000 individual copy and delete API calls.
@@ -136,25 +137,25 @@ metadata:
 spec:
   serviceAccountName: model-training-ksa
   containers:
-  - name: trainer
-    image: us-central1-docker.pkg.dev/core-infrastructure-prod/ai/pytorch-trainer:v2.1
-    command: ["python3", "train.py", "--data-dir=/datasets/imagenet"]
-    resources:
-      requests:
-        cpu: "8"
-        memory: "32Gi"
-    volumeMounts:
-    - name: gcs-dataset-volume
-      mountPath: /datasets/imagenet
-      readOnly: true
+    - name: trainer
+      image: us-central1-docker.pkg.dev/core-infrastructure-prod/ai/pytorch-trainer:v2.1
+      command: ["python3", "train.py", "--data-dir=/datasets/imagenet"]
+      resources:
+        requests:
+          cpu: "8"
+          memory: "32Gi"
+      volumeMounts:
+        - name: gcs-dataset-volume
+          mountPath: /datasets/imagenet
+          readOnly: true
   volumes:
-  - name: gcs-dataset-volume
-    csi:
-      driver: gcsfuse.csi.storage.gke.io
-      readOnly: true
-      volumeAttributes:
-        bucketName: ai-training-datasets-prod
-        mountOptions: "implicit-dirs,file-cache:max-size-mb:50000,file-cache:cache-file-for-range-read:true,metadata-cache:stat-cache-max-size-mb:1000,metadata-cache:ttl-secs:3600"
+    - name: gcs-dataset-volume
+      csi:
+        driver: gcsfuse.csi.storage.gke.io
+        readOnly: true
+        volumeAttributes:
+          bucketName: ai-training-datasets-prod
+          mountOptions: "implicit-dirs,file-cache:max-size-mb:50000,file-cache:cache-file-for-range-read:true,metadata-cache:stat-cache-max-size-mb:1000,metadata-cache:ttl-secs:3600"
 ```
 
 Apply manifest:
@@ -170,14 +171,14 @@ kubectl get pod pytorch-training-worker -n ai-training
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Limit / Performance Characteristic | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Concurrent Readers** | Practically unlimited | Scales to thousands of pods reading simultaneously |
-| **Sequential Read Throughput**| Up to 10+ Gbps per node | Depends on node VM network bandwidth |
-| **File Cache Capacity** | Bounded by node disk / memory | Use attached Local NVMe SSD for multi-TB caches |
-| **Max Single File Size** | 5 TiB (GCS platform limit) | Supports massive model checkpoints |
-| **Directory Listing Latency** | High for 100k+ flat files | Organize datasets into hierarchical subdirectories |
-| **Autopilot Support** | Fully supported out-of-the-box | Zero manual `/dev/fuse` setup required |
+| Parameter / Dimension          | Limit / Performance Characteristic | Engineering Guidance                               |
+| :----------------------------- | :--------------------------------- | :------------------------------------------------- |
+| **Max Concurrent Readers**     | Practically unlimited              | Scales to thousands of pods reading simultaneously |
+| **Sequential Read Throughput** | Up to 10+ Gbps per node            | Depends on node VM network bandwidth               |
+| **File Cache Capacity**        | Bounded by node disk / memory      | Use attached Local NVMe SSD for multi-TB caches    |
+| **Max Single File Size**       | 5 TiB (GCS platform limit)         | Supports massive model checkpoints                 |
+| **Directory Listing Latency**  | High for 100k+ flat files          | Organize datasets into hierarchical subdirectories |
+| **Autopilot Support**          | Fully supported out-of-the-box     | Zero manual `/dev/fuse` setup required             |
 
 ---
 
@@ -194,6 +195,7 @@ kubectl get pod pytorch-training-worker -n ai-training
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **GCS FUSE CSI Driver:** $0.00 platform charge.
 2. **Cloud Storage Standard:** $0.020 per GB-month.
 3. **Cloud Storage API Calls:** Class A (Writes/Lists): $0.05 per 10,000 ops; Class B (Reads): $0.004 per 10,000 ops.
@@ -211,7 +213,7 @@ Pricing components:
   - Class B API Operations: $(5{,}000{,}000 / 10{,}000) \times \$0.004 = \mathbf{\$2.00}$
   - Intra-Region Network Bandwidth: **$0.00**
 - **Total Monthly Cost:** **$202.00 / month**
-*(Note: Provisioning 10 TB of Persistent Disk SSD for this workload would cost $1,700.00/month, yielding an **88% cost reduction**).*
+  _(Note: Provisioning 10 TB of Persistent Disk SSD for this workload would cost $1,700.00/month, yielding an **88% cost reduction**)._
 
 ### Scenario B: Massive Document OCR & NLP Pipeline (100 TB Cold Storage)
 

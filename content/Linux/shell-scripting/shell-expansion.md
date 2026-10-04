@@ -166,6 +166,7 @@ ls /nonexistent/*.txt
 ```
 
 To force nullglob (treat no-match as empty):
+
 ```bash
 shopt -s nullglob
 ```

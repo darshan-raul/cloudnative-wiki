@@ -1,30 +1,37 @@
+---
+title: "Namespaces"
+tags: ["kubernetes", "k8s-concepts", "architecture"]
+date: 2026-09-06
+description: "Namespaces — Kubernetes reference and architecture guide."
+---
+
 # Namespaces
 
-*"https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"*
+_"https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"_
 
 A namespace is a **scope for names** — resource names must be unique within a namespace, but the same name can be used in different namespaces. Namespaces are how you partition a single cluster into multiple virtual clusters.
 
 ## What they actually do
 
-* **Provide a scope for names** — two Deployments with the same name can coexist if they're in different namespaces
-* **Provide a scope for RBAC** — you can grant a user access to one namespace and not another
-* **Provide a scope for policies** — ResourceQuotas, LimitRanges, NetworkPolicies, PodSecurity, etc. all apply per-namespace
-* **Provide a scope for service DNS** — `my-svc.my-ns.svc.cluster.local`
+- **Provide a scope for names** — two Deployments with the same name can coexist if they're in different namespaces
+- **Provide a scope for RBAC** — you can grant a user access to one namespace and not another
+- **Provide a scope for policies** — ResourceQuotas, LimitRanges, NetworkPolicies, PodSecurity, etc. all apply per-namespace
+- **Provide a scope for service DNS** — `my-svc.my-ns.svc.cluster.local`
 
 Namespaces do **not** provide:
 
-* **Hard isolation** — by default, all Pods in all namespaces can talk to each other
-* **Resource isolation** — a namespace can request more resources than the node has; quotas enforce limits, not guarantees
-* **Network segmentation** — without NetworkPolicy, namespaces are just label prefixes
+- **Hard isolation** — by default, all Pods in all namespaces can talk to each other
+- **Resource isolation** — a namespace can request more resources than the node has; quotas enforce limits, not guarantees
+- **Network segmentation** — without NetworkPolicy, namespaces are just label prefixes
 
 ## The default namespaces
 
 When a cluster is created, four namespaces exist:
 
-* `default` — for objects without a namespace. The cluster-admin puts things here when they're being lazy.
-* `kube-system` — for the control plane and add-ons (CoreDNS, kube-proxy, CNI). **Do not deploy your apps here.**
-* `kube-public` — readable by all users (including unauthenticated). Usually just holds a `cluster-info` ConfigMap.
-* `kube-node-lease` — for the NodeLease objects, used to determine node health. Lightweight heartbeat.
+- `default` — for objects without a namespace. The cluster-admin puts things here when they're being lazy.
+- `kube-system` — for the control plane and add-ons (CoreDNS, kube-proxy, CNI). **Do not deploy your apps here.**
+- `kube-public` — readable by all users (including unauthenticated). Usually just holds a `cluster-info` ConfigMap.
+- `kube-node-lease` — for the NodeLease objects, used to determine node health. Lightweight heartbeat.
 
 ```bash
 kubectl get ns
@@ -106,17 +113,17 @@ kubectl api-resources --namespaced=false
 
 The mental model:
 
-* **Namespaced** resources describe things that "live" in a tenant (your app, your team's data)
-* **Cluster-scoped** resources describe cluster-wide things (Nodes, PVs, CRDs, ClusterRoles)
+- **Namespaced** resources describe things that "live" in a tenant (your app, your team's data)
+- **Cluster-scoped** resources describe cluster-wide things (Nodes, PVs, CRDs, ClusterRoles)
 
 ## The "default" namespace problem
 
 A common anti-pattern: deploying to `default`. Why it's bad:
 
-* **No PSS** — `default` doesn't have Pod Security labels, so it gets the cluster default (usually `privileged` = no enforcement)
-* **No quota** — you can use unlimited resources
-* **No ownership** — anyone can deploy here, no one owns it
-* **Mixes everything** — test apps, prod apps, scratch apps all in one place
+- **No PSS** — `default` doesn't have Pod Security labels, so it gets the cluster default (usually `privileged` = no enforcement)
+- **No quota** — you can use unlimited resources
+- **No ownership** — anyone can deploy here, no one owns it
+- **Mixes everything** — test apps, prod apps, scratch apps all in one place
 
 ```bash
 # check what's in default
@@ -138,17 +145,17 @@ kubectl create ns team-b
 
 A few resources let you reference across namespaces:
 
-* **NetworkPolicy** with `namespaceSelector` — "Pods in any namespace with this label can be ingress"
-* **RoleBinding** with a subject from another namespace — rare, but possible
-* **Service DNS** — `my-svc.other-ns.svc.cluster.local` from any namespace
-* **Ingress** to Services in other namespaces — depends on the controller
-* **Gateway API** — `backendRefs` can target a Service in another namespace (with explicit `namespace:`)
+- **NetworkPolicy** with `namespaceSelector` — "Pods in any namespace with this label can be ingress"
+- **RoleBinding** with a subject from another namespace — rare, but possible
+- **Service DNS** — `my-svc.other-ns.svc.cluster.local` from any namespace
+- **Ingress** to Services in other namespaces — depends on the controller
+- **Gateway API** — `backendRefs` can target a Service in another namespace (with explicit `namespace:`)
 
 But the **default is single-namespace**:
 
-* A Pod in `default` can only mount a ConfigMap in `default`
-* A PVC in `team-a` is invisible to a Pod in `team-b`
-* A Service in `team-a` is accessible by DNS from any namespace, but you must use the FQDN or set up search paths
+- A Pod in `default` can only mount a ConfigMap in `default`
+- A PVC in `team-a` is invisible to a Pod in `team-b`
+- A Service in `team-a` is accessible by DNS from any namespace, but you must use the FQDN or set up search paths
 
 This is intentional: **namespaces are isolation boundaries by default.**
 
@@ -156,9 +163,9 @@ This is intentional: **namespaces are isolation boundaries by default.**
 
 The cluster's DNS has a search path. From a Pod, you can refer to a Service by:
 
-* `my-svc` — same namespace as the Pod
-* `my-svc.my-ns` — explicit namespace
-* `my-svc.my-ns.svc.cluster.local` — FQDN
+- `my-svc` — same namespace as the Pod
+- `my-svc.my-ns` — explicit namespace
+- `my-svc.my-ns.svc.cluster.local` — FQDN
 
 The `/etc/resolv.conf` inside a Pod:
 
@@ -219,24 +226,24 @@ metadata:
   namespace: team-a
 spec:
   limits:
-  - type: Container
-    default:                  # these are applied if not specified
-      cpu: 500m
-      memory: 512Mi
-    defaultRequest:           # the default request
-      cpu: 100m
-      memory: 128Mi
-    max:                      # hard cap
-      cpu: "2"
-      memory: 4Gi
-    min:                      # minimum required
-      cpu: 50m
-      memory: 64Mi
-  - type: PersistentVolumeClaim
-    max:
-      storage: 100Gi
-    min:
-      storage: 1Gi
+    - type: Container
+      default: # these are applied if not specified
+        cpu: 500m
+        memory: 512Mi
+      defaultRequest: # the default request
+        cpu: 100m
+        memory: 128Mi
+      max: # hard cap
+        cpu: "2"
+        memory: 4Gi
+      min: # minimum required
+        cpu: 50m
+        memory: 64Mi
+    - type: PersistentVolumeClaim
+      max:
+        storage: 100Gi
+      min:
+        storage: 1Gi
 ```
 
 Without a LimitRange, a Pod with no `resources:` set is `BestEffort` and gets the lowest eviction priority. With a LimitRange, every container has at least a default.
@@ -277,10 +284,10 @@ spec:
 
 This gives you:
 
-* Resource limits (Quota)
-* Security baseline (PSS)
-* Network isolation (default-deny + allow rules)
-* No cross-team access (RBAC scoped to the namespace)
+- Resource limits (Quota)
+- Security baseline (PSS)
+- Network isolation (default-deny + allow rules)
+- No cross-team access (RBAC scoped to the namespace)
 
 This is "soft multi-tenancy" — strong isolation but still a single cluster.
 
@@ -292,15 +299,15 @@ You cannot "namespace" a Node or a PV. You cannot "namespace" a CRD (the CRD is 
 
 ## When to create a new namespace
 
-| Scenario | New namespace? |
-|---|---|
-| Different environment (dev, staging, prod) | **Yes** |
-| Different team | **Yes** |
-| Different app with its own RBAC / quotas | **Yes** |
-| Different customer (multi-tenant SaaS) | **Yes** |
-| Different lifecycle (app + its jobs) | Maybe — depends on the team |
+| Scenario                                   | New namespace?                     |
+| ------------------------------------------ | ---------------------------------- |
+| Different environment (dev, staging, prod) | **Yes**                            |
+| Different team                             | **Yes**                            |
+| Different app with its own RBAC / quotas   | **Yes**                            |
+| Different customer (multi-tenant SaaS)     | **Yes**                            |
+| Different lifecycle (app + its jobs)       | Maybe — depends on the team        |
 | Different version of the same app (v1, v2) | Maybe — but labels usually suffice |
-| Random new feature being developed | **No** — use the dev namespace |
+| Random new feature being developed         | **No** — use the dev namespace     |
 
 The rule of thumb: **if you'd want different RBAC, quotas, or PSS profiles, you want a different namespace.** If you wouldn't, you don't.
 
@@ -308,9 +315,9 @@ The rule of thumb: **if you'd want different RBAC, quotas, or PSS profiles, you 
 
 There's no hard limit, but practical advice:
 
-* **10-50** — easy, recommended
-* **100-500** — fine, but consider using a tool (e.g. [namespace-operator](https://github.com/kubernetes-sigs/multi-tenancy), [hierarchical namespaces](https://github.com/kubernetes-sigs/hierarchical-namespaces)) to manage them
-* **1000+** — you're probably doing something wrong. Use labels, not namespaces.
+- **10-50** — easy, recommended
+- **100-500** — fine, but consider using a tool (e.g. [namespace-operator](https://github.com/kubernetes-sigs/multi-tenancy), [hierarchical namespaces](https://github.com/kubernetes-sigs/hierarchical-namespaces)) to manage them
+- **1000+** — you're probably doing something wrong. Use labels, not namespaces.
 
 The apiserver's `namespace` field is indexed, so 1000s of namespaces don't cause performance issues. But managing them does.
 
@@ -325,12 +332,12 @@ When you delete a namespace:
 
 **Deleting a namespace deletes EVERYTHING in it.** This includes:
 
-* Deployments, StatefulSets, DaemonSets
-* Pods (and their volumes if the StorageClass has the right policy)
-* Services
-* ConfigMaps and Secrets
-* ServiceAccounts
-* CRs of all types
+- Deployments, StatefulSets, DaemonSets
+- Pods (and their volumes if the StorageClass has the right policy)
+- Services
+- ConfigMaps and Secrets
+- ServiceAccounts
+- CRs of all types
 
 The deletion is **cascading and irreversible**. Be careful.
 
@@ -345,16 +352,16 @@ The `NamespaceLifecycle` admission controller prevents creating new objects in a
 
 ## Gotchas
 
-* **You can't `kubectl get pods` across namespaces by default.** Use `-A` or `--all-namespaces`.
-* **The `default` namespace is a trap.** Never deploy to it. Don't even create objects there manually.
-* **Deleting a namespace is permanent.** There's no "soft delete". If you need staging, snapshot, or backup semantics, use a backup tool (Velero).
-* **Namespaces are not security boundaries by themselves.** Add NetworkPolicy + RBAC + PSS + quotas to make them so.
-* **Cross-namespace DNS works, but cross-namespace mounts do not.** A Pod in `team-a` can resolve `db.team-b` but can't mount a PVC from `team-b`.
-* **The `kube-system` namespace is special.** Don't deploy there. Don't apply PSS labels there (system Pods need privileged).
-* **Namespaces can't be renamed.** You can `kubectl create ns new-name` and migrate, but you can't rename in place.
-* **Annotations on namespaces are the standard for tooling.** ArgoCD, cert-manager, ExternalDNS, etc. all use namespace annotations for their config.
-* **ServiceAccount tokens are per-namespace.** A `default` ServiceAccount in `team-a` is a different identity than in `team-b`.
-* **The kubelet doesn't see namespaces.** It only sees Pods assigned to it, regardless of namespace. The kubelet enforces Pod limits (memory, CPU) but not namespace quotas.
+- **You can't `kubectl get pods` across namespaces by default.** Use `-A` or `--all-namespaces`.
+- **The `default` namespace is a trap.** Never deploy to it. Don't even create objects there manually.
+- **Deleting a namespace is permanent.** There's no "soft delete". If you need staging, snapshot, or backup semantics, use a backup tool (Velero).
+- **Namespaces are not security boundaries by themselves.** Add NetworkPolicy + RBAC + PSS + quotas to make them so.
+- **Cross-namespace DNS works, but cross-namespace mounts do not.** A Pod in `team-a` can resolve `db.team-b` but can't mount a PVC from `team-b`.
+- **The `kube-system` namespace is special.** Don't deploy there. Don't apply PSS labels there (system Pods need privileged).
+- **Namespaces can't be renamed.** You can `kubectl create ns new-name` and migrate, but you can't rename in place.
+- **Annotations on namespaces are the standard for tooling.** ArgoCD, cert-manager, ExternalDNS, etc. all use namespace annotations for their config.
+- **ServiceAccount tokens are per-namespace.** A `default` ServiceAccount in `team-a` is a different identity than in `team-b`.
+- **The kubelet doesn't see namespaces.** It only sees Pods assigned to it, regardless of namespace. The kubelet enforces Pod limits (memory, CPU) but not namespace quotas.
 
 ## The full lifecycle in one diagram
 

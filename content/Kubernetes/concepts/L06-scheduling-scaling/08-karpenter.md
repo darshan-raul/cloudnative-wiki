@@ -1,6 +1,13 @@
+---
+title: "Karpenter"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Karpenter — Kubernetes reference and architecture guide."
+---
+
 # Karpenter
 
-*"https://karpenter.sh/"*
+_"https://karpenter.sh/"_
 
 Karpenter is a **node provisioner** that watches unschedulable Pods and launches **just-in-time, right-sized nodes** in seconds. It replaces the older Cluster Autoscaler model (node groups + min/max) with a declarative, Pod-driven approach. Karpenter picks the instance type, AZ, capacity type (on-demand vs spot), and operating system based on what the Pod needs, then provisions the node in ~30-60 seconds.
 
@@ -27,24 +34,24 @@ Karpenter is a **node provisioner** that watches unschedulable Pods and launches
 
 Cluster Autoscaler has a model: "I have N node groups, each with min/max sizes and an instance type. When Pods are unschedulable, add a node to one of the groups." This works but has real limits:
 
-* **You have to predefine instance types** in node groups. New instance types aren't auto-discovered.
-* **Bin-packing is poor.** CA picks a node group, adds a node of that type, even if a different type would be 30% cheaper.
-* **Cold start is 2-3 minutes.** The ASG / cloud provider has to launch, the kubelet has to register, the CNI has to set up networking.
-* **Node group proliferation.** Heterogeneous workloads (GPU + CPU + ARM) require many node groups.
-* **Consolidation is weak.** CA removes underutilized nodes slowly, conservatively, with PDBs in the way.
+- **You have to predefine instance types** in node groups. New instance types aren't auto-discovered.
+- **Bin-packing is poor.** CA picks a node group, adds a node of that type, even if a different type would be 30% cheaper.
+- **Cold start is 2-3 minutes.** The ASG / cloud provider has to launch, the kubelet has to register, the CNI has to set up networking.
+- **Node group proliferation.** Heterogeneous workloads (GPU + CPU + ARM) require many node groups.
+- **Consolidation is weak.** CA removes underutilized nodes slowly, conservatively, with PDBs in the way.
 
 Karpenter's model is different:
 
 ```
 Cluster Autoscaler:                         Karpenter:
-                                            
+
 "Add a node to a group"                     "I'll figure out what node to run"
-                                            
+
 I have:                                    I see:
 - 3 node groups, min=2, max=20 each         - 1 Pending Pod
 - each is m5.large                          - Pod wants 1.5 CPU, 2 GB memory
 - 30 unschedulable Pods                     - Pod tolerates a taint
-                                            
+
 I do:                                      I do:
 - pick the cheapest group that fits        - launch the cheapest instance that fits
 - add a node                               - launch in 30-60 seconds
@@ -56,19 +63,19 @@ I do:                                      I do:
 
 ## 2. Karpenter vs Cluster Autoscaler
 
-| | Karpenter | Cluster Autoscaler |
-|---|---|---|
-| **Model** | "Launch the right instance" | "Scale node groups" |
-| **Cold start** | 30-60s | 2-3 min |
-| **Instance selection** | Dynamic, based on Pod requirements | Predefined in node groups |
-| **Bin-packing** | Excellent (any instance type) | Limited to node group types |
-| **Consolidation** | Built-in, aggressive | Conservative, slow |
-| **Spot support** | Native, multi-instance-type | Per-node-group |
-| **Multi-AZ** | Automatic | Per-node-group |
-| **ARM / GPU / special** | Just works (constraints via requirements) | Separate node groups |
-| **Cluster age** | Newer (2021+), rapidly evolving | Mature, well-known |
-| **Cloud support** | AWS first; GKE + Azure in progress | All clouds |
-| **Heterogeneous workloads** | Single NodePool | Many node groups |
+|                             | Karpenter                                 | Cluster Autoscaler          |
+| --------------------------- | ----------------------------------------- | --------------------------- |
+| **Model**                   | "Launch the right instance"               | "Scale node groups"         |
+| **Cold start**              | 30-60s                                    | 2-3 min                     |
+| **Instance selection**      | Dynamic, based on Pod requirements        | Predefined in node groups   |
+| **Bin-packing**             | Excellent (any instance type)             | Limited to node group types |
+| **Consolidation**           | Built-in, aggressive                      | Conservative, slow          |
+| **Spot support**            | Native, multi-instance-type               | Per-node-group              |
+| **Multi-AZ**                | Automatic                                 | Per-node-group              |
+| **ARM / GPU / special**     | Just works (constraints via requirements) | Separate node groups        |
+| **Cluster age**             | Newer (2021+), rapidly evolving           | Mature, well-known          |
+| **Cloud support**           | AWS first; GKE + Azure in progress        | All clouds                  |
+| **Heterogeneous workloads** | Single NodePool                           | Many node groups            |
 
 **Recommendation:** new clusters should use Karpenter. Existing clusters on CA can migrate. The two are **mutually exclusive** — don't run both.
 
@@ -115,21 +122,21 @@ spec:
   template:
     spec:
       requirements:
-      - key: kubernetes.io/arch
-        operator: In
-        values: [amd64, arm64]
-      - key: kubernetes.io/os
-        operator: In
-        values: [linux]
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: [on-demand, spot]
-      - key: topology.kubernetes.io/zone
-        operator: In
-        values: [us-east-1a, us-east-1b, us-east-1c]
-      - key: karpenter.k8s.aws/instance-family
-        operator: In
-        values: [m5, m6i, c5, c6i, r5, r6i]
+        - key: kubernetes.io/arch
+          operator: In
+          values: [amd64, arm64]
+        - key: kubernetes.io/os
+          operator: In
+          values: [linux]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [on-demand, spot]
+        - key: topology.kubernetes.io/zone
+          operator: In
+          values: [us-east-1a, us-east-1b, us-east-1c]
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values: [m5, m6i, c5, c6i, r5, r6i]
       nodeClassRef:
         apiVersion: karpenter.k8s.aws/v1beta1
         kind: EC2NodeClass
@@ -156,20 +163,20 @@ kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  amiFamily: AL2              # Amazon Linux 2; Bottlerocket, Ubuntu also options
+  amiFamily: AL2 # Amazon Linux 2; Bottlerocket, Ubuntu also options
   subnetSelectorTerms:
-  - tags:
-      karpenter.sh/discovery: my-cluster
+    - tags:
+        karpenter.sh/discovery: my-cluster
   securityGroupSelectorTerms:
-  - tags:
-      karpenter.sh/discovery: my-cluster
+    - tags:
+        karpenter.sh/discovery: my-cluster
   instanceProfile: KarpenterNodeInstanceProfile
   blockDeviceMappings:
-  - deviceName: /dev/xvda
-    ebs:
-      volumeSize: 100Gi
-      volumeType: gp3
-      deleteOnTermination: true
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 100Gi
+        volumeType: gp3
+        deleteOnTermination: true
 ```
 
 For other clouds: `GCENodeClass`, `AKSNodeClass`. The cloud-specific provider handles the details.
@@ -180,9 +187,9 @@ For other clouds: `GCENodeClass`, `AKSNodeClass`. The cloud-specific provider ha
 
 Karpenter matches Pods to NodePools by:
 
-* **`spec.template.spec.taints`** — the Pod must tolerate them.
-* **`spec.template.metadata.labels`** — the NodePool can require specific labels on the Pod (via `nodeSelector`).
-* **`spec.weight`** — when multiple NodePools match, the higher weight wins.
+- **`spec.template.spec.taints`** — the Pod must tolerate them.
+- **`spec.template.metadata.labels`** — the NodePool can require specific labels on the Pod (via `nodeSelector`).
+- **`spec.weight`** — when multiple NodePools match, the higher weight wins.
 
 A common pattern:
 
@@ -197,12 +204,12 @@ spec:
     spec:
       # no taints — any Pod can land here
       requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: [on-demand, spot]
-      - key: karpenter.k8s.aws/instance-family
-        operator: In
-        values: [m5, m6i, c5, c6i, r5, r6i]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [on-demand, spot]
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values: [m5, m6i, c5, c6i, r5, r6i]
 ---
 # NodePool for GPU workloads (tainted, only GPU Pods tolerate)
 apiVersion: karpenter.sh/v1beta1
@@ -213,13 +220,13 @@ spec:
   template:
     spec:
       taints:
-      - key: nvidia.com/gpu
-        value: present
-        effect: NoSchedule
+        - key: nvidia.com/gpu
+          value: present
+          effect: NoSchedule
       requirements:
-      - key: karpenter.k8s.aws/instance-family
-        operator: In
-        values: [p3, p4, g4dn, g5]
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values: [p3, p4, g4dn, g5]
 ```
 
 The GPU Pod has a `tolerations: [{ key: nvidia.com/gpu, operator: Exists }]`. Karpenter sees the toleration, matches the Pod to the GPU NodePool, launches a `p3` or `g5` instance.
@@ -228,17 +235,17 @@ The GPU Pod has a `tolerations: [{ key: nvidia.com/gpu, operator: Exists }]`. Ka
 
 `requirements` constrain **what instance types** Karpenter can launch. Each requirement is a label selector on the eventual Node.
 
-| Well-known label | What it matches |
-|---|---|
-| `kubernetes.io/arch` | `amd64`, `arm64` |
-| `kubernetes.io/os` | `linux`, `windows` |
-| `karpenter.sh/capacity-type` | `on-demand`, `spot` |
-| `topology.kubernetes.io/zone` | AZ name |
-| `topology.kubernetes.io/region` | Region |
-| `karpenter.k8s.aws/instance-family` | `m5`, `c5`, `p3`, etc. |
-| `karpenter.k8s.aws/instance-size` | `large`, `xlarge`, etc. |
-| `karpenter.k8s.aws/instance-cpu` | `4`, `8`, `16`, etc. |
-| `karpenter.k8s.aws/instance-memory` | memory in Mi |
+| Well-known label                    | What it matches         |
+| ----------------------------------- | ----------------------- |
+| `kubernetes.io/arch`                | `amd64`, `arm64`        |
+| `kubernetes.io/os`                  | `linux`, `windows`      |
+| `karpenter.sh/capacity-type`        | `on-demand`, `spot`     |
+| `topology.kubernetes.io/zone`       | AZ name                 |
+| `topology.kubernetes.io/region`     | Region                  |
+| `karpenter.k8s.aws/instance-family` | `m5`, `c5`, `p3`, etc.  |
+| `karpenter.k8s.aws/instance-size`   | `large`, `xlarge`, etc. |
+| `karpenter.k8s.aws/instance-cpu`    | `4`, `8`, `16`, etc.    |
+| `karpenter.k8s.aws/instance-memory` | memory in Mi            |
 
 A Pod's `nodeSelector` and `nodeAffinity` are also matched against the NodePool's requirements. If a Pod says "I want `instance-family: p3`", Karpenter launches a `p3` for it.
 
@@ -279,12 +286,12 @@ Use weight to express preference without forcing a hard selection.
 
 The NodeClass encapsulates the cloud-specific config that doesn't change per workload:
 
-* **AMI / image** — the OS image for the node.
-* **Subnets** — which subnets to launch in.
-* **Security groups** — which SGs to attach.
-* **IAM instance profile** — the AWS IAM role for the node.
-* **Block device mappings** — EBS volume config (size, type, encryption).
-* **User data** — bootstrap script (Karpenter fills in most of it).
+- **AMI / image** — the OS image for the node.
+- **Subnets** — which subnets to launch in.
+- **Security groups** — which SGs to attach.
+- **IAM instance profile** — the AWS IAM role for the node.
+- **Block device mappings** — EBS volume config (size, type, encryption).
+- **User data** — bootstrap script (Karpenter fills in most of it).
 
 ```yaml
 apiVersion: karpenter.k8s.aws/v1beta1
@@ -292,23 +299,23 @@ kind: EC2NodeClass
 metadata:
   name: default
 spec:
-  amiFamily: Bottlerocket              # or AL2, Ubuntu
+  amiFamily: Bottlerocket # or AL2, Ubuntu
   subnetSelectorTerms:
-  - tags:
-      karpenter.sh/discovery: my-cluster
+    - tags:
+        karpenter.sh/discovery: my-cluster
   securityGroupSelectorTerms:
-  - tags:
-      karpenter.sh/discovery: my-cluster
+    - tags:
+        karpenter.sh/discovery: my-cluster
   instanceProfile: KarpenterNodeInstanceProfile
   blockDeviceMappings:
-  - deviceName: /dev/xvda
-    ebs:
-      volumeSize: 100Gi
-      volumeType: gp3
-      iops: 3000
-      throughput: 125
-      encrypted: true
-      deleteOnTermination: true
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 100Gi
+        volumeType: gp3
+        iops: 3000
+        throughput: 125
+        encrypted: true
+        deleteOnTermination: true
   userData: |
     # extra bootstrap if needed
 ```
@@ -331,26 +338,26 @@ spec:
         workload-type: general
     spec:
       requirements:
-      - key: kubernetes.io/arch
-        operator: In
-        values: [amd64, arm64]
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: [on-demand, spot]
-      - key: karpenter.k8s.aws/instance-category
-        operator: In
-        values: [c, m, r]
-      - key: karpenter.k8s.aws/instance-generation
-        operator: Gt
-        values: ["4"]
+        - key: kubernetes.io/arch
+          operator: In
+          values: [amd64, arm64]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [on-demand, spot]
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: [c, m, r]
+        - key: karpenter.k8s.aws/instance-generation
+          operator: Gt
+          values: ["4"]
       nodeClassRef:
         apiVersion: karpenter.k8s.aws/v1beta1
         kind: EC2NodeClass
         name: default
       taints:
-      - key: dedicated
-        value: general
-        effect: NoSchedule
+        - key: dedicated
+          value: general
+          effect: NoSchedule
   limits:
     cpu: "200"
     memory: 800Gi
@@ -358,11 +365,11 @@ spec:
     consolidationPolicy: WhenUnderutilized
     expireAfter: 720h
     budgets:
-    - nodes: "10%"
-    - nodes: "5"
-      reasons: [Underutilized]
-      schedule: "0 9 * * mon-fri"   # weekday mornings
-      duration: 8h
+      - nodes: "10%"
+      - nodes: "5"
+        reasons: [Underutilized]
+        schedule: "0 9 * * mon-fri" # weekday mornings
+        duration: 8h
   weight: 100
 ```
 
@@ -371,6 +378,7 @@ spec:
 Karpenter actively **disrupts** nodes to maintain efficiency. Three mechanisms:
 
 **Consolidation:** when a node is underutilized, Karpenter either:
+
 - **Deletes the node** if its Pods can be rescheduled elsewhere.
 - **Replaces the node** with a different, more efficient instance type for the same Pods.
 
@@ -386,11 +394,11 @@ spec:
     consolidationPolicy: WhenUnderutilized
     expireAfter: 720h
     budgets:
-    - nodes: "10%"                # at most 10% of nodes per budget period
-    - nodes: "5"
-      reasons: [Underutilized]    # only for underutilized, not for other reasons
-      schedule: "0 9 * * mon-fri"
-      duration: 8h
+      - nodes: "10%" # at most 10% of nodes per budget period
+      - nodes: "5"
+        reasons: [Underutilized] # only for underutilized, not for other reasons
+        schedule: "0 9 * * mon-fri"
+        duration: 8h
 ```
 
 Disruption budgets **rate-limit** Karpenter's termination actions. Without them, a fast-changing workload could trigger waves of node replacements.
@@ -410,10 +418,10 @@ The result: cluster capacity tracks demand. You don't pay for empty nodes.
 
 ### 7.1 Consolidation policies
 
-| Policy | Behavior |
-|---|---|
+| Policy                        | Behavior                                             |
+| ----------------------------- | ---------------------------------------------------- |
 | `WhenUnderutilized` (default) | Only consolidate when there's clear underutilization |
-| `Always` | Aggressively consolidate on every evaluation |
+| `Always`                      | Aggressively consolidate on every evaluation         |
 
 `WhenUnderutilized` is conservative — it doesn't churn. `Always` is aggressive — it tries to remove every node that could be replaced.
 
@@ -448,21 +456,21 @@ spec:
 
 Karpenter's Spot support is **much better than CA's**:
 
-* **Multi-instance-type** — Karpenter can pick any instance type in a family, not just one. Spot interruptions are absorbed by the diversity.
-* **Capacity-optimized** allocation strategy.
-* **Interruption handling** — Karpenter is notified of spot interruptions via SQS / EventBridge, and proactively drains the node.
+- **Multi-instance-type** — Karpenter can pick any instance type in a family, not just one. Spot interruptions are absorbed by the diversity.
+- **Capacity-optimized** allocation strategy.
+- **Interruption handling** — Karpenter is notified of spot interruptions via SQS / EventBridge, and proactively drains the node.
 
 ```yaml
 spec:
   template:
     spec:
       requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: [spot]                  # or [on-demand, spot] for mixed
-      - key: karpenter.k8s.aws/instance-family
-        operator: In
-        values: [m5, m5a, m5n, m6i, m6a, m7i, c5, c5a, c6i, c6a, r5, r6i]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [spot] # or [on-demand, spot] for mixed
+        - key: karpenter.k8s.aws/instance-family
+          operator: In
+          values: [m5, m5a, m5n, m6i, m6a, m7i, c5, c5a, c6i, c6a, r5, r6i]
 ```
 
 With 11 instance families, Spot interruption on one family doesn't matter — the others have capacity.
@@ -478,9 +486,9 @@ spec:
   template:
     spec:
       requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: [spot, on-demand]    # try spot first, fall back to on-demand
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [spot, on-demand] # try spot first, fall back to on-demand
 ```
 
 In practice, this means: a Pod that wants 1 core lands on a `m5.large spot` if available, else a `m5.large on-demand`. Karpenter doesn't have a "prefer spot" knob; it picks the cheapest available.
@@ -489,10 +497,10 @@ In practice, this means: a Pod that wants 1 core lands on a `m5.large spot` if a
 
 Karpenter respects **all the k8s scheduling primitives**. A Pod that has:
 
-* `nodeSelector: disktype=ssd` — Karpenter launches a node with that label.
-* `nodeAffinity: { zone: [us-east-1a, us-east-1b] }` — Karpenter picks a node in one of those zones.
-* `tolerations: [{ key: dedicated, operator: Exists }]` — Karpenter matches the Pod to a NodePool with that taint.
-* `topologySpreadConstraints: [{ maxSkew: 1, topologyKey: zone }]` — Karpenter launches nodes in different zones to spread the Pods.
+- `nodeSelector: disktype=ssd` — Karpenter launches a node with that label.
+- `nodeAffinity: { zone: [us-east-1a, us-east-1b] }` — Karpenter picks a node in one of those zones.
+- `tolerations: [{ key: dedicated, operator: Exists }]` — Karpenter matches the Pod to a NodePool with that taint.
+- `topologySpreadConstraints: [{ maxSkew: 1, topologyKey: zone }]` — Karpenter launches nodes in different zones to spread the Pods.
 
 The `topology.kubernetes.io/zone` requirement is a Karpenter `requirements` field. If a Pod wants zone X and the NodePool allows zones X, Y, Z, Karpenter launches in X.
 
@@ -542,10 +550,10 @@ Karpenter is **single-cluster**. Multi-cluster setups run one Karpenter per clus
 
 Cross-cluster is harder. Some patterns:
 
-* **Cluster federation** — KubeFed, but rare in production.
-* **Cluster API** — provisions clusters, not individual nodes.
-* **Multi-cluster ingress** — Route53, Global Accelerator, etc.
-* **Cross-cluster service mesh** — Istio multi-primary, Linkerd multi-cluster.
+- **Cluster federation** — KubeFed, but rare in production.
+- **Cluster API** — provisions clusters, not individual nodes.
+- **Multi-cluster ingress** — Route53, Global Accelerator, etc.
+- **Cross-cluster service mesh** — Istio multi-primary, Linkerd multi-cluster.
 
 These are all beyond Karpenter's scope. Karpenter manages nodes within one cluster.
 
@@ -615,11 +623,11 @@ aws ec2 describe-subnets --filters "Name=tag:karpenter.sh/discovery,Values=<clus
 
 Karpenter terminates nodes for:
 
-* **Consolidation** — the node is underutilized.
-* **Expiration** — `expireAfter` is reached.
-* **Drift** — the NodeClass changed (new AMI, etc.).
-* **Interruption** — spot reclaim, health event, etc.
-* **Manual** — `kubectl delete node` or via the Karpenter CLI.
+- **Consolidation** — the node is underutilized.
+- **Expiration** — `expireAfter` is reached.
+- **Drift** — the NodeClass changed (new AMI, etc.).
+- **Interruption** — spot reclaim, health event, etc.
+- **Manual** — `kubectl delete node` or via the Karpenter CLI.
 
 Check the NodeClaim's `status.conditions` and the controller logs.
 
@@ -689,7 +697,7 @@ Check the NodeClaim's `status.conditions` and the controller logs.
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/09-cluster-autoscaler|Cluster Autoscaler]] — the predecessor
-* [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
-* [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — EKS-specific install / IAM
-* [[Kubernetes/eks/compute/managed-node-groups/cluster-autoscaler|Cluster Autoscaler on EKS]] — EKS-specific install
+- [[Kubernetes/concepts/L06-scheduling-scaling/09-cluster-autoscaler|Cluster Autoscaler]] — the predecessor
+- [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
+- [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — EKS-specific install / IAM
+- [[Kubernetes/eks/compute/managed-node-groups/cluster-autoscaler|Cluster Autoscaler on EKS]] — EKS-specific install

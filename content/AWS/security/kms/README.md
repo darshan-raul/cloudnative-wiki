@@ -88,14 +88,14 @@ If you don't specify a key policy, the default allows the root user full access.
     {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
       "Action": "kms:*",
       "Resource": "*"
     },
     {
       "Sid": "Allow use of key for Lambda",
       "Effect": "Allow",
-      "Principal": {"Service": "lambda.amazonaws.com"},
+      "Principal": { "Service": "lambda.amazonaws.com" },
       "Action": [
         "kms:Encrypt",
         "kms:Decrypt",
@@ -264,24 +264,24 @@ aws cloudtrail lookup-events \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Customer managed keys (CMK) | $1.00/month |
-| AWS managed keys | Free (used by other services) |
-| API calls (cryptographic) | $0.03/10,000 calls |
-| Key rotation | Free (automatic) |
-| Custom key store (CloudHSM) | $1.45/hour (~$1,044/month) |
+| Component                   | Cost                          |
+| --------------------------- | ----------------------------- |
+| Customer managed keys (CMK) | $1.00/month                   |
+| AWS managed keys            | Free (used by other services) |
+| API calls (cryptographic)   | $0.03/10,000 calls            |
+| Key rotation                | Free (automatic)              |
+| Custom key store (CloudHSM) | $1.45/hour (~$1,044/month)    |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| CMKs per region | 100,000 |
-| Grants per CMK | 10,000 |
-| Key policies | 20 KB |
-| Encryption context pairs | 8 |
-| Encryption context key length | 256 bytes |
-| Plaintext size (Encrypt API) | 4 KB |
+| Resource                      | Limit                |
+| ----------------------------- | -------------------- |
+| CMKs per region               | 100,000              |
+| Grants per CMK                | 10,000               |
+| Key policies                  | 20 KB                |
+| Encryption context pairs      | 8                    |
+| Encryption context key length | 256 bytes            |
+| Plaintext size (Encrypt API)  | 4 KB                 |
 | Ciphertext size (Encrypt API) | 4 KB (same key type) |
 
 ## References

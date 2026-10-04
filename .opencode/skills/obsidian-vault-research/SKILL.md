@@ -8,6 +8,7 @@ description: Use when user asks to research a topic and add documentation to the
 Researches topics and creates/updates documentation in the Obsidian vault.
 
 ## Vault Location
+
 - Root: `/home/darshan/projects/cloudnative-wiki/content`
 - Structure follows content organization (see below)
 
@@ -67,6 +68,7 @@ description: <One-line description>
 ## Index Update Pattern
 
 For new `Kubernetes/guides/<tool>.md`, add to `Kubernetes/guides/README.md`:
+
 ```markdown
 - [[<tool>]] - <brief description>
 ```

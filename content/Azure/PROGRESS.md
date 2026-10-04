@@ -15,12 +15,14 @@ Tracks completion of the Microsoft Azure knowledge base, adhering to the high-de
 ## Section Progress
 
 ### 1. Identity & Governance 🔐
+
 - [x] **[[Azure/identity/README|Microsoft Entra ID & Azure RBAC]]** — Tenant structure, Directory vs RBAC roles, Service Principals, Managed Identities, PIM, and Conditional Access
 - [x] **[[Azure/identity/workload-identity|Workload Identity & Federated Credentials]]** — AKS Workload Identity, GitHub Actions OIDC federation, eliminating client secrets
 - [x] **[[Azure/governance/policy|Azure Governance — Management Groups, Policy & Locks]]** — Hierarchy, Policy effects (Deny/DINE), Initiatives, and Resource Locks
 - [x] **[[Azure/resource-group|Resource Groups]]** — Lifecycle boundaries, deployment scopes, and ARM metadata
 
 ### 2. Networking 🌐
+
 - [x] **[[Azure/networking/vnet|Virtual Network (VNet) & Hybrid Routing]]** — Regional VNets, 5 reserved subnet IPs, VNet Peering with Gateway Transit, UDRs, NAT Gateway, and Private Endpoints
 - [x] **[[Azure/networking/nsg|Network Security Groups (NSGs) & ASGs]]** — Rule priority (100–4096), default rules, Service Tags, Application Security Groups, and dual-layer filtering
 - [x] **[[Azure/networking/load-balancing|Azure Load Balancing, Application Gateway & Front Door]]** — Layer 4 Azure Load Balancer, Layer 7 Application Gateway WAF v2, Azure Front Door Anycast CDN, and Private Link
@@ -29,6 +31,7 @@ Tracks completion of the Microsoft Azure knowledge base, adhering to the high-de
 - [x] **[[Azure/networking/private-link/README|Azure Private Link & Private Endpoints]]** — Private PaaS connectivity, Private DNS Zones, eliminating public IPs, and data exfiltration prevention
 
 ### 3. Compute & Containers 🖥️
+
 - [x] **[[Azure/compute/aks|Azure Kubernetes Service (AKS)]]** — Master Architectural Hub: Azure CNI vs Kubenet vs CNI Overlay, Cilium eBPF dataplane, System/User node pools, Ephemeral OS disks, and Workload Identity
   - [x] **[[Azure/compute/aks/automatic-deep-dive|AKS Automatic Deep Dive]]** — Fully managed Kubernetes, Karpenter-powered Node Auto-Provisioning (NAP), weekly automated patch rollouts
   - [x] **[[Azure/compute/aks/cluster-tiers-sla|Cluster Tiers & SLA]]** — Free vs Standard (99.95% SLA) vs Premium (LTS), Private Link clusters, and API Server VNet Integration
@@ -57,9 +60,11 @@ Tracks completion of the Microsoft Azure knowledge base, adhering to the high-de
 - [x] **[[Azure/compute/app-service/README|Azure App Service & Deployment Slots]]** — App Service Plans, zero-downtime deployment slots, regional VNet integration, and custom domain TLS
 
 ### 4. Storage 💽
+
 - [x] **[[Azure/storage/blob|Azure Blob Storage & ADLS Gen2]]** — Redundancy tiers (LRS/ZRS/GRS), access tiers, Archive rehydration, Hierarchical Namespace (HNS), and User Delegation SAS
 
 ### 5. Databases & Messaging 🗄️📨
+
 - [x] **[[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]]** — Single DB vs Managed Instance, vCore vs DTU, Serverless auto-pause, Hyperscale distributed storage, and Auto-Failover Groups
 - [x] **[[Azure/databases/cosmos-db|Azure Cosmos DB]]** — Request Units (RUs), multi-region active-active writes, 5 consistency levels, partition key design, and Autoscale throughput
 - [x] **[[Azure/databases/postgres-flexible/README|PostgreSQL Flexible Server]]** — Zone-redundant HA failover, built-in PgBouncer pooling, storage autogrow, and custom maintenance windows
@@ -68,6 +73,7 @@ Tracks completion of the Microsoft Azure knowledge base, adhering to the high-de
 - [x] **[[Azure/messaging/event-hubs/README|Azure Event Hubs & Kafka Ingestion]]** — Kafka 1.0+ wire protocol, Event Hubs Capture to Blob/ADLS, partitions, consumer groups, and throughput units
 
 ### 6. Monitoring & Security 📊🔐
+
 - [x] **[[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics (KQL)]]** — Centralized log workspaces, Kusto Query Language (KQL), diagnostic settings, commitment tiers, and data retention
 - [x] **[[Azure/monitoring/sentinel/README|Microsoft Sentinel SIEM/SOAR]]** — Cloud-native SIEM, data connectors, KQL threat detections, incident investigation graphs, and Logic Apps SOAR playbooks
 - [x] **[[Azure/security/key-vault/README|Azure Key Vault & Managed HSM]]** — FIPS 140-2 Level 3 hardware HSM, Azure RBAC authorization, Keys/Secrets/Certificates, Soft-Delete, and Purge Protection

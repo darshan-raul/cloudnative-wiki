@@ -17,7 +17,8 @@ To verify a file's integrity using `sha256sum`, follow these steps:
     ```
 
     This command creates a file (`original_file.sha256`) containing the SHA-256 hash and the filename.
-2. **Distribute the File and Hash:** Distribute both the original file and the `.sha256` file.
+
+2.  **Distribute the File and Hash:** Distribute both the original file and the `.sha256` file.
 3.  **Verify the File:** When the recipient receives the file, they can verify its integrity by comparing the hash of the received file with the provided hash:
 
     ```bash
@@ -28,8 +29,8 @@ To verify a file's integrity using `sha256sum`, follow these steps:
 
 #### Why SHA-256?
 
-* **Uniqueness:** The likelihood of two different files producing the same SHA-256 hash is extremely low, ensuring the uniqueness of the hash value for a given file.
-* **Tamper Detection:** Even a small change in the file's content will produce a completely different hash, making it easy to detect any modifications.
+- **Uniqueness:** The likelihood of two different files producing the same SHA-256 hash is extremely low, ensuring the uniqueness of the hash value for a given file.
+- **Tamper Detection:** Even a small change in the file's content will produce a completely different hash, making it easy to detect any modifications.
 
 #### Example
 
@@ -45,6 +46,7 @@ To verify a file's integrity using `sha256sum`, follow these steps:
     ```
     a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b3444c96d13f238c8  example.txt
     ```
+
 2.  **Verify File:**
 
     ```bash

@@ -113,6 +113,7 @@ kubectl get ingress my-app -o yaml
 ```
 
 Common mismatches:
+
 - You sent to `app.example.com` but the Ingress expects `api.example.com`
 - You sent `GET /v2/users` but the Ingress only has `/v1`
 - TLS-SNI mismatch: the cert is for `app.example.com` but you sent a request for `api.example.com`
@@ -222,19 +223,23 @@ kubectl logs -l app=api --tail=100 | grep "timeout\|slow\|hang"
 **Common sub-causes:**
 
 1. **CPU limit too low.** Pod is being throttled.
+
    ```bash
    # in metrics
    rate(container_cpu_cfs_throttled_seconds_total[5m])
    ```
+
    Fix: increase CPU limit, or remove it.
 
 2. **Too few replicas.** All traffic to one pod.
+
    ```bash
    $ kubectl get pods -l app=api
    NAME     READY   STATUS    RESTARTS   AGE
    api-1    1/1     Running   0          5m
    # only one pod
    ```
+
    Fix: scale up.
 
 3. **Slow downstream.** The pod itself is fine, but it depends on a slow database, microservice, etc.
@@ -266,43 +271,51 @@ SSL_do_handshake() failed (SSL: error:1417A0C1 ...)
 **Common sub-causes:**
 
 1. **Cert doesn't match the host.** SNI mismatch.
+
    ```bash
    $ openssl s_client -connect app.example.com:443 -servername app.example.com
    # returns cert for app.example.com
    $ openssl s_client -connect app.example.com:443 -servername api.example.com
    # returns NO cert or wrong cert
    ```
+
    Fix: ensure the cert covers the requested host (`subjectAltName`).
 
 2. **Cert is self-signed and the client doesn't trust it.**
+
    ```bash
    curl: (60) SSL certificate problem: self signed certificate
    ```
+
    Fix: install a CA-signed cert (Let's Encrypt) or add the CA to the client's trust store.
 
 3. **Backend TLS (upstream).** The Ingress forwards to a backend that requires TLS, but the Ingress isn't configured to use TLS.
+
    ```yaml
    # ingress
    spec:
      rules:
-     - host: app.example.com
-       http:
-         paths:
-         - path: /
-           backend:
-             service:
-               name: web
-               port:
-                 number: 443
-                 # ^-- this is the Service port; Ingress will try plain HTTP to it
-                 # to use TLS to upstream, you need a different config
+       - host: app.example.com
+         http:
+           paths:
+             - path: /
+               backend:
+                 service:
+                   name: web
+                   port:
+                     number: 443
+                     # ^-- this is the Service port; Ingress will try plain HTTP to it
+                     # to use TLS to upstream, you need a different config
    ```
+
    Fix: configure the Ingress to use TLS to the backend (e.g., `nginx.ingress.kubernetes.io/backend-protocol: HTTPS`).
 
 4. **TLS version mismatch.** The client only supports TLS 1.0, the controller only supports TLS 1.2+.
+
    ```bash
    curl: (35) error:1407742E:SSL routines:SSL23_GET_SERVER_HELLO:tlsv1 alert protocol version
    ```
+
    Fix: configure the controller to support older TLS (not recommended), or update the client.
 
 5. **Cert is expired.**
@@ -372,11 +385,13 @@ kubectl get svc -n ingress-nginx
    Fix: update DNS to point to the LoadBalancer's CNAME or A record.
 
 2. **Cloud LB not provisioned.** The Service is `type: LoadBalancer`, but the cloud hasn't provisioned an LB.
+
    ```bash
    $ kubectl get svc -n ingress-nginx
    NAME                       TYPE           EXTERNAL-IP
    ingress-nginx-controller   LoadBalancer   <pending>   <-- LB not ready
    ```
+
    Fix: wait, or check the cloud's LB provisioning logs.
 
 3. **Security group / firewall blocking.** The cloud's security group doesn't allow traffic on 443/80.
@@ -434,24 +449,29 @@ kubectl describe challenge -A
 **Common sub-causes:**
 
 1. **ACME challenge failing.** Let's Encrypt can't reach the HTTP-01 challenge endpoint.
+
    ```bash
    $ kubectl get challenges -A
    NAME                                      STATE     AGE
    app-cert-1234567890-12345678              pending   5m
    ```
+
    ```bash
    $ kubectl describe challenge app-cert-xxx
    Reason:  Waiting for HTTP-01 challenge propagation: failed to perform self check
    ```
+
    Fix: ensure the Ingress is reachable from the internet on port 80.
 
 2. **DNS-01 challenge failing.** The DNS provider isn't configured correctly.
    Fix: check the `dns01` solver config, the API token.
 
 3. **Rate limit hit.** Let's Encrypt has rate limits (5 certs per domain per week for the production issuer).
+
    ```bash
    $ kubectl logs -n cert-manager -l app=cert-manager | grep "rate limit"
    ```
+
    Fix: use the staging issuer for testing.
 
 4. **Cert expired and cert-manager didn't renew.** Could be a renewal schedule, or a renewal that failed silently.
@@ -586,11 +606,13 @@ curl: (28) Connection timed out
 **Common sub-causes:**
 
 1. **Health check path wrong.** The LB is checking `/healthz` but the controller serves it at `/healthz` of the controller port.
+
    ```bash
    # AWS NLB
    Health check path: /healthz
    # but the controller's health endpoint might be at a different path
    ```
+
    Fix: check the controller's docs for the health check path.
 
 2. **Health check port wrong.** The LB is checking port 80 but the controller listens on 443 (or vice versa).
@@ -670,19 +692,19 @@ openssl s_client -connect app.example.com:443 -servername app.example.com < /dev
 
 ## Common gotchas
 
-* **`404` is the controller's default** — it received the request but didn't match a rule. `503` is the controller's "no upstream" — it matched a rule but couldn't reach a backend.
-* **`ingressClassName` is the v1 API requirement.** Old `kubernetes.io/ingress.class` annotation is deprecated. Use the spec field.
-* **The Ingress controller is a separate deployment** — many think it's part of the apiserver. It's not. If it's broken, Ingress doesn't work.
-* **`kubectl describe ingress` is the only place you'll see backend service mismatches.** `kubectl get` shows only the resource.
-* **Cloud load balancers have their own health checks** — these can fail even if the controller is healthy. Check the cloud console.
-* **The Ingress controller needs the right ServiceAccount + RBAC.** Especially for AWS LB controller, GKE ingress, etc.
-* **NodePort vs LoadBalancer** — if using NodePort, the cloud doesn't know about your ports. You need to either expose via LB Service or use the NodePort + node IP directly.
-* **IngressClass is the modern way** to disambiguate. With multiple controllers, set the class explicitly.
-* **TLS termination is at the controller** unless you configure it. If your backend requires TLS too, you need a separate config.
-* **Path matching behavior** — `pathType: Prefix` matches prefix (so `/api` matches `/api/v1/users`); `pathType: Exact` matches exact; `pathType: ImplementationSpecific` is implementation-defined.
-* **Ingress doesn't watch Services directly** — it relies on the controller to do the actual routing. The Ingress resource is declarative config; the controller is the implementation.
-* **The `Host` header is what the Ingress uses for virtual hosting.** A request with no `Host` header (or wrong one) doesn't match.
-* **The Ingress controller is its own kind of "Service" to the cluster** — it has its own Service, its own pods, its own resources. If you're running nginx-ingress, the controller is `ingress-nginx-controller`. If you're running Traefik, it's `traefik`.
+- **`404` is the controller's default** — it received the request but didn't match a rule. `503` is the controller's "no upstream" — it matched a rule but couldn't reach a backend.
+- **`ingressClassName` is the v1 API requirement.** Old `kubernetes.io/ingress.class` annotation is deprecated. Use the spec field.
+- **The Ingress controller is a separate deployment** — many think it's part of the apiserver. It's not. If it's broken, Ingress doesn't work.
+- **`kubectl describe ingress` is the only place you'll see backend service mismatches.** `kubectl get` shows only the resource.
+- **Cloud load balancers have their own health checks** — these can fail even if the controller is healthy. Check the cloud console.
+- **The Ingress controller needs the right ServiceAccount + RBAC.** Especially for AWS LB controller, GKE ingress, etc.
+- **NodePort vs LoadBalancer** — if using NodePort, the cloud doesn't know about your ports. You need to either expose via LB Service or use the NodePort + node IP directly.
+- **IngressClass is the modern way** to disambiguate. With multiple controllers, set the class explicitly.
+- **TLS termination is at the controller** unless you configure it. If your backend requires TLS too, you need a separate config.
+- **Path matching behavior** — `pathType: Prefix` matches prefix (so `/api` matches `/api/v1/users`); `pathType: Exact` matches exact; `pathType: ImplementationSpecific` is implementation-defined.
+- **Ingress doesn't watch Services directly** — it relies on the controller to do the actual routing. The Ingress resource is declarative config; the controller is the implementation.
+- **The `Host` header is what the Ingress uses for virtual hosting.** A request with no `Host` header (or wrong one) doesn't match.
+- **The Ingress controller is its own kind of "Service" to the cluster** — it has its own Service, its own pods, its own resources. If you're running nginx-ingress, the controller is `ingress-nginx-controller`. If you're running Traefik, it's `traefik`.
 
 ## A worked example
 
@@ -746,8 +768,8 @@ kube-proxy is failing on one node, so the iptables rules there are stale. The In
 
 ## See also
 
-* [[Kubernetes/guides/troubleshooting/service-unreachable|service-unreachable]] — when the Service is the issue
-* [[Kubernetes/guides/troubleshooting/dns-resolution|dns-resolution]] — when DNS is the issue
-* [[Kubernetes/guides/tools/kubectl|kubectl]] — the commands you need
-* [[Kubernetes/concepts/L04-services-networking/04-ingress|ingress]] — how Ingress works
-* [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — Gateway API alternative
+- [[Kubernetes/guides/troubleshooting/service-unreachable|service-unreachable]] — when the Service is the issue
+- [[Kubernetes/guides/troubleshooting/dns-resolution|dns-resolution]] — when DNS is the issue
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — the commands you need
+- [[Kubernetes/concepts/L04-services-networking/04-ingress|ingress]] — how Ingress works
+- [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — Gateway API alternative

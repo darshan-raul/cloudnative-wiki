@@ -1,6 +1,13 @@
+---
+title: "SecurityContext"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "SecurityContext — Kubernetes reference and architecture guide."
+---
+
 # SecurityContext
 
-*"https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"*
+_"https://kubernetes.io/docs/tasks/configure-pod-container/security-context/"_
 
 A `SecurityContext` defines **privilege and access control settings** for a Pod or Container. It runs from "do almost nothing" (default) to "do everything" (`privileged: true`). Most production clusters should be **far from privileged** — the `restricted` PSS profile (covered in [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]]) is the safe default. This note covers every field, the layered defense model, and the real recipes for hardening.
 
@@ -31,8 +38,8 @@ A `SecurityContext` defines **privilege and access control settings** for a Pod 
 
 A `SecurityContext` can be set at **two levels**:
 
-* **Pod-level** (`spec.securityContext`) — applies to all containers in the Pod.
-* **Container-level** (`spec.containers[].securityContext`) — applies to that container.
+- **Pod-level** (`spec.securityContext`) — applies to all containers in the Pod.
+- **Container-level** (`spec.containers[].securityContext`) — applies to that container.
 
 For fields that are both Pod-level and Container-level (e.g. `runAsUser`), the **container-level value overrides the Pod-level value**.
 
@@ -41,7 +48,7 @@ apiVersion: v1
 kind: Pod
 metadata: { name: app }
 spec:
-  securityContext:                  # Pod-level
+  securityContext: # Pod-level
     runAsUser: 1000
     runAsGroup: 3000
     fsGroup: 2000
@@ -49,60 +56,60 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   containers:
-  - name: app
-    image: app:1.0
-    securityContext:                # Container-level (overrides Pod-level for shared fields)
-      allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: true
-      runAsNonRoot: true
-      capabilities:
-        drop: ["ALL"]
-        add: ["NET_BIND_SERVICE"]   # only if you need to bind < 1024
-      seccompProfile:
-        type: RuntimeDefault
-  - name: sidecar
-    image: sidecar:1.0
-    # inherits Pod-level securityContext, but no container-level overrides
+    - name: app
+      image: app:1.0
+      securityContext: # Container-level (overrides Pod-level for shared fields)
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        capabilities:
+          drop: ["ALL"]
+          add: ["NET_BIND_SERVICE"] # only if you need to bind < 1024
+        seccompProfile:
+          type: RuntimeDefault
+    - name: sidecar
+      image: sidecar:1.0
+      # inherits Pod-level securityContext, but no container-level overrides
 ```
 
 Pod-level fields:
 
-* `runAsUser`, `runAsGroup`, `runAsNonRoot`
-* `fsGroup`, `fsGroupChangePolicy`
-* `seccompProfile`, `appArmorProfile` (via annotation)
-* `sysctls` (deprecated; use `securityContext.sysctls` on the container)
-* `supplementalGroups`
-* `fsGroupChangePolicy`
+- `runAsUser`, `runAsGroup`, `runAsNonRoot`
+- `fsGroup`, `fsGroupChangePolicy`
+- `seccompProfile`, `appArmorProfile` (via annotation)
+- `sysctls` (deprecated; use `securityContext.sysctls` on the container)
+- `supplementalGroups`
+- `fsGroupChangePolicy`
 
 Container-level fields (additional):
 
-* `allowPrivilegeEscalation`
-* `readOnlyRootFilesystem`
-* `privileged`
-* `capabilities` (add / drop)
-* `seccompProfile` (overrides Pod-level)
-* `procMount`
+- `allowPrivilegeEscalation`
+- `readOnlyRootFilesystem`
+- `privileged`
+- `capabilities` (add / drop)
+- `seccompProfile` (overrides Pod-level)
+- `procMount`
 
 ## 2. The Field Reference
 
-| Field | Scope | Default | What it does |
-|---|---|---|---|
-| `runAsUser` | Pod / Container | (image's USER) | UID for the container process |
-| `runAsGroup` | Pod / Container | (image's GROUP) | GID for the container process |
-| `runAsNonRoot` | Pod / Container | false | Reject if the container would run as root (UID 0) |
-| `fsGroup` | Pod | (none) | GID for volume ownership — group-writable volumes |
-| `fsGroupChangePolicy` | Pod | Always | When to chown the volume |
-| `supplementalGroups` | Pod | (none) | Additional GIDs the user is in |
-| `readOnlyRootFilesystem` | Container | false | Mount the root filesystem read-only |
-| `allowPrivilegeEscalation` | Container | true | Allow setuid binaries and capabilities to gain privileges |
-| `privileged` | Container | false | Run as effectively root on the host (almost never) |
-| `capabilities.add` | Container | (none) | Linux capabilities to add |
-| `capabilities.drop` | Container | (none) | Linux capabilities to drop |
-| `seccompProfile.type` | Pod / Container | Unconfined | Seccomp filter (RuntimeDefault, Localhost, Unconfined) |
-| `seccompProfile localhostProfile` | Pod / Container | (none) | Local seccomp profile (if type=Localhost) |
-| `appArmorProfile.type` | (via annotation) | RuntimeDefault | AppArmor profile (RuntimeDefault, Localhost, Unconfined) |
-| `procMount` | Container | Default | /proc mount type (Default, Unmasked) |
-| `sysctls` | Pod / Container | (none) | Allowed kernel tunables |
+| Field                             | Scope            | Default         | What it does                                              |
+| --------------------------------- | ---------------- | --------------- | --------------------------------------------------------- |
+| `runAsUser`                       | Pod / Container  | (image's USER)  | UID for the container process                             |
+| `runAsGroup`                      | Pod / Container  | (image's GROUP) | GID for the container process                             |
+| `runAsNonRoot`                    | Pod / Container  | false           | Reject if the container would run as root (UID 0)         |
+| `fsGroup`                         | Pod              | (none)          | GID for volume ownership — group-writable volumes         |
+| `fsGroupChangePolicy`             | Pod              | Always          | When to chown the volume                                  |
+| `supplementalGroups`              | Pod              | (none)          | Additional GIDs the user is in                            |
+| `readOnlyRootFilesystem`          | Container        | false           | Mount the root filesystem read-only                       |
+| `allowPrivilegeEscalation`        | Container        | true            | Allow setuid binaries and capabilities to gain privileges |
+| `privileged`                      | Container        | false           | Run as effectively root on the host (almost never)        |
+| `capabilities.add`                | Container        | (none)          | Linux capabilities to add                                 |
+| `capabilities.drop`               | Container        | (none)          | Linux capabilities to drop                                |
+| `seccompProfile.type`             | Pod / Container  | Unconfined      | Seccomp filter (RuntimeDefault, Localhost, Unconfined)    |
+| `seccompProfile localhostProfile` | Pod / Container  | (none)          | Local seccomp profile (if type=Localhost)                 |
+| `appArmorProfile.type`            | (via annotation) | RuntimeDefault  | AppArmor profile (RuntimeDefault, Localhost, Unconfined)  |
+| `procMount`                       | Container        | Default         | /proc mount type (Default, Unmasked)                      |
+| `sysctls`                         | Pod / Container  | (none)          | Allowed kernel tunables                                   |
 
 ## 3. The User / Group Fields
 
@@ -135,8 +142,8 @@ securityContext:
 
 **Rejects the Pod** if the container would run as root (UID 0). The admission controller checks:
 
-* `runAsUser` is not 0.
-* The image's `USER` is not 0 (or not set, in which case the default is root, so the Pod is rejected).
+- `runAsUser` is not 0.
+- The image's `USER` is not 0 (or not set, in which case the default is root, so the Pod is rejected).
 
 `runAsNonRoot: true` is a **hard guarantee**. If the image's `USER` is `0` (root) and you don't set `runAsUser`, the Pod is rejected.
 
@@ -171,13 +178,13 @@ This applies to **all volumes** the Pod mounts, including `emptyDir`, `hostPath`
 ```yaml
 securityContext:
   fsGroup: 2000
-  fsGroupChangePolicy: OnRootMismatch   # or "Always"
+  fsGroupChangePolicy: OnRootMismatch # or "Always"
 ```
 
 Controls when the `chown` happens:
 
-* **`Always`** (default) — `chown` the volume's root and all files. **Slow for large volumes** (e.g. a PVC with 100 GB).
-* **`OnRootMismatch`** — `chown` only if the volume's root is not already owned by the `fsGroup`. **Fast for large volumes**.
+- **`Always`** (default) — `chown` the volume's root and all files. **Slow for large volumes** (e.g. a PVC with 100 GB).
+- **`OnRootMismatch`** — `chown` only if the volume's root is not already owned by the `fsGroup`. **Fast for large volumes**.
 
 For `configMap`, `secret`, `downwardAPI`, `projected`: the kubelet always uses `OnRootMismatch` (these are read-only).
 
@@ -196,19 +203,19 @@ To write anywhere, mount a writable `emptyDir` or `persistentVolumeClaim` at the
 
 ```yaml
 volumes:
-- name: scratch
-  emptyDir: {}
+  - name: scratch
+    emptyDir: {}
 volumeMounts:
-- name: scratch
-  mountPath: /tmp
-- name: scratch
-  mountPath: /var/cache
+  - name: scratch
+    mountPath: /tmp
+  - name: scratch
+    mountPath: /var/cache
 ```
 
 `readOnlyRootFilesystem: true` is part of the `restricted` PSS profile. It prevents:
 
-* The app from modifying the image's files (e.g. writing to `/etc/nginx`).
-* An attacker from modifying the image's files (e.g. replacing a binary).
+- The app from modifying the image's files (e.g. writing to `/etc/nginx`).
+- An attacker from modifying the image's files (e.g. replacing a binary).
 
 Most apps work with `readOnlyRootFilesystem: true` if you mount writable volumes for the write paths.
 
@@ -221,8 +228,8 @@ securityContext:
 
 Controls the `/proc` mount type:
 
-* **`Default`** — the standard `/proc` (with some restrictions).
-* **`Unmasked`** — the full `/proc` (like a regular host).
+- **`Default`** — the standard `/proc` (with some restrictions).
+- **`Unmasked`** — the full `/proc` (like a regular host).
 
 `Unmasked` is rare; most apps work with `Default`. PSS `restricted` requires `Default`.
 
@@ -237,14 +244,14 @@ securityContext:
 
 Controls whether the container can **gain privileges** via `setuid` binaries, file capabilities, or other mechanisms.
 
-* **`true`** (default) — the container can use `setuid` to escalate. The app can call `setuid(0)` to become root.
-* **`false`** — the container can't escalate. The `no_new_privs` flag is set, preventing privilege escalation.
+- **`true`** (default) — the container can use `setuid` to escalate. The app can call `setuid(0)` to become root.
+- **`false`** — the container can't escalate. The `no_new_privs` flag is set, preventing privilege escalation.
 
 `allowPrivilegeEscalation: false` is part of the `restricted` PSS profile. It prevents:
 
-* `setuid 0` calls.
-* File capability-based escalation.
-* Other no-new-privileges mechanisms.
+- `setuid 0` calls.
+- File capability-based escalation.
+- Other no-new-privileges mechanisms.
 
 Some apps need setuid (e.g. installers, package managers). For most app containers, this is fine.
 
@@ -257,17 +264,17 @@ securityContext:
 
 **Disables almost all isolation**. The container can:
 
-* See all host devices.
-* Mount filesystems.
-* Modify kernel parameters.
-* Do anything the host's root can do.
+- See all host devices.
+- Mount filesystems.
+- Modify kernel parameters.
+- Do anything the host's root can do.
 
 `privileged: true` is for:
 
-* **CNI plugins** (Calico, Cilium, etc.) — they need to manipulate the network.
-* **Storage daemons** (some CSI drivers).
-* **GPU drivers** (NVIDIA device plugin).
-* **System Pods** (kube-proxy in some configs).
+- **CNI plugins** (Calico, Cilium, etc.) — they need to manipulate the network.
+- **Storage daemons** (some CSI drivers).
+- **GPU drivers** (NVIDIA device plugin).
+- **System Pods** (kube-proxy in some configs).
 
 **For application code, `privileged: true` is a near-universal red flag.** If an app claims to need it, find out what capability it actually needs and grant that explicitly.
 
@@ -275,7 +282,7 @@ PSS `baseline` blocks `privileged: true` for application namespaces.
 
 ## 6. The Capability Fields
 
-*"https://man7.org/linux/man-pages/man7/capabilities.7.html"*
+_"https://man7.org/linux/man-pages/man7/capabilities.7.html"_
 
 Linux **capabilities** are fine-grained privileges. A process can have a subset of root's powers (e.g. `CAP_NET_BIND_SERVICE` to bind port 80, but not `CAP_SYS_ADMIN`).
 
@@ -287,24 +294,24 @@ The full list has ~40 capabilities. The default set for a container is the **sam
 securityContext:
   capabilities:
     drop: ["ALL"]
-    add: ["NET_BIND_SERVICE"]   # only if you need to bind < 1024
+    add: ["NET_BIND_SERVICE"] # only if you need to bind < 1024
 ```
 
 `drop: ["ALL"]` removes every capability. `add: [...]` adds specific ones. **The "drop ALL" pattern is the standard.**
 
 ### 6.1 The capabilities you might need
 
-| Capability | Purpose | When you need it |
-|---|---|---|
-| `NET_BIND_SERVICE` | Bind port < 1024 | Apps binding port 80/443 without root |
-| `NET_RAW` | Use raw sockets (ping, etc.) | Network diagnostic tools |
-| `SYS_PTRACE` | ptrace other processes | Debuggers (strace, gdb) |
-| `SYS_ADMIN` | Many admin operations | **Almost never for app containers** |
-| `SYS_RESOURCE` | Override resource limits | Resource-intensive tools |
-| `DAC_OVERRIDE` | Bypass file permission checks | Apps reading arbitrary files |
-| `CHOWN` | Change file ownership | Apps that need to chown |
-| `FOWNER` | Bypass owner checks | Apps modifying files regardless of owner |
-| `SETUID`, `SETGID` | Change UID/GID | Apps that change user |
+| Capability         | Purpose                       | When you need it                         |
+| ------------------ | ----------------------------- | ---------------------------------------- |
+| `NET_BIND_SERVICE` | Bind port < 1024              | Apps binding port 80/443 without root    |
+| `NET_RAW`          | Use raw sockets (ping, etc.)  | Network diagnostic tools                 |
+| `SYS_PTRACE`       | ptrace other processes        | Debuggers (strace, gdb)                  |
+| `SYS_ADMIN`        | Many admin operations         | **Almost never for app containers**      |
+| `SYS_RESOURCE`     | Override resource limits      | Resource-intensive tools                 |
+| `DAC_OVERRIDE`     | Bypass file permission checks | Apps reading arbitrary files             |
+| `CHOWN`            | Change file ownership         | Apps that need to chown                  |
+| `FOWNER`           | Bypass owner checks           | Apps modifying files regardless of owner |
+| `SETUID`, `SETGID` | Change UID/GID                | Apps that change user                    |
 
 `SYS_ADMIN` is the **most dangerous**. It includes mount, swapon, setns, and many other admin operations. PSS `baseline` blocks it for app namespaces.
 
@@ -315,8 +322,8 @@ See [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmo
 ```yaml
 securityContext:
   seccompProfile:
-    type: RuntimeDefault   # or Localhost, Unconfined
-    localhostProfile: profiles/my-app.json   # if type=Localhost
+    type: RuntimeDefault # or Localhost, Unconfined
+    localhostProfile: profiles/my-app.json # if type=Localhost
 ```
 
 PSS `restricted` requires `RuntimeDefault` or `Localhost`. The default is `Unconfined` (no seccomp).
@@ -326,8 +333,8 @@ PSS `restricted` requires `RuntimeDefault` or `Localhost`. The default is `Uncon
 ```yaml
 securityContext:
   sysctls:
-  - name: net.core.somaxconn
-    value: "1024"
+    - name: net.core.somaxconn
+      value: "1024"
 ```
 
 Pod can set safe sysctls. With `protectKernelDefaults: true` on the kubelet, only **safe** sysctls are allowed. Unsafe sysctls require an admission policy to allow.
@@ -366,11 +373,11 @@ readOnlyRootFilesystem: true
 
 Plus:
 
-* No `privileged: true`.
-* No `hostNetwork`, `hostPID`, `hostIPC`.
-* No `hostPath` volumes.
-* No dangerous capabilities.
-* The image's `USER` is non-root (or set `runAsUser`).
+- No `privileged: true`.
+- No `hostNetwork`, `hostPID`, `hostIPC`.
+- No `hostPath` volumes.
+- No dangerous capabilities.
+- The image's `USER` is non-root (or set `runAsUser`).
 
 A Pod that meets `restricted` is generally safe to run as a default workload.
 
@@ -412,25 +419,25 @@ A common issue: the image runs as root (many do), and the user sets `runAsNonRoo
 
 `readOnlyRootFilesystem: true` is great for security but breaks apps that write to the root filesystem. The common write paths:
 
-* `/tmp` — temp files.
-* `/var/cache` — cached data.
-* `/var/log` — logs.
-* `/var/run` — runtime data.
-* `/home/<user>/.cache` — user cache.
+- `/tmp` — temp files.
+- `/var/cache` — cached data.
+- `/var/log` — logs.
+- `/var/run` — runtime data.
+- `/home/<user>/.cache` — user cache.
 
 The fix: mount `emptyDir` at each write path.
 
 ```yaml
 volumes:
-- name: tmp
-  emptyDir: { medium: Memory }    # in-memory for security (no disk)
-- name: cache
-  emptyDir: {}
+  - name: tmp
+    emptyDir: { medium: Memory } # in-memory for security (no disk)
+  - name: cache
+    emptyDir: {}
 volumeMounts:
-- name: tmp
-  mountPath: /tmp
-- name: cache
-  mountPath: /var/cache
+  - name: tmp
+    mountPath: /tmp
+  - name: cache
+    mountPath: /var/cache
 ```
 
 For app-specific write paths, check the app's documentation. Most apps have a config option to change the write path.
@@ -442,7 +449,7 @@ The k8s-recommended capability allow list for `restricted`:
 ```yaml
 capabilities:
   drop: ["ALL"]
-  add: []    # no additions
+  add: [] # no additions
 ```
 
 This is the **strictest**. The container has no capabilities beyond the default user. To bind port 80, you'd need to run as root (with `runAsUser: 0`) or add `NET_BIND_SERVICE`.
@@ -519,11 +526,11 @@ securityContext:
   readOnlyRootFilesystem: true
   # mount emptyDir for /tmp
 volumes:
-- name: tmp
-  emptyDir: { medium: Memory }   # in-memory
+  - name: tmp
+    emptyDir: { medium: Memory } # in-memory
 volumeMounts:
-- name: tmp
-  mountPath: /tmp
+  - name: tmp
+    mountPath: /tmp
 ```
 
 ### 16.4 A workload that needs to chown files
@@ -541,7 +548,7 @@ securityContext:
 
 ```yaml
 securityContext:
-  privileged: true    # required for DinD
+  privileged: true # required for DinD
   # OR use a sidecar with sysctls
 ```
 
@@ -664,8 +671,8 @@ crictl inspect <container-id> | grep -i 'seccomp\|capabilit'
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the namespace-level enforcement
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level restrictions
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — build non-root images
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the namespace-level enforcement
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level restrictions
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — build non-root images
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags

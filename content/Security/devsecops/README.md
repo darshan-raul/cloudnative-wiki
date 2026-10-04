@@ -23,13 +23,13 @@ Shift-left security principles — integrating security into CI/CD pipelines, co
 
 ## Pipeline Security Checks
 
-| Stage | Check | Tools |
-|-------|-------|-------|
-| **Commit** | Pre-commit hook secrets scan | gitleaks, detect-secrets |
-| **Build** | SAST, dependency scan | SonarQube, Snyk, Trivy |
-| **Test** | DAST, fuzzing | OWASP ZAP, AFL |
-| **Deploy** | Image scan, IaC scan | Trivy, Checkov, Terrascan |
-| **Runtime** | RASP, runtime monitoring | Falco, AppArmor |
+| Stage       | Check                        | Tools                     |
+| ----------- | ---------------------------- | ------------------------- |
+| **Commit**  | Pre-commit hook secrets scan | gitleaks, detect-secrets  |
+| **Build**   | SAST, dependency scan        | SonarQube, Snyk, Trivy    |
+| **Test**    | DAST, fuzzing                | OWASP ZAP, AFL            |
+| **Deploy**  | Image scan, IaC scan         | Trivy, Checkov, Terrascan |
+| **Runtime** | RASP, runtime monitoring     | Falco, AppArmor           |
 
 ## Key Tools
 

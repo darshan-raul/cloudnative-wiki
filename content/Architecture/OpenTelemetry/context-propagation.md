@@ -32,12 +32,12 @@ traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
              └────────────────────────────────────────────────── version prefix
 ```
 
-| Field | Length | Description |
-|-------|--------|-------------|
-| `version` | 2 hex | Protocol version (currently `00`) |
-| `trace_id` | 32 hex | 16-byte global trace ID |
-| `parent_id` (span_id) | 16 hex | 8-byte span ID of the parent |
-| `flags` | 2 hex | Options (bit 0 = sampled) |
+| Field                 | Length | Description                       |
+| --------------------- | ------ | --------------------------------- |
+| `version`             | 2 hex  | Protocol version (currently `00`) |
+| `trace_id`            | 32 hex | 16-byte global trace ID           |
+| `parent_id` (span_id) | 16 hex | 8-byte span ID of the parent      |
+| `flags`               | 2 hex  | Options (bit 0 = sampled)         |
 
 ### tracestate Header
 
@@ -60,10 +60,10 @@ Format: `key=value,key=value` (max 32 pairs, 256 chars total).
 
 OTel defines a **Propagators API** — an abstraction over carriers (HTTP headers, message metadata, etc.) — with two operations:
 
-| Operation | Direction | What it does |
-|-----------|-----------|-------------|
-| `Inject(ctx, carrier)` | Outgoing | Reads trace context from `ctx`, writes it into the carrier (HTTP headers, etc.) |
-| `Extract(ctx, carrier)` | Incoming | Reads trace context from the carrier, returns a new `ctx` with the extracted span context |
+| Operation               | Direction | What it does                                                                              |
+| ----------------------- | --------- | ----------------------------------------------------------------------------------------- |
+| `Inject(ctx, carrier)`  | Outgoing  | Reads trace context from `ctx`, writes it into the carrier (HTTP headers, etc.)           |
+| `Extract(ctx, carrier)` | Incoming  | Reads trace context from the carrier, returns a new `ctx` with the extracted span context |
 
 ```go
 type Propagator interface {
@@ -76,15 +76,15 @@ Carriers are interface-based — any type implementing `TextMapCarrier` works: `
 
 ### Built-in Propagators
 
-|| Propagator | `traceparent` | `tracestate` | Baggage | Notes |
-||------------|---------------|--------------|---------|-------|
-|| `TraceContext` | W3C standard | W3C standard | No | Default |
-|| `Baggage` | No | No | W3C standard | Must be combined |
-|| `CompositePropagator` | Combines multiple | | | |
-|| `B3` (Zipkin) | B3 single header | N/A | Via `bkvr` | Legacy Zipkin |
-|| `AWS X-Ray` | AWS format | N/A | No | AWS-specific |
-|| `Jaeger` | Jaeger headers | N/A | No | Legacy Jaeger |
-|| `W3C` (alias for TraceContext) | W3C standard | W3C standard | No | |
+| Propagator                     | `traceparent`     | `tracestate` | Baggage      | Notes            |
+| ------------------------------ | ----------------- | ------------ | ------------ | ---------------- |
+| `TraceContext`                 | W3C standard      | W3C standard | No           | Default          |
+| `Baggage`                      | No                | No           | W3C standard | Must be combined |
+| `CompositePropagator`          | Combines multiple |              |              |                  |
+| `B3` (Zipkin)                  | B3 single header  | N/A          | Via `bkvr`   | Legacy Zipkin    |
+| `AWS X-Ray`                    | AWS format        | N/A          | No           | AWS-specific     |
+| `Jaeger`                       | Jaeger headers    | N/A          | No           | Legacy Jaeger    |
+| `W3C` (alias for TraceContext) | W3C standard      | W3C standard | No           |                  |
 
 ### Setting Propagators (Go)
 
@@ -128,6 +128,7 @@ When Service A calls Service B over HTTP, the trace context lives in Service A's
 ### The Solution: Propagator = "Transporter"
 
 A **propagator** is a translator that:
+
 - **Outgoing** (`Inject`): Package trace context → stuff into HTTP headers
 - **Incoming** (`Extract`): Read HTTP headers → unpack into memory
 
@@ -207,15 +208,17 @@ Service A span          Service B span          Service C span
 
 ### The Propagator's Job
 
-| Step | What happens |
-|------|-------------|
-| `Inject` | Take `trace_id` + `span_id` + `flags` from memory → write to headers |
-| `Extract` | Read headers → put `trace_id` + `span_id` + `flags` back into memory |
-| `Tracer.Start(ctx, name)` | Reads parent `span_id` from ctx → creates child span |
+| Step                      | What happens                                                         |
+| ------------------------- | -------------------------------------------------------------------- |
+| `Inject`                  | Take `trace_id` + `span_id` + `flags` from memory → write to headers |
+| `Extract`                 | Read headers → put `trace_id` + `span_id` + `flags` back into memory |
+| `Tracer.Start(ctx, name)` | Reads parent `span_id` from ctx → creates child span                 |
 
 **That's it.** Propagator is just a courier — it takes trace context from memory, ships it in HTTP headers, and unpacks it on the other side.
 
 ## Context API (In-Process)
+
+```go
 otel.SetTextMapPropagator(propagation.NewCompositePropagator(
     propagation.TraceContext{},   // W3C Trace Context — handles traceparent + tracestate
     propagation.Baggage{},         // W3C Baggage — handles otel.baggage in tracestate header
@@ -238,12 +241,12 @@ CompositePropagator.Extract()
 
 #### When to Use
 
-| Scenario | Propagators |
-|----------|-------------|
-| W3C standard only | `TraceContext{}` alone |
-| W3C + Baggage | `TraceContext{}` + `Baggage{}` (order: TraceContext first) |
-| Migration from Zipkin | `TraceContext{}` + `B3{}` |
-| Multi-vendor | `TraceContext{}` + vendor-specific propagator |
+| Scenario              | Propagators                                                |
+| --------------------- | ---------------------------------------------------------- |
+| W3C standard only     | `TraceContext{}` alone                                     |
+| W3C + Baggage         | `TraceContext{}` + `Baggage{}` (order: TraceContext first) |
+| Migration from Zipkin | `TraceContext{}` + `B3{}`                                  |
+| Multi-vendor          | `TraceContext{}` + vendor-specific propagator              |
 
 > **Rule of thumb:** For inject, order doesn't matter much. For extract, put the most specific/probable format first — extraction stops at the first match.
 
@@ -514,10 +517,10 @@ with tracer.start_as_current_span("process-message", context=ctx) as span:
 
 The `traceparent` flags field carries sampling information:
 
-| Flag | Name | Meaning |
-|------|------|---------|
+| Flag   | Name    | Meaning                      |
+| ------ | ------- | ---------------------------- |
 | `0x01` | sampled | This trace should be sampled |
-| `0x02` | masked | Reserved |
+| `0x02` | masked  | Reserved                     |
 
 ```
 traceparent: 00-...-...-01   ← sampled

@@ -116,13 +116,13 @@ def refresh_hot_keys():
 
 ## Eviction Policies
 
-| Policy | What It Does | Use When |
-|--------|-------------|----------|
-| LRU (Least Recently Used) | Evict oldest accessed | General purpose |
-| LFU (Least Frequently Used) | Evict least popular | Zipfian access patterns |
-| TTL | Evict after time | Data that goes stale |
-| Random | Evict random | Very uniform access |
-| FIFO | Evict oldest written | Simple, predictable |
+| Policy                      | What It Does          | Use When                |
+| --------------------------- | --------------------- | ----------------------- |
+| LRU (Least Recently Used)   | Evict oldest accessed | General purpose         |
+| LFU (Least Frequently Used) | Evict least popular   | Zipfian access patterns |
+| TTL                         | Evict after time      | Data that goes stale    |
+| Random                      | Evict random          | Very uniform access     |
+| FIFO                        | Evict oldest written  | Simple, predictable     |
 
 ---
 

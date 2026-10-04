@@ -12,6 +12,7 @@ Security coverage across cloud providers, Kubernetes, Linux hardening, SIEM, and
 ## Sections
 
 ### SIEM — Security Information & Event Management
+
 Centralized security monitoring, detection, and alerting across all sources.
 
 - [[Security/siem/README|SIEM Hub]] — Overview, tool comparison, Wazuh vs Elastic vs Splunk
@@ -25,6 +26,7 @@ Centralized security monitoring, detection, and alerting across all sources.
 - [[Security/siem/splunk/README|Splunk]] — SPL queries, Enterprise Security
 
 ### Cloud Security — AWS, Azure, GCP
+
 Security tooling and configuration per cloud provider.
 
 - [[Security/cloud-security/README|Cloud Security Hub]] — AWS, Azure, GCP security tooling
@@ -33,6 +35,7 @@ Security tooling and configuration per cloud provider.
 - [[Security/cloud-security/gcp/README|GCP Security]] — Security Command Center, Chronicle
 
 ### Kubernetes Security
+
 Security for your EKS clusters and homelab K8s environment.
 
 - [[Security/kubernetes-security/README|K8s Security Hub]]
@@ -43,14 +46,16 @@ Security for your EKS clusters and homelab K8s environment.
 - [[Security/kubernetes-security/vulnerability-scanning/README|Vulnerability Scanning]] — Trivy, Grype, Snyk
 
 ### Endpoint Security
+
 Host-based security — Linux hardening, IDS/IPS, runtime security.
 
 - [[Security/endpoint-security/README|Endpoint Security Hub]]
-- [[Security/endpoint-security/hardening|Linux Hardening]] — AppArmor, SELinux, sysctl, PAM
-- [[Security/endpoint-security/ids-ips|IDS/IPS]] — Suricata (NIDS), Wazuh HIDS
-- [[Security/endpoint-security/falco|Falco]] — Runtime security, K8s syscall monitoring
+- [[Security/endpoint-security/hardening/README|Linux Hardening]] — AppArmor, SELinux, sysctl, PAM
+- [[Security/endpoint-security/ids-ips/README|IDS/IPS]] — Suricata (NIDS), Wazuh HIDS
+- [[Security/endpoint-security/falco/README|Falco]] — Runtime security, K8s syscall monitoring
 
 ### Application Security
+
 Auth, secrets, dependency scanning, supply chain.
 
 - [[Security/application-security/README|Application Security Hub]]
@@ -60,6 +65,7 @@ Auth, secrets, dependency scanning, supply chain.
 - Supply Chain — SBOM, Sigstore, SLSA
 
 ### Network Security
+
 TLS/mTLS, zero trust, VPN, firewall.
 
 - [[Security/network-security/README|Network Security Hub]]
@@ -68,6 +74,7 @@ TLS/mTLS, zero trust, VPN, firewall.
 - VPN — WireGuard, OpenVPN, IPSec
 
 ### DevSecOps
+
 Shift-left security, CI/CD pipeline security, container hardening.
 
 - [[Security/devsecops/README|DevSecOps Hub]]
@@ -75,6 +82,7 @@ Shift-left security, CI/CD pipeline security, container hardening.
 - Container Security — Distroless, rootless, capabilities, seccomp
 
 ### Incident Response
+
 Playbooks, forensics, threat hunting, postmortems.
 
 - [[Security/incident-response/README|Incident Response Hub]]
@@ -85,22 +93,22 @@ Playbooks, forensics, threat hunting, postmortems.
 
 ## Your Security Stack
 
-| Layer | Tool | Status |
-|-------|------|--------|
-| SIEM | Wazuh | Primary |
-| Cloud Monitoring | Wazuh agentless (CloudTrail, GuardDuty) | Multi-account (40+ org) |
-| Automation | n8n + Planio | Incident response workflow |
-| K8s Security | Falco + Wazuh agent | EKS clusters |
-| Container Scanning | Trivy | CI/CD |
-| Secrets | Vault (existing notes) | Homelab |
+| Layer              | Tool                                    | Status                     |
+| ------------------ | --------------------------------------- | -------------------------- |
+| SIEM               | Wazuh                                   | Primary                    |
+| Cloud Monitoring   | Wazuh agentless (CloudTrail, GuardDuty) | Multi-account (40+ org)    |
+| Automation         | n8n + Planio                            | Incident response workflow |
+| K8s Security       | Falco + Wazuh agent                     | EKS clusters               |
+| Container Scanning | Trivy                                   | CI/CD                      |
+| Secrets            | Vault (existing notes)                  | Homelab                    |
 
 ## Key Vault References
 
 Your existing notes that inform this section:
 
-- [[AWS/concepts/iam|IAM]] — Identity and access management
-- [[Kubernetes/eks/security|EKS Security]] — Cluster hardening, network policies
-- [[Linux/hardening/pam|PAM]] — Pluggable authentication modules
+- [[AWS/security/iam/README|IAM]] — Identity and access management
+- [[Kubernetes/eks/security/README|EKS Security]] — Cluster hardening, network policies
+- [[Linux/security/pam|PAM]] — Pluggable authentication modules
 - [[Resources/guides/security/ids|IDS/IPS]] — Network and host intrusion detection
 - [[Resources/guides/security/zero-trust|Zero Trust]] — Network architecture
 - [[Resources/guides/security/supply-chain-security|Supply Chain]] — SBOM, Sigstore
@@ -118,6 +126,7 @@ IR            → Playbooks, forensics, postmortems, n8n automation
 ## Contributing
 
 This section is actively expanded. Key areas to develop:
+
 - [ ] Add Wazuh agent deployment on EKS with IRSA
 - [ ] Add AWS SCP examples for security baseline
 - [ ] Add Falco → n8n → Planio workflow

@@ -85,6 +85,7 @@ if (child_pid == 0) {
 ```
 
 PID 1 inside a namespace:
+
 - Reaps zombie processes (calls `wait()` on exited children)
 - Receives signals with no handler (SIGTERM, SIGKILL) and terminates children
 - Its death causes all descendants to die (namespace destruction)
@@ -159,6 +160,7 @@ done
 ## Key Insight for Containers
 
 PID namespace isolation means:
+
 - `ps` inside a container only shows container processes (not host)
 - Signal routing: SIGTERM sent to PID 1 inside container terminates the container's PID 1
 - `/proc/PID` on the host shows the host PID; inside the container it shows the container PID

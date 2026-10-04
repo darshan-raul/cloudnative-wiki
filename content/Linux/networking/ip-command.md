@@ -94,6 +94,7 @@ ip neigh flush all               # clear ARP cache
 ```
 
 NUD states (Neighbour Unreachability Detection):
+
 - `REACHABLE`: confirmed working
 - `STALE`: valid but untested (will be verified lazily)
 - `PERMANENT`: static entry, never expires

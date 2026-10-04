@@ -55,15 +55,15 @@ metadata:
   name: app-with-zfs
 spec:
   containers:
-  - name: app
-    image: nginx
-    volumeMounts:
-    - mountPath: /data
-      name: zfs-volume
+    - name: app
+      image: nginx
+      volumeMounts:
+        - mountPath: /data
+          name: zfs-volume
   volumes:
-  - name: zfs-volume
-    persistentVolumeClaim:
-      claimName: fsx-openzfs-claim
+    - name: zfs-volume
+      persistentVolumeClaim:
+        claimName: fsx-openzfs-claim
 ```
 
 ## Key Features

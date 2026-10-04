@@ -98,11 +98,11 @@ Unhealthy threshold: 2 consecutive failures
 
 ### Types
 
-| Type | What It Checks | Example |
-|------|---------------|---------|
-| TCP connect | Port open | `nc -z backend:8080` |
-| HTTP/HTTPS | `/health` returns 200 | `curl -f http://backend:8080/health` |
-| Deep health check | Actual DB connectivity | Query `SELECT 1` |
+| Type              | What It Checks         | Example                              |
+| ----------------- | ---------------------- | ------------------------------------ |
+| TCP connect       | Port open              | `nc -z backend:8080`                 |
+| HTTP/HTTPS        | `/health` returns 200  | `curl -f http://backend:8080/health` |
+| Deep health check | Actual DB connectivity | Query `SELECT 1`                     |
 
 **Deep health checks** are more reliable but add load — use them sparingly.
 
@@ -110,10 +110,10 @@ Unhealthy threshold: 2 consecutive failures
 
 ## L4 vs L7 Load Balancing
 
-| Layer | What It Routes | Use When |
-|-------|---------------|---------|
-| **L4 (TCP)** | By IP + port | High throughput, simple routing |
-| **L7 (HTTP)** | By URL, headers, cookies | Path routing, auth, canaries |
+| Layer         | What It Routes           | Use When                        |
+| ------------- | ------------------------ | ------------------------------- |
+| **L4 (TCP)**  | By IP + port             | High throughput, simple routing |
+| **L7 (HTTP)** | By URL, headers, cookies | Path routing, auth, canaries    |
 
 ```
 L4: Client → LB → Backend (raw TCP stream)
@@ -164,14 +164,14 @@ Load balancer weight-based routing enables canary without duplicate infrastructu
 
 ## AWS/GCP/Azure LB Options
 
-| Provider | L4 | L7 | Managed |
-|----------|----|----|---------|
-| AWS | NLB | ALB | ✅ |
-| GCP | TCP LB | HTTP(S) LB | ✅ |
-| Azure | L4 Basic | Application Gateway | ✅ |
-| HAProxy | ✅ | ✅ | ❌ (self-managed) |
-| Envoy | ✅ | ✅ | ❌ (self-managed) |
-| NGINX | ✅ | ✅ | ❌ (self-managed) |
+| Provider | L4       | L7                  | Managed           |
+| -------- | -------- | ------------------- | ----------------- |
+| AWS      | NLB      | ALB                 | ✅                |
+| GCP      | TCP LB   | HTTP(S) LB          | ✅                |
+| Azure    | L4 Basic | Application Gateway | ✅                |
+| HAProxy  | ✅       | ✅                  | ❌ (self-managed) |
+| Envoy    | ✅       | ✅                  | ❌ (self-managed) |
+| NGINX    | ✅       | ✅                  | ❌ (self-managed) |
 
 ---
 

@@ -1,6 +1,13 @@
+---
+title: "Authentication vs Authorization"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Authentication vs Authorization — Kubernetes reference and architecture guide."
+---
+
 # Authentication vs Authorization
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/"_
 
 These are **two different things** that get conflated constantly. **Authentication** answers "who are you?"; **Authorization** answers "what can you do?". Kubernetes does them as **separate steps**, in that order, on every API request. A request that fails authn returns 401; a request that passes authn but fails authz returns 403. Understanding the split is the foundation for RBAC, OIDC, ServiceAccount tokens, and webhook authz.
 
@@ -20,7 +27,7 @@ These are **two different things** that get conflated constantly. **Authenticati
 12. [The Authorizers in Detail (Node, RBAC, ABAC, Webhook)](#12-the-authorizers-in-detail-node-rbac-abac-webhook)
 13. [The "Deny by Default" Rule](#13-the-deny-by-default-rule)
 14. [Anonymous Authentication — the Footgun](#14-anonymous-authentication--the-footgun)
-15. [The system:* Groups](#15-the-system-groups)
+15. [The system:\* Groups](#15-the-system-groups)
 16. [Impersonation (--as, --as-group)](#16-impersonation--as---as-group)
 17. [The Authentication and Authorization in Practice](#17-the-authentication-and-authorization-in-practice)
 18. [Common Patterns](#18-common-patterns)
@@ -67,27 +74,27 @@ The two steps are **independent**. A valid user can be denied. The error message
 
 The error codes:
 
-* **401 Unauthorized** — authn failed. The credentials are wrong.
-* **403 Forbidden** — authz failed. The credentials are fine, but you can't do this.
+- **401 Unauthorized** — authn failed. The credentials are wrong.
+- **403 Forbidden** — authz failed. The credentials are fine, but you can't do this.
 
 Clients should react differently:
 
-* **401** — "your credentials are wrong, fix them and retry."
-* **403** — "your credentials are fine, you can't do this, talk to an admin."
+- **401** — "your credentials are wrong, fix them and retry."
+- **403** — "your credentials are fine, you can't do this, talk to an admin."
 
 ## 2. Authentication — who are you?
 
 The apiserver runs a chain of **authenticators** in order. The first one that returns "yes" wins. The rest are skipped.
 
-| Authenticator | Source | Common use |
-|---|---|---|
-| **X.509 client certificates** | `~/.kube/config` `client-certificate` | `kubectl` from outside, kubelet, controllers |
-| **Bearer tokens** | `~/.kube/config` `token`, or HTTP `Authorization: Bearer` | ServiceAccount tokens, OIDC |
-| **Bootstrap tokens** | `kube-system` `bootstrap-token-*` Secrets | `kubeadm join` |
-| **ServiceAccount tokens** | JWT, mounted in Pods at `/var/run/secrets/kubernetes.io/serviceaccount/token` | In-cluster Pods |
-| **OpenID Connect (OIDC)** | External IdP (Okta, Google, Azure AD) | User SSO |
-| **Webhook token authentication** | External service you run | Custom auth |
-| **Anonymous** | If `anonymous-auth=true` and no other matched | Healthz, debugging |
+| Authenticator                    | Source                                                                        | Common use                                   |
+| -------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------- |
+| **X.509 client certificates**    | `~/.kube/config` `client-certificate`                                         | `kubectl` from outside, kubelet, controllers |
+| **Bearer tokens**                | `~/.kube/config` `token`, or HTTP `Authorization: Bearer`                     | ServiceAccount tokens, OIDC                  |
+| **Bootstrap tokens**             | `kube-system` `bootstrap-token-*` Secrets                                     | `kubeadm join`                               |
+| **ServiceAccount tokens**        | JWT, mounted in Pods at `/var/run/secrets/kubernetes.io/serviceaccount/token` | In-cluster Pods                              |
+| **OpenID Connect (OIDC)**        | External IdP (Okta, Google, Azure AD)                                         | User SSO                                     |
+| **Webhook token authentication** | External service you run                                                      | Custom auth                                  |
+| **Anonymous**                    | If `anonymous-auth=true` and no other matched                                 | Healthz, debugging                           |
 
 The result of authentication is a **UserInfo** object attached to the request.
 
@@ -95,8 +102,8 @@ The result of authentication is a **UserInfo** object attached to the request.
 
 The chain runs **in order**. The first authenticator to return "yes" wins. If no authenticator returns "yes", the request is either:
 
-* **401 Unauthorized** — if `--anonymous-auth=false` (the safe default).
-* **Authenticated as `system:anonymous`** — if `--anonymous-auth=true`.
+- **401 Unauthorized** — if `--anonymous-auth=false` (the safe default).
+- **Authenticated as `system:anonymous`** — if `--anonymous-auth=true`.
 
 The order is configured via the apiserver's `--authentication-*` flags. The most common:
 
@@ -129,9 +136,9 @@ Anonymous is the catch-all. If no other authenticator matched and anonymous is e
 
 X.509 client certs are the **legacy** but still common auth method for:
 
-* `kubectl` users (the `client-certificate` and `client-key` in kubeconfig).
-* Kubelets (each kubelet has a client cert).
-* Controllers (kube-scheduler, kube-controller-manager, etc.).
+- `kubectl` users (the `client-certificate` and `client-key` in kubeconfig).
+- Kubelets (each kubelet has a client cert).
+- Controllers (kube-scheduler, kube-controller-manager, etc.).
 
 The cert is verified against `--client-ca-file` (the cluster CA). The cert's CN becomes the user, the O becomes the group.
 
@@ -151,10 +158,10 @@ The kubeconfig:
 apiVersion: v1
 kind: Config
 users:
-- name: alice
-  user:
-    client-certificate: /path/to/alice.crt
-    client-key: /path/to/alice.key
+  - name: alice
+    user:
+      client-certificate: /path/to/alice.crt
+      client-key: /path/to/alice.key
 ```
 
 The user `alice` is authenticated. The `developers` group is set. RBAC matches on these.
@@ -167,9 +174,9 @@ Bearer tokens are in the HTTP `Authorization: Bearer <token>` header. The apiser
 
 The token types:
 
-* **ServiceAccount token** — a JWT signed by the apiserver. Verifiable by any k8s consumer.
-* **OIDC token** — a JWT signed by an external IdP. The apiserver validates via the OIDC issuer's JWKS.
-* **Bootstrap token** — a short-lived token in `kube-system/bootstrap-token-*` Secret. Used for `kubeadm join`.
+- **ServiceAccount token** — a JWT signed by the apiserver. Verifiable by any k8s consumer.
+- **OIDC token** — a JWT signed by an external IdP. The apiserver validates via the OIDC issuer's JWKS.
+- **Bootstrap token** — a short-lived token in `kube-system/bootstrap-token-*` Secret. Used for `kubeadm join`.
 
 ### 5.1 The kubeconfig token
 
@@ -177,22 +184,22 @@ The token types:
 apiVersion: v1
 kind: Config
 users:
-- name: alice
-  user:
-    token: <bearer-token>
+  - name: alice
+    user:
+      token: <bearer-token>
 ```
 
 Or:
 
 ```yaml
 users:
-- name: alice
-  user:
-    auth-provider:
-      name: oidc
-      config:
-        id-token: <jwt>
-        refresh-token: <refresh>
+  - name: alice
+    user:
+      auth-provider:
+        name: oidc
+        config:
+          id-token: <jwt>
+          refresh-token: <refresh>
 ```
 
 ### 5.2 The in-cluster Pod
@@ -220,16 +227,16 @@ The token is in a Secret in `kube-system`. It's short-lived (24h by default). Af
 
 ## 6. Bound ServiceAccount Tokens (k8s 1.21+)
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#bound-service-account-tokens"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/#bound-service-account-tokens"_
 
 Legacy SA tokens were **long-lived** (the lifetime of the Secret). The bound tokens (k8s 1.21+, GA in 1.30) are **short-lived** and **audience-scoped**.
 
 A bound token:
 
-* Is a JWT.
-* Has a specific `aud` (audience) — only valid for the configured audience.
-* Has a short expiry (~1h by default).
-* Is bound to a specific Pod — can't be reused by another Pod.
+- Is a JWT.
+- Has a specific `aud` (audience) — only valid for the configured audience.
+- Has a short expiry (~1h by default).
+- Is bound to a specific Pod — can't be reused by another Pod.
 
 The Pod gets a bound token via a **projected volume**:
 
@@ -240,20 +247,20 @@ metadata: { name: app }
 spec:
   serviceAccountName: my-sa
   containers:
-  - name: app
-    image: app:1.0
-    volumeMounts:
-    - name: sa-token
-      mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-      readOnly: true
+    - name: app
+      image: app:1.0
+      volumeMounts:
+        - name: sa-token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
   volumes:
-  - name: sa-token
-    projected:
-      sources:
-      - serviceAccountToken:
-          path: token
-          audience: https://my-service.example.com   # the audience
-          expirationSeconds: 3600                    # 1 hour
+    - name: sa-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              audience: https://my-service.example.com # the audience
+              expirationSeconds: 3600 # 1 hour
 ```
 
 The kubelet requests a bound token from the apiserver. The token is mounted to the Pod. The Pod can use it to authenticate to `https://my-service.example.com` (or any service that validates the `aud`).
@@ -264,7 +271,7 @@ The legacy long-lived tokens (via Secrets) are **deprecated**. Use bound tokens.
 
 ## 7. OIDC for Human Users
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens"_
 
 OIDC is the standard for **user SSO**. The apiserver is configured to trust an OIDC issuer:
 
@@ -292,12 +299,12 @@ For `kubectl`, the `kubelogin` plugin handles the OIDC flow. It opens a browser,
 
 The claims the apiserver uses:
 
-* `iss` (issuer) — must match `--oidc-issuer-url`.
-* `sub` (subject) — the user's unique ID.
-* `aud` (audience) — must include `--oidc-client-id`.
-* `exp` (expiry) — must be in the future.
-* `--oidc-username-claim` — the claim to use as the username (e.g. `email`, `sub`, `preferred_username`).
-* `--oidc-groups-claim` — the claim to use as the groups (e.g. `groups`).
+- `iss` (issuer) — must match `--oidc-issuer-url`.
+- `sub` (subject) — the user's unique ID.
+- `aud` (audience) — must include `--oidc-client-id`.
+- `exp` (expiry) — must be in the future.
+- `--oidc-username-claim` — the claim to use as the username (e.g. `email`, `sub`, `preferred_username`).
+- `--oidc-groups-claim` — the claim to use as the groups (e.g. `groups`).
 
 ### 7.2 The required-claim filter
 
@@ -305,7 +312,7 @@ The claims the apiserver uses:
 
 ## 8. Webhook Token Authentication
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#webhook-token-authentication"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#webhook-token-authentication"_
 
 The apiserver can call out to an **external service** to validate tokens:
 
@@ -314,15 +321,15 @@ The apiserver can call out to an **external service** to validate tokens:
 apiVersion: v1
 kind: Config
 clusters:
-- name: my-authn
-  cluster:
-    server: https://my-authn-service/authn
-    certificate-authority: /etc/kubernetes/ca.crt
+  - name: my-authn
+    cluster:
+      server: https://my-authn-service/authn
+      certificate-authority: /etc/kubernetes/ca.crt
 contexts:
-- context:
-    cluster: my-authn
-    user: ""
-  name: default
+  - context:
+      cluster: my-authn
+      user: ""
+    name: default
 current-context: default
 preferences: {}
 users: []
@@ -348,9 +355,9 @@ The apiserver extracts the user and groups from the response. The webhook is **o
 
 The webhook is used for:
 
-* **Custom auth** — your own SSO (e.g. a non-OIDC IdP).
-* **JWT validation** — a service that validates JWTs from your IdP.
-* **Static tokens** — a service that looks up tokens in a database.
+- **Custom auth** — your own SSO (e.g. a non-OIDC IdP).
+- **JWT validation** — a service that validates JWTs from your IdP.
+- **Static tokens** — a service that looks up tokens in a database.
 
 The webhook's response is cached (`--authentication-token-webhook-cache-ttl`, default 5m). The cache reduces load on the webhook.
 
@@ -367,10 +374,10 @@ type UserInfo struct {
 }
 ```
 
-* **`Username`** — a string. `system:serviceaccount:default:my-sa` for a SA. `alice@example.com` for OIDC. `kubernetes-admin` for a client cert.
-* **`UID`** — a unique ID for the user (k8s-internal). Used by RBAC.
-* **`Groups`** — a list of groups. `system:authenticated`, `system:serviceaccounts`, `developers`, `system:masters`, etc.
-* **`Extra`** — extra claims. For OIDC, the IdP's other claims (e.g. `extra.email`).
+- **`Username`** — a string. `system:serviceaccount:default:my-sa` for a SA. `alice@example.com` for OIDC. `kubernetes-admin` for a client cert.
+- **`UID`** — a unique ID for the user (k8s-internal). Used by RBAC.
+- **`Groups`** — a list of groups. `system:authenticated`, `system:serviceaccounts`, `developers`, `system:masters`, etc.
+- **`Extra`** — extra claims. For OIDC, the IdP's other claims (e.g. `extra.email`).
 
 The UserInfo is **read by RBAC** and **recorded in the audit log**.
 
@@ -378,12 +385,12 @@ The UserInfo is **read by RBAC** and **recorded in the audit log**.
 
 The apiserver has **multiple authorizers** configured. They're tried in order. The first one to give a definitive answer wins. If none give a definitive answer, the default is **deny**.
 
-| Authorizer | Model | Use case |
-|---|---|---|
-| **RBAC** (Role-Based Access Control) | Roles + bindings | Most common, default in 1.8+ |
-| **Node** | Special case for kubelets | Node authorizer, not for users |
-| **ABAC** (Attribute-Based) | Policy file with attrs | Legacy, deprecated |
-| **Webhook** | Call out to an external authorizer (OPA, etc.) | Custom policy engines |
+| Authorizer                           | Model                                          | Use case                       |
+| ------------------------------------ | ---------------------------------------------- | ------------------------------ |
+| **RBAC** (Role-Based Access Control) | Roles + bindings                               | Most common, default in 1.8+   |
+| **Node**                             | Special case for kubelets                      | Node authorizer, not for users |
+| **ABAC** (Attribute-Based)           | Policy file with attrs                         | Legacy, deprecated             |
+| **Webhook**                          | Call out to an external authorizer (OPA, etc.) | Custom policy engines          |
 
 **RBAC is the default and the only one most clusters use.**
 
@@ -402,9 +409,9 @@ The order:
 
 Other modes:
 
-* `--authorization-mode=Node,RBAC,Webhook` — adds a webhook authorizer. The webhook is called only if RBAC returns a definitive answer (or to override, depending on config).
-* `--authorization-mode=ABAC,RBAC` — ABAC is deprecated, don't use.
-* `--authorization-mode=AlwaysAllow` — disables all authz. **Don't use.**
+- `--authorization-mode=Node,RBAC,Webhook` — adds a webhook authorizer. The webhook is called only if RBAC returns a definitive answer (or to override, depending on config).
+- `--authorization-mode=ABAC,RBAC` — ABAC is deprecated, don't use.
+- `--authorization-mode=AlwaysAllow` — disables all authz. **Don't use.**
 
 The chain's order is critical. If `RBAC` is before `Webhook`, the RBAC answer wins for matching requests. The webhook is not called.
 
@@ -412,14 +419,14 @@ The chain's order is critical. If `RBAC` is before `Webhook`, the RBAC answer wi
 
 ### 12.1 Node authorizer
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/node/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/node/"_
 
 A special authorizer for **kubelet requests**. Allows kubelets to:
 
-* Read their own Node.
-* Update their own Node's status (conditions, addresses).
-* Update their own Pod's status.
-* Read most API resources (for `kubectl exec`, `kubectl logs`).
+- Read their own Node.
+- Update their own Node's status (conditions, addresses).
+- Update their own Pod's status.
+- Read most API resources (for `kubectl exec`, `kubectl logs`).
 
 A kubelet is identified by its username `system:node:<node-name>`. The Node authorizer matches this and allows the relevant actions.
 
@@ -427,33 +434,33 @@ The Node authorizer works with the **NodeRestriction** admission plugin. NodeRes
 
 ### 12.2 RBAC authorizer
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/rbac/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/rbac/"_
 
 The workhorse. RBAC has:
 
-* **Role** / **ClusterRole** — a set of allowed verbs on resources.
-* **RoleBinding** / **ClusterRoleBinding** — assigns a Role to a subject (User, Group, ServiceAccount).
+- **Role** / **ClusterRole** — a set of allowed verbs on resources.
+- **RoleBinding** / **ClusterRoleBinding** — assigns a Role to a subject (User, Group, ServiceAccount).
 
 See [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] for the full picture.
 
 ### 12.3 ABAC authorizer
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/abac/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/abac/"_
 
 **Legacy**. Uses a policy file with attributes. Deprecated; use RBAC.
 
 ABAC has a few drawbacks:
 
-* Policies are in a file (not API objects).
-* No default-deny (you have to deny explicitly).
-* No way to update without restarting the apiserver.
-* No way to delegate (you have to edit the file).
+- Policies are in a file (not API objects).
+- No default-deny (you have to deny explicitly).
+- No way to update without restarting the apiserver.
+- No way to delegate (you have to edit the file).
 
 For new clusters, don't use ABAC.
 
 ### 12.4 Webhook authorizer
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/webhook/"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/webhook/"_
 
 A custom authorizer. The apiserver calls a webhook for each request:
 
@@ -462,10 +469,10 @@ A custom authorizer. The apiserver calls a webhook for each request:
 apiVersion: v1
 kind: Config
 clusters:
-- name: my-authz
-  cluster:
-    server: https://my-authz-service/authz
-    certificate-authority: /etc/kubernetes/ca.crt
+  - name: my-authz
+    cluster:
+      server: https://my-authz-service/authz
+      certificate-authority: /etc/kubernetes/ca.crt
 ```
 
 The webhook receives a `SubjectAccessReview`:
@@ -492,8 +499,8 @@ The webhook is on the **hot path**. A slow webhook slows down all API requests. 
 
 The `failurePolicy` (in the SAR spec, not the apiserver) is important:
 
-* `FailurePolicy: allow` — if the webhook fails, the request is allowed.
-* `FailurePolicy: deny` — if the webhook fails, the request is denied.
+- `FailurePolicy: allow` — if the webhook fails, the request is allowed.
+- `FailurePolicy: deny` — if the webhook fails, the request is denied.
 
 For most custom authz, `allow` is the safe default (don't break the API when the webhook is down). For security-critical authz, `deny`.
 
@@ -527,28 +534,28 @@ This rejects unauthenticated requests. A request with no credentials is **401 Un
 
 The trade-off:
 
-* **With anonymous on** — backward-compatible, some tools (like `kubectl auth can-i` without a user) work without credentials. But the footgun is real.
-* **With anonymous off** — strict. All requests must have credentials. `kubectl auth can-i` requires `--as <user>` or a kubeconfig.
+- **With anonymous on** — backward-compatible, some tools (like `kubectl auth can-i` without a user) work without credentials. But the footgun is real.
+- **With anonymous off** — strict. All requests must have credentials. `kubectl auth can-i` requires `--as <user>` or a kubeconfig.
 
 **For production, set `--anonymous-auth=false`.** The footgun outweighs the convenience.
 
-## 15. The system:* Groups
+## 15. The system:\* Groups
 
 Some groups are **automatic** and **special**:
 
-* **`system:authenticated`** — anyone who authenticates (regardless of who they are) is in this group. Don't grant it broad permissions.
-* **`system:unauthenticated`** — unauthenticated requests (with anonymous auth on). Don't grant it anything.
-* **`system:masters`** — cluster-admin. Anyone in this group has full access. Don't add users to it.
-* **`system:serviceaccounts`** — all ServiceAccounts in all namespaces. Don't grant it broad permissions.
-* **`system:serviceaccounts:<namespace>`** — all SAs in a specific namespace.
-* **`system:nodes`** — all kubelets.
-* **`system:kube-controller-manager`**, **`system:kube-scheduler`**, **`system:kube-proxy`** — the control plane components. Don't grant them extra permissions.
+- **`system:authenticated`** — anyone who authenticates (regardless of who they are) is in this group. Don't grant it broad permissions.
+- **`system:unauthenticated`** — unauthenticated requests (with anonymous auth on). Don't grant it anything.
+- **`system:masters`** — cluster-admin. Anyone in this group has full access. Don't add users to it.
+- **`system:serviceaccounts`** — all ServiceAccounts in all namespaces. Don't grant it broad permissions.
+- **`system:serviceaccounts:<namespace>`** — all SAs in a specific namespace.
+- **`system:nodes`** — all kubelets.
+- **`system:kube-controller-manager`**, **`system:kube-scheduler`**, **`system:kube-proxy`** — the control plane components. Don't grant them extra permissions.
 
 The convention: `system:` is reserved for k8s-internal groups. You should **not** create a group with a `system:` prefix.
 
 ## 16. Impersonation (--as, --as-group)
 
-*"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation"*
+_"https://kubernetes.io/docs/reference/access-authn-authz/authentication/#user-impersonation"_
 
 `kubectl` supports **impersonation**: act as a different user for one command.
 
@@ -575,12 +582,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata: { name: impersonator }
 rules:
-- apiGroups: [""]
-  resources: ["users", "groups", "serviceaccounts"]
-  verbs: ["impersonate"]
-- apiGroups: ["authentication.k8s.io"]
-  resources: ["uids"]
-  verbs: ["impersonate"]
+  - apiGroups: [""]
+    resources: ["users", "groups", "serviceaccounts"]
+    verbs: ["impersonate"]
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["uids"]
+    verbs: ["impersonate"]
 ```
 
 The `impersonator` ClusterRole is for debugging. **Don't grant it broadly.**
@@ -626,15 +633,15 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: devs, namespace: team-a }
 subjects:
-- kind: Group
-  name: "developers"             # OIDC group
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: "team-a-admins"
-  apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: "developers" # OIDC group
+    apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: "team-a-admins"
+    apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
-  name: edit                      # built-in "edit" role
+  name: edit # built-in "edit" role
   apiGroup: rbac.authorization.k8s.io
 ```
 
@@ -647,18 +654,18 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: app-reader, namespace: default }
 rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  resourceNames: ["app-config"]   # ONLY this ConfigMap
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["app-config"] # ONLY this ConfigMap
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: app-reader, namespace: default }
 subjects:
-- kind: ServiceAccount
-  name: app
-  namespace: default
+  - kind: ServiceAccount
+    name: app
+    namespace: default
 roleRef:
   kind: Role
   name: app-reader
@@ -678,20 +685,20 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: ci-deploy, namespace: prod }
 rules:
-- apiGroups: ["apps"]
-  resources: ["deployments"]
-  verbs: ["get", "list", "watch", "update", "patch"]
-- apiGroups: [""]
-  resources: ["pods", "services", "configmaps"]
-  verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata: { name: ci-deploy, namespace: prod }
 subjects:
-- kind: ServiceAccount
-  name: ci
-  namespace: ci                 # SA in one ns, bound in another
+  - kind: ServiceAccount
+    name: ci
+    namespace: ci # SA in one ns, bound in another
 roleRef:
   kind: Role
   name: ci-deploy
@@ -831,7 +838,7 @@ kubectl get rolebinding <name> -n <ns> -o yaml
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — the in-cluster identity
-* [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — the authorization model
-* [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the X.509 piece
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+- [[Kubernetes/concepts/L07-security/01-api-access/02-service-accounts|ServiceAccounts]] — the in-cluster identity
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — the authorization model
+- [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the X.509 piece
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags

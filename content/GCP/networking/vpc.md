@@ -40,7 +40,7 @@ Google Cloud VPC provides software-defined networking across Google's private gl
                 (Zero VPN/Peering required; internal IP routing)
 ```
 
-* **Zero Peering Across Regions:** A VM in `us-central1-a` (`10.20.0.5`) communicates directly with a VM in `europe-west1-b` (`10.30.0.12`) over internal IP addresses without VPN tunnels, NAT gateways, or peering configurations.
+- **Zero Peering Across Regions:** A VM in `us-central1-a` (`10.20.0.5`) communicates directly with a VM in `europe-west1-b` (`10.30.0.12`) over internal IP addresses without VPN tunnels, NAT gateways, or peering configurations.
 
 ---
 
@@ -48,20 +48,21 @@ Google Cloud VPC provides software-defined networking across Google's private gl
 
 ### 1. Auto Mode vs. Custom Mode VPC
 
-| Feature | Auto Mode VPC | Custom Mode VPC |
-| :--- | :--- | :--- |
-| **Creation** | Default on project creation | Manually created or via IaC |
-| **Subnets** | Automatically creates a `/20` subnet in *every* GCP region | Subnets created explicitly only where needed |
-| **CIDR Ranges** | Fixed, non-configurable (`10.128.0.0/9` allocated across regions) | Fully custom RFC 1918 ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) |
-| **Enterprise Feasibility** | **Unusable:** Overlaps with corporate on-prem or multi-cloud CIDRs | **Standard:** Mandatory for enterprise, Shared VPC, and peering |
+| Feature                    | Auto Mode VPC                                                      | Custom Mode VPC                                                                |
+| :------------------------- | :----------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| **Creation**               | Default on project creation                                        | Manually created or via IaC                                                    |
+| **Subnets**                | Automatically creates a `/20` subnet in _every_ GCP region         | Subnets created explicitly only where needed                                   |
+| **CIDR Ranges**            | Fixed, non-configurable (`10.128.0.0/9` allocated across regions)  | Fully custom RFC 1918 ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) |
+| **Enterprise Feasibility** | **Unusable:** Overlaps with corporate on-prem or multi-cloud CIDRs | **Standard:** Mandatory for enterprise, Shared VPC, and peering                |
 
 ### 2. Primary vs. Secondary Subnet Ranges (Alias IPs)
 
 In GCP, a subnet can have one **Primary IP Range** and multiple **Secondary IP Ranges**:
-* **Primary IP Range:** Assigns internal IPv4 addresses to VM network interfaces (NICs) and GKE node VMs.
-* **Secondary IP Ranges:** Used heavily by **VPC-native GKE clusters**:
-  * Pod Secondary Range: Allocates a dedicated IP directly to every Kubernetes Pod.
-  * Service Secondary Range: Allocates ClusterIPs for Kubernetes Services.
+
+- **Primary IP Range:** Assigns internal IPv4 addresses to VM network interfaces (NICs) and GKE node VMs.
+- **Secondary IP Ranges:** Used heavily by **VPC-native GKE clusters**:
+  - Pod Secondary Range: Allocates a dedicated IP directly to every Kubernetes Pod.
+  - Service Secondary Range: Allocates ClusterIPs for Kubernetes Services.
 
 ### 3. Shared VPC (Multi-Project Centralized Networking)
 
@@ -80,23 +81,24 @@ Shared VPC allows an organization to separate network administration from applic
 └─────────────────────────┘    └─────────────────────────┘
 ```
 
-* **Host Project:** Centralizes network definitions, firewall rules, and hybrid connectivity (Cloud Interconnect / Cloud VPN).
-* **Service Projects:** Attached to the Host Project. Developers deploy workloads into designated host subnets using IAM permissions (`roles/compute.networkUser`).
+- **Host Project:** Centralizes network definitions, firewall rules, and hybrid connectivity (Cloud Interconnect / Cloud VPN).
+- **Service Projects:** Attached to the Host Project. Developers deploy workloads into designated host subnets using IAM permissions (`roles/compute.networkUser`).
 
 ### 4. Cloud Router & Cloud NAT
 
-Compute Engine instances and GKE nodes without public external IPs cannot access the internet directly. 
-* **Cloud NAT:** A distributed, software-defined managed NAT service. It does **not** rely on proxy VMs or bottlenecks.
-* Cloud NAT is managed by **Cloud Router** in the region to handle egress traffic for all instances in that region's subnets.
+Compute Engine instances and GKE nodes without public external IPs cannot access the internet directly.
+
+- **Cloud NAT:** A distributed, software-defined managed NAT service. It does **not** rely on proxy VMs or bottlenecks.
+- Cloud NAT is managed by **Cloud Router** in the region to handle egress traffic for all instances in that region's subnets.
 
 ### 5. Firewalls: Traditional vs. Hierarchical
 
 GCP firewalls operate at the virtual network interface level (distributed stateful inspection):
 
-* **Project VPC Firewall Rules:** Applied per VPC. Uses **Network Tags** or **Service Accounts** to target specific VMs.
-* **Hierarchical Firewall Policies:** Applied at the Organization or Folder level. 
-  * Evaluated **before** project-level VPC rules.
-  * Enables security teams to enforce immutable global rules (e.g., "Deny SSH port 22 from internet across all projects").
+- **Project VPC Firewall Rules:** Applied per VPC. Uses **Network Tags** or **Service Accounts** to target specific VMs.
+- **Hierarchical Firewall Policies:** Applied at the Organization or Folder level.
+  - Evaluated **before** project-level VPC rules.
+  - Enables security teams to enforce immutable global rules (e.g., "Deny SSH port 22 from internet across all projects").
 
 ```
 Incoming Packet
@@ -178,40 +180,42 @@ gcloud compute firewall-rules create allow-gcp-health-checks \
 
 ## Quotas & Limits
 
-| Metric / Limit | Default Limit | Production Notes |
-| :--- | :--- | :--- |
-| **VPC networks per project** | 15 | Can be increased via quota request |
-| **Subnets per VPC** | Unlimited (up to IP limits) | Subnets must not have overlapping CIDRs |
-| **Secondary IP ranges per subnet** | 30 ranges | Plan GKE clusters carefully |
-| **Internal IP addresses per VPC** | 150,000 | Encompasses VMs, GKE pods, internal LBs |
-| **Firewall rules per VPC** | 500 rules | Use tags and Service Accounts to minimize rules |
-| **Shared VPC Service Projects per Host** | 1,000 | Supports massive multi-tenant architectures |
+| Metric / Limit                           | Default Limit               | Production Notes                                |
+| :--------------------------------------- | :-------------------------- | :---------------------------------------------- |
+| **VPC networks per project**             | 15                          | Can be increased via quota request              |
+| **Subnets per VPC**                      | Unlimited (up to IP limits) | Subnets must not have overlapping CIDRs         |
+| **Secondary IP ranges per subnet**       | 30 ranges                   | Plan GKE clusters carefully                     |
+| **Internal IP addresses per VPC**        | 150,000                     | Encompasses VMs, GKE pods, internal LBs         |
+| **Firewall rules per VPC**               | 500 rules                   | Use tags and Service Accounts to minimize rules |
+| **Shared VPC Service Projects per Host** | 1,000                       | Supports massive multi-tenant architectures     |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/vpc
-* **Documentation:** https://cloud.google.com/vpc/docs
-* **Shared VPC Guide:** https://cloud.google.com/vpc/docs/shared-vpc
-* **Cloud NAT Docs:** https://cloud.google.com/nat/docs
-* **Pricing:** https://cloud.google.com/vpc/pricing
+- **Homepage:** https://cloud.google.com/vpc
+- **Documentation:** https://cloud.google.com/vpc/docs
+- **Shared VPC Guide:** https://cloud.google.com/vpc/docs/shared-vpc
+- **Cloud NAT Docs:** https://cloud.google.com/nat/docs
+- **Pricing:** https://cloud.google.com/vpc/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Inter-Region Microservices Data Transfer
-* 20 VMs communicating across regions (`us-central1` to `europe-west1`) over Google's global fiber backbone.
-* Total cross-region internal egress: 15 TB / month.
-* Inter-region egress rate: ~$0.02 / GB ($20 / TB).
-* **Cross-Region Egress Cost:** 15 × $20 = **$300 / month** (Notice: AWS charges ~$0.02/GB cross-region as well; inter-zone within same region is $0.01/GB).
+
+- 20 VMs communicating across regions (`us-central1` to `europe-west1`) over Google's global fiber backbone.
+- Total cross-region internal egress: 15 TB / month.
+- Inter-region egress rate: ~$0.02 / GB ($20 / TB).
+- **Cross-Region Egress Cost:** 15 × $20 = **$300 / month** (Notice: AWS charges ~$0.02/GB cross-region as well; inter-zone within same region is $0.01/GB).
 
 ### Scenario 2: Cloud NAT for High-Throughput Cluster
-* GKE cluster with 100 private nodes pulling container images and calling external SaaS APIs.
-* NAT Gateway hourly rate: ~$0.045 / hour / gateway = ~$32.40 / month.
-* Data processed via NAT: 10 TB / month at $0.045 / GB = $450.
-* **Total Cloud NAT Cost:** ~$32.40 + $450 = **~$482.40 / month**.
+
+- GKE cluster with 100 private nodes pulling container images and calling external SaaS APIs.
+- NAT Gateway hourly rate: ~$0.045 / hour / gateway = ~$32.40 / month.
+- Data processed via NAT: 10 TB / month at $0.045 / GB = $450.
+- **Total Cloud NAT Cost:** ~$32.40 + $450 = **~$482.40 / month**.
 
 ---
 

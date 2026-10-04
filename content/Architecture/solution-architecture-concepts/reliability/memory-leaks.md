@@ -54,9 +54,9 @@ def get_user(user_id):
 
 ```javascript
 // ❌ Leaky: new listener added on every request
-app.get('/subscribe', (req, res) => {
-  eventEmitter.on('update', () => {
-    res.send('notification');
+app.get("/subscribe", (req, res) => {
+  eventEmitter.on("update", () => {
+    res.send("notification");
   });
 });
 ```
@@ -65,8 +65,8 @@ app.get('/subscribe', (req, res) => {
 
 ```javascript
 // ✅ Fixed: one-time listener
-eventEmitter.once('update', () => {
-  res.send('notification');
+eventEmitter.once("update", () => {
+  res.send("notification");
 });
 ```
 
@@ -184,7 +184,7 @@ Service A ─────────▶│   Envoy     │ ◀── leak here 
 ```yaml
 resources:
   limits:
-    memory: 256Mi  # pod dies and restarts on leak, doesn't starve others
+    memory: 256Mi # pod dies and restarts on leak, doesn't starve others
 ```
 
 ---

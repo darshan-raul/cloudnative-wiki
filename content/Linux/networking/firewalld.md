@@ -15,17 +15,17 @@ tags:
 
 A zone is a **trust level** for a network connection. firewalld ships predefined zones (ordered by trust):
 
-| Zone          | Trust | Description                                |
-|--------------|-------|--------------------------------------------|
-| block | none | Reject all incoming |
-| drop | low   | Drop all incoming (no reply)              |
-| external | low   | For external routed networks (NAT)         |
-| dmz          | med | DMZ (limited access)                      |
-| work         | med | Work network                               |
-| home         | med | Home network                               |
-| internal     | med   | Internal network                           |
-| public | low | Public networks (default)                  |
-| trusted      | full  | Allow all                                 |
+| Zone     | Trust | Description                        |
+| -------- | ----- | ---------------------------------- |
+| block    | none  | Reject all incoming                |
+| drop     | low   | Drop all incoming (no reply)       |
+| external | low   | For external routed networks (NAT) |
+| dmz      | med   | DMZ (limited access)               |
+| work     | med   | Work network                       |
+| home     | med   | Home network                       |
+| internal | med   | Internal network                   |
+| public   | low   | Public networks (default)          |
+| trusted  | full  | Allow all                          |
 
 ```bash
 # List zones

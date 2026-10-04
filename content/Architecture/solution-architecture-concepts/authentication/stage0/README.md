@@ -18,11 +18,11 @@ The most common reason engineers ship broken auth isn't malice or stupidity — 
 
 ## Modules
 
-| # | Module | Why it matters | Exit criterion |
-|---|--------|----------------|----------------|
-| [[01-crypto-primitives\|0.1 Crypto Building Blocks]] | Symmetric vs asymmetric, hashing, HMAC, RSA, ECDSA, EdDSA | You can explain why `alg=none` is fatal and pick the right algorithm for a use case |
-| [[02-encoding-signing-verification\|0.2 Encoding, Signing, Verification]] | Base64URL vs Base64, JSON canonicalization, signature malleability | You can hand-craft and verify a signature without a library |
-| [[03-http-tls-foundations\|0.3 HTTP & TLS Foundations]] | TLS 1.2 vs 1.3, mTLS, cookies, Authorization header, CORS preflight, SameSite | You can read a network trace and explain every auth-relevant header |
+| #                                                                         | Module                                                                        | Why it matters                                                                      | Exit criterion |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
+| [[01-crypto-primitives\|0.1 Crypto Building Blocks]]                      | Symmetric vs asymmetric, hashing, HMAC, RSA, ECDSA, EdDSA                     | You can explain why `alg=none` is fatal and pick the right algorithm for a use case |
+| [[02-encoding-signing-verification\|0.2 Encoding, Signing, Verification]] | Base64URL vs Base64, JSON canonicalization, signature malleability            | You can hand-craft and verify a signature without a library                         |
+| [[03-http-tls-foundations\|0.3 HTTP & TLS Foundations]]                   | TLS 1.2 vs 1.3, mTLS, cookies, Authorization header, CORS preflight, SameSite | You can read a network trace and explain every auth-relevant header                 |
 
 ## Connections
 

@@ -13,10 +13,10 @@ description: Build a full local Keycloak lab exercising OIDC, OAuth2, SSO, SAML,
 
 ## Modules
 
-| # | Module | What it builds | Exit criterion |
-|---|--------|----------------|----------------|
-| [[01-keycloak-lab\|C.1 Keycloak Reference Lab]] | A full Docker Compose stack: Keycloak + 3 client apps (SPA, mobile-API, CLI), OIDC code+PKCE, OAuth2 client_credentials, SAML SP bridge, group/role mapping, JWKS rotation drill | You can run `./up.sh` and demonstrate end-to-end auth across all 3 apps with one Keycloak login |
-| [[02-incident-tabletop\|C.2 Identity Incident Tabletop]] | 3 scenarios: token leak, signing key compromise, full IdP outage | You have a tested runbook for each, with SIEM rules wired in |
+| #                                                        | Module                                                                                                                                                                           | What it builds                                                                                  | Exit criterion |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------- |
+| [[01-keycloak-lab\|C.1 Keycloak Reference Lab]]          | A full Docker Compose stack: Keycloak + 3 client apps (SPA, mobile-API, CLI), OIDC code+PKCE, OAuth2 client_credentials, SAML SP bridge, group/role mapping, JWKS rotation drill | You can run `./up.sh` and demonstrate end-to-end auth across all 3 apps with one Keycloak login |
+| [[02-incident-tabletop\|C.2 Identity Incident Tabletop]] | 3 scenarios: token leak, signing key compromise, full IdP outage                                                                                                                 | You have a tested runbook for each, with SIEM rules wired in                                    |
 
 ## What the Keycloak Lab Demonstrates
 
@@ -46,6 +46,7 @@ SIEM hooks: Keycloak events → JSON log → Wazuh → Slack
 ## Connections
 
 This capstone uses:
+
 - [[../stage0/README|Stage 0]] — TLS for the lab, HMAC + RSA for JWT verification
 - [[../stage1/README|Stage 1]] — JWT inspection, JWKS rotation drill
 - [[../stage2/README|Stage 2]] — OAuth 2.0 auth code + PKCE, client_credentials

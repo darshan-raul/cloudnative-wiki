@@ -8,13 +8,13 @@ Prompt Engineering <mark style="color:purple;">leverages the principle of “pri
 
 **The key ideas are:**
 
-* Prompt engineering is the fastest way to harness the power of large language models.
-* Prompt engineering optimizes how you work with and direct language models.
-* It boosts abilities, improves safety, and provides understanding.
-* Prompt engineering incorporates various skills for interfacing with and advancing language models.
-* Prompt engineering enables new features like augmenting domain knowledge with language models without changing model parameters or fine-tuning.
-* Prompt engineering provides methods for interacting with, building with, and grasping language models' capabilities.
-* Higher quality prompt inputs lead to higher quality outputs.
+- Prompt engineering is the fastest way to harness the power of large language models.
+- Prompt engineering optimizes how you work with and direct language models.
+- It boosts abilities, improves safety, and provides understanding.
+- Prompt engineering incorporates various skills for interfacing with and advancing language models.
+- Prompt engineering enables new features like augmenting domain knowledge with language models without changing model parameters or fine-tuning.
+- Prompt engineering provides methods for interacting with, building with, and grasping language models' capabilities.
+- Higher quality prompt inputs lead to higher quality outputs.
 
 <br>
 
@@ -27,8 +27,6 @@ Prompt Engineering <mark style="color:purple;">leverages the principle of “pri
 
 "https://www.youtube.com/watch?v=T9aRN5JkmL8"
 
-
-
-A very good guide :arrow\_double\_down:
+A very good guide :arrow_double_down:
 
 "https://catalog.us-east-1.prod.workshops.aws/workshops/0644c9e9-5b82-45f2-8835-3b5aa30b1848/en-US"

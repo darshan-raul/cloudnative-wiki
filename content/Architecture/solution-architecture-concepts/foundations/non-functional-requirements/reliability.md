@@ -18,17 +18,20 @@ A system can be available (responding) but unreliable (returning wrong data, pro
 Before designing for reliability, enumerate how things fail:
 
 ### Hardware Failures
+
 - **Disk failure** — data loss if no RAID/replication. Mitigate: replication, backups, checksums.
 - **RAM failure** — silent data corruption (bit flips). Mitigate: ECC RAM, checksums, read-replication.
 - **Network hardware failure** — partition between components. Mitigate: multi-path networking, redundant switches.
 
 ### Software Failures
+
 - **Crash loops** — process starts, fails, restarts, fails again. Mitigate: health checks, backoff delays, proper error handling.
 - **Memory leaks** — gradual memory exhaustion. Mitigate: memory limits, restart policies, monitoring.
 - **Deadlocks** — threads block forever waiting for each other. Mitigate: lock-free data structures, timeouts.
 - **Cascading failures** — one component's failure causes others to fail. Mitigate: circuit breakers, bulkheads.
 
 ### Human Errors
+
 - **Misconfigured deployments** — wrong environment variables, IP addresses. Mitigate: IaC, immutability, canary deployments.
 - **Runaway deployments** — deploy breaks something, spreads to all instances. Mitigate: blue-green, feature flags, rollback.
 - **Data corruption** — bad data writes corrupt the system. Mitigate: validation, backup before migration.
@@ -147,6 +150,7 @@ except requests.Timeout:
 ```
 
 Default timeout guidelines:
+
 - **Fast path (cache, in-memory):** 5-50ms
 - **Synchronous API call:** 100-500ms
 - **Async job dispatch:** 1-5s
@@ -180,15 +184,18 @@ def retry_with_backoff(fn, max_attempts=5, base_delay=1.0):
 You can't fix what you can't see. Three pillars:
 
 ### Logs
+
 - **Structured logs** (JSON) — machine-parseable, searchable
 - **Correlation IDs** — trace a request across all services
 - **Log levels** — ERROR for failures, WARN for degraded, INFO for significant events
 
 ### Metrics
+
 - **RED method** for services: Rate (RPS), Errors (error rate), Duration (latency)
 - **USE method** for resources: Utilization, Saturation, Errors
 
 ### Traces
+
 - **Distributed tracing** — trace a request across service boundaries (OpenTelemetry, Jaeger, Zipkin)
 - **Span context propagation** — trace ID passed via HTTP headers or message queue metadata
 
@@ -204,6 +211,7 @@ Reliability = MTBF / (MTBF + MTTR)
 ```
 
 Design to minimize MTTR:
+
 - **Fast detection** — health checks, alerting
 - **Fast failover** — automated, not manual
 - **Fast rollback** — feature flags, blue-green deployments

@@ -1,6 +1,7 @@
 ---
 title: Kubernetes
-tags: [kubernetes, k8s, container-orchestration, cloud-native, platform-engineering]
+tags:
+  [kubernetes, k8s, container-orchestration, cloud-native, platform-engineering]
 date: 2026-09-06
 description: Comprehensive Kubernetes curriculum and deep-reference system — from container orchestration primitives to production operations and controller internals.
 ---
@@ -9,6 +10,7 @@ description: Comprehensive Kubernetes curriculum and deep-reference system — f
 
 > [!NOTE] Current Baseline: Kubernetes 1.37 ("Garhwal", Released August 2026)
 > This curriculum reflects the modern Kubernetes baseline:
+>
 > - **Gateway API** as the primary ingress standard following the community retirement of `ingress-nginx` in March 2026.
 > - **nftables** as the primary `kube-proxy` direction alongside IPVS deprecation.
 > - **EndpointSlices**, **cgroup v2**, **`metrics.k8s.io` GA**, and **DRA Extended Resources GA**.
@@ -17,14 +19,14 @@ description: Comprehensive Kubernetes curriculum and deep-reference system — f
 
 ## Choose Your Path
 
-| Reader Intent | Where to Start | What You Will Get |
-| :--- | :--- | :--- |
-| **I am new to Kubernetes** | [[Kubernetes/concepts/L00-start-here/00-start-here\|00 — Start Here]] | Hands-on local cluster setup with `kind` and first workload deployment. |
-| **I want a structured conceptual learning path** | [[Kubernetes/concepts/00-hub\|Concepts Hub (L00–L09)]] | 10-level sequential curriculum from primitives to controller internals. |
-| **I need to fix a cluster or workload outage** | [[Kubernetes/guides/README#troubleshooting\|Troubleshooting Playbooks]] | Symptom-first diagnosis (`CrashLoopBackOff`, `Pod Pending`, DNS, PVC issues). |
-| **I am hardening or preparing for production** | [[Kubernetes/concepts/L07-security/00-README\|L07 — Security]] & [[Kubernetes/guides/non-functional/security-baseline\|Security Baseline]] | Layered threat model, Pod Security Standards, NetworkPolicies, and admission control. |
-| **I am running on AWS (EKS)** | [[Kubernetes/eks/README\|EKS Implementation Track]] | VPC CNI, IRSA, EKS Pod Identity, Karpenter, and EKS Auto Mode. |
-| **I want tool & delivery walkthroughs** | [[Kubernetes/guides/README\|Guides Index]] | Helm, Kustomize, Argo CD, kubectl workflows, and k9s. |
+| Reader Intent                                    | Where to Start                                                                                                                             | What You Will Get                                                                     |
+| :----------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| **I am new to Kubernetes**                       | [[Kubernetes/concepts/L00-start-here/00-start-here\|00 — Start Here]]                                                                      | Hands-on local cluster setup with `kind` and first workload deployment.               |
+| **I want a structured conceptual learning path** | [[Kubernetes/concepts/00-hub\|Concepts Hub (L00–L09)]]                                                                                     | 10-level sequential curriculum from primitives to controller internals.               |
+| **I need to fix a cluster or workload outage**   | [[Kubernetes/guides/README#troubleshooting\|Troubleshooting Playbooks]]                                                                    | Symptom-first diagnosis (`CrashLoopBackOff`, `Pod Pending`, DNS, PVC issues).         |
+| **I am hardening or preparing for production**   | [[Kubernetes/concepts/L07-security/00-README\|L07 — Security]] & [[Kubernetes/guides/non-functional/security-baseline\|Security Baseline]] | Layered threat model, Pod Security Standards, NetworkPolicies, and admission control. |
+| **I am running on AWS (EKS)**                    | [[Kubernetes/eks/README\|EKS Implementation Track]]                                                                                        | VPC CNI, IRSA, EKS Pod Identity, Karpenter, and EKS Auto Mode.                        |
+| **I want tool & delivery walkthroughs**          | [[Kubernetes/guides/README\|Guides Index]]                                                                                                 | Helm, Kustomize, Argo CD, kubectl workflows, and k9s.                                 |
 
 ---
 
@@ -64,7 +66,9 @@ flowchart TD
 ## Core Sections
 
 ### 1. Conceptual Curriculum (`concepts/`)
+
 Sequential, provider-neutral fundamentals building a single mental model:
+
 - [[Kubernetes/concepts/00-hub|00 — Concepts Hub]]: Roadmap and reading order.
 - [[Kubernetes/concepts/L00-start-here/00-start-here|L00 — Start Here]]: Prerequisites, local cluster setup, and first deployment.
 - [[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]]: Control plane components, kubelet, and reconciliation loops.
@@ -78,7 +82,9 @@ Sequential, provider-neutral fundamentals building a single mental model:
 - [[Kubernetes/concepts/L09-advanced/index|L09 — Advanced & Extensibility]]: CRDs, reconciliation loops, custom controllers, finalizers, and etcd.
 
 ### 2. Cumulative Hands-on Labs (`labs/`)
+
 A 10-part progressive lab track in a reproducible multi-node `kind` cluster with `podinfo`:
+
 - [[Kubernetes/labs/index|Labs Hub]]: Environment setup, architecture, and step-by-step progress.
 - [[Kubernetes/labs/00-cluster-setup|Lab 00 — Cluster Setup]]: Multi-node `kind` with topology zones.
 - [[Kubernetes/labs/01-deploy-workload|Lab 01 — Workload Deployment]]: Declarative `podinfo` deployment, probes, and resource limits.
@@ -92,13 +98,16 @@ A 10-part progressive lab track in a reproducible multi-node `kind` cluster with
 - [[Kubernetes/labs/09-gitops-and-lifecycle|Lab 09 — GitOps & Lifecycle]]: Kustomize overlays, drift correction, and disaster recovery drill.
 
 ### 3. Revision & Master Decision Tables (`review/`)
+
 High-density references for experienced practitioners, technical interviews, and exam review:
+
 - [[Kubernetes/review/index|Revision Hub]]: Central navigation for refreshers and decision frameworks.
 - [[Kubernetes/review/decision-tables|Master Decision Tables]]: Multi-dimensional trade-off matrices (Workloads, Storage, Gateway API vs Ingress, Autoscaling, Governance).
 - [[Kubernetes/review/scenarios|Production Incidents & Walkthroughs]]: Real-world post-mortems and diagnostic playbooks.
 - **5-Minute Refreshers:** [[Kubernetes/review/architecture-refresher|Architecture]], [[Kubernetes/review/workloads-refresher|Workloads]], [[Kubernetes/review/networking-refresher|Networking]], [[Kubernetes/review/storage-refresher|Storage]], [[Kubernetes/review/scheduling-scaling-refresher|Scheduling & Scaling]], [[Kubernetes/review/security-refresher|Security]].
 
 ### 4. Practical Guides (`guides/`)
+
 - [[Kubernetes/guides/README|Guides Hub]]: Real-world production guides and runbooks.
 - **Troubleshooting:** [[Kubernetes/guides/troubleshooting/crashloop-backoff|CrashLoopBackOff]], [[Kubernetes/guides/troubleshooting/pod-pending|Pod Pending]], [[Kubernetes/guides/troubleshooting/service-unreachable|Service Unreachable]], [[Kubernetes/guides/troubleshooting/dns-resolution|DNS Resolution]], [[Kubernetes/guides/troubleshooting/pvc-stuck|PVC Stuck]], [[Kubernetes/guides/troubleshooting/node-not-ready|Node NotReady]].
 - **Delivery & GitOps:** [[Kubernetes/guides/delivery/gitops/basics|GitOps Concepts]], [[Kubernetes/guides/delivery/gitops/argo-cd/README|Argo CD]], [[Kubernetes/guides/delivery/templating-patching/helm/README|Helm Series]], [[Kubernetes/guides/delivery/templating-patching/kustomize|Kustomize]].
@@ -106,6 +115,7 @@ High-density references for experienced practitioners, technical interviews, and
 - **Production Operations:** [[Kubernetes/guides/non-functional/high-availability|High Availability]], [[Kubernetes/guides/non-functional/auto-scaling|Autoscaling Strategy]], [[Kubernetes/guides/non-functional/security-baseline|Security Baseline]], [[Kubernetes/guides/non-functional/backup-restore|Backup & Restore]].
 
 ### 5. Provider Tracks & Deep Dives
+
 - [[Kubernetes/eks/README|AWS EKS Implementation Track]]: Universal Concept to EKS Translation Matrix, Karpenter, VPC CNI, IAM Access Entries, and EKS Pod Identity.
 - [[Kubernetes/client-go|client-go & Controller Architecture]]: Informers, DeltaFIFO, RateLimitingQueue, and reconciliation loops.
 - [[Kubernetes/certifications/index|Certification Alignment Guide]]: CKA, CKAD, and CKS curriculum mapping.

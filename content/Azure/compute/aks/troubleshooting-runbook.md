@@ -42,14 +42,14 @@ Increase memory limit   Inspect stdout logs:     Prune /var/lib/docker   Restart
 
 ## 2. Container Exit Code Taxonomy & Immediate Actions
 
-| Exit Code | Termination Reason | Underlying Kernel / K8s Mechanism | Immediate Remediation Action |
-| :--- | :--- | :--- | :--- |
-| **137** | **OOMKilled** | Linux kernel Out-Of-Memory killer triggered ($128 + 9 = \text{SIGKILL}$) | Increase `.resources.limits.memory`; fix application memory leak |
-| **143** | **SIGTERM** | Graceful termination initiated by K8s ($128 + 15 = \text{SIGTERM}$) | Check if Cluster Autoscaler or Node Surge upgrade evicted the pod |
-| **1** | **Application Crash** | General software exception, uncaught error, or syntax fault | Run `kubectl logs -n <ns> <pod> --previous` to inspect stack trace |
-| **126** | **Permission Denied** | Container command binary is not executable (`chmod +x`) | Verify container entrypoint file permissions in Dockerfile |
-| **127** | **Binary Not Found** | Entrypoint executable or shell missing from container image | Check if binary was compiled dynamically without libc |
-| **139** | **Segmentation Fault**| Memory access violation in compiled code ($128 + 11 = \text{SIGSEGV}$) | Inspect C/C++ or Rust native extensions for null pointer deref |
+| Exit Code | Termination Reason     | Underlying Kernel / K8s Mechanism                                        | Immediate Remediation Action                                       |
+| :-------- | :--------------------- | :----------------------------------------------------------------------- | :----------------------------------------------------------------- |
+| **137**   | **OOMKilled**          | Linux kernel Out-Of-Memory killer triggered ($128 + 9 = \text{SIGKILL}$) | Increase `.resources.limits.memory`; fix application memory leak   |
+| **143**   | **SIGTERM**            | Graceful termination initiated by K8s ($128 + 15 = \text{SIGTERM}$)      | Check if Cluster Autoscaler or Node Surge upgrade evicted the pod  |
+| **1**     | **Application Crash**  | General software exception, uncaught error, or syntax fault              | Run `kubectl logs -n <ns> <pod> --previous` to inspect stack trace |
+| **126**   | **Permission Denied**  | Container command binary is not executable (`chmod +x`)                  | Verify container entrypoint file permissions in Dockerfile         |
+| **127**   | **Binary Not Found**   | Entrypoint executable or shell missing from container image              | Check if binary was compiled dynamically without libc              |
+| **139**   | **Segmentation Fault** | Memory access violation in compiled code ($128 + 11 = \text{SIGSEGV}$)   | Inspect C/C++ or Rust native extensions for null pointer deref     |
 
 ---
 
@@ -58,6 +58,7 @@ Increase memory limit   Inspect stdout logs:     Prune /var/lib/docker   Restart
 ### Playbook 1: Resolving `Node NotReady` and Kubelet PLEG Timeouts
 
 #### Diagnostic Commands
+
 ```bash
 # 1. Identify all NotReady worker nodes
 kubectl get nodes --sort-by='.metadata.name' | grep NotReady
@@ -72,6 +73,7 @@ journalctl -u kubelet -e --no-pager | grep -i "PLEG"
 ```
 
 #### Root Cause & Resolution
+
 - **PLEG (Pod Lifecycle Event Generator) Timeout:** Occurs when hundreds of pods on a single node concurrently churn, causing the container runtime (`containerd`) to block. Kubelet misses its heartbeat to the API server and marks the node `NotReady`.
 - **Action:**
   ```bash
@@ -85,6 +87,7 @@ journalctl -u kubelet -e --no-pager | grep -i "PLEG"
 ### Playbook 2: Resolving Traditional Azure CNI IP Exhaustion
 
 #### Diagnostic Commands
+
 ```bash
 # Check if pods are stuck in Pending with Network Plugin IPAM errors
 kubectl get pods -A | grep Pending
@@ -92,6 +95,7 @@ kubectl describe pod <pending-pod> | grep -i "FailedAllocateIPAddress"
 ```
 
 #### Root Cause & Resolution
+
 - **Symptom:** `Failed to allocate address: Failed to allocate IP address from subnet: No free IP addresses available`.
 - **Root Cause:** Traditional Azure CNI reserved all available private IPs from the host VNet subnet.
 - **Action:**
@@ -112,6 +116,7 @@ kubectl describe pod <pending-pod> | grep -i "FailedAllocateIPAddress"
 ### Playbook 3: Resolving Azure Disk Detach Deadlocks (`VolumeAttachment` Stuck)
 
 #### Diagnostic Commands
+
 ```bash
 # Check for stuck VolumeAttachments preventing StatefulSet pod failover
 kubectl get volumeattachments | grep false
@@ -119,9 +124,11 @@ kubectl describe volumeattachment <attachment-name>
 ```
 
 #### Root Cause & Resolution
+
 - **Symptom:** Pod fails to start on Node 2 with `Multi-Attach error for volume: Volume is already exclusively attached to Node 1`.
 - **Root Cause:** Node 1 crashed abruptly without cleanly unmounting the LUN. Azure's `csi-attacher` controller will wait up to 6 minutes before issuing a force detach.
 - **Action:**
+
   ```bash
   # 1. Force delete the stuck pod on Node 1
   kubectl delete pod <pod-name> -n <namespace> --grace-period=0 --force
@@ -135,6 +142,7 @@ kubectl describe volumeattachment <attachment-name>
 ## 4. AKS Built-In Diagnostic Tooling (`az` CLI)
 
 ### 1. Run AKS Diagnostic Collector
+
 Collect comprehensive logs across the control plane, CoreDNS, network dataplane, and node metrics:
 
 ```bash
@@ -155,12 +163,12 @@ az aks kollect \
 
 ## 5. Quotas, Performance & Configuration Limits
 
-| Failure Vector | Threshold / Limit | SRE Triage Rule |
-| :--- | :--- | :--- |
-| **Kubelet Node Heartbeat** | **40 Seconds** | Node marked `NotReady` if heartbeat is missed |
-| **CSI Disk Attach Timeout** | **6 Minutes** | Hard Azure timeout before force-detaching LUN |
-| **Subnet Reserve IPs** | **5 IPs reserved by Azure**| First 4 IPs and last IP cannot be allocated to nodes |
-| **ARM API Throttling** | **1,200 reads/writes per hr**| Rapid nodepool script loops can trigger `429 Throttling`|
+| Failure Vector              | Threshold / Limit             | SRE Triage Rule                                          |
+| :-------------------------- | :---------------------------- | :------------------------------------------------------- |
+| **Kubelet Node Heartbeat**  | **40 Seconds**                | Node marked `NotReady` if heartbeat is missed            |
+| **CSI Disk Attach Timeout** | **6 Minutes**                 | Hard Azure timeout before force-detaching LUN            |
+| **Subnet Reserve IPs**      | **5 IPs reserved by Azure**   | First 4 IPs and last IP cannot be allocated to nodes     |
+| **ARM API Throttling**      | **1,200 reads/writes per hr** | Rapid nodepool script loops can trigger `429 Throttling` |
 
 ---
 

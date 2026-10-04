@@ -87,16 +87,16 @@ Important: the controller evaluates the schedule against the **controller's cloc
 
 ### What a CronJob does NOT do
 
-| Capability | CronJob | Argo Workflows / Airflow |
-|---|---|---|
-| Run a Job on a schedule | ✅ | ✅ |
-| DAG dependencies (B after A) | ❌ | ✅ |
-| Backfills across missed days | ❌ | ✅ |
-| Conditional execution | ❌ | ✅ |
-| SLA-based scheduling | ❌ | ✅ |
-| Cross-cluster scheduling | ❌ | ✅ (with effort) |
-| Pause / resume schedule | ✅ (`suspend`) | ✅ |
-| Per-run history | ✅ (configurable) | ✅ (richer) |
+| Capability                   | CronJob           | Argo Workflows / Airflow |
+| ---------------------------- | ----------------- | ------------------------ |
+| Run a Job on a schedule      | ✅                | ✅                       |
+| DAG dependencies (B after A) | ❌                | ✅                       |
+| Backfills across missed days | ❌                | ✅                       |
+| Conditional execution        | ❌                | ✅                       |
+| SLA-based scheduling         | ❌                | ✅                       |
+| Cross-cluster scheduling     | ❌                | ✅ (with effort)         |
+| Pause / resume schedule      | ✅ (`suspend`)    | ✅                       |
+| Per-run history              | ✅ (configurable) | ✅ (richer)              |
 
 ---
 
@@ -110,15 +110,15 @@ kind: CronJob
 metadata:
   name: hello
 spec:
-  schedule: "* * * * *"           # every minute
+  schedule: "* * * * *" # every minute
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: hello
-            image: busybox:1.36
-            args: ["echo", "hello from cron"]
+            - name: hello
+              image: busybox:1.36
+              args: ["echo", "hello from cron"]
           restartPolicy: OnFailure
 ```
 
@@ -134,14 +134,14 @@ metadata:
     app: backup
     tier: data
 spec:
-  schedule: "0 2 * * *"            # 02:00 every day
-  timeZone: "Etc/UTC"               # k8s 1.25+
-  startingDeadlineSeconds: 200      # see section 6
-  concurrencyPolicy: Forbid         # see section 5
-  suspend: false                    # see section 7
-  successfulJobsHistoryLimit: 3     # see section 7
-  failedJobsHistoryLimit: 1         # see section 7
-  jobTemplate:                      # full Job spec
+  schedule: "0 2 * * *" # 02:00 every day
+  timeZone: "Etc/UTC" # k8s 1.25+
+  startingDeadlineSeconds: 200 # see section 6
+  concurrencyPolicy: Forbid # see section 5
+  suspend: false # see section 7
+  successfulJobsHistoryLimit: 3 # see section 7
+  failedJobsHistoryLimit: 1 # see section 7
+  jobTemplate: # full Job spec
     spec:
       backoffLimit: 2
       activeDeadlineSeconds: 3600
@@ -151,44 +151,44 @@ spec:
           restartPolicy: OnFailure
           serviceAccountName: backup-runner
           containers:
-          - name: backup
-            image: myorg/backup:2.1
-            command: ["./backup.sh"]
-            env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: url
-            resources:
-              requests:
-                cpu: 200m
-                memory: 256Mi
-              limits:
-                cpu: 1
-                memory: 1Gi
+            - name: backup
+              image: myorg/backup:2.1
+              command: ["./backup.sh"]
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: db-credentials
+                      key: url
+              resources:
+                requests:
+                  cpu: 200m
+                  memory: 256Mi
+                limits:
+                  cpu: 1
+                  memory: 1Gi
 status:
-  active:                          # currently-running Jobs created by this CronJob
-  - apiVersion: batch/v1
-    kind: Job
-    name: db-backup-28532020
-    namespace: batch
-    resourceVersion: "12345"
-    uid: abc-123
+  active: # currently-running Jobs created by this CronJob
+    - apiVersion: batch/v1
+      kind: Job
+      name: db-backup-28532020
+      namespace: batch
+      resourceVersion: "12345"
+      uid: abc-123
   lastScheduleTime: "2025-05-24T02:00:00Z"
   lastSuccessfulTime: "2025-05-24T02:00:30Z"
 ```
 
 ### Required fields
 
-| Field | Required | Why |
-|---|---|---|
-| `apiVersion` | yes | Always `batch/v1` |
-| `kind` | yes | Must be `CronJob` |
-| `metadata.name` | yes | DNS-1123 label |
-| `spec.schedule` | yes | Cron expression |
-| `spec.jobTemplate` | yes | The Job template to instantiate |
-| `spec.jobTemplate.spec.template.spec.restartPolicy` | yes (in template) | `OnFailure` or `Never` |
+| Field                                               | Required          | Why                             |
+| --------------------------------------------------- | ----------------- | ------------------------------- |
+| `apiVersion`                                        | yes               | Always `batch/v1`               |
+| `kind`                                              | yes               | Must be `CronJob`               |
+| `metadata.name`                                     | yes               | DNS-1123 label                  |
+| `spec.schedule`                                     | yes               | Cron expression                 |
+| `spec.jobTemplate`                                  | yes               | The Job template to instantiate |
+| `spec.jobTemplate.spec.template.spec.restartPolicy` | yes (in template) | `OnFailure` or `Never`          |
 
 ### `schedule` is required and immutable
 
@@ -216,40 +216,40 @@ The `schedule` field uses standard cron syntax, with extensions for `@hourly` et
 
 ### Common expressions
 
-| Expression | When |
-|---|---|
-| `* * * * *` | Every minute |
-| `0 * * * *` | Every hour, on the hour |
-| `0 0 * * *` | Every day at midnight |
-| `0 2 * * *` | Every day at 02:00 |
-| `0 0 * * 0` | Every Sunday at midnight |
-| `0 0 1 * *` | First of the month at midnight |
-| `*/5 * * * *` | Every 5 minutes |
-| `0 9-17 * * 1-5` | Hourly from 9 AM to 5 PM, Mon-Fri |
-| `0 0,12 * * *` | Daily at midnight and noon |
-| `30 4 1,15 * *` | 04:30 on the 1st and 15th of every month |
+| Expression       | When                                     |
+| ---------------- | ---------------------------------------- |
+| `* * * * *`      | Every minute                             |
+| `0 * * * *`      | Every hour, on the hour                  |
+| `0 0 * * *`      | Every day at midnight                    |
+| `0 2 * * *`      | Every day at 02:00                       |
+| `0 0 * * 0`      | Every Sunday at midnight                 |
+| `0 0 1 * *`      | First of the month at midnight           |
+| `*/5 * * * *`    | Every 5 minutes                          |
+| `0 9-17 * * 1-5` | Hourly from 9 AM to 5 PM, Mon-Fri        |
+| `0 0,12 * * *`   | Daily at midnight and noon               |
+| `30 4 1,15 * *`  | 04:30 on the 1st and 15th of every month |
 
 ### The `@` shortcuts
 
-| Shortcut | Equivalent |
-|---|---|
-| `@hourly` | `0 * * * *` |
-| `@daily` | `0 0 * * *` |
+| Shortcut    | Equivalent  |
+| ----------- | ----------- |
+| `@hourly`   | `0 * * * *` |
+| `@daily`    | `0 0 * * *` |
 | `@midnight` | `0 0 * * *` |
-| `@weekly` | `0 0 * * 0` |
-| `@monthly` | `0 0 1 * *` |
-| `@yearly` | `0 0 1 1 *` |
+| `@weekly`   | `0 0 * * 0` |
+| `@monthly`  | `0 0 1 * *` |
+| `@yearly`   | `0 0 1 1 *` |
 | `@annually` | `0 0 1 1 *` |
 
 ### Special characters
 
-| Char | Meaning | Example |
-|---|---|---|
-| `*` | Any value | `*` in hour = any hour |
-| `,` | Value list separator | `1,3,5` in day = 1st, 3rd, 5th |
-| `-` | Range | `9-17` in hour = 9 AM to 5 PM |
-| `/` | Step | `*/15` in minute = every 15 min |
-| `?` | No specific value (some implementations) | k8s doesn't support this; use `*` |
+| Char | Meaning                                  | Example                           |
+| ---- | ---------------------------------------- | --------------------------------- |
+| `*`  | Any value                                | `*` in hour = any hour            |
+| `,`  | Value list separator                     | `1,3,5` in day = 1st, 3rd, 5th    |
+| `-`  | Range                                    | `9-17` in hour = 9 AM to 5 PM     |
+| `/`  | Step                                     | `*/15` in minute = every 15 min   |
+| `?`  | No specific value (some implementations) | k8s doesn't support this; use `*` |
 
 ### Two gotchas in cron syntax
 
@@ -284,7 +284,7 @@ Or use a tool like [crontab.guru](https://crontab.guru) for human-readable expla
 
 ```yaml
 spec:
-  schedule: "0 9 * * *"      # 09:00
+  schedule: "0 9 * * *" # 09:00
   timeZone: "America/New_York"
 ```
 
@@ -303,13 +303,13 @@ This breaks during DST transitions. Use `timeZone` to avoid the headache.
 
 `timeZone` accepts any IANA timezone name:
 
-| Region | Timezones |
-|---|---|
+| Region   | Timezones                                                                                           |
+| -------- | --------------------------------------------------------------------------------------------------- |
 | Americas | `America/New_York`, `America/Chicago`, `America/Denver`, `America/Los_Angeles`, `America/Sao_Paulo` |
-| Europe | `Europe/London`, `Europe/Paris`, `Europe/Berlin`, `Europe/Moscow` |
-| Asia | `Asia/Tokyo`, `Asia/Shanghai`, `Asia/Kolkata`, `Asia/Dubai` |
-| Pacific | `Pacific/Auckland`, `Australia/Sydney` |
-| UTC | `Etc/UTC` (alias for UTC, no DST) |
+| Europe   | `Europe/London`, `Europe/Paris`, `Europe/Berlin`, `Europe/Moscow`                                   |
+| Asia     | `Asia/Tokyo`, `Asia/Shanghai`, `Asia/Kolkata`, `Asia/Dubai`                                         |
+| Pacific  | `Pacific/Auckland`, `Australia/Sydney`                                                              |
+| UTC      | `Etc/UTC` (alias for UTC, no DST)                                                                   |
 
 For full list, see the [IANA timezone database](https://www.iana.org/time-zones).
 
@@ -331,25 +331,25 @@ What happens if a Job is still running when the next scheduled time arrives:
 
 ```yaml
 spec:
-  concurrencyPolicy: Forbid     # or Allow or Replace
+  concurrencyPolicy: Forbid # or Allow or Replace
 ```
 
-| Policy | Behavior |
-|---|---|
+| Policy            | Behavior                                                               |
+| ----------------- | ---------------------------------------------------------------------- |
 | `Allow` (default) | Overlapping Jobs are allowed. Multiple instances can run concurrently. |
-| `Forbid` | Skip the new run if the previous one is still active. |
-| `Replace` | Kill the previous Job's Pods and start the new one. |
+| `Forbid`          | Skip the new run if the previous one is still active.                  |
+| `Replace`         | Kill the previous Job's Pods and start the new one.                    |
 
 ### The decision matrix
 
-| Use case | Recommended policy |
-|---|---|
-| **Database backups** | `Forbid` — don't run two backups against the same DB at once |
-| **Log rotation** | `Forbid` — don't double-rotate |
-| **Cache warmer** | `Replace` — you want the latest run |
-| **Metric scrapers** | `Allow` — multiple instances are fine |
-| **Data pipeline (independent runs)** | `Allow` — each run is independent |
-| **Distributed ML training (resume from checkpoint)** | `Forbid` — don't step on the running training |
+| Use case                                             | Recommended policy                                           |
+| ---------------------------------------------------- | ------------------------------------------------------------ |
+| **Database backups**                                 | `Forbid` — don't run two backups against the same DB at once |
+| **Log rotation**                                     | `Forbid` — don't double-rotate                               |
+| **Cache warmer**                                     | `Replace` — you want the latest run                          |
+| **Metric scrapers**                                  | `Allow` — multiple instances are fine                        |
+| **Data pipeline (independent runs)**                 | `Allow` — each run is independent                            |
+| **Distributed ML training (resume from checkpoint)** | `Forbid` — don't step on the running training                |
 
 ### `Forbid` and missed runs
 
@@ -359,11 +359,11 @@ Example: schedule is `0 * * * *` (every hour), `concurrencyPolicy: Forbid`. A ru
 
 ### `Replace` and `Forbid` are not the same
 
-| | `Forbid` | `Replace` |
-|---|---|---|
-| Previous Job still running? | Skip new run | Kill previous, start new |
-| Previous run is preserved? | Yes (continues) | No (terminated) |
-| Use for | Sequential safety | Latest-wins |
+|                             | `Forbid`          | `Replace`                |
+| --------------------------- | ----------------- | ------------------------ |
+| Previous Job still running? | Skip new run      | Kill previous, start new |
+| Previous run is preserved?  | Yes (continues)   | No (terminated)          |
+| Use for                     | Sequential safety | Latest-wins              |
 
 `Replace` is the right policy for "I always want the most recent run" patterns. `Forbid` is the right policy for "don't run two of me at once."
 
@@ -394,12 +394,12 @@ With `startingDeadlineSeconds: 200`, the controller only creates a Job if it's "
 
 ### Choosing the value
 
-| Pattern | Recommended value |
-|---|---|
-| **Every minute** | `60` (only create if within 1 minute) |
-| **Every hour** | `300` (5 minutes) |
-| **Daily at 02:00** | `3600` (1 hour) or more |
-| **Once a month** | `86400` (1 day) |
+| Pattern                     | Recommended value                             |
+| --------------------------- | --------------------------------------------- |
+| **Every minute**            | `60` (only create if within 1 minute)         |
+| **Every hour**              | `300` (5 minutes)                             |
+| **Daily at 02:00**          | `3600` (1 hour) or more                       |
+| **Once a month**            | `86400` (1 day)                               |
 | **Critical hourly backups** | `600` (10 minutes — you want a tighter bound) |
 
 If you set it too high, the controller will queue up many missed runs. If too low, brief controller-manager restarts will drop runs.
@@ -464,8 +464,8 @@ The next scheduled time after resume will trigger a Job.
 
 ```yaml
 spec:
-  successfulJobsHistoryLimit: 3     # keep 3 most recent successful Jobs
-  failedJobsHistoryLimit: 1         # keep 1 most recent failed Job
+  successfulJobsHistoryLimit: 3 # keep 3 most recent successful Jobs
+  failedJobsHistoryLimit: 1 # keep 1 most recent failed Job
 ```
 
 Default: 3 and 1.
@@ -532,10 +532,10 @@ The Job's `ownerReference` points to the CronJob, so when the CronJob is deleted
 ```yaml
 status:
   active:
-  - apiVersion: batch/v1
-    kind: Job
-    name: db-backup-1700000000
-    namespace: batch
+    - apiVersion: batch/v1
+      kind: Job
+      name: db-backup-1700000000
+      namespace: batch
   lastScheduleTime: "2025-05-24T02:00:00Z"
   lastSuccessfulTime: "2025-05-24T02:00:30Z"
 ```
@@ -559,34 +559,34 @@ spec:
   schedule: "0 2 * * *"
   timeZone: "Etc/UTC"
   startingDeadlineSeconds: 600
-  concurrencyPolicy: Forbid        # don't run two backups at once
-  successfulJobsHistoryLimit: 7    # keep a week of successful backups
-  failedJobsHistoryLimit: 3        # keep 3 failures for debugging
+  concurrencyPolicy: Forbid # don't run two backups at once
+  successfulJobsHistoryLimit: 7 # keep a week of successful backups
+  failedJobsHistoryLimit: 3 # keep 3 failures for debugging
   jobTemplate:
     spec:
-      backoffLimit: 1              # don't retry failed backups
-      activeDeadlineSeconds: 3600  # 1 hour max
-      ttlSecondsAfterFinished: 604800  # delete Job after 7 days
+      backoffLimit: 1 # don't retry failed backups
+      activeDeadlineSeconds: 3600 # 1 hour max
+      ttlSecondsAfterFinished: 604800 # delete Job after 7 days
       template:
         spec:
           restartPolicy: OnFailure
           serviceAccountName: backup-runner
           containers:
-          - name: backup
-            image: myorg/backup:2.1
-            command: ["./backup.sh"]
-            env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: db-credentials
-                  key: url
-            - name: BACKUP_BUCKET
-              value: s3://myorg-db-backups/
-            resources:
-              requests:
-                cpu: 500m
-                memory: 512Mi
+            - name: backup
+              image: myorg/backup:2.1
+              command: ["./backup.sh"]
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: db-credentials
+                      key: url
+                - name: BACKUP_BUCKET
+                  value: s3://myorg-db-backups/
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 512Mi
 ```
 
 ### Pattern 2: Cleanup job every hour
@@ -597,7 +597,7 @@ kind: CronJob
 metadata:
   name: cleanup-stale-data
 spec:
-  schedule: "0 * * * *"           # top of every hour
+  schedule: "0 * * * *" # top of every hour
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
@@ -608,9 +608,9 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-          - name: cleanup
-            image: myorg/cleanup:1.0
-            command: ["./cleanup", "--older-than=24h"]
+            - name: cleanup
+              image: myorg/cleanup:1.0
+              command: ["./cleanup", "--older-than=24h"]
 ```
 
 ### Pattern 3: ML training every Sunday at midnight
@@ -621,29 +621,29 @@ kind: CronJob
 metadata:
   name: weekly-train
 spec:
-  schedule: "0 0 * * 0"            # Sunday midnight UTC
+  schedule: "0 0 * * 0" # Sunday midnight UTC
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 3600
   jobTemplate:
     spec:
-      backoffLimit: 0              # no retries
-      activeDeadlineSeconds: 21600  # 6 hours
+      backoffLimit: 0 # no retries
+      activeDeadlineSeconds: 21600 # 6 hours
       template:
         spec:
           restartPolicy: OnFailure
           containers:
-          - name: train
-            image: myorg/trainer:3.0
-            command: ["./train", "--epochs=100"]
-            resources:
-              requests:
-                nvidia.com/gpu: 1
-                cpu: 4
-                memory: 16Gi
-              limits:
-                nvidia.com/gpu: 1
-                cpu: 8
-                memory: 32Gi
+            - name: train
+              image: myorg/trainer:3.0
+              command: ["./train", "--epochs=100"]
+              resources:
+                requests:
+                  nvidia.com/gpu: 1
+                  cpu: 4
+                  memory: 16Gi
+                limits:
+                  nvidia.com/gpu: 1
+                  cpu: 8
+                  memory: 32Gi
 ```
 
 ### Pattern 4: Cache warmer every 10 minutes (Replace)
@@ -655,7 +655,7 @@ metadata:
   name: cache-warmer
 spec:
   schedule: "*/10 * * * *"
-  concurrencyPolicy: Replace      # always want the latest run
+  concurrencyPolicy: Replace # always want the latest run
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
@@ -665,9 +665,9 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-          - name: warmer
-            image: myorg/warmer:1.0
-            command: ["./warm"]
+            - name: warmer
+              image: myorg/warmer:1.0
+              command: ["./warm"]
 ```
 
 ### Pattern 5: Heartbeat / canary (every minute, Allow)
@@ -679,8 +679,8 @@ metadata:
   name: heartbeat
 spec:
   schedule: "* * * * *"
-  concurrencyPolicy: Allow         # many can run concurrently; cheap
-  successfulJobsHistoryLimit: 0    # no history needed
+  concurrencyPolicy: Allow # many can run concurrently; cheap
+  successfulJobsHistoryLimit: 0 # no history needed
   failedJobsHistoryLimit: 1
   startingDeadlineSeconds: 60
   jobTemplate:
@@ -690,16 +690,16 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-          - name: heartbeat
-            image: myorg/heartbeat:1.0
-            command: ["./send-heartbeat"]
-            resources:
-              requests:
-                cpu: 10m
-                memory: 32Mi
-              limits:
-                cpu: 100m
-                memory: 64Mi
+            - name: heartbeat
+              image: myorg/heartbeat:1.0
+              command: ["./send-heartbeat"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
 ```
 
 ### Pattern 6: Email digest every weekday at 8 AM
@@ -710,7 +710,7 @@ kind: CronJob
 metadata:
   name: daily-digest
 spec:
-  schedule: "0 8 * * 1-5"          # 8 AM, Mon-Fri
+  schedule: "0 8 * * 1-5" # 8 AM, Mon-Fri
   timeZone: "America/New_York"
   concurrencyPolicy: Forbid
   jobTemplate:
@@ -720,9 +720,9 @@ spec:
         spec:
           restartPolicy: OnFailure
           containers:
-          - name: digest
-            image: myorg/digest:1.0
-            command: ["./send-digest"]
+            - name: digest
+              image: myorg/digest:1.0
+              command: ["./send-digest"]
 ```
 
 ---
@@ -1021,12 +1021,12 @@ This is fine if `concurrencyPolicy: Allow`. With `Forbid` or `Replace`, the cont
 
 ## 14. Related Notes
 
-| Topic | Note |
-|---|---|
-| Jobs (what CronJob creates) | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]] |
-| Pods (what Jobs run) | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]] |
-| Deployment (long-running) | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]] |
-| Init containers (run before app) | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]] |
-| Resource requests and limits | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
-| Taints and tolerations | [[Kubernetes/concepts/L06-scheduling-scaling\|L06 — Scheduling and Scaling]] |
-| Garbage collection (TTL, history) | [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|L09 — Garbage Collection]] |
+| Topic                             | Note                                                                                                           |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Jobs (what CronJob creates)       | [[Kubernetes/concepts/L03-workloads/06-job\|06 — Job]]                                                         |
+| Pods (what Jobs run)              | [[Kubernetes/concepts/L03-workloads/01-pods\|01 — Pods]]                                                       |
+| Deployment (long-running)         | [[Kubernetes/concepts/L03-workloads/03-deployments\|03 — Deployments]]                                         |
+| Init containers (run before app)  | [[Kubernetes/concepts/L03-workloads/08-init-containers\|08 — Init Containers]]                                 |
+| Resource requests and limits      | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
+| Taints and tolerations            | [[Kubernetes/concepts/L06-scheduling-scaling/00-README\|L06 — Scheduling and Scaling]]                         |
+| Garbage collection (TTL, history) | [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|L09 — Garbage Collection]]                           |

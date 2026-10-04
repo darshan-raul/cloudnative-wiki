@@ -100,6 +100,7 @@ aws appsync create-data-source \
 ### Resolver (VTL Template)
 
 **Query - getOrder:**
+
 ```vtl
 ## request
 {
@@ -119,6 +120,7 @@ aws appsync create-data-source \
 ```
 
 **Query - listOrders (Paginated):**
+
 ```vtl
 ## request
 {
@@ -142,6 +144,7 @@ aws appsync create-data-source \
 ```
 
 **Mutation - createOrder (with auto-ID and timestamp):**
+
 ```vtl
 ## request
 #set($orderId = $util.autoId())
@@ -169,11 +172,11 @@ $util.toJson($ctx.result)
 def handler(event, context):
     # event['arguments'] = query/mutation arguments
     # event['identity'] = caller info (Cognito, API key, etc.)
-    
+
     if event['info']['fieldName'] == 'recommendProducts':
         customer_id = event['arguments']['customerId']
         return get_recommendations(customer_id)
-    
+
     return None
 ```
 
@@ -232,21 +235,21 @@ type Mutation {
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Queries | $0.004/million reads |
-| Mutations | $0.008/million writes |
+| Component               | Cost                   |
+| ----------------------- | ---------------------- |
+| Queries                 | $0.004/million reads   |
+| Mutations               | $0.008/million writes  |
 | Real-time subscriptions | $0.008/million minutes |
-| Data transfer | Standard EC2 rates |
+| Data transfer           | Standard EC2 rates     |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| API per region | 25 |
-| Schema size | 600KB |
-| Resolver timeout | 30 seconds |
-| Lambda resolver memory | 10240MB |
+| Resource               | Limit      |
+| ---------------------- | ---------- |
+| API per region         | 25         |
+| Schema size            | 600KB      |
+| Resolver timeout       | 30 seconds |
+| Lambda resolver memory | 10240MB    |
 
 ## References
 

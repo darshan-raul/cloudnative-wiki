@@ -1,6 +1,13 @@
+---
+title: "Scheduling (Taints, Tolerations, Affinity, Topology)"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "Scheduling (Taints, Tolerations, Affinity, Topology) — Kubernetes reference and architecture guide."
+---
+
 # Scheduling (Taints, Tolerations, Affinity, Topology)
 
-*"https://kubernetes.io/docs/concepts/scheduling-eviction/"*
+_"https://kubernetes.io/docs/concepts/scheduling-eviction/"_
 
 The kube-scheduler decides **which node a Pod runs on**. By default, it picks anything with enough resources. When you need to constrain that — keep Pods off certain nodes, group them together, spread them out — you use the scheduling primitives below. The scheduler is a **plugin pipeline** (Filter → Score → Reserve → Permit → Bind) — see [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] for the framework details.
 
@@ -44,12 +51,12 @@ The scheduler is **not a daemon**. It runs as a Deployment. Pods are evaluated w
 
 ## 2. The Four Node Selection Primitives
 
-| Primitive | Direction | What's selected |
-|---|---|---|
-| `nodeSelector` | Hard, simple | Nodes matching labels |
-| `nodeAffinity` | Hard or soft | Nodes matching labels (richer expressions) |
-| `podAffinity` | Hard or soft | Nodes where matching Pods are running |
-| `podAntiAffinity` | Hard or soft | Nodes where matching Pods are NOT running |
+| Primitive         | Direction    | What's selected                            |
+| ----------------- | ------------ | ------------------------------------------ |
+| `nodeSelector`    | Hard, simple | Nodes matching labels                      |
+| `nodeAffinity`    | Hard or soft | Nodes matching labels (richer expressions) |
+| `podAffinity`     | Hard or soft | Nodes where matching Pods are running      |
+| `podAntiAffinity` | Hard or soft | Nodes where matching Pods are NOT running  |
 
 Plus **taints and tolerations** (repel Pods) and **topology spread constraints** (spread across domains).
 
@@ -75,15 +82,15 @@ The `nodeSelector` is the simplest primitive. It's hard (no soft version) and su
 
 Every node has well-known labels set by the kubelet / cloud provider:
 
-| Label | Example value | Meaning |
-|---|---|---|
-| `kubernetes.io/hostname` | `ip-10-0-1-5.ec2.internal` | The node's hostname |
-| `kubernetes.io/os` | `linux` / `windows` | The OS |
-| `kubernetes.io/arch` | `amd64` / `arm64` | The architecture |
-| `topology.kubernetes.io/zone` | `us-east-1a` | The AZ (cloud) |
-| `topology.kubernetes.io/region` | `us-east-1` | The region (cloud) |
-| `node.kubernetes.io/instance-type` | `m5.large` | The instance type (cloud) |
-| `kubernetes.io/role` | `control-plane` / `worker` | Node role (if set) |
+| Label                              | Example value              | Meaning                   |
+| ---------------------------------- | -------------------------- | ------------------------- |
+| `kubernetes.io/hostname`           | `ip-10-0-1-5.ec2.internal` | The node's hostname       |
+| `kubernetes.io/os`                 | `linux` / `windows`        | The OS                    |
+| `kubernetes.io/arch`               | `amd64` / `arm64`          | The architecture          |
+| `topology.kubernetes.io/zone`      | `us-east-1a`               | The AZ (cloud)            |
+| `topology.kubernetes.io/region`    | `us-east-1`                | The region (cloud)        |
+| `node.kubernetes.io/instance-type` | `m5.large`                 | The instance type (cloud) |
+| `kubernetes.io/role`               | `control-plane` / `worker` | Node role (if set)        |
 
 You can use any of these in a `nodeSelector`.
 
@@ -95,32 +102,32 @@ spec:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
-        - matchExpressions:
-          - key: topology.kubernetes.io/zone
-            operator: In
-            values: ["us-east-1a", "us-east-1b"]
-        - matchExpressions:
-          - key: kubernetes.io/arch
-            operator: In
-            values: ["arm64"]
+          - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values: ["us-east-1a", "us-east-1b"]
+          - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values: ["arm64"]
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 80
-        preference:
-          matchExpressions:
-          - key: gpu
-            operator: Exists
-      - weight: 20
-        preference:
-          matchExpressions:
-          - key: disktype
-            operator: In
-            values: ["nvme"]
+        - weight: 80
+          preference:
+            matchExpressions:
+              - key: gpu
+                operator: Exists
+        - weight: 20
+          preference:
+            matchExpressions:
+              - key: disktype
+                operator: In
+                values: ["nvme"]
 ```
 
 ### 4.1 Required vs preferred
 
-* **`requiredDuringSchedulingIgnoredDuringExecution`** — hard constraint. The Pod won't schedule if no node matches.
-* **`preferredDuringSchedulingIgnoredDuringExecution`** — soft preference. The scheduler scores nodes higher for matching, but doesn't block non-matching.
+- **`requiredDuringSchedulingIgnoredDuringExecution`** — hard constraint. The Pod won't schedule if no node matches.
+- **`preferredDuringSchedulingIgnoredDuringExecution`** — soft preference. The scheduler scores nodes higher for matching, but doesn't block non-matching.
 
 You can have both. The Pod is scheduled only if required is satisfied, but is preferred to match the soft rules.
 
@@ -130,8 +137,8 @@ You can have both. The Pod is scheduled only if required is satisfied, but is pr
 
 ```yaml
 nodeSelectorTerms:
-- matchExpressions: [...]     # term 1
-- matchExpressions: [...]     # term 2
+  - matchExpressions: [...] # term 1
+  - matchExpressions: [...] # term 2
 ```
 
 The Pod schedules on a node if term 1 matches OR term 2 matches. **Within a term, all expressions must match** (AND).
@@ -144,14 +151,14 @@ match: (zone=a AND arch=amd64) OR arch=arm64
 
 ### 4.3 Operators
 
-| Operator | Matches when |
-|---|---|
-| `In` | Value is in the list |
-| `NotIn` | Value is not in the list |
-| `Exists` | Label key exists (any value) |
-| `DoesNotExist` | Label key does not exist |
-| `Gt` | Label value is greater than (numeric) |
-| `Lt` | Label value is less than (numeric) |
+| Operator       | Matches when                          |
+| -------------- | ------------------------------------- |
+| `In`           | Value is in the list                  |
+| `NotIn`        | Value is not in the list              |
+| `Exists`       | Label key exists (any value)          |
+| `DoesNotExist` | Label key does not exist              |
+| `Gt`           | Label value is greater than (numeric) |
+| `Lt`           | Label value is less than (numeric)    |
 
 `In` and `NotIn` take a list. `Exists` and `DoesNotExist` don't. `Gt` and `Lt` are for numeric labels (e.g. node CPU count, GPU memory).
 
@@ -179,11 +186,11 @@ spec:
   affinity:
     podAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchLabels:
-            app: cache
-        topologyKey: kubernetes.io/hostname
-        namespaces: ["prod", "staging"]    # optional
+        - labelSelector:
+            matchLabels:
+              app: cache
+          topologyKey: kubernetes.io/hostname
+          namespaces: ["prod", "staging"] # optional
 ```
 
 Schedule the Pod on a node where a Pod with `app=cache` is **already running**.
@@ -197,17 +204,17 @@ spec:
   affinity:
     podAntiAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchLabels:
-            app: web
-        topologyKey: kubernetes.io/hostname
+        - labelSelector:
+            matchLabels:
+              app: web
+          topologyKey: kubernetes.io/hostname
 ```
 
 Schedule the Pod on a node where NO Pod with `app=web` is running. **Spreads replicas of the same Deployment across nodes.**
 
 ### 5.3 The performance cost
 
-The scheduler **lists all Pods in the cluster** (or the specified namespaces) and checks the affinity label on each. This is O(n*m) — for every Pod, every node, every existing Pod. The scheduler caches Pod state, but the cache is invalidated frequently.
+The scheduler **lists all Pods in the cluster** (or the specified namespaces) and checks the affinity label on each. This is O(n\*m) — for every Pod, every node, every existing Pod. The scheduler caches Pod state, but the cache is invalidated frequently.
 
 **At 1000+ nodes and 10,000+ Pods, the scheduler gets slow.** This is why `topologySpreadConstraints` is preferred for "spread evenly" use cases — it's much more efficient.
 
@@ -216,12 +223,12 @@ The scheduler **lists all Pods in the cluster** (or the specified namespaces) an
 ```yaml
 podAffinity:
   preferredDuringSchedulingIgnoredDuringExecution:
-  - weight: 50
-    podAffinityTerm:
-      labelSelector:
-        matchLabels:
-          app: cache
-      topologyKey: kubernetes.io/hostname
+    - weight: 50
+      podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            app: cache
+        topologyKey: kubernetes.io/hostname
 ```
 
 A soft version. The scheduler scores nodes higher if the affinity is satisfied, but doesn't block non-matching.
@@ -248,28 +255,28 @@ kubectl taint nodes node1 special=true:NoSchedule
 
 Three effects:
 
-* **`NoSchedule`** — Pods without the toleration won't be scheduled. Existing Pods unaffected.
-* **`PreferNoSchedule`** — soft version. The scheduler tries to avoid, but schedules if necessary.
-* **`NoExecute`** — Pods without the toleration are **evicted**. Existing Pods are killed.
+- **`NoSchedule`** — Pods without the toleration won't be scheduled. Existing Pods unaffected.
+- **`PreferNoSchedule`** — soft version. The scheduler tries to avoid, but schedules if necessary.
+- **`NoExecute`** — Pods without the toleration are **evicted**. Existing Pods are killed.
 
 ### 6.2 Tolerate the taint
 
 ```yaml
 spec:
   tolerations:
-  - key: special
-    operator: Equal
-    value: "true"
-    effect: NoSchedule
+    - key: special
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
 ```
 
 The toleration matches the taint. The Pod is now allowed to be scheduled on the tainted node.
 
 ### 6.3 Toleration operators
 
-| Operator | Matches when |
-|---|---|
-| `Equal` | `key`, `value`, and `effect` all match |
+| Operator | Matches when                                  |
+| -------- | --------------------------------------------- |
+| `Equal`  | `key`, `value`, and `effect` all match        |
 | `Exists` | `key` and `effect` match; `value` is not used |
 
 `Exists` is more permissive — match the key and effect, regardless of value.
@@ -285,10 +292,10 @@ The toleration matches the taint. The Pod is now allowed to be scheduled on the 
 
 ```yaml
 tolerations:
-- key: node.kubernetes.io/unreachable
-  operator: Exists
-  effect: NoExecute
-  tolerationSeconds: 300    # tolerate the taint for 5 min before being evicted
+  - key: node.kubernetes.io/unreachable
+    operator: Exists
+    effect: NoExecute
+    tolerationSeconds: 300 # tolerate the taint for 5 min before being evicted
 ```
 
 Used for **node-level taints** that mark a node as NotReady / unreachable. The Pod tolerates for `tolerationSeconds`, then is evicted if the node is still in that state.
@@ -299,12 +306,12 @@ This is the standard pattern for giving Pods time to drain to a new node when th
 
 The kubelet / cloud-controller adds some taints automatically:
 
-* `node.kubernetes.io/not-ready` — node is NotReady. Removed when ready.
-* `node.kubernetes.io/unreachable` — node is unreachable. Removed when reachable.
-* `node.kubernetes.io/unschedulable` — node is cordoned. Removed when uncordoned.
-* `node.kubernetes.io/memory-pressure` — node is under memory pressure. (Actually, this is a node condition, not a taint — the scheduler considers it for filtering but doesn't add a taint.)
-* `node.kubernetes.io/disk-pressure` — same.
-* `node.kubernetes.io/pid-pressure` — same.
+- `node.kubernetes.io/not-ready` — node is NotReady. Removed when ready.
+- `node.kubernetes.io/unreachable` — node is unreachable. Removed when reachable.
+- `node.kubernetes.io/unschedulable` — node is cordoned. Removed when uncordoned.
+- `node.kubernetes.io/memory-pressure` — node is under memory pressure. (Actually, this is a node condition, not a taint — the scheduler considers it for filtering but doesn't add a taint.)
+- `node.kubernetes.io/disk-pressure` — same.
+- `node.kubernetes.io/pid-pressure` — same.
 
 **The standard `tolerationSeconds: 300` on `not-ready` and `unreachable`** is what gives Pods time to be rescheduled before being killed. Without it, the Pods die as soon as the node goes NotReady.
 
@@ -332,9 +339,9 @@ GPU Pods tolerate:
 
 ```yaml
 tolerations:
-- key: nvidia.com/gpu
-  operator: Exists
-  effect: NoSchedule
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
 ```
 
 Non-GPU Pods (without the toleration) are not scheduled on GPU nodes. **The GPU node is dedicated.**
@@ -346,18 +353,18 @@ The modern way to spread Pods across failure domains.
 ```yaml
 spec:
   topologySpreadConstraints:
-  - maxSkew: 1
-    topologyKey: topology.kubernetes.io/zone
-    whenUnsatisfiable: DoNotSchedule
-    labelSelector:
-      matchLabels:
-        app: web
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app: web
 ```
 
-* **`maxSkew: 1`** — at most 1 more Pod in any domain than the average.
-* **`topologyKey`** — the node label that defines a domain.
-* **`whenUnsatisfiable: DoNotSchedule`** — hard constraint, vs `ScheduleAnyway` (soft).
-* **`labelSelector`** — which Pods to count (the Deployment's Pods).
+- **`maxSkew: 1`** — at most 1 more Pod in any domain than the average.
+- **`topologyKey`** — the node label that defines a domain.
+- **`whenUnsatisfiable: DoNotSchedule`** — hard constraint, vs `ScheduleAnyway` (soft).
+- **`labelSelector`** — which Pods to count (the Deployment's Pods).
 
 ### 7.1 The algorithm
 
@@ -374,9 +381,9 @@ For each domain D (defined by topologyKey):
 
 `podAntiAffinity` with `topologyKey: kubernetes.io/hostname` does the same thing. But:
 
-* `podAntiAffinity` is O(n) per node (lists all matching Pods).
-* `topologySpreadConstraints` is O(1) per node (counts via the scheduler's cache).
-* Topology spread has cleaner semantics (`maxSkew` is explicit).
+- `podAntiAffinity` is O(n) per node (lists all matching Pods).
+- `topologySpreadConstraints` is O(1) per node (counts via the scheduler's cache).
+- Topology spread has cleaner semantics (`maxSkew` is explicit).
 
 For "spread replicas of a Deployment across nodes", use topology spread. For "I want my Pod near a specific other Pod", use pod affinity.
 
@@ -405,8 +412,8 @@ topologySpreadConstraints:
     nodeTaintsPolicy: Honor        # ignore tainted nodes
 ```
 
-* `Honor` (default) — the constraint respects the Pod's other constraints (affinity, taints).
-* `Ignore` — the constraint counts Pods on all nodes, including those the Pod wouldn't otherwise land on.
+- `Honor` (default) — the constraint respects the Pod's other constraints (affinity, taints).
+- `Ignore` — the constraint counts Pods on all nodes, including those the Pod wouldn't otherwise land on.
 
 `Honor` is the standard. `Ignore` is for advanced cases.
 
@@ -423,9 +430,9 @@ The Pod is scheduled on `node-1` directly. The scheduler's `NodeName` plugin fil
 
 Used by:
 
-* **DaemonSets** (kubelet creates Pods with nodeName set).
-* **Custom controllers** that pick the node themselves.
-* **Debugging** — force a Pod to a specific node.
+- **DaemonSets** (kubelet creates Pods with nodeName set).
+- **Custom controllers** that pick the node themselves.
+- **Debugging** — force a Pod to a specific node.
 
 **`nodeName` overrides the scheduler.** If `node-1` doesn't have enough resources, the Pod stays Pending. The scheduler doesn't try to fit it elsewhere.
 
@@ -447,16 +454,16 @@ A `KubeSchedulerConfiguration` can define multiple profiles:
 apiVersion: kubescheduler.config.k8s.io/v1beta3
 kind: KubeSchedulerConfiguration
 profiles:
-- schedulerName: default-scheduler
-  plugins:
-    score:
-      enabled:
-      - name: NodeResourcesBalancedAllocation
-- schedulerName: batch-scheduler
-  plugins:
-    score:
-      enabled:
-      - name: NodeResourcesMostAllocated
+  - schedulerName: default-scheduler
+    plugins:
+      score:
+        enabled:
+          - name: NodeResourcesBalancedAllocation
+  - schedulerName: batch-scheduler
+    plugins:
+      score:
+        enabled:
+          - name: NodeResourcesMostAllocated
 ```
 
 Pods use a profile via `spec.schedulerName`. See [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] for the full picture.
@@ -467,16 +474,16 @@ The suffix is everywhere: `requiredDuringSchedulingIgnoredDuringExecution`, `pre
 
 Once a Pod is scheduled, the scheduler doesn't re-evaluate:
 
-* Node label changes.
-* Pods moving between nodes.
-* Taint changes.
+- Node label changes.
+- Pods moving between nodes.
+- Taint changes.
 
 **If the cluster state changes after a Pod is scheduled, the Pod is not evicted to satisfy the new state.**
 
 This is a real footgun:
 
-* A Pod scheduled to "us-east-1a" with `zone: [a, b]` affinity stays in `us-east-1a` even if all other Pods in the Deployment move to `us-east-1b`.
-* A Pod scheduled to a "ssd" node stays on that node even if you remove the `disktype=ssd` label.
+- A Pod scheduled to "us-east-1a" with `zone: [a, b]` affinity stays in `us-east-1a` even if all other Pods in the Deployment move to `us-east-1b`.
+- A Pod scheduled to a "ssd" node stays on that node even if you remove the `disktype=ssd` label.
 
 If you want **steady-state enforcement**, use a different mechanism (e.g. an operator that reconciles). Affinity is a scheduling hint, not a steady-state constraint.
 
@@ -498,11 +505,11 @@ A key perf tuning. The default is to score **all** nodes that pass the filter. W
 
 ```yaml
 pluginConfig:
-- name: PercentageOfNodesToScore
-  args:
-    apiVersion: kubescheduler.config.k8s.io/v1beta3
-    kind: PercentageOfNodesToScoreArgs
-    percentageOfNodesToScore: 50
+  - name: PercentageOfNodesToScore
+    args:
+      apiVersion: kubescheduler.config.k8s.io/v1beta3
+      kind: PercentageOfNodesToScoreArgs
+      percentageOfNodesToScore: 50
 ```
 
 The scheduler picks a random 50% of nodes and scores only those. **The best node is in the 50% with high probability, but the scheduler is 2x faster.** For most clusters, 50% is a good default.
@@ -513,30 +520,30 @@ The scheduler's filter phase runs in **parallel across nodes**. The default is 1
 
 Each filter plugin can return:
 
-* `nil` — node is fine.
-* `Unschedulable` — node can't run the Pod (filter it out).
-* `UnschedulableAndUnresolvable` — same, plus don't try to preempt on this node.
-* `Wait` — wait for the plugin's condition to clear (e.g. PVC binding).
+- `nil` — node is fine.
+- `Unschedulable` — node can't run the Pod (filter it out).
+- `UnschedulableAndUnresolvable` — same, plus don't try to preempt on this node.
+- `Wait` — wait for the plugin's condition to clear (e.g. PVC binding).
 
 If **any** plugin returns Unschedulable, the node is dropped.
 
 ### 12.1 The 16 default filter plugins
 
-| Plugin | What it filters |
-|---|---|
-| `NodeUnschedulable` | Cordoned nodes |
-| `NodeName` | Nodes not matching `spec.nodeName` |
-| `NodeAffinity` | Nodes not matching `nodeAffinity` |
-| `NodeResourcesFit` | Nodes without enough CPU/memory/extended resources |
-| `NodePorts` | Nodes without the requested `hostPort` |
-| `NodeVolumeLimits` | Nodes at the per-CSI-driver volume count |
-| `TaintToleration` | Nodes with taints the Pod doesn't tolerate |
-| `EBSLimits`, `GCEPDLimits`, `AzureDiskLimits`, `CinderLimits` | Per-cloud volume count |
-| `MaxCSIVolumeCountPerNode`, `MaxEBSVolumeCountPerNode`, etc. | Max CSI / EBS / GCE PD / Azure Disk / Cinder volume counts |
-| `PodTopologySpread` | Nodes violating topology spread (DoNotSchedule) |
-| `InterPodAffinity` | Nodes violating pod affinity / anti-affinity (required) |
-| `VolumeBinding` | Nodes where the Pod's PVCs can't bind |
-| `VolumeRestrictions` | Nodes with restricted volumes (e.g. FUSE) |
+| Plugin                                                        | What it filters                                            |
+| ------------------------------------------------------------- | ---------------------------------------------------------- |
+| `NodeUnschedulable`                                           | Cordoned nodes                                             |
+| `NodeName`                                                    | Nodes not matching `spec.nodeName`                         |
+| `NodeAffinity`                                                | Nodes not matching `nodeAffinity`                          |
+| `NodeResourcesFit`                                            | Nodes without enough CPU/memory/extended resources         |
+| `NodePorts`                                                   | Nodes without the requested `hostPort`                     |
+| `NodeVolumeLimits`                                            | Nodes at the per-CSI-driver volume count                   |
+| `TaintToleration`                                             | Nodes with taints the Pod doesn't tolerate                 |
+| `EBSLimits`, `GCEPDLimits`, `AzureDiskLimits`, `CinderLimits` | Per-cloud volume count                                     |
+| `MaxCSIVolumeCountPerNode`, `MaxEBSVolumeCountPerNode`, etc.  | Max CSI / EBS / GCE PD / Azure Disk / Cinder volume counts |
+| `PodTopologySpread`                                           | Nodes violating topology spread (DoNotSchedule)            |
+| `InterPodAffinity`                                            | Nodes violating pod affinity / anti-affinity (required)    |
+| `VolumeBinding`                                               | Nodes where the Pod's PVCs can't bind                      |
+| `VolumeRestrictions`                                          | Nodes with restricted volumes (e.g. FUSE)                  |
 
 Most filters are fast. `InterPodAffinity` is the slow one at scale.
 
@@ -573,9 +580,9 @@ Replicas of `web` are spread evenly across zones. Lose a zone, lose 1/3 of repli
 nodeSelector:
   accelerator: nvidia-tesla-a100
 tolerations:
-- key: nvidia.com/gpu
-  operator: Exists
-  effect: NoSchedule
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
 ```
 
 Only A100 nodes, with a GPU toleration.
@@ -585,12 +592,12 @@ Only A100 nodes, with a GPU toleration.
 ```yaml
 podAntiAffinity:
   preferredDuringSchedulingIgnoredDuringExecution:
-  - weight: 100
-    podAffinityTerm:
-      labelSelector:
-        matchLabels:
-          app: my-cache
-      topologyKey: kubernetes.io/hostname
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchLabels:
+            app: my-cache
+        topologyKey: kubernetes.io/hostname
 ```
 
 Try to keep the cache's replicas on different nodes. **This is `podAntiAffinity` with `topologyKey: hostname`** — same as spreading.
@@ -605,10 +612,10 @@ kubectl taint nodes -l dedicated=general dedicated=general:NoSchedule
 ```yaml
 # Pod tolerates the pool
 tolerations:
-- key: dedicated
-  operator: Equal
-  value: general
-  effect: NoSchedule
+  - key: dedicated
+    operator: Equal
+    value: general
+    effect: NoSchedule
 ```
 
 ## 14. Operations and Debugging
@@ -743,7 +750,7 @@ kubectl get nodes -l <key>=<value>    # candidates
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — preemption when filter yields 0 nodes
-* [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the plugin pipeline
-* [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] — holding Pods back from scheduling
-* [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — what scheduling decisions affect (Service routing)
+- [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — preemption when filter yields 0 nodes
+- [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the plugin pipeline
+- [[Kubernetes/concepts/L06-scheduling-scaling/13-scheduling-gates|Scheduling Gates]] — holding Pods back from scheduling
+- [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — what scheduling decisions affect (Service routing)

@@ -8,9 +8,9 @@ Below is an overview of **dnsmasq**, a lightweight DNS forwarder and DHCP server
 
 ### What Is dnsmasq?
 
-* **Definition**: dnsmasq is a lightweight DNS, DHCP, TFTP, PXE and router-advertisement server designed for small networks. It combines multiple networking services in one daemon to simplify configuration and reduce resource usage ([The Kelleys](https://thekelleys.org.uk/dnsmasq/doc.html?utm_source=chatgpt.com)).
-* **Origins & Licensing**: Created by Simon Kelley in 2001, dnsmasq is written in C and released under the GNU GPL v2 or v3 ([Wikipedia](https://en.wikipedia.org/wiki/Dnsmasq?utm_source=chatgpt.com)).
-* **Use Cases**: Commonly embedded in home-router firmware, IoT gateways, smartphones for tethering, virtual-network bridges, and small office/home office environments ([The Kelleys](https://thekelleys.org.uk/dnsmasq/doc.html?utm_source=chatgpt.com)).
+- **Definition**: dnsmasq is a lightweight DNS, DHCP, TFTP, PXE and router-advertisement server designed for small networks. It combines multiple networking services in one daemon to simplify configuration and reduce resource usage ([The Kelleys](https://thekelleys.org.uk/dnsmasq/doc.html?utm_source=chatgpt.com)).
+- **Origins & Licensing**: Created by Simon Kelley in 2001, dnsmasq is written in C and released under the GNU GPL v2 or v3 ([Wikipedia](https://en.wikipedia.org/wiki/Dnsmasq?utm_source=chatgpt.com)).
+- **Use Cases**: Commonly embedded in home-router firmware, IoT gateways, smartphones for tethering, virtual-network bridges, and small office/home office environments ([The Kelleys](https://thekelleys.org.uk/dnsmasq/doc.html?utm_source=chatgpt.com)).
 
 ### Key Features
 
@@ -136,9 +136,9 @@ Place PXELINUX files under `/srv/tftp`; on network boot, clients receive IP via 
 
 ### Troubleshooting & Tips
 
-* **DNS Not Resolving**: Ensure `/etc/resolv.conf` points to 127.0.0.1 after starting dnsmasq; check `systemctl status dnsmasq` for errors ([Arch Linux Forums](https://bbs.archlinux.org/viewtopic.php?id=284300\&utm_source=chatgpt.com)).
-* **Permission Denied**: If binding to low-numbered ports (<1024), dnsmasq must run as root or you must grant capabilities (`cap_net_bind_service`) ([The Kelleys](https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html?utm_source=chatgpt.com)).
-* **Interference with NetworkManager**: NetworkManager can manage its own dnsmasq instance; disable one or the other to avoid conflicts ([YouTube](https://www.youtube.com/watch?v=n2eajB9Qsws\&utm_source=chatgpt.com)).
+- **DNS Not Resolving**: Ensure `/etc/resolv.conf` points to 127.0.0.1 after starting dnsmasq; check `systemctl status dnsmasq` for errors ([Arch Linux Forums](https://bbs.archlinux.org/viewtopic.php?id=284300&utm_source=chatgpt.com)).
+- **Permission Denied**: If binding to low-numbered ports (<1024), dnsmasq must run as root or you must grant capabilities (`cap_net_bind_service`) ([The Kelleys](https://thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html?utm_source=chatgpt.com)).
+- **Interference with NetworkManager**: NetworkManager can manage its own dnsmasq instance; disable one or the other to avoid conflicts ([YouTube](https://www.youtube.com/watch?v=n2eajB9Qsws&utm_source=chatgpt.com)).
 
 ### Conclusion
 

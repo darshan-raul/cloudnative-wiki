@@ -59,15 +59,15 @@ Unlike 1st Gen functions (which ran on legacy App Engine infrastructure), 2nd Ge
 
 ## 1st Gen vs. 2nd Gen Comparison
 
-| Architectural Dimension | 1st Gen Functions (Legacy) | 2nd Gen Functions (Modern Standard) |
-| :--- | :--- | :--- |
-| **Underlying Infrastructure**| App Engine internal runtime | **Google Cloud Run** |
-| **Event Routing Engine** | Legacy proprietary event broker | **Eventarc (CNCF CloudEvents v1.0)** |
-| **Concurrency per Instance** | Strictly **1 request at a time** | **Up to 1,000 concurrent requests** |
-| **Max Request Timeout** | 9 minutes (540 seconds) | **60 minutes (3,600s)** for HTTP |
-| **Max Memory & CPU** | 8 GiB RAM / 2 vCPUs | **32 GiB RAM / 8 vCPUs** |
-| **Traffic Splitting** | Not supported | **Supported natively (Canary rollouts)** |
-| **Direct VPC Egress** | Requires Serverless VPC Access | **Direct VPC Egress** supported |
+| Architectural Dimension       | 1st Gen Functions (Legacy)       | 2nd Gen Functions (Modern Standard)      |
+| :---------------------------- | :------------------------------- | :--------------------------------------- |
+| **Underlying Infrastructure** | App Engine internal runtime      | **Google Cloud Run**                     |
+| **Event Routing Engine**      | Legacy proprietary event broker  | **Eventarc (CNCF CloudEvents v1.0)**     |
+| **Concurrency per Instance**  | Strictly **1 request at a time** | **Up to 1,000 concurrent requests**      |
+| **Max Request Timeout**       | 9 minutes (540 seconds)          | **60 minutes (3,600s)** for HTTP         |
+| **Max Memory & CPU**          | 8 GiB RAM / 2 vCPUs              | **32 GiB RAM / 8 vCPUs**                 |
+| **Traffic Splitting**         | Not supported                    | **Supported natively (Canary rollouts)** |
+| **Direct VPC Egress**         | Requires Serverless VPC Access   | **Direct VPC Egress** supported          |
 
 ---
 
@@ -76,8 +76,9 @@ Unlike 1st Gen functions (which ran on legacy App Engine infrastructure), 2nd Ge
 ### 1. Concurrency Tuning in Serverless FaaS
 
 In AWS Lambda and 1st Gen Cloud Functions, if 100 simultaneous requests arrive, the cloud provider spins up **100 independent container instances**, triggering 100 separate cold starts and risking database connection pool exhaustion.
-* In Cloud Functions 2nd Gen, setting `--concurrency=80` allows a single warm function instance to process 80 requests simultaneously.
-* Dramatically slashes compute costs and eliminates cold starts for concurrent traffic.
+
+- In Cloud Functions 2nd Gen, setting `--concurrency=80` allows a single warm function instance to process 80 requests simultaneously.
+- Dramatically slashes compute costs and eliminates cold starts for concurrent traffic.
 
 ### 2. Eventarc & CloudEvents Specification
 
@@ -99,12 +100,12 @@ All asynchronous event-driven functions in 2nd Gen receive payloads structured a
 }
 ```
 
-* **Uniform Developer Experience:** Whether an event originates from a Cloud Storage upload, a BigQuery table creation, or a Firebase user sign-up, the envelope format is identical.
+- **Uniform Developer Experience:** Whether an event originates from a Cloud Storage upload, a BigQuery table creation, or a Firebase user sign-up, the envelope format is identical.
 
 ### 3. Cold Start Optimization
 
-* **Min Instances (`--min-instances=1`):** Keeps a pre-warmed instance constantly provisioned to eliminate cold starts for latency-sensitive customer APIs.
-* **Buildpack Optimization:** Keep dependency manifests (`package.json`, `requirements.txt`) lean. Heavy libraries (like Pandas, PyTorch, or TensorFlow) dramatically increase container initialization time.
+- **Min Instances (`--min-instances=1`):** Keeps a pre-warmed instance constantly provisioned to eliminate cold starts for latency-sensitive customer APIs.
+- **Buildpack Optimization:** Keep dependency manifests (`package.json`, `requirements.txt`) lean. Heavy libraries (like Pandas, PyTorch, or TensorFlow) dramatically increase container initialization time.
 
 ---
 
@@ -177,42 +178,44 @@ def generate_thumbnail(cloudevent: CloudEvent):
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max HTTP execution timeout** | 60 minutes (3,600s) | Configurable up from 1st Gen 9-min limit |
-| **Max event-driven timeout** | 10 minutes (600s) | For Eventarc background triggers |
-| **Max function memory** | 32 GiB | Up to 8 vCPUs |
-| **Max request concurrency** | 1,000 per instance | Default is 1; tune according to I/O vs CPU |
-| **Max deployment size** | 500 MB (compressed) | Store heavy model weights in Cloud Storage |
+| Parameter                      | Limit               | Production Notes                           |
+| :----------------------------- | :------------------ | :----------------------------------------- |
+| **Max HTTP execution timeout** | 60 minutes (3,600s) | Configurable up from 1st Gen 9-min limit   |
+| **Max event-driven timeout**   | 10 minutes (600s)   | For Eventarc background triggers           |
+| **Max function memory**        | 32 GiB              | Up to 8 vCPUs                              |
+| **Max request concurrency**    | 1,000 per instance  | Default is 1; tune according to I/O vs CPU |
+| **Max deployment size**        | 500 MB (compressed) | Store heavy model weights in Cloud Storage |
 
 ---
 
 ## References
 
-* **Cloud Functions 2nd Gen Documentation:** https://cloud.google.com/functions/docs/2nd-gen/overview
-* **Eventarc Overview:** https://cloud.google.com/eventarc/docs
-* **CloudEvents Specification:** https://cloudevents.io/
-* **Pricing:** https://cloud.google.com/functions/pricing
+- **Cloud Functions 2nd Gen Documentation:** https://cloud.google.com/functions/docs/2nd-gen/overview
+- **Eventarc Overview:** https://cloud.google.com/eventarc/docs
+- **CloudEvents Specification:** https://cloudevents.io/
+- **Pricing:** https://cloud.google.com/functions/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Event-Driven Image Thumbnail Generation
-* 500,000 image uploads per month triggering a 2nd Gen function.
-* Execution time: 800 ms per invocation. Allocation: 1 vCPU, 512 MB RAM.
-* Total vCPU-seconds: 500,000 × 1 vCPU × 0.8s = 400,000 vCPU-seconds.
-* Monthly Free Tier: First 2 million invocations, 400,000 vCPU-seconds, and 200,000 GB-seconds are **100% free every month**.
-* **Total Monthly Bill:** **$0.00 / month** (Falls entirely within the permanent free tier).
+
+- 500,000 image uploads per month triggering a 2nd Gen function.
+- Execution time: 800 ms per invocation. Allocation: 1 vCPU, 512 MB RAM.
+- Total vCPU-seconds: 500,000 × 1 vCPU × 0.8s = 400,000 vCPU-seconds.
+- Monthly Free Tier: First 2 million invocations, 400,000 vCPU-seconds, and 200,000 GB-seconds are **100% free every month**.
+- **Total Monthly Bill:** **$0.00 / month** (Falls entirely within the permanent free tier).
 
 ### Scenario 2: High-Throughput Webhook Ingestion API
-* 50 million inbound webhook requests per month with average latency of 150 ms.
-* Concurrency tuned to 50 requests per instance.
-* Billable compute: (50M reqs × 0.15s) / 50 = 150,000 instance-seconds.
-* Invocation requests fee (after 2M free): 48M × $0.40 / million = $19.20.
-* Active vCPU/RAM compute time: ~$5.50.
-* 1 Pre-warmed min-instance (`--min-instances=1`) to eliminate cold starts: ~$6.50 / month.
-* **Total Monthly Cost:** **~$31.20 / month** (Handling 50M webhooks with zero cold starts).
+
+- 50 million inbound webhook requests per month with average latency of 150 ms.
+- Concurrency tuned to 50 requests per instance.
+- Billable compute: (50M reqs × 0.15s) / 50 = 150,000 instance-seconds.
+- Invocation requests fee (after 2M free): 48M × $0.40 / million = $19.20.
+- Active vCPU/RAM compute time: ~$5.50.
+- 1 Pre-warmed min-instance (`--min-instances=1`) to eliminate cold starts: ~$6.50 / month.
+- **Total Monthly Cost:** **~$31.20 / month** (Handling 50M webhooks with zero cold starts).
 
 ---
 
@@ -222,4 +225,4 @@ def generate_thumbnail(cloudevent: CloudEvent):
 2. **The CloudEvent `finalized` Loop Disaster:** If an event-driven function is triggered by `google.cloud.storage.object.v1.finalized` on Bucket A, and the function's code writes an output file or thumbnail back to **Bucket A**, the newly written file will trigger another `finalized` event! This creates an **infinite recursive execution loop** that can burn thousands of dollars in minutes. Always write output files to a separate destination bucket (e.g. Bucket B).
 3. **Missing Eventarc Service Agent Permissions:** When deploying an event-driven function for the first time, Eventarc requires permission to publish events from your services. If you see `FAILED_PRECONDITION: Eventarc Service Agent lacks roles/eventarc.serviceAgent`, you must explicitly grant the service agent role or allow GCP to auto-generate it.
 4. **Default Concurrency is 1 (Not Cloud Run's 80):** When deploying a service directly via Cloud Run, concurrency defaults to 80. However, when deploying via `gcloud functions deploy --gen2`, concurrency defaults to **1** to maintain backwards compatibility with 1st Gen single-threaded behavior! To take advantage of multi-request cost savings, you must explicitly pass `--concurrency=80`.
-5. **Cold Starts on Min-Instances Scaling:** Setting `--min-instances=1` ensures that the *first* instance is warm. However, if traffic suddenly bursts to 50 concurrent requests and your function has `--concurrency=1`, Cloud Run must provision 49 new instances simultaneously. All 49 new instances will experience cold starts. Tune `--concurrency` alongside `--min-instances`.
+5. **Cold Starts on Min-Instances Scaling:** Setting `--min-instances=1` ensures that the _first_ instance is warm. However, if traffic suddenly bursts to 50 concurrent requests and your function has `--concurrency=1`, Cloud Run must provision 49 new instances simultaneously. All 49 new instances will experience cold starts. Tune `--concurrency` alongside `--min-instances`.

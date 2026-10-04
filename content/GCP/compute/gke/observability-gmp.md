@@ -61,7 +61,7 @@ GMP replaces self-hosted Prometheus servers with lightweight, Kubernetes-native 
 1. **Managed Data Collection:** GKE automatically deploys and manages the collector daemonset and Operator. Upgrades and patches are handled by Google with zero downtime.
 2. **Declarative Custom Resources:**
    - **PodMonitoring:** Namespace-scoped resource that tells GMP which pods to scrape within a specific namespace.
-   - **ClusterPodMonitoring:** Cluster-scoped resource that scrapes pods matching label selectors across *all* namespaces (e.g., scraping Istio or Envoy proxies globally).
+   - **ClusterPodMonitoring:** Cluster-scoped resource that scrapes pods matching label selectors across _all_ namespaces (e.g., scraping Istio or Envoy proxies globally).
 3. **ContainerLogV2:** GKE's high-efficiency structured logging format. It splits logs into parsed JSON fields, separating stdout from stderr, container metadata, and log volume to optimize log querying in Cloud Logging.
 4. **Grafana Integration:** Native Cloud Monitoring data source plugin enables connecting self-hosted or managed Grafana directly to GMP using standard **PromQL**.
 
@@ -69,14 +69,14 @@ GMP replaces self-hosted Prometheus servers with lightweight, Kubernetes-native 
 
 ## 2. PodMonitoring vs Standard Prometheus Operator
 
-| Dimension | Standard Open-Source Prometheus | Google Managed Service for Prometheus (GMP) |
-| :--- | :--- | :--- |
-| **TSDB Storage Backend** | Local Persistent Disks (PDs) | **Monarch** (Google's planet-scale time-series DB) |
-| **Data Retention** | Typically 14 to 30 days | **24 Months (730 days)** without downsampling |
-| **High Availability** | Complex Thanos / Cortex setup | **Built-in multi-zone high availability** |
-| **Collector Footprint** | Heavy (~2-8 GiB RAM per Prometheus)| Ultra-lightweight (~50 MiB RAM per collector) |
-| **Query Language** | PromQL | **Pure PromQL** + Monitoring Query Language (MQL) |
-| **Pricing Model** | Provisioned VM & PD disk cost | Ingestion volume (samples ingested per month) |
+| Dimension                | Standard Open-Source Prometheus     | Google Managed Service for Prometheus (GMP)        |
+| :----------------------- | :---------------------------------- | :------------------------------------------------- |
+| **TSDB Storage Backend** | Local Persistent Disks (PDs)        | **Monarch** (Google's planet-scale time-series DB) |
+| **Data Retention**       | Typically 14 to 30 days             | **24 Months (730 days)** without downsampling      |
+| **High Availability**    | Complex Thanos / Cortex setup       | **Built-in multi-zone high availability**          |
+| **Collector Footprint**  | Heavy (~2-8 GiB RAM per Prometheus) | Ultra-lightweight (~50 MiB RAM per collector)      |
+| **Query Language**       | PromQL                              | **Pure PromQL** + Monitoring Query Language (MQL)  |
+| **Pricing Model**        | Provisioned VM & PD disk cost       | Ingestion volume (samples ingested per month)      |
 
 ---
 
@@ -106,14 +106,14 @@ spec:
     matchLabels:
       app: order-service
   endpoints:
-  - port: metrics # Matches containerPort name in deployment
-    interval: 15s
-    path: /actuator/prometheus
-    # Metric Relabeling: Drop high-cardinality debugging metrics to cut ingestion costs
-    metricRelabeling:
-    - action: keep
-      sourceLabels: [__name__]
-      regex: "(http_server_requests_seconds_.*|jvm_memory_used_bytes|jvm_threads_live_threads|process_cpu_usage)"
+    - port: metrics # Matches containerPort name in deployment
+      interval: 15s
+      path: /actuator/prometheus
+      # Metric Relabeling: Drop high-cardinality debugging metrics to cut ingestion costs
+      metricRelabeling:
+        - action: keep
+          sourceLabels: [__name__]
+          regex: "(http_server_requests_seconds_.*|jvm_memory_used_bytes|jvm_threads_live_threads|process_cpu_usage)"
 ```
 
 Apply PodMonitoring:
@@ -139,9 +139,9 @@ spec:
     matchLabels:
       app.kubernetes.io/component: proxy
   endpoints:
-  - port: 15090
-    interval: 30s
-    path: /stats/prometheus
+    - port: 15090
+      interval: 30s
+      path: /stats/prometheus
 ```
 
 Apply ClusterPodMonitoring:
@@ -174,13 +174,13 @@ gcloud monitoring timeseries list \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Limit / Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Scrape Frequency** | Minimum 5 seconds | Recommended production default: 15s to 30s |
-| **Max Samples per Scrape** | 100,000 samples | Relabel metrics to drop unused time series |
-| **Metric Retention** | **24 Months (730 days)** | Retained at native resolution without rollups |
-| **Query Range Timeout** | 60 seconds per query | Restrict PromQL query windows (`[5m]`, `[1h]`) |
-| **Monitored Projects per Scope**| Up to 375 projects | Unify multi-cluster metrics in single scoping project |
+| Parameter / Dimension            | Standard Limit / Quota   | Engineering Guidance                                  |
+| :------------------------------- | :----------------------- | :---------------------------------------------------- |
+| **Max Scrape Frequency**         | Minimum 5 seconds        | Recommended production default: 15s to 30s            |
+| **Max Samples per Scrape**       | 100,000 samples          | Relabel metrics to drop unused time series            |
+| **Metric Retention**             | **24 Months (730 days)** | Retained at native resolution without rollups         |
+| **Query Range Timeout**          | 60 seconds per query     | Restrict PromQL query windows (`[5m]`, `[1h]`)        |
+| **Monitored Projects per Scope** | Up to 375 projects       | Unify multi-cluster metrics in single scoping project |
 
 ---
 
@@ -197,6 +197,7 @@ gcloud monitoring timeseries list \
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **Google Cloud System Metrics:** **100% Free** (CPU, RAM, disk I/O from GKE node agents).
 2. **GMP Custom Prometheus Ingestion:**
    - First 150 MiB/month: Free.

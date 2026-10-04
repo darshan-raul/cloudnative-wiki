@@ -21,12 +21,12 @@ Start with a hypothesis: "Threat actors are using living-off-the-land binaries t
 
 Map your hunts to ATT&CK techniques:
 
-| Technique | Hunt For |
-|----------|----------|
+| Technique                               | Hunt For                                          |
+| --------------------------------------- | ------------------------------------------------- |
 | T1059 (Command & Scripting Interpreter) | PowerShell/Bash spawned from browser/email client |
-| T1070 (Indicator Removal) | Log clearing, history deletion |
-| T1048 (Exfiltration) | Large data transfers to unexpected external IPs |
-| T1053 (Scheduled Task) | Cron jobs created by non-root users |
+| T1070 (Indicator Removal)               | Log clearing, history deletion                    |
+| T1048 (Exfiltration)                    | Large data transfers to unexpected external IPs   |
+| T1053 (Scheduled Task)                  | Cron jobs created by non-root users               |
 
 ## Wazuh Hunting Queries
 

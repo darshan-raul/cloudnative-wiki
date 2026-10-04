@@ -2,7 +2,7 @@
 
 Below is a **tree-style, exam-oriented breakdown** of **Cost Control & Cost Management topics**&#x20;
 
-***
+---
 
 ### 1. Cost Management Foundations
 
@@ -24,11 +24,11 @@ AWS Pricing Models
 │  ├─ Spot pricing model
 │  ├─ Interruption behavior
 │  ├─ Spot Fleets & Capacity Pools
-│  └─ When NOT to use Spot 
+│  └─ When NOT to use Spot
 └─ Free tier & hidden cost traps
 ```
 
-***
+---
 
 ### 2. AWS Cost Visibility & Reporting
 
@@ -54,7 +54,7 @@ Billing & Cost Tools
    └─ Consolidated billing
 ```
 
-***
+---
 
 ### 3. Cost Allocation & Governance (VERY IMPORTANT)
 
@@ -79,7 +79,7 @@ Cost Allocation
    └─ CI/CD tag injection
 ```
 
-***
+---
 
 ### 4. AWS Organizations & Consolidated Billing
 
@@ -99,7 +99,7 @@ Organizations & Billing
 └─ Multi-payer billing strategies
 ```
 
-***
+---
 
 ### 5. Compute Cost Optimization
 
@@ -123,7 +123,7 @@ EC2 Cost Optimization
 └─ Graviton (ARM) cost trade-offs
 ```
 
-***
+---
 
 ### 6. Storage Cost Optimization
 
@@ -152,7 +152,7 @@ Storage Costs
    └─ Cross-account backups
 ```
 
-***
+---
 
 ### 7. Database Cost Optimization
 
@@ -178,7 +178,7 @@ Database Costs
    └─ RI usage
 ```
 
-***
+---
 
 ### 8. Network & Data Transfer Costs (EXAM FAVORITE)
 
@@ -207,7 +207,7 @@ Networking Costs
    └─ Direct Connect trade-offs
 ```
 
-***
+---
 
 ### 9. Serverless Cost Optimization
 
@@ -227,7 +227,7 @@ Serverless Costs
 └─ Event-driven architecture cost analysis
 ```
 
-***
+---
 
 ### 10. Monitoring, Alerts & Automation
 
@@ -243,7 +243,7 @@ Cost Controls & Automation
 └─ CI/CD guardrails for cost
 ```
 
-***
+---
 
 ### 11. Migration & Architecture Trade-offs
 
@@ -256,7 +256,7 @@ Cost-Aware Architecture Decisions
 └─ Build vs buy cost evaluation
 ```
 
-***
+---
 
 ### 12. Exam-Style Scenario Thinking
 
@@ -269,20 +269,20 @@ How AWS Tests Cost Knowledge
 └─ Multi-account governance scenarios
 ```
 
-***
+---
 
 #### How I’d recommend you study this (based on your background)
 
-* You already have **deep AWS experience**, so:
-  * Focus on **RI vs Savings Plan edge cases**
-  * **Network & data transfer costs**
-  * **Governance via SCPs and tagging**
-* Practice **architecture questions**, not definitions.
+- You already have **deep AWS experience**, so:
+  - Focus on **RI vs Savings Plan edge cases**
+  - **Network & data transfer costs**
+  - **Governance via SCPs and tagging**
+- Practice **architecture questions**, not definitions.
 
 If you want, I can next:
 
-* Convert this into a **1-week SAP cost-optimization study plan**
-* Or give **10 brutal SAP-C02 cost-optimization scenario questions**
-* Or map **each topic → typical exam trick**
+- Convert this into a **1-week SAP cost-optimization study plan**
+- Or give **10 brutal SAP-C02 cost-optimization scenario questions**
+- Or map **each topic → typical exam trick**
 
 Just tell me 👍

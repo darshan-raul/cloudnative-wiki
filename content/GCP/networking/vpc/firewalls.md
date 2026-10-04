@@ -63,25 +63,25 @@ Incoming Network Packet (Ingress)
 
 ### 1. Rule Priority (0 to 65,535)
 
-* Evaluated strictly in ascending order: **Priority 0 is evaluated first; priority 65,535 is evaluated last**.
-* The **first rule that matches** the packet's attributes terminates evaluation.
-* **Best Practice:** Leave numerical gaps (e.g. 1000, 1100, 1200) to allow inserting emergency rules during active security incidents.
+- Evaluated strictly in ascending order: **Priority 0 is evaluated first; priority 65,535 is evaluated last**.
+- The **first rule that matches** the packet's attributes terminates evaluation.
+- **Best Practice:** Leave numerical gaps (e.g. 1000, 1100, 1200) to allow inserting emergency rules during active security incidents.
 
 ### 2. Hierarchical Policies & `goto_next`
 
-* **Immutable Guardrails:** Policies defined at the Organization root or Folder cannot be deleted, altered, or overridden by Project Owners.
-* **The `goto_next` Action:** A hierarchical rule can match a packet and explicitly delegate further evaluation to child folders or project-level VPC rules. This allows security teams to inspect or log traffic globally without prematurely terminating rule evaluation.
+- **Immutable Guardrails:** Policies defined at the Organization root or Folder cannot be deleted, altered, or overridden by Project Owners.
+- **The `goto_next` Action:** A hierarchical rule can match a packet and explicitly delegate further evaluation to child folders or project-level VPC rules. This allows security teams to inspect or log traffic globally without prematurely terminating rule evaluation.
 
 ### 3. Targeting Workloads: Network Tags vs. Service Accounts
 
 GCP provides two mechanisms to apply firewall rules to specific VMs within a VPC:
 
-| Dimension | Network Tags | Service Accounts (Recommended) |
-| :--- | :--- | :--- |
-| **Identifier Type** | Arbitrary text string (e.g. `web-backend`) | Cryptographically verified IAM email |
-| **Security Risk** | **High:** Any user with `compute.instances.setTags` can add a tag to their VM and instantly inherit sensitive firewall access | **Zero Identity Drift:** Governed strictly by `iam.serviceAccounts.actAs` permissions |
-| **Cross-Subnet Enforcement** | Matches tags regardless of IP | Matches verified service account identity |
-| **Production Guidance** | Legacy / rapid prototyping | **Enterprise Zero-Trust Standard** |
+| Dimension                    | Network Tags                                                                                                                  | Service Accounts (Recommended)                                                        |
+| :--------------------------- | :---------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| **Identifier Type**          | Arbitrary text string (e.g. `web-backend`)                                                                                    | Cryptographically verified IAM email                                                  |
+| **Security Risk**            | **High:** Any user with `compute.instances.setTags` can add a tag to their VM and instantly inherit sensitive firewall access | **Zero Identity Drift:** Governed strictly by `iam.serviceAccounts.actAs` permissions |
+| **Cross-Subnet Enforcement** | Matches tags regardless of IP                                                                                                 | Matches verified service account identity                                             |
+| **Production Guidance**      | Legacy / rapid prototyping                                                                                                    | **Enterprise Zero-Trust Standard**                                                    |
 
 ```
 Secure Ingress Rule Using Service Accounts:
@@ -94,8 +94,9 @@ Result:         Only VMs authorized to run as api-worker can reach db-worker!
 ### 4. Stateful Connection Tracking
 
 GCP firewalls are stateful:
-* If an incoming connection is permitted on port 443, the outbound response traffic is **automatically allowed**, regardless of any egress firewall rules.
-* Similarly, if an outgoing connection is permitted, the incoming response packets are automatically allowed.
+
+- If an incoming connection is permitted on port 443, the outbound response traffic is **automatically allowed**, regardless of any egress firewall rules.
+- Similarly, if an outgoing connection is permitted, the incoming response packets are automatically allowed.
 
 ---
 
@@ -157,40 +158,42 @@ gcloud compute firewall-rules create allow-gcp-health-checks \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **VPC Firewall rules per network** | 500 rules (default) | Can request increase up to 1,000 |
-| **Hierarchical policy rules** | Up to 1,000 rules per policy | Enforced at Org/Folder level |
-| **IP addresses in source/target** | Up to 256 CIDRs per rule | Aggregate CIDR blocks |
-| **Target Service Accounts per rule** | Up to 10 Service Accounts | Define roles by application tiers |
+| Parameter                            | Limit                        | Production Notes                  |
+| :----------------------------------- | :--------------------------- | :-------------------------------- |
+| **VPC Firewall rules per network**   | 500 rules (default)          | Can request increase up to 1,000  |
+| **Hierarchical policy rules**        | Up to 1,000 rules per policy | Enforced at Org/Folder level      |
+| **IP addresses in source/target**    | Up to 256 CIDRs per rule     | Aggregate CIDR blocks             |
+| **Target Service Accounts per rule** | Up to 10 Service Accounts    | Define roles by application tiers |
 
 ---
 
 ## References
 
-* **Firewall Rules Overview:** https://cloud.google.com/vpc/docs/firewalls
-* **Hierarchical Firewall Policies:** https://cloud.google.com/vpc/docs/hierarchical-firewall-policies
-* **Service Account Firewalls Guide:** https://cloud.google.com/vpc/docs/firewalls#service-accounts
-* **Firewall Rules Logging:** https://cloud.google.com/vpc/docs/firewall-rules-logging
-* **Pricing:** Free (GCP Firewall rule evaluation is free; Firewall Rule Logging incurs standard Cloud Logging ingestion charges)
+- **Firewall Rules Overview:** https://cloud.google.com/vpc/docs/firewalls
+- **Hierarchical Firewall Policies:** https://cloud.google.com/vpc/docs/hierarchical-firewall-policies
+- **Service Account Firewalls Guide:** https://cloud.google.com/vpc/docs/firewalls#service-accounts
+- **Firewall Rules Logging:** https://cloud.google.com/vpc/docs/firewall-rules-logging
+- **Pricing:** Free (GCP Firewall rule evaluation is free; Firewall Rule Logging incurs standard Cloud Logging ingestion charges)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Enterprise Perimeter Protection (Zero Ingress Fees)
-* 100 projects running 1,500 VMs across 10 VPC networks.
-* Enforcing 50 Hierarchical Firewall rules and 200 project VPC rules.
-* Total rule evaluations: Tens of billions of packets processed by Andromeda hypervisors.
-* **Monthly Firewall Engine Cost:** **$0.00 / month** (Included free with Google Cloud compute networking).
+
+- 100 projects running 1,500 VMs across 10 VPC networks.
+- Enforcing 50 Hierarchical Firewall rules and 200 project VPC rules.
+- Total rule evaluations: Tens of billions of packets processed by Andromeda hypervisors.
+- **Monthly Firewall Engine Cost:** **$0.00 / month** (Included free with Google Cloud compute networking).
 
 ### Scenario 2: Security Auditing with Firewall Rule Logging
-* Firewall Rule Logging enabled on 5 high-traffic edge ingress rules to capture dropped malicious packets.
-* Dropped packet log volume: 100 GB / month.
-* Cloud Logging ingestion pricing ($0.50 / GiB after first 50 GiB free):
-  * 50 billable GiB × $0.50 = **$25.00 / month**.
-* Exporting logs via Log Sink to BigQuery for SIEM threat analysis: ~$5.00 / month.
-* **Total Monthly Observability Cost:** **~$30.00 / month**.
+
+- Firewall Rule Logging enabled on 5 high-traffic edge ingress rules to capture dropped malicious packets.
+- Dropped packet log volume: 100 GB / month.
+- Cloud Logging ingestion pricing ($0.50 / GiB after first 50 GiB free):
+  - 50 billable GiB × $0.50 = **$25.00 / month**.
+- Exporting logs via Log Sink to BigQuery for SIEM threat analysis: ~$5.00 / month.
+- **Total Monthly Observability Cost:** **~$30.00 / month**.
 
 ---
 

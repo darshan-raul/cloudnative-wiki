@@ -22,20 +22,20 @@ tags:
 /proc/self/             # symlink to current process's /proc/PID
 ```
 
-| File              | What it contains                                |
-|------------------|------------------------------------------------|
-| `/proc/PID/cmdline` | Command line (null-separated)                  |
-| `/proc/PID/environ` | Environment variables (null-separated)         |
-| `/proc/PID/status`  | Human-readable process state (UID, memory, etc.) |
-| `/proc/PID/statm`   | Memory usage in pages                          |
-| `/proc/PID/maps`    | Memory mappings (address → file)                |
-| `/proc/PID/fd/`     | Open file descriptors (symlinks to files/sockets)|
-| `/proc/PID/fdinfo/` | FD metadata (flags, position)                 |
-| `/proc/PID/cgroup`  | Cgroup membership                              |
-| `/proc/PID/ns/`     | Namespace inodes (shows namespace IDs)          |
-| `/proc/PID/syscall` | Current syscall number and args                 |
-| `/proc/PID/wchan`   | Kernel function the process is sleeping in      |
-| `/proc/PID/stack`   | Kernel stack trace (if running in kernel)      |
+| File                | What it contains                                  |
+| ------------------- | ------------------------------------------------- |
+| `/proc/PID/cmdline` | Command line (null-separated)                     |
+| `/proc/PID/environ` | Environment variables (null-separated)            |
+| `/proc/PID/status`  | Human-readable process state (UID, memory, etc.)  |
+| `/proc/PID/statm`   | Memory usage in pages                             |
+| `/proc/PID/maps`    | Memory mappings (address → file)                  |
+| `/proc/PID/fd/`     | Open file descriptors (symlinks to files/sockets) |
+| `/proc/PID/fdinfo/` | FD metadata (flags, position)                     |
+| `/proc/PID/cgroup`  | Cgroup membership                                 |
+| `/proc/PID/ns/`     | Namespace inodes (shows namespace IDs)            |
+| `/proc/PID/syscall` | Current syscall number and args                   |
+| `/proc/PID/wchan`   | Kernel function the process is sleeping in        |
+| `/proc/PID/stack`   | Kernel stack trace (if running in kernel)         |
 
 ### System-Wide /proc Files
 
@@ -80,32 +80,32 @@ sysctl -w net.ipv4.ip_forward=1
 
 ### Key /proc/sys Paths
 
-| Path                          | What it controls                         |
-|-------------------------------|------------------------------------------|
-| `net/ipv4/ip_forward`          | Enable IP forwarding (router)           |
-| `net/ipv4/conf/eth0/forwarding` | Per-interface forwarding                 |
-| `net/ipv4/tcp_syncookies`      | Enable SYN cookies                       |
-| `net/ipv4/icmp_echo_ignore_all` | Ignore all ICMP pings                   |
-| `net/ipv4/icmp_echo_ignore_broadcasts` | Ignore broadcast pings        |
-| `net/ipv4/conf/default/rp_filter` | Reverse path filtering                |
-| `net/core/somaxconn`            | Max listen() backlog                     |
-| `net/core/file-max`             | System-wide max open files               |
-| `net/ipv4/tcp_max_syn_backlog`  | Max pending TCP connections              |
-| `vm/swappiness`                 | How aggressively to swap (0-100)         |
-| `vm/dirty_ratio`                | % of RAM before pdflush starts writing   |
-| `vm/dirty_background_ratio`     | % of RAM before background flush starts  |
-| `vm/overcommit_memory`          | Memory overcommit (0=heuristic, 1=always)|
-| `kernel/hostname`               | System hostname                          |
-| `kernel/domainname`             | NIS domain name                          |
-| `kernel/shmmax`                  | Max shared memory segment size           |
-| `kernel/shmall`                  | Max shared memory pages total            |
-| `kernel/threads-max`             | Max threads in system                    |
-| `kernel/pid_max`                 | Max PID number                          |
-| `kernel/randomize_va_space`      | ASLR (0=off, 1=stack, 2=all)           |
-| `kernel/sysrq`                   | SysRq key enable (1=full, 0=disabled)   |
-| `fs/file-max`                   | System-wide max open files               |
-| `fs/inotify/max_user_watches`   | inotify watches limit                   |
-| `fs/inotify/max_user_instances` | inotify instances per user              |
+| Path                                   | What it controls                          |
+| -------------------------------------- | ----------------------------------------- |
+| `net/ipv4/ip_forward`                  | Enable IP forwarding (router)             |
+| `net/ipv4/conf/eth0/forwarding`        | Per-interface forwarding                  |
+| `net/ipv4/tcp_syncookies`              | Enable SYN cookies                        |
+| `net/ipv4/icmp_echo_ignore_all`        | Ignore all ICMP pings                     |
+| `net/ipv4/icmp_echo_ignore_broadcasts` | Ignore broadcast pings                    |
+| `net/ipv4/conf/default/rp_filter`      | Reverse path filtering                    |
+| `net/core/somaxconn`                   | Max listen() backlog                      |
+| `net/core/file-max`                    | System-wide max open files                |
+| `net/ipv4/tcp_max_syn_backlog`         | Max pending TCP connections               |
+| `vm/swappiness`                        | How aggressively to swap (0-100)          |
+| `vm/dirty_ratio`                       | % of RAM before pdflush starts writing    |
+| `vm/dirty_background_ratio`            | % of RAM before background flush starts   |
+| `vm/overcommit_memory`                 | Memory overcommit (0=heuristic, 1=always) |
+| `kernel/hostname`                      | System hostname                           |
+| `kernel/domainname`                    | NIS domain name                           |
+| `kernel/shmmax`                        | Max shared memory segment size            |
+| `kernel/shmall`                        | Max shared memory pages total             |
+| `kernel/threads-max`                   | Max threads in system                     |
+| `kernel/pid_max`                       | Max PID number                            |
+| `kernel/randomize_va_space`            | ASLR (0=off, 1=stack, 2=all)              |
+| `kernel/sysrq`                         | SysRq key enable (1=full, 0=disabled)     |
+| `fs/file-max`                          | System-wide max open files                |
+| `fs/inotify/max_user_watches`          | inotify watches limit                     |
+| `fs/inotify/max_user_instances`        | inotify instances per user                |
 
 ### sysctl — Manage These Persistently
 
@@ -188,13 +188,13 @@ cat /sys/module/nf_conntrack/parameters/hashsize
 
 ## /proc vs /sys
 
-| Aspect        | /proc                        | /sys                          |
-|--------------|------------------------------|-------------------------------|
-| Contents      | Process info + kernel stats  | Device model + device drivers  |
-| Organization  | Per-PID dirs + system files  | Hierarchical tree (device tree)|
-| Origin        | `fs/proc/` kernel code      | `fs/sysfs/` kernel code       |
-| Writable      | Some files (tunables)       | Device attributes (driver-specific)|
-| Use case      | Process inspection, tuning   | Hardware inspection, driver config |
+| Aspect       | /proc                       | /sys                                |
+| ------------ | --------------------------- | ----------------------------------- |
+| Contents     | Process info + kernel stats | Device model + device drivers       |
+| Organization | Per-PID dirs + system files | Hierarchical tree (device tree)     |
+| Origin       | `fs/proc/` kernel code      | `fs/sysfs/` kernel code             |
+| Writable     | Some files (tunables)       | Device attributes (driver-specific) |
+| Use case     | Process inspection, tuning  | Hardware inspection, driver config  |
 
 ## Practical Examples
 

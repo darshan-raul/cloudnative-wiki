@@ -12,18 +12,18 @@ tags:
 
 ## The Attributes
 
-| Attribute | Letter | Meaning |
-|-----------|--------|---------|
-| Immutable | `i` | Cannot delete, rename, or modify (even as root) |
-| Append-only | `a` | Can only append (write at end of file) |
-| No dump | `d` | Excluded by `dump(8)` backup |
-| Compressed | `c` | Kernel auto-compresses on write, decompress on read |
-| Synchronous | `s` | Writes are synchronous (written to disk immediately) |
-| Undeletable | `u` | File contents saved when deleted (undelete possible) |
-| No atime | `A` | Don't update atime on access |
-| No copy on write | `C` | CoW disabled (btrfs only) |
-| Indexed directory | `I` | Directory uses HTree indexed (ext4) |
-| No update of dir atime | `D` | Synchronous dir updates |
+| Attribute              | Letter | Meaning                                              |
+| ---------------------- | ------ | ---------------------------------------------------- |
+| Immutable              | `i`    | Cannot delete, rename, or modify (even as root)      |
+| Append-only            | `a`    | Can only append (write at end of file)               |
+| No dump                | `d`    | Excluded by `dump(8)` backup                         |
+| Compressed             | `c`    | Kernel auto-compresses on write, decompress on read  |
+| Synchronous            | `s`    | Writes are synchronous (written to disk immediately) |
+| Undeletable            | `u`    | File contents saved when deleted (undelete possible) |
+| No atime               | `A`    | Don't update atime on access                         |
+| No copy on write       | `C`    | CoW disabled (btrfs only)                            |
+| Indexed directory      | `I`    | Directory uses HTree indexed (ext4)                  |
+| No update of dir atime | `D`    | Synchronous dir updates                              |
 
 ## Viewing: lsattr
 
@@ -59,6 +59,7 @@ chattr -R +i /etc/important/
 ```
 
 Use cases:
+
 - `/etc/resolv.conf` after configuring DNS (prevents accidental or malicious changes)
 - `/etc/passwd` and `/etc/shadow` after hardening (prevents privilege escalation)
 - Boot-critical files
@@ -147,6 +148,7 @@ sudo chattr -i /etc/passwd
 ## Security Note
 
 chattr does NOT protect against some attacks:
+
 - **Root can still remove +i** — if root account is compromised, attacker removes immutable
 - **Does not prevent deletion of parent directory** (only the file itself)
 - **Does not encrypt** — just prevents modification

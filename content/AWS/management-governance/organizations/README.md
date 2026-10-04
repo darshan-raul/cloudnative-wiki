@@ -40,6 +40,7 @@ Root (Organization)
 ### Consolidated Billing
 
 When accounts are under an organization, billing is consolidated:
+
 - **Single payment account** — One credit card pays for all accounts
 - **Single invoice** — One bill covers all member accounts
 - **Cost allocation tags** — Use org-level tags to allocate costs per account/OUs
@@ -51,6 +52,7 @@ When accounts are under an organization, billing is consolidated:
 SCPs are JSON policies attached to OUs or the Root that restrict what actions are available in member accounts. They don't grant permissions — they restrict the permissions that identity-based or resource-based policies can grant.
 
 **Key difference from IAM policies:**
+
 - IAM policies: What a principal CAN do (allow/deny attached to users/roles)
 - SCPs: What a principal CANNOT do (applied at the organizational level)
 
@@ -91,10 +93,12 @@ Root (no SCP)
 When you create an organization, you choose:
 
 **Consolidated billing features only (legacy):**
+
 - Simple account grouping and billing
 - No SCPs, no organization-wide CloudTrail/Config
 
 **All features:**
+
 - SCPs, organization root, OU hierarchy
 - Trusted access for AWS services (CloudTrail, Config, Guard Duty)
 - Recommended for new organizations
@@ -135,13 +139,13 @@ aws organizations attach-policy \
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
+| Resource                  | Limit                                     |
+| ------------------------- | ----------------------------------------- |
 | Accounts per organization | 10 (default, can request increase to 100) |
-| OUs per parent | 10 |
-| SCPs per account/OUs | 5 |
-| SCP policy size | 5,120 bytes |
-| Depth of OU nesting | 5 levels |
+| OUs per parent            | 10                                        |
+| SCPs per account/OUs      | 5                                         |
+| SCP policy size           | 5,120 bytes                               |
+| Depth of OU nesting       | 5 levels                                  |
 
 ## References
 

@@ -49,6 +49,7 @@ Istio is a **full-featured service mesh**. Sidecar proxies (Envoy) intercept all
 ## Why Istio
 
 **Use Istio for:**
+
 - Large clusters (50+ services) where service-to-service comms is complex
 - mTLS required for compliance (PCI-DSS, HIPAA, FedRAMP)
 - Fine-grained access control (AuthorizationPolicy)
@@ -57,6 +58,7 @@ Istio is a **full-featured service mesh**. Sidecar proxies (Envoy) intercept all
 - Service-to-service observability
 
 **Don't use Istio for:**
+
 - Small clusters (1-10 services) — overhead isn't worth it
 - Where simpler alternatives (Linkerd, Cilium) suffice
 - Teams that don't have mesh expertise
@@ -106,6 +108,7 @@ istioctl install --set profile=default -y
 ```
 
 The default profile:
+
 - istiod (1 replica by default, scale for HA)
 - Ingress gateway
 - CNI plugin (optional, but recommended)
@@ -134,11 +137,11 @@ spec:
   template:
     metadata:
       annotations:
-        sidecar.istio.io/inject: "false"   # explicitly no sidecar
+        sidecar.istio.io/inject: "false" # explicitly no sidecar
     spec:
       containers:
-      - name: my-app
-        image: myapp:v1
+        - name: my-app
+          image: myapp:v1
 ```
 
 ### Verifying injection
@@ -175,7 +178,7 @@ metadata:
   namespace: legacy
 spec:
   mtls:
-    mode: PERMISSIVE   # accept both mTLS and plaintext
+    mode: PERMISSIVE # accept both mTLS and plaintext
 ```
 
 **For migration:**
@@ -207,15 +210,15 @@ spec:
     matchLabels:
       app: my-app
   rules:
-  # allow only from my-app's own namespace
-  - from:
-    - source:
-        principals:
-        - cluster.local/ns/my-app/sa/my-app-sa
-  # allow only GET, POST methods
-  - to:
-    - operation:
-        methods: ["GET", "POST"]
+    # allow only from my-app's own namespace
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/my-app/sa/my-app-sa
+    # allow only GET, POST methods
+    - to:
+        - operation:
+            methods: ["GET", "POST"]
 ```
 
 **Patterns:**
@@ -223,25 +226,25 @@ spec:
 ```yaml
 # allow all from same namespace
 - from:
-  - source:
-      principals:
-      - cluster.local/ns/<ns>/*
+    - source:
+        principals:
+          - cluster.local/ns/<ns>/*
 
 # allow specific service
 - from:
-  - source:
-      principals:
-      - cluster.local/ns/<ns>/sa/<sa>
+    - source:
+        principals:
+          - cluster.local/ns/<ns>/sa/<sa>
 
 # allow with specific header
 - when:
-  - key: request.headers[x-api-key]
-    values: ["secret"]
+    - key: request.headers[x-api-key]
+      values: ["secret"]
 
 # allow from external (with JWT)
 - from:
-  - source:
-      requestPrincipals: ["*"]
+    - source:
+        requestPrincipals: ["*"]
 ```
 
 **Default deny:**
@@ -253,8 +256,7 @@ kind: AuthorizationPolicy
 metadata:
   name: deny-all
   namespace: my-app
-spec:
-  {}   # empty
+spec: {} # empty
 ```
 
 Combine with allow rules for "default deny + explicit allow."
@@ -270,25 +272,25 @@ metadata:
   name: my-app
 spec:
   hosts:
-  - my-app
+    - my-app
   http:
-  - match:
-    - headers:
-        x-canary:
-          exact: "true"
-    route:
-    - destination:
-        host: my-app
-        subset: v2
-  - route:
-    - destination:
-        host: my-app
-        subset: v1
-      weight: 90
-    - destination:
-        host: my-app
-        subset: v2
-      weight: 10   # 10% canary
+    - match:
+        - headers:
+            x-canary:
+              exact: "true"
+      route:
+        - destination:
+            host: my-app
+            subset: v2
+    - route:
+        - destination:
+            host: my-app
+            subset: v1
+          weight: 90
+        - destination:
+            host: my-app
+            subset: v2
+          weight: 10 # 10% canary
 ```
 
 ### DestinationRule (subset definition)
@@ -301,12 +303,12 @@ metadata:
 spec:
   host: my-app
   subsets:
-  - name: v1
-    labels:
-      version: v1
-  - name: v2
-    labels:
-      version: v2
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
   trafficPolicy:
     connectionPool:
       tcp:
@@ -337,17 +339,17 @@ metadata:
   name: my-app
 spec:
   hosts:
-  - my-app
+    - my-app
   http:
-  - route:
-    - destination:
-        host: my-app
-        subset: v1
-      weight: 100
-    - destination:
-        host: my-app
-        subset: v2
-      weight: 0
+    - route:
+        - destination:
+            host: my-app
+            subset: v1
+          weight: 100
+        - destination:
+            host: my-app
+            subset: v2
+          weight: 0
 
 # 4. Update weights to 1%, 5%, 10%, 50%, 100%
 # (over time, as you monitor)
@@ -364,21 +366,21 @@ metadata:
   name: my-app
 spec:
   hosts:
-  - my-app
+    - my-app
   http:
-  - fault:
-      delay:
-        percentage:
-          value: 10
-        fixedDelay: 2s
-      abort:
-        percentage:
-          value: 5
-        httpStatus: 503
-    route:
-    - destination:
-        host: my-app
-        subset: v1
+    - fault:
+        delay:
+          percentage:
+            value: 10
+          fixedDelay: 2s
+        abort:
+          percentage:
+            value: 5
+          httpStatus: 503
+      route:
+        - destination:
+            host: my-app
+            subset: v1
 ```
 
 **Inject 10% of requests to have 2s delay, 5% to abort with 503.** Test how your system handles failure.
@@ -392,17 +394,17 @@ metadata:
   name: my-app
 spec:
   hosts:
-  - my-app
+    - my-app
   http:
-  - route:
-    - destination:
+    - route:
+        - destination:
+            host: my-app
+            subset: v1
+      mirror:
         host: my-app
-        subset: v1
-    mirror:
-      host: my-app
-      subset: v2
-    mirrorPercentage:
-      value: 100
+        subset: v2
+      mirrorPercentage:
+        value: 100
 ```
 
 All v1 traffic is mirrored to v2. v2's response is discarded.
@@ -420,15 +422,15 @@ spec:
   selector:
     istio: ingressgateway
   servers:
-  - port:
-      number: 443
-      name: https
-      protocol: HTTPS
-    tls:
-      mode: SIMPLE
-      credentialName: my-app-cert
-    hosts:
-    - app.example.com
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: my-app-cert
+      hosts:
+        - app.example.com
 ```
 
 ```yaml
@@ -438,18 +440,19 @@ metadata:
   name: my-app
 spec:
   hosts:
-  - app.example.com
+    - app.example.com
   gateways:
-  - my-gateway
+    - my-gateway
   http:
-  - route:
-    - destination:
-        host: my-app
-        port:
-          number: 80
+    - route:
+        - destination:
+            host: my-app
+            port:
+              number: 80
 ```
 
 **Two resources, two roles:**
+
 - **Gateway:** L4 (port, TLS, hosts)
 - **VirtualService:** L7 (routing rules)
 
@@ -462,6 +465,7 @@ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samp
 ```
 
 UI shows:
+
 - Service graph
 - Traffic flow
 - mTLS status
@@ -485,6 +489,7 @@ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samp
 Sidecars export metrics on `:15090`. Scrape with Prometheus.
 
 **Key metrics:**
+
 - `istio_requests_total` — request count, labels: source, destination, status
 - `istio_request_duration_milliseconds` — latency
 - `istio_tcp_sent_bytes_total` — TCP traffic
@@ -499,27 +504,29 @@ istioctl install --set profile=ambient -y
 ```
 
 **Pros:**
+
 - No sidecar resource overhead
 - Faster pod startup
 - Less CPU/memory per pod
 
 **Cons:**
+
 - Newer, less battle-tested
 - Some features not yet available (e.g., per-pod config)
 
 ## Common gotchas
 
-* **Sidecars add latency** (~1-3ms per request) and resource overhead (~50-100MB per pod).
-* **STRICT mTLS breaks non-Istio clients.** Start with PERMISSIVE, migrate carefully.
-* **AuthorizationPolicy is namespace-scoped.** Cluster-wide policies need ClusterAuthorizationPolicy (or use mesh-level).
-* **Service entries** for external services (databases, etc.) need to be defined. Otherwise, sidecars can't reach them.
-* **Outbound traffic** is blocked by default. Add ServiceEntry for external dependencies.
-* **The ingress gateway is a SPOF** if not scaled. Run 2+ replicas.
-* **Patching sidecars in running pods** requires pod restart. Update the deployment.
-* **Resource limits on sidecars** can cause issues. Sidecar needs enough to handle traffic.
-* **The control plane (istiod) is a SPOF** if not HA. Run 3+ replicas for production.
-* **Mutual mTLS doesn't replace app-level auth.** It's network-layer only. Apps still need to authenticate users.
-* **Sidecar ordering matters in init containers.** Istio uses iptables to redirect traffic; broken iptables rules break apps.
+- **Sidecars add latency** (~1-3ms per request) and resource overhead (~50-100MB per pod).
+- **STRICT mTLS breaks non-Istio clients.** Start with PERMISSIVE, migrate carefully.
+- **AuthorizationPolicy is namespace-scoped.** Cluster-wide policies need ClusterAuthorizationPolicy (or use mesh-level).
+- **Service entries** for external services (databases, etc.) need to be defined. Otherwise, sidecars can't reach them.
+- **Outbound traffic** is blocked by default. Add ServiceEntry for external dependencies.
+- **The ingress gateway is a SPOF** if not scaled. Run 2+ replicas.
+- **Patching sidecars in running pods** requires pod restart. Update the deployment.
+- **Resource limits on sidecars** can cause issues. Sidecar needs enough to handle traffic.
+- **The control plane (istiod) is a SPOF** if not HA. Run 3+ replicas for production.
+- **Mutual mTLS doesn't replace app-level auth.** It's network-layer only. Apps still need to authenticate users.
+- **Sidecar ordering matters in init containers.** Istio uses iptables to redirect traffic; broken iptables rules break apps.
 
 ## Migration from non-mesh
 
@@ -603,7 +610,7 @@ spec:
 
 ## See also
 
-* [[Kubernetes/guides/networking/linkerd|linkerd]] — lighter alternative
-* [[Kubernetes/guides/networking/comparison|comparison]] — Istio vs Linkerd vs Cilium
-* [[Kubernetes/guides/delivery/progressive-delivery/strategies|progressive-delivery]] — canary patterns
-* [Istio docs](https://istio.io/latest/docs/)
+- [[Kubernetes/guides/networking/linkerd|linkerd]] — lighter alternative
+- [[Kubernetes/guides/networking/comparison|comparison]] — Istio vs Linkerd vs Cilium
+- [[Kubernetes/guides/delivery/progressive-delivery/strategies|progressive-delivery]] — canary patterns
+- [Istio docs](https://istio.io/latest/docs/)

@@ -46,7 +46,7 @@ Google Cloud Firestore is a serverless, horizontally scalable NoSQL document dat
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **Shallow Queries by Default:** Querying a collection (e.g. `/users`) fetches only the matching user documents; it **never automatically downloads sub-collections** (`/orders`), preventing unintended bandwidth and memory exhaustion.
+- **Shallow Queries by Default:** Querying a collection (e.g. `/users`) fetches only the matching user documents; it **never automatically downloads sub-collections** (`/orders`), preventing unintended bandwidth and memory exhaustion.
 
 ---
 
@@ -56,20 +56,21 @@ Google Cloud Firestore is a serverless, horizontally scalable NoSQL document dat
 
 When provisioning a Firestore database, you must select one of two mutually exclusive modes:
 
-| Dimension | Firestore in Native Mode (Recommended) | Firestore in Datastore Mode |
-| :--- | :--- | :--- |
-| **Target Audience** | Web, mobile, serverless apps, and microservices | Server-only architectures, legacy App Engine Datastore |
-| **Client Support** | Client SDKs (iOS, Android, Web) + Server SDKs | **Server SDKs exclusively** (No mobile/web direct client SDKs) |
-| **Real-Time Listeners**| **Supported (`onSnapshot`):** Instant live websocket updates | Not supported |
-| **Offline Sync** | **Supported:** Automatic local cache and sync | Not supported |
-| **Security Rules** | Declarative client security rules (`firestore.rules`) | Standard GCP IAM exclusively |
-| **Max Write Rate** | 10,000 writes/sec initial (scales automatically) | Scales immediately to millions of writes/sec |
+| Dimension               | Firestore in Native Mode (Recommended)                       | Firestore in Datastore Mode                                    |
+| :---------------------- | :----------------------------------------------------------- | :------------------------------------------------------------- |
+| **Target Audience**     | Web, mobile, serverless apps, and microservices              | Server-only architectures, legacy App Engine Datastore         |
+| **Client Support**      | Client SDKs (iOS, Android, Web) + Server SDKs                | **Server SDKs exclusively** (No mobile/web direct client SDKs) |
+| **Real-Time Listeners** | **Supported (`onSnapshot`):** Instant live websocket updates | Not supported                                                  |
+| **Offline Sync**        | **Supported:** Automatic local cache and sync                | Not supported                                                  |
+| **Security Rules**      | Declarative client security rules (`firestore.rules`)        | Standard GCP IAM exclusively                                   |
+| **Max Write Rate**      | 10,000 writes/sec initial (scales automatically)             | Scales immediately to millions of writes/sec                   |
 
 ### 2. ACID Multi-Document Transactions
 
 Firestore supports full ACID transactions across multiple documents:
-* **Optimistic Concurrency Control (OCC):** Read operations are performed first, followed by atomic writes.
-* If any document read during the transaction is modified by a concurrent client before the commit completes, Firestore automatically retries the entire transaction.
+
+- **Optimistic Concurrency Control (OCC):** Read operations are performed first, followed by atomic writes.
+- If any document read during the transaction is modified by a concurrent client before the commit completes, Firestore automatically retries the entire transaction.
 
 ```python
 # Python ACID Multi-Document Transaction Example:
@@ -88,8 +89,8 @@ def transfer_funds(transaction, source_ref, dest_ref, amount):
 
 ### 3. Single-Field vs. Composite Indexes
 
-* **Single-Field Indexes (Automatic):** Firestore automatically indexes every single field in every document (both ascending and descending).
-* **Composite Indexes (Manual):** Queries that filter or sort on multiple fields (e.g. `WHERE status = 'PAID' ORDER BY created_at DESC`) require an explicit composite index defined in `firestore.indexes.json`.
+- **Single-Field Indexes (Automatic):** Firestore automatically indexes every single field in every document (both ascending and descending).
+- **Composite Indexes (Manual):** Queries that filter or sort on multiple fields (e.g. `WHERE status = 'PAID' ORDER BY created_at DESC`) require an explicit composite index defined in `firestore.indexes.json`.
 
 ---
 
@@ -103,7 +104,7 @@ gcloud firestore databases create \
   --type=firestore-native
 ```
 
-* `nam5`: Google's multi-region dual-primary location spanning `us-central1` and `us-east1`, backed by a 99.999% uptime SLA.
+- `nam5`: Google's multi-region dual-primary location spanning `us-central1` and `us-east1`, backed by a 99.999% uptime SLA.
 
 ### 2. Deploying Composite Indexes via `firestore.indexes.json`
 
@@ -114,8 +115,8 @@ gcloud firestore databases create \
       "collectionGroup": "orders",
       "queryScope": "COLLECTION",
       "fields": [
-        {"fieldPath": "status", "order": "ASCENDING"},
-        {"fieldPath": "total", "order": "DESCENDING"}
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "total", "order": "DESCENDING" }
       ]
     }
   ],
@@ -134,12 +135,12 @@ firebase deploy --only firestore:indexes
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // User profile documents: Only the authenticated owner can write
     match /users/{userId} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
-      
+
       // Nested sub-collection: Orders
       match /orders/{orderId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -153,46 +154,48 @@ service cloud.firestore {
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max document size** | 1 MiB (1,048,576 bytes) | Store large images/PDFs in Cloud Storage |
-| **Max write rate to a single document**| **1 write per second** | **Critical:** Avoid single-document counter anti-pattern |
-| **Max transaction duration** | 270 seconds | Keep transactions fast and non-blocking |
-| **Max documents per batch write** | 500 documents | Split bulk operations into 500-item chunks |
-| **Max sub-collection depth** | 100 levels | Typical architectures rarely exceed 3–4 levels |
+| Parameter                               | Limit                   | Production Notes                                         |
+| :-------------------------------------- | :---------------------- | :------------------------------------------------------- |
+| **Max document size**                   | 1 MiB (1,048,576 bytes) | Store large images/PDFs in Cloud Storage                 |
+| **Max write rate to a single document** | **1 write per second**  | **Critical:** Avoid single-document counter anti-pattern |
+| **Max transaction duration**            | 270 seconds             | Keep transactions fast and non-blocking                  |
+| **Max documents per batch write**       | 500 documents           | Split bulk operations into 500-item chunks               |
+| **Max sub-collection depth**            | 100 levels              | Typical architectures rarely exceed 3–4 levels           |
 
 ---
 
 ## References
 
-* **Firestore Documentation:** https://cloud.google.com/firestore/docs
-* **Native vs Datastore Mode Guide:** https://cloud.google.com/firestore/docs/choosing-a-database-mode
-* **Security Rules Reference:** https://firebase.google.com/docs/firestore/security/get-started
-* **Pricing:** https://cloud.google.com/firestore/pricing
+- **Firestore Documentation:** https://cloud.google.com/firestore/docs
+- **Native vs Datastore Mode Guide:** https://cloud.google.com/firestore/docs/choosing-a-database-mode
+- **Security Rules Reference:** https://firebase.google.com/docs/firestore/security/get-started
+- **Pricing:** https://cloud.google.com/firestore/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Collaborative Mobile Application (Native Mode)
-* 50,000 daily active mobile users syncing data via live WebSocket listeners.
-* Operations:
-  * Document Reads: 15 million reads / month.
-  * Document Writes: 3 million writes / month.
-  * Document Deletes: 500,000 deletes / month.
-* Storage: 25 GB of JSON document data.
-* Billing calculation (us-central1 multi-region):
-  * Reads (after 1.5M free): 13.5M × $0.06 / 100k = **$8.10**.
-  * Writes (after 600k free): 2.4M × $0.18 / 100k = **$4.32**.
-  * Deletes: 500k × $0.02 / 100k = **$0.10**.
-  * Storage: 25 GB × $0.18 / GB = **$4.50**.
-* **Total Monthly Database Cost:** **~$17.02 / month** (Serving 50k users with real-time sync).
+
+- 50,000 daily active mobile users syncing data via live WebSocket listeners.
+- Operations:
+  - Document Reads: 15 million reads / month.
+  - Document Writes: 3 million writes / month.
+  - Document Deletes: 500,000 deletes / month.
+- Storage: 25 GB of JSON document data.
+- Billing calculation (us-central1 multi-region):
+  - Reads (after 1.5M free): 13.5M × $0.06 / 100k = **$8.10**.
+  - Writes (after 600k free): 2.4M × $0.18 / 100k = **$4.32**.
+  - Deletes: 500k × $0.02 / 100k = **$0.10**.
+  - Storage: 25 GB × $0.18 / GB = **$4.50**.
+- **Total Monthly Database Cost:** **~$17.02 / month** (Serving 50k users with real-time sync).
 
 ### Scenario 2: High-Volume Analytics Event Ingestion (Datastore Mode)
-* 100 million event documents written per month by backend worker services.
-* Billable writes: 100M × $0.18 / 100k = **$180.00 / month**.
-* 100 GB storage retained: $18.00 / month.
-* **Total Monthly Bill:** **~$198.00 / month**.
+
+- 100 million event documents written per month by backend worker services.
+- Billable writes: 100M × $0.18 / 100k = **$180.00 / month**.
+- 100 GB storage retained: $18.00 / month.
+- **Total Monthly Bill:** **~$198.00 / month**.
 
 ---
 

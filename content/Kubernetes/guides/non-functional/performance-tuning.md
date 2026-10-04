@@ -40,11 +40,11 @@ Every container has four resources to tune:
 
 Kubernetes assigns pods to one of three QoS classes based on requests and limits. This affects scheduling and eviction behavior.
 
-| QoS class | When assigned | Eviction order |
-|-----------|--------------|----------------|
-| **Guaranteed** | requests == limits (both CPU and memory) | Last |
-| **Burstable** | requests < limits, or only one is set | Middle |
-| **BestEffort** | No requests, no limits | First |
+| QoS class      | When assigned                            | Eviction order |
+| -------------- | ---------------------------------------- | -------------- |
+| **Guaranteed** | requests == limits (both CPU and memory) | Last           |
+| **Burstable**  | requests < limits, or only one is set    | Middle         |
+| **BestEffort** | No requests, no limits                   | First          |
 
 **Guaranteed** pods are the most stable but most expensive. They get scheduled onto dedicated resources and are last to be evicted under pressure.
 
@@ -84,8 +84,8 @@ resources:
 ```yaml
 # Don't do this in production
 containers:
-- name: web
-  image: myorg/web:v1
+  - name: web
+    image: myorg/web:v1
 ```
 
 The pod uses whatever's free. Under load, it can use the whole node. Under pressure, it's killed first.
@@ -145,10 +145,12 @@ $ rate(container_cpu_cfs_throttled_seconds_total[5m])
 **Common causes:**
 
 1. **CPU limit too low.** App legitimately needs more.
+
    ```bash
    $ kubectl top pod web-1
    # CPU: 980m  (limit was 1, app is hitting it)
    ```
+
    Fix: increase the limit, or set `Burstable: requests < limits`.
 
 2. **Multi-threaded app with one core limit.** A Java app with 16 threads on a 1-CPU pod thrashes.
@@ -254,12 +256,12 @@ K8s itself doesn't tune the network, but there are k8s-aware patterns:
 ```yaml
 # topology spread for low-latency
 topologySpreadConstraints:
-- maxSkew: 1
-  topologyKey: topology.kubernetes.io/zone
-  whenUnsatisfiable: DoNotSchedule
-  labelSelector:
-    matchLabels:
-      app: web
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app: web
 ```
 
 ## JVM-specific tuning
@@ -268,14 +270,14 @@ JVMs need explicit tuning for containers. The default behavior is wrong for k8s.
 
 ```yaml
 env:
-- name: JAVA_OPTS
-  value: >-
-    -XX:+UseContainerSupport
-    -XX:MaxRAMPercentage=75.0
-    -XX:+ExitOnOutOfMemoryError
-    -XX:+HeapDumpOnOutOfMemoryError
-    -XX:HeapDumpPath=/tmp/heapdump.hprof
-    -Xss512k
+  - name: JAVA_OPTS
+    value: >-
+      -XX:+UseContainerSupport
+      -XX:MaxRAMPercentage=75.0
+      -XX:+ExitOnOutOfMemoryError
+      -XX:+HeapDumpOnOutOfMemoryError
+      -XX:HeapDumpPath=/tmp/heapdump.hprof
+      -Xss512k
 resources:
   requests:
     cpu: 500m
@@ -300,12 +302,12 @@ The node's kernel and container runtime have settings that affect performance.
 # pod spec (privileged) or via node-level config
 securityContext:
   sysctls:
-  - name: net.core.somaxconn
-    value: "65535"
-  - name: net.ipv4.tcp_max_syn_backlog
-    value: "65535"
-  - name: vm.swappiness
-    value: "1"
+    - name: net.core.somaxconn
+      value: "65535"
+    - name: net.ipv4.tcp_max_syn_backlog
+      value: "65535"
+    - name: vm.swappiness
+      value: "1"
 ```
 
 Or at the node level via kubelet config.
@@ -376,10 +378,12 @@ For latency-sensitive services, every millisecond matters.
 **Levers:**
 
 - **CPU pinning** (static CPU manager policy) — pod gets dedicated cores, no scheduling noise
+
   ```yaml
   # kubelet config
   cpuManagerPolicy: static
   ```
+
   ```yaml
   # pod
   resources:
@@ -436,19 +440,19 @@ $ perf top
 
 ## Common gotchas
 
-* **`requests.cpu: 0` (or no requests)** means the scheduler can pack pods unlimited onto a node. Under load, the node thrashes.
-* **Memory limit too high** doesn't hurt much. Memory limit too low causes OOM. Err on the side of higher.
-* **CPU limit too high** doesn't hurt much. CPU limit too low causes throttling. Err on the side of higher.
-* **JVMs default to 1/4 host memory for heap.** On a 64Gi node, a 1Gi container limit, the JVM tries 16Gi heap. Set `-Xmx` explicitly.
-* **Java 8 needs `-XX:+UseContainerSupport`** to respect cgroup limits. Java 11+ has it on by default.
-* **Go programs don't GC-limit well** by default. Set `GOMEMLIMIT` (Go 1.19+).
-* **Don't set requests too high "for safety."** Over-provisioning wastes resources.
-* **The scheduler only knows requests.** If your app uses 1 CPU but requests 2, the scheduler thinks you need 2x what you do.
-* **CPU throttling is silent.** You can be throttled and never see an error.
-* **Memory pressure on a node** causes kubelet to evict pods, even BestEffort ones. Guaranteed pods are last to go.
-* **`cpuManagerPolicy: static`** is a kubelet setting, not a pod setting. It affects all pods on the node.
-* **The HPA and VPA both need requests to work.** Set them.
-* **`topology.kubernetes.io/region` and `topology.kubernetes.io/zone`** are the standard labels, but they're populated by the cloud provider. Self-managed clusters may not have them.
+- **`requests.cpu: 0` (or no requests)** means the scheduler can pack pods unlimited onto a node. Under load, the node thrashes.
+- **Memory limit too high** doesn't hurt much. Memory limit too low causes OOM. Err on the side of higher.
+- **CPU limit too high** doesn't hurt much. CPU limit too low causes throttling. Err on the side of higher.
+- **JVMs default to 1/4 host memory for heap.** On a 64Gi node, a 1Gi container limit, the JVM tries 16Gi heap. Set `-Xmx` explicitly.
+- **Java 8 needs `-XX:+UseContainerSupport`** to respect cgroup limits. Java 11+ has it on by default.
+- **Go programs don't GC-limit well** by default. Set `GOMEMLIMIT` (Go 1.19+).
+- **Don't set requests too high "for safety."** Over-provisioning wastes resources.
+- **The scheduler only knows requests.** If your app uses 1 CPU but requests 2, the scheduler thinks you need 2x what you do.
+- **CPU throttling is silent.** You can be throttled and never see an error.
+- **Memory pressure on a node** causes kubelet to evict pods, even BestEffort ones. Guaranteed pods are last to go.
+- **`cpuManagerPolicy: static`** is a kubelet setting, not a pod setting. It affects all pods on the node.
+- **The HPA and VPA both need requests to work.** Set them.
+- **`topology.kubernetes.io/region` and `topology.kubernetes.io/zone`** are the standard labels, but they're populated by the cloud provider. Self-managed clusters may not have them.
 
 ## A worked example
 
@@ -482,6 +486,7 @@ JAVA_OPTS=-Xmx1500m   <-- but cgroup is 2Gi, JVM tries 1.5Gi
 ```
 
 **Issues:**
+
 - No requests — scheduler can over-pack
 - No CPU limit — fine, but no throttling means GC isn't CPU-constrained
 - JVM heap = 1.5Gi, but cgroup is 2Gi, no headroom for non-heap
@@ -490,24 +495,24 @@ JAVA_OPTS=-Xmx1500m   <-- but cgroup is 2Gi, JVM tries 1.5Gi
 
 ```yaml
 env:
-- name: JAVA_OPTS
-  value: >-
-    -XX:+UseG1GC
-    -XX:MaxRAMPercentage=70.0
-    -XX:+ExitOnOutOfMemoryError
+  - name: JAVA_OPTS
+    value: >-
+      -XX:+UseG1GC
+      -XX:MaxRAMPercentage=70.0
+      -XX:+ExitOnOutOfMemoryError
 resources:
   requests:
     cpu: 1
-    memory: 1.5Gi     # 1.5Gi: realistic steady-state
+    memory: 1.5Gi # 1.5Gi: realistic steady-state
   limits:
     cpu: 2
-    memory: 2Gi       # 2Gi: allows headroom
+    memory: 2Gi # 2Gi: allows headroom
 ```
 
 **Result:** P99 latency drops to 200ms. GC pauses still happen but are <100ms.
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/auto-scaling|auto-scaling]] — HPA on resources
-* [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — right-sizing is cost
-* [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — OOMKilled diagnostics
+- [[Kubernetes/guides/non-functional/auto-scaling|auto-scaling]] — HPA on resources
+- [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — right-sizing is cost
+- [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — OOMKilled diagnostics

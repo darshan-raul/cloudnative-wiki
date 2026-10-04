@@ -17,12 +17,12 @@ Two numbers define your DR plan:
 - **RPO (Recovery Point Objective)** — how much data can you afford to lose? Measured in time. RPO of 1 hour means: if disaster strikes, you can lose at most 1 hour of data.
 - **RTO (Recovery Time Objective)** — how long until you're back online? Measured in time. RTO of 4 hours means: from disaster to fully restored, 4 hours max.
 
-| Tier | RPO | RTO | Cost | Example |
-|------|-----|-----|------|---------|
-| Tier 1 (best) | seconds | seconds | very high | Active-active multi-region |
-| Tier 2 | minutes | minutes | high | Active-passive with hot standby |
-| Tier 3 | 1 hour | hours | medium | Backup + restore |
-| Tier 4 (lowest) | 24 hours | 24+ hours | low | Offsite backups only |
+| Tier            | RPO      | RTO       | Cost      | Example                         |
+| --------------- | -------- | --------- | --------- | ------------------------------- |
+| Tier 1 (best)   | seconds  | seconds   | very high | Active-active multi-region      |
+| Tier 2          | minutes  | minutes   | high      | Active-passive with hot standby |
+| Tier 3          | 1 hour   | hours     | medium    | Backup + restore                |
+| Tier 4 (lowest) | 24 hours | 24+ hours | low       | Offsite backups only            |
 
 **For most k8s workloads, Tier 2-3 is appropriate.**
 
@@ -111,6 +111,7 @@ Tools that snapshot the filesystem while the app is running. May not be applicat
 ## Velero — the k8s-native backup tool
 
 Velero backs up:
+
 - Cluster state (all API objects)
 - Persistent volumes (via CSI snapshots, Restic, or Kopia)
 
@@ -204,6 +205,7 @@ Every 5 minutes:
 The hardest part isn't the data — it's getting the cluster back up. **GitOps is essential here.**
 
 If your cluster was provisioned with:
+
 - **kOps / Cluster API** — declarative, can re-provision
 - **Terraform / Pulumi** — declarative, can re-apply
 - **EKS / GKE / AKS** — declarative, can recreate
@@ -243,12 +245,12 @@ If your cluster was provisioned with:
 - RTO: seconds (DNS update or LB failover)
 - RPO: seconds (or zero, with synchronous replication)
 
-| Pattern | RTO | RPO | Cost | When to use |
-|---------|-----|-----|------|-------------|
-| Backup-and-restore | 4+ hours | 1+ hour | $ | Compliance, not customer-facing |
-| Pilot light | 30-60 min | minutes | $$ | Most production |
-| Warm standby | 10-30 min | seconds | $$$ | Critical services |
-| Active-active | seconds | zero | $$$$ | Telco, finance, payments |
+| Pattern            | RTO       | RPO     | Cost | When to use                     |
+| ------------------ | --------- | ------- | ---- | ------------------------------- |
+| Backup-and-restore | 4+ hours  | 1+ hour | $    | Compliance, not customer-facing |
+| Pilot light        | 30-60 min | minutes | $$   | Most production                 |
+| Warm standby       | 10-30 min | seconds | $$$  | Critical services               |
+| Active-active      | seconds   | zero    | $$$$ | Telco, finance, payments        |
 
 ## The DR plan
 
@@ -266,15 +268,15 @@ A written, tested DR plan. Not a wiki page nobody reads — a real document with
 
 ## Tools
 
-| Tool | What it backs up | When to use |
-|------|------------------|-------------|
-| **Velero** | Cluster state + PVs (CSI/restic) | Most clusters |
-| **etcdctl snapshot** | etcd directly | Self-managed clusters |
-| **Restic** | File-level backup | When CSI snapshots aren't available |
-| **Kopia** | File-level backup with dedup | Modern restic alternative |
-| **Cloud-native snapshots** (EBS, GCE PD) | Volume snapshots | When you control the storage |
-| **App-level tools** (pg_basebackup, mongodump) | App-consistent data | Critical data stores |
-| **Cloud backup services** (AWS Backup, Azure Backup) | Cross-service backup | Multi-service DR |
+| Tool                                                 | What it backs up                 | When to use                         |
+| ---------------------------------------------------- | -------------------------------- | ----------------------------------- |
+| **Velero**                                           | Cluster state + PVs (CSI/restic) | Most clusters                       |
+| **etcdctl snapshot**                                 | etcd directly                    | Self-managed clusters               |
+| **Restic**                                           | File-level backup                | When CSI snapshots aren't available |
+| **Kopia**                                            | File-level backup with dedup     | Modern restic alternative           |
+| **Cloud-native snapshots** (EBS, GCE PD)             | Volume snapshots                 | When you control the storage        |
+| **App-level tools** (pg_basebackup, mongodump)       | App-consistent data              | Critical data stores                |
+| **Cloud backup services** (AWS Backup, Azure Backup) | Cross-service backup             | Multi-service DR                    |
 
 ## Testing backups
 
@@ -327,18 +329,18 @@ The cost goes up exponentially as you push both down. **Match the targets to the
 
 ## Common gotchas
 
-* **etcd snapshots contain secrets in plaintext.** Encrypt the backup at rest.
-* **Velero backups aren't app-consistent.** For databases, use the app's own backup mechanism.
-* **RPO of 0 is hard.** Even sync replication has a few ms of lag.
-* **RTO of 0 is impossible.** At least DNS propagation takes seconds.
-* **Cloud-managed control plane is HA, but data plane is yours.** EKS recovers the control plane. Your workloads, your problem.
-* **Backup encryption key is not the same as cluster encryption key.** If you lose the cluster, you still have the key (in a separate vault).
-* **Cross-region replication is not a substitute for proper backup.** Replicated data with corruption = corruption in both regions. Have a real backup.
-* **Ransomware doesn't care about replication.** If your cluster is encrypted by attackers, replicated data is too. Have an offline/air-gapped backup.
-* **GitOps and DR work together.** Git is the source of truth. If the cluster is gone, `kubectl apply` from git rebuilds.
-* **Testing DR takes the cluster offline.** Use a non-prod cluster or a test environment.
-* **DNS failover isn't instant.** TTLs matter. Set them appropriately.
-* **The 3am call:** you need people who know the DR plan. Document it. Train them.
+- **etcd snapshots contain secrets in plaintext.** Encrypt the backup at rest.
+- **Velero backups aren't app-consistent.** For databases, use the app's own backup mechanism.
+- **RPO of 0 is hard.** Even sync replication has a few ms of lag.
+- **RTO of 0 is impossible.** At least DNS propagation takes seconds.
+- **Cloud-managed control plane is HA, but data plane is yours.** EKS recovers the control plane. Your workloads, your problem.
+- **Backup encryption key is not the same as cluster encryption key.** If you lose the cluster, you still have the key (in a separate vault).
+- **Cross-region replication is not a substitute for proper backup.** Replicated data with corruption = corruption in both regions. Have a real backup.
+- **Ransomware doesn't care about replication.** If your cluster is encrypted by attackers, replicated data is too. Have an offline/air-gapped backup.
+- **GitOps and DR work together.** Git is the source of truth. If the cluster is gone, `kubectl apply` from git rebuilds.
+- **Testing DR takes the cluster offline.** Use a non-prod cluster or a test environment.
+- **DNS failover isn't instant.** TTLs matter. Set them appropriately.
+- **The 3am call:** you need people who know the DR plan. Document it. Train them.
 
 ## A worked example
 
@@ -401,6 +403,7 @@ Set up backups before you need them. The first 90 days of any new cluster should
 ## Backup the backup's backup
 
 **The 3-2-1 rule:**
+
 - 3 copies of data
 - 2 different storage types
 - 1 offsite (different region, different cloud, or air-gapped)
@@ -569,31 +572,31 @@ aws s3 cp backup.tar.gz s3://my-backups/ \
 
 How long do you keep backups?
 
-| Tier | Daily | Weekly | Monthly | Yearly |
-|------|-------|--------|---------|--------|
-| **Tier 0** (critical) | 7 days | 4 weeks | 12 months | 7 years |
-| **Tier 1** (production) | 7 days | 4 weeks | 6 months | 2 years |
-| **Tier 2** (internal) | 3 days | 2 weeks | 3 months | None |
-| **Tier 3** (dev) | 1 day | None | None | None |
+| Tier                    | Daily  | Weekly  | Monthly   | Yearly  |
+| ----------------------- | ------ | ------- | --------- | ------- |
+| **Tier 0** (critical)   | 7 days | 4 weeks | 12 months | 7 years |
+| **Tier 1** (production) | 7 days | 4 weeks | 6 months  | 2 years |
+| **Tier 2** (internal)   | 3 days | 2 weeks | 3 months  | None    |
+| **Tier 3** (dev)        | 1 day  | None    | None      | None    |
 
 **Compliance mandates** may require specific retention (HIPAA: 6 years, PCI-DSS: 1 year, SOX: 7 years).
 
 ## Common gotchas (deep)
 
-* **The "primary" bucket isn't backed up if it's encrypted with a key that you lose.** Multiple encryption paths.
-* **Cross-region replication has eventual consistency.** A write to us-east-1 may not be in us-west-2 for seconds. Test the lag.
-* **S3 Glacier is cheap but slow to restore.** Hours to days. Don't use it for active DR.
-* **Air-gapped backups are the only true ransomware protection.** Replicated data is also encrypted by the attacker.
-* **The restore runbook should be in a different place from the cluster.** If the cluster is gone, you still need the runbook. (git is fine.)
-* **Restoring from cold storage is slow.** Plan for hours.
-* **Velero's restic integration is slow for large PVs.** Use CSI snapshots where possible.
-* **Application-level backup requires app cooperation.** If the app is down, you can't back it up.
-* **Database backups during heavy load are slow.** Schedule for off-peak.
-* **Network bandwidth for backup/restore is finite.** Don't run full backups during business hours.
-* **The restore target cluster must have the same CRDs.** If you restore a workload with a CRD that's not installed, the restore "succeeds" but the resource is broken.
-* **Backup retention doesn't survive "delete before X" policies.** Test your lifecycle policies.
-* **Encrypted backups need their encryption key.** If the key is in the cluster, restoring the cluster is hard. Move keys to a separate store.
-* **A full restore is not the same as an upgrade.** Restoring an old backup to a new cluster may need version migrations.
+- **The "primary" bucket isn't backed up if it's encrypted with a key that you lose.** Multiple encryption paths.
+- **Cross-region replication has eventual consistency.** A write to us-east-1 may not be in us-west-2 for seconds. Test the lag.
+- **S3 Glacier is cheap but slow to restore.** Hours to days. Don't use it for active DR.
+- **Air-gapped backups are the only true ransomware protection.** Replicated data is also encrypted by the attacker.
+- **The restore runbook should be in a different place from the cluster.** If the cluster is gone, you still need the runbook. (git is fine.)
+- **Restoring from cold storage is slow.** Plan for hours.
+- **Velero's restic integration is slow for large PVs.** Use CSI snapshots where possible.
+- **Application-level backup requires app cooperation.** If the app is down, you can't back it up.
+- **Database backups during heavy load are slow.** Schedule for off-peak.
+- **Network bandwidth for backup/restore is finite.** Don't run full backups during business hours.
+- **The restore target cluster must have the same CRDs.** If you restore a workload with a CRD that's not installed, the restore "succeeds" but the resource is broken.
+- **Backup retention doesn't survive "delete before X" policies.** Test your lifecycle policies.
+- **Encrypted backups need their encryption key.** If the key is in the cluster, restoring the cluster is hard. Move keys to a separate store.
+- **A full restore is not the same as an upgrade.** Restoring an old backup to a new cluster may need version migrations.
 
 ## The decision matrix
 
@@ -639,7 +642,7 @@ When disaster strikes:
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — day-to-day backup tooling
-* [[Kubernetes/guides/non-functional/high-availability|high-availability]] — preventing disasters
-* [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing the plan
-* [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — DR has a cost
+- [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — day-to-day backup tooling
+- [[Kubernetes/guides/non-functional/high-availability|high-availability]] — preventing disasters
+- [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing the plan
+- [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — DR has a cost

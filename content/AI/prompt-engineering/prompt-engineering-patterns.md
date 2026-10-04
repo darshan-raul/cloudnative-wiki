@@ -4,7 +4,7 @@
 
 Prompt engineering is the practice of designing and optimizing prompts to improve the performance of large language models (LLMs). Various **prompt engineering patterns** have emerged, each serving a unique purpose in improving AI-generated outputs. Below, we explore these patterns in detail, with examples for each.
 
-***
+---
 
 ### **1. Zero-Shot Prompting**
 
@@ -28,16 +28,16 @@ Is the following sentence positive or negative?
 
 #### **Use Cases**
 
-* Quick classification tasks
-* Basic text summarization
-* General knowledge-based queries
+- Quick classification tasks
+- Basic text summarization
+- General knowledge-based queries
 
 #### **Limitations**
 
-* May not always be accurate for complex or nuanced tasks
-* Can struggle with ambiguous inputs
+- May not always be accurate for complex or nuanced tasks
+- Can struggle with ambiguous inputs
 
-***
+---
 
 ### **2. Few-Shot Prompting**
 
@@ -56,7 +56,7 @@ Classify the sentiment of the following sentences:
 1. "The food was amazing!" → Positive
 2. "I hate waiting in long lines." → Negative
 3. "The product quality is disappointing." → Negative
-4. "This new feature is fantastic!" → 
+4. "This new feature is fantastic!" →
 ```
 
 **Response:**\
@@ -64,16 +64,16 @@ Classify the sentiment of the following sentences:
 
 #### **Use Cases**
 
-* When the model needs contextual guidance
-* Text classification
-* Translation tasks
+- When the model needs contextual guidance
+- Text classification
+- Translation tasks
 
 #### **Limitations**
 
-* Requires manual selection of good examples
-* Can be inconsistent if the examples don’t cover edge cases
+- Requires manual selection of good examples
+- Can be inconsistent if the examples don’t cover edge cases
 
-***
+---
 
 ### **3. Chain-of-Thought (CoT) Prompting**
 
@@ -103,16 +103,16 @@ The final answer is 6 apples.
 
 #### **Use Cases**
 
-* Math problem-solving
-* Logical reasoning
-* Code debugging and explanations
+- Math problem-solving
+- Logical reasoning
+- Code debugging and explanations
 
 #### **Limitations**
 
-* Longer responses increase computational cost
-* If the model starts with an incorrect step, the whole answer may be wrong
+- Longer responses increase computational cost
+- If the model starts with an incorrect step, the whole answer may be wrong
 
-***
+---
 
 ### **4. Self-Consistency Prompting**
 
@@ -127,7 +127,7 @@ Instead of generating a single response, the model generates **multiple outputs*
 **Prompt:**
 
 ```
-If all roses are flowers and some flowers fade quickly, does it mean that all roses fade quickly?  
+If all roses are flowers and some flowers fade quickly, does it mean that all roses fade quickly?
 Let's think step by step.
 ```
 
@@ -141,15 +141,15 @@ No, because "some flowers fade quickly" does not mean "all flowers fade quickly.
 
 #### **Use Cases**
 
-* Reducing hallucination in complex reasoning tasks
-* Improving reliability of AI-generated explanations
+- Reducing hallucination in complex reasoning tasks
+- Improving reliability of AI-generated explanations
 
 #### **Limitations**
 
-* Computationally expensive
-* Requires multiple inference runs
+- Computationally expensive
+- Requires multiple inference runs
 
-***
+---
 
 ### **5. ReAct (Reasoning + Acting) Prompting**
 
@@ -173,21 +173,21 @@ What do you do?
 **Response:**
 
 ```
-Think: The forward path looks clear, but I hear noises from the right.  
+Think: The forward path looks clear, but I hear noises from the right.
 Act: Move forward.
 ```
 
 #### **Use Cases**
 
-* AI agents that interact with users dynamically
-* Decision-making systems (e.g., game AI, chatbots)
+- AI agents that interact with users dynamically
+- Decision-making systems (e.g., game AI, chatbots)
 
 #### **Limitations**
 
-* Requires iterative interactions, making it slower
-* Needs structured environments where actions lead to meaningful outcomes
+- Requires iterative interactions, making it slower
+- Needs structured environments where actions lead to meaningful outcomes
 
-***
+---
 
 ### **6. Instruction Prompting**
 
@@ -202,7 +202,7 @@ Instruction prompting explicitly tells the model what to do, making it **follow 
 **Prompt:**
 
 ```
-Summarize the following article in exactly three sentences:  
+Summarize the following article in exactly three sentences:
 [Article text here]
 ```
 
@@ -214,14 +214,14 @@ The article discusses the recent advancements in AI. It highlights the role of r
 
 #### **Use Cases**
 
-* Controlling output length and format
-* Ensuring consistency in responses
+- Controlling output length and format
+- Ensuring consistency in responses
 
 #### **Limitations**
 
-* If the instructions are unclear, the model may not follow them correctly
+- If the instructions are unclear, the model may not follow them correctly
 
-***
+---
 
 ### **7. Role-Playing Prompting**
 
@@ -247,14 +247,14 @@ As a cybersecurity expert, I highly recommend using strong passwords to prevent 
 
 #### **Use Cases**
 
-* AI-powered tutors and assistants
-* Simulating customer support interactions
+- AI-powered tutors and assistants
+- Simulating customer support interactions
 
 #### **Limitations**
 
-* If not carefully controlled, the model may **hallucinate** expertise it does not have
+- If not carefully controlled, the model may **hallucinate** expertise it does not have
 
-***
+---
 
 ### **8. Iterative Refinement Prompting**
 
@@ -269,8 +269,8 @@ In this approach, the model is given **incremental feedback** to refine its resp
 **Prompt:**
 
 ```
-Here is my paragraph:  
-"The sun was bright. It was hot outside."  
+Here is my paragraph:
+"The sun was bright. It was hot outside."
 
 Make it more descriptive.
 ```
@@ -283,14 +283,14 @@ The golden sun blazed in the clear blue sky, casting shimmering heatwaves over t
 
 #### **Use Cases**
 
-* Creative writing and content improvement
-* Code refactoring and debugging
+- Creative writing and content improvement
+- Code refactoring and debugging
 
 #### **Limitations**
 
-* Requires iterative interactions, making it slower
+- Requires iterative interactions, making it slower
 
-***
+---
 
 #### **Final Thoughts**
 

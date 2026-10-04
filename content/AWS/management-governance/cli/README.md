@@ -202,6 +202,7 @@ aws ec2 describe-instances | jq '.Reservations[].Instances[] | select(.State.Nam
 ## AWS CLI v2 vs v1
 
 AWS CLI v2 is the current version with improvements:
+
 - **Session manager** plugin for connecting to EC2 without SSH
 - **Automatic prompt** for missing parameters
 - **Built-in credential caching**

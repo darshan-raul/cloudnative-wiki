@@ -1,6 +1,13 @@
+---
+title: "SPIFFE and SPIRE — Workload Identity"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "SPIFFE and SPIRE — Workload Identity — Kubernetes reference and architecture guide."
+---
+
 # SPIFFE and SPIRE — Workload Identity
 
-*"https://spiffe.io/ | https://spiffe.io/spire/"*
+_"https://spiffe.io/ | https://spiffe.io/spire/"_
 
 SPIFFE (Secure Production Identity Framework For Everyone) is a **specification for workload identity** — a way to give every service a cryptographic identity that proves "I am who I say I am", independent of the network, the DNS, the IP, or the deployment location. SPIRE (the SPIFFE Runtime Environment) is the **reference implementation** that issues these identities. In a Kubernetes cluster, SPIFFE is what powers mTLS in service meshes (Istio, Linkerd, Cilium) and increasingly in other security tools.
 
@@ -27,10 +34,10 @@ SPIFFE (Secure Production Identity Framework For Everyone) is a **specification 
 
 In a network, services need to know who they're talking to. The traditional answers are fragile:
 
-* **IP address** — proves "I'm at this IP", not "I'm the auth service". An attacker can spoof.
-* **DNS name** — proves "I'm at this name", not "I'm the auth service". DNS can be hijacked.
-* **TLS cert with hostname** — proves "I'm the server at this hostname", but the cert is tied to a hostname, not a workload. If the workload moves, the cert is wrong.
-* **Bearer token** — proves "I have this token", but the token is shareable and is "what you have", not "who you are".
+- **IP address** — proves "I'm at this IP", not "I'm the auth service". An attacker can spoof.
+- **DNS name** — proves "I'm at this name", not "I'm the auth service". DNS can be hijacked.
+- **TLS cert with hostname** — proves "I'm the server at this hostname", but the cert is tied to a hostname, not a workload. If the workload moves, the cert is wrong.
+- **Bearer token** — proves "I have this token", but the token is shareable and is "what you have", not "who you are".
 
 SPIFFE's answer: **a cryptographic identity that is bound to the workload, not the network**. The workload proves its identity with a private key, and the corresponding cert is short-lived and auto-rotated.
 
@@ -63,8 +70,8 @@ A SPIFFE ID is **not a secret**. It's a label. The corresponding SVID is the sec
 
 A **SPIFFE Verifiable Identity Document (SVID)** is a **signed token** that proves the holder has the SPIFFE ID. Two formats:
 
-* **X.509-SVID** — an X.509 cert where the URI SAN is the SPIFFE ID.
-* **JWT-SVID** — a JWT where the `sub` claim is the SPIFFE ID.
+- **X.509-SVID** — an X.509 cert where the URI SAN is the SPIFFE ID.
+- **JWT-SVID** — a JWT where the `sub` claim is the SPIFFE ID.
 
 The X.509-SVID is the workhorse. A service proves its identity in a TLS handshake by presenting the cert; the SAN is the SPIFFE ID; the client validates the cert's signature chain to a trusted root.
 
@@ -81,13 +88,13 @@ The cert is short-lived (default 1 hour for SPIRE). The private key is held only
 
 ### 3.1 X.509-SVID vs JWT-SVID
 
-| | X.509-SVID | JWT-SVID |
-|---|---|---|
-| **Used for** | TLS, mTLS | HTTP auth, API calls |
-| **Format** | X.509 cert | JWT |
-| **Verified by** | Standard TLS chain | Signature verification |
-| **Carries** | Public key + identity | Identity only (the calling app's key signs the request) |
-| **Rotation** | Auto, by SPIRE agent | Auto, by SPIRE agent |
+|                 | X.509-SVID            | JWT-SVID                                                |
+| --------------- | --------------------- | ------------------------------------------------------- |
+| **Used for**    | TLS, mTLS             | HTTP auth, API calls                                    |
+| **Format**      | X.509 cert            | JWT                                                     |
+| **Verified by** | Standard TLS chain    | Signature verification                                  |
+| **Carries**     | Public key + identity | Identity only (the calling app's key signs the request) |
+| **Rotation**    | Auto, by SPIRE agent  | Auto, by SPIRE agent                                    |
 
 X.509-SVIDs are for **mutual TLS** — both sides prove identity at the network layer. JWT-SVIDs are for **application-level auth** — the app sends the JWT in an `Authorization` header.
 
@@ -103,8 +110,8 @@ In service meshes, the trust bundle is typically distributed via the control pla
 
 SPIRE has two main components:
 
-* **`spire-server`** — the control plane. Issues SVIDs, validates attestation, holds the trust bundle.
-* **`spire-agent`** — runs on every node (as a DaemonSet in k8s). Attests workloads, holds their private keys, exposes a Workload API.
+- **`spire-server`** — the control plane. Issues SVIDs, validates attestation, holds the trust bundle.
+- **`spire-agent`** — runs on every node (as a DaemonSet in k8s). Attests workloads, holds their private keys, exposes a Workload API.
 
 ```
    spire-server (control plane)
@@ -182,16 +189,16 @@ When a node joins a SPIRE trust domain, the agent must prove "I am the agent for
 
 In k8s, the common approach is **PSAT (Projected ServiceAccount Token) attestation**:
 
-* The agent runs on the node, has access to the kubelet's identity.
-* The agent sends its PSAT token to the server.
-* The server validates the token (signed by the cluster CA) and confirms the agent is on a node it trusts.
+- The agent runs on the node, has access to the kubelet's identity.
+- The agent sends its PSAT token to the server.
+- The server validates the token (signed by the cluster CA) and confirms the agent is on a node it trusts.
 
 Other node attestation methods (for non-k8s or hybrid):
 
-* **AWS IID attestation** — verify the agent is on a specific EC2 instance.
-* **GCP identity attestation** — verify the agent is on a specific GCE instance.
-* **Azure MSI attestation** — verify the agent is on a specific Azure VM.
-* **X.509 attestation** — the agent has a cert from a known CA.
+- **AWS IID attestation** — verify the agent is on a specific EC2 instance.
+- **GCP identity attestation** — verify the agent is on a specific GCE instance.
+- **Azure MSI attestation** — verify the agent is on a specific Azure VM.
+- **X.509 attestation** — the agent has a cert from a known CA.
 
 Once attested, the agent can register workloads on that node.
 
@@ -201,11 +208,11 @@ When a Pod starts, the agent must prove "this Pod is the one I think it is" to t
 
 In k8s, the agent sees:
 
-* **Pod's namespace**
-* **Pod's ServiceAccount name**
-* **Pod's labels** (from the kubelet)
-* **Pod's projected tokens** (PSAT, etc.)
-* **Container's image**
+- **Pod's namespace**
+- **Pod's ServiceAccount name**
+- **Pod's labels** (from the kubelet)
+- **Pod's projected tokens** (PSAT, etc.)
+- **Container's image**
 
 The agent uses these to match a registration entry. The entry says "give SPIFFE ID X to Pods matching selector Y."
 
@@ -215,11 +222,11 @@ If the Pod matches, the agent issues an SVID. If not, the agent refuses.
 
 Selectors are how the agent decides which Pods match which entries. Common selectors in k8s:
 
-* `k8s_psat` — the projected ServiceAccount token.
-* `k8s_sa` — the ServiceAccount name.
-* `k8s_namespace` — the namespace.
-* `k8s_label` — a label on the Pod.
-* `unix` — a UID (used for non-k8s workloads).
+- `k8s_psat` — the projected ServiceAccount token.
+- `k8s_sa` — the ServiceAccount name.
+- `k8s_namespace` — the namespace.
+- `k8s_label` — a label on the Pod.
+- `unix` — a UID (used for non-k8s workloads).
 
 A typical entry:
 
@@ -237,9 +244,9 @@ The agent matches a Pod's PSAT, namespace, and ServiceAccount name to these sele
 
 SPIRE rotates everything regularly:
 
-* **SVIDs** — short-lived (default 1 hour for X.509-SVID, configurable). The workload auto-fetches new SVIDs before expiry.
-* **Agent keys** — long-lived but rotated on demand.
-* **Server keys** — long-lived, rotated via the spire-server CLI.
+- **SVIDs** — short-lived (default 1 hour for X.509-SVID, configurable). The workload auto-fetches new SVIDs before expiry.
+- **Agent keys** — long-lived but rotated on demand.
+- **Server keys** — long-lived, rotated via the spire-server CLI.
 
 Rotation is transparent to the workload if it uses a SPIFFE client library. The library fetches new SVIDs before the old ones expire, and the new SVIDs are used in the next TLS handshake.
 
@@ -253,8 +260,8 @@ The SVID's lifetime includes a "renewal threshold" (default 50% of the lifetime)
 
 Use cases:
 
-* **Cross-cluster mTLS** — cluster A and cluster B in different clouds, but their services need to talk securely.
-* **Cross-org** — two companies want to share an API, with workload identity.
+- **Cross-cluster mTLS** — cluster A and cluster B in different clouds, but their services need to talk securely.
+- **Cross-org** — two companies want to share an API, with workload identity.
 
 The mechanism:
 
@@ -290,9 +297,9 @@ Cilium uses SPIFFE IDs as workload identity for network policy. Cilium's identit
 
 You can issue SPIFFE IDs without SPIRE:
 
-* **Istiod** (in Istio) issues SPIFFE IDs directly.
-* **linkerd-identity** (in Linkerd) issues SPIFFE IDs.
-* **Custom issuers** — issue certs with SPIFFE IDs from your own CA.
+- **Istiod** (in Istio) issues SPIFFE IDs directly.
+- **linkerd-identity** (in Linkerd) issues SPIFFE IDs.
+- **Custom issuers** — issue certs with SPIFFE IDs from your own CA.
 
 The SPIFFE spec is just the format. The issuer can be anything. SPIRE is the most common issuer, but it's not the only one.
 
@@ -415,6 +422,6 @@ kubectl logs <proxy>
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the underlying transport security
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for SPIRE events
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco/Tetragon as consumers of workload identity
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the underlying transport security
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for SPIRE events
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco/Tetragon as consumers of workload identity

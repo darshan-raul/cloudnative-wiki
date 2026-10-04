@@ -60,13 +60,17 @@ Azure Kubernetes Fleet Manager operates an intelligent central hub that coordina
 ## 2. Core Architectural Capabilities
 
 ### 1. Staged Update Runs (Safe Global Upgrades)
+
 Upgrading 50 production clusters manually is fraught with risk. Fleet Manager orchestrates **Update Runs**:
-- Clusters are grouped into sequential **Update Stages** (e.g., *Stage 1: Dev/Canary (10%)*, *Stage 2: Regional Staging*, *Stage 3: Global Production*).
+
+- Clusters are grouped into sequential **Update Stages** (e.g., _Stage 1: Dev/Canary (10%)_, _Stage 2: Regional Staging_, _Stage 3: Global Production_).
 - Enforces configurable **Soak Times** (e.g., wait 24 hours between stages) to catch regressions before touching Tier-1 production clusters.
 - If a cluster in Stage 1 fails its upgrade, the Update Run halts automatically, protecting remaining clusters.
 
 ### 2. Multi-Cluster Services (MCS)
+
 Implements the Kubernetes SIG Multi-Cluster Services specification:
+
 - Pods export services across cluster boundaries by declaring a **`ServiceExport`** resource.
 - Peer member clusters discover the service via an auto-generated **`ServiceImport`** object.
 - Internal DNS resolves the cross-cluster service using the standardized domain:
@@ -75,7 +79,9 @@ Implements the Kubernetes SIG Multi-Cluster Services specification:
   ```
 
 ### 3. Workload Placement (`ClusterResourcePlacement`)
+
 Platform engineers can author a single deployment or policy on the Fleet Hub and declare a `ClusterResourcePlacement` (CRP) rule:
+
 - Fleet dynamically deploys the manifest to all matching member clusters using labels, resource availability, or regional criteria.
 
 ---
@@ -129,16 +135,12 @@ Create `staged-update-run.json`:
       "stages": [
         {
           "name": "canary-stage",
-          "groups": [
-            { "name": "canary-group" }
-          ],
+          "groups": [{ "name": "canary-group" }],
           "afterStageWaitInSeconds": 86400
         },
         {
           "name": "global-prod-stage",
-          "groups": [
-            { "name": "prod-group" }
-          ]
+          "groups": [{ "name": "prod-group" }]
         }
       ]
     }
@@ -182,19 +184,19 @@ Apply on `aks-prod-eastus`:
 kubectl apply -f catalog-service-export.yaml
 ```
 
-*Pods in `aks-prod-weur` can now query `catalog-service.e-commerce.svc.clusterset.local` directly.*
+_Pods in `aks-prod-weur` can now query `catalog-service.e-commerce.svc.clusterset.local` directly._
 
 ---
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter | Platform Limit | Production Impact |
-| :--- | :--- | :--- |
-| **Max Member Clusters per Fleet** | **Up to 100 Clusters** | Single Fleet management capacity |
-| **Cross-Cluster DNS Protocol** | `clusterset.local` | Standardized Kubernetes SIG MCS domain |
-| **Update Run Soak Time** | **Up to 30 Days** | Configurable wait periods between upgrade stages |
-| **Network Prerequisite for MCS** | **Routable Pod IPs** | Requires Azure CNI with routable VNet IPs or VNet Peering |
-| **Hub Type** | Hubless vs Managed Hub | Managed Hub enables Kubernetes API server and CRP |
+| Parameter                         | Platform Limit         | Production Impact                                         |
+| :-------------------------------- | :--------------------- | :-------------------------------------------------------- |
+| **Max Member Clusters per Fleet** | **Up to 100 Clusters** | Single Fleet management capacity                          |
+| **Cross-Cluster DNS Protocol**    | `clusterset.local`     | Standardized Kubernetes SIG MCS domain                    |
+| **Update Run Soak Time**          | **Up to 30 Days**      | Configurable wait periods between upgrade stages          |
+| **Network Prerequisite for MCS**  | **Routable Pod IPs**   | Requires Azure CNI with routable VNet IPs or VNet Peering |
+| **Hub Type**                      | Hubless vs Managed Hub | Managed Hub enables Kubernetes API server and CRP         |
 
 ---
 
@@ -216,7 +218,7 @@ kubectl apply -f catalog-service-export.yaml
   - Fleet Manager Hub Management Fee: **$0.20 / hour** (~$146.00 / month).
   - Member Cluster Management: Standard AKS cluster fees apply.
   - Multi-Cluster Service Discovery: **$0.00** (Included with Fleet).
-- **Total Fleet Management Overhead:** **$146.00 / month** *(Achieving automated multi-cluster governance across 20 clusters for under $5/day).*
+- **Total Fleet Management Overhead:** **$146.00 / month** _(Achieving automated multi-cluster governance across 20 clusters for under $5/day)._
 
 ### Scenario B: Multi-Region Active Failover Fleet (2 Large Hub Clusters)
 

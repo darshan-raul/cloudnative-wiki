@@ -18,15 +18,15 @@ CDK lets you define AWS infrastructure in code (TypeScript, Python, Java, .NET) 
 A construct is the basic building block of CDK. It's a CloudFormation resource (or group of resources) defined in code.
 
 ```typescript
-import { Construct } from 'constructs';
-import { Stack, StackProps } from 'aws-cdk-lib';
-import { Vpc } from 'aws-cdk-lib/aws-ec2';
+import { Construct } from "constructs";
+import { Stack, StackProps } from "aws-cdk-lib";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
 
 class MyStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-    new Vpc(this, 'MyVpc', {
-      cidr: '10.0.0.0/16',
+    new Vpc(this, "MyVpc", {
+      cidr: "10.0.0.0/16",
       maxAzs: 2,
     });
   }
@@ -35,11 +35,11 @@ class MyStack extends Stack {
 
 ### Construct Levels
 
-| Level | Example | Use |
-|-------|---------|-----|
-| L1 | `CfnVPC`, `CfnSubnet` | Raw CloudFormation resources (100% feature coverage) |
-| L2 | `Vpc`, `Instance`, `Bucket` | Opinionated, higher-level (recommended) |
-| L3 | `eks.Cluster`, `aurora.DatabaseCluster` | Full application patterns |
+| Level | Example                                 | Use                                                  |
+| ----- | --------------------------------------- | ---------------------------------------------------- |
+| L1    | `CfnVPC`, `CfnSubnet`                   | Raw CloudFormation resources (100% feature coverage) |
+| L2    | `Vpc`, `Instance`, `Bucket`             | Opinionated, higher-level (recommended)              |
+| L3    | `eks.Cluster`, `aurora.DatabaseCluster` | Full application patterns                            |
 
 ### Stacks and Apps
 
@@ -47,11 +47,11 @@ class MyStack extends Stack {
 - **App:** A container that holds multiple stacks.
 
 ```typescript
-import { App } from 'aws-cdk-lib';
+import { App } from "aws-cdk-lib";
 
 const app = new App();
-new MyStack(app, 'dev-stack', { env: { region: 'us-east-1' } });
-new MyStack(app, 'prod-stack', { env: { region: 'us-east-1' } });
+new MyStack(app, "dev-stack", { env: { region: "us-east-1" } });
+new MyStack(app, "prod-stack", { env: { region: "us-east-1" } });
 ```
 
 ### CDK App Structure
@@ -107,13 +107,13 @@ const vpc = Vpc.fromLookup(this, 'Vpc', {
 
 ```typescript
 // Stack A exports a value
-new CfnOutput(this, 'VpcId', {
+new CfnOutput(this, "VpcId", {
   value: vpc.vpcId,
-  exportName: 'my-vpc-id',
+  exportName: "my-vpc-id",
 });
 
 // Stack B imports it
-const vpcId = Fn.importValue('my-vpc-id');
+const vpcId = Fn.importValue("my-vpc-id");
 ```
 
 ## CDK Testing
@@ -121,23 +121,23 @@ const vpcId = Fn.importValue('my-vpc-id');
 CDK provides a testing framework (`@aws-cdk/assert`) for validating synthesized stacks:
 
 ```typescript
-import { Template } from 'aws-cdk-lib/assertions';
+import { Template } from "aws-cdk-lib/assertions";
 
 const template = Template.fromStack(myStack);
 
-template.hasResourceProperties('AWS::EC2::VPC', {
-  CidrBlock: '10.0.0.0/16',
+template.hasResourceProperties("AWS::EC2::VPC", {
+  CidrBlock: "10.0.0.0/16",
 });
 
-template.hasResource('AWS::EC2::Instance', 1);
+template.hasResource("AWS::EC2::Instance", 1);
 ```
 
 ### Integ Tests and Snapshot Testing
 
 ```typescript
-import { IntegTest } from '@aws-cdk/integ-tests';
+import { IntegTest } from "@aws-cdk/integ-tests";
 
-const integ = new IntegTest(app, 'Integ', {
+const integ = new IntegTest(app, "Integ", {
   testCases: [myStack],
 });
 ```
@@ -147,14 +147,18 @@ const integ = new IntegTest(app, 'Integ', {
 CDK Pipelines is a construct for CI/CD with CodePipeline:
 
 ```typescript
-new Pipeline(this, 'MyPipeline', {
-  synth: new CodePipelineStep('Synth', {
-    input: CodePipelineSource.gitHub('myorg/myrepo', 'main'),
-    commands: ['npm ci', 'npx cdk synth'],
+new Pipeline(this, "MyPipeline", {
+  synth: new CodePipelineStep("Synth", {
+    input: CodePipelineSource.gitHub("myorg/myrepo", "main"),
+    commands: ["npm ci", "npx cdk synth"],
   }),
   stages: [
-    new Stage(this, 'Dev', { env: { account: '111122223333', region: 'us-east-1' } }),
-    new Stage(this, 'Prod', { env: { account: '444455556666', region: 'us-east-1' } }),
+    new Stage(this, "Dev", {
+      env: { account: "111122223333", region: "us-east-1" },
+    }),
+    new Stage(this, "Prod", {
+      env: { account: "444455556666", region: "us-east-1" },
+    }),
   ],
 });
 ```
@@ -165,8 +169,8 @@ Aspects apply operations to all constructs in a tree. Used for governance:
 
 ```typescript
 // Apply a tag to all resources
-const tagAspect = new Tag('Environment', 'production');
- Aspects.of(app).add(tagAspect);
+const tagAspect = new Tag("Environment", "production");
+Aspects.of(app).add(tagAspect);
 
 // Check all S3 buckets are encrypted
 class S3EncryptionChecker implements IAspect {
@@ -190,14 +194,14 @@ cdk metadata                  # Show metadata
 
 ## Comparison: CDK vs CloudFormation vs Terraform
 
-| | CDK | CloudFormation | Terraform |
-|--|--|--|--|
-| Language | TypeScript, Python, Java, .NET | YAML/JSON | HCL |
-| State management | CloudFormation (stateless) | CloudFormation | State file |
-| Drift detection | Yes (via CloudFormation) | Yes | Yes |
-| Drift correction | Limited | Yes | Yes |
-| Community | Growing | Large (AWS-native) | Largest |
-| Use when | Developers comfortable with code | Simple templates, AWS-native | Multi-cloud, complex state |
+|                  | CDK                              | CloudFormation               | Terraform                  |
+| ---------------- | -------------------------------- | ---------------------------- | -------------------------- |
+| Language         | TypeScript, Python, Java, .NET   | YAML/JSON                    | HCL                        |
+| State management | CloudFormation (stateless)       | CloudFormation               | State file                 |
+| Drift detection  | Yes (via CloudFormation)         | Yes                          | Yes                        |
+| Drift correction | Limited                          | Yes                          | Yes                        |
+| Community        | Growing                          | Large (AWS-native)           | Largest                    |
+| Use when         | Developers comfortable with code | Simple templates, AWS-native | Multi-cloud, complex state |
 
 ## References
 

@@ -4,24 +4,24 @@ Sure, let's break this down:
 
 #### Sockets as Linux File Descriptors
 
-* **File Descriptors**: In Unix-like operating systems, a file descriptor is a unique identifier for a file or a resource like a socket. File descriptors are used by processes to perform input/output operations.
-* **Sockets as File Descriptors**: A socket is one type of file descriptor that specifically facilitates network communication. Just like file descriptors can point to files, sockets point to network connections.
+- **File Descriptors**: In Unix-like operating systems, a file descriptor is a unique identifier for a file or a resource like a socket. File descriptors are used by processes to perform input/output operations.
+- **Sockets as File Descriptors**: A socket is one type of file descriptor that specifically facilitates network communication. Just like file descriptors can point to files, sockets point to network connections.
 
 #### Communication End-Points
 
-* **Communication End-Points**: A socket serves as an end-point for sending and receiving data across a network. It acts as an interface between the application layer (where your programs run) and the transport layer (which handles the actual transmission of data over the network).
+- **Communication End-Points**: A socket serves as an end-point for sending and receiving data across a network. It acts as an interface between the application layer (where your programs run) and the transport layer (which handles the actual transmission of data over the network).
 
 #### IP Address and Port Number
 
-* **IP Address**: This is the address of the device on the network. It ensures that the data is sent to the correct device.
-* **Port Number**: This is a numerical identifier within the device that helps direct the data to the correct application or service. Different services (like web servers, email servers, etc.) listen on different ports.
+- **IP Address**: This is the address of the device on the network. It ensures that the data is sent to the correct device.
+- **Port Number**: This is a numerical identifier within the device that helps direct the data to the correct application or service. Different services (like web servers, email servers, etc.) listen on different ports.
 
 #### Putting It Together
 
-* When a process wants to communicate over a network, it creates a socket.
-* This socket is assigned a file descriptor by the operating system.
-* The socket binds to a combination of an IP address and a port number.
-* The IP address directs the data to the correct device, and the port number directs the data to the correct application or service on that device.
+- When a process wants to communicate over a network, it creates a socket.
+- This socket is assigned a file descriptor by the operating system.
+- The socket binds to a combination of an IP address and a port number.
+- The IP address directs the data to the correct device, and the port number directs the data to the correct application or service on that device.
 
 #### Example
 
@@ -34,9 +34,7 @@ Imagine you have a web server running on your device. Here's what happens in ter
 
 In summary, a socket in Linux is a file descriptor that represents one end of a network communication link, identified by a device's IP address and a specific port number.
 
-
-
-***
+---
 
 Sure, let's go through the steps to view sockets on your machine and create and use a socket. This guide assumes you're using a Linux-based system.
 
@@ -49,6 +47,7 @@ Sure, let's go through the steps to view sockets on your machine and create and 
     ```
 
     This command lists all the sockets currently in use on your machine, including TCP, UDP, and Unix sockets.
+
 2.  **List TCP Sockets**
 
     ```bash
@@ -56,6 +55,7 @@ Sure, let's go through the steps to view sockets on your machine and create and 
     ```
 
     This command lists all the TCP sockets.
+
 3.  **List UDP Sockets**
 
     ```bash
@@ -63,6 +63,7 @@ Sure, let's go through the steps to view sockets on your machine and create and 
     ```
 
     This command lists all the UDP sockets.
+
 4.  **List Listening Sockets**
 
     ```bash
@@ -111,6 +112,7 @@ Let's create a simple client-server application using Python to demonstrate sock
         # Close the connection
         client_socket.close()
     ```
+
 2.  **Run the Server**
 
     ```bash
@@ -145,6 +147,7 @@ Let's create a simple client-server application using Python to demonstrate sock
     # Close the connection
     client_socket.close()
     ```
+
 2.  **Run the Client**
 
     ```bash
@@ -155,14 +158,14 @@ Let's create a simple client-server application using Python to demonstrate sock
 
 #### Explanation
 
-* **Server Script (`server.py`)**:
-  * Creates a TCP socket.
-  * Binds it to the local machine's hostname and port `12345`.
-  * Listens for incoming connections.
-  * Accepts a connection and sends a message to the client.
-* **Client Script (`client.py`)**:
-  * Creates a TCP socket.
-  * Connects to the server using the local machine's hostname and port `12345`.
-  * Receives a message from the server and prints it.
+- **Server Script (`server.py`)**:
+  - Creates a TCP socket.
+  - Binds it to the local machine's hostname and port `12345`.
+  - Listens for incoming connections.
+  - Accepts a connection and sends a message to the client.
+- **Client Script (`client.py`)**:
+  - Creates a TCP socket.
+  - Connects to the server using the local machine's hostname and port `12345`.
+  - Receives a message from the server and prints it.
 
 By following these steps, you can view existing sockets on your machine and create a simple socket-based client-server application using Python.

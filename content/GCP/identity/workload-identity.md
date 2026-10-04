@@ -12,7 +12,7 @@ tags:
 
 # GCP Workload Identity & Federation 🔑🚫
 
-Workload Identity Federation eliminates long-lived service account keys (`.json` files) for both internal workloads (Kubernetes pods on GKE) and external workloads (GitHub Actions, AWS EC2/Lambda, GitLab, on-prem). 
+Workload Identity Federation eliminates long-lived service account keys (`.json` files) for both internal workloads (Kubernetes pods on GKE) and external workloads (GitHub Actions, AWS EC2/Lambda, GitLab, on-prem).
 
 Instead of storing secrets, workloads exchange external cryptographic tokens (Kubernetes Projected ServiceAccount Tokens or external OIDC JSON Web Tokens) for short-lived Google Cloud OAuth 2.0 access tokens via the **Security Token Service (STS)**.
 
@@ -58,6 +58,7 @@ GKE Workload Identity ties a **Kubernetes ServiceAccount (KSA)** directly to a *
 ### Mechanics & Metadata Interception
 
 When Workload Identity is enabled on a GKE cluster:
+
 1. GKE deploys the **GKE Metadata Server** DaemonSet to every node.
 2. Calls from pods to `http://metadata.google.internal/computeMetadata/v1/` are intercepted by the local metadata server.
 3. The metadata server verifies the calling Pod's identity using Kubernetes TokenRequest API, checks the binding, and returns a GCP access token for the bound GSA.
@@ -180,8 +181,8 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: 'projects/123456789012/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-          service_account: 'deployer@my-prod-project.iam.gserviceaccount.com'
+          workload_identity_provider: "projects/123456789012/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
+          service_account: "deployer@my-prod-project.iam.gserviceaccount.com"
 
       - name: Deploy to Cloud Run
         run: |
@@ -194,38 +195,40 @@ jobs:
 
 ## Quotas & Limits
 
-| Attribute | Default Limit | Description |
-| :--- | :--- | :--- |
-| **Pools per Project** | 50 pools | Total Workload Identity Pools per project |
-| **Providers per Pool** | 100 providers | Number of external IdPs (e.g. GitHub, AWS, GitLab) per pool |
-| **Attribute Condition Size** | 2,048 characters | Max size for the CEL filtering expression |
-| **Attribute Mapping Entries** | 32 custom mappings | Mappings from OIDC claims to Google security attributes |
-| **Token Lifetime** | 1 hour default | Max configurable up to 12 hours via ServiceAccount policy |
+| Attribute                     | Default Limit      | Description                                                 |
+| :---------------------------- | :----------------- | :---------------------------------------------------------- |
+| **Pools per Project**         | 50 pools           | Total Workload Identity Pools per project                   |
+| **Providers per Pool**        | 100 providers      | Number of external IdPs (e.g. GitHub, AWS, GitLab) per pool |
+| **Attribute Condition Size**  | 2,048 characters   | Max size for the CEL filtering expression                   |
+| **Attribute Mapping Entries** | 32 custom mappings | Mappings from OIDC claims to Google security attributes     |
+| **Token Lifetime**            | 1 hour default     | Max configurable up to 12 hours via ServiceAccount policy   |
 
 ---
 
 ## References
 
-* **Homepage:** https://cloud.google.com/iam/docs/workload-identity-federation
-* **GKE Workload Identity Docs:** https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
-* **GitHub Actions Auth Action:** https://github.com/google-github-actions/auth
-* **Pricing:** https://cloud.google.com/iam/pricing (Workload Identity Federation is free)
+- **Homepage:** https://cloud.google.com/iam/docs/workload-identity-federation
+- **GKE Workload Identity Docs:** https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity
+- **GitHub Actions Auth Action:** https://github.com/google-github-actions/auth
+- **Pricing:** https://cloud.google.com/iam/pricing (Workload Identity Federation is free)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: High-Volume CI/CD Pipeline
-* 100 active repositories running 5,000 GitHub Actions builds per day.
-* Every build performs Workload Identity token exchange to push container images and deploy to GKE.
-* Total STS Token Exchanges: 150,000 requests/month.
-* **STS Exchange Cost:** **$0.00** (Google does not charge for STS token exchanges or federation).
-* **Total Cost:** **$0.00 / month**.
+
+- 100 active repositories running 5,000 GitHub Actions builds per day.
+- Every build performs Workload Identity token exchange to push container images and deploy to GKE.
+- Total STS Token Exchanges: 150,000 requests/month.
+- **STS Exchange Cost:** **$0.00** (Google does not charge for STS token exchanges or federation).
+- **Total Cost:** **$0.00 / month**.
 
 ### Scenario 2: Large Enterprise Multi-Cluster GKE Deployment
-* 15 GKE clusters across 3 regions running 2,500 pods authenticating to Cloud Spanner, Pub/Sub, and Secret Manager via GKE Workload Identity.
-* **GKE Workload Identity Add-on Cost:** **$0.00** (Included with GKE cluster management).
-* **Total Monthly Federation Cost:** **$0.00**.
+
+- 15 GKE clusters across 3 regions running 2,500 pods authenticating to Cloud Spanner, Pub/Sub, and Secret Manager via GKE Workload Identity.
+- **GKE Workload Identity Add-on Cost:** **$0.00** (Included with GKE cluster management).
+- **Total Monthly Federation Cost:** **$0.00**.
 
 ---
 
@@ -233,6 +236,6 @@ jobs:
 
 1. **Missing `permissions: id-token: write` in GitHub Actions:** If your GitHub workflow fails with `400: Invalid Token` or `Unable to retrieve OIDC token`, 99% of the time it is because the workflow is missing `permissions: id-token: write`. Without this block, GitHub refuses to generate a signed JWT for the runner.
 2. **Missing GSA Annotation on KSA Causes Silent Node Fallback:** If you bind the IAM role `roles/iam.workloadIdentityUser` to a KSA but forget to add `iam.gke.io/gcp-service-account: <gsa-email>` to the Kubernetes ServiceAccount annotations, the pod will **silently fall back** to the underlying GKE Node's Compute Engine service account. This can lead to either confusing permission-denied errors or unintentional privilege escalation.
-3. **The `attribute-condition` Injection Trap:** Always enforce an `--attribute-condition` matching `assertion.repository_owner == '<your-org>'` or `assertion.repository == '<your-org>/<your-repo>'` at the provider level. If you create a GitHub Actions provider without a repository restriction and only bind permissions loosely at the pool, *any* public GitHub repository could theoretically exchange a token against your pool.
+3. **The `attribute-condition` Injection Trap:** Always enforce an `--attribute-condition` matching `assertion.repository_owner == '<your-org>'` or `assertion.repository == '<your-org>/<your-repo>'` at the provider level. If you create a GitHub Actions provider without a repository restriction and only bind permissions loosely at the pool, _any_ public GitHub repository could theoretically exchange a token against your pool.
 4. **HostNetwork Pods Bypass Workload Identity:** Pods running with `hostNetwork: true` share the network namespace of the GKE node. Because of this, their requests to `169.254.169.254` bypass the GKE Metadata Server daemonset filter and always receive the node's machine service account credentials. **Never use `hostNetwork: true` for pods requiring fine-grained Workload Identity.**
 5. **Node Pool Upgrades & Metadata Server Restart Blips:** During GKE node pool rolling upgrades, the local metadata server pod is briefly restarted on newly scheduled nodes. Applications initiating connections during pod startup should implement standard exponential backoff retries when fetching initial tokens from the metadata endpoint.

@@ -20,6 +20,7 @@ In a distributed system, you can only guarantee **two of three** properties simu
 ```
 
 **Key constraint:** Network partitions WILL happen in any real distributed system. You can't avoid them. So in practice, you're choosing between:
+
 - **CP** — consistent but unavailable during partition
 - **AP** — available but returns stale data during partition
 
@@ -28,6 +29,7 @@ In a distributed system, you can only guarantee **two of three** properties simu
 ## The Three Properties
 
 ### Consistency
+
 Every read receives the **most recent write** or an error.
 
 ```
@@ -41,6 +43,7 @@ Read from any node → always returns x=5
 ```
 
 ### Availability
+
 Every request receives a **response** — but it might not be the most recent data.
 
 ```
@@ -54,6 +57,7 @@ Node A is partitioned from B and C
 ```
 
 ### Partition Tolerance
+
 The system continues operating when **network partitions** occur.
 
 ```
@@ -69,16 +73,16 @@ The system continues operating when **network partitions** occur.
 
 ## CAP in Practice
 
-| System | Type | How It Behaves |
-|--------|------|---------------|
-| **Zookeeper** | CP | Quorum required for writes — unavailable if can't reach majority |
-| **etcd** | CP | Same as Zookeeper |
-| **MongoDB** (standalone) | CP | Primary must be reachable for writes |
-| **Cassandra** | AP | Any node can serve reads/writes — eventual consistency |
-| **DynamoDB** | AP | Tunable consistency (strong/eventual) |
-| **CouchDB** | AP | Eventual consistency |
-| **PostgreSQL** (primary) | CP | Writes must reach primary + replica |
-| **RabbitMQ** | CP | Mirror queue requires quorum |
+| System                   | Type | How It Behaves                                                   |
+| ------------------------ | ---- | ---------------------------------------------------------------- |
+| **Zookeeper**            | CP   | Quorum required for writes — unavailable if can't reach majority |
+| **etcd**                 | CP   | Same as Zookeeper                                                |
+| **MongoDB** (standalone) | CP   | Primary must be reachable for writes                             |
+| **Cassandra**            | AP   | Any node can serve reads/writes — eventual consistency           |
+| **DynamoDB**             | AP   | Tunable consistency (strong/eventual)                            |
+| **CouchDB**              | AP   | Eventual consistency                                             |
+| **PostgreSQL** (primary) | CP   | Writes must reach primary + replica                              |
+| **RabbitMQ**             | CP   | Mirror queue requires quorum                                     |
 
 ---
 
@@ -93,24 +97,26 @@ Else (no partition, E):
   → Choose between Consistency (C) and Latency (L)
 ```
 
-| System | PACELC |
-|--------|--------|
-| Cassandra | PA/EL — Available under partition, low latency |
-| DynamoDB (strong consistency) | PC/EC — Consistent, higher latency |
-| CosmosDB | PA/EC — Configurable per operation |
-| HBase | PC/EC |
-| Kafka | PC/EC — Durability over low latency |
+| System                        | PACELC                                         |
+| ----------------------------- | ---------------------------------------------- |
+| Cassandra                     | PA/EL — Available under partition, low latency |
+| DynamoDB (strong consistency) | PC/EC — Consistent, higher latency             |
+| CosmosDB                      | PA/EC — Configurable per operation             |
+| HBase                         | PC/EC                                          |
+| Kafka                         | PC/EC — Durability over low latency            |
 
 ---
 
 ## Choosing CP vs AP
 
 ### Choose CP When:
+
 - **Financial transactions** — correctness > availability (double-entry bookkeeping)
 - **Inventory systems** — overselling is catastrophic
 - **Distributed locks** — stale locks cause data corruption
 
 ### Choose AP When:
+
 - **Social feeds** — stale data is fine, downtime is not
 - **Analytics dashboards** — approximate data is acceptable
 - **CDN edge caches** — serving stale content better than no content
@@ -120,12 +126,12 @@ Else (no partition, E):
 
 ## Common Misconceptions
 
-| Misconception | Reality |
-|--------------|---------|
-| "We can have all three" | Only in systems with no network partitions (not a distributed system) |
-| "CAP means2 of 3 always" | You always have partitions in distributed systems. The choice is C vs A. |
-| "CA systems exist" | A CA system = no partitions = not distributed. Not a real-world claim. |
-| "Eventual consistency = AP" | Not always. Some CP systems use eventual consistency for reads. |
+| Misconception               | Reality                                                                  |
+| --------------------------- | ------------------------------------------------------------------------ |
+| "We can have all three"     | Only in systems with no network partitions (not a distributed system)    |
+| "CAP means2 of 3 always"    | You always have partitions in distributed systems. The choice is C vs A. |
+| "CA systems exist"          | A CA system = no partitions = not distributed. Not a real-world claim.   |
+| "Eventual consistency = AP" | Not always. Some CP systems use eventual consistency for reads.          |
 
 ---
 

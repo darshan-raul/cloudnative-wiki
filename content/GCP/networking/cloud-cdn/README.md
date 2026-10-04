@@ -48,7 +48,7 @@ Google Cloud CDN uses Google's globally distributed Edge Points of Presence (PoP
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **The Anycast Edge Advantage:** Unlike DNS-based CDNs that require regional CNAME hopping, user traffic hits the nearest Google Edge PoP over a single Anycast IP. Cache misses travel over Google's private global fiber backbone to the origin rather than traversing the public internet.
+- **The Anycast Edge Advantage:** Unlike DNS-based CDNs that require regional CNAME hopping, user traffic hits the nearest Google Edge PoP over a single Anycast IP. Cache misses travel over Google's private global fiber backbone to the origin rather than traversing the public internet.
 
 ---
 
@@ -56,17 +56,19 @@ Google Cloud CDN uses Google's globally distributed Edge Points of Presence (PoP
 
 ### 1. Cache Modes
 
-| Cache Mode | Behavior | Best For |
-| :--- | :--- | :--- |
-| **`CACHE_ALL_STATIC` (Default)** | Automatically caches static content (images, videos, CSS, JS) based on standard file extensions. Respects `no-store` / `private`. | Standard web apps, frontend SPAs, blog sites |
-| **`USE_ORIGIN_HEADERS`** | Strictly obeys origin response headers (`Cache-Control`, `Expires`). Does not cache unless origin explicitly permits it. | Enterprise APIs with custom dynamic caching logic |
-| **`FORCE_CACHE_ALL`** | Unconditionally caches all responses, completely overriding origin `Cache-Control: private` or `no-cache` headers. | Public static websites, firmware distribution |
+| Cache Mode                       | Behavior                                                                                                                          | Best For                                          |
+| :------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------ |
+| **`CACHE_ALL_STATIC` (Default)** | Automatically caches static content (images, videos, CSS, JS) based on standard file extensions. Respects `no-store` / `private`. | Standard web apps, frontend SPAs, blog sites      |
+| **`USE_ORIGIN_HEADERS`**         | Strictly obeys origin response headers (`Cache-Control`, `Expires`). Does not cache unless origin explicitly permits it.          | Enterprise APIs with custom dynamic caching logic |
+| **`FORCE_CACHE_ALL`**            | Unconditionally caches all responses, completely overriding origin `Cache-Control: private` or `no-cache` headers.                | Public static websites, firmware distribution     |
 
 ### 2. Cache Key Customization
 
 A **Cache Key** is the unique identifier string used to index and look up cached content. By default, the cache key includes: `Protocol + Host + Path + All Query Parameters`.
-* **Excluding Query Parameters:** If your marketing campaigns append tracking query parameters (`?utm_source=twitter&utm_medium=cpc`), standard caching treats every URL as a separate cache entry, causing a near-zero cache hit ratio!
-* Configure Cloud CDN to exclude query parameters to normalize cache keys:
+
+- **Excluding Query Parameters:** If your marketing campaigns append tracking query parameters (`?utm_source=twitter&utm_medium=cpc`), standard caching treats every URL as a separate cache entry, causing a near-zero cache hit ratio!
+- Configure Cloud CDN to exclude query parameters to normalize cache keys:
+
 ```
 Request 1: /images/banner.png?utm_source=google ──► Key: /images/banner.png
 Request 2: /images/banner.png?utm_source=fb     ──► Key: /images/banner.png (CACHE HIT!)
@@ -75,14 +77,16 @@ Request 2: /images/banner.png?utm_source=fb     ──► Key: /images/banner.pn
 ### 3. Negative Caching (Protecting Origins Against Thundering Herds)
 
 When an origin returns an error (such as `HTTP 404 Not Found` or `HTTP 502 Bad Gateway`), clients and scrapers frequently retry aggressively, overwhelming the origin:
-* **Negative Caching:** Caches error responses for a short configurable window (e.g. 10 seconds for 404s, 5 seconds for 502s).
-* Shields backend microservices from denial-of-service traffic during backend database degradation.
+
+- **Negative Caching:** Caches error responses for a short configurable window (e.g. 10 seconds for 404s, 5 seconds for 502s).
+- Shields backend microservices from denial-of-service traffic during backend database degradation.
 
 ### 4. Signed URLs & Signed Cookies
 
 Restricts media access to authorized, paying users without making storage buckets public:
-* **Signed URLs:** Embeds an HMAC cryptographic signature and expiration timestamp directly into the URL query parameters.
-* **Signed Cookies:** Injects a signed session cookie into the client's browser, permitting access to an entire directory tree of private files (e.g. video streaming HLS/DASH playlists).
+
+- **Signed URLs:** Embeds an HMAC cryptographic signature and expiration timestamp directly into the URL query parameters.
+- **Signed Cookies:** Injects a signed session cookie into the client's browser, permitting access to an entire directory tree of private files (e.g. video streaming HLS/DASH playlists).
 
 ---
 
@@ -104,7 +108,7 @@ gcloud compute backend-services update prod-web-backend \
   --cache-key-include-protocol
 ```
 
-* `--cache-key-query-string-whitelist=id,version`: Normalizes cache keys by stripping all marketing UTM tags while preserving critical application query arguments.
+- `--cache-key-query-string-whitelist=id,version`: Normalizes cache keys by stripping all marketing UTM tags while preserving critical application query arguments.
 
 ### 2. Configuring Negative Caching for Resiliency
 
@@ -128,41 +132,43 @@ gcloud compute url-maps invalidate-cdn-cache prod-url-map \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max cacheable object size** | 5 TiB per object | Supports massive video assets |
+| Parameter                              | Limit                                 | Production Notes                        |
+| :------------------------------------- | :------------------------------------ | :-------------------------------------- |
+| **Max cacheable object size**          | 5 TiB per object                      | Supports massive video assets           |
 | **Max concurrent cache invalidations** | 1 concurrent invalidation per URL map | Use versioned asset names (`app.v2.js`) |
-| **Cache key size limit** | 4,096 bytes | Normalize long query strings |
-| **Custom headers per backend** | Up to 16 custom headers | Useful for debugging cache hit states |
+| **Cache key size limit**               | 4,096 bytes                           | Normalize long query strings            |
+| **Custom headers per backend**         | Up to 16 custom headers               | Useful for debugging cache hit states   |
 
 ---
 
 ## References
 
-* **Cloud CDN Overview:** https://cloud.google.com/cdn/docs/overview
-* **Cache Modes Guide:** https://cloud.google.com/cdn/docs/caching-details
-* **Cache Keys Documentation:** https://cloud.google.com/cdn/docs/using-cache-keys
-* **Signed URLs and Cookies:** https://cloud.google.com/cdn/docs/using-signed-urls
-* **Pricing:** https://cloud.google.com/cdn/pricing
+- **Cloud CDN Overview:** https://cloud.google.com/cdn/docs/overview
+- **Cache Modes Guide:** https://cloud.google.com/cdn/docs/caching-details
+- **Cache Keys Documentation:** https://cloud.google.com/cdn/docs/using-cache-keys
+- **Signed URLs and Cookies:** https://cloud.google.com/cdn/docs/using-signed-urls
+- **Pricing:** https://cloud.google.com/cdn/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: SaaS Web Application (Static Asset Offload)
-* Monthly outbound traffic from Cloud Storage origin: 20 TB without CDN.
-* With Cloud CDN enabled: **85% Cache Hit Ratio** (17 TB served from Edge Cache; 3 TB fetched from origin).
-* CDN Cache Fill (Fetch from GCS to Edge): 3 TB × $0.01 / GB = $30.00.
-* CDN Edge Egress to Users: 20 TB × ~$0.05 / GB = $1,000.00.
-* Direct GCS Egress without CDN would have cost: 20 TB × $0.12 / GB = $2,400.00.
-* **Monthly Savings with Cloud CDN:** **~$1,370.00 / month** (57% net reduction in egress billing).
+
+- Monthly outbound traffic from Cloud Storage origin: 20 TB without CDN.
+- With Cloud CDN enabled: **85% Cache Hit Ratio** (17 TB served from Edge Cache; 3 TB fetched from origin).
+- CDN Cache Fill (Fetch from GCS to Edge): 3 TB × $0.01 / GB = $30.00.
+- CDN Edge Egress to Users: 20 TB × ~$0.05 / GB = $1,000.00.
+- Direct GCS Egress without CDN would have cost: 20 TB × $0.12 / GB = $2,400.00.
+- **Monthly Savings with Cloud CDN:** **~$1,370.00 / month** (57% net reduction in egress billing).
 
 ### Scenario 2: High-Volume Media Streaming Platform
-* 100 TB of video files streamed to worldwide audiences.
-* 92% Cache Hit Ratio.
-* CDN Egress: 100 TB (tiered discount: ~$0.04 / GB) = **$4,000.00 / month**.
-* HTTP Request fees (100 million cache hits @ $0.0075 / 10,000): **$75.00 / month**.
-* **Total Monthly CDN Bill:** **~$4,075.00 / month**.
+
+- 100 TB of video files streamed to worldwide audiences.
+- 92% Cache Hit Ratio.
+- CDN Egress: 100 TB (tiered discount: ~$0.04 / GB) = **$4,000.00 / month**.
+- HTTP Request fees (100 million cache hits @ $0.0075 / 10,000): **$75.00 / month**.
+- **Total Monthly CDN Bill:** **~$4,075.00 / month**.
 
 ---
 

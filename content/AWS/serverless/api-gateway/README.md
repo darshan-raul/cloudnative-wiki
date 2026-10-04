@@ -16,14 +16,14 @@ API Gateway exposes Lambda, HTTP backends, and other AWS services as REST or HTT
 
 ## REST vs HTTP vs WebSocket
 
-| Feature | REST API | HTTP API | WebSocket API |
-|---------|----------|----------|---------------|
-| Protocols | REST, OData | REST, gRPC | WebSocket |
-| Auth | IAM, Cognito, Lambda | JWT, Lambda | Lambda |
-| Rate limiting | Usage plans, API keys | Throttling per route | Connection limits |
-| Caching | Yes | No | No |
-| Cost | $3.50/million | $0.50-1.00/million | $1.00/million + $0.25/million connection-minutes |
-| Use case | Full-featured API | Lightweight, modern | Real-time, chat, dashboards |
+| Feature       | REST API              | HTTP API             | WebSocket API                                    |
+| ------------- | --------------------- | -------------------- | ------------------------------------------------ |
+| Protocols     | REST, OData           | REST, gRPC           | WebSocket                                        |
+| Auth          | IAM, Cognito, Lambda  | JWT, Lambda          | Lambda                                           |
+| Rate limiting | Usage plans, API keys | Throttling per route | Connection limits                                |
+| Caching       | Yes                   | No                   | No                                               |
+| Cost          | $3.50/million         | $0.50-1.00/million   | $1.00/million + $0.25/million connection-minutes |
+| Use case      | Full-featured API     | Lightweight, modern  | Real-time, chat, dashboards                      |
 
 ## REST API
 
@@ -127,7 +127,7 @@ aws apigateway create-authorizer \
 ```python
 def lambda_authorizer(event, context):
     token = event['headers']['Authorization']
-    
+
     # Validate JWT
     if validate(token):
         return {
@@ -251,12 +251,12 @@ aws apigatewayv2 create-integration \
 
 ## Pricing
 
-| API Type | Cost |
-|----------|------|
-| REST API | $3.50/million API calls |
-| HTTP API | $1.00/million (with JWT auth), $0.50/million (without) |
-| WebSocket | $1.00/million messages + $0.25/million connection-minutes |
-| REST caching | $0.020/hour per GB |
+| API Type     | Cost                                                      |
+| ------------ | --------------------------------------------------------- |
+| REST API     | $3.50/million API calls                                   |
+| HTTP API     | $1.00/million (with JWT auth), $0.50/million (without)    |
+| WebSocket    | $1.00/million messages + $0.25/million connection-minutes |
+| REST caching | $0.020/hour per GB                                        |
 
 ## References
 

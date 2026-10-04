@@ -1,29 +1,41 @@
+---
+title: Resources
+tags: [resources, cheat-sheets, guides, reference]
+date: 2026-09-06
+description: "Reference cheat sheets, operational guides, and architectural cheat sheets for cloud-native engineering."
+---
+
 # Resources 📚
 
-Cheat sheets, documentation, and miscellaneous guides.
+Reference cheat sheets, tool guides, and developer resources.
 
 ## Sections
 
 ### Cheat Sheets
 
-- [[Resources/cheat-sheets/README|Cheat Sheets]] - Quick reference for Linux, Python, regex
+- [[Resources/cheat-sheets/README|Cheat Sheets]] — Quick reference for Linux, Python, regex
+- [[Resources/cheat-sheets/linux|Linux Cheat Sheet]]
+- [[Resources/cheat-sheets/python|Python Cheat Sheet]]
+- [[Resources/cheat-sheets/regex|Regex Reference]]
 
-### Guides
+### Tooling Guides
 
-- [[Resources/guides/testing/README|Testing]] - Unit testing, test doubles
-- [[Resources/guides/platform-engineering/README|Platform Engineering]] - Crossplane, IDP
-- [[Resources/guides/wasm/README|WASM]] - WebAssembly with Kubernetes and Docker
+- [[Resources/guides/hashicorp/README|HashiCorp Tools]] — Terraform, Vault, Packer, Boundary
+- [[Resources/guides/opentofu|OpenTofu]] — Open-source Terraform alternative
+- [[Resources/guides/platform-engineering/README|Platform Engineering]] — Crossplane, IDPs
+- [[Resources/guides/wasm/README|WASM]] — WebAssembly with Kubernetes and Docker
+- [[Resources/guides/testing/README|Testing]] — Unit testing, test doubles
 
-### Cloud Documentation
+### Engineering Concepts
 
-- [[Resources/documentation/aws-cli/README|AWS CLI]]
-- [[Resources/documentation/aws-faqs/README|AWS FAQs]]
-- [[Resources/documentation/ci-cd/README|CI/CD Documentation]]
-- [[Resources/documentation/gcp/README|GCP Documentation]]
+- [[Resources/guides/networking/README|Networking]] — OSI, TCP/IP, TLS, IPv6
+- [[Resources/guides/databases/README|Databases]] — Transactions, Normalization, Constraints
+- [[Resources/guides/grpc|gRPC]] — Protobuf and streaming
+- [[Resources/guides/graphql|GraphQL]] — APIs and queries
 
-## Related
+---
 
-All major topics have their own dedicated sections above. Explore:
+## Related Knowledge Bases
 
 - [[AWS]], [[Kubernetes]], [[Linux]], [[AI]]
-- [[DevOps]], [[Security]], [[Observability]]
+- [[DevOps]], [[Security]], [[Observability]], [[Architecture]]

@@ -48,13 +48,13 @@ As Kubernetes adoption matures from pilot projects to hundreds of enterprise mic
 
 ## 2. FinOps Optimization Pillars for AKS
 
-| Strategy | Implementation Mechanism | Expected Cloud Savings | Risk Profile |
-| :--- | :--- | :--- | :--- |
-| **Azure Savings Plans** | 1-year or 3-year hourly spend commitment | **30% to 50% discount** | Low (Applies across all Azure compute) |
-| **Reserved Instances (RI)**| 1-year or 3-year reservation on specific VM SKU | **40% to 65% discount** | Low (Locks in VM family & region) |
-| **Spot Node Pools** | Unallocated capacity with 30s preemption | **70% to 90% discount** | Medium (Requires fault-tolerant code) |
-| **Pod Rightsizing (VPA)**| Adjusts `requests` to match actual P95 usage | **25% to 40% discount** | Low (Eliminates stranded CPU/RAM slack) |
-| **Ephemeral OS Disks** | Relocates OS disk from remote storage to local SSD| **$15–$75 / node / mo** | Zero (Better performance + $0 disk fee)|
+| Strategy                    | Implementation Mechanism                           | Expected Cloud Savings  | Risk Profile                            |
+| :-------------------------- | :------------------------------------------------- | :---------------------- | :-------------------------------------- |
+| **Azure Savings Plans**     | 1-year or 3-year hourly spend commitment           | **30% to 50% discount** | Low (Applies across all Azure compute)  |
+| **Reserved Instances (RI)** | 1-year or 3-year reservation on specific VM SKU    | **40% to 65% discount** | Low (Locks in VM family & region)       |
+| **Spot Node Pools**         | Unallocated capacity with 30s preemption           | **70% to 90% discount** | Medium (Requires fault-tolerant code)   |
+| **Pod Rightsizing (VPA)**   | Adjusts `requests` to match actual P95 usage       | **25% to 40% discount** | Low (Eliminates stranded CPU/RAM slack) |
+| **Ephemeral OS Disks**      | Relocates OS disk from remote storage to local SSD | **$15–$75 / node / mo** | Zero (Better performance + $0 disk fee) |
 
 ---
 
@@ -132,12 +132,12 @@ spec:
     spec:
       priorityClassName: overprovisioning-low-priority
       containers:
-      - name: pause
-        image: registry.k8s.io/pause:3.9
-        resources:
-          requests:
-            cpu: "3500m"
-            memory: "14Gi"
+        - name: pause
+          image: registry.k8s.io/pause:3.9
+          resources:
+            requests:
+              cpu: "3500m"
+              memory: "14Gi"
 ```
 
 Apply pause pods:
@@ -146,18 +146,18 @@ Apply pause pods:
 kubectl apply -f pause-pods-balloon.yaml
 ```
 
-*When a real production pod arrives, Kubernetes instantly evicts the pause pods (< 500ms), giving production workloads instantaneous compute while the Cluster Autoscaler provisions new hardware in the background.*
+_When a real production pod arrives, Kubernetes instantly evicts the pause pods (< 500ms), giving production workloads instantaneous compute while the Cluster Autoscaler provisions new hardware in the background._
 
 ---
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter | Specification | FinOps Context |
-| :--- | :--- | :--- |
-| **Cost Allocation Data Refresh** | **24 to 36 Hours** | Microsoft Cost Management batch billing ingestion lag |
-| **Spot Max Price Limit** | Default: `-1` (Up to On-Demand)| Prevents node eviction due to price spikes |
-| **Savings Plan Cancellation** | Flexible exchanges supported | Can trade compute families without penalty |
-| **Reserved Instance Exchanges**| Supported within same family | Allows resizing VM shapes (e.g. D4s to D8s) |
+| Parameter                        | Specification                   | FinOps Context                                        |
+| :------------------------------- | :------------------------------ | :---------------------------------------------------- |
+| **Cost Allocation Data Refresh** | **24 to 36 Hours**              | Microsoft Cost Management batch billing ingestion lag |
+| **Spot Max Price Limit**         | Default: `-1` (Up to On-Demand) | Prevents node eviction due to price spikes            |
+| **Savings Plan Cancellation**    | Flexible exchanges supported    | Can trade compute families without penalty            |
+| **Reserved Instance Exchanges**  | Supported within same family    | Allows resizing VM shapes (e.g. D4s to D8s)           |
 
 ---
 

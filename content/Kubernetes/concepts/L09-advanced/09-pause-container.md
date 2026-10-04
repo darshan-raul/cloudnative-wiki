@@ -1,13 +1,22 @@
 ---
 title: The Pause Container
-tags: [kubernetes, internals, pause-container, pods, networking, cgroups, linux-namespaces]
+tags:
+  [
+    kubernetes,
+    internals,
+    pause-container,
+    pods,
+    networking,
+    cgroups,
+    linux-namespaces,
+  ]
 date: 2026-09-06
 description: Detailed breakdown of the Kubernetes pause (sandbox) container, Linux namespace sharing, PID 1 reaping, and Pod lifecycle mechanics.
 ---
 
 # Pause Container
 
-*"https://kubernetes.io/docs/concepts/workloads/pods/#workload-resources-for-managing-pods"*
+_"https://kubernetes.io/docs/concepts/workloads/pods/#workload-resources-for-managing-pods"_
 
 Every Pod has a **pause container** (also called the "sandbox container"). It's a tiny init process that holds the Pod's network namespace and is the basis for the Pod's container runtime. The pause container is what makes the multi-container Pod pattern work.
 
@@ -15,9 +24,9 @@ Every Pod has a **pause container** (also called the "sandbox container"). It's 
 
 The pause container is a **statically-linked binary** that does almost nothing — it just sleeps. Its job is to:
 
-* **Hold the network namespace** for the Pod
-* **Be PID 1** of the namespace (so it doesn't exit)
-* **Receive SIGTERM** and shut down cleanly (so the Pod can be torn down)
+- **Hold the network namespace** for the Pod
+- **Be PID 1** of the namespace (so it doesn't exit)
+- **Receive SIGTERM** and shut down cleanly (so the Pod can be torn down)
 
 The binary is from the `k8s.gcr.io/pause` image (now `registry.k8s.io/pause`):
 
@@ -55,9 +64,9 @@ That's the whole program. The pause container is literally a program that does n
 
 The pause container is what makes a Pod a **unit of network identity**. Without it:
 
-* If you start a container, it has a network namespace
-* If you start a second container, it has a separate network namespace
-* They can't share `localhost`
+- If you start a container, it has a network namespace
+- If you start a second container, it has a separate network namespace
+- They can't share `localhost`
 
 The pause container creates the **Pod's network namespace first**. The other containers in the Pod are then started with `network: container:<pause-container-id>`, which puts them in the **same namespace** as the pause container.
 
@@ -72,10 +81,10 @@ Pod's network namespace (created by pause)
 
 This is why all containers in a Pod:
 
-* Share the same IP
-* Can reach each other on `localhost`
-* Share the same ports (with caveats)
-* Share the same network interfaces
+- Share the same IP
+- Can reach each other on `localhost`
+- Share the same ports (with caveats)
+- Share the same network interfaces
 
 ## Where it shows up
 
@@ -133,9 +142,9 @@ service RuntimeService {
 
 `RunPodSandbox` is what creates the pause container + the Pod's network namespace. The runtime knows how to do this:
 
-* **containerd** — uses the `cri` plugin
-* **CRI-O** — uses `cri-o` directly
-* **Docker** — uses `dockershim` (removed in k8s 1.24+)
+- **containerd** — uses the `cri` plugin
+- **CRI-O** — uses `cri-o` directly
+- **Docker** — uses `dockershim` (removed in k8s 1.24+)
 
 Each runtime has its own way of implementing the sandbox, but the result is the same: a pause container, a network namespace, a cgroup, and a place for the other containers to live.
 
@@ -143,15 +152,15 @@ Each runtime has its own way of implementing the sandbox, but the result is the 
 
 The naive approach: start container A first, use its network namespace for container B. This breaks because:
 
-* If A crashes, B has no network namespace
-* If A is replaced, B's network namespace changes
-* If A is in a Pod with `restartPolicy: Always`, the namespace might be reused or not
+- If A crashes, B has no network namespace
+- If A is replaced, B's network namespace changes
+- If A is in a Pod with `restartPolicy: Always`, the namespace might be reused or not
 
 By having a **dedicated pause container**:
 
-* The network namespace is independent of any app container
-* The pause container is "infrastructure" — kubelet restarts it if it dies (it shouldn't, but the safety is there)
-* Multiple containers can be added / removed without affecting the network namespace
+- The network namespace is independent of any app container
+- The pause container is "infrastructure" — kubelet restarts it if it dies (it shouldn't, but the safety is there)
+- Multiple containers can be added / removed without affecting the network namespace
 
 ## The /pause process from inside the container
 
@@ -185,21 +194,21 @@ apiVersion: v1
 kind: Pod
 metadata: { name: web }
 spec:
-  shareProcessNamespace: true   # containers share PID namespace
+  shareProcessNamespace: true # containers share PID namespace
   containers:
-  - name: app
-    image: app:1.0
-  - name: sidecar
-    image: sidecar:1.0
+    - name: app
+      image: app:1.0
+    - name: sidecar
+      image: sidecar:1.0
 ```
 
 With this, all containers in the Pod share the **PID namespace** too. Now your app can see the sidecar's processes, and vice versa. The pause container is still PID 1 in the shared namespace.
 
 `shareProcessNamespace: true` is useful for:
 
-* Debugging (see all processes in the Pod)
-* Sidecars that need to inspect the main app's processes
-* Cooperative shutdown (sending signals to peer containers)
+- Debugging (see all processes in the Pod)
+- Sidecars that need to inspect the main app's processes
+- Cooperative shutdown (sending signals to peer containers)
 
 But it has security implications: a compromised container can see and signal other containers' processes. Don't enable it unless you need it.
 
@@ -207,15 +216,15 @@ But it has security implications: a compromised container can see and signal oth
 
 A common question: "why does the pause container have PID 1?". The answer is **PID 1 semantics in Linux**:
 
-* PID 1 is special — signals to it are NOT delivered by default (kernel only sends signals it doesn't ignore)
-* When a container's PID 1 exits, the container is considered "stopped"
-* A non-PID-1 process that becomes an orphan is reparented to PID 1 (or systemd, or another init)
+- PID 1 is special — signals to it are NOT delivered by default (kernel only sends signals it doesn't ignore)
+- When a container's PID 1 exits, the container is considered "stopped"
+- A non-PID-1 process that becomes an orphan is reparented to PID 1 (or systemd, or another init)
 
 If the pause container weren't PID 1:
 
-* If the app container's main process died, the pause process would be reparented to something else (or be orphaned)
-* The container wouldn't shut down cleanly
-* The Pod's network namespace would be torn down prematurely
+- If the app container's main process died, the pause process would be reparented to something else (or be orphaned)
+- The container wouldn't shut down cleanly
+- The Pod's network namespace would be torn down prematurely
 
 By having the pause container as PID 1, the network namespace is anchored to a process that **never dies** (until the Pod is being torn down). This makes the lifecycle predictable.
 
@@ -223,9 +232,9 @@ By having the pause container as PID 1, the network namespace is anchored to a p
 
 The pause image is intentionally tiny. It needs to:
 
-* Be downloadable fast (every Pod needs it)
-* Have no vulnerabilities (every Pod uses it)
-* Work on every architecture
+- Be downloadable fast (every Pod needs it)
+- Have no vulnerabilities (every Pod uses it)
+- Work on every architecture
 
 ```bash
 # what's in the pause image
@@ -257,35 +266,35 @@ The kubelet passes this image to the CRI runtime when calling `RunPodSandbox`. T
 
 Most of the time, you don't think about the pause container. But it matters when:
 
-* **Debugging Pod networking**: "all containers in the Pod share the network namespace" — because of the pause container
-* **Multi-container Pods**: the sidecar can `localhost` to the main app — because of the pause container
-* **Pod startup time**: pulling the pause image is part of every Pod's startup. If the image is in a slow registry, every Pod is slow to start
-* **Pod security**: the pause container is PID 1 in the shared namespace. A bug in pause could (theoretically) affect every Pod
-* **Container runtime bugs**: pause container lifecycle issues manifest as weird network namespace behavior
+- **Debugging Pod networking**: "all containers in the Pod share the network namespace" — because of the pause container
+- **Multi-container Pods**: the sidecar can `localhost` to the main app — because of the pause container
+- **Pod startup time**: pulling the pause image is part of every Pod's startup. If the image is in a slow registry, every Pod is slow to start
+- **Pod security**: the pause container is PID 1 in the shared namespace. A bug in pause could (theoretically) affect every Pod
+- **Container runtime bugs**: pause container lifecycle issues manifest as weird network namespace behavior
 
 ## Gotchas
 
-* **You can't customize the pause image via the Pod spec.** It's set at the kubelet level. (You can change the kubelet's `--pod-infra-container-image`, but that's a node-level setting.)
-* **The pause image must be in every node's cache** for fast Pod startup. If your cluster is air-gapped, mirror the image.
-* **The pause container uses no resources (no CPU, no memory).** It's a sleeping process, not a workload. The cgroup is empty.
-* **You can see the pause container in `crictl ps` but not in `kubectl get pod -o jsonpath='{.spec.containers}'`.** It's a runtime detail, not a spec.
-* **The pause container is invisible from inside the app container** (unless `shareProcessNamespace: true`).
-* **The pause container's logs are usually empty.** If it has any output, something has gone wrong.
-* **Some runtimes (older Docker) had a different sandbox model.** With dockershim removed in k8s 1.24+, all runtimes use the pause-container sandbox model.
-* **CNI plugins interact with the pause container's network namespace**, not the app container's. The CNI gets the Pod's netns via the pause container.
-* **The pause container doesn't have a security context.** It runs as root, has no capabilities, etc. (It doesn't need them — it does nothing.)
-* **The image tag is part of the kubelet version compatibility.** Pause 3.9 is for k8s 1.27+. Older pause images may have issues with newer runtimes.
+- **You can't customize the pause image via the Pod spec.** It's set at the kubelet level. (You can change the kubelet's `--pod-infra-container-image`, but that's a node-level setting.)
+- **The pause image must be in every node's cache** for fast Pod startup. If your cluster is air-gapped, mirror the image.
+- **The pause container uses no resources (no CPU, no memory).** It's a sleeping process, not a workload. The cgroup is empty.
+- **You can see the pause container in `crictl ps` but not in `kubectl get pod -o jsonpath='{.spec.containers}'`.** It's a runtime detail, not a spec.
+- **The pause container is invisible from inside the app container** (unless `shareProcessNamespace: true`).
+- **The pause container's logs are usually empty.** If it has any output, something has gone wrong.
+- **Some runtimes (older Docker) had a different sandbox model.** With dockershim removed in k8s 1.24+, all runtimes use the pause-container sandbox model.
+- **CNI plugins interact with the pause container's network namespace**, not the app container's. The CNI gets the Pod's netns via the pause container.
+- **The pause container doesn't have a security context.** It runs as root, has no capabilities, etc. (It doesn't need them — it does nothing.)
+- **The image tag is part of the kubelet version compatibility.** Pause 3.9 is for k8s 1.27+. Older pause images may have issues with newer runtimes.
 
 ## When to think about the pause container
 
-* **Air-gapped clusters**: make sure the pause image is in your private registry
-* **Custom container runtimes**: ensure the runtime supports the pause-container sandbox model
-* **CNI development**: you're working with the pause container's netns
-* **Performance tuning**: if Pod startup is slow, check pause image pull time
-* **Debugging weird Pod issues**: "I can reach localhost from the sidecar, but not the other way" — pause container lifecycle
+- **Air-gapped clusters**: make sure the pause image is in your private registry
+- **Custom container runtimes**: ensure the runtime supports the pause-container sandbox model
+- **CNI development**: you're working with the pause container's netns
+- **Performance tuning**: if Pod startup is slow, check pause image pull time
+- **Debugging weird Pod issues**: "I can reach localhost from the sidecar, but not the other way" — pause container lifecycle
 
 ## See also
 
-* [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — the parent concept
-* [[Kubernetes/concepts/L03-workloads/09-multi-container-pods|Multi-Container Pods]] — the pattern that depends on the pause container
-* [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — uses the pause container's netns
+- [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — the parent concept
+- [[Kubernetes/concepts/L03-workloads/09-multi-container-pods|Multi-Container Pods]] — the pattern that depends on the pause container
+- [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — uses the pause container's netns

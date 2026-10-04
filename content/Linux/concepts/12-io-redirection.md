@@ -9,6 +9,7 @@ tags:
 # 12 — Input/Output Redirection
 
 Every command has three standard streams:
+
 - **stdin (0)** — input (keyboard, pipe)
 - **stdout (1)** — normal output (terminal)
 - **stderr (2)** — error messages (terminal)

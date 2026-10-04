@@ -34,7 +34,7 @@ This section covers the full cost management stack: pricing models, visibility t
 
 **[[cost-anomaly-detection|Cost Anomaly Detection]]** — Machine learning-based detection of unexpected cost spikes. Alert subscriptions. Root cause investigation workflow.
 
-**[[instance-scheduler|Instance Scheduler]]** — AWS Solutions construct for stopping/starting EC2 and RDS instances on a schedule. CloudWatch Events + Lambda implementation. Cost impact of running 24/7 vs scheduled.
+**[[cost-automation|Instance Scheduler & Automation]]** — AWS Solutions construct for stopping/starting EC2 and RDS instances on a schedule. CloudWatch Events + Lambda implementation. Cost impact of running 24/7 vs scheduled.
 
 ## Compute Cost Optimization
 

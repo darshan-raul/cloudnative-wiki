@@ -34,6 +34,7 @@ In order of impact, easiest first:
 ### 1. Right-size pod requests (5-30% savings)
 
 Most clusters have over-provisioned pods. Common patterns:
+
 - 1GB memory request for a pod that uses 80Mi
 - 1 CPU request for a pod that uses 50m
 - Memory requests copied from the limit, not the actual need
@@ -54,11 +55,11 @@ kubectl get vpa -A
 ```yaml
 resources:
   requests:
-    cpu: 100m       # was 1
-    memory: 256Mi   # was 1Gi
+    cpu: 100m # was 1
+    memory: 256Mi # was 1Gi
   limits:
-    cpu: 500m       # was 2
-    memory: 512Mi   # was 2Gi
+    cpu: 500m # was 2
+    memory: 512Mi # was 2Gi
 ```
 
 **Why it matters:** the scheduler uses requests to bin-pack pods onto nodes. If requests are too high, fewer pods fit per node, you need more nodes, more cost.
@@ -68,12 +69,14 @@ resources:
 Spot instances are 60-90% cheaper than on-demand. The catch: they can be reclaimed with 30s-2min notice.
 
 **Where spot works:**
+
 - Stateless services that can be rescheduled quickly
 - Batch jobs (with checkpointing)
 - Dev/staging environments
 - Worker nodes behind a service mesh (rescheduling is fast)
 
 **Where spot doesn't work:**
+
 - Stateful workloads with PVCs (re-attaching a volume takes minutes)
 - Latency-sensitive services that can't tolerate brief capacity loss
 - Gossip-based systems (Consul, etcd — except as a quorum with on-demand)
@@ -89,12 +92,12 @@ spec:
   template:
     spec:
       requirements:
-      - key: karpenter.sh/capacity-type
-        operator: In
-        values: ["spot"]
-      - key: karpenter.k8s.aws/instance-category
-        operator: In
-        values: ["c", "m", "r"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot"]
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["c", "m", "r"]
       nodeClassRef:
         name: default
   limits:
@@ -135,6 +138,7 @@ But if pods are smaller, the node is wasted
 ```
 
 **Instance family selection matters.** Some instances are more cost-effective for certain workloads:
+
 - **Compute-optimized (c5, c6i, c7g)** — CPU-bound, batch, video
 - **Memory-optimized (r5, r6i, x2)** — caches, in-memory DBs
 - **General (m5, m6i)** — web servers, APIs
@@ -210,20 +214,22 @@ resources:
 
 Cloud egress is the silent killer. Each cloud's pricing differs:
 
-| Cloud | Egress cost |
-|-------|-------------|
-| **AWS** | $0.09/GB to internet, $0.01/GB cross-AZ, free in-region |
-| **GCP** | $0.12/GB to internet, $0.01-0.08/GB cross-region |
-| **Azure** | $0.087/GB to internet, $0.01/GB cross-AZ |
+| Cloud     | Egress cost                                             |
+| --------- | ------------------------------------------------------- |
+| **AWS**   | $0.09/GB to internet, $0.01/GB cross-AZ, free in-region |
+| **GCP**   | $0.12/GB to internet, $0.01-0.08/GB cross-region        |
+| **Azure** | $0.087/GB to internet, $0.01/GB cross-AZ                |
 
 **Common egress bombs:**
 
 1. **Cross-AZ traffic.** A pod in zone A talking to a Service that routes to a pod in zone B. Multiply by RPS, you can spend thousands.
+
    ```bash
    # check cross-AZ traffic
    # (AWS: VPC Flow Logs; GCP: VPC Flow Logs; or your CNI's metrics)
    # if high, fix with topology-aware routing or affinity
    ```
+
    Fix: pod topology spread constraints, or use a service mesh with locality-aware load balancing.
 
 2. **Cross-region replication.** S3 cross-region replication, RDS cross-region replicas, etc. — billed by data transferred.
@@ -245,7 +251,7 @@ kind: DevNamespace
 metadata:
   name: alice-experiment
 spec:
-  ttl: 7d  # auto-delete after 7 days
+  ttl: 7d # auto-delete after 7 days
 ```
 
 ### 10. Image optimization (5-10%)
@@ -306,6 +312,7 @@ Together: **50-70% reduction** is realistic.
 ### Kubecost (commercial, free tier)
 
 The standard cost-monitoring tool for k8s. Shows:
+
 - Per-namespace, per-Deployment, per-Label cost
 - Right-sizing recommendations
 - Spot vs on-demand breakdown
@@ -314,8 +321,8 @@ The standard cost-monitoring tool for k8s. Shows:
 ```yaml
 # install
 helm install kubecost cost-analyzer \
-  --repo https://kubecost.github.io/cost-analyzer \
-  --namespace kubecost --create-namespace
+--repo https://kubecost.github.io/cost-analyzer \
+--namespace kubecost --create-namespace
 ```
 
 Web UI at `localhost:9090` (port-forward).
@@ -358,6 +365,7 @@ Pair these with k8s labels: tag every namespace, Deployment, and Service with `t
 ### The "fleet of small clusters" pattern
 
 Instead of one big shared cluster, run many small clusters:
+
 - Per-environment: dev, staging, prod
 - Per-region: us-east-1, eu-west-1
 - Per-team: team-a-cluster, team-b-cluster
@@ -564,10 +572,10 @@ metadata:
   name: default
 spec:
   tags:
-  - team
-  - cost-center
-  - project
-  - environment
+    - team
+    - cost-center
+    - project
+    - environment
 ```
 
 Now your bill rolls up by team / project / environment.
@@ -587,7 +595,8 @@ Now your bill rolls up by team / project / environment.
 Cluster: 50 nodes, mostly `m5.2xlarge` (8 CPU, 32Gi). 200 namespaces, mixed dev/staging/prod.
 
 **Bills:**
-- Compute: 50 * 8 * $0.192/hour = $5,600/mo
+
+- Compute: 50 _ 8 _ $0.192/hour = $5,600/mo
 - Storage: 30 PVCs at 100Gi gp3 = $360/mo
 - Egress: 2TB cross-AZ at $0.01/GB = $20/mo
 - LB: 5 NLB = $90/mo
@@ -602,6 +611,7 @@ Cluster: 50 nodes, mostly `m5.2xlarge` (8 CPU, 32Gi). 200 namespaces, mixed dev/
 5. **Drop idle namespaces.** 5 namespaces with 0 Deployments still have over-provisioned limit ranges. Drop.
 
 **New bills:**
+
 - Compute (prod): $1,440/mo
 - Compute (dev, spot): $560/mo
 - Storage: $360/mo
@@ -612,7 +622,7 @@ Cluster: 50 nodes, mostly `m5.2xlarge` (8 CPU, 32Gi). 200 namespaces, mixed dev/
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/auto-scaling|auto-scaling]] — HPA, VPA, Karpenter, KEDA
-* [[Kubernetes/guides/non-functional/performance-tuning|performance-tuning]] — right-sizing
-* [[Kubernetes/guides/non-functional/high-availability|high-availability]] — cost vs reliability tradeoffs
-* [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — storage costs
+- [[Kubernetes/guides/non-functional/auto-scaling|auto-scaling]] — HPA, VPA, Karpenter, KEDA
+- [[Kubernetes/guides/non-functional/performance-tuning|performance-tuning]] — right-sizing
+- [[Kubernetes/guides/non-functional/high-availability|high-availability]] — cost vs reliability tradeoffs
+- [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — storage costs

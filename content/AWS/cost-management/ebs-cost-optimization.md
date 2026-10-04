@@ -13,14 +13,14 @@ EBS costs come from three sources: **volume storage** (per GB-month), **IOPS** (
 
 ## Volume Types and When to Use Them
 
-| Type | Use When | GB/Month | IOPS/GB | Max IOPS | Max Throughput |
-|------|----------|----------|---------|---------|---------------|
-| **gp3** | General purpose, most workloads | ~$0.08 | N/A (baseline 3,000 IOPS + 125MB/s included) | 16,000 | 1,000 MB/s |
-| **gp2** | Legacy, burst to 3,000 IOPS | ~$0.10 | Burst model | 3,000 | 250 MB/s |
-| **io2** | High-performance databases | ~$0.125 + $0.065 per IOPS | 500:1 ratio | 64,000 | 1,000 MB/s |
-| **io2 Block Express** | Ultra-high performance | ~$0.125 + $0.065 per IOPS | 1,000:1 ratio | 256,000 | 4,000 MB/s |
-| **st1** | Throughput-intensive (Hadoop, log processing) | ~$0.045 | N/A | 500 | 500 MB/s |
-| **sc1** | Cold storage (infrequently accessed) | ~$0.015 | N/A | 250 | 250 MB/s |
+| Type                  | Use When                                      | GB/Month                  | IOPS/GB                                      | Max IOPS | Max Throughput |
+| --------------------- | --------------------------------------------- | ------------------------- | -------------------------------------------- | -------- | -------------- |
+| **gp3**               | General purpose, most workloads               | ~$0.08                    | N/A (baseline 3,000 IOPS + 125MB/s included) | 16,000   | 1,000 MB/s     |
+| **gp2**               | Legacy, burst to 3,000 IOPS                   | ~$0.10                    | Burst model                                  | 3,000    | 250 MB/s       |
+| **io2**               | High-performance databases                    | ~$0.125 + $0.065 per IOPS | 500:1 ratio                                  | 64,000   | 1,000 MB/s     |
+| **io2 Block Express** | Ultra-high performance                        | ~$0.125 + $0.065 per IOPS | 1,000:1 ratio                                | 256,000  | 4,000 MB/s     |
+| **st1**               | Throughput-intensive (Hadoop, log processing) | ~$0.045                   | N/A                                          | 500      | 500 MB/s       |
+| **sc1**               | Cold storage (infrequently accessed)          | ~$0.015                   | N/A                                          | 250      | 250 MB/s       |
 
 **gp3 vs gp2:** gp3 is newer and cheaper. It includes a baseline of 3,000 IOPS and 125MB/s regardless of volume size, and you can provision IOPS up to 16,000 independently of volume size. gp2 uses a burst model — small volumes get burst IOPS up to 3,000 but deplete a burst balance. gp3 is almost always the better choice for new workloads.
 
@@ -31,11 +31,13 @@ EBS costs come from three sources: **volume storage** (per GB-month), **IOPS** (
 The single biggest source of EBS waste is volumes left attached to stopped or terminated instances. EBS volumes persist independently of EC2 instances — when you stop or terminate an instance, the root volume is deleted (if `DeleteOnTermination=true`) but data volumes are detached and remain.
 
 **Finding unattached volumes:**
+
 ```bash
 aws ec2 describe-volumes --filters Name=status,Values=available --query 'Volumes[].[VolumeId,Size,VolumeType,CreateTime]'
 ```
 
 **Unattached volume detection strategies:**
+
 - AWS Config rule: `ebs-volume-inuse-check` detects volumes not attached to running instances
 - AWS Trusted Advisor (Business plan): checks for unattached volumes
 - Lambda function scheduled daily to report untagged unattached volumes
@@ -46,6 +48,7 @@ aws ec2 describe-volumes --filters Name=status,Values=available --query 'Volumes
 EBS snapshots are stored in S3. Snapshot pricing: ~$0.05/GB-month (standard, varies by region).
 
 **Sources of snapshot waste:**
+
 1. **Old snapshots from deleted instances** — the instance is gone but the snapshot remains
 2. **Multiple snapshots of the same volume** — accumulated over time with no cleanup policy
 3. **Snapshots from test/dev environments** — left behind after test runs
@@ -53,6 +56,7 @@ EBS snapshots are stored in S3. Snapshot pricing: ~$0.05/GB-month (standard, var
 
 **Amazon Data Lifecycle Manager (DLM):**
 Automate snapshot creation and deletion. Configure policies to:
+
 - Create daily snapshots with a 7-day retention → auto-delete after 7 days
 - Create weekly snapshots with 90-day retention → auto-delete after 90 days
 - Tag-based policies for fine-grained control (only snapshot volumes with `Backup=true` tag)
@@ -68,6 +72,7 @@ DLM policies are free — you only pay for the snapshot storage.
 **Under-sized volumes:** Less common but causes performance issues. If IOPS requirements are high but volume is too small, you can't provision enough IOPS (gp3 has a 50:1 IOPS-to-GB ratio for provisioned IOPS).
 
 **Right-sizing approach:**
+
 - CloudWatch `VolumeConsumedReadWriteBytes` metric shows actual I/O
 - EBS I/O stats in the EC2 console shows if you're consistently hitting volume limits
 - Compute Optimizer recommends volume changes for instances with high EBS I/O
@@ -85,12 +90,14 @@ The only scenario where encryption adds cost: CMK with a dedicated HSM (CloudHSM
 ## Monitoring EBS Costs
 
 CloudWatch metrics for EBS:
+
 - `VolumeReadOps`, `VolumeWriteOps` — I/O operations
 - `VolumeReadBytes`, `VolumeWriteBytes` — throughput
 - `VolumeQueueLength` — I/O waiting (high queue = volume is saturated)
 - `BurstBalance` (gp2) — remaining burst IOPS credits
 
 Use these to identify volumes that are:
+
 - Consistently under-utilized (right-size down)
 - Consistently over-utilized (upgrade to io2 or larger gp3)
 - Showing low BurstBalance (gp2) indicating IOPS throttling

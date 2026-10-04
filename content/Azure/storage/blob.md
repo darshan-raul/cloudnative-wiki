@@ -42,30 +42,32 @@ Azure Blob Storage is Microsoft's massively scalable object storage service for 
 
 ### 1. Access Tiers & Archive Rehydration
 
-| Access Tier | Optimal Access Pattern | Min Storage Duration | First-Byte Latency |
-| :--- | :--- | :--- | :--- |
-| **Hot** | Active daily reads and writes | None | Milliseconds (Online) |
-| **Cool** | Infrequently accessed (>= 30 days) | 30 days | Milliseconds (Online) |
-| **Cold** | Rarely accessed (>= 90 days) | 90 days | Milliseconds (Online) |
-| **Archive** | Historical compliance (>= 180 days) | 180 days | **Hours (Offline)** |
+| Access Tier | Optimal Access Pattern              | Min Storage Duration | First-Byte Latency    |
+| :---------- | :---------------------------------- | :------------------- | :-------------------- |
+| **Hot**     | Active daily reads and writes       | None                 | Milliseconds (Online) |
+| **Cool**    | Infrequently accessed (>= 30 days)  | 30 days              | Milliseconds (Online) |
+| **Cold**    | Rarely accessed (>= 90 days)        | 90 days              | Milliseconds (Online) |
+| **Archive** | Historical compliance (>= 180 days) | 180 days             | **Hours (Offline)**   |
 
-* **The Archive Rehydration Process:** Blobs in the Archive tier are offline. To read an archived blob, you must **rehydrate** it back to Hot or Cool:
-  * **Standard Priority:** Rehydration completes in **up to 15 hours**.
-  * **High Priority:** Rehydrates small blobs (< 10 GB) in **under 1 hour** at higher cost.
+- **The Archive Rehydration Process:** Blobs in the Archive tier are offline. To read an archived blob, you must **rehydrate** it back to Hot or Cool:
+  - **Standard Priority:** Rehydration completes in **up to 15 hours**.
+  - **High Priority:** Rehydrates small blobs (< 10 GB) in **under 1 hour** at higher cost.
 
 ### 2. ADLS Gen2 Hierarchical Namespace (HNS)
 
 In standard object storage (like AWS S3 or standard Azure Blob), "folders" do not exist; they are merely prefixes in the object key string (e.g. `folder/subfolder/file.csv`).
-* **The Rename Problem:** In standard object storage, renaming a folder containing 1,000,000 files requires **1,000,000 individual copy operations followed by 1,000,000 delete operations**, taking hours and costing thousands of API transactions.
-* **ADLS Gen2 Solution:** The Hierarchical Namespace creates real filesystem directory nodes. Renaming a directory is an **atomic metadata operation** that completes in **milliseconds**, regardless of how many petabytes of data reside inside the folder.
+
+- **The Rename Problem:** In standard object storage, renaming a folder containing 1,000,000 files requires **1,000,000 individual copy operations followed by 1,000,000 delete operations**, taking hours and costing thousands of API transactions.
+- **ADLS Gen2 Solution:** The Hierarchical Namespace creates real filesystem directory nodes. Renaming a directory is an **atomic metadata operation** that completes in **milliseconds**, regardless of how many petabytes of data reside inside the folder.
 
 ### 3. User Delegation SAS vs. Account Key SAS
 
 Shared Access Signatures (SAS) generate temporary, signed URLs for client uploads and downloads:
-* **Account Key SAS (Insecure):** Signed using the master Storage Account Access Key. If compromised, an attacker can generate unlimited SAS tokens with full permissions.
-* **User Delegation SAS (Enterprise Best Practice):**
-  * Signed using temporary **Microsoft Entra ID credentials**.
-  * Revoking the user or service account in Entra ID immediately invalidates all active delegated SAS tokens!
+
+- **Account Key SAS (Insecure):** Signed using the master Storage Account Access Key. If compromised, an attacker can generate unlimited SAS tokens with full permissions.
+- **User Delegation SAS (Enterprise Best Practice):**
+  - Signed using temporary **Microsoft Entra ID credentials**.
+  - Revoking the user or service account in Entra ID immediately invalidates all active delegated SAS tokens!
 
 ---
 
@@ -101,10 +103,10 @@ az storage account create \
         },
         "actions": {
           "baseBlob": {
-            "tierToCool": {"daysAfterModificationGreaterThan": 30},
-            "tierToCold": {"daysAfterModificationGreaterThan": 90},
-            "tierToArchive": {"daysAfterModificationGreaterThan": 180},
-            "delete": {"daysAfterModificationGreaterThan": 2555}
+            "tierToCool": { "daysAfterModificationGreaterThan": 30 },
+            "tierToCold": { "daysAfterModificationGreaterThan": 90 },
+            "tierToArchive": { "daysAfterModificationGreaterThan": 180 },
+            "delete": { "daysAfterModificationGreaterThan": 2555 }
           }
         }
       }
@@ -124,37 +126,39 @@ az storage account management-policy create \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max storage capacity per account** | 5 PiB (5,120 TB) | Increase via support request |
-| **Max individual block blob size** | 190.7 TiB | Via 50,000 blocks × 4,000 MiB |
-| **Max ingress request rate** | Up to 20,000 requests/sec | Scales automatically |
-| **Storage accounts per subscription** | 250 accounts per region | Group containers into shared accounts |
+| Parameter                             | Limit                     | Production Notes                      |
+| :------------------------------------ | :------------------------ | :------------------------------------ |
+| **Max storage capacity per account**  | 5 PiB (5,120 TB)          | Increase via support request          |
+| **Max individual block blob size**    | 190.7 TiB                 | Via 50,000 blocks × 4,000 MiB         |
+| **Max ingress request rate**          | Up to 20,000 requests/sec | Scales automatically                  |
+| **Storage accounts per subscription** | 250 accounts per region   | Group containers into shared accounts |
 
 ---
 
 ## References
 
-* **Homepage:** https://azure.microsoft.com/en-us/products/storage/blobs
-* **Blob Storage Documentation:** https://learn.microsoft.com/en-us/azure/storage/blobs/
-* **ADLS Gen2 Overview:** https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction
-* **Pricing:** https://azure.microsoft.com/en-us/pricing/details/storage/blobs/
+- **Homepage:** https://azure.microsoft.com/en-us/products/storage/blobs
+- **Blob Storage Documentation:** https://learn.microsoft.com/en-us/azure/storage/blobs/
+- **ADLS Gen2 Overview:** https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction
+- **Pricing:** https://azure.microsoft.com/en-us/pricing/details/storage/blobs/
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Big Data Analytics Lake with ADLS Gen2
-* 100 TB of active analytical data stored in `Hot` tier with Zone-Redundant Storage (`Standard_ZRS`).
-* Storage cost: 100 TB (102,400 GB) × $0.023 / GB = **$2,355.20 / month**.
-* Read transactions (10 million read operations @ $0.005 / 10,000): $5.00.
-* **Total Monthly Data Lake Cost:** **~$2,360.20 / month**.
+
+- 100 TB of active analytical data stored in `Hot` tier with Zone-Redundant Storage (`Standard_ZRS`).
+- Storage cost: 100 TB (102,400 GB) × $0.023 / GB = **$2,355.20 / month**.
+- Read transactions (10 million read operations @ $0.005 / 10,000): $5.00.
+- **Total Monthly Data Lake Cost:** **~$2,360.20 / month**.
 
 ### Scenario 2: Regulatory Archive with Lifecycle Rules
-* 250 TB of compliance audit logs transitioned to `Archive` tier with Locally Redundant Storage (`Standard_LRS`).
-* Storage cost: 250 TB (256,000 GB) × $0.00099 / GB = **$253.44 / month**.
-* Retrieval cost (when audited): 1 TB rehydrated ($0.022 / GB = $22.00).
-* **Total Baseline Monthly Storage:** **~$253.44 / month** for 250 TB of preserved data.
+
+- 250 TB of compliance audit logs transitioned to `Archive` tier with Locally Redundant Storage (`Standard_LRS`).
+- Storage cost: 250 TB (256,000 GB) × $0.00099 / GB = **$253.44 / month**.
+- Retrieval cost (when audited): 1 TB rehydrated ($0.022 / GB = $22.00).
+- **Total Baseline Monthly Storage:** **~$253.44 / month** for 250 TB of preserved data.
 
 ---
 

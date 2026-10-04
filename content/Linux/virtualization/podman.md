@@ -13,14 +13,14 @@ Podman is a **daemonless, rootless** container runtime that's Docker-compatible.
 
 ## Podman vs Docker
 
-| Feature             | Docker                  | Podman                        |
-|--------------------|------------------------|-------------------------------|
-| Daemon             | dockerd (runs as root)  | None (daemonless)             |
-| Root privileges    | Requires root or docker group | Runs as normal user (rootless) |
-| Container UID mapping | via dockerd (root) | via user namespaces (no root) |
-| Pods | Via docker-compose     | Native pod support |
-| Socket | /var/run/docker.sock   | /run/podman/podman.sock |
-| systemd | docker.service | podman.socket + quadlet |
+| Feature               | Docker                        | Podman                         |
+| --------------------- | ----------------------------- | ------------------------------ |
+| Daemon                | dockerd (runs as root)        | None (daemonless)              |
+| Root privileges       | Requires root or docker group | Runs as normal user (rootless) |
+| Container UID mapping | via dockerd (root)            | via user namespaces (no root)  |
+| Pods                  | Via docker-compose            | Native pod support             |
+| Socket                | /var/run/docker.sock          | /run/podman/podman.sock        |
+| systemd               | docker.service                | podman.socket + quadlet        |
 
 ## Rootless Containers
 

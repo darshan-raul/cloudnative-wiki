@@ -12,19 +12,19 @@ AWS provides a comprehensive set of security services covering identity, encrypt
 
 ## Service Map
 
-| Service | Category | Use Case |
-|---------|----------|----------|
-| [[iam/README|IAM]] | Identity | Users, groups, roles, policies, federation |
-| [[kms/README|KMS]] | Encryption | Data at rest encryption, CMK, envelope encryption |
-| [[cloudtrail/README|CloudTrail]] | Audit | API call logging, compliance, forensics |
-| [[config/README|Config]] | Compliance | Resource inventory, change tracking, conformance packs |
-| [[guardduty/README|GuardDuty]] | Threat Detection | DNS/CloudTrail/VPC flow analysis, malware detection |
-| [[security-hub/README|Security Hub]] | Centralized Security | Aggregates findings from all security services |
-| [[inspector/README|Inspector]] | Vulnerability Scanning | EC2, ECR, Lambda vulnerability assessment |
-| [[macie/README|Macie]] | Data Privacy | S3 data classification, PII detection |
-| [[secrets-manager/README|Secrets Manager]] | Secrets | Passwords, API keys, rotation |
-| [[certificate-manager/README|Certificate Manager]] | TLS/SSL | Public/private certificates, managed renewal |
-| [[detective/README|Detective]] | Investigation | Graph-based security investigation |
+| Service                      | Category              | Use Case               |
+| ---------------------------- | --------------------- | ---------------------- | ------------------------------------------------------ |
+| [[iam/README                 | IAM]]                 | Identity               | Users, groups, roles, policies, federation             |
+| [[kms/README                 | KMS]]                 | Encryption             | Data at rest encryption, CMK, envelope encryption      |
+| [[cloudtrail/README          | CloudTrail]]          | Audit                  | API call logging, compliance, forensics                |
+| [[config/README              | Config]]              | Compliance             | Resource inventory, change tracking, conformance packs |
+| [[guardduty/README           | GuardDuty]]           | Threat Detection       | DNS/CloudTrail/VPC flow analysis, malware detection    |
+| [[security-hub/README        | Security Hub]]        | Centralized Security   | Aggregates findings from all security services         |
+| [[inspector/README           | Inspector]]           | Vulnerability Scanning | EC2, ECR, Lambda vulnerability assessment              |
+| [[macie/README               | Macie]]               | Data Privacy           | S3 data classification, PII detection                  |
+| [[secrets-manager/README     | Secrets Manager]]     | Secrets                | Passwords, API keys, rotation                          |
+| [[certificate-manager/README | Certificate Manager]] | TLS/SSL                | Public/private certificates, managed renewal           |
+| [[detective/README           | Detective]]           | Investigation          | Graph-based security investigation                     |
 
 ## Shared Responsibility Model
 

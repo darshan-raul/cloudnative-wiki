@@ -1,6 +1,13 @@
+---
+title: "PodDisruptionBudget (PDB)"
+tags: ["kubernetes", "k8s-concepts", "scheduling"]
+date: 2026-09-06
+description: "PodDisruptionBudget (PDB) — Kubernetes reference and architecture guide."
+---
+
 # PodDisruptionBudget (PDB)
 
-*"https://kubernetes.io/docs/concepts/workloads/pods/disruptions/"*
+_"https://kubernetes.io/docs/concepts/workloads/pods/disruptions/"_
 
 A PodDisruptionBudget **limits how many Pods in a set can be simultaneously unavailable** during **voluntary disruption**. Voluntary disruption = initiated by a person or a controller (a `kubectl drain`, a cluster autoscaler removing a node, an operator rolling out a change). It does NOT cover involuntary disruption (node failure, OOM, network partition).
 
@@ -27,18 +34,18 @@ A PodDisruptionBudget **limits how many Pods in a set can be simultaneously unav
 
 **Voluntary disruption** is any disruption initiated by a person or a controller. The eviction API is what enforces it, and the eviction API respects PDBs.
 
-| Action | Voluntary? | PDB respected? |
-|---|---|---|
-| `kubectl drain` | Yes | Yes |
-| Cluster Autoscaler removing a node | Yes | Yes |
-| Karpenter consolidation | Yes | Yes |
-| HPA scale-down | Yes | Yes (via eviction API) |
-| `kubectl delete pod` | Yes | Yes (via eviction API) |
-| `kubectl delete pod --force --grace-period=0` | Yes | **No — bypasses PDB** |
-| Node failure | No (involuntary) | No |
-| Pod OOM-kill | No | No |
-| kubelet kills a stuck Pod | No | No |
-| Network partition | No | No |
+| Action                                        | Voluntary?       | PDB respected?         |
+| --------------------------------------------- | ---------------- | ---------------------- |
+| `kubectl drain`                               | Yes              | Yes                    |
+| Cluster Autoscaler removing a node            | Yes              | Yes                    |
+| Karpenter consolidation                       | Yes              | Yes                    |
+| HPA scale-down                                | Yes              | Yes (via eviction API) |
+| `kubectl delete pod`                          | Yes              | Yes (via eviction API) |
+| `kubectl delete pod --force --grace-period=0` | Yes              | **No — bypasses PDB**  |
+| Node failure                                  | No (involuntary) | No                     |
+| Pod OOM-kill                                  | No               | No                     |
+| kubelet kills a stuck Pod                     | No               | No                     |
+| Network partition                             | No               | No                     |
 
 The **eviction API** is the gate. The kubelet doesn't use it for involuntary disruption — when a node fails, the Pods die regardless of PDB. PDB only constrains **what the eviction API allows**.
 
@@ -50,7 +57,7 @@ kind: PodDisruptionBudget
 metadata:
   name: web
 spec:
-  minAvailable: 2           # or
+  minAvailable: 2 # or
   # maxUnavailable: 1      # pick one
   selector:
     matchLabels:
@@ -67,21 +74,21 @@ spec:
 
 ### 2.3 Which to use
 
-* **`minAvailable`** for "I always need N available" services (e.g. quorum-based, databases with replicas).
-* **`maxUnavailable`** for "I can tolerate some being gone" services (e.g. stateless HTTP).
+- **`minAvailable`** for "I always need N available" services (e.g. quorum-based, databases with replicas).
+- **`maxUnavailable`** for "I can tolerate some being gone" services (e.g. stateless HTTP).
 
 They are **equivalent for simple cases** (e.g. `minAvailable: 2` on a Deployment with `replicas: 3` is the same as `maxUnavailable: 1`).
 
 The difference shows up with **percentages**:
 
-* `minAvailable: 50%` on `replicas: 3` rounds **up** to 2.
-* `maxUnavailable: 50%` on `replicas: 3` rounds **down** to 1 (but can be at most 1; the same as `minAvailable: 2`).
+- `minAvailable: 50%` on `replicas: 3` rounds **up** to 2.
+- `maxUnavailable: 50%` on `replicas: 3` rounds **down** to 1 (but can be at most 1; the same as `minAvailable: 2`).
 
 ### 2.4 Percentages
 
 ```yaml
 spec:
-  minAvailable: 75%        # round up
+  minAvailable: 75% # round up
   # maxUnavailable: 25%
 ```
 
@@ -101,10 +108,10 @@ status:
   disruptionsAllowed: 1
 ```
 
-* **`expectedPods`** — Pods matching the selector that exist.
-* **`currentHealthy`** — Pods matching the selector that are currently Ready.
-* **`desiredHealthy`** — the floor (or ceiling) from the spec.
-* **`disruptionsAllowed`** — how many more Pods can be voluntarily disrupted.
+- **`expectedPods`** — Pods matching the selector that exist.
+- **`currentHealthy`** — Pods matching the selector that are currently Ready.
+- **`desiredHealthy`** — the floor (or ceiling) from the spec.
+- **`disruptionsAllowed`** — how many more Pods can be voluntarily disrupted.
 
 The eviction API checks: `currentHealthy - 1 >= desiredHealthy` for each eviction. If yes, allow. If no, reject.
 
@@ -127,6 +134,7 @@ Result: no evictions allowed while all 3 are healthy.
 Wait, that doesn't make sense. Let me re-check.
 
 Actually, the math is:
+
 - `disruptionsAllowed` = how many Pods can be disrupted while still satisfying the PDB.
 - For `minAvailable: 2` on `replicas: 3`: you can disrupt 1 (currentHealthy 3, after disruption 2 = minAvailable).
 - For `minAvailable: 3` on `replicas: 3`: you can disrupt 0.
@@ -147,6 +155,7 @@ disruptionsAllowed = max(0, currentHealthy - desiredHealthy)
 ```
 
 Hmm, the exact algorithm depends on the k8s version. The practical effect:
+
 - For `minAvailable: 2` and 3 healthy Pods: 1 disruption allowed.
 - For `minAvailable: 2` and 2 healthy Pods: 0 disruptions allowed.
 
@@ -201,6 +210,7 @@ kubectl delete pod <pod> --force --grace-period=0
 The `--force` flag bypasses the eviction API. **The Pod is deleted regardless of PDB.** This is the only way to evict a Pod when the PDB would block.
 
 Use `--force` only when:
+
 - A node is truly gone and you need to evict stuck Pods.
 - The cluster autoscaler is stuck because of a deadlock.
 - You accept the disruption.
@@ -229,20 +239,20 @@ status:
   desiredHealthy: 4
   expectedPods: 5
   conditions:
-  - type: SufficientPods
-    status: "True"
-    reason: ""
-    message: ""
-    lastTransitionTime: "2024-01-15T12:00:00Z"
-  - type: DisruptionAllowed
-    status: "True"
-    reason: ""
-    message: ""
-    lastTransitionTime: "2024-01-15T12:00:00Z"
+    - type: SufficientPods
+      status: "True"
+      reason: ""
+      message: ""
+      lastTransitionTime: "2024-01-15T12:00:00Z"
+    - type: DisruptionAllowed
+      status: "True"
+      reason: ""
+      message: ""
+      lastTransitionTime: "2024-01-15T12:00:00Z"
 ```
 
-* **`SufficientPods`** — does the current state satisfy the PDB?
-* **`DisruptionAllowed`** — is a disruption allowed right now?
+- **`SufficientPods`** — does the current state satisfy the PDB?
+- **`DisruptionAllowed`** — is a disruption allowed right now?
 
 If `DisruptionAllowed: False`, no new voluntary disruption is allowed.
 
@@ -278,8 +288,8 @@ status:
   desiredHealthy: 4
   expectedPods: 5
   conditions:
-  - type: DisruptionAllowed
-    status: "True"
+    - type: DisruptionAllowed
+      status: "True"
 ```
 
 But by default, **unhealthy Pods are still counted as expected**. If a Pod is CrashLoopBackOff, it's in `expectedPods` but not in `currentHealthy`. The PDB may block eviction because the math is "off".
@@ -292,21 +302,21 @@ kind: PodDisruptionBudget
 metadata: { name: web }
 spec:
   minAvailable: 2
-  unhealthyPodEvictionPolicy: IfHealthyBudget   # default
+  unhealthyPodEvictionPolicy: IfHealthyBudget # default
   selector:
     matchLabels: { app: web }
 ```
 
 Two values:
 
-* **`IfHealthyBudget`** — the PDB only blocks if the Pod is healthy. If the Pod is already unhealthy (CrashLoopBackOff, NotReady), the eviction is allowed.
-* **`AlwaysAllow`** — the PDB never blocks the eviction of an unhealthy Pod. The PDB only protects healthy Pods.
+- **`IfHealthyBudget`** — the PDB only blocks if the Pod is healthy. If the Pod is already unhealthy (CrashLoopBackOff, NotReady), the eviction is allowed.
+- **`AlwaysAllow`** — the PDB never blocks the eviction of an unhealthy Pod. The PDB only protects healthy Pods.
 
 ### 6.1 The use case
 
 A Pod is CrashLoopBackOff. You want to drain the node. Without `IfHealthyBudget`, the PDB blocks the eviction (the Pod is in `expectedPods` but not in `currentHealthy`).
 
-With `IfHealthyBudget`, the eviction is allowed because the Pod is already unhealthy. The PDB's protection is only for the *healthy* Pods.
+With `IfHealthyBudget`, the eviction is allowed because the Pod is already unhealthy. The PDB's protection is only for the _healthy_ Pods.
 
 **This is a critical fix for stuck drains.**
 
@@ -450,7 +460,7 @@ Loses 1 of 3, still has 2. Loses 2 of 3, PDB blocks further disruption.
 
 ```yaml
 spec:
-  minAvailable: 50%           # always have majority
+  minAvailable: 50% # always have majority
   selector:
     matchLabels: { app: web }
 ```
@@ -548,7 +558,7 @@ kubectl get events --field-selector reason=Evicted -A
 
 4. **PDB is not a substitute for HPA.** PDB is about availability during planned disruption, not about handling load. You can have 100% availability during a drain and still get killed by traffic spikes.
 
-5. **PDB does not block voluntary disruption completely.** It controls the *rate*, not the possibility. A `kubectl delete pod` still works — it just makes the next drain fail.
+5. **PDB does not block voluntary disruption completely.** It controls the _rate_, not the possibility. A `kubectl delete pod` still works — it just makes the next drain fail.
 
 6. **PDB status is reflected in the PDB object itself** — `kubectl get pdb` shows `ALLOWED DISRUPTIONS`. If that's 0, the next drain will block.
 
@@ -592,8 +602,8 @@ kubectl get events --field-selector reason=Evicted -A
 
 ## See also
 
-* [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — PDB interaction with HPA scale-down
-* [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — PDB interaction with consolidation
-* [[Kubernetes/concepts/L06-scheduling-scaling/09-cluster-autoscaler|CA]] — PDB interaction with CA scale-down
-* [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — PDBs can block preemption
-* [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — readiness probes for currentHealthy
+- [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — PDB interaction with HPA scale-down
+- [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — PDB interaction with consolidation
+- [[Kubernetes/concepts/L06-scheduling-scaling/09-cluster-autoscaler|CA]] — PDB interaction with CA scale-down
+- [[Kubernetes/concepts/L06-scheduling-scaling/11-priority-and-preemption|Priority & Preemption]] — PDBs can block preemption
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — readiness probes for currentHealthy

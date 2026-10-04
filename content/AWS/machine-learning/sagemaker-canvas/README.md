@@ -30,13 +30,13 @@ Business Analyst
 
 ## Model Types
 
-| Type | Use Case | Example |
-|------|----------|---------|
-| Binary Classification | Yes/No prediction | Will customer churn? |
-| Multi-class Classification | Category prediction | What product category? |
-| Numeric Prediction (Regression) | Number prediction | How much will they spend? |
-| Time Series Forecasting | Future values | Forecast demand for next 30 days |
-| ML Models (Tabular) | Any tabular data | AutoML on your data |
+| Type                            | Use Case            | Example                          |
+| ------------------------------- | ------------------- | -------------------------------- |
+| Binary Classification           | Yes/No prediction   | Will customer churn?             |
+| Multi-class Classification      | Category prediction | What product category?           |
+| Numeric Prediction (Regression) | Number prediction   | How much will they spend?        |
+| Time Series Forecasting         | Future values       | Forecast demand for next 30 days |
+| ML Models (Tabular)             | Any tabular data    | AutoML on your data              |
 
 ## Getting Started
 
@@ -56,6 +56,7 @@ Then open Canvas from SageMaker Studio.
 ### 2. Connect Data
 
 Canvas supports:
+
 - **Upload**: CSV, XLSX files directly
 - **S3**: Browse and select S3 buckets
 - **Redshift**: Query warehouse data
@@ -104,6 +105,7 @@ canvas.start_model_training(
 ## Evaluating Models
 
 Canvas provides:
+
 - **Accuracy score**
 - **F1 score** (classification)
 - **RMSE** (regression)
@@ -168,28 +170,29 @@ canvas.start_model_training(
 ```
 
 Forecast outputs:
+
 - Point predictions
 - Confidence intervals (80%, 95%)
 - Trend, seasonality, holiday effects
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Canvas app (SageMaker Studio) | Included in SageMaker Studio cost |
-| Quick build | $0.40/hour |
-| Standard build | $1.20/hour |
-| Batch predictions | Free (uses inference) |
-| Real-time predictions | Standard SageMaker inference pricing |
+| Component                     | Cost                                 |
+| ----------------------------- | ------------------------------------ |
+| Canvas app (SageMaker Studio) | Included in SageMaker Studio cost    |
+| Quick build                   | $0.40/hour                           |
+| Standard build                | $1.20/hour                           |
+| Batch predictions             | Free (uses inference)                |
+| Real-time predictions         | Standard SageMaker inference pricing |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Dataset size | 100K rows, 100 columns |
-| Training time | 48 hours |
-| Forecast horizon | 730 periods |
-| Model storage | 100 models |
+| Resource         | Limit                  |
+| ---------------- | ---------------------- |
+| Dataset size     | 100K rows, 100 columns |
+| Training time    | 48 hours               |
+| Forecast horizon | 730 periods            |
+| Model storage    | 100 models             |
 
 ## References
 

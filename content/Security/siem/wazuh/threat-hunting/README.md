@@ -25,19 +25,19 @@ Threat hunting is proactively searching through security data to find attacks th
 
 Map your hunting to MITRE ATT&CK tactics for coverage:
 
-| Phase | MITRE Tactic | What to Hunt |
-|-------|-------------|--------------|
-| Reconnaissance | TA0043 | Port scans, DNS enumeration |
-| Resource Development | TA0011 | New AWS users, unusual API calls |
-| Initial Access | TA0001 | Phishing, valid creds, exposed credentials |
-| Execution | TA0002 | Shell commands, PowerShell, malicious scripts |
-| Persistence | TA0003 | New users, scheduled tasks, cron jobs |
-| Privilege Escalation | TA0004 | sudo/su attempts, policy changes |
-| Defense Evasion | TA0005 | Disabling logging, clearing logs |
-| Lateral Movement | TA0008 | SSH, RDP, SSM, port forwarding |
-| Collection | TA0009 | Data staging, large uploads to S3 |
-| Exfiltration | TA0010 | Large data transfers, unusual S3 downloads |
-| Impact | TA0040 | Ransomware, encryption, data destruction |
+| Phase                | MITRE Tactic | What to Hunt                                  |
+| -------------------- | ------------ | --------------------------------------------- |
+| Reconnaissance       | TA0043       | Port scans, DNS enumeration                   |
+| Resource Development | TA0011       | New AWS users, unusual API calls              |
+| Initial Access       | TA0001       | Phishing, valid creds, exposed credentials    |
+| Execution            | TA0002       | Shell commands, PowerShell, malicious scripts |
+| Persistence          | TA0003       | New users, scheduled tasks, cron jobs         |
+| Privilege Escalation | TA0004       | sudo/su attempts, policy changes              |
+| Defense Evasion      | TA0005       | Disabling logging, clearing logs              |
+| Lateral Movement     | TA0008       | SSH, RDP, SSM, port forwarding                |
+| Collection           | TA0009       | Data staging, large uploads to S3             |
+| Exfiltration         | TA0010       | Large data transfers, unusual S3 downloads    |
+| Impact               | TA0040       | Ransomware, encryption, data destruction      |
 
 ## Hunting Queries
 
@@ -176,35 +176,35 @@ action:REJECT
 
 ### Coverage by Tactic
 
-| Tactic | Technique | Wazuh Rule/SID | Log Source |
-|--------|-----------|----------------|------------|
-| **Reconnaissance** | | | |
-| Resource Development | T1586 - Compromise Accounts | 100103 | CloudTrail |
-| Reconnaissance | T1595 - Active Scanning | 100105 | VPC Flow |
-| **Initial Access** | | | |
-| Valid Accounts | T1078.004 - Cloud Accounts | 100100 | CloudTrail |
-| Phishing | T1566 - Spearphishing | - | Email gateway |
-| **Execution** | | | |
-| Command and Script | T1059 - Command and Script | 100300 | Linux syslog |
-| PowerShell | T1059.001 - PowerShell | - | Windows |
-| **Persistence** | | | |
-| Account Creation | T0859 - IAM User Creation | 100500 | CloudTrail |
-| Cron Job | T1053 - Scheduled Task | 100303 | Linux cron |
-| **Privilege Escalation** | | | |
-| Sudo/Sudoers | T1548.003 - Sudo/Sudoers | 100304 | Linux sudo |
-| Policy Change | T1098 - Account Manipulation | 100501 | CloudTrail |
-| **Defense Evasion** | | | |
-| Log Deletion | T1070.002 - Clear Logs | 100306 | Linux |
-| Disable Logging | T1070 - Indicator Removal | - | Linux auditd |
-| **Lateral Movement** | | | |
-| SSH | T1021.004 - Remote Services | 100001 | SSH logs |
-| SSM Session | T1021.008 - Cloud Services | 100600 | CloudTrail |
-| **Collection** | | | |
-| S3 Collection | T1530 - Cloud Data | 100601 | CloudTrail |
-| **Exfiltration** | | | |
-| Large S3 GET | T1047 - Exfil | 100602 | CloudTrail |
-| **Impact** | | | |
-| Data Destruction | T0899 - S3 Data Destruction | 100103 | CloudTrail |
+| Tactic                   | Technique                    | Wazuh Rule/SID | Log Source    |
+| ------------------------ | ---------------------------- | -------------- | ------------- |
+| **Reconnaissance**       |                              |                |               |
+| Resource Development     | T1586 - Compromise Accounts  | 100103         | CloudTrail    |
+| Reconnaissance           | T1595 - Active Scanning      | 100105         | VPC Flow      |
+| **Initial Access**       |                              |                |               |
+| Valid Accounts           | T1078.004 - Cloud Accounts   | 100100         | CloudTrail    |
+| Phishing                 | T1566 - Spearphishing        | -              | Email gateway |
+| **Execution**            |                              |                |               |
+| Command and Script       | T1059 - Command and Script   | 100300         | Linux syslog  |
+| PowerShell               | T1059.001 - PowerShell       | -              | Windows       |
+| **Persistence**          |                              |                |               |
+| Account Creation         | T0859 - IAM User Creation    | 100500         | CloudTrail    |
+| Cron Job                 | T1053 - Scheduled Task       | 100303         | Linux cron    |
+| **Privilege Escalation** |                              |                |               |
+| Sudo/Sudoers             | T1548.003 - Sudo/Sudoers     | 100304         | Linux sudo    |
+| Policy Change            | T1098 - Account Manipulation | 100501         | CloudTrail    |
+| **Defense Evasion**      |                              |                |               |
+| Log Deletion             | T1070.002 - Clear Logs       | 100306         | Linux         |
+| Disable Logging          | T1070 - Indicator Removal    | -              | Linux auditd  |
+| **Lateral Movement**     |                              |                |               |
+| SSH                      | T1021.004 - Remote Services  | 100001         | SSH logs      |
+| SSM Session              | T1021.008 - Cloud Services   | 100600         | CloudTrail    |
+| **Collection**           |                              |                |               |
+| S3 Collection            | T1530 - Cloud Data           | 100601         | CloudTrail    |
+| **Exfiltration**         |                              |                |               |
+| Large S3 GET             | T1047 - Exfil                | 100602         | CloudTrail    |
+| **Impact**               |                              |                |               |
+| Data Destruction         | T0899 - S3 Data Destruction  | 100103         | CloudTrail    |
 
 ## Investigation Playbooks
 
@@ -215,31 +215,31 @@ trigger: Alert level >= 8 for ConsoleLogin from unexpected location
 
 steps:
   1. Identify:
-     - Which account (recipient_account_id)?
-     - Which user (userIdentity.arn)?
-     - Which IP (sourceIPAddress)?
-     - Which location (geo details)?
-     - Time of login?
+    - Which account (recipient_account_id)?
+    - Which user (userIdentity.arn)?
+    - Which IP (sourceIPAddress)?
+    - Which location (geo details)?
+    - Time of login?
 
   2. Enrich:
-     - Is this IP in our known IP list?
-     - Has this user logged in from this IP before?
-     - Is this geolocation unexpected for this user?
-     - Is this login time normal for this user?
+    - Is this IP in our known IP list?
+    - Has this user logged in from this IP before?
+    - Is this geolocation unexpected for this user?
+    - Is this login time normal for this user?
 
   3. Determine:
-     - If new IP + unusual location → Potential compromised credential
-     - If known IP + normal time → Likely legitimate
-     - If new IP + MFA not used → Investigate MFA bypass
+    - If new IP + unusual location → Potential compromised credential
+    - If known IP + normal time → Likely legitimate
+    - If new IP + MFA not used → Investigate MFA bypass
 
   4. Response:
-     - If compromised: Revoke session, reset password, check CloudTrail for follow-on actions
-     - If inconclusive: Create ticket for user verification
-     - If legitimate: Add IP to whitelist, update rules
+    - If compromised: Revoke session, reset password, check CloudTrail for follow-on actions
+    - If inconclusive: Create ticket for user verification
+    - If legitimate: Add IP to whitelist, update rules
 
   5. Document:
-     - Log in incident response tracker
-     - Note: if false positive, update detection rules
+    - Log in incident response tracker
+    - Note: if false positive, update detection rules
 ```
 
 ### Playbook: Lateral Movement via SSM
@@ -279,24 +279,24 @@ trigger: K8s API accessed by system:anonymous
 
 steps:
   1. Identify:
-     - Which cluster?
-     - Source IP of the request?
-     - What API endpoints were accessed?
-     - What was the HTTP response code?
+    - Which cluster?
+    - Source IP of the request?
+    - What API endpoints were accessed?
+    - What was the HTTP response code?
 
   2. Check:
-     - Is this from our VPN/jump host range?
-     - Is this a known K8s API call pattern?
-     - Was authentication attempted?
+    - Is this from our VPN/jump host range?
+    - Is this a known K8s API call pattern?
+    - Was authentication attempted?
 
   3. Investigate:
-     - Check if this IP has accessed K8s API before legitimately
-     - Look for follow-on authenticated requests from same IP
-     - Check other clusters for same source
+    - Check if this IP has accessed K8s API before legitimately
+    - Look for follow-on authenticated requests from same IP
+    - Check other clusters for same source
 
   4. Response:
-     - If external IP + unauthenticated: Block at network level
-     - If internal jump host: Verify with owner, check for compromise
+    - If external IP + unauthenticated: Block at network level
+    - If internal jump host: Verify with owner, check for compromise
 
   5. MITRE mapping: T0853 - Virtualization/Sandbox Escape
 ```
@@ -337,26 +337,26 @@ trigger: S3 PutBucketAcl with ALLUSERS grant
 
 steps:
   1. Identify:
-     - Which bucket?
-     - Which account?
-     - Who made the change (arn)?
-     - When?
+    - Which bucket?
+    - Which account?
+    - Who made the change (arn)?
+    - When?
 
   2. Assess:
-     - What's in the bucket? (check contents)
-     - What objects are public?
-     - Any sensitive data (check with Macie or custom scanner)?
+    - What's in the bucket? (check contents)
+    - What objects are public?
+    - Any sensitive data (check with Macie or custom scanner)?
 
   3. Response:
-     - Immediately: Revert the ACL change
-     - Identify: What data was exposed, for how long?
-     - Notify: Data owner, security team
-     - Document: Incident report
+    - Immediately: Revert the ACL change
+    - Identify: What data was exposed, for how long?
+    - Notify: Data owner, security team
+    - Document: Incident report
 
   4. Prevention:
-     - Add S3 block public access at account level
-     - Enable S3 access logging for audit
-     - Add SCP in AWS Org to prevent public access
+    - Add S3 block public access at account level
+    - Enable S3 access logging for audit
+    - Add SCP in AWS Org to prevent public access
 
   5. MITRE mapping: T0899 - Data Destruction
 ```
@@ -371,34 +371,43 @@ steps:
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
-const dateStr = yesterday.toISOString().split('T')[0];
+const dateStr = yesterday.toISOString().split("T")[0];
 
 // Query Wazuh API for hunting results
 const queries = [
-  { name: 'New IAM Users', query: `rule.groups:cloudtrail AND eventName:CreateUser` },
-  { name: 'Failed Logins', query: `rule.level:>5 AND action:failure` },
-  { name: 'S3 Public Access', query: `eventName:PutBucketAcl AND requestParameters.accessControlList.grant:ALLUSERS` },
-  { name: 'SSM Sessions', query: `eventName:StartSession` }
+  {
+    name: "New IAM Users",
+    query: `rule.groups:cloudtrail AND eventName:CreateUser`,
+  },
+  { name: "Failed Logins", query: `rule.level:>5 AND action:failure` },
+  {
+    name: "S3 Public Access",
+    query: `eventName:PutBucketAcl AND requestParameters.accessControlList.grant:ALLUSERS`,
+  },
+  { name: "SSM Sessions", query: `eventName:StartSession` },
 ];
 
 const results = [];
 
 for (const q of queries) {
-  const response = await fetch(`https://wazuh-server:55000/alerts?q=${encodeURIComponent(q.query)}&from=${dateStr}&limit=20`, {
-    headers: { 'Authorization': 'Basic <base64-credentials>' }
-  });
+  const response = await fetch(
+    `https://wazuh-server:55000/alerts?q=${encodeURIComponent(q.query)}&from=${dateStr}&limit=20`,
+    {
+      headers: { Authorization: "Basic <base64-credentials>" },
+    },
+  );
   const data = await response.json();
   results.push({ query: q.name, count: data.total, alerts: data.data });
 }
 
 // Generate report
-const report = results.map(r => `*${r.query}*: ${r.count} alerts`).join('\n');
+const report = results.map((r) => `*${r.query}*: ${r.count} alerts`).join("\n");
 
 // Send to Slack
 return {
   report,
   summary: `Daily Threat Hunt Report - ${dateStr}`,
-  results
+  results,
 };
 ```
 
@@ -409,18 +418,20 @@ return {
 // Query all alerts for known IOCs (from AlienVault OTX, MISP)
 
 const iocList = [
-  '185.234.xx.xx',   // Known malicious IP from OTX
-  'malware-domain.com',
-  'a1b2c3d4e5f6.hash'
+  "185.234.xx.xx", // Known malicious IP from OTX
+  "malware-domain.com",
+  "a1b2c3d4e5f6.hash",
 ];
 
 const suspiciousAlerts = [];
 
 for (const ioc of iocList) {
   const query = `srcip:${ioc} OR dstip:${ioc} OR file_hash:${ioc}`;
-  const response = await fetch(`https://wazuh-server:55000/alerts?q=${encodeURIComponent(query)}&from=now-7d`);
+  const response = await fetch(
+    `https://wazuh-server:55000/alerts?q=${encodeURIComponent(query)}&from=now-7d`,
+  );
   const data = await response.json();
-  
+
   if (data.total > 0) {
     suspiciousAlerts.push({ ioc, count: data.total, alerts: data.data });
   }
@@ -429,8 +440,8 @@ for (const ioc of iocList) {
 if (suspiciousAlerts.length > 0) {
   // Trigger incident response workflow
   return {
-    action: 'create_incident',
-    iocs: suspiciousAlerts
+    action: "create_incident",
+    iocs: suspiciousAlerts,
   };
 }
 ```

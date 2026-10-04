@@ -53,15 +53,15 @@ Azure Cache for Redis offers four distinct architectural tiers:
 
 ### Architectural Tiers Breakdown
 
-| Capability | Basic Tier | Standard Tier | Premium Tier | Enterprise / Enterprise Flash |
-| :--- | :--- | :--- | :--- | :--- |
-| **Node Architecture** | Single VM node (No HA) | Primary + Secondary (HA) | Primary + Secondary (Multi-Zone) | Multi-node active-active mesh |
-| **SLA Guarantee** | **0.0% (None)** | 99.9% | **99.95%** (Multi-Zone) | **99.999%** (Active-Active) |
-| **Data Persistence** | None | None | **RDB & AOF supported** | RDB & AOF supported |
-| **Clustering** | Not supported | Not supported | **Up to 10 Shards (1.2 TB)** | **Up to 2 TB RAM / 4.5 TB Flash** |
-| **Virtual Network** | Public endpoint only | Public endpoint only | **VNet Injection / Private Link**| **Private Link integration** |
-| **Redis Modules** | Core Redis only | Core Redis only | Core Redis only | **RediSearch, RedisJSON, RedisBloom** |
-| **Multi-Region** | Passive manual copy | Passive manual copy | Passive geo-replication | **Active-Active Multi-Region CRDT** |
+| Capability            | Basic Tier             | Standard Tier            | Premium Tier                      | Enterprise / Enterprise Flash         |
+| :-------------------- | :--------------------- | :----------------------- | :-------------------------------- | :------------------------------------ |
+| **Node Architecture** | Single VM node (No HA) | Primary + Secondary (HA) | Primary + Secondary (Multi-Zone)  | Multi-node active-active mesh         |
+| **SLA Guarantee**     | **0.0% (None)**        | 99.9%                    | **99.95%** (Multi-Zone)           | **99.999%** (Active-Active)           |
+| **Data Persistence**  | None                   | None                     | **RDB & AOF supported**           | RDB & AOF supported                   |
+| **Clustering**        | Not supported          | Not supported            | **Up to 10 Shards (1.2 TB)**      | **Up to 2 TB RAM / 4.5 TB Flash**     |
+| **Virtual Network**   | Public endpoint only   | Public endpoint only     | **VNet Injection / Private Link** | **Private Link integration**          |
+| **Redis Modules**     | Core Redis only        | Core Redis only          | Core Redis only                   | **RediSearch, RedisJSON, RedisBloom** |
+| **Multi-Region**      | Passive manual copy    | Passive manual copy      | Passive geo-replication           | **Active-Active Multi-Region CRDT**   |
 
 ---
 
@@ -76,6 +76,7 @@ Azure Cache for Redis offers four distinct architectural tiers:
 ### Enterprise Multi-Region Active-Active (CRDTs)
 
 Traditional geo-replication in Redis is one-way passive: writes to a secondary region fail. The **Enterprise Tier** implements **Conflict-Free Replicated Data Types (CRDTs)**:
+
 - Applications read and write locally to their nearest regional Redis cluster (`East US` and `West Europe`) with sub-millisecond response times.
 - Clusters synchronize asynchronously over the Azure global backbone.
 - If concurrent conflicting writes occur (e.g., two users modifying the same set or counter in different regions), the underlying CRDT mathematical algorithms deterministically resolve the conflict without human intervention or data corruption.
@@ -164,14 +165,14 @@ redis-cli -h redis-core-production-eastus.redis.cache.windows.net \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Basic / Standard | Premium Tier | Enterprise Tier |
-| :--- | :--- | :--- | :--- |
-| **Max Cache Size** | Up to 53 GB (C6) | Up to 1.2 TB (10 shards × 120 GB)| Up to 2 TB RAM / 4.5 TB Flash |
-| **Max Connections** | 20,000 | Up to 400,000 | Up to 1,000,000 concurrent conns |
-| **Max Shards** | N/A (Single shard) | 1 to 10 shards | Dynamic auto-sharding |
-| **Max Network Bandwidth** | 1,000 Mbps | Up to 10,000 Mbps | 40+ Gbps dedicated throughput |
-| **Backup Frequency (RDB)**| Not supported | 15, 30, 60 minutes | Snapshot / Continuous |
-| **Redis Version** | Redis 6.0 | Redis 6.0 / 7.0 | Redis Enterprise 7.2 |
+| Parameter / Dimension      | Basic / Standard   | Premium Tier                      | Enterprise Tier                  |
+| :------------------------- | :----------------- | :-------------------------------- | :------------------------------- |
+| **Max Cache Size**         | Up to 53 GB (C6)   | Up to 1.2 TB (10 shards × 120 GB) | Up to 2 TB RAM / 4.5 TB Flash    |
+| **Max Connections**        | 20,000             | Up to 400,000                     | Up to 1,000,000 concurrent conns |
+| **Max Shards**             | N/A (Single shard) | 1 to 10 shards                    | Dynamic auto-sharding            |
+| **Max Network Bandwidth**  | 1,000 Mbps         | Up to 10,000 Mbps                 | 40+ Gbps dedicated throughput    |
+| **Backup Frequency (RDB)** | Not supported      | 15, 30, 60 minutes                | Snapshot / Continuous            |
+| **Redis Version**          | Redis 6.0          | Redis 6.0 / 7.0                   | Redis Enterprise 7.2             |
 
 ---
 
@@ -188,6 +189,7 @@ redis-cli -h redis-core-production-eastus.redis.cache.windows.net \
 ## 6. Realistic Pricing Scenarios
 
 Azure Cache for Redis pricing is billed hourly per cache instance:
+
 1. **Standard Tier (C3 - 13 GB RAM):** ~$0.27 per hour (~$197.10/month).
 2. **Premium Tier (P1 - 6 GB RAM per shard):** ~$0.56 per hour per shard.
 3. **Enterprise Tier (E10 - 12 GB RAM):** ~$0.72 per hour.

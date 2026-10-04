@@ -35,4 +35,4 @@ Welcome to my knowledge graph! This wiki covers cloud-native engineering, from i
 
 ---
 
-*The knowledge graph is interconnected - use `[[wiki-links]]` to navigate between topics!*
+_The knowledge graph is interconnected — navigate between topics using bidirectional links!_

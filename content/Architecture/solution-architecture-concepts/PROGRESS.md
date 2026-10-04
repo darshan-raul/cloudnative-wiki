@@ -126,6 +126,7 @@ solution-architecture-concepts/
 ## Actions
 
 ### Stubs Fixed (this session)
+
 - [x] 12-factor-app.md — written
 - [x] cheatsheets.md — written
 - [x] idempotency.md — written
@@ -144,21 +145,25 @@ solution-architecture-concepts/
 - [x] performance-testing.md — written (was stub)
 
 ### Directory Renames
+
 - [x] `architecture/` → `architecture-patterns/`
 - [x] `openssl/` → `cryptography/`
 - [x] `vscode/` → `developer-tooling/`
 
 ### File Moves
+
 - [x] `databases/` → `data-architecture/databases/`
 - [x] `performance/memory-leaks.md` ← (moved from root to reliability/)
 - [x] Root-level files consolidated into new grouping dirs
 
 ### Duplicate Removal
+
 - [x] `software-engineering-concepts/base64-encoding.md` — deleted
 - [x] `software-engineering-concepts/basics.md` — deleted
 - [x] `software-engineering-concepts/cache.md` — deleted
 
 ### GitBook Image Refs — Fix or Remove
+
 - [x] `architecture-patterns/README.md` — GitBook image refs replaced
 - [x] `architecture-patterns/architecture-patterns.md` — GitBook image refs replaced
 - [x] `authentication/jwt/README.md` — GitBook image refs replaced
@@ -169,6 +174,7 @@ solution-architecture-concepts/
 - [x] `software-engineering-concepts/https.md` — GitBook image refs replaced
 
 ### Section READMEs Created
+
 - [x] `foundations/README.md`
 - [x] `reliability/README.md`
 - [x] `security/README.md`
@@ -179,7 +185,9 @@ solution-architecture-concepts/
 - [x] `developer-tooling/README.md`
 
 ### Hub Update
+
 - [x] `Architecture.md` — added links to all new groupings (foundations, reliability, security, api-design, data-architecture, architecture-patterns, cryptography, developer-tooling)
 
 ### Build Verification
+
 - [x] `npx quartz build` passes

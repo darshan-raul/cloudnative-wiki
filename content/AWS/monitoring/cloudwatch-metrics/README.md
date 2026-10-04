@@ -28,23 +28,23 @@ Period: 60 seconds
 
 ### AWS Service Namespaces
 
-| Namespace | Common Metrics |
-|-----------|----------------|
-| AWS/EC2 | CPUUtilization, NetworkIn, NetworkOut, DiskReadBytes |
-| AWS/RDS | CPUUtilization, DatabaseConnections, FreeStorageSpace |
-| AWS/Lambda | Invocations, Duration, Errors, Throttles |
-| AWS/ALB | RequestCount, TargetResponseTime, UnHealthyHostCount |
-| AWS/S3 | BucketSizeBytes, NumberOfObjects, AllRequests |
+| Namespace    | Common Metrics                                        |
+| ------------ | ----------------------------------------------------- |
+| AWS/EC2      | CPUUtilization, NetworkIn, NetworkOut, DiskReadBytes  |
+| AWS/RDS      | CPUUtilization, DatabaseConnections, FreeStorageSpace |
+| AWS/Lambda   | Invocations, Duration, Errors, Throttles              |
+| AWS/ALB      | RequestCount, TargetResponseTime, UnHealthyHostCount  |
+| AWS/S3       | BucketSizeBytes, NumberOfObjects, AllRequests         |
 | AWS/DynamoDB | ConsumedReadCapacityUnits, ConsumedWriteCapacityUnits |
 
 ### Basic vs Detailed Monitoring
 
-| | Basic (default) | Detailed (costs extra) |
-|--|--|--|
-| Resolution | 5 minutes | 1 minute |
-| Cost | Free | $0.30/metric/month |
-| Data retention | 15 days | 15 days |
-| Use | Cost optimization, low-traffic | Production, real-time |
+|                | Basic (default)                | Detailed (costs extra) |
+| -------------- | ------------------------------ | ---------------------- |
+| Resolution     | 5 minutes                      | 1 minute               |
+| Cost           | Free                           | $0.30/metric/month     |
+| Data retention | 15 days                        | 15 days                |
+| Use            | Cost optimization, low-traffic | Production, real-time  |
 
 ## Retrieving Metrics
 
@@ -108,6 +108,7 @@ aws cloudwatch get-metric-data \
 ```
 
 Common expressions:
+
 - `m1 + m2` — sum of two metrics
 - `SEARCH('{AWS/EC2}, Average)', 300)` — search for metrics matching a pattern
 
@@ -195,23 +196,23 @@ aws cloudwatch get-metric-widget-image \
 
 ## Integration with Other Services
 
-| Service | How It Uses Metrics |
-|---------|--------------------|
-| CloudWatch Alarms | Trigger alerts when thresholds are breached |
-| CloudWatch Dashboards | Visualize metrics in real-time |
-| CloudWatch Contributor Insights | Identify top contributors to a metric |
-| Auto Scaling | Scale EC2/ECS based on metrics |
-| EventBridge | Trigger rules based on metric math results |
+| Service                         | How It Uses Metrics                         |
+| ------------------------------- | ------------------------------------------- |
+| CloudWatch Alarms               | Trigger alerts when thresholds are breached |
+| CloudWatch Dashboards           | Visualize metrics in real-time              |
+| CloudWatch Contributor Insights | Identify top contributors to a metric       |
+| Auto Scaling                    | Scale EC2/ECS based on metrics              |
+| EventBridge                     | Trigger rules based on metric math results  |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Metrics per call (PutMetricData) | 20 |
-| Dimensions per metric | 30 |
-| Metric name length | 255 characters |
-| Namespace name length | 255 characters |
-| GetMetricData metrics per call | 500 |
+| Resource                           | Limit                              |
+| ---------------------------------- | ---------------------------------- |
+| Metrics per call (PutMetricData)   | 20                                 |
+| Dimensions per metric              | 30                                 |
+| Metric name length                 | 255 characters                     |
+| Namespace name length              | 255 characters                     |
+| GetMetricData metrics per call     | 500                                |
 | GetMetricStatistics period minimum | 60 seconds (1 second for high-res) |
 
 ## References

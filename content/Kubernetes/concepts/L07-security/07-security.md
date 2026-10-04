@@ -74,18 +74,18 @@ Concern 1 and 2 are in this L07. Concern 3 is in L04 (network-policy) and the TL
 
 Different threats require different defenses. Map your controls to threats:
 
-| Threat | Primary defense | Secondary |
-|---|---|---|
-| Compromised user credential | OIDC + short sessions, audit logs | RBAC least-privilege |
-| Compromised ServiceAccount | Bound tokens, audience-scoped | NetworkPolicy, mTLS |
-| Compromised container image | Image scanning, signed images | PSS, NetworkPolicy |
-| Compromised Pod | PSS, SecurityContext, seccomp | NetworkPolicy, Falco |
-| Compromised kubelet | NodeRestriction, etcd encryption | Audit logs |
-| Compromised etcd | etcd access control, encryption at rest | Backups, DR |
-| Network sniffing | TLS everywhere, mTLS in cluster | NetworkPolicy |
-| Insider threat | Audit logs, RBAC, separation of duties | OIDC, MFA |
-| Misconfiguration | OPA / Kyverno, admission policies | PSS, NetworkPolicy |
-| Kernel exploit | seccomp, RuntimeClass (gVisor / Kata) | Node hardening |
+| Threat                      | Primary defense                         | Secondary            |
+| --------------------------- | --------------------------------------- | -------------------- |
+| Compromised user credential | OIDC + short sessions, audit logs       | RBAC least-privilege |
+| Compromised ServiceAccount  | Bound tokens, audience-scoped           | NetworkPolicy, mTLS  |
+| Compromised container image | Image scanning, signed images           | PSS, NetworkPolicy   |
+| Compromised Pod             | PSS, SecurityContext, seccomp           | NetworkPolicy, Falco |
+| Compromised kubelet         | NodeRestriction, etcd encryption        | Audit logs           |
+| Compromised etcd            | etcd access control, encryption at rest | Backups, DR          |
+| Network sniffing            | TLS everywhere, mTLS in cluster         | NetworkPolicy        |
+| Insider threat              | Audit logs, RBAC, separation of duties  | OIDC, MFA            |
+| Misconfiguration            | OPA / Kyverno, admission policies       | PSS, NetworkPolicy   |
+| Kernel exploit              | seccomp, RuntimeClass (gVisor / Kata)   | Node hardening       |
 
 ## The "Kubernetes security" checklist (priority order)
 
@@ -172,8 +172,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata: { name: jane }
 subjects:
-- kind: User
-  name: jane
+  - kind: User
+    name: jane
 roleRef:
   kind: ClusterRole
   name: cluster-admin
@@ -227,26 +227,26 @@ LATE (runtime)                           EARLY (build)
 
 Tools for shift-left:
 
-* **Trivy** — image scan, runs in CI
-* **Snyk** — code, image, IaC scan
-* **Conftest / OPA** — manifest validation
-* **Datree** — policy-as-code
-* **Kyverno** — admission control
-* **Connaisseur** — image signature verification at admission
+- **Trivy** — image scan, runs in CI
+- **Snyk** — code, image, IaC scan
+- **Conftest / OPA** — manifest validation
+- **Datree** — policy-as-code
+- **Kyverno** — admission control
+- **Connaisseur** — image signature verification at admission
 
 ## The compliance question
 
 If you have to satisfy a framework (PCI-DSS, SOC2, HIPAA, FedRAMP), k8s has answers for most things but you need to know what the auditor wants:
 
-* **Audit logs** — k8s audit policy, shipped to immutable storage
-* **Encryption at rest** — etcd encryption + cloud storage encryption
-* **Encryption in transit** — TLS everywhere (apiserver, etcd, kubelet)
-* **Access control** — RBAC + OIDC + MFA at the IdP
-* **Network segmentation** — NetworkPolicy + separate namespaces
-* **Vulnerability management** — image scanning + k8s CVE monitoring
-* **Backups** — Velero + etcd snapshots
-* **Disaster recovery** — tested restore procedures
-* **Logging** — pod logs + control plane logs to a SIEM
+- **Audit logs** — k8s audit policy, shipped to immutable storage
+- **Encryption at rest** — etcd encryption + cloud storage encryption
+- **Encryption in transit** — TLS everywhere (apiserver, etcd, kubelet)
+- **Access control** — RBAC + OIDC + MFA at the IdP
+- **Network segmentation** — NetworkPolicy + separate namespaces
+- **Vulnerability management** — image scanning + k8s CVE monitoring
+- **Backups** — Velero + etcd snapshots
+- **Disaster recovery** — tested restore procedures
+- **Logging** — pod logs + control plane logs to a SIEM
 
 Most compliance failures in k8s are **not k8s problems** — they're organizational problems (no runbook, no review, no off-cluster backups).
 
@@ -262,9 +262,9 @@ For a **complete read**: follow one of the four reading paths in the README (API
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/00-README|L07 README]] — the full note list
-* [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — the network layer
-* [[Kubernetes/eks/security/README|EKS Security]] — AWS-specific details
-* [[Kubernetes/guides/delivery/ci-cd-integration|security-scanning]] — image scanning in practice
-* [[Kubernetes/guides/delivery/ci-cd-integration|image-signing]] — image signing in practice
-* [[Kubernetes/guides/non-functional/security-baseline|secrets-management]] — external secret stores
+- [[Kubernetes/concepts/L07-security/00-README|L07 README]] — the full note list
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — the network layer
+- [[Kubernetes/eks/security/README|EKS Security]] — AWS-specific details
+- [[Kubernetes/guides/delivery/ci-cd-integration|security-scanning]] — image scanning in practice
+- [[Kubernetes/guides/delivery/ci-cd-integration|image-signing]] — image signing in practice
+- [[Kubernetes/guides/non-functional/security-baseline|secrets-management]] — external secret stores

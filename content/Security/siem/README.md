@@ -11,23 +11,23 @@ Security Information and Event Management (SIEM) platforms centralize log collec
 
 ## Core Functions
 
-| Function | Description |
-|----------|-------------|
-| Log Collection | Gather logs from agents, syslog, cloud APIs |
-| Normalization | Parse diverse log formats into structured data |
-| Correlation | Link events across sources to detect attacks |
-| Alerting | Generate alerts based on rules and thresholds |
-| Retention | Store logs for compliance and forensics |
+| Function       | Description                                    |
+| -------------- | ---------------------------------------------- |
+| Log Collection | Gather logs from agents, syslog, cloud APIs    |
+| Normalization  | Parse diverse log formats into structured data |
+| Correlation    | Link events across sources to detect attacks   |
+| Alerting       | Generate alerts based on rules and thresholds  |
+| Retention      | Store logs for compliance and forensics        |
 
 ## SIEM Tools Comparison
 
-| Tool | Type | Strengths | Best For |
-|------|------|-----------|----------|
-| [[Security/siem/wazuh/README|Wazuh]] | Open source | CloudTrail native, agentless AWS, built-in XDR | Your multi-account AWS (40+ org), homelab |
-| [[Security/siem/elastic-security/README|Elastic Security]] | Open source | Scale, performance, ML features | High-volume environments |
-| [[Security/siem/splunk/README|Splunk]] | Commercial | SPL language, enterprise integrations | Large enterprises |
-| Microsoft Sentinel | SaaS | Azure integration, M365 integration | Azure-heavy shops |
-| XSIAM (Palo Alto) | SaaS | ML-driven, automated response | Advanced SOCs |
+| Tool                                    | Type               | Strengths                           | Best For                                       |
+| --------------------------------------- | ------------------ | ----------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| [[Security/siem/wazuh/README            | Wazuh]]            | Open source                         | CloudTrail native, agentless AWS, built-in XDR | Your multi-account AWS (40+ org), homelab |
+| [[Security/siem/elastic-security/README | Elastic Security]] | Open source                         | Scale, performance, ML features                | High-volume environments                  |
+| [[Security/siem/splunk/README           | Splunk]]           | Commercial                          | SPL language, enterprise integrations          | Large enterprises                         |
+| Microsoft Sentinel                      | SaaS               | Azure integration, M365 integration | Azure-heavy shops                              |
+| XSIAM (Palo Alto)                       | SaaS               | ML-driven, automated response       | Advanced SOCs                                  |
 
 ## Your Setup: Wazuh
 

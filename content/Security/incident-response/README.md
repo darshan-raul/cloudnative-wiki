@@ -26,13 +26,13 @@ PREPARE → DETECT → CONTAIN → ERADICATE → RECOVER → LESSONS LEARNED
 
 ## Key Playbooks
 
-| Scenario | Priority | Automation Target |
-|----------|----------|-------------------|
-| AWS compromised credentials | Critical | n8n: block IP + rotate creds |
-| Malware on endpoint | Critical | n8n: isolate + alert |
-| Phishing link clicked | High | n8n: reset creds + scan endpoint |
-| Data exfiltration | Critical | n8n: block + notify |
-| K8s cluster compromise | Critical | n8n: isolate namespace |
+| Scenario                    | Priority | Automation Target                |
+| --------------------------- | -------- | -------------------------------- |
+| AWS compromised credentials | Critical | n8n: block IP + rotate creds     |
+| Malware on endpoint         | Critical | n8n: isolate + alert             |
+| Phishing link clicked       | High     | n8n: reset creds + scan endpoint |
+| Data exfiltration           | Critical | n8n: block + notify              |
+| K8s cluster compromise      | Critical | n8n: isolate namespace           |
 
 ## Your n8n + Planio Integration
 

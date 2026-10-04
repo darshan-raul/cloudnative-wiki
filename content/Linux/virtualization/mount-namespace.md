@@ -47,12 +47,15 @@ df -h /mytmp              # shows tmpfs
 Both change the root filesystem, but they work differently:
 
 ### chroot (older, simpler)
+
 ```
 chroot /new/root bash
 ```
+
 Changes where `/` points to. The old `/` is still accessible as the parent directory of the new root. Poor isolation — escape is possible via `chdir("..")`.
 
 ### pivot_root (what containers use)
+
 ```c
 // The pivot_root syscall
 pivot_root(new_root, put_old);
@@ -69,7 +72,7 @@ pivot_root /newroot /newroot/oldroot
 umount /oldroot   # clean up
 ```
 
-The key difference: with `pivot_root`, processes cannot escape back to the old root because the old root is mounted *inside* the new root's namespace and gets hidden.
+The key difference: with `pivot_root`, processes cannot escape back to the old root because the old root is mounted _inside_ the new root's namespace and gets hidden.
 
 ## Mount Propagation
 
@@ -77,12 +80,12 @@ When you mount something inside a container, does it propagate to the host? Moun
 
 ### Mount Types
 
-| Type         | Propagation                           | Container default |
-|-------------|--------------------------------------|------------------|
-| `private`   | No propagation in either direction   | What containers use |
-| `shared`    | Bidirectional propagation             | Rarely used      |
-| `slave`     | Host → container (not reverse)        | Rarely used      |
-| `unbindable`| Cannot be bind-mounted               | For /                 |
+| Type         | Propagation                        | Container default   |
+| ------------ | ---------------------------------- | ------------------- |
+| `private`    | No propagation in either direction | What containers use |
+| `shared`     | Bidirectional propagation          | Rarely used         |
+| `slave`      | Host → container (not reverse)     | Rarely used         |
+| `unbindable` | Cannot be bind-mounted             | For /               |
 
 ```bash
 # Default: containers use private mounts
@@ -170,6 +173,7 @@ Docker does this automatically. In Kubernetes, the kubelet ensures each pod gets
 ## Key Insight: Mount Namespace ≠ Container
 
 Containers need **multiple namespaces together**:
+
 - Mount NS: which filesystems are visible
 - PID NS: which processes are visible
 - Network NS: which network interfaces exist

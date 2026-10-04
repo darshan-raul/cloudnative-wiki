@@ -67,6 +67,7 @@ helm install fluent-bit fluent/fluent-bit \
 ## Sample Dashboard Queries
 
 ### Error rate over time
+
 ```
 {
   "aggs": {
@@ -84,6 +85,7 @@ helm install fluent-bit fluent/fluent-bit \
 ```
 
 ### Top error sources
+
 ```
 {
   "aggs": {

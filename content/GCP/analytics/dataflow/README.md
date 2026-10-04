@@ -76,18 +76,18 @@ Dataflow decouples pipeline graph compilation from distributed worker execution.
 
 Apache Beam and Dataflow structure all stream processing around four fundamental questions:
 
-| Question | Mechanism | Technical Implementation |
-| :--- | :--- | :--- |
-| **What is being computed?** | Transformations | `ParDo`, `GroupByKey`, `Combine`, `Count`, `Sum` |
-| **Where in event time is it computed?** | Windowing | Fixed (Tumbling), Sliding (Hopping), Session windows |
-| **When in processing time are results materialized?** | Watermarks & Triggers | Event-time watermarks, Processing-time triggers, Punctuations |
-| **How do related results relate?** | Accumulation Mode | Accumulating (emitting running totals) vs Retracting (emitting deltas) |
+| Question                                              | Mechanism             | Technical Implementation                                               |
+| :---------------------------------------------------- | :-------------------- | :--------------------------------------------------------------------- |
+| **What is being computed?**                           | Transformations       | `ParDo`, `GroupByKey`, `Combine`, `Count`, `Sum`                       |
+| **Where in event time is it computed?**               | Windowing             | Fixed (Tumbling), Sliding (Hopping), Session windows                   |
+| **When in processing time are results materialized?** | Watermarks & Triggers | Event-time watermarks, Processing-time triggers, Punctuations          |
+| **How do related results relate?**                    | Accumulation Mode     | Accumulating (emitting running totals) vs Retracting (emitting deltas) |
 
 ### Event Time vs Processing Time & Watermarks
 
 - **Event Time:** The timestamp when the event physically occurred at the source (e.g., mobile device sensor click).
 - **Processing Time:** The timestamp when the event is processed by a specific Dataflow worker node.
-- **Watermark:** A monotonically increasing timestamp representing Dataflow's notion of completeness. A watermark at time $T$ asserts: *"The system expects that no future events with Event Time $< T$ will be received."*
+- **Watermark:** A monotonically increasing timestamp representing Dataflow's notion of completeness. A watermark at time $T$ asserts: _"The system expects that no future events with Event Time $< T$ will be received."_
   - Dataflow maintains an **Input Watermark** (source completeness) and an **Output Watermark** (downstream transformation completeness).
 
 ### Windowing Strategies
@@ -99,6 +99,7 @@ Apache Beam and Dataflow structure all stream processing around four fundamental
 ### Exactly-Once Processing Guarantees
 
 Dataflow guarantees **end-to-end exactly-once semantics** across streaming pipelines:
+
 - **Deduplication:** Pub/Sub message IDs and user-defined unique record IDs are tracked within the Streaming Engine state backend using Bloom filters and transactional state lookups.
 - **Checkpointing:** State and watermarks are continuously snapshotted. If a worker fails, replacement workers resume from the exact committed checkpoint without skipping or duplicating records.
 - **Idempotent Sinks:** Output connectors (e.g., BigQuery Storage Write API, Spanner, Bigtable) participate in two-phase commits or upsert mechanisms to prevent partial duplicate writes.
@@ -203,15 +204,15 @@ gcloud dataflow jobs drain <JOB_ID> \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension | Default Limit | Maximum / Production Considerations |
-| :--- | :--- | :--- |
-| **Max Workers per Job** | 1,000 workers | Soft limit; adjustable via GCP support request |
-| **Concurrent Jobs per Project** | 25 concurrent jobs | Expandable per region |
-| **Worker Subnet IP Requirement** | 1 IP per active worker | Subnets must have enough addresses for max autoscaling |
-| **Window Duration** | No hard limit | Large windows (> 24h) require massive state in Streaming Engine |
-| **Max Message / Key Size** | 100 MB per single key | Keys with gigabytes of data cause GroupByKey memory skew |
-| **Pipeline Drain Timeout** | Up to several hours | Depends on watermark progress and buffer depth |
-| **Direct VPC Access** | Requires Private Google Access | Worker nodes need `--disable-public-ips` for PCI/HIPAA |
+| Dimension                        | Default Limit                  | Maximum / Production Considerations                             |
+| :------------------------------- | :----------------------------- | :-------------------------------------------------------------- |
+| **Max Workers per Job**          | 1,000 workers                  | Soft limit; adjustable via GCP support request                  |
+| **Concurrent Jobs per Project**  | 25 concurrent jobs             | Expandable per region                                           |
+| **Worker Subnet IP Requirement** | 1 IP per active worker         | Subnets must have enough addresses for max autoscaling          |
+| **Window Duration**              | No hard limit                  | Large windows (> 24h) require massive state in Streaming Engine |
+| **Max Message / Key Size**       | 100 MB per single key          | Keys with gigabytes of data cause GroupByKey memory skew        |
+| **Pipeline Drain Timeout**       | Up to several hours            | Depends on watermark progress and buffer depth                  |
+| **Direct VPC Access**            | Requires Private Google Access | Worker nodes need `--disable-public-ips` for PCI/HIPAA          |
 
 ---
 
@@ -228,6 +229,7 @@ gcloud dataflow jobs drain <JOB_ID> \
 ## 6. Realistic Pricing Scenarios
 
 Dataflow charges based on:
+
 1. **Worker Compute Resources:**
    - vCPU: ~$0.056 per vCPU-hr (Batch), ~$0.069 per vCPU-hr (Streaming).
    - Memory: ~$0.003557 per GB-hr (Batch), ~$0.003557 per GB-hr (Streaming).

@@ -40,13 +40,13 @@ Raw Log → Decoder (normalize) → Rule Engine (match) → Alert
 
 ### Decoder Fields
 
-| Field | Description |
-|-------|-------------|
-| `program_name` | Match logs by the program generating them |
-| `prematch` | Fast regex check before full decode |
-| `regex` | Full regex with capture groups for fields |
-| `order` | Ordered list of captured fields |
-| `fts` | First time seen — tracks new unique events |
+| Field          | Description                                |
+| -------------- | ------------------------------------------ |
+| `program_name` | Match logs by the program generating them  |
+| `prematch`     | Fast regex check before full decode        |
+| `regex`        | Full regex with capture groups for fields  |
+| `order`        | Ordered list of captured fields            |
+| `fts`          | First time seen — tracks new unique events |
 
 ### Decoder with Parent (Inheritance)
 
@@ -99,22 +99,22 @@ Raw Log → Decoder (normalize) → Rule Engine (match) → Alert
 
 ### Rule Levels (0-15)
 
-| Level | Meaning |
-|-------|---------|
-| 0 | None (log only, no alert) |
-| 1 | Low (information) |
-| 3-5 | Medium (important but normal) |
-| 6-7 | High (值得关注) |
+| Level | Meaning                        |
+| ----- | ------------------------------ |
+| 0     | None (log only, no alert)      |
+| 1     | Low (information)              |
+| 3-5   | Medium (important but normal)  |
+| 6-7   | High (值得关注)                |
 | 10-14 | Critical (immediate attention) |
-| 15 | Highest (flood/lockout) |
+| 15    | Highest (flood/lockout)        |
 
 ### Rule ID Ranges
 
-| Range | Owner |
-|-------|-------|
-| 0-99999 | Wazuh built-in rules |
-| 100000-100999 | Local rules (custom) |
-| 101000+ | Shared rules (custom) |
+| Range         | Owner                 |
+| ------------- | --------------------- |
+| 0-99999       | Wazuh built-in rules  |
+| 100000-100999 | Local rules (custom)  |
+| 101000+       | Shared rules (custom) |
 
 ## Custom Rules for AWS CloudTrail
 
@@ -389,18 +389,18 @@ Map your rules to MITRE ATT&CK for better threat context.
 
 ### MITRE Coverage Matrix
 
-| MITRE ID | Technique | Rule Example |
-|----------|----------|--------------|
-| T1078.004 | Valid Accounts: Cloud Accounts | AWS console login from unexpected location |
-| T0859 | Account Manipulation: IAM | New IAM user created |
-| T1098 | Account Manipulation: Authorization | Admin policy attached to user |
-| T1552 | Unsecured Credentials | Secret access key accessed |
-| T0899 | Data Destruction | S3 bucket policy changed to public |
-| T1046 | Network Service Discovery | Port scan detected in VPC logs |
-| T1110 | Brute Force | SSH brute force from single IP |
-| T1548.003 | Sudo/Sudoers | Sudoers file modified |
-| T0853 | Virtualization/Sandbox | K8s anonymous API access |
-| T1552.001 | Service Account Credentials | SA token mounted in pod |
+| MITRE ID  | Technique                           | Rule Example                               |
+| --------- | ----------------------------------- | ------------------------------------------ |
+| T1078.004 | Valid Accounts: Cloud Accounts      | AWS console login from unexpected location |
+| T0859     | Account Manipulation: IAM           | New IAM user created                       |
+| T1098     | Account Manipulation: Authorization | Admin policy attached to user              |
+| T1552     | Unsecured Credentials               | Secret access key accessed                 |
+| T0899     | Data Destruction                    | S3 bucket policy changed to public         |
+| T1046     | Network Service Discovery           | Port scan detected in VPC logs             |
+| T1110     | Brute Force                         | SSH brute force from single IP             |
+| T1548.003 | Sudo/Sudoers                        | Sudoers file modified                      |
+| T0853     | Virtualization/Sandbox              | K8s anonymous API access                   |
+| T1552.001 | Service Account Credentials         | SA token mounted in pod                    |
 
 ## Testing Rules
 

@@ -1,6 +1,17 @@
 ---
 title: "M15: Policy-as-Code"
-tags: [devsecops, stage3, deploy, opa, kyverno, rego, cel, policy-as-code, admission-control]
+tags:
+  [
+    devsecops,
+    stage3,
+    deploy,
+    opa,
+    kyverno,
+    rego,
+    cel,
+    policy-as-code,
+    admission-control,
+  ]
 date: 2026-06-16
 description: "Module 15 of 20 — policy-as-code with OPA, Kyverno, and CEL. Writing admission-control policies, RBAC policies, and CI gate policies in code. Version-controlled, testable, auditable policy."
 ---
@@ -13,28 +24,28 @@ Policy-as-code is the discipline of writing security and operational rules in a 
 
 By the end of this module you should be able to:
 
-  - Write a Kyverno policy for Kubernetes admission control
-  - Write an OPA/Rego policy for arbitrary structured data
-  - Write a CEL policy for Kubernetes-native use cases
-  - Test a policy in isolation
-  - Version-control, review, and roll out policy changes
-  - Map policy-as-code to compliance controls
+- Write a Kyverno policy for Kubernetes admission control
+- Write an OPA/Rego policy for arbitrary structured data
+- Write a CEL policy for Kubernetes-native use cases
+- Test a policy in isolation
+- Version-control, review, and roll out policy changes
+- Map policy-as-code to compliance controls
 
 ## 1. Why Policy-as-Code
 
 The opposite: policy in a wiki page, enforced by humans. The failure modes are well known:
 
-  - The wiki is out of date
-  - Two engineers interpret the wiki differently
-  - The exception process is by email
-  - Audit is a quarterly scramble
+- The wiki is out of date
+- Two engineers interpret the wiki differently
+- The exception process is by email
+- Audit is a quarterly scramble
 
 Policy-as-code fixes each:
 
-  - The policy is in git; "out of date" means "not committed"
-  - The policy is code; interpretation is deterministic
-  - Exceptions are coded (waiver, expiry)
-  - Audit is a git log + a CI history
+- The policy is in git; "out of date" means "not committed"
+- The policy is code; interpretation is deterministic
+- Exceptions are coded (waiver, expiry)
+- Audit is a git log + a CI history
 
 ```
   Policy in wiki            Policy as code
@@ -64,11 +75,12 @@ The right side is reviewable, testable, version-controlled, and enforced by a ma
 The most general-purpose engine. Policy is written in Rego. Input is any structured JSON/YAML. Output is a decision (allow/deny + reason).
 
 Used for:
-  - Kubernetes admission (via Gatekeeper)
-  - Terraform plan validation
-  - CI gate policies
-  - API authorization
-  - Anywhere you can express input as JSON
+
+- Kubernetes admission (via Gatekeeper)
+- Terraform plan validation
+- CI gate policies
+- API authorization
+- Anywhere you can express input as JSON
 
 ### Kyverno
 
@@ -80,15 +92,15 @@ Google's policy expression language. Built into Kubernetes as an admission alter
 
 ### Comparison
 
-| Aspect | OPA/Rego | Kyverno | CEL |
-| ------ | -------- | ------- | --- |
-| Learning curve | Steep (Rego) | Gentle (YAML) | Medium (expressions) |
-| Scope | Anything JSON | K8s only | K8s only |
-| Background generation | Yes (OPA bundle) | Yes (background scans) | Limited |
-| Testing | `opa test` | `kyverno test` | Embedded |
-| Mutation | Yes | Yes (more ergonomic) | Limited |
-| Validation | Yes | Yes | Yes |
-| Best for | Multi-system policy | K8s admission | K8s simple policies |
+| Aspect                | OPA/Rego            | Kyverno                | CEL                  |
+| --------------------- | ------------------- | ---------------------- | -------------------- |
+| Learning curve        | Steep (Rego)        | Gentle (YAML)          | Medium (expressions) |
+| Scope                 | Anything JSON       | K8s only               | K8s only             |
+| Background generation | Yes (OPA bundle)    | Yes (background scans) | Limited              |
+| Testing               | `opa test`          | `kyverno test`         | Embedded             |
+| Mutation              | Yes                 | Yes (more ergonomic)   | Limited              |
+| Validation            | Yes                 | Yes                    | Yes                  |
+| Best for              | Multi-system policy | K8s admission          | K8s simple policies  |
 
 For most teams starting policy-as-code in a K8s environment, **Kyverno is the default** — the YAML syntax is more accessible to engineers who do not want to learn Rego. For multi-system policy (K8s + Terraform + API), OPA is the better fit.
 
@@ -286,10 +298,10 @@ CEL is built into K8s; no admission controller to install. Limited to K8s, but l
 
 A policy without tests is a bug waiting to ship. Required tests:
 
-  - **Positive test** — the policy allows what should be allowed
-  - **Negative test** — the policy denies what should be denied
-  - **Boundary test** — edge cases (null values, missing fields, empty arrays)
-  - **Regression test** — a real production incident, captured as a test case
+- **Positive test** — the policy allows what should be allowed
+- **Negative test** — the policy denies what should be denied
+- **Boundary test** — edge cases (null values, missing fields, empty arrays)
+- **Regression test** — a real production incident, captured as a test case
 
 For Kyverno:
 
@@ -323,17 +335,17 @@ opa test ./policy -v
 
 ### The Pattern
 
-  - Policy lives in a git repo (e.g., `org/policies`)
-  - Changes go through PR review (two approvers for production policies)
-  - CI runs the test suite
-  - Deploy: `kubectl apply -f policies/` (or Argo CD / Flux for GitOps)
+- Policy lives in a git repo (e.g., `org/policies`)
+- Changes go through PR review (two approvers for production policies)
+- CI runs the test suite
+- Deploy: `kubectl apply -f policies/` (or Argo CD / Flux for GitOps)
 
 ### Rollout Strategy
 
-  - **Audit mode** — `validationFailureAction: Audit` — log but allow
-  - **Monitor** — wait 1–2 weeks; collect the audit logs
-  - **Fix** — fix the workloads that violate (usually <10%)
-  - **Enforce** — change to `Enforce`; violations now block
+- **Audit mode** — `validationFailureAction: Audit` — log but allow
+- **Monitor** — wait 1–2 weeks; collect the audit logs
+- **Fix** — fix the workloads that violate (usually <10%)
+- **Enforce** — change to `Enforce`; violations now block
 
 The same pattern for OPA: `dryRun: true` initially, then remove.
 
@@ -358,7 +370,7 @@ spec:
       kinds: ["Pod"]
       names: ["legacy-app"]
       namespaces: ["legacy"]
-  ttl: 90  # waiver expires
+  ttl: 90 # waiver expires
 ```
 
 The exception has an expiration. The exception is in git, not in someone's head.
@@ -380,9 +392,9 @@ rules:
 
 CI is the second enforcement layer. Even before admission control, the CI pipeline can enforce:
 
-  - SAST/SCA policy: "fail the build on critical"
-  - IaC policy: "fail the PR on public S3"
-  - Image policy: "fail on unsigned image"
+- SAST/SCA policy: "fail the build on critical"
+- IaC policy: "fail the PR on public S3"
+- Image policy: "fail on unsigned image"
 
 OPA + Conftest in CI:
 
@@ -405,62 +417,62 @@ The same policy runs in two places: CI (catch early) and admission (catch everyt
 
 ## 9. Common Policies to Ship First
 
-| Policy | Why |
-| ------ | --- |
-| No privileged containers | Single most common K8s misconfiguration |
-| No root user | Blast-radius reducer |
-| Read-only root filesystem | Defense in depth |
-| Drop all capabilities | Principle of least privilege |
-| Image from approved registry | Supply chain |
-| Image signature verified | Supply chain |
-| Resource limits set | QoS, scheduling |
-| Network policy exists | Lateral movement prevention |
-| No hostNetwork / hostPID | Container isolation |
-| Labels required (owner, env, data-class) | Operational hygiene |
+| Policy                                   | Why                                     |
+| ---------------------------------------- | --------------------------------------- |
+| No privileged containers                 | Single most common K8s misconfiguration |
+| No root user                             | Blast-radius reducer                    |
+| Read-only root filesystem                | Defense in depth                        |
+| Drop all capabilities                    | Principle of least privilege            |
+| Image from approved registry             | Supply chain                            |
+| Image signature verified                 | Supply chain                            |
+| Resource limits set                      | QoS, scheduling                         |
+| Network policy exists                    | Lateral movement prevention             |
+| No hostNetwork / hostPID                 | Container isolation                     |
+| Labels required (owner, env, data-class) | Operational hygiene                     |
 
 Ship the first five in week 1; the rest in the first quarter.
 
 ## 10. Policy-as-Code Anti-Patterns
 
-| Anti-pattern | Symptom | Fix |
-| ------------ | ------- | --- |
-| Policy in a wiki | Drift, no enforcement | Move to code |
-| Policy without tests | Surprise blocks in prod | `opa test` / `kyverno test` in CI |
-| Direct `kubectl apply` of policies | No review, no audit | GitOps (Argo CD / Flux) |
-| No exception expiry | Waivers live forever | `ttl: 90` on exceptions |
-| One policy for all clusters | Too strict or too loose | Per-cluster overlays + org floor |
-| `Enforce` on day 1 | Everything breaks | `Audit` first, then `Enforce` |
+| Anti-pattern                       | Symptom                 | Fix                               |
+| ---------------------------------- | ----------------------- | --------------------------------- |
+| Policy in a wiki                   | Drift, no enforcement   | Move to code                      |
+| Policy without tests               | Surprise blocks in prod | `opa test` / `kyverno test` in CI |
+| Direct `kubectl apply` of policies | No review, no audit     | GitOps (Argo CD / Flux)           |
+| No exception expiry                | Waivers live forever    | `ttl: 90` on exceptions           |
+| One policy for all clusters        | Too strict or too loose | Per-cluster overlays + org floor  |
+| `Enforce` on day 1                 | Everything breaks       | `Audit` first, then `Enforce`     |
 
 ## 11. Policy Governance
 
 For a mid-size org (50+ engineers):
 
-  - **Policy author** — security team or platform team
-  - **Policy reviewer** — anyone affected by the policy; two reviewers for prod
-  - **Policy owner** — the team that owns the policy
-  - **Policy steward** — overall responsibility; usually the security lead
+- **Policy author** — security team or platform team
+- **Policy reviewer** — anyone affected by the policy; two reviewers for prod
+- **Policy owner** — the team that owns the policy
+- **Policy steward** — overall responsibility; usually the security lead
 
 Quarterly review: which policies have exceptions? Which have no audit hits? Which are bypassed? Adjust accordingly.
 
 ## 12. Mapping to Compliance
 
-| Framework | Control | Policy |
-| --------- | ------- | ------ |
-| SOC2 CC6.6 | Logical access controls | RBAC + admission policy |
-| SOC2 CC7.2 | System monitoring | Audit mode for all policies |
-| CIS K8s 5.1.1 | No privileged containers | Kyverno no-privileged |
-| CIS K8s 5.2.1 | Minimize admin containers | Kyverno no-root |
-| PCI-DSS 1.2.1 | NSCs | Network policy required |
-| ISO 27001 A.8.32 | Change management | GitOps for policy changes |
-| FedRAMP AC-6 | Least privilege | Kyverno drop-capabilities |
+| Framework        | Control                   | Policy                      |
+| ---------------- | ------------------------- | --------------------------- |
+| SOC2 CC6.6       | Logical access controls   | RBAC + admission policy     |
+| SOC2 CC7.2       | System monitoring         | Audit mode for all policies |
+| CIS K8s 5.1.1    | No privileged containers  | Kyverno no-privileged       |
+| CIS K8s 5.2.1    | Minimize admin containers | Kyverno no-root             |
+| PCI-DSS 1.2.1    | NSCs                      | Network policy required     |
+| ISO 27001 A.8.32 | Change management         | GitOps for policy changes   |
+| FedRAMP AC-6     | Least privilege           | Kyverno drop-capabilities   |
 
-The policy is the *implementation* of the control. The audit evidence is the git log + the admission logs.
+The policy is the _implementation_ of the control. The audit evidence is the git log + the admission logs.
 
 ## 13. Self-Check
 
-  1. Pick one policy from section 9. Write it in Kyverno or Rego. Test it. Apply in audit mode.
-  2. How many of your current policies have exceptions? Do those exceptions have expiry dates?
-  3. If you flipped all your policies from `Audit` to `Enforce` today, what would break? The list is your remediation backlog.
+1. Pick one policy from section 9. Write it in Kyverno or Rego. Test it. Apply in audit mode.
+2. How many of your current policies have exceptions? Do those exceptions have expiry dates?
+3. If you flipped all your policies from `Audit` to `Enforce` today, what would break? The list is your remediation backlog.
 
 ## 14. The Policy-as-Code Library Pattern
 
@@ -534,12 +546,12 @@ The base policy applies to all clusters; the overlay applies to specific environ
 
 Some policies run in CI, not in admission control:
 
-  - **Terraform plan validation** — conftest, OPA, tfsec, Checkov
-  - **K8s manifest validation** — kubeconform, kubectl --dry-run, Kyverno CLI
-  - **Helm chart validation** — conftest on the rendered output
-  - **OPA on arbitrary JSON** — anything structured
+- **Terraform plan validation** — conftest, OPA, tfsec, Checkov
+- **K8s manifest validation** — kubeconform, kubectl --dry-run, Kyverno CLI
+- **Helm chart validation** — conftest on the rendered output
+- **OPA on arbitrary JSON** — anything structured
 
-The CI gate is *faster* than admission control (it runs before the PR is merged). The admission control is *comprehensive* (it runs against the final manifest at deploy).
+The CI gate is _faster_ than admission control (it runs before the PR is merged). The admission control is _comprehensive_ (it runs against the final manifest at deploy).
 
 Run the policy in both. The CI gate catches issues during development; admission control catches issues that slipped through.
 
@@ -564,7 +576,7 @@ spec:
     - name: check-s3-acl
       match:
         resources:
-          kinds: ["S3Bucket"]  # CRD or similar
+          kinds: ["S3Bucket"] # CRD or similar
       validate:
         message: "S3 buckets cannot have public-read ACL"
         pattern:
@@ -577,32 +589,32 @@ Same policy, two enforcement points.
 
 ## 17. Policy and Compliance
 
-| Framework | Control | Policy |
-| --------- | ------- | ------ |
-| SOC 2 CC6.1 | Logical access | RBAC, network policies |
-| SOC 2 CC6.6 | Boundary | K8s NetworkPolicy, AWS SG |
-| SOC 2 CC7.2 | Monitoring | Audit mode for all policies |
-| SOC 2 CC8.1 | Change management | GitOps for policy changes |
-| ISO A.8.16 | Monitoring | Audit logs of policy decisions |
-| ISO A.8.32 | Change management | Policy PR history |
-| PCI 1.2 | NSCs | Network policies |
-| PCI 6.4 | Change control | GitOps for policy |
-| CIS K8s 5.x | Container security | Kyverno/Kyverno equivalents |
-| FedRAMP AC-6 | Least privilege | Drop capabilities, runAsNonRoot |
+| Framework    | Control            | Policy                          |
+| ------------ | ------------------ | ------------------------------- |
+| SOC 2 CC6.1  | Logical access     | RBAC, network policies          |
+| SOC 2 CC6.6  | Boundary           | K8s NetworkPolicy, AWS SG       |
+| SOC 2 CC7.2  | Monitoring         | Audit mode for all policies     |
+| SOC 2 CC8.1  | Change management  | GitOps for policy changes       |
+| ISO A.8.16   | Monitoring         | Audit logs of policy decisions  |
+| ISO A.8.32   | Change management  | Policy PR history               |
+| PCI 1.2      | NSCs               | Network policies                |
+| PCI 6.4      | Change control     | GitOps for policy               |
+| CIS K8s 5.x  | Container security | Kyverno/Kyverno equivalents     |
+| FedRAMP AC-6 | Least privilege    | Drop capabilities, runAsNonRoot |
 
-The policy is the *implementation*. The audit evidence is the policy PR history + admission logs.
+The policy is the _implementation_. The audit evidence is the policy PR history + admission logs.
 
 ## 18. Policy Authoring Anti-Patterns (Extended)
 
-| Anti-pattern | Symptom | Fix |
-| ------------ | ------- | --- |
-| Copy-pasted policy from the internet | Doesn't fit your environment | Customize; test in audit mode |
-| Policy in a different repo from the app | Drift, no review | Policy in app repo, or co-located |
-| No tests | Surprises in prod | `opa test`, `kyverno test` in CI |
-| No exceptions allowed | Engineers find workarounds | Document exception process, with TTL |
-| Exceptions are permanent | Tech debt accumulates | Expiry on every exception |
-| Policy without a metric | Can't tell if it's working | Count admissions, denials, exceptions |
-| Policy with no owner | Drift, no review | Every policy has an owner and a review date |
+| Anti-pattern                            | Symptom                      | Fix                                         |
+| --------------------------------------- | ---------------------------- | ------------------------------------------- |
+| Copy-pasted policy from the internet    | Doesn't fit your environment | Customize; test in audit mode               |
+| Policy in a different repo from the app | Drift, no review             | Policy in app repo, or co-located           |
+| No tests                                | Surprises in prod            | `opa test`, `kyverno test` in CI            |
+| No exceptions allowed                   | Engineers find workarounds   | Document exception process, with TTL        |
+| Exceptions are permanent                | Tech debt accumulates        | Expiry on every exception                   |
+| Policy without a metric                 | Can't tell if it's working   | Count admissions, denials, exceptions       |
+| Policy with no owner                    | Drift, no review             | Every policy has an owner and a review date |
 
 ## 19. The Policy Lifecycle
 
@@ -625,25 +637,26 @@ A policy that sits in audit mode forever is a policy that does not work. The lif
 
 The same pattern applies at every layer:
 
-  - **Application** — OPA on request (e.g., authorization)
-  - **CI/CD** — conftest on Terraform plan
-  - **K8s admission** — Kyverno / OPA Gatekeeper
-  - **Cloud** — AWS Config, Azure Policy, GCP Org Policy
-  - **Network** — VPC flow logs, NACLs
-  - **Identity** — IAM policies, RBAC
+- **Application** — OPA on request (e.g., authorization)
+- **CI/CD** — conftest on Terraform plan
+- **K8s admission** — Kyverno / OPA Gatekeeper
+- **Cloud** — AWS Config, Azure Policy, GCP Org Policy
+- **Network** — VPC flow logs, NACLs
+- **Identity** — IAM policies, RBAC
 
 The discipline is the same: policy in code, test, version, review, deploy, monitor. The tool differs by layer.
 
 A unified policy story:
-  - Author in OPA Rego
-  - Test with `opa test`
-  - Deploy to multiple enforcement points (CI, admission, runtime)
-  - Monitor across all points
+
+- Author in OPA Rego
+- Test with `opa test`
+- Deploy to multiple enforcement points (CI, admission, runtime)
+- Monitor across all points
 
 ## Related
 
-  - [[DevOps/devsecops/stage0-foundations/03-secure-sdlc|M03: Secure SDLC]]
-  - [[DevOps/devsecops/stage2-build/10-iac-security|M10: IaC Security]]
-  - [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
-  - [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
-  - [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]
+- [[DevOps/devsecops/stage0-foundations/03-secure-sdlc|M03: Secure SDLC]]
+- [[DevOps/devsecops/stage2-build/10-iac-security|M10: IaC Security]]
+- [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
+- [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
+- [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]

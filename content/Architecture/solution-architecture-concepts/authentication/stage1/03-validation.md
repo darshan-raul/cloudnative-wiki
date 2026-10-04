@@ -1,7 +1,17 @@
 ---
 title: "1.3 — JWT Validation: The 7 Checks"
 author: darshan
-tags: [authentication, stage-1, jwt, validation, security, jti-denylist, audience, issuer]
+tags:
+  [
+    authentication,
+    stage-1,
+    jwt,
+    validation,
+    security,
+    jti-denylist,
+    audience,
+    issuer,
+  ]
 date: 2026-06-13
 description: The 7 checks every JWT validator must do, in the right order — with hand-rolled code, library code, attack examples, and a hardened production pattern
 ---
@@ -79,6 +89,7 @@ Expensive and specific:
 ```
 
 You do the cheap, general checks first because they:
+
 1. **Reject garbage fast** — no point doing a DB lookup on a malformed token.
 2. **Block attacks before they reach expensive operations** — a malformed token that triggers a DB lookup is a DoS vector.
 3. **Establish authenticity before identity** — you only do the user-specific checks if you know the token is genuine.
@@ -87,22 +98,22 @@ You do the cheap, general checks first because they:
 
 ```
 ❌  WRONG ORDER: parse → audience check → signature check
-  
+
   Attacker sends: garbage.junk.stuff
   Parser throws: "invalid JSON in payload"
   Server returns: 400 "malformed payload"
-  
+
   Attacker learns: the server is doing audience checks
                    before signature verification
                    (which is also wrong, but tells them the server
                     has bugs to exploit)
 
 ✅  RIGHT ORDER: parse → algorithm allowlist → signature → claims
-  
+
   Attacker sends: garbage.junk.stuff
   Parser throws OR signature fails
   Server returns: 401 "invalid token"
-  
+
   Attacker learns: nothing. Same response as a real expired token.
 ```
 
@@ -117,9 +128,9 @@ Production validator behavior:
   Input: wrong-issuer token            → 401 "invalid_token" (200ms response)
   Input: valid token, revoked sub      → 401 "invalid_token" (200ms response)
   Input: valid token, unknown jti      → 401 "invalid_token" (200ms response)
-  
+
   All six responses are byte-identical. The attacker learns nothing.
-  
+
   The server's internal log shows the specific failure for ops:
     "jwt_rejected" reason="expired"     sub=alice  kid=key-2024-01
     "jwt_rejected" reason="bad_sig"     sub=?      kid=key-2024-01
@@ -141,13 +152,13 @@ Production validator behavior:
 def parse_jwt(token: str) -> tuple[str, str, str]:
     if not isinstance(token, str):
         raise ValueError("not a string")
-    
+
     parts = token.split(".")
     if len(parts) != 3:
         raise ValueError(f"expected 3 parts, got {len(parts)}")
-    
+
     h_b64, p_b64, s_b64 = parts
-    
+
     # Base64URL alphabet: A-Z a-z 0-9 - _ (with optional padding =)
     import re
     pattern = re.compile(r"^[A-Za-z0-9_\-]+=*$")
@@ -156,28 +167,28 @@ def parse_jwt(token: str) -> tuple[str, str, str]:
             raise ValueError(f"{name} has invalid Base64URL characters")
         if len(part) == 0:
             raise ValueError(f"{name} is empty")
-    
+
     # Try to decode — catches malformed Base64
     try:
         base64.urlsafe_b64decode(h_b64 + "=" * (-len(h_b64) % 4))
     except Exception as e:
         raise ValueError(f"header is not valid Base64URL: {e}")
-    
+
     try:
         base64.urlsafe_b64decode(p_b64 + "=" * (-len(p_b64) % 4))
     except Exception as e:
         raise ValueError(f"payload is not valid Base64URL: {e}")
-    
+
     try:
         base64.urlsafe_b64decode(s_b64 + "=" * (-len(s_b64) % 4))
     except Exception as e:
         raise ValueError(f"signature is not valid Base64URL: {e}")
-    
+
     # The signature MUST be non-empty. A JWT with empty signature
     # is only valid with alg=none, which we never accept.
     if len(s_b64) == 0:
         raise ValueError("signature is empty (alg=none is not accepted)")
-    
+
     return h_b64, p_b64, s_b64
 ```
 
@@ -212,20 +223,20 @@ def check_algorithm(h_b64: str) -> str:
         header = json.loads(b64url_decode(h_b64))
     except Exception as e:
         raise ValueError(f"header is not valid JSON: {e}")
-    
+
     if not isinstance(header, dict):
         raise ValueError("header is not a JSON object")
-    
+
     alg = header.get("alg")
     if not isinstance(alg, str):
         raise ValueError("alg claim missing or not a string")
-    
+
     if alg not in ALLOWED_ALGS:
         raise ValueError(
             f"algorithm not allowed: {alg!r}. "
             f"allowed: {sorted(ALLOWED_ALGS)}"
         )
-    
+
     return alg
 ```
 
@@ -257,6 +268,7 @@ def check_algorithm(h_b64: str) -> str:
 ```
 
 **The allowlist should be:**
+
 - 1 algorithm in most cases (you know what you issue)
 - 2-3 if you're a multi-tenant system with tenant-specific keys
 - NEVER "all" or "trust the header"
@@ -293,7 +305,7 @@ def check_signature(h_b64: str, p_b64: str, s_b64: str,
     # Resolve the key
     header = json.loads(b64url_decode(h_b64))
     kid = header.get("kid")
-    
+
     try:
         if kid:
             # Production pattern: fetch from JWKS
@@ -304,14 +316,14 @@ def check_signature(h_b64: str, p_b64: str, s_b64: str,
             key = CONFIGURED_PUBLIC_KEY
     except Exception as e:
         raise ValueError(f"could not resolve key (kid={kid}): {e}")
-    
+
     # Verify
     signing_input = f"{h_b64}.{p_b64}".encode("ascii")
     try:
         actual_sig = b64url_decode(s_b64)
     except Exception as e:
         raise ValueError(f"signature is not valid Base64URL: {e}")
-    
+
     try:
         if alg == "HS256":
             expected = hmac.new(key, signing_input, hashlib.sha256).digest()
@@ -362,23 +374,23 @@ import time
 
 def check_time_claims(payload: dict, leeway: int = 30) -> None:
     now = int(time.time())
-    
+
     # exp (expiration) — MUST be present and in the future
     if "exp" not in payload:
         raise ValueError("missing exp claim")
     if not isinstance(payload["exp"], (int, float)):
         raise ValueError("exp claim must be a number")
-    
+
     if now > payload["exp"] + leeway:
         raise ValueError("token expired")
-    
+
     # nbf (not before) — optional, but if present, must be in the past
     if "nbf" in payload:
         if not isinstance(payload["nbf"], (int, float)):
             raise ValueError("nbf claim must be a number")
         if now + leeway < payload["nbf"]:
             raise ValueError("token not yet valid")
-    
+
     # iat (issued at) — optional, but if present, must be in the past (with clock skew tolerance)
     if "iat" in payload:
         if not isinstance(payload["iat"], (int, float)):
@@ -422,7 +434,7 @@ production with NTP. But:
     without /etc/chrony, etc.), every token "fails leeway"
   - Some admins set leeway to 86400 to "make it work" — now expired
     tokens are accepted for a day after expiration
-    
+
 If you find yourself setting leeway > 60s, fix your clock.
 If you find yourself setting leeway > 300s, you're accepting
 effectively-expired tokens and should investigate why.
@@ -465,7 +477,7 @@ def check_issuer(payload: dict) -> None:
     iss = payload.get("iss")
     if not isinstance(iss, str):
         raise ValueError("iss claim missing or not a string")
-    
+
     if iss not in TRUSTED_ISSUERS:
         raise ValueError(f"untrusted issuer: {iss!r}")
 ```
@@ -478,13 +490,13 @@ If your service trusts multiple IdPs:
     "https://idp.example.com",
     "https://idp-2.example.com",
   }
-  
+
 For each trusted issuer, you need its JWKS URL:
   JWKS_URLS = {
     "https://idp.example.com":      "https://idp.example.com/.well-known/jwks.json",
     "https://idp-2.example.com":    "https://idp-2.example.com/.well-known/jwks.json",
   }
-  
+
 The validator:
   1. Verifies signature with the right key (from the right JWKS)
   2. Then checks iss is in TRUSTED_ISSUERS
@@ -535,7 +547,7 @@ def check_audience(payload: dict) -> None:
     aud = payload.get("aud")
     if aud is None:
         raise ValueError("aud claim missing")
-    
+
     # aud can be a string or an array of strings
     if isinstance(aud, str):
         aud_list = [aud]
@@ -543,7 +555,7 @@ def check_audience(payload: dict) -> None:
         aud_list = aud
     else:
         raise ValueError("aud claim must be string or array")
-    
+
     if MY_AUDIENCE not in aud_list:
         raise ValueError(f"audience does not include {MY_AUDIENCE!r}")
 ```
@@ -552,26 +564,26 @@ def check_audience(payload: dict) -> None:
 
 ```
 Scenario: confused-deputy attack
-  
+
   Acme Co has 3 services: api-a, api-b, api-c
   All trust the same IdP
   All use the same JWKS
-  
+
   Alice logs in via web flow:
     IdP issues a token with aud="api-a"
-    
+
   Attacker tricks Alice into making a request to api-b with this token:
     GET https://api-b.example.com/users/me HTTP/1.1
     Authorization: Bearer eyJ... (the api-a token)
-  
+
   api-b's buggy validator:
     1. Parses the token
     2. Fetches JWKS, verifies signature (passes — same IdP)
     3. Skips aud check
     4. Returns Alice's data to Alice, but at api-b's permissions
-    
+
   Result: Alice now has api-b access she shouldn't have.
-  
+
   api-b's fixed validator:
     1-3. Same as above
     4. Checks aud contains "api-b" (it doesn't — only "api-a")
@@ -583,19 +595,19 @@ Scenario: confused-deputy attack
 ```
 If aud is an array (RFC 7519 allows this, OIDC recommends it):
   aud = ["https://api-a.example.com", "https://api-b.example.com"]
-  
+
 This is a multi-audience token. Any service in the list should accept.
-  
+
 Some services do:
   if MY_AUDIENCE in aud:
     accept
-    
+
 This is correct — same audience, just listed in array form.
-  
+
 Some services do:
   if aud == MY_AUDIENCE:
     accept
-    
+
 This is WRONG — it would reject a token where aud is a single-element
 array containing MY_AUDIENCE. Always use "in" not "==".
 ```
@@ -628,12 +640,12 @@ def check_subject_and_replay(payload: dict, denylist=None) -> None:
     sub = payload.get("sub")
     if not isinstance(sub, str) or not sub:
         raise ValueError("sub claim missing or empty")
-    
+
     jti = payload.get("jti")
     if jti and denylist is not None:
         if denylist.contains(jti):
             raise ValueError("token has been revoked")
-    
+
     # Optional: check sub against active user list
     # if your app requires the user to still be active
     # user_store = get_user_store()
@@ -649,17 +661,17 @@ class InMemoryDenylist:
     def __init__(self):
         self._set = set()
         self._lock = threading.Lock()
-    
+
     def add(self, jti: str, ttl_seconds: int) -> None:
         with self._lock:
             self._set.add(jti)
         # Schedule removal after TTL
         threading.Timer(ttl_seconds, self._remove, args=(jti,)).start()
-    
+
     def _remove(self, jti: str) -> None:
         with self._lock:
             self._set.discard(jti)
-    
+
     def contains(self, jti: str) -> bool:
         with self._lock:
             return jti in self._set
@@ -687,7 +699,7 @@ Always:
 Never (overhead not worth it):
   - Short-lived access tokens (5-15 min): just let them expire
   - High-volume systems where Redis is a bottleneck
-  
+
 Alternative to denylist: short-lived tokens + refresh token rotation
 (covered in 1.4).
 ```
@@ -710,7 +722,7 @@ Option B: check user status on every request
 Option C: short-lived tokens + revocation event
   - User deactivation triggers revocation of all their tokens
   - Issued via the denylist or by invalidating refresh tokens
-  
+
 Option D: just wait for the token to expire
   - Acceptable if tokens are 5-15 minutes
   - Not acceptable if tokens are 24 hours
@@ -757,7 +769,7 @@ def validate_jwt(token: str, *, denylist=None) -> dict:
         raise ValueError("malformed: not 3 parts")
     if not s_b64:
         raise ValueError("malformed: empty signature (alg=none rejected)")
-    
+
     # Step 2: algorithm allowlist
     try:
         header = json.loads(b64url_decode(h_b64))
@@ -766,19 +778,19 @@ def validate_jwt(token: str, *, denylist=None) -> dict:
     alg = header.get("alg")
     if alg not in ALLOWED_ALGS:
         raise ValueError(f"alg not allowed: {alg}")
-    
+
     # Step 3: signature (BEFORE parsing payload)
     key = resolve_key(header)
     if key is None:
         raise ValueError(f"unknown kid: {header.get('kid')}")
     verify_signature(h_b64, p_b64, s_b64, alg, key)
-    
+
     # Now we can safely parse the payload
     try:
         payload = json.loads(b64url_decode(p_b64))
     except Exception:
         raise ValueError("malformed payload")
-    
+
     # Step 4: time claims
     now = int(time.time())
     if "exp" not in payload or not isinstance(payload["exp"], (int, float)):
@@ -789,29 +801,30 @@ def validate_jwt(token: str, *, denylist=None) -> dict:
         raise ValueError("token not yet valid")
     if "iat" in payload and payload["iat"] - LEEWAY > now + 60:
         raise ValueError("iat in the future")
-    
+
     # Step 5: issuer
     if payload.get("iss") not in TRUSTED_ISSUERS:
         raise ValueError(f"untrusted issuer")
-    
+
     # Step 6: audience
     aud = payload.get("aud")
     aud_list = aud if isinstance(aud, list) else [aud] if aud else []
     if MY_AUDIENCE not in aud_list:
         raise ValueError("wrong audience")
-    
+
     # Step 7: subject + replay
     if not payload.get("sub"):
         raise ValueError("missing sub")
     if denylist and payload.get("jti") and denylist.contains(payload["jti"]):
         raise ValueError("token revoked")
-    
+
     return payload
 ```
 
 This is 50 lines. It does all 7 checks. It has the right order. It returns the payload or raises.
 
 What it doesn't do (and why libraries exist):
+
 - JWKS fetch + cache
 - All the algorithm variants
 - Audience array edge cases
@@ -855,7 +868,7 @@ def validate(token: str, *, denylist=None) -> dict:
     try:
         # Get the signing key from JWKS based on the kid in the token
         signing_key = _jwks_client.get_signing_key_from_jwt(token).key
-        
+
         # Decode and verify
         payload = jwt.decode(
             token,
@@ -890,11 +903,11 @@ def validate(token: str, *, denylist=None) -> dict:
         raise InvalidTokenError(f"malformed token: {e}")
     except InvalidTokenError:
         raise  # any other JWT error
-    
+
     # Replay protection (not built into PyJWT)
     if denylist and payload.get("jti") and denylist.contains(payload["jti"]):
         raise InvalidTokenError("token revoked")
-    
+
     return payload
 ```
 
@@ -937,10 +950,10 @@ class JWTValidator:
         self.jwks_client = PyJWKClient(jwks_url, cache_keys=True,
                                        lifespan=jwks_cache_ttl)
         self.denylist = None  # injected later
-    
+
     def set_denylist(self, denylist):
         self.denylist = denylist
-    
+
     def validate(self, token: str) -> dict:
         start = time.monotonic()
         try:
@@ -950,7 +963,7 @@ class JWTValidator:
             except Exception as e:
                 self._log_failure("kid_resolution_failed", token, str(e))
                 raise InvalidTokenError("invalid token")
-            
+
             # Decode + verify (all 6 checks in one call)
             try:
                 payload = jwt.decode(
@@ -994,22 +1007,22 @@ class JWTValidator:
             except jwt.InvalidTokenError as e:
                 self._log_failure("invalid", token, str(e))
                 raise InvalidTokenError("invalid token")
-            
+
             # Replay protection (7th check, separate from PyJWT)
             if self.denylist and payload.get("jti"):
                 if self.denylist.contains(payload["jti"]):
                     self._log_failure("revoked", token, sub=payload.get("sub"))
                     raise InvalidTokenError("invalid token")
-            
+
             return payload
-        
+
         finally:
             elapsed = (time.monotonic() - start) * 1000
             if elapsed > 100:  # log slow validations
                 logger.warning("jwt_validation_slow_ms", extra={
                     "duration_ms": elapsed, "token_prefix": token[:20]
                 })
-    
+
     def _log_failure(self, reason: str, token: str, detail: str = "",
                      sub: str = ""):
         """Log the specific reason for ops. Never include the token."""
@@ -1096,50 +1109,64 @@ The same principle applies to your JWT validator. The HTTP response is identical
 ## 14. Attacks & Pitfalls
 
 ### A1. The `alg=none` attack (revisit)
+
 If your library accepts `alg=none`, you have no auth. Period. Most libraries default to rejecting it. Verify yours does.
 
 ### A2. The algorithm confusion attack
+
 If your validator accepts any algorithm, an attacker can downgrade. Pin the algorithm. If you expect RS256, only accept RS256.
 
 ### A3. Verifying AFTER parsing
+
 If you parse the JSON before verifying the signature, the JSON parser is an oracle. Verify first, then parse. This is also why we do Step 2 (algorithm) before Step 3 (signature) — we don't even know if the algorithm is acceptable until we check.
 
 ### A4. Missing `exp` validation
+
 If you forget to require `exp`, tokens live forever. This is the most common bug. Always require `exp`.
 
 ### A5. Missing `iss` validation
+
 If you skip the iss check, any token signed by any IdP that publishes its public key to your JWKS URL is accepted. The IdP could be a totally different one. Pin the issuer.
 
 ### A6. Missing `aud` validation
+
 Confused-deputy attack. A token for service A is used against service B. Always check aud.
 
 ### A7. The `kid` confusion attack (revisit)
+
 The `kid` in the header is supposed to point to a key in your JWKS. If your library uses the kid to fetch a file from disk (e.g., `kid = "../../../etc/passwd"`) or to do an SQL query, an attacker can manipulate the kid to control which key is used for verification.
 
 **Mitigation:** sanitize the kid (alphanumeric + hyphen + underscore only) and/or use an allowlist.
 
 ### A8. The `jku` / `x5u` header trust
+
 Some libraries fetch the JWK Set or X.509 chain from a URL in the token header. If you don't trust the URL, the attacker hosts their own keys. Disable this entirely. Use only your configured JWKS URL.
 
 ### A9. Long leeway
+
 Setting leeway to 86400 "to make it work" = accepting expired tokens for a day. Don't. If you need a day of leeway, fix your clock or change your token lifetime strategy.
 
 ### A10. JWKS cache stale during rotation
+
 If your JWKS client caches the key set for an hour, and the IdP rotates keys every 5 minutes, your verifier fails to find the new kid for 55 minutes. Configure cache TTL based on rotation cadence.
 
 ### A11. Verifier vs validator confusion
+
 - A **verifier** checks the signature.
 - A **validator** does the verifier's job PLUS the claims checks.
 
 A "signature verifier" that doesn't check exp, iss, aud is **not** a JWT validator. It's just a crypto check. Use a library that does both.
 
 ### A12. Side-channel via response time
+
 If your validator does a DB lookup for the user (step 7) before rejecting on a bad signature (step 3), the DB lookup is a timing oracle. The attacker measures the response time and can distinguish "valid signature, bad user" from "invalid signature" without seeing the response.
 
 **Always do the signature check first, then the DB lookup.**
 
 ### A13. The "the library handles it" fallacy
+
 Many engineers assume `jwt.decode()` does everything. It does the signature + time + iss + aud checks. It does NOT:
+
 - Maintain a denylist (you do)
 - Check user active status (you do)
 - Check session binding (you do)
@@ -1149,14 +1176,16 @@ Many engineers assume `jwt.decode()` does everything. It does the signature + ti
 A library is the floor, not the ceiling.
 
 ### A14. Tokens with empty payload
+
 ```
 Token: header_b64..signature_b64  (empty payload between dots)
-  
+
 Some libraries accept this. Some reject. Be explicit: require
 a non-empty payload with the claims you need.
 ```
 
 ### A15. Tokens with no `kid` in JWKS-rotated environments
+
 If your IdP rotates keys, every new token has a `kid`. If the verifier doesn't see a `kid`, it's either a very old token (before rotation) or a non-IdP-issued token.
 
 **Be explicit:** require `kid` in production. Reject tokens without one (or accept them only if you have a single static key, never in a JWKS-rotated setup).
@@ -1166,10 +1195,13 @@ If your IdP rotates keys, every new token has a `kid`. If the verifier doesn't s
 ## 15. Exercises
 
 ### Exercise 1: Implement the 50-line validator
+
 Take Section 10's code. Run it against the test cases in Section 6. Verify all checks fire in the right order.
 
 ### Exercise 2: Add 5 more attacks
+
 Take the production validator from Section 12. Try these attacks and verify it's rejected:
+
 - (a) Token with `alg=none`
 - (b) Token with `alg=HS256` signed with the RS256 public key
 - (c) Token with no `exp`
@@ -1177,27 +1209,35 @@ Take the production validator from Section 12. Try these attacks and verify it's
 - (e) Token with `jti` in the denylist
 
 ### Exercise 3: Timing oracle
+
 Run your validator 1000 times with a valid token and 1000 times with an obviously-invalid one. Compare the average response time. If there's a big difference (e.g., > 10ms), you've got a timing oracle somewhere.
 
 ### Exercise 4: Reorder the checks
+
 Take the 7-check list and reorder them (e.g., do iss before signature). For each reordering, identify an attack it enables.
 
 ### Exercise 5: Test the denylist
+
 Build a Redis denylist. Add a jti to it. Verify a token with that jti is rejected within 1 second. Verify the denylist entry expires after the token's remaining lifetime.
 
 ### Exercise 6: The kid path-traversal drill
+
 Try tokens with these kids: `../../../etc/passwd`, `' OR 1=1 --`, `key1; rm -rf /`. Does your resolver reject them all?
 
 ### Exercise 7: Build a fail-closed validator
+
 Write a function `validate(token)` that returns the payload or raises. For every error path, return the same exception type, the same error message, the same HTTP status. The internal log shows the specific reason.
 
 ### Exercise 8: Multi-tenant config
+
 Extend the validator to support multiple trusted issuers. For each, a different JWKS URL. The token's kid determines which JWKS to use. The token's iss must match the issuer that owns the kid.
 
 ### Exercise 9: Audit your existing validators
+
 If you have JWT validation in production, run through this stage's checklist. For each of the 7 checks, is it enabled? Are claims required? What's the leeway? Is the algorithm pinned? Write a one-page audit report.
 
 ### Exercise 10: Stress test
+
 Generate 1 million valid JWTs and 1 million invalid JWTs. Run them through your validator. Measure p50, p95, p99 latency for both. Are they similar? If not, you've got a timing oracle.
 
 ---
@@ -1209,6 +1249,7 @@ You can now write a JWT validator that does the 7 checks in the right order, eve
 → [[../stage1/04-lifecycle|Stage 1.4 — JWT Lifecycle: Issuance, Rotation, Revocation, Replay Protection]]
 
 **Before you move on, verify you can answer these:**
+
 1. What are the 7 checks, and why is the order important?
 2. What attack does verifying the signature BEFORE parsing the payload prevent?
 3. What does "fail closed" mean, and how do you implement it for JWT validation?

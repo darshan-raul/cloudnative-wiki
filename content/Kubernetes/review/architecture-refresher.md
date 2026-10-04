@@ -48,15 +48,15 @@ sequenceDiagram
 
 ## The Core Components
 
-| Component | Layer | Stateless? | Key Responsibility |
-| :--- | :--- | :--- | :--- |
-| **`kube-apiserver`** | Control Plane | **Yes** (Scale horizontally) | Central gateway; authenticates, authorizes, validates, and acts as the sole reader/writer to `etcd`. |
-| **`etcd`** | Control Plane | **Stateful** (Strict Raft) | Distributed key-value store holding the single source of truth for the entire cluster. |
-| **`kube-controller-manager`** | Control Plane | Active/Standby leader | Runs reconciliation loops (Deployment, ReplicaSet, Node, ServiceAccount, Endpoints). |
-| **`kube-scheduler`** | Control Plane | Active/Standby leader | Places unassigned Pods onto suitable worker nodes based on resources, taints, and affinity. |
-| **`kubelet`** | Worker Node | Node daemon | Registers node, watches API for assigned pods, commands container runtime via CRI, executes probes. |
-| **`kube-proxy`** | Worker Node | DaemonSet / host daemon | Translates Service Virtual IPs into pod routing rules via `nftables` (v1.35+) or `iptables`. |
-| **CRI Runtime** | Worker Node | Host daemon (containerd 2.x) | Creates cgroups, namespaces, pulls images, and manages container execution. |
+| Component                     | Layer         | Stateless?                   | Key Responsibility                                                                                   |
+| :---------------------------- | :------------ | :--------------------------- | :--------------------------------------------------------------------------------------------------- |
+| **`kube-apiserver`**          | Control Plane | **Yes** (Scale horizontally) | Central gateway; authenticates, authorizes, validates, and acts as the sole reader/writer to `etcd`. |
+| **`etcd`**                    | Control Plane | **Stateful** (Strict Raft)   | Distributed key-value store holding the single source of truth for the entire cluster.               |
+| **`kube-controller-manager`** | Control Plane | Active/Standby leader        | Runs reconciliation loops (Deployment, ReplicaSet, Node, ServiceAccount, Endpoints).                 |
+| **`kube-scheduler`**          | Control Plane | Active/Standby leader        | Places unassigned Pods onto suitable worker nodes based on resources, taints, and affinity.          |
+| **`kubelet`**                 | Worker Node   | Node daemon                  | Registers node, watches API for assigned pods, commands container runtime via CRI, executes probes.  |
+| **`kube-proxy`**              | Worker Node   | DaemonSet / host daemon      | Translates Service Virtual IPs into pod routing rules via `nftables` (v1.35+) or `iptables`.         |
+| **CRI Runtime**               | Worker Node   | Host daemon (containerd 2.x) | Creates cgroups, namespaces, pulls images, and manages container execution.                          |
 
 ---
 

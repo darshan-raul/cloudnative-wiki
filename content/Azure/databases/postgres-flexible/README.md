@@ -76,6 +76,7 @@ Flexible Server separates compute from storage using Azure Premium SSD / Ultra D
 PostgreSQL uses a process-per-connection concurrency model. Opening thousands of direct TCP connections consumes significant RAM and degrades CPU performance through OS context switching.
 
 Flexible Server embeds **PgBouncer** directly on the compute node:
+
 - **Port 5432:** Direct PostgreSQL connections (used for administrative tasks, DDL, and migrations).
 - **Port 6432:** Pooled connections through PgBouncer.
 - **Pool Modes Supported:**
@@ -185,15 +186,15 @@ az postgres flexible-server replica create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Quota | Maximum Supported |
-| :--- | :--- | :--- |
-| **Max Compute Shape** | Standard_D4ds_v5 | Up to 64 vCPUs / 512 GiB RAM (Memory Optimized) |
-| **Max Storage Capacity** | 128 GiB default | Elastic scaling up to 32 TiB (32,768 GiB) |
-| **Storage IOPS** | Tier-based | Up to 80,000 IOPS (32 TiB Premium SSD) |
-| **Backup Retention** | 7 days default | 1 to 35 days (PITR down to the second) |
-| **Read Replicas** | 0 replicas | Up to 8 read replicas per primary server |
-| **Max Direct Connections**| Scaled by vCPU | E.g., 4 vCPU = 200 conns; 64 vCPU = 5,000 conns |
-| **Max PgBouncer Connections**| 5,000 pooled | Supports up to 10,000 concurrent client sessions |
+| Parameter / Dimension         | Default Quota    | Maximum Supported                                |
+| :---------------------------- | :--------------- | :----------------------------------------------- |
+| **Max Compute Shape**         | Standard_D4ds_v5 | Up to 64 vCPUs / 512 GiB RAM (Memory Optimized)  |
+| **Max Storage Capacity**      | 128 GiB default  | Elastic scaling up to 32 TiB (32,768 GiB)        |
+| **Storage IOPS**              | Tier-based       | Up to 80,000 IOPS (32 TiB Premium SSD)           |
+| **Backup Retention**          | 7 days default   | 1 to 35 days (PITR down to the second)           |
+| **Read Replicas**             | 0 replicas       | Up to 8 read replicas per primary server         |
+| **Max Direct Connections**    | Scaled by vCPU   | E.g., 4 vCPU = 200 conns; 64 vCPU = 5,000 conns  |
+| **Max PgBouncer Connections** | 5,000 pooled     | Supports up to 10,000 concurrent client sessions |
 
 ---
 
@@ -210,6 +211,7 @@ az postgres flexible-server replica create \
 ## 6. Realistic Pricing Scenarios
 
 Pricing is based on:
+
 1. **Compute vCore + Memory:** Standard D-series or Memory Optimized E-series billed per hour. Zone-redundant HA doubles compute cost (primary + standby VM).
 2. **Storage:** $0.115 per GB-month (Premium SSD).
 3. **Backup Storage:** First 100% of provisioned storage is free; extra incremental backup storage billed at $0.095/GB-month.

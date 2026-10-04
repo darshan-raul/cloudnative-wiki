@@ -12,7 +12,7 @@ tags:
 
 # GKE Security & Hardening — Workload Identity & Binary Authorization 🛡️☸️
 
-Securing Google Kubernetes Engine (GKE) requires defense-in-depth across the entire stack: from the Linux host kernel and container supply chain up to the Kubernetes API and cloud IAM control plane. 
+Securing Google Kubernetes Engine (GKE) requires defense-in-depth across the entire stack: from the Linux host kernel and container supply chain up to the Kubernetes API and cloud IAM control plane.
 
 Google Cloud provides three flagship security capabilities built directly into the GKE control plane: **GKE Workload Identity** (eliminating static service account keys), **Binary Authorization** (cryptographically enforcing that only signed, verified container images can deploy), and **Shielded GKE Nodes** (hardware-rooted hypervisor integrity).
 
@@ -60,32 +60,35 @@ Google Cloud provides three flagship security capabilities built directly into t
 
 ### 1. Workload Identity Hardening
 
-* **The Node Service Account Vulnerability:** By default, if Workload Identity is disabled, all pods on a GKE node inherit the broad Google Service Account attached to the underlying VM (historically the default Compute Engine SA with primitive `Editor` permissions!). A compromised pod can curl the metadata server and steal project-wide credentials.
-* **Workload Identity Protection:**
-  * Maps a Kubernetes ServiceAccount (`KSA`) in a specific namespace to a Google Cloud ServiceAccount (`GSA`).
-  * The **GKE Metadata Server** intercepts pod requests to `http://metadata.google.internal/` and validates the calling Pod's projected identity token before issuing a short-lived GCP OAuth2 access token.
-  * Completely strips the underlying VM's credentials from the Pod network namespace.
+- **The Node Service Account Vulnerability:** By default, if Workload Identity is disabled, all pods on a GKE node inherit the broad Google Service Account attached to the underlying VM (historically the default Compute Engine SA with primitive `Editor` permissions!). A compromised pod can curl the metadata server and steal project-wide credentials.
+- **Workload Identity Protection:**
+  - Maps a Kubernetes ServiceAccount (`KSA`) in a specific namespace to a Google Cloud ServiceAccount (`GSA`).
+  - The **GKE Metadata Server** intercepts pod requests to `http://metadata.google.internal/` and validates the calling Pod's projected identity token before issuing a short-lived GCP OAuth2 access token.
+  - Completely strips the underlying VM's credentials from the Pod network namespace.
 
 ### 2. Binary Authorization (Deploy-Time Supply Chain Enforcement)
 
 Binary Authorization is a deploy-time security control that ensures only trusted container images are launched in your GKE cluster:
-* **Attestor:** An identity (backed by a Cloud KMS asymmetric signing key) that certifies an image has passed required checks (e.g. security scanning, QA testing).
-* **Policy:** A rule configured at the project level specifying which attestors are mandatory.
-* **Admission Controller:** When `kubectl apply` or Helm submits a pod spec to the cluster, the Binary Authorization admission controller checks the image against the policy. Unsigned images are blocked before they ever pull to a node.
-* **Breakglass Mode:** In a high-priority production incident, operators can bypass the policy by annotating the pod with `image-policy.k8s.io/break-glass: "true"`. All breakglass actions trigger an immediate high-severity Cloud Audit Log event.
+
+- **Attestor:** An identity (backed by a Cloud KMS asymmetric signing key) that certifies an image has passed required checks (e.g. security scanning, QA testing).
+- **Policy:** A rule configured at the project level specifying which attestors are mandatory.
+- **Admission Controller:** When `kubectl apply` or Helm submits a pod spec to the cluster, the Binary Authorization admission controller checks the image against the policy. Unsigned images are blocked before they ever pull to a node.
+- **Breakglass Mode:** In a high-priority production incident, operators can bypass the policy by annotating the pod with `image-policy.k8s.io/break-glass: "true"`. All breakglass actions trigger an immediate high-severity Cloud Audit Log event.
 
 ### 3. Shielded GKE Nodes
 
 Shielded GKE nodes protect the host operating system against rootkits and boot-level malware:
-* **Secure Boot:** Verifies the cryptographic signature of every bootloader component, kernel, and driver against trusted certificates.
-* **Virtual Trusted Platform Module (vTPM):** Provides hardware-level measured boot by measuring kernel state during startup.
-* **Integrity Monitoring:** Continuously compares current host measurements against baseline measurements, alerting Security Command Center if integrity is breached.
+
+- **Secure Boot:** Verifies the cryptographic signature of every bootloader component, kernel, and driver against trusted certificates.
+- **Virtual Trusted Platform Module (vTPM):** Provides hardware-level measured boot by measuring kernel state during startup.
+- **Integrity Monitoring:** Continuously compares current host measurements against baseline measurements, alerting Security Command Center if integrity is breached.
 
 ### 4. Master Authorized Networks
 
 Restricts access to the GKE control plane API server (`kube-apiserver`):
-* Even if a cluster is public or uses a public master endpoint, Master Authorized Networks enforces firewall-level IP allowlisting.
-* Blocks unauthorized internet port scanners from reaching port 443 on the Kubernetes API server.
+
+- Even if a cluster is public or uses a public master endpoint, Master Authorized Networks enforces firewall-level IP allowlisting.
+- Blocks unauthorized internet port scanners from reaching port 443 on the Kubernetes API server.
 
 ---
 
@@ -188,39 +191,41 @@ spec:
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Attestors per project** | 100 attestors | Multiple signing stages in CI/CD |
-| **Master Authorized Networks CIDRs** | Up to 50 CIDR blocks | Include corporate VPN & CI/CD runners |
-| **Workload Identity token lifetime** | 1 hour | Automatically renewed by Google SDKs |
-| **Shielded Node reboot verification** | Continuous | Monitored by Cloud Logging |
+| Parameter                             | Limit                | Production Notes                      |
+| :------------------------------------ | :------------------- | :------------------------------------ |
+| **Attestors per project**             | 100 attestors        | Multiple signing stages in CI/CD      |
+| **Master Authorized Networks CIDRs**  | Up to 50 CIDR blocks | Include corporate VPN & CI/CD runners |
+| **Workload Identity token lifetime**  | 1 hour               | Automatically renewed by Google SDKs  |
+| **Shielded Node reboot verification** | Continuous           | Monitored by Cloud Logging            |
 
 ---
 
 ## References
 
-* **GKE Security Overview:** https://cloud.google.com/kubernetes-engine/docs/concepts/security-overview
-* **GKE Hardening Guide:** https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster-infrastructure
-* **Binary Authorization Documentation:** https://cloud.google.com/binary-authorization/docs
-* **Pricing:** https://cloud.google.com/binary-authorization/pricing (Binary Authorization is billed at ~$0.026 per million evaluations; GKE Workload Identity is free)
+- **GKE Security Overview:** https://cloud.google.com/kubernetes-engine/docs/concepts/security-overview
+- **GKE Hardening Guide:** https://cloud.google.com/kubernetes-engine/docs/how-to/hardening-your-cluster-infrastructure
+- **Binary Authorization Documentation:** https://cloud.google.com/binary-authorization/docs
+- **Pricing:** https://cloud.google.com/binary-authorization/pricing (Binary Authorization is billed at ~$0.026 per million evaluations; GKE Workload Identity is free)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Enterprise GKE Hardening Suite
-* 5 Production GKE clusters running 200 nodes and 2,500 pods in `us-central1`.
-* Workload Identity: **$0.00** (Free).
-* Shielded GKE Nodes (Secure Boot & vTPM): **$0.00** (Free).
-* Master Authorized Networks: **$0.00** (Free).
-* Cloud KMS Key for signing container images: 1 Asymmetric Key = **$0.06 / month**.
-* Binary Authorization Evaluation: 10,000 deployments / month = **negligible (< $0.01)**.
-* **Total Monthly Security Hardening Cost:** **~$0.06 / month**.
+
+- 5 Production GKE clusters running 200 nodes and 2,500 pods in `us-central1`.
+- Workload Identity: **$0.00** (Free).
+- Shielded GKE Nodes (Secure Boot & vTPM): **$0.00** (Free).
+- Master Authorized Networks: **$0.00** (Free).
+- Cloud KMS Key for signing container images: 1 Asymmetric Key = **$0.06 / month**.
+- Binary Authorization Evaluation: 10,000 deployments / month = **negligible (< $0.01)**.
+- **Total Monthly Security Hardening Cost:** **~$0.06 / month**.
 
 ### Scenario 2: Container Vulnerability Scanning via Artifact Analysis
-* 50 active container repositories building 500 images per month.
-* Automatic vulnerability scanning on push: ~$0.26 per scanned image.
-* Monthly cost: 500 × $0.26 = **$130.00 / month** (Feeds CVE findings directly into Binary Authorization).
+
+- 50 active container repositories building 500 images per month.
+- Automatic vulnerability scanning on push: ~$0.26 per scanned image.
+- Monthly cost: 500 × $0.26 = **$130.00 / month** (Feeds CVE findings directly into Binary Authorization).
 
 ---
 

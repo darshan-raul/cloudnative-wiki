@@ -17,6 +17,7 @@ Pay per second (Linux, billed per second after first minute) or per hour (Window
 **When to use:** Short-lived workloads, unpredictable traffic, spiky demand, proof-of-concept, disaster recovery, anything you can't forecast.
 
 **Hidden costs to watch:**
+
 - Windows and RHEL are billed per hour, not per second
 - Data transfer OUT is priced separately (often the biggest surprise)
 - NAT Gateway charges per hour + per GB processed
@@ -27,11 +28,11 @@ Pay per second (Linux, billed per second after first minute) or per hour (Window
 
 Commit to a usage term (1 or 3 years) in exchange for a significant discount vs On-Demand. Billed as one of three payment options:
 
-| Payment Option | Upfront | Discount vs On-Demand |
-|----------------|---------|----------------------|
-| No Upfront     | None    | ~40-60%              |
-| Partial Upfront| 50%    | ~60-70%              |
-| All Upfront    | 100%   | up to 72%            |
+| Payment Option  | Upfront | Discount vs On-Demand |
+| --------------- | ------- | --------------------- |
+| No Upfront      | None    | ~40-60%               |
+| Partial Upfront | 50%     | ~60-70%               |
+| All Upfront     | 100%    | up to 72%             |
 
 **Instance Size Flexibility (EC2 RI):** A single az-style Standard RI automatically applies to any instance of the same family within the purchased AZ. Size flexibility does NOT apply across AZs or across instance families.
 
@@ -56,6 +57,7 @@ AWS's evolution from RI. Two main types:
 AWS offers unused capacity at up to 90% off On-Demand pricing. The catch: AWS can reclaim the instance with a 2-minute warning when they need the capacity back.
 
 **Interruption handling:**
+
 - `hibernate` — hibernate the instance (must have supported OS, hibernation enabled in AMI)
 - `stop` — stop the instance, resume later (persistent capacity in capacity-optimized pools)
 - `terminate` — shut down (default, no recovery)

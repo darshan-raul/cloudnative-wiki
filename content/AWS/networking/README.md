@@ -12,19 +12,19 @@ AWS networking is split into two layers: the foundational IP networking inside y
 
 ## Service Map
 
-| Service | What It Does | When to Use |
-|---------|-------------|-------------|
-| [[vpc/README|VPC]] | Isolated virtual network with subnets, route tables, gateways | Every AWS workload — foundational |
-| [[vpc/security-groups|Security Groups]] | Stateful instance-level firewall | Per-instance/per-ENI inbound/outbound rules |
-| [[vpc/network-acls|Network ACLs]] | Stateless subnet-level firewall |Subnet-level deny rules, explicit allow/deny |
-| [[vpc/vpc-peering|VPC Peering]] | Private connection between two VPCs | Two VPCs needing direct private communication |
-| [[vpc/transit-gateway|Transit Gateway]] | Hub-and-spoke router for 100s of VPCs | Multi-VPC architectures, cross-account routing |
-| [[load-balancing/README|ELB]] | Distributes traffic across targets | Always — for any service with more than one target |
-| [[dns/README|Route 53]] | Managed DNS and domain registration | Every production workload — DNS + health checks |
-| [[cdn/README|CloudFront]] | Global CDN with edge caching | Static assets, API acceleration, geo-restriction |
-| [[hybrid/README|Direct Connect]] | Dedicated private connection from on-prem | Hybrid workloads, consistent high-bandwidth needs |
-| [[hybrid/README|VPN]] | Encrypted tunnel over internet | Quick hybrid setup, low-volume traffic |
-| [[networking-security/README|API Gateway]] | Managed API proxy with auth and throttling | HTTP/REST APIs, microservices communication |
+| Service                      | What It Does      | When to Use                                                   |
+| ---------------------------- | ----------------- | ------------------------------------------------------------- | -------------------------------------------------- |
+| [[vpc/README                 | VPC]]             | Isolated virtual network with subnets, route tables, gateways | Every AWS workload — foundational                  |
+| [[vpc/security-groups        | Security Groups]] | Stateful instance-level firewall                              | Per-instance/per-ENI inbound/outbound rules        |
+| [[vpc/network-acls           | Network ACLs]]    | Stateless subnet-level firewall                               | Subnet-level deny rules, explicit allow/deny       |
+| [[vpc/vpc-peering            | VPC Peering]]     | Private connection between two VPCs                           | Two VPCs needing direct private communication      |
+| [[vpc/transit-gateway        | Transit Gateway]] | Hub-and-spoke router for 100s of VPCs                         | Multi-VPC architectures, cross-account routing     |
+| [[load-balancing/README      | ELB]]             | Distributes traffic across targets                            | Always — for any service with more than one target |
+| [[dns/README                 | Route 53]]        | Managed DNS and domain registration                           | Every production workload — DNS + health checks    |
+| [[cdn/README                 | CloudFront]]      | Global CDN with edge caching                                  | Static assets, API acceleration, geo-restriction   |
+| [[hybrid/README              | Direct Connect]]  | Dedicated private connection from on-prem                     | Hybrid workloads, consistent high-bandwidth needs  |
+| [[hybrid/README              | VPN]]             | Encrypted tunnel over internet                                | Quick hybrid setup, low-volume traffic             |
+| [[networking-security/README | API Gateway]]     | Managed API proxy with auth and throttling                    | HTTP/REST APIs, microservices communication        |
 
 ## How Services Relate
 
@@ -55,6 +55,7 @@ VPC (10.0.0.0/16)
 ## Common Architecture Patterns
 
 ### Internet-Facing Web Service
+
 ```
 Users → CloudFront → ALB (public subnet) → EC2/ECS (private subnets)
                         ↓
@@ -62,6 +63,7 @@ Users → CloudFront → ALB (public subnet) → EC2/ECS (private subnets)
 ```
 
 ### Hybrid with Private API
+
 ```
 On-premises → Direct Connect → VPC Private subnet → API Gateway → Lambda/EC2
                                        ↓
@@ -69,6 +71,7 @@ On-premises → Direct Connect → VPC Private subnet → API Gateway → Lambda
 ```
 
 ### Multi-Account VPC
+
 ```
 Transit Gateway (Account A)
  ├── VPC-Prod (Account B)
@@ -79,27 +82,33 @@ Transit Gateway (Account A)
 ## AWS Services Organized by Category
 
 **Core Networking**
+
 - [[vpc/README|VPC]] — Isolated network, subnets, route tables, IGW, NAT GW
 - [[vpc/vpc-peering|VPC Peering]] — Two-VPC private connectivity
 - [[vpc/transit-gateway|Transit Gateway]] — Multi-VPC hub router
 - [[vpc/vpn|VPN]] — Site-to-Site VPN over internet
 
 **Load Balancing**
+
 - [[load-balancing/README|ALB]] — Layer 7 HTTP/S load balancer with rule-based routing
 - [[load-balancing/README|NLB]] — Layer 4 TCP/UDP load balancer for high-throughput
 - [[load-balancing/README|CLB]] — Legacy layer 4/7 load balancer (avoid for new deployments)
 
 **DNS**
+
 - [[dns/README|Route 53]] — Managed DNS, domain registration, health checks, routing policies
 
 **CDN & Edge**
+
 - [[cdn/README|CloudFront]] — Global CDN, SSL termination, edge functions
 
 **Hybrid Connectivity**
+
 - [[hybrid/README|Direct Connect]] — Dedicated 1Gbps/100Gbps private connection
 - [[hybrid/README|VPN]] — Encrypted IPsec tunnel over internet
 
 **Security & Filtering**
+
 - [[networking-security/README|WAF]] — Web application firewall, rule-based filtering
 - [[networking-security/README|Shield]] — DDoS protection (Standard vs Advanced)
 - [[networking-security/README|Network Firewall]] — Managed VPC intrusion detection/prevention

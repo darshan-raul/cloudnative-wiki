@@ -17,6 +17,4 @@ You can apply semi-supervised learning when it’s difficult to obtain labels fo
 | Goal        | Predict an output based on known inputs.                                                            | Identify valuable relationship information between input data points. This can then be applied to new input to draw similar insights. |
 | Approach    | Minimize the error between predicted outputs and true labels.                                       | Find patterns, similarities, or anomalies within the data.                                                                            |
 
-
-
 "https://aws.amazon.com/compare/the-difference-between-machine-learning-supervised-and-unsupervised/"

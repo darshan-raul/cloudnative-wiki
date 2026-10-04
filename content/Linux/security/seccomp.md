@@ -16,9 +16,11 @@ seccomp (secure computing) is a Linux kernel feature that lets you **filter sysc
 seccomp has three modes:
 
 ### seccomp mode 0 — Disabled
+
 No filtering. Default for most processes.
 
 ### seccomp mode 1 (SECCOMP_MODE_STRICT)
+
 Only allows `read()`, `write()`, `_exit()`, and `sigreturn()`. Anything else → `SIGKILL`.
 
 ```c
@@ -30,6 +32,7 @@ prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT);
 Used by Chrome's sandbox before BPF. No practical admin use today.
 
 ### seccomp mode 2 (SECCOMP_MODE_FILTER)
+
 Allows **any BPF program** to decide whether to allow or block syscalls. This is what containers use.
 
 ```c
@@ -64,15 +67,15 @@ BPF_JMP(opcode, from, true, false) // jump (conditional)
 
 ### Return Values (Actions)
 
-| Return            | Effect                                       |
-|------------------|---------------------------------------------|
-| `SECCOMP_RET_ALLOW` | Syscall proceeds normally                  |
-| `SECCOMP_RET_KILL`  | Process killed immediately (no signal)     |
-| `SECCOMP_RET_KILL_THREAD` | Kill the thread (not whole process) |
-| `SECCOMP_RET_TRAP`   | Send SIGSYS to process                     |
-| `SECCOMP_RET_ERRNO`  | Return this errno to userspace              |
-| `SECCOMP_RET_TRACE`  | Trigger ptrace event (for debugger)        |
-| `SECCOMP_RET_LOG`    | Allow but log to audit log                  |
+| Return                    | Effect                                 |
+| ------------------------- | -------------------------------------- |
+| `SECCOMP_RET_ALLOW`       | Syscall proceeds normally              |
+| `SECCOMP_RET_KILL`        | Process killed immediately (no signal) |
+| `SECCOMP_RET_KILL_THREAD` | Kill the thread (not whole process)    |
+| `SECCOMP_RET_TRAP`        | Send SIGSYS to process                 |
+| `SECCOMP_RET_ERRNO`       | Return this errno to userspace         |
+| `SECCOMP_RET_TRACE`       | Trigger ptrace event (for debugger)    |
+| `SECCOMP_RET_LOG`         | Allow but log to audit log             |
 
 ### Reading Syscall Arguments
 
@@ -83,6 +86,7 @@ BPF_STMT(BPF_RET, SECCOMP_RET_KILL),                                   // kill i
 ```
 
 The BPF program receives a `struct seccomp_data`:
+
 ```c
 struct seccomp_data {
     int nr;                      // syscall number
@@ -150,6 +154,7 @@ setpriv --no-new-privs nginx
 ```
 
 When `no_new_privileges` is set:
+
 - `execve()` of setuid binaries won't change UID/GID
 - `file capabilities` won't grant additional capabilities
 - `SECBIT_NO_NEW_PRIVS` propagates to child processes
@@ -162,7 +167,7 @@ In Kubernetes, you set it via `securityContext.noNewPrivileges: true`.
 securityContext:
   seccompProfile:
     type: Localhost
-    localhostProfile: profiles/audit.json   # logs instead of blocks
+    localhostProfile: profiles/audit.json # logs instead of blocks
 ---
 # The actual profile lives on the node at:
 # /var/lib/kubelet/seccomp/profiles/audit.json

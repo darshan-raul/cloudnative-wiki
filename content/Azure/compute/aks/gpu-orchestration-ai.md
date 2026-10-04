@@ -46,13 +46,13 @@ Azure Kubernetes Service is the flagship infrastructure foundation powering Open
 
 ## 2. Azure GPU Machine Series Taxonomy
 
-| VM Family | GPU Accelerator | VRAM / GPU | Interconnect | Cross-Node Fabric | Primary AI Workload |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **NCas_T4_v3** | 1–4x NVIDIA T4 | 16 GB GDDR6 | PCIe Gen3 | Standard Ethernet | Classical Vision & Embedding Inference |
-| **NC_A100_v4** | 1–2x NVIDIA A100 | 40 GB or 80 GB | PCIe Gen4 | Standard Ethernet | Mid-Scale Fine-Tuning & Serving |
-| **NDv4_A100** | 8x NVIDIA A100 SXM4| 80 GB HBM2e | NVLink 3 (600 GB/s) | 8x 200 Gbps HDR InfiniBand | Distributed Pre-Training (Megatron) |
-| **NDv5_H100** | 8x NVIDIA H100 SXM5| 80 GB HBM3 | NVLink 4 (900 GB/s) | **8x 400 Gbps NDR InfiniBand** | **Frontier LLM Training (GPT-4 class)**|
-| **NDv5_H200** | 8x NVIDIA H200 SXM5| **141 GB HBM3e** | NVLink 4 (900 GB/s) | **8x 400 Gbps NDR InfiniBand** | **Ultra-Long-Context Frontier LLMs** |
+| VM Family      | GPU Accelerator     | VRAM / GPU       | Interconnect        | Cross-Node Fabric              | Primary AI Workload                     |
+| :------------- | :------------------ | :--------------- | :------------------ | :----------------------------- | :-------------------------------------- |
+| **NCas_T4_v3** | 1–4x NVIDIA T4      | 16 GB GDDR6      | PCIe Gen3           | Standard Ethernet              | Classical Vision & Embedding Inference  |
+| **NC_A100_v4** | 1–2x NVIDIA A100    | 40 GB or 80 GB   | PCIe Gen4           | Standard Ethernet              | Mid-Scale Fine-Tuning & Serving         |
+| **NDv4_A100**  | 8x NVIDIA A100 SXM4 | 80 GB HBM2e      | NVLink 3 (600 GB/s) | 8x 200 Gbps HDR InfiniBand     | Distributed Pre-Training (Megatron)     |
+| **NDv5_H100**  | 8x NVIDIA H100 SXM5 | 80 GB HBM3       | NVLink 4 (900 GB/s) | **8x 400 Gbps NDR InfiniBand** | **Frontier LLM Training (GPT-4 class)** |
+| **NDv5_H200**  | 8x NVIDIA H200 SXM5 | **141 GB HBM3e** | NVLink 4 (900 GB/s) | **8x 400 Gbps NDR InfiniBand** | **Ultra-Long-Context Frontier LLMs**    |
 
 ---
 
@@ -120,43 +120,43 @@ spec:
         app: vllm-mistral
     spec:
       tolerations:
-      - key: "sku"
-        operator: "Equal"
-        value: "gpu"
-        effect: "NoSchedule"
+        - key: "sku"
+          operator: "Equal"
+          value: "gpu"
+          effect: "NoSchedule"
       nodeSelector:
         accelerator: nvidia-a100
       containers:
-      - name: vllm-engine
-        image: vllm/vllm-openai:v0.4.0
-        args:
-        - "--model"
-        - "mistralai/Mistral-7B-Instruct-v0.2"
-        - "--tensor-parallel-size"
-        - "1"
-        - "--gpu-memory-utilization"
-        - "0.90"
-        - "--max-model-len"
-        - "8192"
-        resources:
-          limits:
-            nvidia.com/gpu: "1"
-            memory: "32Gi"
-            cpu: "8"
-          requests:
-            nvidia.com/gpu: "1"
-            memory: "16Gi"
-            cpu: "4"
-        ports:
-        - containerPort: 8000
-          name: http
-        volumeMounts:
-        - name: model-cache
-          mountPath: /root/.cache/huggingface
+        - name: vllm-engine
+          image: vllm/vllm-openai:v0.4.0
+          args:
+            - "--model"
+            - "mistralai/Mistral-7B-Instruct-v0.2"
+            - "--tensor-parallel-size"
+            - "1"
+            - "--gpu-memory-utilization"
+            - "0.90"
+            - "--max-model-len"
+            - "8192"
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+              memory: "32Gi"
+              cpu: "8"
+            requests:
+              nvidia.com/gpu: "1"
+              memory: "16Gi"
+              cpu: "4"
+          ports:
+            - containerPort: 8000
+              name: http
+          volumeMounts:
+            - name: model-cache
+              mountPath: /root/.cache/huggingface
       volumes:
-      - name: model-cache
-        emptyDir:
-          medium: Memory
+        - name: model-cache
+          emptyDir:
+            medium: Memory
 ```
 
 Apply deployment:
@@ -169,13 +169,13 @@ kubectl apply -f vllm-mistral-deployment.yaml
 
 ## 5. Quotas, Performance & Configuration Limits
 
-| Dimension | Limit / Metric | Production Constraint |
-| :--- | :--- | :--- |
-| **InfiniBand Network Bandwidth**| **3.2 Tbps (NDv5)** | 8x 400 Gbps ConnectX-7 adapters operating concurrently |
-| **Max GPUs per Node** | **8x H100 / H200** | Full NVLink 4 mesh with 900 GB/s bidirectional throughput |
-| **Regional GPU Quota** | Subscription Bound | Request N-series vCPU quota increases via Azure Support |
-| **InfiniBand Driver (OFED)** | Mandatory MLNX_OFED | Automatically configured on Ubuntu HPC node images |
-| **Multi-Instance GPU (MIG)** | Up to 7 instances per A100 | Slices 80 GB A100 into 7x 10 GB independent vGPUs |
+| Dimension                        | Limit / Metric             | Production Constraint                                     |
+| :------------------------------- | :------------------------- | :-------------------------------------------------------- |
+| **InfiniBand Network Bandwidth** | **3.2 Tbps (NDv5)**        | 8x 400 Gbps ConnectX-7 adapters operating concurrently    |
+| **Max GPUs per Node**            | **8x H100 / H200**         | Full NVLink 4 mesh with 900 GB/s bidirectional throughput |
+| **Regional GPU Quota**           | Subscription Bound         | Request N-series vCPU quota increases via Azure Support   |
+| **InfiniBand Driver (OFED)**     | Mandatory MLNX_OFED        | Automatically configured on Ubuntu HPC node images        |
+| **Multi-Instance GPU (MIG)**     | Up to 7 instances per A100 | Slices 80 GB A100 into 7x 10 GB independent vGPUs         |
 
 ---
 
@@ -200,7 +200,7 @@ kubectl apply -f vllm-mistral-deployment.yaml
   - Ephemeral OS Disks: **$0.00**
   - Control Plane Fee: **$73.00**
   - Azure Key Vault & Container Registry: ~$25.00
-- **Total Monthly Spend:** **$5,456.20 / month** *(Eligible for 1-yr Savings Plan discount to ~$3,800/mo).*
+- **Total Monthly Spend:** **$5,456.20 / month** _(Eligible for 1-yr Savings Plan discount to ~$3,800/mo)._
 
 ### Scenario B: Multi-Node Frontier Fine-Tuning Run (Spot NDv5 H100 Cluster)
 

@@ -15,6 +15,7 @@ AWS Organizations is primarily an account governance tool, but it has significan
 When you enable consolidated billing in an Organization, all member accounts send their bills to the payer account. The payer account sees a single monthly bill, and member accounts see their own spend transparently.
 
 **Benefits:**
+
 1. **Single invoice** — one bill to pay, one payment method
 2. **Volume discounts** — certain tier discounts apply across the organization based on total spend
 3. **RI/SP sharing** — Reserved Instances and Savings Plans purchased in the payer account can be shared with member accounts
@@ -26,18 +27,19 @@ When you enable consolidated billing in an Organization, all member accounts sen
 
 AWS has volume-based pricing tiers. With consolidated billing, the organization's total spend counts toward the tier:
 
-| Spend Level | Additional Discount |
-|------------|-------------------|
-| $0-$150K/month | 0% (baseline) |
-| $150K-$500K | 3% off select services |
-| $500K-$1M | 7% off select services |
-| $1M+ | 10% off select services |
+| Spend Level    | Additional Discount     |
+| -------------- | ----------------------- |
+| $0-$150K/month | 0% (baseline)           |
+| $150K-$500K    | 3% off select services  |
+| $500K-$1M      | 7% off select services  |
+| $1M+           | 10% off select services |
 
 These discounts apply to select services (EC2, S3, etc.) and are applied to the payer account's bill. The discount tiers are not published for all services — talk to your AWS TAM for specific discount schedules.
 
 ## RI/SP Sharing Across Accounts
 
 When you buy RIs or Savings Plans in the payer account with the "Share RI/SP" option enabled:
+
 - RIs/SPs are shared with all member accounts in the Organization
 - Each account can use the shared RI/SP capacity
 - Usage is tracked per account via the RI/SP utilization report
@@ -104,17 +106,14 @@ Service Control Policies (SCPs) can enforce cost-related governance at the Organ
 AWS Organizations Tag Policies let you enforce consistent tagging across all accounts. A tag policy applied to an OU requires all resources in that OU to have specific tags with specific allowed values.
 
 **Example tag policy:**
+
 ```json
 {
   "tags": {
     "Environment": {
       "tag_key": {
         "是否符合": "enforce",
-        "values": [
-          "prod",
-          "staging",
-          "dev"
-        ]
+        "values": ["prod", "staging", "dev"]
       }
     },
     "Team": {
@@ -131,6 +130,7 @@ This ensures all resources in the Organization have `Environment` set to one of 
 ## Multi-Payer Billing
 
 For large enterprises, Organizations supports multiple payer accounts — each paying for different parts of the organization. This is useful when:
+
 - Different business units have separate budgets
 - Regulatory requirements mandate separate billing
 - Different entities within a conglomerate have independent finance relationships

@@ -48,7 +48,7 @@ msg = SystemMessage(content="You are a helpful assistant that always "
 What the model actually sees (after LangChain serializes it):
 
 ```json
-{"role": "system", "content": "You are a helpful assistant..."}
+{ "role": "system", "content": "You are a helpful assistant..." }
 ```
 
 The system message goes first and stays for the entire conversation.

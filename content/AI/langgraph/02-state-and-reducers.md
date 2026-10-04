@@ -96,6 +96,7 @@ class AgentState(TypedDict):
 ```
 
 Common uses:
+
 - **Counter:** `lambda left, right: left + right`
 - **Config merge:** `lambda left, right: {**left, **right}` (deep merge)
 - **Deduplication:** custom logic for a set or dict

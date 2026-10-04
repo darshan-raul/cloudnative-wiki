@@ -32,9 +32,9 @@ Span: handleOrders
 
 ## Two Flavors of OTel Logs
 
-| What | Description |
-|------|-------------|
-| **Span Events** | A log entry **inside a span** — has `span_id` auto-attached. Good for in-process timing breadcrumbs. |
+| What                       | Description                                                                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Span Events**            | A log entry **inside a span** — has `span_id` auto-attached. Good for in-process timing breadcrumbs.                          |
 | **Standalone Log Records** | A full log entry **outside any span** — has `trace_id` if called within a traced context. Correlates to traces cross-service. |
 
 Span events are the simplest starting point. Standalone logs with correlation are what you want for production.
@@ -66,15 +66,15 @@ logger = logger_provider.get_logger("invoice-service")
 
 **What it is:** A single log entry. Fields:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `timestamp` | time.Time | When the event occurred |
-| `severity` | SeverityNumber | `Trace=5`, `Debug=10`, `Info=20`, `Warn=30`, `Error=40` |
-| `body` | string | The log message |
-| `attributes` | map[string]value | Structured key-value pairs |
-| `trace_id` | uint64 | Trace ID (if called within a traced context) |
-| `span_id` | uint64 | Span ID (if called within a span) |
-| `resource` | Resource | Service metadata (service.name, etc.) |
+| Field        | Type             | Description                                             |
+| ------------ | ---------------- | ------------------------------------------------------- |
+| `timestamp`  | time.Time        | When the event occurred                                 |
+| `severity`   | SeverityNumber   | `Trace=5`, `Debug=10`, `Info=20`, `Warn=30`, `Error=40` |
+| `body`       | string           | The log message                                         |
+| `attributes` | map[string]value | Structured key-value pairs                              |
+| `trace_id`   | uint64           | Trace ID (if called within a traced context)            |
+| `span_id`    | uint64           | Span ID (if called within a span)                       |
+| `resource`   | Resource         | Service metadata (service.name, etc.)                   |
 
 ### LogRecord vs Span Event
 
@@ -96,13 +96,13 @@ logger.Info("ORDER PLACED",
 
 OTel uses numeric severity levels (not strings):
 
-| Level | Number | Name | When to use |
-|-------|--------|------|-------------|
-| `TRACE` | 5 | Finiest granularity | Debug at function-entry level |
-| `DEBUG` | 10 | Debug info | Debugging verbose details |
-| `INFO` | 20 | Informational | Normal operational events |
-| `WARN` | 30 | Warning | Unexpected but handled situations |
-| `ERROR` | 40 | Error | Partial failure, caught exceptions |
+| Level   | Number | Name                | When to use                        |
+| ------- | ------ | ------------------- | ---------------------------------- |
+| `TRACE` | 5      | Finiest granularity | Debug at function-entry level      |
+| `DEBUG` | 10     | Debug info          | Debugging verbose details          |
+| `INFO`  | 20     | Informational       | Normal operational events          |
+| `WARN`  | 30     | Warning             | Unexpected but handled situations  |
+| `ERROR` | 40     | Error               | Partial failure, caught exceptions |
 
 `body` is the human-readable message. Attributes are structured data.
 
@@ -346,14 +346,14 @@ log.info("invoice generated", extra={"order_id": order_id, "amount": amount})
 
 ## Key Distinction: Span Events vs Standalone Logs
 
-| Aspect | Span Events | Standalone Logs |
-|--------|-----------|----------------|
-| Scope | Inside a single span | Any operation |
-| Export | As part of span export | Via log exporter pipeline |
-| Trace ID | Inherits from parent span | Inherits if within traced context |
-| Span ID | Auto-attached | Not set unless inside a span |
-| Appears in | Span timeline in SigNoz | Logs tab with trace correlation |
-| Use for | Breadcrumbs (step markers) | Business events, errors, lifecycle events |
+| Aspect      | Span Events                          | Standalone Logs                           |
+| ----------- | ------------------------------------ | ----------------------------------------- |
+| Scope       | Inside a single span                 | Any operation                             |
+| Export      | As part of span export               | Via log exporter pipeline                 |
+| Trace ID    | Inherits from parent span            | Inherits if within traced context         |
+| Span ID     | Auto-attached                        | Not set unless inside a span              |
+| Appears in  | Span timeline in SigNoz              | Logs tab with trace correlation           |
+| Use for     | Breadcrumbs (step markers)           | Business events, errors, lifecycle events |
 | Limitations | Cannot exist independently of a span | Need bridge/otel logger for OTel pipeline |
 
 ## Structured Logging
@@ -448,21 +448,22 @@ if err != nil {
         attribute.Int("status_code", 500),
         otellog.WithContext(ctx),
     )
+    }
 }
-}
+```
 
-// LogExporter
+## LogExporter
 
 The `LogExporter` serializes and sends completed log records to a backend.
 
 ### Go Exporters
 
-| Exporter | Package | Config |
-|----------|---------|--------|
+| Exporter        | Package                                                       | Config                             |
+| --------------- | ------------------------------------------------------------- | ---------------------------------- |
 | **OTLP** (gRPC) | `go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc` | `WithEndpoint()`, `WithInsecure()` |
 | **OTLP** (HTTP) | `go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp` | `WithEndpoint()`, `WithInsecure()` |
-| **Console** | `go.opentelemetry.io/otel/exporters/stdout/stdoutlog` | Dev/debug |
-| **Loki** | `go.opentelemetry.io/otel/exporters/otlp/otlplog` + Collector | via Collector `loki` exporter |
+| **Console**     | `go.opentelemetry.io/otel/exporters/stdout/stdoutlog`         | Dev/debug                          |
+| **Loki**        | `go.opentelemetry.io/otel/exporters/otlp/otlplog` + Collector | via Collector `loki` exporter      |
 
 ```go
 import (
@@ -482,10 +483,10 @@ exporter, _ := stdoutlog.New(stdoutlog.WithPrettyPrint())
 
 ### Python Exporters
 
-| Exporter | Package | Config |
-|----------|---------|--------|
-| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp` | `endpoint`, `insecure` |
-| **Console** | `opentelemetry-sdk` (built-in) | Dev only |
+| Exporter             | Package                        | Config                 |
+| -------------------- | ------------------------------ | ---------------------- |
+| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp`  | `endpoint`, `insecure` |
+| **Console**          | `opentelemetry-sdk` (built-in) | Dev only               |
 
 ```python
 from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
@@ -507,10 +508,10 @@ logger_provider.add_log_processor(BatchLogProcessor(exporter))
 
 Unlike traces which use `SpanProcessor`, logs use `LogProcessor`:
 
-| Processor | Behavior | Use |
-|-----------|----------|-----|
-| `SimpleLogProcessor` | Exports synchronously on `log.Record()` | Dev, tests |
-| `BatchLogProcessor` | Batches logs in queue, exports on schedule | **Production default** |
+| Processor            | Behavior                                   | Use                    |
+| -------------------- | ------------------------------------------ | ---------------------- |
+| `SimpleLogProcessor` | Exports synchronously on `log.Record()`    | Dev, tests             |
+| `BatchLogProcessor`  | Batches logs in queue, exports on schedule | **Production default** |
 
 ```go
 import "go.opentelemetry.io/otel/sdk/log"

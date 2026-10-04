@@ -1,6 +1,13 @@
+---
+title: "Secret Encryption"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Secret Encryption — Kubernetes reference and architecture guide."
+---
+
 # Secret Encryption
 
-*"https://kubernetes.io/docs/concepts/configuration/secret/"*
+_"https://kubernetes.io/docs/concepts/configuration/secret/"_
 
 Kubernetes Secrets are **base64-encoded plaintext** by default — encoded, not encrypted. Anyone with etcd access can read them as plaintext. **Secret encryption** is the practice of encrypting Secrets at rest, in transit, and in use, using layered defenses. This note covers the encryption-at-rest side (etcd encryption), but also walks through the broader "Secrets lifecycle" — when encryption matters, what to encrypt, and the operational patterns.
 
@@ -28,22 +35,22 @@ Kubernetes Secrets are **base64-encoded plaintext** by default — encoded, not 
 
 Secrets in k8s are the **highest-value target** in a cluster. They contain:
 
-* Database credentials.
-* API tokens.
-* TLS private keys.
-* OAuth client secrets.
-* Encryption keys.
-* Cloud provider credentials (via IRSA / Pod Identity).
+- Database credentials.
+- API tokens.
+- TLS private keys.
+- OAuth client secrets.
+- Encryption keys.
+- Cloud provider credentials (via IRSA / Pod Identity).
 
 A leaked secret is a **direct path to other systems**. A database password gives the attacker DB access. A cloud credential gives them the entire cloud account. A TLS private key lets them impersonate the service.
 
 The threat model:
 
-* **Compromised etcd** — the attacker can read all data. Encryption at rest mitigates.
-* **Compromised apiserver backup** — the backup contains all data. Encryption at rest mitigates.
-* **Compromised workload** — the workload has the secret in memory. Encryption at rest doesn't help; need runtime controls.
-* **Compromised RBAC** — a user with `get` on Secrets can read them. RBAC mitigation.
-* **Compromised Git repo** — if Secrets are in git, they're exposed. Need external secret store.
+- **Compromised etcd** — the attacker can read all data. Encryption at rest mitigates.
+- **Compromised apiserver backup** — the backup contains all data. Encryption at rest mitigates.
+- **Compromised workload** — the workload has the secret in memory. Encryption at rest doesn't help; need runtime controls.
+- **Compromised RBAC** — a user with `get` on Secrets can read them. RBAC mitigation.
+- **Compromised Git repo** — if Secrets are in git, they're exposed. Need external secret store.
 
 The defenses are **layered**: encryption at rest, RBAC, external secret managers, runtime controls (NetworkPolicy, etc.).
 
@@ -51,20 +58,20 @@ The defenses are **layered**: encryption at rest, RBAC, external secret managers
 
 A Secret's data is in one of three states:
 
-* **At rest** — stored in etcd (or in an external system).
-* **In transit** — moving between the apiserver and the client, or between the apiserver and etcd.
-* **In use** — in the memory of a workload.
+- **At rest** — stored in etcd (or in an external system).
+- **In transit** — moving between the apiserver and the client, or between the apiserver and etcd.
+- **In use** — in the memory of a workload.
 
 Each state needs its own defense:
 
-| State | Defense | Default in k8s |
-|---|---|---|
-| At rest (etcd) | etcd encryption, KMS | ❌ plaintext (base64) |
-| In transit (apiserver ↔ client) | TLS | ✅ TLS 1.2+ |
-| In transit (apiserver ↔ etcd) | TLS, mTLS | ✅ mTLS |
-| In transit (workload ↔ apiserver) | TLS | ✅ TLS |
-| In use (workload memory) | Runtime controls | ❌ no protection |
-| In transit (workload ↔ DB) | App-level mTLS | ❌ not by default |
+| State                             | Defense              | Default in k8s        |
+| --------------------------------- | -------------------- | --------------------- |
+| At rest (etcd)                    | etcd encryption, KMS | ❌ plaintext (base64) |
+| In transit (apiserver ↔ client)   | TLS                  | ✅ TLS 1.2+           |
+| In transit (apiserver ↔ etcd)     | TLS, mTLS            | ✅ mTLS               |
+| In transit (workload ↔ apiserver) | TLS                  | ✅ TLS                |
+| In use (workload memory)          | Runtime controls     | ❌ no protection      |
+| In transit (workload ↔ DB)        | App-level mTLS       | ❌ not by default     |
 
 The most important gap: **at rest** (by default, no encryption) and **in use** (no protection beyond the workload's own controls).
 
@@ -86,17 +93,17 @@ Anyone with `base64 --decode` can read a base64-encoded Secret. The encoding is 
 
 See [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] for the full deep-dive. The summary:
 
-* An `EncryptionConfiguration` file on the apiserver's node configures encryption.
-* Local providers (`aescbc`, `secretbox`) use keys in the file.
-* KMS providers (`kms`) call out to AWS KMS, GCP KMS, Azure Key Vault, etc.
-* Envelope encryption: per-Secret DEK encrypted with KMS KEK.
-* The apiserver handles encryption / decryption transparently.
-* etcd stores ciphertext; the apiserver decrypts for clients.
+- An `EncryptionConfiguration` file on the apiserver's node configures encryption.
+- Local providers (`aescbc`, `secretbox`) use keys in the file.
+- KMS providers (`kms`) call out to AWS KMS, GCP KMS, Azure Key Vault, etc.
+- Envelope encryption: per-Secret DEK encrypted with KMS KEK.
+- The apiserver handles encryption / decryption transparently.
+- etcd stores ciphertext; the apiserver decrypts for clients.
 
 The trade-off:
 
-* **Local providers** — simple, no external dependencies, but the key is in the file.
-* **KMS providers** — production-grade, key in the cloud KMS, but adds a network dependency.
+- **Local providers** — simple, no external dependencies, but the key is in the file.
+- **KMS providers** — production-grade, key in the cloud KMS, but adds a network dependency.
 
 For production: **use KMS**. The performance cost is small (with caching); the security gain is large (the key never leaves the cloud's HSM).
 
@@ -104,11 +111,11 @@ For production: **use KMS**. The performance cost is small (with caching); the s
 
 See [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] for the full deep-dive. The summary:
 
-* **apiserver ↔ client** — TLS by default (port 6443). mTLS optional.
-* **apiserver ↔ etcd** — mTLS by default.
-* **apiserver ↔ kubelet** — mTLS by default.
-* **Pod ↔ Pod** — plaintext by default. mTLS via service mesh.
-* **Pod ↔ apiserver** — TLS via the SA token.
+- **apiserver ↔ client** — TLS by default (port 6443). mTLS optional.
+- **apiserver ↔ etcd** — mTLS by default.
+- **apiserver ↔ kubelet** — mTLS by default.
+- **Pod ↔ Pod** — plaintext by default. mTLS via service mesh.
+- **Pod ↔ apiserver** — TLS via the SA token.
 
 **The control plane is mTLS.** **The data plane needs work** (NetworkPolicy + service mesh or app-level mTLS).
 
@@ -118,12 +125,12 @@ There's no k8s-level encryption for secrets in a workload's memory. The Secret i
 
 Mitigations:
 
-* **Don't put secrets in environment variables.** Env vars are visible in `/proc/<pid>/environ` and in `kubectl describe pod`. Use **files** (mounted as volumes).
-* **Use memory-only filesystems** (`tmpfs` for `/tmp`) to limit swap.
-* **Don't log secrets.** Configure the app to redact.
-* **Use runtime detection** (Falco, Tetragon) to alert on secret file reads.
-* **Use mTLS in the app** to limit network exposure of the secret (e.g. the DB password is in a TLS handshake, not a network packet).
-* **Use secret rotation** to limit the window of a leaked secret.
+- **Don't put secrets in environment variables.** Env vars are visible in `/proc/<pid>/environ` and in `kubectl describe pod`. Use **files** (mounted as volumes).
+- **Use memory-only filesystems** (`tmpfs` for `/tmp`) to limit swap.
+- **Don't log secrets.** Configure the app to redact.
+- **Use runtime detection** (Falco, Tetragon) to alert on secret file reads.
+- **Use mTLS in the app** to limit network exposure of the secret (e.g. the DB password is in a TLS handshake, not a network packet).
+- **Use secret rotation** to limit the window of a leaked secret.
 
 For most apps, the **memory protection is the OS's job** (process isolation). The k8s layer doesn't have visibility into process memory.
 
@@ -165,9 +172,9 @@ For env vars, the workload must be **restarted** to pick up the new value. Env v
 
 For a smooth rotation:
 
-* Use **files** (volume mount) for secrets that rotate.
-* Use **env vars** for secrets that don't rotate (e.g. cluster config).
-* The workload must **reload the file** when it changes (inotify or a refresh task).
+- Use **files** (volume mount) for secrets that rotate.
+- Use **env vars** for secrets that don't rotate (e.g. cluster config).
+- The workload must **reload the file** when it changes (inotify or a refresh task).
 
 ## 8. External Secret Managers
 
@@ -189,33 +196,33 @@ The "External Secrets" pattern:
 
 The sync can be:
 
-* **External Secrets Operator** (ESO) — a k8s controller that syncs from external stores.
-* **Vault Agent Injector** — Vault's sidecar that fetches and mounts.
-* **Secrets Store CSI Driver** — a CSI driver that mounts secrets as volumes (see below).
+- **External Secrets Operator** (ESO) — a k8s controller that syncs from external stores.
+- **Vault Agent Injector** — Vault's sidecar that fetches and mounts.
+- **Secrets Store CSI Driver** — a CSI driver that mounts secrets as volumes (see below).
 
 The external store is the **source of truth**. The k8s Secret is a **cache**.
 
 ### 8.1 Why external is better
 
-* **Centralized rotation** — the secret manager rotates, all k8s workloads pick it up.
-* **Audit trail** — the secret manager logs who accessed what.
-* **Granular access control** — the secret manager has its own RBAC.
-* **No plaintext in git** — secrets are not in the cluster's source of truth.
-* **Better key management** — the secret manager has HSM-backed keys, audit logs, etc.
+- **Centralized rotation** — the secret manager rotates, all k8s workloads pick it up.
+- **Audit trail** — the secret manager logs who accessed what.
+- **Granular access control** — the secret manager has its own RBAC.
+- **No plaintext in git** — secrets are not in the cluster's source of truth.
+- **Better key management** — the secret manager has HSM-backed keys, audit logs, etc.
 
 ### 8.2 The secret-zero problem
 
 The first secret you need: the credential to the secret manager itself. This is the **secret-zero problem**. Solutions:
 
-* **IAM roles for service accounts** (IRSA) on EKS — the pod's identity is in the IAM role, not in a Secret.
-* **Workload Identity** on GKE — similar.
-* **Pod Identity** on AKS — similar.
+- **IAM roles for service accounts** (IRSA) on EKS — the pod's identity is in the IAM role, not in a Secret.
+- **Workload Identity** on GKE — similar.
+- **Pod Identity** on AKS — similar.
 
 These give the pod a cloud identity that can access the secret manager. No Secret holds the credential.
 
 ## 9. The Secret Store CSI Driver
 
-*"https://secrets-store-csi-driver.sigs.k8s.io/"*
+_"https://secrets-store-csi-driver.sigs.k8s.io/"_
 
 The **Secret Store CSI Driver** is a CSI driver that mounts secrets from an external store as a volume. The pod's filesystem contains the secret; the secret is fetched on demand.
 
@@ -237,24 +244,24 @@ A pod mounts the CSI volume:
 
 ```yaml
 volumes:
-- name: secrets
-  csi:
-    driver: secrets-store.csi.k8s.io
-    readOnly: true
-    volumeAttributes:
-      secretProviderClass: vault-secrets
+  - name: secrets
+    csi:
+      driver: secrets-store.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: vault-secrets
 volumeMounts:
-- name: secrets
-  mountPath: /mnt/secrets
-  readOnly: true
+  - name: secrets
+    mountPath: /mnt/secrets
+    readOnly: true
 ```
 
 The pod's `/mnt/secrets/db-password` contains the secret. The pod can read it like a regular file.
 
 ### 9.1 The CSI driver modes
 
-* **CSI volume** — mounted as a tmpfs (in-memory) volume. The secret is in memory, not on disk.
-* **CSI inline** — the secret is also written to a k8s Secret (sync'd from the external store).
+- **CSI volume** — mounted as a tmpfs (in-memory) volume. The secret is in memory, not on disk.
+- **CSI inline** — the secret is also written to a k8s Secret (sync'd from the external store).
 
 The "CSI inline" mode is the bridge to existing patterns (where the app reads from a k8s Secret).
 
@@ -264,7 +271,7 @@ For GitOps workflows where Secrets are in git (encrypted), there are two main to
 
 ### 10.1 Sealed Secrets (Bitnami)
 
-*"https://github.com/bitnami-labs/sealed-secrets"*
+_"https://github.com/bitnami-labs/sealed-secrets"_
 
 A `SealedSecret` is a custom resource that contains an encrypted Secret. Only the **Sealed Secrets controller** in the cluster can decrypt it.
 
@@ -281,7 +288,7 @@ The `sealed-secret.yaml` is safe to commit. The controller decrypts and creates 
 
 ### 10.2 SOPS (Mozilla)
 
-*"https://github.com/getsops/sops"*
+_"https://github.com/getsops/sops"_
 
 SOPS encrypts specific fields in a YAML / JSON / ENV file. The encrypted file is committed to git; the decryption key is in the cloud (KMS) or locally.
 
@@ -304,8 +311,8 @@ The `ENC[...]` blocks are the encrypted fields. SOPS knows which fields to encry
 
 ### 10.3 Sealed Secrets vs SOPS
 
-* **Sealed Secrets** — k8s-specific, requires the controller in the cluster. The encryption key is in the controller.
-* **SOPS** — generic, works for any YAML / JSON / ENV. The encryption key is in KMS (or PGP, age, etc.).
+- **Sealed Secrets** — k8s-specific, requires the controller in the cluster. The encryption key is in the controller.
+- **SOPS** — generic, works for any YAML / JSON / ENV. The encryption key is in KMS (or PGP, age, etc.).
 
 For pure k8s GitOps: **Sealed Secrets**. For multi-system (k8s + Terraform + Ansible): **SOPS**.
 
@@ -318,10 +325,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata: { name: secret-reader, namespace: default }
 rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  resourceNames: ["my-secret"]   # only this Secret
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["my-secret"] # only this Secret
+    verbs: ["get"]
 ```
 
 With `resourceNames`, the Role is limited to a specific Secret. The bound subject can read only that one.
@@ -330,9 +337,9 @@ The standard anti-pattern: a ClusterRole with `resources: ["secrets"], verbs: ["
 
 For production:
 
-* Default: **no role grants access to Secrets** (the default ServiceAccount has no RoleBindings).
-* App: a Role that grants access to **specific Secrets** by name.
-* Admin: a ClusterRole for emergency access (e.g. cluster-admin).
+- Default: **no role grants access to Secrets** (the default ServiceAccount has no RoleBindings).
+- App: a Role that grants access to **specific Secrets** by name.
+- Admin: a ClusterRole for emergency access (e.g. cluster-admin).
 
 ## 12. Secret Rotation
 
@@ -345,22 +352,22 @@ Secrets should be **rotated regularly**. The rotation flow:
 
 For **zero-downtime rotation**:
 
-* The Secret has two values (e.g. `password` and `previousPassword`).
-* The app tries `password` first; if auth fails, it tries `previousPassword`.
-* The old value is removed after all clients are using the new one.
+- The Secret has two values (e.g. `password` and `previousPassword`).
+- The app tries `password` first; if auth fails, it tries `previousPassword`.
+- The old value is removed after all clients are using the new one.
 
 For **DB credentials**:
 
-* The DB has two users (or one user with two passwords).
-* The app's first attempt is the new password; the fallback is the old.
-* Once all clients are on the new password, the old is removed.
+- The DB has two users (or one user with two passwords).
+- The app's first attempt is the new password; the fallback is the old.
+- Once all clients are on the new password, the old is removed.
 
 For **TLS certs**:
 
-* The cert has a validity period (90 days is typical).
-* The new cert is issued and stored as a new Secret.
-* The app (or ingress controller) reloads the new cert.
-* The old cert expires naturally.
+- The cert has a validity period (90 days is typical).
+- The new cert is issued and stored as a new Secret.
+- The app (or ingress controller) reloads the new cert.
+- The old cert expires naturally.
 
 ## 13. Secret Sprawl
 
@@ -368,10 +375,10 @@ A common anti-pattern: **Secrets are scattered** across ConfigMaps, env vars, fi
 
 The "single source of truth" pattern:
 
-* All Secrets live in **one external manager** (Vault, AWS Secrets Manager, etc.).
-* A controller syncs them to k8s Secrets (or mounts them as files).
-* The app reads from the k8s Secret (or the mounted file).
-* GitOps doesn't have Secrets — only references to the Secret's name.
+- All Secrets live in **one external manager** (Vault, AWS Secrets Manager, etc.).
+- A controller syncs them to k8s Secrets (or mounts them as files).
+- The app reads from the k8s Secret (or the mounted file).
+- GitOps doesn't have Secrets — only references to the Secret's name.
 
 The "Secret" is a **handle**, not a value. The value lives in the external manager. The handle is in git.
 
@@ -505,7 +512,7 @@ ETCDCTL_API=3 etcdctl get /registry/secrets/default/my-secret ...
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — the at-rest encryption deep-dive
-* [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the in-transit story
-* [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — controlling who can read Secrets
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags for encryption
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — the at-rest encryption deep-dive
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS / mTLS]] — the in-transit story
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — controlling who can read Secrets
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags for encryption

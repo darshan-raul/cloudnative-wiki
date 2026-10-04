@@ -77,18 +77,18 @@ Naming convention: use the **service name** or **module name** as the tracer nam
 
 **What it is:** The fundamental unit — a named, timed operation.
 
-| Span Field | What it stores |
-|-----------|---------------|
-| `name` | Human-readable operation name (`"POST /orders"`) |
-| `trace_id` | 16-byte ID — identifies the entire trace |
-| `span_id` | 8-byte ID — unique within the trace |
-| `parent_span_id` | ID of the parent span (empty for root) |
-| `start_time` / `end_time` | Wall-clock duration |
-| `kind` | `server`, `client`, `producer`, `consumer`, `internal` |
-| `status` | `unset`, `ok`, `error` |
-| `attributes` | Key-value metadata |
-| `events` | Timestamped log messages during the span |
-| `links` | Links to spans from other traces |
+| Span Field                | What it stores                                         |
+| ------------------------- | ------------------------------------------------------ |
+| `name`                    | Human-readable operation name (`"POST /orders"`)       |
+| `trace_id`                | 16-byte ID — identifies the entire trace               |
+| `span_id`                 | 8-byte ID — unique within the trace                    |
+| `parent_span_id`          | ID of the parent span (empty for root)                 |
+| `start_time` / `end_time` | Wall-clock duration                                    |
+| `kind`                    | `server`, `client`, `producer`, `consumer`, `internal` |
+| `status`                  | `unset`, `ok`, `error`                                 |
+| `attributes`              | Key-value metadata                                     |
+| `events`                  | Timestamped log messages during the span               |
+| `links`                   | Links to spans from other traces                       |
 
 ### Span Lifecycle
 
@@ -104,7 +104,7 @@ start_time set
 
 ## What is a Resource?
 
-A **Resource** represents the **entity producing telemetry** — not the operation, but the *thing* doing the work. Every span is associated with a Resource.
+A **Resource** represents the **entity producing telemetry** — not the operation, but the _thing_ doing the work. Every span is associated with a Resource.
 
 ```
 Resource
@@ -121,12 +121,12 @@ Resource
 
 ### Resource vs SpanAttributes
 
-| Aspect | Resource | SpanAttributes |
-|--------|----------|----------------|
-| Scope | Process-wide — all spans share it | Per-span |
-| Set where | `TracerProvider.WithResource()` | `span.SetAttributes()` |
-| Purpose | "Who is producing this data?" | "What happened in this span?" |
-| Examples | `service.name`, `cloud.region`, `host.name` | `http.status_code`, `db.operation`, `error` |
+| Aspect    | Resource                                    | SpanAttributes                              |
+| --------- | ------------------------------------------- | ------------------------------------------- |
+| Scope     | Process-wide — all spans share it           | Per-span                                    |
+| Set where | `TracerProvider.WithResource()`             | `span.SetAttributes()`                      |
+| Purpose   | "Who is producing this data?"               | "What happened in this span?"               |
+| Examples  | `service.name`, `cloud.region`, `host.name` | `http.status_code`, `db.operation`, `error` |
 
 All spans from a TracerProvider inherit its Resource automatically — you set it once at startup.
 
@@ -343,13 +343,13 @@ span.set_attribute("error", True)
 
 ## SpanKind Explained
 
-| Kind | When to use | Visual |
-|------|------------|--------|
+| Kind                 | When to use                                          | Visual   |
+| -------------------- | ---------------------------------------------------- | -------- |
 | `internal` (default) | Operations inside your service with no external call | No arrow |
-| `server` | Incoming request (HTTP handler, gRPC server) | `←───` |
-| `client` | Outgoing call (HTTP GET, DB query) | `───▶` |
-| `producer` | Message sent to queue (no reply expected) | `───▸` |
-| `consumer` | Message received from queue | `▸───` |
+| `server`             | Incoming request (HTTP handler, gRPC server)         | `←───`   |
+| `client`             | Outgoing call (HTTP GET, DB query)                   | `───▶`   |
+| `producer`           | Message sent to queue (no reply expected)            | `───▸`   |
+| `consumer`           | Message received from queue                          | `▸───`   |
 
 Use `server` or `client` explicitly for clarity in service maps.
 
@@ -364,16 +364,16 @@ _, span := tracer.Start(ctx,
 
 Use OTel semantic conventions for standard attribute names:
 
-| Attribute | Value |
-|-----------|-------|
-| `http.method` | `"GET"`, `"POST"` |
-| `http.url` | `"https://api.example.com/users"` |
-| `http.status_code` | `200`, `404`, `500` |
-| `db.system` | `"postgresql"`, `"redis"` |
-| `db.operation` | `"SELECT"`, `"INSERT"` |
-| `db.statement` | `"SELECT * FROM orders"` |
-| `messaging.system` | `"kafka"`, `"rabbitmq"` |
-| `error` | `true` (when span is an error) |
+| Attribute          | Value                             |
+| ------------------ | --------------------------------- |
+| `http.method`      | `"GET"`, `"POST"`                 |
+| `http.url`         | `"https://api.example.com/users"` |
+| `http.status_code` | `200`, `404`, `500`               |
+| `db.system`        | `"postgresql"`, `"redis"`         |
+| `db.operation`     | `"SELECT"`, `"INSERT"`            |
+| `db.statement`     | `"SELECT * FROM orders"`          |
+| `messaging.system` | `"kafka"`, `"rabbitmq"`           |
+| `error`            | `true` (when span is an error)    |
 
 ```go
 span.SetAttributes(
@@ -390,10 +390,10 @@ Sampling decides **which spans are recorded and exported**. Without it, high-thr
 
 ### Head-Based vs Tail-Based
 
-| Type | When decision is made | What it sees | Use case |
-|------|---------------------|--------------|----------|
-| **Head-based** | At `Span.Start()` — before work is done | Nothing (future tense) | Default SDK behavior |
-| **Tail-based** | After `Span.End()` — when span is complete | Full span with status, attributes, duration | Collector pipeline |
+| Type           | When decision is made                      | What it sees                                | Use case             |
+| -------------- | ------------------------------------------ | ------------------------------------------- | -------------------- |
+| **Head-based** | At `Span.Start()` — before work is done    | Nothing (future tense)                      | Default SDK behavior |
+| **Tail-based** | After `Span.End()` — when span is complete | Full span with status, attributes, duration | Collector pipeline   |
 
 ```
 HEAD-BASED (SDK — at start)
@@ -440,12 +440,12 @@ type SamplingResult struct {
 
 ### Built-in Samplers
 
-|| Sampler | When to use | Gotcha |
-||---------|------------|--------|
-| `AlwaysOn` | Dev — every span recorded | Produces huge volume |
-| `AlwaysOff` | Perf testing, disabled tracing | All spans dropped |
-| `TraceIdRatioBased(0.1)` | Prod head-based — sample 10% of traces | All children of sampled root are sampled |
-| `ParentBased(child)` | Prod default — respect upstream decision | Child inherits parent's flags; if no parent, uses child sampler |
+| Sampler                  | When to use                              | Gotcha                                                          |
+| ------------------------ | ---------------------------------------- | --------------------------------------------------------------- |
+| `AlwaysOn`               | Dev — every span recorded                | Produces huge volume                                            |
+| `AlwaysOff`              | Perf testing, disabled tracing           | All spans dropped                                               |
+| `TraceIdRatioBased(0.1)` | Prod head-based — sample 10% of traces   | All children of sampled root are sampled                        |
+| `ParentBased(child)`     | Prod default — respect upstream decision | Child inherits parent's flags; if no parent, uses child sampler |
 
 **ParentBased is the standard for production:**
 
@@ -476,6 +476,7 @@ trace_id = "0af7651916cd43dd8448eb211c80319c"
 ```
 
 **Why hash instead of random?**
+
 - Same trace_id always gets the same decision — no split traces
 - Across multiple collectors/replicas, consistent sampling
 - If 10% of trace_ids are sampled, exactly 10% of traces are sampled
@@ -490,14 +491,15 @@ traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
                                                       flags (01 = sampled)
 ```
 
-| Flags | Meaning |
-|-------|---------|
-| `01` | Sampled — all downstream services record spans |
-| `00` | Not sampled — downstream SDKs record NOTsampled spans (see below) |
+| Flags | Meaning                                                           |
+| ----- | ----------------------------------------------------------------- |
+| `01`  | Sampled — all downstream services record spans                    |
+| `00`  | Not sampled — downstream SDKs record NOTsampled spans (see below) |
 
 **Key insight:** A `flags=00` trace still has a valid `trace_id` and `span_id` — you can see it as a "phantom trace" with only the root span. This is useful for **request counting** even without full span data.
 
 **Child span behavior with not-sampled parent:**
+
 - `ParentBased` sampler: child follows parent → not sampled
 - `TraceIDRatio` on child: child makes its own decision (not recommended — creates partial traces)
 
@@ -508,27 +510,28 @@ Head-based sampling is cheap but blunt — you sample before knowing if the requ
 ```yaml
 processors:
   tail_sampling:
-    decision_wait: 10s  # wait for spans to accumulate before making decision
+    decision_wait: 10s # wait for spans to accumulate before making decision
     policies:
       # Sample 100% of errors
       - name: errors
         type: status_code
-        status_code: {status_codes: [ERROR]}
+        status_code: { status_codes: [ERROR] }
 
       # Sample slow spans > 1s
       - name: slow-traces
         type: latency
-        latency: {threshold_ms: 1000}
+        latency: { threshold_ms: 1000 }
 
       # Sample 1% of everything (fallback)
       - name: probabilistic
         type: probabilistic
-        probabilistic: {sampling_percentage: 1}
+        probabilistic: { sampling_percentage: 1 }
 
       # Always keep traces with specific service name
       - name: high-value-service
         type: string_attribute
-        string_attribute: {key: service.name, values: [["payment-service", "order-service"]]}
+        string_attribute:
+          { key: service.name, values: [["payment-service", "order-service"]] }
 ```
 
 ```
@@ -547,6 +550,7 @@ tail_sampling processor
 ```
 
 **Typical prod setup:**
+
 - Head-based: sample 10-20% at SDK (keeps costs predictable)
 - Tail-based: override to 100% for errors and slow spans (preserves debugging data)
 
@@ -568,6 +572,7 @@ trace.WithSampler(trace.ParentBased(trace.TraceIDRatioBased(0.1)))
 ## Typical Setup: Traces
 
 **Go:**
+
 ```go
 import (
     "go.opentelemetry.io/otel"
@@ -604,6 +609,7 @@ func initTracer(ctx context.Context) (func(), error) {
 ```
 
 **Python:**
+
 ```python
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -664,10 +670,10 @@ print(f"trace_id={sc.trace_id} span_id={sc.span_id} remote={sc.is_remote}")
 
 The `trace_flags` byte carries the **sampled** flag:
 
-| Flag | Value | Meaning |
-|------|-------|---------|
+| Flag   | Value       | Meaning                                       |
+| ------ | ----------- | --------------------------------------------- |
 | `0x00` | Not sampled | Trace exists but spans should not be recorded |
-| `0x01` | Sampled | Trace is sampled — record spans |
+| `0x01` | Sampled     | Trace is sampled — record spans               |
 
 ```
 traceparent: 00-0af7651916cd43dd8448eb211c80319c-abc123456def-01
@@ -705,11 +711,11 @@ message SpanContext {
 
 Every span has a `Status`. It is **not** just for errors — it has three states:
 
-| Status | Code | When to use |
-|--------|------|-------------|
-| `Unset` | `0` | Default — no status set. Treated as `Ok`. Backend typically does not display. |
-| `Ok` | `1` | Span completed successfully. Set explicitly when you want to guarantee the status is visible. |
-| `Error` | `2` | Span ended in a failure. Span will surface in error-focused views in SigNoz. |
+| Status  | Code | When to use                                                                                   |
+| ------- | ---- | --------------------------------------------------------------------------------------------- |
+| `Unset` | `0`  | Default — no status set. Treated as `Ok`. Backend typically does not display.                 |
+| `Ok`    | `1`  | Span completed successfully. Set explicitly when you want to guarantee the status is visible. |
+| `Error` | `2`  | Span ended in a failure. Span will surface in error-focused views in SigNoz.                  |
 
 ### When to Set Status Explicitly
 
@@ -742,6 +748,7 @@ These are often confused. They are fundamentally different constructs.
 ### SpanEvents
 
 An **event** is a **log point in time** during a span. It:
+
 - Belongs to exactly **one span**
 - Has a timestamp
 - Can have attributes
@@ -803,26 +810,26 @@ tracer.start_as_current_span(
 
 ### Event vs Link Comparison
 
-| Aspect | SpanEvent | SpanLink |
-|--------|-----------|---------|
-| Scope | Inside a single span | Cross-trace — no parent-child relationship |
-| `trace_id` | Same as parent span | **Different** from the linking span |
-| Use case | Breadcrumbs, step markers | Background jobs, error association, batch processes |
-| In SigNoz | Dots on span timeline | Separate entries in the trace list for the linked trace |
-| `parent_id` | Refers to the parent span | None — this is not a parent-child relationship |
+| Aspect      | SpanEvent                 | SpanLink                                                |
+| ----------- | ------------------------- | ------------------------------------------------------- |
+| Scope       | Inside a single span      | Cross-trace — no parent-child relationship              |
+| `trace_id`  | Same as parent span       | **Different** from the linking span                     |
+| Use case    | Breadcrumbs, step markers | Background jobs, error association, batch processes     |
+| In SigNoz   | Dots on span timeline     | Separate entries in the trace list for the linked trace |
+| `parent_id` | Refers to the parent span | None — this is not a parent-child relationship          |
 
 ## SpanAttributes vs SpanEvents
 
 These are often confused. They serve different purposes:
 
-| Aspect | SpanAttributes | SpanEvents |
-|--------|---------------|------------|
-| When set | At `Start()` or any time via `SetAttributes` | At any point via `AddEvent` |
-| Cardinality | Low — one value per attribute key (deduplicated) | High — one event per call, can have many |
-| Visual in backend | Shown as static span metadata fields | Shown as dots on the span timeline |
-| Use for | Static metadata: `user.id`, `region`, `db.system` | Timestamps: "validation failed", "cache miss", "lock acquired" |
-| Sampled | Subject to sampler — dropped entirely if span is not sampled | Same as parent span — dropped with span |
-| Overhead | Negligible — just key-value pairs in the span | Higher — each event has its own timestamp and attributes |
+| Aspect            | SpanAttributes                                               | SpanEvents                                                     |
+| ----------------- | ------------------------------------------------------------ | -------------------------------------------------------------- |
+| When set          | At `Start()` or any time via `SetAttributes`                 | At any point via `AddEvent`                                    |
+| Cardinality       | Low — one value per attribute key (deduplicated)             | High — one event per call, can have many                       |
+| Visual in backend | Shown as static span metadata fields                         | Shown as dots on the span timeline                             |
+| Use for           | Static metadata: `user.id`, `region`, `db.system`            | Timestamps: "validation failed", "cache miss", "lock acquired" |
+| Sampled           | Subject to sampler — dropped entirely if span is not sampled | Same as parent span — dropped with span                        |
+| Overhead          | Negligible — just key-value pairs in the span                | Higher — each event has its own timestamp and attributes       |
 
 ```go
 // Attributes: set once, describe the operation context
@@ -844,7 +851,7 @@ span.AddEvent("validation failed", trace.WithAttributes(
 ))
 ```
 
-**Key rule of thumb:** If the data describes the span itself, use an **attribute**. If the data marks something that happened *at a moment* during the span's lifetime, use an **event**.
+**Key rule of thumb:** If the data describes the span itself, use an **attribute**. If the data marks something that happened _at a moment_ during the span's lifetime, use an **event**.
 
 ## Span Recording Behavior
 
@@ -897,20 +904,20 @@ span.End()                    // 1. Called in your code
 
 #### SpanProcessors
 
-| Processor | Behavior | Blocking? | Use Case |
-|-----------|----------|-----------|----------|
-| `SimpleSpanProcessor` | Exports each span synchronously on `span.End()` | Yes | Dev, very low traffic, tests |
-| `BatchSpanProcessor` | Buffers spans in queue, exports on batch size or schedule | No | **Production default** |
-| `FilteredSpanProcessor` | Conditionally drops spans before batching | No | Debug filtering |
+| Processor               | Behavior                                                  | Blocking? | Use Case                     |
+| ----------------------- | --------------------------------------------------------- | --------- | ---------------------------- |
+| `SimpleSpanProcessor`   | Exports each span synchronously on `span.End()`           | Yes       | Dev, very low traffic, tests |
+| `BatchSpanProcessor`    | Buffers spans in queue, exports on batch size or schedule | No        | **Production default**       |
+| `FilteredSpanProcessor` | Conditionally drops spans before batching                 | No        | Debug filtering              |
 
 #### BatchSpanProcessor Options (Go)
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `WithMaxQueueSize(n)` | 2048 | Max spans queued before forcing export |
-| `WithBatchSize(n)` | 512 | Spans per batch before triggering export |
-| `WithBatchTimeout(d)` | 5s | Force export after duration (even if batch not full) |
-| `WithExportThreshold(n)` | 1 | Force sync export when queue reaches n (for critical spans) |
+| Option                   | Default | Description                                                 |
+| ------------------------ | ------- | ----------------------------------------------------------- |
+| `WithMaxQueueSize(n)`    | 2048    | Max spans queued before forcing export                      |
+| `WithBatchSize(n)`       | 512     | Spans per batch before triggering export                    |
+| `WithBatchTimeout(d)`    | 5s      | Force export after duration (even if batch not full)        |
+| `WithExportThreshold(n)` | 1       | Force sync export when queue reaches n (for critical spans) |
 
 ```go
 // Production: non-blocking batch export
@@ -929,11 +936,11 @@ criticalProcessor := trace.NewBatchSpanProcessor(exporter,
 
 #### BatchSpanProcessor Options (Python)
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `max_queue_size` | 2048 | Max spans queued |
-| `scheduled_delay_seconds` | 5s | Force export after duration |
-| `max_export_batch_size` | 512 | Spans per batch |
+| Option                    | Default | Description                 |
+| ------------------------- | ------- | --------------------------- |
+| `max_queue_size`          | 2048    | Max spans queued            |
+| `scheduled_delay_seconds` | 5s      | Force export after duration |
+| `max_export_batch_size`   | 512     | Spans per batch             |
 
 ```python
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -966,14 +973,14 @@ The `SpanExporter` serializes and sends completed spans to a backend.
 
 #### Go Exporters
 
-| Exporter | Package | Config |
-|----------|---------|--------|
-| **OTLP** (gRPC) | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc` | `WithEndpoint()`, `WithInsecure()` |
-| **OTLP** (HTTP) | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | `WithEndpoint()`, `WithInsecure()` |
-| **Jaeger** (Thrift) | `go.opentelemetry.io/otel/exporters/jaeger` | `WithAgentEndpoint()`, `WithEndpoint()` |
-| **Zipkin** | `go.opentelemetry.io/otel/exporters/zipkin` | `WithEndpoint()` |
-| **Console** | `go.opentelemetry.io/otel/exporters/stdout/stdouttrace` | (dev only) |
-| **Datadog** | `gopkg.in/DataDog/dd-trace-go.v1/contrib/otel` | via Datadog exporter package |
+| Exporter            | Package                                                           | Config                                  |
+| ------------------- | ----------------------------------------------------------------- | --------------------------------------- |
+| **OTLP** (gRPC)     | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc` | `WithEndpoint()`, `WithInsecure()`      |
+| **OTLP** (HTTP)     | `go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp` | `WithEndpoint()`, `WithInsecure()`      |
+| **Jaeger** (Thrift) | `go.opentelemetry.io/otel/exporters/jaeger`                       | `WithAgentEndpoint()`, `WithEndpoint()` |
+| **Zipkin**          | `go.opentelemetry.io/otel/exporters/zipkin`                       | `WithEndpoint()`                        |
+| **Console**         | `go.opentelemetry.io/otel/exporters/stdout/stdouttrace`           | (dev only)                              |
+| **Datadog**         | `gopkg.in/DataDog/dd-trace-go.v1/contrib/otel`                    | via Datadog exporter package            |
 
 ```go
 import (
@@ -1005,12 +1012,12 @@ exporter, _ := stdouttrace.New(stdouttrace.WithPrettyPrint())
 
 #### Python Exporters
 
-| Exporter | Package | Config |
-|----------|---------|--------|
-| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp` | `endpoint`, `insecure` |
-| **Jaeger** | `opentelemetry-exporter-jaeger` | `agent_port` |
-| **Zipkin** | `opentelemetry-exporter-zipkin` | `endpoint` |
-| **Console** | `opentelemetry-sdk` (built-in) | (dev only) |
+| Exporter             | Package                         | Config                 |
+| -------------------- | ------------------------------- | ---------------------- |
+| **OTLP** (gRPC/HTTP) | `opentelemetry-exporter-otlp`   | `endpoint`, `insecure` |
+| **Jaeger**           | `opentelemetry-exporter-jaeger` | `agent_port`           |
+| **Zipkin**           | `opentelemetry-exporter-zipkin` | `endpoint`             |
+| **Console**          | `opentelemetry-sdk` (built-in)  | (dev only)             |
 
 ```python
 from opentelemetry.exporter.otlp import OTLPSpanExporter

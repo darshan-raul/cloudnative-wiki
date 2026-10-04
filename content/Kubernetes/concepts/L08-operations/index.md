@@ -43,6 +43,7 @@ kubectl get --raw='/livez?verbose'
 ```
 
 **Expected output:**
+
 ```
 [+]ping ok
 [+]log ok
@@ -59,13 +60,13 @@ readyz check passed
 
 Kubernetes separates telemetry into **metrics**, **logs**, **events**, and **traces**:
 
-| Signal Type | In-Cluster Source | Aggregator | Primary Consumer | Long-Term Storage |
-| :--- | :--- | :--- | :--- | :--- |
-| **Resource Metrics** | cAdvisor (inside kubelet) | `metrics-server` | HPA, `kubectl top` | Prometheus / Mimir |
-| **Object State** | `kube-apiserver` watch stream | `kube-state-metrics` | Platform alerting | Prometheus / VictoriaMetrics |
-| **Container Logs** | `/var/log/pods/` (CRI JSON logs) | Fluent Bit / Promtail | Developers, SREs | Loki / OpenSearch / CloudWatch |
-| **Cluster Events** | `kube-apiserver` event records | `eventrouter` / exporter | SRE triage | Elasticsearch / Loki |
-| **Audit Logs** | `kube-apiserver` audit backend | File / Webhook sink | Security & Compliance | SIEM / S3 Archive |
+| Signal Type          | In-Cluster Source                | Aggregator               | Primary Consumer      | Long-Term Storage              |
+| :------------------- | :------------------------------- | :----------------------- | :-------------------- | :----------------------------- |
+| **Resource Metrics** | cAdvisor (inside kubelet)        | `metrics-server`         | HPA, `kubectl top`    | Prometheus / Mimir             |
+| **Object State**     | `kube-apiserver` watch stream    | `kube-state-metrics`     | Platform alerting     | Prometheus / VictoriaMetrics   |
+| **Container Logs**   | `/var/log/pods/` (CRI JSON logs) | Fluent Bit / Promtail    | Developers, SREs      | Loki / OpenSearch / CloudWatch |
+| **Cluster Events**   | `kube-apiserver` event records   | `eventrouter` / exporter | SRE triage            | Elasticsearch / Loki           |
+| **Audit Logs**       | `kube-apiserver` audit backend   | File / Webhook sink      | Security & Compliance | SIEM / S3 Archive              |
 
 ---
 

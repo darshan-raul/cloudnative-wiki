@@ -64,6 +64,7 @@ Microsoft Sentinel operates as an intelligence layer on top of an Azure Log Anal
 ## 2. Advanced Threat Detection with KQL
 
 ### 1. Detect Suspicious Mass File Downloads / Exfiltration
+
 ```kql
 AzureActivity
 | where TimeGenerated > ago(1h)
@@ -74,6 +75,7 @@ AzureActivity
 ```
 
 ### 2. Detect Password Spray Attacks across Microsoft Entra ID
+
 ```kql
 SigninLogs
 | where TimeGenerated > ago(1h)
@@ -84,6 +86,7 @@ SigninLogs
 ```
 
 ### 3. Correlate AWS CloudTrail root activity with Azure Alerts
+
 ```kql
 AWSCloudTrail
 | where TimeGenerated > ago(2h)
@@ -149,11 +152,13 @@ Create a detection rule `brute-force-detection.json`:
   "entityMappings": [
     {
       "entityType": "IP",
-      "fieldMappings": [{"identifier": "Address", "columnName": "IPAddress"}]
+      "fieldMappings": [{ "identifier": "Address", "columnName": "IPAddress" }]
     },
     {
       "entityType": "Account",
-      "fieldMappings": [{"identifier": "Name", "columnName": "UserPrincipalName"}]
+      "fieldMappings": [
+        { "identifier": "Name", "columnName": "UserPrincipalName" }
+      ]
     }
   ]
 }
@@ -184,14 +189,14 @@ az logic workflow create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Ingestion Rate** | Scaled by Log Analytics | Supports hundreds of terabytes per day |
-| **Active Analytics Rules** | 512 scheduled rules | Consolidate detection logic using KQL functions |
-| **NRT Rules per Workspace**| 50 NRT rules | Reserve NRT rules for immediate Tier-1 threats |
-| **Automation Rules** | 100 rules per workspace | Direct playbooks based on incident tags |
-| **Incident Retention** | Matches workspace retention | Incidents persist as long as underlying logs exist |
-| **Free Data Sources** | Entra ID Activity, Office 365, Defender alerts | Free ingestion into Sentinel |
+| Parameter / Dimension       | Default Quota                                  | Engineering Guidance                               |
+| :-------------------------- | :--------------------------------------------- | :------------------------------------------------- |
+| **Max Ingestion Rate**      | Scaled by Log Analytics                        | Supports hundreds of terabytes per day             |
+| **Active Analytics Rules**  | 512 scheduled rules                            | Consolidate detection logic using KQL functions    |
+| **NRT Rules per Workspace** | 50 NRT rules                                   | Reserve NRT rules for immediate Tier-1 threats     |
+| **Automation Rules**        | 100 rules per workspace                        | Direct playbooks based on incident tags            |
+| **Incident Retention**      | Matches workspace retention                    | Incidents persist as long as underlying logs exist |
+| **Free Data Sources**       | Entra ID Activity, Office 365, Defender alerts | Free ingestion into Sentinel                       |
 
 ---
 
@@ -208,6 +213,7 @@ az logic workflow create \
 ## 6. Realistic Pricing Scenarios
 
 Microsoft Sentinel pricing is an **additive layer on top of Log Analytics**:
+
 1. **Pay-As-You-Go:**
    - Log Analytics Ingestion: $2.30 per GB.
    - Microsoft Sentinel Analysis: $4.30 per GB.

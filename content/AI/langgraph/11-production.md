@@ -163,6 +163,7 @@ restarting the conversation.
 ## LangGraph Platform
 
 LangGraph Platform (the managed offering) handles:
+
 - Deployment (Docker, Kubernetes)
 - Scaling (multiple replicas)
 - Persistence (built-in Postgres checkpointer)

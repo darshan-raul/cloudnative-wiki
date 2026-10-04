@@ -9,12 +9,12 @@ Parameters:
   WazuhSecurityAccountId:
     Description: Account ID where Wazuh manager runs (Account A)
     Type: String
-    Default: "444444444444"  # REPLACE with your security tooling account ID
+    Default: "444444444444" # REPLACE with your security tooling account ID
 
   CloudTrailBucketName:
     Description: Name of the CloudTrail S3 bucket in this account
     Type: String
-    Default: "cloudtrail-org-alpha-logs"  # REPLACE per org
+    Default: "cloudtrail-org-alpha-logs" # REPLACE per org
 
   AllowedRegion:
     Description: Region constraint for role assumption
@@ -30,7 +30,7 @@ Resources:
     Properties:
       RoleName: WazuhCrossAccountRead
       Description: Role for Wazuh SIEM to read CloudTrail logs from S3
-      MaxSessionDuration: 43200  # 12 hours
+      MaxSessionDuration: 43200 # 12 hours
 
       # Trust policy — only the Wazuh security account can assume this
       AssumeRolePolicyDocument:

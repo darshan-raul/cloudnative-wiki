@@ -77,6 +77,7 @@ graph TD
 ```
 
 ### Why Gateway API Won:
+
 - **Role-oriented separation:** Platform admins manage infrastructure (`Gateway`), while product teams manage routing rules (`HTTPRoute`) independently.
 - **Cross-namespace routing:** Routes in `namespace-a` can attach to a shared corporate `Gateway` in `infrastructure-gateway`.
 - **Built-in traffic splitting:** Native canary weights without vendor-specific annotations:

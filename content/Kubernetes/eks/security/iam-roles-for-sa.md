@@ -47,11 +47,11 @@ IRSA allows pods to authenticate as IAM roles, enabling fine-grained access to A
 
 ### Components
 
-| Component | URL |
-|-----------|-----|
-| OIDC Provider URL | `https://oidc.eks.<region>.amazonaws.com/id/<CLUSTER_ID>` |
-| Discovery Document | `/.well-known/openid-configuration` |
-| JWKS (Public Keys) | `/.well-known/jwks.json` |
+| Component          | URL                                                       |
+| ------------------ | --------------------------------------------------------- |
+| OIDC Provider URL  | `https://oidc.eks.<region>.amazonaws.com/id/<CLUSTER_ID>` |
+| Discovery Document | `/.well-known/openid-configuration`                       |
+| JWKS (Public Keys) | `/.well-known/jwks.json`                                  |
 
 ### Trust Policy Structure
 
@@ -78,12 +78,12 @@ IRSA allows pods to authenticate as IAM roles, enabling fine-grained access to A
 
 ### Condition Keys
 
-| Key | Description | Example Value |
-|-----|-------------|---------------|
-| `sub` | Service account identity | `system:serviceaccount:default:my-app` |
-| `aud` | Intended audience | `sts.amazonaws.com` |
-| `namespace` | (Prefix) SA namespace | `default:my-app` |
-| `svcacct` | (Prefix) SA name | `default:my-app` |
+| Key         | Description              | Example Value                          |
+| ----------- | ------------------------ | -------------------------------------- |
+| `sub`       | Service account identity | `system:serviceaccount:default:my-app` |
+| `aud`       | Intended audience        | `sts.amazonaws.com`                    |
+| `namespace` | (Prefix) SA namespace    | `default:my-app`                       |
+| `svcacct`   | (Prefix) SA name         | `default:my-app`                       |
 
 ### Conditions Syntax Examples
 
@@ -127,13 +127,13 @@ IRSA allows pods to authenticate as IAM roles, enabling fine-grained access to A
 
 ### Token Characteristics
 
-| Property | Value |
-|----------|-------|
-| Issuer | EKS OIDC provider URL |
-| Subject | `system:serviceaccount:<namespace>:<name>` |
-| Audience | `sts.amazonaws.com` |
-| Expiration | Token-based, configurable (default 1 day) |
-| Rotation | Managed by kubelet |
+| Property   | Value                                      |
+| ---------- | ------------------------------------------ |
+| Issuer     | EKS OIDC provider URL                      |
+| Subject    | `system:serviceaccount:<namespace>:<name>` |
+| Audience   | `sts.amazonaws.com`                        |
+| Expiration | Token-based, configurable (default 1 day)  |
+| Rotation   | Managed by kubelet                         |
 
 ### Token Mount in Pod
 
@@ -233,9 +233,9 @@ metadata:
 spec:
   serviceAccountName: my-app
   containers:
-  - name: app
-    image: my-app:latest
-    # No need to set env vars - SDK auto-detects
+    - name: app
+      image: my-app:latest
+      # No need to set env vars - SDK auto-detects
 ```
 
 ### Verify IRSA is Working
@@ -254,10 +254,10 @@ kubectl exec -it my-app -- aws sts get-caller-identity
 
 ## Key Rotation
 
-| Rotation | Frequency | Details |
-|----------|-----------|---------|
-| OIDC signing keys | Every 7 days | EKS rotates private key |
-| Service account token | 1 day (default) | kubelet manages |
+| Rotation              | Frequency       | Details                 |
+| --------------------- | --------------- | ----------------------- |
+| OIDC signing keys     | Every 7 days    | EKS rotates private key |
+| Service account token | 1 day (default) | kubelet manages         |
 
 ### External Client Key Refresh
 
@@ -276,13 +276,14 @@ AWS SDKs handle key refresh automatically - no external action needed.
 
 ### IMDS Access
 
-| Node Configuration | IMDS Access | IRSA Override |
-|-------------------|-------------|---------------|
-| IMDSv2 required | Blocked | SDK uses IRSA creds |
-| IMDSv1 + IMDSv2 | Available | SDK prefers IRSA creds |
-| No restriction | Available | SDK uses first available |
+| Node Configuration | IMDS Access | IRSA Override            |
+| ------------------ | ----------- | ------------------------ |
+| IMDSv2 required    | Blocked     | SDK uses IRSA creds      |
+| IMDSv1 + IMDSv2    | Available   | SDK prefers IRSA creds   |
+| No restriction     | Available   | SDK uses first available |
 
 **Best Practice:** Require IMDSv2 on all nodes:
+
 ```bash
 aws ec2 modify-instance-metadata-options \
   --instance-id i-xxxx \
@@ -319,6 +320,7 @@ IRSA: read-s3        IRSA: write-s3
 ```
 
 Pods on the same node share:
+
 - Kernel namespaces (if not isolated)
 - Node credentials (if IMDS accessible)
 
@@ -332,7 +334,7 @@ Pods on the same node share:
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {"Federated": "*"},
+      "Principal": { "Federated": "*" },
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringLike": {
@@ -421,11 +423,11 @@ aws logs insights-query \
 
 ### AccessDenied when calling AssumeRoleWithWebIdentity
 
-| Cause | Fix |
-|-------|-----|
-| Trust policy missing | Add OIDC provider to principals |
-| Condition mismatch | Verify `sub` matches SA exactly |
-| Wrong OIDC provider | Check cluster's OIDC provider URL |
+| Cause                | Fix                               |
+| -------------------- | --------------------------------- |
+| Trust policy missing | Add OIDC provider to principals   |
+| Condition mismatch   | Verify `sub` matches SA exactly   |
+| Wrong OIDC provider  | Check cluster's OIDC provider URL |
 
 ### InvalidIdentityToken
 
@@ -433,11 +435,11 @@ aws logs insights-query \
 Error: InvalidIdentityToken: Couldn't retrieve verification key from ...
 ```
 
-| Cause | Fix |
-|-------|-----|
-| Can't reach OIDC endpoint | Check VPC routing, NAT Gateway |
-| Wrong audience | Ensure `aud: sts.amazonaws.com` in trust policy |
-| Token expired | kubelet should auto-renew |
+| Cause                     | Fix                                             |
+| ------------------------- | ----------------------------------------------- |
+| Can't reach OIDC endpoint | Check VPC routing, NAT Gateway                  |
+| Wrong audience            | Ensure `aud: sts.amazonaws.com` in trust policy |
+| Token expired             | kubelet should auto-renew                       |
 
 ### Token Not Mounted
 
@@ -478,14 +480,14 @@ aws ec2 describe-vpc-endpoints \
 
 ## Comparison with Pod Identity
 
-| Aspect | IRSA | Pod Identity |
-|--------|------|--------------|
-| Setup | OIDC provider + trust policy | EKS API association |
-| Per-cluster config | Separate trust policy | Same role works everywhere |
-| SDK calls | Each pod calls STS | One call per node, cached |
-| Key management | 7-day rotation | Managed by EKS |
-| Cross-account | Via trust relationships | Via role delegation |
-| Audit trail | CloudTrail STS events | CloudTrail + EKS API |
+| Aspect             | IRSA                         | Pod Identity               |
+| ------------------ | ---------------------------- | -------------------------- |
+| Setup              | OIDC provider + trust policy | EKS API association        |
+| Per-cluster config | Separate trust policy        | Same role works everywhere |
+| SDK calls          | Each pod calls STS           | One call per node, cached  |
+| Key management     | 7-day rotation               | Managed by EKS             |
+| Cross-account      | Via trust relationships      | Via role delegation        |
+| Audit trail        | CloudTrail STS events        | CloudTrail + EKS API       |
 
 ## References
 

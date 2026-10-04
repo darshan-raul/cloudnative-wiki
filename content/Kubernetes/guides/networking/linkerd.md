@@ -12,26 +12,28 @@ Linkerd is the **lightweight service mesh** for k8s. Built on Rust (Linkerd2-pro
 
 ## Why Linkerd
 
-| | Linkerd | Istio |
-|---|---------|-------|
-| **Proxy** | linkerd2-proxy (Rust) | Envoy (C++) |
-| **Memory per pod** | ~20-30MB | ~50-100MB |
-| **Latency overhead** | <1ms | 1-3ms |
-| **mTLS** | ✅ automatic | ✅ automatic |
-| **Traffic management** | ✅ (less feature-rich) | ✅ (more flexible) |
-| **Authorization** | ✅ Server, AuthzPolicy | ✅ more flexible |
-| **Multi-cluster** | ✅ | ✅ |
-| **Gateway** | ✅ built-in | ✅ |
-| **Complexity** | Lower | Higher |
-| **Maturity** | Production (CNCF Graduated) | Production (CNCF Graduated) |
-| **Use cases** | Most | More complex |
+|                        | Linkerd                     | Istio                       |
+| ---------------------- | --------------------------- | --------------------------- |
+| **Proxy**              | linkerd2-proxy (Rust)       | Envoy (C++)                 |
+| **Memory per pod**     | ~20-30MB                    | ~50-100MB                   |
+| **Latency overhead**   | <1ms                        | 1-3ms                       |
+| **mTLS**               | ✅ automatic                | ✅ automatic                |
+| **Traffic management** | ✅ (less feature-rich)      | ✅ (more flexible)          |
+| **Authorization**      | ✅ Server, AuthzPolicy      | ✅ more flexible            |
+| **Multi-cluster**      | ✅                          | ✅                          |
+| **Gateway**            | ✅ built-in                 | ✅                          |
+| **Complexity**         | Lower                       | Higher                      |
+| **Maturity**           | Production (CNCF Graduated) | Production (CNCF Graduated) |
+| **Use cases**          | Most                        | More complex                |
 
 **Use Linkerd when:**
+
 - You want mTLS without operational overhead
 - You don't need Istio's full feature set (e.g., complex EnvoyFilter)
 - You want a smaller, more focused mesh
 
 **Use Istio when:**
+
 - You need Envoy's full power (custom filters, WASM)
 - You need advanced traffic management
 - You're a very large org with mesh expertise
@@ -114,6 +116,7 @@ linkerd install --ha | kubectl apply -f -
 ```
 
 This sets:
+
 - 3 destination replicas
 - 3 identity replicas
 - 3 proxy-injector replicas
@@ -177,7 +180,7 @@ spec:
     matchLabels:
       app: legacy-app
   port: 80
-  proxyProtocol: "unknown"   # accept plain or mTLS
+  proxyProtocol: "unknown" # accept plain or mTLS
 ```
 
 The legacy app accepts both. Mesh traffic to it is plain.
@@ -213,9 +216,9 @@ spec:
     kind: Server
     name: my-app
   requiredAuthenticationRefs:
-  - group: policy.linkerd.io
-    kind: MeshTLSAuthentication
-    name: allow-mesh
+    - group: policy.linkerd.io
+      kind: MeshTLSAuthentication
+      name: allow-mesh
 ---
 apiVersion: policy.linkerd.io/v1beta1
 kind: MeshTLSAuthentication
@@ -224,9 +227,9 @@ metadata:
   namespace: my-app
 spec:
   identityRefs:
-  - group: core
-    kind: ServiceAccount
-    name: "*"   # any service account in the mesh
+    - group: core
+      kind: ServiceAccount
+      name: "*" # any service account in the mesh
 ```
 
 **Patterns:**
@@ -234,14 +237,14 @@ spec:
 ```yaml
 # allow all authenticated clients
 requiredAuthenticationRefs:
-- group: policy.linkerd.io
-  kind: MeshTLSAuthentication
-  name: allow-mesh
+  - group: policy.linkerd.io
+    kind: MeshTLSAuthentication
+    name: allow-mesh
 
-# allow specific namespace
-- group: policy.linkerd.io
-  kind: MeshTLSAuthentication
-  name: allow-from-ns-x
+  # allow specific namespace
+  - group: policy.linkerd.io
+    kind: MeshTLSAuthentication
+    name: allow-from-ns-x
 ---
 apiVersion: policy.linkerd.io/v1beta1
 kind: MeshTLSAuthentication
@@ -250,13 +253,13 @@ metadata:
   namespace: my-app
 spec:
   identityRefs:
-  - group: core
-    kind: ServiceAccount
-    name: app-x-sa
-    namespace: app-x
+    - group: core
+      kind: ServiceAccount
+      name: app-x-sa
+      namespace: app-x
 
 # deny all (default deny)
-requiredAuthenticationRefs: []   # empty = no auth = denied
+requiredAuthenticationRefs: [] # empty = no auth = denied
 ```
 
 ## Traffic management
@@ -271,18 +274,18 @@ metadata:
   namespace: my-app
 spec:
   routes:
-  - name: GET /api/users/{id}
-    condition:
-      method: GET
-      pathRegex: /api/users/[^/]+
-    isRetryable: false
-    timeout: 5s
-    responseClasses:
-    - condition:
-        status:
-          min: 500
-          max: 599
-      isFailure: true
+    - name: GET /api/users/{id}
+      condition:
+        method: GET
+        pathRegex: /api/users/[^/]+
+      isRetryable: false
+      timeout: 5s
+      responseClasses:
+        - condition:
+            status:
+              min: 500
+              max: 599
+          isFailure: true
 ```
 
 **Why?** Per-route metrics (success rate, latency), timeouts, retry budgets.
@@ -298,10 +301,10 @@ metadata:
 spec:
   service: my-app
   backends:
-  - service: my-app-v1
-    weight: 90
-  - service: my-app-v2
-    weight: 10
+    - service: my-app-v1
+      weight: 90
+    - service: my-app-v2
+      weight: 10
 ```
 
 **SMI (Service Mesh Interface)** standard. Linkerd implements it. **Tool-agnostic.**
@@ -352,13 +355,13 @@ metadata:
   name: my-app.my-app.svc.cluster.local
 spec:
   routes:
-  - name: GET /api
-    isRetryable: true
-    timeout: 5s
-    retryBudget:
-      minRetriesPerSecond: 10
-      maxRetriesPerSecond: 100
-      retryRatio: 0.2
+    - name: GET /api
+      isRetryable: true
+      timeout: 5s
+      retryBudget:
+        minRetriesPerSecond: 10
+        maxRetriesPerSecond: 100
+        retryRatio: 0.2
 ```
 
 **Retry budget:** max retries as a fraction of requests. Prevents retry storms.
@@ -373,6 +376,7 @@ linkerd viz dashboard
 ```
 
 Browser UI showing:
+
 - Service mesh
 - Per-route metrics
 - Live traffic
@@ -389,6 +393,7 @@ linkerd viz install --set prometheus.enabled=true | kubectl apply -f -
 Metrics are exposed on `:4191` for proxies, `:8086` for the control plane.
 
 **Key metrics:**
+
 - `request_total` — request count
 - `response_latency_ms` — request latency
 - `tcp_open_total` — TCP connections
@@ -440,10 +445,10 @@ metadata:
 spec:
   service: my-app
   backends:
-  - service: my-app-v1
-    weight: 100
-  - service: my-app-v2
-    weight: 0
+    - service: my-app-v1
+      weight: 100
+    - service: my-app-v2
+      weight: 0
 
 # 3. Update weights to 1%, 5%, 10%, 50%, 100%
 
@@ -460,8 +465,8 @@ metadata:
   name: my-app.my-app.svc.cluster.local
 spec:
   routes:
-  - name: GET /
-    isRetryable: true
+    - name: GET /
+      isRetryable: true
 ```
 
 Linkerd doesn't have built-in sticky session; use a load balancer that does (e.g., AWS ALB).
@@ -476,11 +481,11 @@ metadata:
   namespace: my-app
 spec:
   routes:
-  - name: GET /api/data
-    condition:
-      method: GET
-      pathRegex: /api/data/.*
-    timeout: 10s
+    - name: GET /api/data
+      condition:
+        method: GET
+        pathRegex: /api/data/.*
+      timeout: 10s
 ```
 
 Or use `ExternalService` (Linkerd 2.13+):
@@ -492,28 +497,28 @@ metadata:
   name: external-api
 spec:
   parentRefs:
-  - name: my-app
+    - name: my-app
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: /api }
-    backendRefs:
-    - name: external-api
-      kind: Service
-      port: 443
+    - matches:
+        - path: { type: PathPrefix, value: /api }
+      backendRefs:
+        - name: external-api
+          kind: Service
+          port: 443
 ```
 
 ## Common gotchas
 
-* **mTLS requires both ends to be in the mesh.** If one side doesn't have a proxy, traffic is plain (unless you set `proxyProtocol: unknown`).
-* **ServiceAccount-based identity** is fundamental. Make sure pods have a SA.
-* **AuthorizationPolicy needs Server CRD.** First define the Server, then the policy.
-* **SMI TrafficSplit is a standard,** not Linkerd-specific. Other meshes can use it.
-* **The linkerd2-proxy** uses iptables to capture traffic. If iptables is broken, mesh breaks.
-* **Memory limits on the proxy** can cause issues. Default limits are 50MB (small) to 200MB (large).
-* **Linkerd 2.x is the production version.** Older 1.x is deprecated.
-* **HA mode is recommended for production.** Default install is 1 replica of each.
-* **Linkerd's ingress is simpler than Istio's** but less feature-rich. Use Envoy Gateway or Traefik for complex ingress.
-* **The viz extension** is useful but resource-heavy. For production, use Prometheus + Grafana.
+- **mTLS requires both ends to be in the mesh.** If one side doesn't have a proxy, traffic is plain (unless you set `proxyProtocol: unknown`).
+- **ServiceAccount-based identity** is fundamental. Make sure pods have a SA.
+- **AuthorizationPolicy needs Server CRD.** First define the Server, then the policy.
+- **SMI TrafficSplit is a standard,** not Linkerd-specific. Other meshes can use it.
+- **The linkerd2-proxy** uses iptables to capture traffic. If iptables is broken, mesh breaks.
+- **Memory limits on the proxy** can cause issues. Default limits are 50MB (small) to 200MB (large).
+- **Linkerd 2.x is the production version.** Older 1.x is deprecated.
+- **HA mode is recommended for production.** Default install is 1 replica of each.
+- **Linkerd's ingress is simpler than Istio's** but less feature-rich. Use Envoy Gateway or Traefik for complex ingress.
+- **The viz extension** is useful but resource-heavy. For production, use Prometheus + Grafana.
 
 ## HA setup
 
@@ -569,7 +574,7 @@ linkerd stat -n my-app
 
 ## See also
 
-* [[Kubernetes/guides/networking/istio|istio]] — full-featured alternative
-* [[Kubernetes/guides/networking/comparison|comparison]] — Linkerd vs Istio vs Cilium
-* [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — alternative ingress
-* [Linkerd docs](https://linkerd.io/docs/)
+- [[Kubernetes/guides/networking/istio|istio]] — full-featured alternative
+- [[Kubernetes/guides/networking/comparison|comparison]] — Linkerd vs Istio vs Cilium
+- [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — alternative ingress
+- [Linkerd docs](https://linkerd.io/docs/)

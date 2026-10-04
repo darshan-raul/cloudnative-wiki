@@ -42,21 +42,22 @@ The choice of topology defines where the Kubernetes master components (`kube-api
 
 ### Deep Mechanics Breakdown
 
-| Architectural Vector | Single-Zone Zonal | Multi-Zonal | Regional (Production Standard) |
-| :--- | :--- | :--- | :--- |
-| **Control Plane Replicas**| 1 Master VM in 1 Zone | 1 Master VM in 1 Zone | **3 Master Replicas across 3 Zones** |
-| **etcd Quorum** | Single-node etcd instance | Single-node etcd instance | **3-node distributed Raft quorum** |
-| **Control Plane SLA** | **99.5%** | **99.5%** | **99.95%** (Financially backed) |
-| **Master Upgrade Impact** | `kube-apiserver` drops for ~5-15 min | `kube-apiserver` drops for ~5-15 min | **Zero downtime** (Rolling replica upgrade) |
-| **Worker Node Scope** | 1 Zone | 2+ Zones in same region | **3 Zones** across the region |
-| **Cluster Management Fee**| $0.10/hour ($73/month) | $0.10/hour ($73/month) | $0.10/hour ($73/month) |
-| **Recommended Use Case** | Dev, Sandbox, ephemeral CI | Non-prod multi-zone testing | **All Enterprise Production Workloads** |
+| Architectural Vector       | Single-Zone Zonal                    | Multi-Zonal                          | Regional (Production Standard)              |
+| :------------------------- | :----------------------------------- | :----------------------------------- | :------------------------------------------ |
+| **Control Plane Replicas** | 1 Master VM in 1 Zone                | 1 Master VM in 1 Zone                | **3 Master Replicas across 3 Zones**        |
+| **etcd Quorum**            | Single-node etcd instance            | Single-node etcd instance            | **3-node distributed Raft quorum**          |
+| **Control Plane SLA**      | **99.5%**                            | **99.5%**                            | **99.95%** (Financially backed)             |
+| **Master Upgrade Impact**  | `kube-apiserver` drops for ~5-15 min | `kube-apiserver` drops for ~5-15 min | **Zero downtime** (Rolling replica upgrade) |
+| **Worker Node Scope**      | 1 Zone                               | 2+ Zones in same region              | **3 Zones** across the region               |
+| **Cluster Management Fee** | $0.10/hour ($73/month)               | $0.10/hour ($73/month)               | $0.10/hour ($73/month)                      |
+| **Recommended Use Case**   | Dev, Sandbox, ephemeral CI           | Non-prod multi-zone testing          | **All Enterprise Production Workloads**     |
 
 ---
 
 ## 2. Control Plane Resilience & etcd Raft Mechanics
 
 In a **Regional Cluster**:
+
 1. **Three Master VMs:** GKE deploys independent master instances across three distinct physical Availability Zones within the chosen GCP region.
 2. **Distributed Raft Quorum:** The underlying etcd cluster maintains state across the 3 zones using the Raft consensus algorithm ($N=3$, Quorum $= \lfloor N/2 \rfloor + 1 = 2$). If an entire physical zone experiences catastrophic power or network loss, the remaining two master replicas maintain etcd quorum, and `kubectl` API calls continue to execute without disruption.
 3. **Internal Load Balancer:** Client API calls (`kubectl`, Kubelets, in-cluster pods talking to `https://kubernetes.default.svc`) route through a Google internal regional load balancer that automatically health-checks and forwards traffic only to healthy master replicas.
@@ -103,7 +104,8 @@ gcloud container clusters create prod-regional-cluster \
     --release-channel=regular \
     --project=core-infrastructure-prod
 ```
-*(Note: `--num-nodes=2` in a regional cluster provisions 2 nodes per zone $\times 3 \text{ zones} = 6 \text{ total worker nodes}$).*
+
+_(Note: `--num-nodes=2` in a regional cluster provisions 2 nodes per zone $\times 3 \text{ zones} = 6 \text{ total worker nodes}$)._
 
 ### 2. Configure a 4-Hour Recurring Weekly Maintenance Window
 
@@ -146,14 +148,14 @@ gcloud container node-pools create cache-node-pool \
 
 ## 5. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Single-Zone Cluster | Regional Cluster |
-| :--- | :--- | :--- |
-| **Max Nodes per Cluster** | 1,000 nodes | **15,000 nodes** |
-| **Control Plane SLA** | 99.5% | **99.95%** |
-| **Control Plane Resiliency** | Master failure breaks API access | Resilient to loss of an entire zone |
-| **Maintenance Exclusions** | Max 3 exclusions active | Max 3 exclusions active (up to 30 days each) |
-| **Minimum Maintenance Window** | 4 hours per 7 days | 4 hours per 7 days |
-| **Cross-Zone Network Egress** | **$0.00** (All traffic in 1 zone) | **$0.01 per GB** between zones |
+| Parameter / Dimension          | Single-Zone Cluster               | Regional Cluster                             |
+| :----------------------------- | :-------------------------------- | :------------------------------------------- |
+| **Max Nodes per Cluster**      | 1,000 nodes                       | **15,000 nodes**                             |
+| **Control Plane SLA**          | 99.5%                             | **99.95%**                                   |
+| **Control Plane Resiliency**   | Master failure breaks API access  | Resilient to loss of an entire zone          |
+| **Maintenance Exclusions**     | Max 3 exclusions active           | Max 3 exclusions active (up to 30 days each) |
+| **Minimum Maintenance Window** | 4 hours per 7 days                | 4 hours per 7 days                           |
+| **Cross-Zone Network Egress**  | **$0.00** (All traffic in 1 zone) | **$0.01 per GB** between zones               |
 
 ---
 
@@ -170,6 +172,7 @@ gcloud container node-pools create cache-node-pool \
 ## 7. Realistic Pricing Scenarios
 
 Pricing considerations:
+
 1. **Cluster Management Fee:** Flat $0.10/hour ($73/month) regardless of whether the cluster is Zonal or Regional.
 2. **Worker Node Compute:** Regional clusters distribute nodes across 3 zones. A request for 3 nodes provisions $3 \times 3 = 9$ nodes.
 3. **Cross-Zone Network Egress:** Internal inter-zonal traffic in the same region costs **$0.01 per GB**.

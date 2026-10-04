@@ -13,7 +13,7 @@ tags:
 
 # AKS Automatic Deep Dive — Architecture, SRE Invariants, and Node Auto-Provisioning 🤖⚙️
 
-Announced at Microsoft Build and generally available as of late 2025, **AKS Automatic** represents Microsoft's opinionated, fully managed operational model for Azure Kubernetes Service. Similar to GKE Autopilot and AWS EKS Auto Mode, AKS Automatic eliminates manual node pool lifecycle management, OS patching overhead, and cluster bootstrapping complexity. Behind the scenes, Microsoft provisions, optimizes, and auto-repairs worker nodes using an integrated, hardened distribution of **Node Auto-Provisioning (NAP)** powered by the **Karpenter provider for Azure**. 
+Announced at Microsoft Build and generally available as of late 2025, **AKS Automatic** represents Microsoft's opinionated, fully managed operational model for Azure Kubernetes Service. Similar to GKE Autopilot and AWS EKS Auto Mode, AKS Automatic eliminates manual node pool lifecycle management, OS patching overhead, and cluster bootstrapping complexity. Behind the scenes, Microsoft provisions, optimizes, and auto-repairs worker nodes using an integrated, hardened distribution of **Node Auto-Provisioning (NAP)** powered by the **Karpenter provider for Azure**.
 
 ---
 
@@ -70,16 +70,16 @@ AKS Automatic creates a curated abstraction boundary. Platform engineers and dev
 
 ## 2. Comparison: AKS Automatic vs. AKS Standard vs. GKE Autopilot
 
-| Architectural Dimension | AKS Standard (Manual / Self-Managed) | AKS Automatic (Fully Managed) | GKE Autopilot (Google Cloud) |
-| :--- | :--- | :--- | :--- |
-| **Node Management** | Customer manages VMSS, OS updates, node pools | Microsoft manages JIT nodes via Karpenter | Google manages JIT nodes via GKE Autopilot |
-| **Node OS** | Ubuntu 22.04 or Azure Linux 3 (Customer choice)| **Azure Linux 3** (Standardized) | Container-Optimized OS (COS) |
-| **Autoscaling Engine** | Kubernetes Cluster Autoscaler (CA) | **Node Auto-Provisioning (Karpenter)** | GKE Cluster Autoscaler / NAP |
-| **Networking Dataplane** | Kubenet, Azure CNI, or Azure CNI Cilium | **Azure CNI Overlay + Cilium eBPF** | Datapath V2 (Cilium eBPF) |
-| **Control Plane Fee** | $0.10/hr (Standard SLA) or $0.00/hr (Free) | **$0.16/cluster-hour** | $0.10/cluster-hour ($74.40 free credit) |
-| **Worker Billing Model**| Per-VM instance compute rates | **Per-VM compute rates** (No markup) | **Per-Pod resource requests** |
-| **SSH / Host Access** | Supported via SSH keys or Node Shell | **Restricted / Blocked** (Container-only) | Restricted / Blocked |
-| **Privileged Pods** | Permitted (if RBAC allows) | **Restricted by Azure Policy** | Strictly Blocked |
+| Architectural Dimension  | AKS Standard (Manual / Self-Managed)            | AKS Automatic (Fully Managed)             | GKE Autopilot (Google Cloud)               |
+| :----------------------- | :---------------------------------------------- | :---------------------------------------- | :----------------------------------------- |
+| **Node Management**      | Customer manages VMSS, OS updates, node pools   | Microsoft manages JIT nodes via Karpenter | Google manages JIT nodes via GKE Autopilot |
+| **Node OS**              | Ubuntu 22.04 or Azure Linux 3 (Customer choice) | **Azure Linux 3** (Standardized)          | Container-Optimized OS (COS)               |
+| **Autoscaling Engine**   | Kubernetes Cluster Autoscaler (CA)              | **Node Auto-Provisioning (Karpenter)**    | GKE Cluster Autoscaler / NAP               |
+| **Networking Dataplane** | Kubenet, Azure CNI, or Azure CNI Cilium         | **Azure CNI Overlay + Cilium eBPF**       | Datapath V2 (Cilium eBPF)                  |
+| **Control Plane Fee**    | $0.10/hr (Standard SLA) or $0.00/hr (Free)      | **$0.16/cluster-hour**                    | $0.10/cluster-hour ($74.40 free credit)    |
+| **Worker Billing Model** | Per-VM instance compute rates                   | **Per-VM compute rates** (No markup)      | **Per-Pod resource requests**              |
+| **SSH / Host Access**    | Supported via SSH keys or Node Shell            | **Restricted / Blocked** (Container-only) | Restricted / Blocked                       |
+| **Privileged Pods**      | Permitted (if RBAC allows)                      | **Restricted by Azure Policy**            | Strictly Blocked                           |
 
 ---
 
@@ -136,15 +136,15 @@ spec:
         app: checkout-service
     spec:
       containers:
-      - name: api
-        image: mcr.microsoft.com/oss/nginx/nginx:1.25.3
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "1Gi"
-          limits:
-            cpu: "1000m"
-            memory: "2Gi"
+        - name: api
+          image: mcr.microsoft.com/oss/nginx/nginx:1.25.3
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
       # AKS Automatic allows targeting specific VM architectures seamlessly
       nodeSelector:
         kubernetes.io/arch: amd64
@@ -161,15 +161,15 @@ kubectl apply -f checkout-service-deployment.yaml
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Limit / Metric | Value | Production Architectural Context |
-| :--- | :--- | :--- |
-| **Max Nodes per Cluster** | **5,000 nodes** | Powered by Azure CNI Overlay private CIDR space |
-| **Control Plane Uptime SLA** | **99.95%** | Financially backed, multi-zone control plane replication |
-| **Default OS Platform** | **Azure Linux 3** | Security-hardened Linux kernel with minimal attack surface |
-| **Node Provisioning Latency**| **~40 to 60 seconds** | Rapid Karpenter VMSS instance attachment with cached VHDs |
-| **Managed Cluster Surcharge**| **$0.16 per hour** | Billed as the `Automatic` SKU management fee (~$116.80/mo) |
-| **Max Pods per Node** | **250 pods** | Default overlay allocation per auto-provisioned node |
-| **Network Dataplane** | **Cilium eBPF** | Kernel-level L3/L4/L7 routing without iptables bottlenecks |
+| Limit / Metric                | Value                 | Production Architectural Context                           |
+| :---------------------------- | :-------------------- | :--------------------------------------------------------- |
+| **Max Nodes per Cluster**     | **5,000 nodes**       | Powered by Azure CNI Overlay private CIDR space            |
+| **Control Plane Uptime SLA**  | **99.95%**            | Financially backed, multi-zone control plane replication   |
+| **Default OS Platform**       | **Azure Linux 3**     | Security-hardened Linux kernel with minimal attack surface |
+| **Node Provisioning Latency** | **~40 to 60 seconds** | Rapid Karpenter VMSS instance attachment with cached VHDs  |
+| **Managed Cluster Surcharge** | **$0.16 per hour**    | Billed as the `Automatic` SKU management fee (~$116.80/mo) |
+| **Max Pods per Node**         | **250 pods**          | Default overlay allocation per auto-provisioned node       |
+| **Network Dataplane**         | **Cilium eBPF**       | Kernel-level L3/L4/L7 routing without iptables bottlenecks |
 
 ---
 
@@ -211,7 +211,7 @@ Unlike GKE Autopilot (which charges an upcharge per Pod vCPU and memory request)
   - Baseline Nodes (24/7): 2 × $0.192/hr × 730 hrs = **$280.32**
   - Spot Surge Nodes (120 hrs/mo): 20 × $0.0768/hr × 120 hrs = **$184.32**
   - Storage & Network Overhead: ~$50.00.
-- **Total Monthly Cost:** **$631.44 / month** *(Delivering over $700/mo in savings compared to static VMSS sizing).*
+- **Total Monthly Cost:** **$631.44 / month** _(Delivering over $700/mo in savings compared to static VMSS sizing)._
 
 ---
 

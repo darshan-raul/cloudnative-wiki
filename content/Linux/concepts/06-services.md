@@ -13,6 +13,7 @@ A service (daemon) is a program that runs in the background, waiting to handle r
 ## What is a Daemon?
 
 A daemon is a process that:
+
 1. Starts at boot (usually)
 2. Runs in the background
 3. Has no attached terminal (detached from /dev/tty)
@@ -29,6 +30,7 @@ DNS:        systemd-resolved → answers DNS queries
 ## systemd — The Service Manager
 
 systemd is the init system on most modern Linux distros. It:
+
 - Starts services at boot
 - Keeps services running (restarts on failure)
 - Provides logging (journald)

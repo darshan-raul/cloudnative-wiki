@@ -47,7 +47,7 @@ Shared VPC allows an enterprise to connect resources from multiple Google Cloud 
 └──────────────────────────────────────────┘ └──────────────────────────────────────────┘
 ```
 
-* **Internal Routing Without Peering:** A VM in Service Project A communicates directly with a GKE Pod in Service Project B over internal RFC 1918 addresses at zero latency, because they reside on the **exact same VPC routing domain** inside the Host Project.
+- **Internal Routing Without Peering:** A VM in Service Project A communicates directly with a GKE Pod in Service Project B over internal RFC 1918 addresses at zero latency, because they reside on the **exact same VPC routing domain** inside the Host Project.
 
 ---
 
@@ -55,28 +55,30 @@ Shared VPC allows an enterprise to connect resources from multiple Google Cloud 
 
 ### 1. Separation of Concerns (NetOps vs. DevOps)
 
-* **Host Project Admins (`roles/compute.xpnAdmin` at Org/Folder level):**
-  * Enable the Shared VPC host project.
-  * Define IP CIDR blocks, create subnets, provision Cloud NAT gateways, and manage Cloud Interconnect circuits.
-  * Associate Service Projects to the Host Project.
-* **Service Project Admins (DevOps/SRE):**
-  * Hold `Owner` or `Editor` rights inside their specific Service Project.
-  * Cannot create, alter, or delete subnets or firewall rules.
-  * Can only consume the subnets explicitly delegated to them by the network team.
+- **Host Project Admins (`roles/compute.xpnAdmin` at Org/Folder level):**
+  - Enable the Shared VPC host project.
+  - Define IP CIDR blocks, create subnets, provision Cloud NAT gateways, and manage Cloud Interconnect circuits.
+  - Associate Service Projects to the Host Project.
+- **Service Project Admins (DevOps/SRE):**
+  - Hold `Owner` or `Editor` rights inside their specific Service Project.
+  - Cannot create, alter, or delete subnets or firewall rules.
+  - Can only consume the subnets explicitly delegated to them by the network team.
 
 ### 2. Subnet-Level IAM Delegation
 
 Permissions to attach instances to a Shared VPC must **never** be granted at the project level:
-* **Anti-Pattern:** Granting `roles/compute.networkUser` on the entire Host Project allows developers in Project A to attach VMs to confidential database subnets reserved for Project B.
-* **Best Practice:** Grant `roles/compute.networkUser` strictly on individual **Subnet resources**:
-  * Payments team gets `roles/compute.networkUser` on `projects/host-proj/regions/us-central1/subnetworks/snet-payments`.
+
+- **Anti-Pattern:** Granting `roles/compute.networkUser` on the entire Host Project allows developers in Project A to attach VMs to confidential database subnets reserved for Project B.
+- **Best Practice:** Grant `roles/compute.networkUser` strictly on individual **Subnet resources**:
+  - Payments team gets `roles/compute.networkUser` on `projects/host-proj/regions/us-central1/subnetworks/snet-payments`.
 
 ### 3. GKE in a Shared VPC (Service Agent Requirements)
 
 When provisioning a GKE cluster inside a Service Project connected to a Shared VPC, the GKE control plane requires specialized cross-project permissions:
-* The **GKE Service Agent** of the Service Project (`service-<service-project-number>@container-engine-robot.iam.gserviceaccount.com`) must be granted:
-  * `roles/container.hostServiceAgentUser` at the **Host Project level**.
-  * `roles/compute.networkUser` on the specific host subnets (including primary, pod secondary, and service secondary ranges).
+
+- The **GKE Service Agent** of the Service Project (`service-<service-project-number>@container-engine-robot.iam.gserviceaccount.com`) must be granted:
+  - `roles/container.hostServiceAgentUser` at the **Host Project level**.
+  - `roles/compute.networkUser` on the specific host subnets (including primary, pod secondary, and service secondary ranges).
 
 ---
 
@@ -142,38 +144,40 @@ gcloud compute instances create payment-api-01 \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Service Projects per Host Project** | 1,000 projects | Scalable for massive enterprise environments |
-| **Host Projects per Organization** | 100 host projects | Can maintain separate Prod, Non-Prod, and Sandbox hubs |
-| **Max Network User bindings per subnet** | Standard IAM policy limits (250 KB) | Assign roles to Google Groups, not individual users |
-| **Cross-project peering** | Not permitted within same VPC | Shared VPC eliminates the need for peering |
+| Parameter                                | Limit                               | Production Notes                                       |
+| :--------------------------------------- | :---------------------------------- | :----------------------------------------------------- |
+| **Service Projects per Host Project**    | 1,000 projects                      | Scalable for massive enterprise environments           |
+| **Host Projects per Organization**       | 100 host projects                   | Can maintain separate Prod, Non-Prod, and Sandbox hubs |
+| **Max Network User bindings per subnet** | Standard IAM policy limits (250 KB) | Assign roles to Google Groups, not individual users    |
+| **Cross-project peering**                | Not permitted within same VPC       | Shared VPC eliminates the need for peering             |
 
 ---
 
 ## References
 
-* **Shared VPC Overview:** https://cloud.google.com/vpc/docs/shared-vpc
-* **Provisioning Shared VPC Guide:** https://cloud.google.com/vpc/docs/provisioning-shared-vpc
-* **GKE with Shared VPC:** https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc
-* **Pricing:** Free (Shared VPC is a core networking feature; pay standard inter-zone/inter-region egress rates)
+- **Shared VPC Overview:** https://cloud.google.com/vpc/docs/shared-vpc
+- **Provisioning Shared VPC Guide:** https://cloud.google.com/vpc/docs/provisioning-shared-vpc
+- **GKE with Shared VPC:** https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-shared-vpc
+- **Pricing:** Free (Shared VPC is a core networking feature; pay standard inter-zone/inter-region egress rates)
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Enterprise Multi-Team Cloud Migration
-* 25 Service Projects (Payments, Logistics, Catalog, User Services) running 300 VMs connected to a single Host Project in `us-central1`.
-* Cross-project communication between microservices within the same zone: **$0.00** (Free).
-* Cross-zone internal communication: 20 TB / month ($0.01 / GB = **$200.00 / month**).
-* Shared VPC Admin & Host infrastructure: **$0.00**.
-* **Total Network Infrastructure Overhead:** **$0.00** (Eliminates the cost of 25 separate NAT gateways, VPN tunnels, and complex transit peering).
+
+- 25 Service Projects (Payments, Logistics, Catalog, User Services) running 300 VMs connected to a single Host Project in `us-central1`.
+- Cross-project communication between microservices within the same zone: **$0.00** (Free).
+- Cross-zone internal communication: 20 TB / month ($0.01 / GB = **$200.00 / month**).
+- Shared VPC Admin & Host infrastructure: **$0.00**.
+- **Total Network Infrastructure Overhead:** **$0.00** (Eliminates the cost of 25 separate NAT gateways, VPN tunnels, and complex transit peering).
 
 ### Scenario 2: Centralized Egress via Shared VPC Cloud NAT
-* Instead of running 25 separate NAT gateways across 25 standalone projects, the Host Project operates **1 centralized Cloud NAT Gateway** in `us-central1`.
-* Fixed gateway fee: 1 gateway × $0.045 / hr × 730 hrs = **$32.85 / month**.
-* Total egress processed across all 25 teams: 15 TB ($0.045 / GB = $675.00).
-* **Cost Savings:** Operating 25 separate NAT gateways would cost ~$821/month in base hourly fees alone. Shared VPC reduces base NAT gateway fees by **96%**.
+
+- Instead of running 25 separate NAT gateways across 25 standalone projects, the Host Project operates **1 centralized Cloud NAT Gateway** in `us-central1`.
+- Fixed gateway fee: 1 gateway × $0.045 / hr × 730 hrs = **$32.85 / month**.
+- Total egress processed across all 25 teams: 15 TB ($0.045 / GB = $675.00).
+- **Cost Savings:** Operating 25 separate NAT gateways would cost ~$821/month in base hourly fees alone. Shared VPC reduces base NAT gateway fees by **96%**.
 
 ---
 

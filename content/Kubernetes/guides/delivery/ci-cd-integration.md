@@ -104,14 +104,14 @@ Or use BuildKit:
 
 **Kaniko vs Buildx vs Docker-in-Docker:**
 
-| | Kaniko | Buildx | DinD |
-|---|--------|--------|------|
-| **Daemon** | None | None (uses buildkit) | Docker daemon |
-| **Privileges** | None | None | Needs privileged |
-| **Performance** | Good | Excellent | Best |
-| **Multi-arch** | Yes | Yes (with QEMU) | Yes |
-| **Caching** | Yes (registry, GCS, S3) | Yes (registry, GHA cache) | Local cache |
-| **Complexity** | Medium | Low | High |
+|                 | Kaniko                  | Buildx                    | DinD             |
+| --------------- | ----------------------- | ------------------------- | ---------------- |
+| **Daemon**      | None                    | None (uses buildkit)      | Docker daemon    |
+| **Privileges**  | None                    | None                      | Needs privileged |
+| **Performance** | Good                    | Excellent                 | Best             |
+| **Multi-arch**  | Yes                     | Yes (with QEMU)           | Yes              |
+| **Caching**     | Yes (registry, GCS, S3) | Yes (registry, GHA cache) | Local cache      |
+| **Complexity**  | Medium                  | Low                       | High             |
 
 **For most:** Buildx is the right choice. Kaniko when you can't use Buildx (unprivileged, restricted env).
 
@@ -132,6 +132,7 @@ Or use BuildKit:
 ```
 
 **BuildKit features:**
+
 - Parallel build steps
 - Better layer caching
 - Multi-arch builds (`--platform linux/amd64,linux/arm64`)
@@ -145,14 +146,15 @@ Or use BuildKit:
   uses: aquasecurity/trivy-action@master
   with:
     image-ref: myregistry/myapp:${{ github.sha }}
-    format: 'table'
-    exit-code: '1'   # fail build on HIGH/CRITICAL
+    format: "table"
+    exit-code: "1" # fail build on HIGH/CRITICAL
     ignore-unfixed: true
-    vuln-type: 'os,library'
-    severity: 'CRITICAL,HIGH'
+    vuln-type: "os,library"
+    severity: "CRITICAL,HIGH"
 ```
 
 Other scanners:
+
 - **Grype** (`anchore/scan-action`) — Anchore, fast
 - **Snyk** (`snyk/actions/docker`) — commercial
 - **Docker Scout** — built into Docker Hub
@@ -269,6 +271,7 @@ Public registries (Docker Hub, GHCR, Quay) are easy. For production, **use a pri
 ### Image retention policies
 
 Most registries auto-prune:
+
 - **Keep last N tags**
 - **Keep tags newer than X days**
 - **Keep tags matching patterns** (e.g., `v1.*`)
@@ -299,7 +302,7 @@ kind: ServiceAccount
 metadata:
   name: my-app
 imagePullSecrets:
-- name: registry-creds
+  - name: registry-creds
 ```
 
 Or use a registry mirror (all nodes pull from a local proxy).
@@ -319,12 +322,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
-      with:
-        go-version: '1.21'
-    - run: go test ./...
-    - run: go vet ./...
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+      - run: go test ./...
+      - run: go vet ./...
 
   build:
     needs: test
@@ -335,49 +338,49 @@ jobs:
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Login to ECR
-      uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Set up Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: myregistry/myapp:${{ github.sha }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        provenance: true
-        sbom: true
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: myregistry/myapp:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
 
-    - name: Sign image
-      uses: sigstore/cosign-installer@v3
-    - run: |
-        cosign sign --yes myregistry/myapp:${{ github.sha }}
+      - name: Sign image
+        uses: sigstore/cosign-installer@v3
+      - run: |
+          cosign sign --yes myregistry/myapp:${{ github.sha }}
 
-    - name: Scan image
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: myregistry/myapp:${{ github.sha }}
-        exit-code: '1'
-        severity: 'CRITICAL,HIGH'
+      - name: Scan image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: myregistry/myapp:${{ github.sha }}
+          exit-code: "1"
+          severity: "CRITICAL,HIGH"
 
-    - name: Update GitOps
-      env:
-        GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
-      run: |
-        git clone https://github.com/myorg/gitops.git
-        cd gitops/overlays/prod
-        kustomize edit set image myregistry/myapp=myregistry/myapp:${{ github.sha }}
-        git config user.email "ci@example.com"
-        git config user.name "CI Bot"
-        git add -A
-        git commit -m "ci: bump myapp to ${{ github.sha }}"
-        git push
+      - name: Update GitOps
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: |
+          git clone https://github.com/myorg/gitops.git
+          cd gitops/overlays/prod
+          kustomize edit set image myregistry/myapp=myregistry/myapp:${{ github.sha }}
+          git config user.email "ci@example.com"
+          git config user.name "CI Bot"
+          git add -A
+          git commit -m "ci: bump myapp to ${{ github.sha }}"
+          git push
 ```
 
 ## GitLab CI reference
@@ -465,24 +468,25 @@ Caching speeds up builds 5-10x.
 ```
 
 **Cache types:**
+
 - **GHA cache** — GitHub Actions, fast, free
 - **Registry cache** — works with any registry, shareable
 - **Local cache** — DinD only, doesn't share between runs
 
 ## Common gotchas
 
-* **The build context size** matters. Use `.dockerignore` to exclude `.git`, `node_modules`, etc.
-* **Multi-stage builds** are faster and smaller. The final image should have only the runtime.
-* **Base image updates** are critical. Use `docker pull` regularly or Renovate/Dependabot.
-* **Image tag strategy matters.** Use `latest` for dev, git SHA for prod. Floating tags are dangerous.
-* **Build args vs env vars.** Build args are visible in image history, env vars are runtime-only.
-* **Layer caching invalidates on file changes.** Order your Dockerfile carefully (least-changing first).
-* **The image registry is a SPOF.** If it's down, no deploys. Replicate or use a registry proxy.
-* **Pull rate limits** (Docker Hub) can break prod. Use a private registry for production images.
-* **The CI runner needs enough disk** for layer caching. 50-100GB is common.
-* **Secrets in CI logs** are a real risk. Mask them, audit logs.
-* **Pipeline duration** is a hidden cost. Cache aggressively.
-* **Long-running builds** block the queue. Parallelize or split into multiple jobs.
+- **The build context size** matters. Use `.dockerignore` to exclude `.git`, `node_modules`, etc.
+- **Multi-stage builds** are faster and smaller. The final image should have only the runtime.
+- **Base image updates** are critical. Use `docker pull` regularly or Renovate/Dependabot.
+- **Image tag strategy matters.** Use `latest` for dev, git SHA for prod. Floating tags are dangerous.
+- **Build args vs env vars.** Build args are visible in image history, env vars are runtime-only.
+- **Layer caching invalidates on file changes.** Order your Dockerfile carefully (least-changing first).
+- **The image registry is a SPOF.** If it's down, no deploys. Replicate or use a registry proxy.
+- **Pull rate limits** (Docker Hub) can break prod. Use a private registry for production images.
+- **The CI runner needs enough disk** for layer caching. 50-100GB is common.
+- **Secrets in CI logs** are a real risk. Mask them, audit logs.
+- **Pipeline duration** is a hidden cost. Cache aggressively.
+- **Long-running builds** block the queue. Parallelize or split into multiple jobs.
 
 ## A worked example
 
@@ -505,11 +509,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
-      with: {go-version: '1.21'}
-    - run: go test ./...
-    - run: go vet ./...
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.21" }
+      - run: go test ./...
+      - run: go vet ./...
 
   build:
     needs: test
@@ -519,59 +523,60 @@ jobs:
       packages: write
       id-token: write
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Login
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.REGISTRY_USER }}
-        password: ${{ secrets.REGISTRY_PASS }}
+      - name: Login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASS }}
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-    - name: Set up Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
-        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE }}:cache
-        cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE }}:cache,mode=max
-        provenance: true
-        sbom: true
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE }}:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE }}:cache,mode=max
+          provenance: true
+          sbom: true
 
-    - name: Sign
-      uses: sigstore/cosign-installer@v3
-    - run: |
-        cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
+      - name: Sign
+        uses: sigstore/cosign-installer@v3
+      - run: |
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
 
-    - name: Scan
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
-        exit-code: '1'
-        severity: 'CRITICAL,HIGH'
+      - name: Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
+          exit-code: "1"
+          severity: "CRITICAL,HIGH"
 
-    - name: Update GitOps
-      env:
-        GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
-      run: |
-        git clone https://github.com/myorg/gitops.git
-        cd gitops/overlays/prod
-        kustomize edit set image ${{ env.REGISTRY }}/${{ env.IMAGE }}=${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
-        git config user.email "ci@example.com"
-        git config user.name "CI Bot"
-        git add -A
-        git commit -m "ci: bump myapp to ${{ github.sha }}"
-        git push
+      - name: Update GitOps
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: |
+          git clone https://github.com/myorg/gitops.git
+          cd gitops/overlays/prod
+          kustomize edit set image ${{ env.REGISTRY }}/${{ env.IMAGE }}=${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
+          git config user.email "ci@example.com"
+          git config user.name "CI Bot"
+          git add -A
+          git commit -m "ci: bump myapp to ${{ github.sha }}"
+          git push
 ```
 
 **The flow:**
+
 1. Push to main triggers CI
 2. Tests run
 3. Multi-arch image built, scanned, signed, pushed
@@ -581,8 +586,8 @@ jobs:
 
 ## See also
 
-* [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — the model
-* [[Kubernetes/guides/delivery/templating-patching/kustomize|kustomize]] — image updates
-* [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — safe deploys
-* [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — full CI/CD
-* [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for CI
+- [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — the model
+- [[Kubernetes/guides/delivery/templating-patching/kustomize|kustomize]] — image updates
+- [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — safe deploys
+- [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — full CI/CD
+- [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for CI

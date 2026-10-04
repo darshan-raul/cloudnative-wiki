@@ -76,22 +76,22 @@ spec:
   backoffLimit: 6
   podFailurePolicy:
     rules:
-    # 1. Ignore preemption from Spot VM shutdowns (Do not count toward backoffLimit)
-    - action: Ignore
-      onPodConditions:
-      - type: DisruptionTarget
-    # 2. Count application exceptions toward retry backoff limit
-    - action: Count
-      onExitCodes:
-        containerName: worker
-        operator: In
-        values: [1, 2]
-    # 3. Fail immediately on fatal database schema mismatch (Do not waste compute retrying)
-    - action: FailJob
-      onExitCodes:
-        containerName: worker
-        operator: In
-        values: [99]
+      # 1. Ignore preemption from Spot VM shutdowns (Do not count toward backoffLimit)
+      - action: Ignore
+        onPodConditions:
+          - type: DisruptionTarget
+      # 2. Count application exceptions toward retry backoff limit
+      - action: Count
+        onExitCodes:
+          containerName: worker
+          operator: In
+          values: [1, 2]
+      # 3. Fail immediately on fatal database schema mismatch (Do not waste compute retrying)
+      - action: FailJob
+        onExitCodes:
+          containerName: worker
+          operator: In
+          values: [99]
 ```
 
 ---
@@ -138,9 +138,9 @@ spec:
   nodeLabels:
     cloud.google.com/gke-spot: "true"
   nodeTaints:
-  - key: "workload"
-    value: "batch"
-    effect: "NoSchedule"
+    - key: "workload"
+      value: "batch"
+      effect: "NoSchedule"
 ---
 apiVersion: kueue.x-k8s.io/v1beta1
 kind: ClusterQueue
@@ -149,14 +149,14 @@ metadata:
 spec:
   namespaceSelector: {}
   resourceGroups:
-  - coveredResources: ["cpu", "memory"]
-    flavors:
-    - name: spot-c3-flavor
-      resources:
-      - name: "cpu"
-        nominalQuota: 200 # Up to 200 Spot vCPUs
-      - name: "memory"
-        nominalQuota: 800Gi
+    - coveredResources: ["cpu", "memory"]
+      flavors:
+        - name: spot-c3-flavor
+          resources:
+            - name: "cpu"
+              nominalQuota: 200 # Up to 200 Spot vCPUs
+            - name: "memory"
+              nominalQuota: 800Gi
   preemption:
     reclaimWithinCohort: Any
     withinClusterQueue: LowerPriority
@@ -199,23 +199,23 @@ spec:
         app: risk-worker
     spec:
       tolerations:
-      - key: "workload"
-        operator: "Equal"
-        value: "batch"
-        effect: "NoSchedule"
+        - key: "workload"
+          operator: "Equal"
+          value: "batch"
+          effect: "NoSchedule"
       restartPolicy: OnFailure
       terminationGracePeriodSeconds: 25
       containers:
-      - name: worker
-        image: us-central1-docker.pkg.dev/core-infrastructure-prod/batch/risk-engine:v1.4
-        command:
-        - "sh"
-        - "-c"
-        - "python3 analyze_shard.py --shard-id=${JOB_COMPLETION_INDEX} --output=gs://batch-results-prod/shard_${JOB_COMPLETION_INDEX}.parquet"
-        resources:
-          requests:
-            cpu: "2"
-            memory: "8Gi"
+        - name: worker
+          image: us-central1-docker.pkg.dev/core-infrastructure-prod/batch/risk-engine:v1.4
+          command:
+            - "sh"
+            - "-c"
+            - "python3 analyze_shard.py --shard-id=${JOB_COMPLETION_INDEX} --output=gs://batch-results-prod/shard_${JOB_COMPLETION_INDEX}.parquet"
+          resources:
+            requests:
+              cpu: "2"
+              memory: "8Gi"
 ```
 
 Apply Job:
@@ -232,13 +232,13 @@ kubectl get jobs -n batch-analytics
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension / Parameter | Standard Boundary | Scalability Guidance |
-| :--- | :--- | :--- |
-| **Max Completions per Job** | 100,000 tasks | Use IndexedJob for high-volume tasks |
-| **Kueue Admission Latency** | Sub-second (< 500ms) | Evaluates quotas in-memory |
-| **Cluster Autoscaler Scale-Out**| 0 to 50 nodes in ~2-3 mins | Leverages GCE parallel VM creation |
-| **Spot Preemption Grace Period**| 25-30 seconds | Checkpoint state to GCS before exit |
-| **Job History Retention** | `failedJobsHistoryLimit` | Clean up completed pods to reduce etcd bloat |
+| Dimension / Parameter            | Standard Boundary          | Scalability Guidance                         |
+| :------------------------------- | :------------------------- | :------------------------------------------- |
+| **Max Completions per Job**      | 100,000 tasks              | Use IndexedJob for high-volume tasks         |
+| **Kueue Admission Latency**      | Sub-second (< 500ms)       | Evaluates quotas in-memory                   |
+| **Cluster Autoscaler Scale-Out** | 0 to 50 nodes in ~2-3 mins | Leverages GCE parallel VM creation           |
+| **Spot Preemption Grace Period** | 25-30 seconds              | Checkpoint state to GCS before exit          |
+| **Job History Retention**        | `failedJobsHistoryLimit`   | Clean up completed pods to reduce etcd bloat |
 
 ---
 
@@ -255,6 +255,7 @@ kubectl get jobs -n batch-analytics
 ## 6. Realistic Pricing Scenarios
 
 Batch pricing relies heavily on **Compute Engine Spot VMs**:
+
 - **C3 Standard Spot VM (8 vCPU / 32 GiB):** ~$0.075 per hour (~75% discount off on-demand).
 
 ### Scenario A: Nightly Financial Monte Carlo Simulation (10,000 Tasks)
@@ -268,7 +269,7 @@ Batch pricing relies heavily on **Compute Engine Spot VMs**:
   - Boot Disks (25 × 100 GB PD during active hours): Negligible (~$1.50)
   - GCS result uploads (500 GB): 500 GB × $0.020/GB = **$10.00**
 - **Total Monthly Cost:** **$180.25 / month**
-*(Running this identical simulation on on-demand VMs would cost ~$720/month; Spot + Kueue saves **$540/month**).*
+  _(Running this identical simulation on on-demand VMs would cost ~$720/month; Spot + Kueue saves **$540/month**)._
 
 ### Scenario B: Massive Genomic Sequencing Pipeline (500-Node Burst)
 

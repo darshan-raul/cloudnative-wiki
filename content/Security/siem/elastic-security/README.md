@@ -47,6 +47,7 @@ process.args: "-enc" and not user.name: "SYSTEM"
 ## Your Context
 
 If you're using Wazuh as primary SIEM, Elastic Security is a potential migration target for:
+
 - Large-scale environments (Elastic scales better at 10B+ events/day)
 - Teams already on the ELK stack
 - When you need advanced ML anomaly detection (Elastic SIEM has built-in ML jobs)

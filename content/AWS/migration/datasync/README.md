@@ -13,13 +13,13 @@ DataSync is a managed file transfer service for migrating large datasets between
 
 ## When to Use DataSync
 
-| Scenario | Use DataSync? | Alternative |
-|----------|--------------|-------------|
-| Migrate 100TB+ to S3 | Yes | Snowball if bandwidth is limited |
-| Sync ongoing file changes to S3 | Yes | S3 File Gateway or DataSync |
-| Transfer from NAS to EFS | Yes | Direct connect + manual |
-| Quick one-time transfer (< 10TB) | Maybe | AWS Transfer (SFTP → S3) |
-| Database migration | No | DMS |
+| Scenario                         | Use DataSync? | Alternative                      |
+| -------------------------------- | ------------- | -------------------------------- |
+| Migrate 100TB+ to S3             | Yes           | Snowball if bandwidth is limited |
+| Sync ongoing file changes to S3  | Yes           | S3 File Gateway or DataSync      |
+| Transfer from NAS to EFS         | Yes           | Direct connect + manual          |
+| Quick one-time transfer (< 10TB) | Maybe         | AWS Transfer (SFTP → S3)         |
+| Database migration               | No            | DMS                              |
 
 ## How It Works
 
@@ -50,6 +50,7 @@ aws datasync create-agent \
 ```
 
 **Agent deployment:**
+
 - VMware ESXi, Hyper-V, or KVM
 - EC2 (for AWS-native transfers or testing)
 - 4 vCPU, 8GB RAM minimum
@@ -131,18 +132,19 @@ aws datasync create-task \
 
 ## Transfer Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `VerifyMode` | `POINT_IN_TIME_CONSISTENT` | Verify transferred files match source |
-| `Mtime` | `PRESERVE` | Preserve file modification time |
-| `Atime` | `NONE` | Don't update access time (performance) |
-| `Uid` | `INT preserved` | Preserve Unix user ID |
-| `Gid` | `INT preserved` | Preserve Unix group ID |
-| `PreserveDeletedFiles` | `PRESERVE` | Keep deleted files in target (or remove) |
-| `OverwriteMode` | `ALWAYS` | Overwrite if file changed |
-| `TaskQueueing` | `ENABLED` | Queue multiple executions |
+| Option                 | Default                    | Description                              |
+| ---------------------- | -------------------------- | ---------------------------------------- |
+| `VerifyMode`           | `POINT_IN_TIME_CONSISTENT` | Verify transferred files match source    |
+| `Mtime`                | `PRESERVE`                 | Preserve file modification time          |
+| `Atime`                | `NONE`                     | Don't update access time (performance)   |
+| `Uid`                  | `INT preserved`            | Preserve Unix user ID                    |
+| `Gid`                  | `INT preserved`            | Preserve Unix group ID                   |
+| `PreserveDeletedFiles` | `PRESERVE`                 | Keep deleted files in target (or remove) |
+| `OverwriteMode`        | `ALWAYS`                   | Overwrite if file changed                |
+| `TaskQueueing`         | `ENABLED`                  | Queue multiple executions                |
 
 **Important options:**
+
 - `Mtime = PRESERVE`: Required for incremental sync. If you don't preserve mtime, subsequent incremental syncs will re-transfer everything.
 - `Atime = NONE`: Don't update access time — skipping this improves performance significantly.
 
@@ -190,6 +192,7 @@ aws datasync create-task \
 ```
 
 **Throttling tips:**
+
 - Set lower bandwidth during business hours, full speed off-hours
 - Monitor with CloudWatch metrics to tune
 - Bandwidth is per-agent — if you need 500 Mbps total, deploy multiple agents
@@ -250,20 +253,23 @@ DataSync can write to S3 as-is (preserve original format) or convert to differen
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "datasync:ListAgents",
-      "datasync:CreateAgent",
-      "datasync:CreateTask",
-      "datasync:StartTaskExecution"
-    ],
-    "Resource": "*"
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "datasync:ListAgents",
+        "datasync:CreateAgent",
+        "datasync:CreateTask",
+        "datasync:StartTaskExecution"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
 ```
 
 For S3 destination, the DataSync service role needs:
+
 ```json
 {
   "Effect": "Allow",
@@ -279,6 +285,7 @@ For S3 destination, the DataSync service role needs:
 - **Agent:** Runs as EC2 (if deployed in AWS) or as on-prem VM (no AWS cost for on-prem agent)
 
 **Cost tips:**
+
 - For very large migrations (100TB+), consider Snowball Edge instead — DataSync becomes expensive at that scale
 - Schedule transfers for off-hours to avoid production impact, but DataSync doesn't have off-peak pricing
 

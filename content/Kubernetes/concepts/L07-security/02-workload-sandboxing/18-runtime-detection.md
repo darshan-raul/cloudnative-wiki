@@ -1,6 +1,13 @@
+---
+title: "Runtime Detection (Falco, Tetragon)"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Runtime Detection (Falco, Tetragon) — Kubernetes reference and architecture guide."
+---
+
 # Runtime Detection (Falco, Tetragon)
 
-*"https://falco.org/ | https://cilium.io/products/#:~:text=Tetragon"*
+_"https://falco.org/ | https://cilium.io/products/#:~:text=Tetragon"_
 
 **Runtime detection** is the practice of **observing what workloads actually do** at runtime and **alerting on suspicious behavior**. It's the last line of defense: when the workload is compromised, runtime detection sees the abnormal behavior (e.g. shell spawned in a Pod, sensitive file read, unexpected network call) and alerts. **Falco** and **Tetragon** are the two leading tools. Both use **eBPF** (extended Berkeley Packet Filter) to observe kernel-level events with low overhead.
 
@@ -28,10 +35,10 @@ Runtime detection answers: **"what is this workload actually doing?"**
 
 The shift-left defenses (image scanning, PSS, NetworkPolicy, mTLS, seccomp) all happen **before or at admission**. They prevent known-bad behavior. They don't help when:
 
-* The workload is compromised at runtime (zero-day in the app).
-* The credentials are stolen (a leaked Secret).
-* The defenses are misconfigured (NetworkPolicy has a hole).
-* The attacker uses a legitimate capability (e.g. shells out to bash to download malware).
+- The workload is compromised at runtime (zero-day in the app).
+- The credentials are stolen (a leaked Secret).
+- The defenses are misconfigured (NetworkPolicy has a hole).
+- The attacker uses a legitimate capability (e.g. shells out to bash to download malware).
 
 Runtime detection sees **the actual behavior**: the syscall, the file read, the network call. It detects anomalies that prevention missed.
 
@@ -39,15 +46,15 @@ Runtime detection sees **the actual behavior**: the syscall, the file read, the 
 
 A Pod is running `nginx`. The expected behavior:
 
-* Read config files.
-* Serve HTTP requests.
-* Write access logs.
+- Read config files.
+- Serve HTTP requests.
+- Write access logs.
 
 An unexpected behavior:
 
-* `bash` is spawned (shell).
-* A file in `/etc/shadow` is read.
-* A connection to an external IP is made.
+- `bash` is spawned (shell).
+- A file in `/etc/shadow` is read.
+- A connection to an external IP is made.
 
 Runtime detection sees the `bash` spawn, the `/etc/shadow` read, the external connection. It alerts: "this Pod is doing something it shouldn't."
 
@@ -79,33 +86,33 @@ Prevention is **stronger** (the bad thing doesn't happen). Detection is **broade
 
 The analogy:
 
-* **Prevention** — locks on the doors. Most burglars can't get in.
-* **Detection** — alarms. When a burglar gets in (locks failed), the alarm goes off.
+- **Prevention** — locks on the doors. Most burglars can't get in.
+- **Detection** — alarms. When a burglar gets in (locks failed), the alarm goes off.
 
 ## 3. eBPF — the Foundation
 
-*"https://ebpf.io/"*
+_"https://ebpf.io/"_
 
 **eBPF (extended Berkeley Packet Filter)** is a Linux kernel technology that lets **user-space programs run safely in the kernel**. The user-space program is verified by the kernel (no loops, bounded memory access) and runs at near-native speed.
 
 eBPF is used for:
 
-* **Networking** — Cilium uses eBPF for kube-proxy replacement, NetworkPolicy enforcement, load balancing.
-* **Observability** — Pixie, Parca use eBPF to capture metrics without instrumentation.
-* **Security** — Falco, Tetragon, Tracee use eBPF to capture syscalls, file events, network events.
+- **Networking** — Cilium uses eBPF for kube-proxy replacement, NetworkPolicy enforcement, load balancing.
+- **Observability** — Pixie, Parca use eBPF to capture metrics without instrumentation.
+- **Security** — Falco, Tetragon, Tracee use eBPF to capture syscalls, file events, network events.
 
 For runtime detection, eBPF is the **perfect tool**:
 
-* **Sees all syscalls** — every `open`, `read`, `write`, `connect`, `exec` is visible.
-* **Low overhead** — eBPF programs run in the kernel; the cost is small.
-* **No instrumentation** — the workload's code doesn't change. eBPF is transparent.
-* **Per-container or per-process** — the eBPF program can filter by container ID, cgroup, etc.
+- **Sees all syscalls** — every `open`, `read`, `write`, `connect`, `exec` is visible.
+- **Low overhead** — eBPF programs run in the kernel; the cost is small.
+- **No instrumentation** — the workload's code doesn't change. eBPF is transparent.
+- **Per-container or per-process** — the eBPF program can filter by container ID, cgroup, etc.
 
 The alternative (without eBPF) is to read `/proc` periodically, or to use ptrace, or to use auditd. eBPF is faster, more flexible, and the modern way.
 
 ## 4. Falco Architecture
 
-*"https://falco.org/"*
+_"https://falco.org/"_
 
 **Falco** is a CNCF-graduated runtime detection tool. It was created by Sysdig and is now a top-level CNCF project.
 
@@ -133,9 +140,9 @@ The alternative (without eBPF) is to read `/proc` periodically, or to use ptrace
 
 Components:
 
-* **eBPF probe** (or kernel module) — captures kernel events. eBPF is the modern, kernel-version-dependent option. The kernel module is the older, more portable option.
-* **falco** (userspace) — reads events from the shared ring buffer, evaluates rules, emits alerts.
-* **Outputs** — the alerts go to stdout (default), files, syslog, HTTP webhooks, Kafka, etc.
+- **eBPF probe** (or kernel module) — captures kernel events. eBPF is the modern, kernel-version-dependent option. The kernel module is the older, more portable option.
+- **falco** (userspace) — reads events from the shared ring buffer, evaluates rules, emits alerts.
+- **Outputs** — the alerts go to stdout (default), files, syslog, HTTP webhooks, Kafka, etc.
 
 In k8s, Falco is typically deployed as a **DaemonSet** (one Pod per node). Each Pod captures events for its node.
 
@@ -170,29 +177,29 @@ Falco rules are YAML files that define **what to detect**:
 
 The structure:
 
-* **`rule`** — the rule's name (used for suppression, etc.).
-* **`desc`** — description.
-* **`condition`** — a Falco filter expression. The rule fires when the expression is true.
-* **`output`** — the alert message. Uses `%` placeholders.
-* **`priority`** — DEBUG / INFO / NOTICE / WARNING / ERROR / CRITICAL / ALERT / EMERGENCY.
-* **`tags`** — labels for organization.
+- **`rule`** — the rule's name (used for suppression, etc.).
+- **`desc`** — description.
+- **`condition`** — a Falco filter expression. The rule fires when the expression is true.
+- **`output`** — the alert message. Uses `%` placeholders.
+- **`priority`** — DEBUG / INFO / NOTICE / WARNING / ERROR / CRITICAL / ALERT / EMERGENCY.
+- **`tags`** — labels for organization.
 
 The **condition** is the rule's logic. Falco has a rich set of fields:
 
-* `proc.name`, `proc.cmdline`, `proc.pid`, `proc.ppid`
-* `fd.name` (file path), `fd.type` (file, socket, etc.)
-* `container.name`, `container.image.repository`, `container.image.tag`
-* `k8s.pod.name`, `k8s.ns.name`, `k8s.deployment.name`
-* `evt.type` (the event type — `open`, `read`, `connect`, `execve`, etc.)
-* `user.name`, `user.uid`
+- `proc.name`, `proc.cmdline`, `proc.pid`, `proc.ppid`
+- `fd.name` (file path), `fd.type` (file, socket, etc.)
+- `container.name`, `container.image.repository`, `container.image.tag`
+- `k8s.pod.name`, `k8s.ns.name`, `k8s.deployment.name`
+- `evt.type` (the event type — `open`, `read`, `connect`, `execve`, etc.)
+- `user.name`, `user.uid`
 
 The condition uses **boolean operators and functions**:
 
-* `and`, `or`, `not`
-* `in (...)` — match against a list
-* `startswith`, `endswith`, `contains`
-* `count() > N` — count of events
-* `>`, `<`, `=`, `!=`
+- `and`, `or`, `not`
+- `in (...)` — match against a list
+- `startswith`, `endswith`, `contains`
+- `count() > N` — count of events
+- `>`, `<`, `=`, `!=`
 
 ## 6. Falco Outputs
 
@@ -224,15 +231,15 @@ kafka_output:
 
 Multiple outputs can be enabled. The standard setup:
 
-* **stdout** for the kubelet's log (kubectl logs).
-* **file** for local persistence.
-* **http / syslog / kafka** for shipping to a SIEM.
+- **stdout** for the kubelet's log (kubectl logs).
+- **file** for local persistence.
+- **http / syslog / kafka** for shipping to a SIEM.
 
 For k8s, **Falco Sidekick** is a common add-on — it formats the alerts and ships to multiple destinations (Elasticsearch, Loki, Slack, PagerDuty, etc.).
 
 ## 7. Tetragon Architecture
 
-*"https://cilium.io/products/"*
+_"https://cilium.io/products/"_
 
 **Tetragon** is Cilium's runtime detection tool. It's tightly integrated with Cilium (and works without it, but with less context). Like Falco, it uses eBPF.
 
@@ -260,9 +267,9 @@ For k8s, **Falco Sidekick** is a common add-on — it formats the alerts and shi
 
 Tetragon's key difference from Falco: **Tetragon can take action in-kernel, not just observe**. With a `TracingPolicy`, Tetragon can:
 
-* **Block** a syscall (e.g. block `execve` for non-allowed binaries).
-* **Signal** a process (e.g. SIGKILL a process that does a forbidden action).
-* **Trace** function calls (e.g. trace specific libc functions).
+- **Block** a syscall (e.g. block `execve` for non-allowed binaries).
+- **Signal** a process (e.g. SIGKILL a process that does a forbidden action).
+- **Trace** function calls (e.g. trace specific libc functions).
 
 This is **enforcement at the syscall level**, not just detection. Tetragon is closer to "policy enforcement" than "just detection".
 
@@ -276,29 +283,29 @@ kind: TracingPolicy
 metadata: { name: block-spawn-shell }
 spec:
   kprobes:
-  - call: "security_bpf_prog"  # or syscall
-    syscall: true
-    args:
-    - index: 0
-      type: "nop"
+    - call: "security_bpf_prog" # or syscall
+      syscall: true
+      args:
+        - index: 0
+          type: "nop"
   tracepoints:
-  - subsystem: "sched"
-    event: "sched_process_exec"
-    args:
-    - index: 0
-      type: "nop"
+    - subsystem: "sched"
+      event: "sched_process_exec"
+      args:
+        - index: 0
+          type: "nop"
   filters:
-  - type: "tracepoint"
-    matchArgs:
-    - index: 0
-      operator: "Equal"
-      values:
-      - "bash"
-      - "sh"
+    - type: "tracepoint"
+      matchArgs:
+        - index: 0
+          operator: "Equal"
+          values:
+            - "bash"
+            - "sh"
   actions:
-  - type: "signal"
-    args:
-    - sig: "SIGKILL"
+    - type: "signal"
+      args:
+        - sig: "SIGKILL"
 ```
 
 This policy **traces `execve` syscalls** and **kills processes** that are `bash` or `sh`. It's a strict "no shell in container" enforcement.
@@ -307,23 +314,23 @@ Tetragon's `TracingPolicy` is more complex than Falco's rules. The power is in t
 
 ## 9. Tetragon vs Falco — When to Use Which
 
-| | Falco | Tetragon |
-|---|---|---|
-| **Primary purpose** | Detection (observe + alert) | Detection + enforcement (observe + alert + act) |
-| **Rule language** | YAML (Falco filter syntax) | YAML (`TracingPolicy`, eBPF-specific) |
-| **Action** | Alert (no action) | Alert, signal, block |
-| **Integration** | Standalone | Cilium-native (works without) |
-| **eBPF dependency** | Yes | Yes |
-| **Kernel support** | Broad (kernel module for older) | Modern kernels (5.x+) |
-| **Maturity** | CNCF Graduated, very mature | Mature, growing |
-| **Rule library** | Huge (Falco rules repo, hundreds of rules) | Smaller, growing |
-| **Performance** | Low overhead | Low overhead |
+|                     | Falco                                      | Tetragon                                        |
+| ------------------- | ------------------------------------------ | ----------------------------------------------- |
+| **Primary purpose** | Detection (observe + alert)                | Detection + enforcement (observe + alert + act) |
+| **Rule language**   | YAML (Falco filter syntax)                 | YAML (`TracingPolicy`, eBPF-specific)           |
+| **Action**          | Alert (no action)                          | Alert, signal, block                            |
+| **Integration**     | Standalone                                 | Cilium-native (works without)                   |
+| **eBPF dependency** | Yes                                        | Yes                                             |
+| **Kernel support**  | Broad (kernel module for older)            | Modern kernels (5.x+)                           |
+| **Maturity**        | CNCF Graduated, very mature                | Mature, growing                                 |
+| **Rule library**    | Huge (Falco rules repo, hundreds of rules) | Smaller, growing                                |
+| **Performance**     | Low overhead                               | Low overhead                                    |
 
 The decision:
 
-* **Use Falco** for **detection-first** clusters. The rule library is huge, the community is mature, the integration is simple.
-* **Use Tetragon** if you already run **Cilium** (it's a natural extension) or want **enforcement** (block, signal).
-* **Use both** — Falco for broad detection, Tetragon for targeted enforcement.
+- **Use Falco** for **detection-first** clusters. The rule library is huge, the community is mature, the integration is simple.
+- **Use Tetragon** if you already run **Cilium** (it's a natural extension) or want **enforcement** (block, signal).
+- **Use both** — Falco for broad detection, Tetragon for targeted enforcement.
 
 For most clusters, **Falco is the easier starting point**. Add Tetragon if you need enforcement.
 
@@ -402,12 +409,12 @@ spec:
   template:
     metadata: { labels: { app: falco } }
     spec:
-      hostPID: true       # to see all processes
-      hostNetwork: true   # to see all network
+      hostPID: true # to see all processes
+      hostNetwork: true # to see all network
       containers:
-      - name: falco
-        image: falcosecurity/falco:latest
-        # ...
+        - name: falco
+          image: falcosecurity/falco:latest
+          # ...
 ```
 
 The Pod runs on every node, with `hostPID` and `hostNetwork` to see all processes and network on the host. The eBPF probe is in the kernel; the userspace reads events.
@@ -419,11 +426,11 @@ For per-workload detection (rare):
 ```yaml
 spec:
   containers:
-  - name: app
-    image: myapp:1.0
-  - name: falco-sidecar
-    image: falcosecurity/falco:latest
-    # ...
+    - name: app
+      image: myapp:1.0
+    - name: falco-sidecar
+      image: falcosecurity/falco:latest
+      # ...
 ```
 
 The sidecar only sees its own Pod's events. This is **less useful** than DaemonSet (you want cluster-wide detection, not per-Pod).
@@ -556,7 +563,7 @@ Falco alerts on every container start, every health check, every log read.
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — apiserver-level audit
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as alternatives
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the prevention layer
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — reduce attack surface before runtime
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — apiserver-level audit
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as alternatives
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the prevention layer
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — reduce attack surface before runtime

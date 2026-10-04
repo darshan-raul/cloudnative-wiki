@@ -131,10 +131,10 @@ def readiness():
     return {"status": "ready"}
 ```
 
-| Check | Purpose | LB Removes Instance? |
-|-------|---------|---------------------|
-| `/health/live` | Process is alive | No (never kill) |
-| `/health/ready` | Ready to serve traffic | Yes |
+| Check           | Purpose                | LB Removes Instance? |
+| --------------- | ---------------------- | -------------------- |
+| `/health/live`  | Process is alive       | No (never kill)      |
+| `/health/ready` | Ready to serve traffic | Yes                  |
 
 ---
 
@@ -147,6 +147,7 @@ Game Day: intentionally kill a service, verify alarms fire, runbook executes
 ```
 
 **Principles:**
+
 1. Blast radius: start small (1 pod,1 AZ)
 2. Hypothesis: "we expect X to happen"
 3. Measure: did the system behave as expected?
@@ -154,22 +155,22 @@ Game Day: intentionally kill a service, verify alarms fire, runbook executes
 
 ### Tools
 
-| Tool | What It Breaks |
-|------|---------------|
-| Chaos Monkey (Netflix) | Random service kill |
-| Gremlin | CPU, memory, network, I/O |
-| Litmus | K8s resources |
-| kube-monkey | K8s pod kill |
-| AWS Fault Injection Simulator | AWS resources |
+| Tool                          | What It Breaks            |
+| ----------------------------- | ------------------------- |
+| Chaos Monkey (Netflix)        | Random service kill       |
+| Gremlin                       | CPU, memory, network, I/O |
+| Litmus                        | K8s resources             |
+| kube-monkey                   | K8s pod kill              |
+| AWS Fault Injection Simulator | AWS resources             |
 
 ---
 
 ## Reliability vs Availability
 
-| Property | Definition | What It Measures |
-|----------|-----------|-----------------|
-| **Reliability** | Probability system works correctly over time | "Did we serve the right answer?" |
-| **Availability** | Proportion of time system is operational | "Is the system up?" |
+| Property         | Definition                                   | What It Measures                 |
+| ---------------- | -------------------------------------------- | -------------------------------- |
+| **Reliability**  | Probability system works correctly over time | "Did we serve the right answer?" |
+| **Availability** | Proportion of time system is operational     | "Is the system up?"              |
 
 ```
 Reliable but not available:  wrong answers fast

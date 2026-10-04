@@ -11,9 +11,9 @@ description: EKS cluster endpoint configuration - public/private access, bastion
 
 When you create an EKS cluster, two endpoints are created:
 
-| Endpoint | Purpose | Default State |
-|----------|---------|---------------|
-| **Public endpoint** | Kubernetes API from internet | Enabled |
+| Endpoint             | Purpose                        | Default State       |
+| -------------------- | ------------------------------ | ------------------- |
+| **Public endpoint**  | Kubernetes API from internet   | Enabled             |
 | **Private endpoint** | Kubernetes API from within VPC | Disabled by default |
 
 Both endpoints resolve to the same API server. You can use one or both depending on your security requirements.
@@ -22,11 +22,11 @@ Both endpoints resolve to the same API server. You can use one or both depending
 
 ### Configuration Matrix
 
-| Public Access | Private Access | Behavior |
-|---------------|----------------|----------|
-| Enabled | Disabled | API server reachable from internet only |
-| Enabled | Enabled | API server reachable from internet AND VPC (recommended) |
-| Disabled | Enabled | API server reachable from VPC only (most secure) |
+| Public Access | Private Access | Behavior                                                 |
+| ------------- | -------------- | -------------------------------------------------------- |
+| Enabled       | Disabled       | API server reachable from internet only                  |
+| Enabled       | Enabled        | API server reachable from internet AND VPC (recommended) |
+| Disabled      | Enabled        | API server reachable from VPC only (most secure)         |
 
 ### Configuration via AWS CLI
 
@@ -74,13 +74,14 @@ aws eks update-cluster-config \
 
 ### Requirements
 
-| Requirement | Description |
-|-------------|-------------|
-| `enableDnsHostnames` | VPC must have DNS hostnames enabled |
-| `enableDnsSupport` | VPC must have DNS support enabled |
-| DHCP options | Must include `AmazonProvidedDNS` in domain name servers |
+| Requirement          | Description                                             |
+| -------------------- | ------------------------------------------------------- |
+| `enableDnsHostnames` | VPC must have DNS hostnames enabled                     |
+| `enableDnsSupport`   | VPC must have DNS support enabled                       |
+| DHCP options         | Must include `AmazonProvidedDNS` in domain name servers |
 
 Check with:
+
 ```bash
 aws ec2 describe-vpc-attribute \
   --vpc-id vpc-xxxx \
@@ -114,6 +115,7 @@ Corporate Network ──► AWS Transit Gateway ──► VPC ──► API Serv
 ```
 
 **Requirements:**
+
 - Transit Gateway or Direct Connect connected to VPC
 - Security group rule allowing port 443 from connected network
 - Network path allows traffic to EKS control plane
@@ -135,6 +137,7 @@ aws eks update-kubeconfig --name my-cluster
 ```
 
 **Bastion Security Group Rules:**
+
 ```json
 {
   "InboundRules": [
@@ -181,6 +184,7 @@ aws eks update-kubeconfig --name my-cluster
 ```
 
 **Benefits:**
+
 - Persistent credentials
 - VPC-based access to private clusters
 - Full IDE with debugging capabilities
@@ -191,10 +195,10 @@ The cluster security group controls access to the kubelet API and private endpoi
 
 ### What It Controls
 
-| Traffic Type | Ports | Commands Affected |
-|-------------|-------|-------------------|
-| Kubelet API | 10250 | `kubectl exec`, `logs`, `cp`, `attach`, `port-forward` |
-| Private endpoint | 443 | All kubectl operations from within VPC |
+| Traffic Type     | Ports | Commands Affected                                      |
+| ---------------- | ----- | ------------------------------------------------------ |
+| Kubelet API      | 10250 | `kubectl exec`, `logs`, `cp`, `attach`, `port-forward` |
+| Private endpoint | 443   | All kubectl operations from within VPC                 |
 
 ### What It Does NOT Control
 
@@ -203,10 +207,10 @@ The cluster security group controls access to the kubelet API and private endpoi
 
 ### Default Rules (Managed by EKS)
 
-| Rule Type | Effect | Description |
-|-----------|--------|-------------|
-| Inbound | Allow | All traffic from node security group |
-| Outbound | Allow | All traffic |
+| Rule Type | Effect | Description                          |
+| --------- | ------ | ------------------------------------ |
+| Inbound   | Allow  | All traffic from node security group |
+| Outbound  | Allow  | All traffic                          |
 
 ### Customizing for Private-Only Access
 
@@ -246,11 +250,11 @@ aws eks update-cluster-config \
 
 ### IPv4 vs IPv6 Considerations
 
-| Cluster Type | CIDR Types Allowed |
-|-------------|-------------------|
-| IPv4 cluster | IPv4 CIDRs only |
+| Cluster Type                 | CIDR Types Allowed       |
+| ---------------------------- | ------------------------ |
+| IPv4 cluster                 | IPv4 CIDRs only          |
 | IPv6 cluster (post-Oct 2024) | Both IPv4 and IPv6 CIDRs |
-| IPv6 cluster (pre-Oct 2024) | IPv4 CIDRs only |
+| IPv6 cluster (pre-Oct 2024)  | IPv4 CIDRs only          |
 
 **New IPv6 clusters** (post-Oct 2024) have dual-stack endpoints and can mix CIDR types.
 
@@ -311,10 +315,10 @@ EKS uses managed VPC endpoints for the API server. These are **not** customer-cr
 
 ### EKS Managed Endpoints
 
-| Service | Endpoint Type |
-|---------|---------------|
-| eks.amazonaws.com | Interface (PrivateLink) |
-| eks.us-west-2.amazonaws.com | Gateway (S3) |
+| Service                     | Endpoint Type           |
+| --------------------------- | ----------------------- |
+| eks.amazonaws.com           | Interface (PrivateLink) |
+| eks.us-west-2.amazonaws.com | Gateway (S3)            |
 
 ### When You Might Need Additional Endpoints
 
@@ -342,6 +346,7 @@ For certain AWS services accessed from within the VPC:
 4. **Configure cluster security group correctly** - Allow only necessary traffic
 
 5. **Use IMDSv2 on nodes** - Prevents metadata service attacks
+
    ```bash
    aws ec2 modify-instance-metadata-options \
      --instance-id i-xxxx \

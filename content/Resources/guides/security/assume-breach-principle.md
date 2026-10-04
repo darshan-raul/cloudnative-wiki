@@ -12,17 +12,17 @@ The Assume Breach principle is a cyber security mindset that operates on the pre
 
 #### Why It Matters:
 
-* **Realism**: No system is 100% secure; breaches are often a matter of "when," not "if."
-* **Faster Response**: By assuming a breach, organizations prioritize detection and mitigation, reducing dwell time (how long an attacker remains undetected).
-* **Resilience**: It builds systems that can operate securely even under partial compromise.
+- **Realism**: No system is 100% secure; breaches are often a matter of "when," not "if."
+- **Faster Response**: By assuming a breach, organizations prioritize detection and mitigation, reducing dwell time (how long an attacker remains undetected).
+- **Resilience**: It builds systems that can operate securely even under partial compromise.
 
 #### Example in Practice:
 
 A company might:
 
-* Use network segmentation to limit an attacker’s access to critical systems.
-* Deploy honeypots to detect intruders early.
-* Require multi-factor authentication (MFA) for all users, assuming credentials could be stolen.
-* Regularly simulate attacks (red team exercises) to test defenses under the assumption of a breach.
+- Use network segmentation to limit an attacker’s access to critical systems.
+- Deploy honeypots to detect intruders early.
+- Require multi-factor authentication (MFA) for all users, assuming credentials could be stolen.
+- Regularly simulate attacks (red team exercises) to test defenses under the assumption of a breach.
 
 This principle shifts the focus from an over-reliance on perimeter defenses to a more resilient, adaptive security posture. Would you like me to dive deeper into any specific aspect, like implementation or real-world examples?

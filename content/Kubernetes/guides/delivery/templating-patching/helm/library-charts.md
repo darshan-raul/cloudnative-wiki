@@ -57,7 +57,7 @@ rm -rf common-lib/templates/*
 
 ### 4. Create Shared Templates
 
-#### _configmap.tpl
+#### \_configmap.tpl
 
 ```yaml
 {{/* Common ConfigMap template */}}
@@ -73,7 +73,7 @@ metadata:
 {{- end -}}
 ```
 
-#### _deployment.tpl
+#### \_deployment.tpl
 
 ```yaml
 {{/* Common Deployment template */}}
@@ -99,7 +99,7 @@ spec:
 {{- end -}}
 ```
 
-#### _service.tpl
+#### \_service.tpl
 
 ```yaml
 {{/* Common Service template */}}
@@ -125,7 +125,7 @@ spec:
 {{- end -}}
 ```
 
-#### _helpers.tpl
+#### \_helpers.tpl
 
 ```yaml
 {{/* Full name (release-chart) */}}
@@ -165,7 +165,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 ```
 
-#### _util.yaml
+#### \_util.yaml
 
 ```yaml
 {{/* Utility: Merge two YAML templates */}}
@@ -347,7 +347,7 @@ spec:
 
 ## Example: Shared Monitoring Template
 
-### common-lib/templates/_servicemonitor.tpl
+### common-lib/templates/\_servicemonitor.tpl
 
 ```yaml
 {{/* ServiceMonitor for Prometheus scraping */}}

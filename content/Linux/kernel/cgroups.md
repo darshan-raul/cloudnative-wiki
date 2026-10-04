@@ -33,14 +33,14 @@ Each controller (cpu, memory, io, pids) adds its own interface files to every cg
 
 ## Key Differences: v1 vs v2
 
-| Feature              | v1                              | v2                                      |
-|----------------------|----------------------------------|----------------------------------------|
-| Hierarchy            | One per controller               | Single unified tree                    |
-| Controller trees     | Independent per controller       | Unified tree with subtree_control      |
-| Thread grouping      | Processes only                   | Threads (PIDs) can be in separate cgroups |
-| `cpu.rt_runtime`    | Per-cgroup                       | No (moved to cpu controller)           |
-| Default hierarchy    | `/cgroup.controllers/`           | `/sys/fs/cgroup/` (unified)            |
-| `notify_on_release`  | Per-cgroup                       | Replaced by `cgroup.events`           |
+| Feature             | v1                         | v2                                        |
+| ------------------- | -------------------------- | ----------------------------------------- |
+| Hierarchy           | One per controller         | Single unified tree                       |
+| Controller trees    | Independent per controller | Unified tree with subtree_control         |
+| Thread grouping     | Processes only             | Threads (PIDs) can be in separate cgroups |
+| `cpu.rt_runtime`    | Per-cgroup                 | No (moved to cpu controller)              |
+| Default hierarchy   | `/cgroup.controllers/`     | `/sys/fs/cgroup/` (unified)               |
+| `notify_on_release` | Per-cgroup                 | Replaced by `cgroup.events`               |
 
 ## Controllers
 
@@ -150,12 +150,12 @@ echo "100000 100000" > /sys/fs/cgroup/system/myapp.slice/worker/cpu.max
 
 ## `cgroup.procs` vs `cgroup.threads` (cgroup v2 Threads)
 
-| File           | What it contains           | Granularity |
-|----------------|---------------------------|-------------|
-| `cgroup.procs` | Thread-group leaders only  | Process-level |
-| `cgroup.threads` | All threads (PIDs)      | Thread-level |
+| File             | What it contains          | Granularity   |
+| ---------------- | ------------------------- | ------------- |
+| `cgroup.procs`   | Thread-group leaders only | Process-level |
+| `cgroup.threads` | All threads (PIDs)        | Thread-level  |
 
-`cgroup.procs` only accepts the *thread group leader* (PID = TGID). To place individual threads in different cgroups (useful for web servers where each thread handles a request), use `cgroup.threads`.
+`cgroup.procs` only accepts the _thread group leader_ (PID = TGID). To place individual threads in different cgroups (useful for web servers where each thread handles a request), use `cgroup.threads`.
 
 ## systemd Integration
 
@@ -206,7 +206,7 @@ cat /proc/1/cgroup
 
 ## Common Mistakes
 
-- **Writing to wrong level:** Limits must be set on the *leaf* cgroup where processes live. Setting on a parent doesn't retroactively apply.
+- **Writing to wrong level:** Limits must be set on the _leaf_ cgroup where processes live. Setting on a parent doesn't retroactively apply.
 - **Forgetting subtree_control:** Parent won't pass controller to children without it.
 - **Bytes vs percentages:** `memory.max` takes bytes, not percentages. `536870912` = 512 MiB.
 - **Confusing v1 and v2 paths:** v1 = `/cgroup/cpu/`, v2 = `/sys/fs/cgroup/system.slice/`

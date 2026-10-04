@@ -47,14 +47,14 @@ Outputs:
 
 CloudFormation provides built-in functions for dynamic values:
 
-| Function | Purpose | Example |
-|----------|---------|---------|
-| `!Ref` | Reference a resource's physical ID | `!Ref VPC` |
-| `!GetAtt` | Get an attribute of a resource | `!GetAtt EC2Instance.PublicIp` |
-| `!Sub` | Substitute variables in a string | `${AWS::StackName}` |
-| `!If` | Conditional value | `!If [UseEncryption, true, false]` |
-| `!Equals` | Compare two values | `!Equals !Ref Environment, prod` |
-| `!Select` | Pick an item from a list | `!Select [0, !GetAZs ""]` |
+| Function  | Purpose                            | Example                            |
+| --------- | ---------------------------------- | ---------------------------------- |
+| `!Ref`    | Reference a resource's physical ID | `!Ref VPC`                         |
+| `!GetAtt` | Get an attribute of a resource     | `!GetAtt EC2Instance.PublicIp`     |
+| `!Sub`    | Substitute variables in a string   | `${AWS::StackName}`                |
+| `!If`     | Conditional value                  | `!If [UseEncryption, true, false]` |
+| `!Equals` | Compare two values                 | `!Equals !Ref Environment, prod`   |
+| `!Select` | Pick an item from a list           | `!Select [0, !GetAZs ""]`          |
 
 ### Stack Operations
 
@@ -138,10 +138,12 @@ StackSet (one template)
 ```
 
 **Requirements:**
+
 - Target accounts must trust the StackSet administrator account
 - Use AWS RAM to share the StackSet with target accounts, or configure trust manually
 
 **Administration:**
+
 ```bash
 # Create StackSet
 aws cloudformation create-stack-set \
@@ -201,11 +203,11 @@ Resources:
 
 Controls what happens to a resource when the stack is deleted:
 
-| Policy | Behavior |
-|--------|----------|
-| `Delete` (default) | Resource is deleted |
-| `Retain` | Resource is preserved (not deleted) |
-| `Snapshot` | Snapshot is created before deletion (for RDS, EBS, etc.) |
+| Policy             | Behavior                                                 |
+| ------------------ | -------------------------------------------------------- |
+| `Delete` (default) | Resource is deleted                                      |
+| `Retain`           | Resource is preserved (not deleted)                      |
+| `Snapshot`         | Snapshot is created before deletion (for RDS, EBS, etc.) |
 
 ```yaml
 Database:
@@ -218,7 +220,7 @@ Database:
 AWS SAM is an extension of CloudFormation for serverless applications:
 
 ```yaml
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 
 Resources:

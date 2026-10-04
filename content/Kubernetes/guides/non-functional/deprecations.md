@@ -173,12 +173,12 @@ kind: PodDisruptionBudget
 
 As of v1.30, these are deprecated and will be removed:
 
-| API | Status | Replacement | Removal expected |
-|-----|--------|-------------|------------------|
-| `flowcontrol.apiserver.k8s.io/v1beta3` FlowSchema | Deprecated | `flowcontrol.apiserver.k8s.io/v1` | 1.32-1.33 |
-| `flowcontrol.apiserver.k8s.io/v1beta3` PriorityLevelConfiguration | Deprecated | `flowcontrol.apiserver.k8s.io/v1` | 1.32-1.33 |
-| `admissionregistration/v1beta1` ValidatingAdmissionPolicy | Deprecated (in 1.30) | `admissionregistration/v1` | 1.34-1.35 |
-| `admissionregistration/v1beta1` ValidatingAdmissionPolicyBinding | Deprecated | `admissionregistration/v1` | 1.34-1.35 |
+| API                                                               | Status               | Replacement                       | Removal expected |
+| ----------------------------------------------------------------- | -------------------- | --------------------------------- | ---------------- |
+| `flowcontrol.apiserver.k8s.io/v1beta3` FlowSchema                 | Deprecated           | `flowcontrol.apiserver.k8s.io/v1` | 1.32-1.33        |
+| `flowcontrol.apiserver.k8s.io/v1beta3` PriorityLevelConfiguration | Deprecated           | `flowcontrol.apiserver.k8s.io/v1` | 1.32-1.33        |
+| `admissionregistration/v1beta1` ValidatingAdmissionPolicy         | Deprecated (in 1.30) | `admissionregistration/v1`        | 1.34-1.35        |
+| `admissionregistration/v1beta1` ValidatingAdmissionPolicyBinding  | Deprecated           | `admissionregistration/v1`        | 1.34-1.35        |
 
 **Always check the [deprecation guide](https://kubernetes.io/docs/reference/using-api/deprecation-guide/) for the latest.**
 
@@ -333,6 +333,7 @@ grep -rh "apiVersion:" manifests/ | sort -u
 ```
 
 Common findings:
+
 - `extensions/v1beta1` (entire API group gone in 1.16)
 - `apps/v1beta1` (gone long ago)
 - `policy/v1beta1` (PSP gone in 1.25, PDB gone in 1.27)
@@ -362,14 +363,14 @@ kubent
 
 ## Common migration gotchas
 
-* **`kubectl convert` doesn't always work.** Some APIs changed spec significantly. Read the docs.
-* **Helm charts may pin old API versions.** Update the chart, not just your overrides.
-* **Operators / CRDs** lag behind k8s API changes. Check operator compatibility.
-* **Some deprecated APIs have multiple replacements.** Ingress v1beta1 → v1 with different spec fields. Read the migration guide.
-* **Beta APIs are removed faster.** `v1beta1` APIs can be removed in the next release.
-* **Custom controllers using client-go** need to be updated to use the new API versions.
-* **Third-party tools** may still use deprecated APIs. Pin k8s to a version that supports them, or replace the tools.
-* **The apiserver's behavior is per-version.** A deprecated API in 1.28 may still be present in 1.29, then gone in 1.30. Track the deprecation timeline.
+- **`kubectl convert` doesn't always work.** Some APIs changed spec significantly. Read the docs.
+- **Helm charts may pin old API versions.** Update the chart, not just your overrides.
+- **Operators / CRDs** lag behind k8s API changes. Check operator compatibility.
+- **Some deprecated APIs have multiple replacements.** Ingress v1beta1 → v1 with different spec fields. Read the migration guide.
+- **Beta APIs are removed faster.** `v1beta1` APIs can be removed in the next release.
+- **Custom controllers using client-go** need to be updated to use the new API versions.
+- **Third-party tools** may still use deprecated APIs. Pin k8s to a version that supports them, or replace the tools.
+- **The apiserver's behavior is per-version.** A deprecated API in 1.28 may still be present in 1.29, then gone in 1.30. Track the deprecation timeline.
 
 ## The deprecation timeline (where to look)
 
@@ -609,11 +610,11 @@ kubent
 
 For clusters that can't upgrade immediately:
 
-| Cloud | Extended support | Cost |
-|-------|-----------------|------|
+| Cloud   | Extended support                     | Cost                                        |
+| ------- | ------------------------------------ | ------------------------------------------- |
 | **EKS** | K8s 1.23-1.28 (EKS Extended Support) | 0.10 USD/cluster/hour per supported version |
-| **GKE** | K8s 1.26+ (GKE Extended) | 0.0008 USD/vCPU/hour per supported version |
-| **AKS** | K8s 1.27+ (AKS Extended Support) | Free during preview, will charge |
+| **GKE** | K8s 1.26+ (GKE Extended)             | 0.0008 USD/vCPU/hour per supported version  |
+| **AKS** | K8s 1.27+ (AKS Extended Support)     | Free during preview, will charge            |
 
 **Use extended support as a bridge, not a destination.** Plan your upgrade.
 
@@ -775,6 +776,7 @@ spec:
 ```
 
 **Key changes:**
+
 - `pathType` is required (`Exact`, `Prefix`, or `ImplementationSpecific`)
 - `backend.serviceName` and `servicePort` are now `backend.service.name` and `backend.service.port.number`
 
@@ -819,6 +821,7 @@ spec:
 ```
 
 **Key changes:**
+
 - `validation` → `schema` (under each version)
 - `subresources` moved to per-version
 - `additionalPrinterColumns` is per-version
@@ -841,7 +844,7 @@ kind: PodDisruptionBudget
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/upgrade-strategy|upgrade-strategy]] — the upgrade process
-* [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — PSP migration
-* [k8s deprecation guide](https://kubernetes.io/docs/reference/using-api/deprecation-guide/)
-* [kubent](https://github.com/kubernetes-sigs/kube-no-trouble)
+- [[Kubernetes/guides/non-functional/upgrade-strategy|upgrade-strategy]] — the upgrade process
+- [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — PSP migration
+- [k8s deprecation guide](https://kubernetes.io/docs/reference/using-api/deprecation-guide/)
+- [kubent](https://github.com/kubernetes-sigs/kube-no-trouble)

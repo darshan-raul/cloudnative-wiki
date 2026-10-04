@@ -12,14 +12,14 @@ AWS compute covers the full spectrum from bare-metal servers to fully managed se
 
 ## Service Map
 
-| Service | Compute Model | Control | Use Case |
-|---------|--------------|---------|----------|
-| [[ec2/README|EC2]] | Virtual machine (bare metal available) | Full control | Long-running, predictable workloads |
-| [[lambda/README|Lambda]] | Serverless functions | None (managed) | Event-driven, spiky, short-duration |
-| [[ecs/README|ECS]] | Docker containers on EC2 or Fargate | Shared responsibility | Containerized microservices |
-| [[eks/README|EKS]] | Kubernetes on EC2 or Fargate | Full K8s API | Complex container orchestration |
-| [[batch/README|Batch]] | Batch jobs on managed infra | Job definitions | Scheduled/queued batch processing |
-| [[lightsail/README|Lightsail]] | Simple VPS | Simplified | Simple websites, dev/test |
+| Service            | Compute Model | Control                                | Use Case              |
+| ------------------ | ------------- | -------------------------------------- | --------------------- | ----------------------------------- |
+| [[ec2/README       | EC2]]         | Virtual machine (bare metal available) | Full control          | Long-running, predictable workloads |
+| [[lambda/README    | Lambda]]      | Serverless functions                   | None (managed)        | Event-driven, spiky, short-duration |
+| [[ecs/README       | ECS]]         | Docker containers on EC2 or Fargate    | Shared responsibility | Containerized microservices         |
+| [[eks/README       | EKS]]         | Kubernetes on EC2 or Fargate           | Full K8s API          | Complex container orchestration     |
+| [[batch/README     | Batch]]       | Batch jobs on managed infra            | Job definitions       | Scheduled/queued batch processing   |
+| [[lightsail/README | Lightsail]]   | Simple VPS                             | Simplified            | Simple websites, dev/test           |
 
 ## Compute Decision Tree
 
@@ -51,14 +51,14 @@ How long does your workload run?
 
 ## Instance Family Overview
 
-| Family | Specialty | Use Case |
-|--------|-----------|----------|
-| A/T/M | General purpose | Web servers, small databases |
-| C | Compute optimized | Media processing, CI/CD runners |
-| R/X | Memory optimized | Databases, in-memory caches |
-| G/P/INF | GPU | ML training, inference, graphics |
-| I/D | Storage optimized | HDFS, data warehousing,日志处理 |
-| Hpc | High performance | Scientific computing, CFD |
+| Family  | Specialty         | Use Case                         |
+| ------- | ----------------- | -------------------------------- |
+| A/T/M   | General purpose   | Web servers, small databases     |
+| C       | Compute optimized | Media processing, CI/CD runners  |
+| R/X     | Memory optimized  | Databases, in-memory caches      |
+| G/P/INF | GPU               | ML training, inference, graphics |
+| I/D     | Storage optimized | HDFS, data warehousing,日志处理  |
+| Hpc     | High performance  | Scientific computing, CFD        |
 
 ## Architecture Patterns
 
@@ -94,19 +94,24 @@ ECS/EKS Cluster
 ## AWS Services Organized by Category
 
 **Bare Metal / Virtual Machines**
+
 - [[ec2/README|EC2]] — Virtual servers (instances)
 
 **Serverless**
+
 - [[lambda/README|Lambda]] — Event-driven functions
 
 **Containers**
+
 - [[ecs/README|ECS]] — Docker container orchestrator (Elastic Container Service)
 - [[eks/README|EKS]] — Managed Kubernetes (Elastic Kubernetes Service)
 
 **Batch / Scheduled**
+
 - [[batch/README|Batch]] — Managed batch processing
 
 **Simple**
+
 - [[lightsail/README|Lightsail]] — Simple VPS for basic workloads
 
 ## References

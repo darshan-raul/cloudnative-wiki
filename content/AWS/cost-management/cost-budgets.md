@@ -17,11 +17,13 @@ Cost Budgets let you set custom cost thresholds and get alerted when spend appro
 The most common type. Set a target spend amount (e.g., $10,000/month) and get alerted when actual spend reaches a percentage of that target.
 
 **Configuration options:**
+
 - **Fixed:** $X per month
 - **Variable:** Dynamic based on a metric (e.g., last month's spend × 1.1)
 - **Auto-adjusting:** AWS adjusts the budget based on your forecast
 
 **Alert thresholds:**
+
 ```
 [100%] — You've hit the budget
 [80%] — Warning before you hit it
@@ -47,17 +49,20 @@ Track whether you're fully utilizing the RIs/SPs you bought. "Alert me when my R
 ## Notification Destinations
 
 Budget alerts can go to:
+
 - **Email:** Simple, no integration required
 - **SNS:** Integrates with Slack, Teams, PagerDuty, or any webhook
 - **ChatOps:** SNS → Lambda → Slack webhook is the common pattern
 - **AWS Chatbot:** Direct Slack/Teams integration with minimal setup
 
 **ChatOps integration example (Slack):**
+
 ```
 Budget Alert → SNS Topic → Lambda → Slack webhook → #cost-alerts channel
 ```
 
 The Lambda function formats the alert into a Slack message with:
+
 - Budget name
 - Actual spend vs budgeted
 - % of budget consumed
@@ -67,11 +72,13 @@ The Lambda function formats the alert into a Slack message with:
 ## Budget Actions
 
 Budgets can trigger automated responses when thresholds are exceeded:
+
 - **IAM Policy:** Restrict certain actions (e.g., deny new EC2 instance creation above a certain size)
 - **SCP:** Applied at the Organization level
 - **Lambda:** Trigger a custom remediation function
 
 **Example:** A budget action that triggers when spend exceeds 90% of budget:
+
 ```json
 {
   "actionThresholdValue": 90,
@@ -86,6 +93,7 @@ Budgets can trigger automated responses when thresholds are exceeded:
 ```
 
 The Lambda function might:
+
 - Stop non-production EC2 instances
 - Delete unattached EBS volumes
 - Send a more detailed Slack alert to the finance team
@@ -94,22 +102,24 @@ The Lambda function might:
 ## Multi-Account Budgets
 
 In AWS Organizations, you can create budgets at:
+
 - **Payer account level:** Total organization spend
 - **Linked account level:** Individual account spend
 - **Tag-based:** Spend filtered by tag (e.g., `Environment=prod`)
 
 **Tag-based budgets** are powerful for chargeback:
+
 - Set a budget for `Team=platform` and alert when that tag's spend exceeds threshold
 - The actual spend includes all resources tagged `Team=platform` across all accounts
 
 ## Budget vs Cost Anomaly Detection
 
-| | Budgets | Cost Anomaly Detection |
-|--|---------|----------------------|
-| Trigger | Budget threshold | ML-detected unusual spend |
-| Latency | Daily updates (24h delay) | Near real-time |
-| Use case | Planned spend tracking | Unexpected spikes |
-| Response | Alert + optional automation | Alert only |
+|          | Budgets                     | Cost Anomaly Detection    |
+| -------- | --------------------------- | ------------------------- |
+| Trigger  | Budget threshold            | ML-detected unusual spend |
+| Latency  | Daily updates (24h delay)   | Near real-time            |
+| Use case | Planned spend tracking      | Unexpected spikes         |
+| Response | Alert + optional automation | Alert only                |
 
 Use both together: Budgets for planned spend visibility, Anomaly Detection for unexpected surprises.
 

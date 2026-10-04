@@ -15,13 +15,13 @@ SQS is a fully managed message queue. Producers send messages to a queue; consum
 
 ## Standard vs FIFO
 
-| Feature | Standard Queue | FIFO Queue |
-|---------|--------------|------------|
-| Throughput | Unlimited | 300 msg/s (batch: 3000/s) |
-| Ordering | At-least-once, no guarantee | Exactly-once, strict order |
-| Duplicates | May be delivered multiple times | Deduplicated (5-min window) |
-| Price | $0.40/million requests | $0.50/million requests |
-| Use case | High throughput, can tolerate duplicates | Financial transactions, strict order |
+| Feature    | Standard Queue                           | FIFO Queue                           |
+| ---------- | ---------------------------------------- | ------------------------------------ |
+| Throughput | Unlimited                                | 300 msg/s (batch: 3000/s)            |
+| Ordering   | At-least-once, no guarantee              | Exactly-once, strict order           |
+| Duplicates | May be delivered multiple times          | Deduplicated (5-min window)          |
+| Price      | $0.40/million requests                   | $0.50/million requests               |
+| Use case   | High throughput, can tolerate duplicates | Financial transactions, strict order |
 
 ## Core Concepts
 
@@ -100,10 +100,10 @@ response = sqs.receive_message(
 for msg in response.get('Messages', []):
     receipt = msg['ReceiptHandle']
     body = json.loads(msg['Body'])
-    
+
     # Process the message
     print(f"Processing: {body}")
-    
+
     # Delete after successful processing
     sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt)
 ```
@@ -151,7 +151,7 @@ def handler(event, context):
     for record in event['Records']:
         body = json.loads(record['body'])
         print(f"Processing message: {body}")
-        
+
         # Lambda automatically deletes the message after successful execution
         # If Lambda throws an error, the message becomes visible again
 ```
@@ -170,31 +170,31 @@ aws lambda create-event-source-mapping \
 
 ## Cost Optimization
 
-| Strategy | Savings |
-|----------|---------|
-| Long polling (WaitTimeSeconds=20) | Reduces API calls, improves efficiency |
-| Batch operations (SendMessageBatch, DeleteMessageBatch) | 10x fewer API calls |
-| Reduce VisibilityTimeout | Match to your processing time |
-| Short polling only when needed | Avoid empty receive_message calls |
+| Strategy                                                | Savings                                |
+| ------------------------------------------------------- | -------------------------------------- |
+| Long polling (WaitTimeSeconds=20)                       | Reduces API calls, improves efficiency |
+| Batch operations (SendMessageBatch, DeleteMessageBatch) | 10x fewer API calls                    |
+| Reduce VisibilityTimeout                                | Match to your processing time          |
+| Short polling only when needed                          | Avoid empty receive_message calls      |
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Standard queue | $0.40/million requests |
-| FIFO queue | $0.50/million requests |
-| FIFO (batching) | $0.017/million messages (after 1M) |
-| Data transfer (same region) | Free |
-| Data transfer (cross-region) | $0.02-0.09/GB |
+| Component                    | Cost                               |
+| ---------------------------- | ---------------------------------- |
+| Standard queue               | $0.40/million requests             |
+| FIFO queue                   | $0.50/million requests             |
+| FIFO (batching)              | $0.017/million messages (after 1M) |
+| Data transfer (same region)  | Free                               |
+| Data transfer (cross-region) | $0.02-0.09/GB                      |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Message size | 256KB (max 2GB with S3 extended client library) |
-| Queue retention | 1 minute to 14 days |
-| In-flight messages | 120,000 (standard), 20,000 (FIFO) |
-| Max messages per ReceiveMessage | 10 |
+| Resource                        | Limit                                           |
+| ------------------------------- | ----------------------------------------------- |
+| Message size                    | 256KB (max 2GB with S3 extended client library) |
+| Queue retention                 | 1 minute to 14 days                             |
+| In-flight messages              | 120,000 (standard), 20,000 (FIFO)               |
+| Max messages per ReceiveMessage | 10                                              |
 
 ## References
 

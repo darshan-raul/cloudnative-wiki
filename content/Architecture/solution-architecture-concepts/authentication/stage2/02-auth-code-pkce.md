@@ -1,7 +1,17 @@
 ---
 title: "2.2 — Authorization Code + PKCE: The Workhorse"
 author: darshan
-tags: [authentication, stage-2, oauth, authorization-code, pkce, rfc7636, csrf, state-parameter]
+tags:
+  [
+    authentication,
+    stage-2,
+    oauth,
+    authorization-code,
+    pkce,
+    rfc7636,
+    csrf,
+    state-parameter,
+  ]
 date: 2026-06-13
 description: The OAuth 2.0 workhorse — authorization code grant, state parameter, PKCE for public + confidential clients, and the security threats each one defeats
 ---
@@ -120,15 +130,15 @@ The client redirects the user's browser to the AS's authorization endpoint:
 
 **What each parameter means:**
 
-| Parameter | Required | Meaning |
-|-----------|----------|---------|
-| `response_type=code` | Yes | "I want the authorization code flow" |
-| `client_id` | Yes | The IdP's identifier for this app |
-| `redirect_uri` | Yes | Where the IdP sends the user back. MUST be pre-registered. |
-| `scope` | Yes | What the client wants. Space-separated. |
-| `state` | Recommended (effectively required) | CSRF defense. Client-generated nonce. |
-| `code_challenge` | PKCE required (per OAuth 2.1) | Hashed secret, ties the request to the token exchange |
-| `code_challenge_method` | Required if code_challenge present | Almost always `S256` (SHA-256) |
+| Parameter               | Required                           | Meaning                                                    |
+| ----------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| `response_type=code`    | Yes                                | "I want the authorization code flow"                       |
+| `client_id`             | Yes                                | The IdP's identifier for this app                          |
+| `redirect_uri`          | Yes                                | Where the IdP sends the user back. MUST be pre-registered. |
+| `scope`                 | Yes                                | What the client wants. Space-separated.                    |
+| `state`                 | Recommended (effectively required) | CSRF defense. Client-generated nonce.                      |
+| `code_challenge`        | PKCE required (per OAuth 2.1)      | Hashed secret, ties the request to the token exchange      |
+| `code_challenge_method` | Required if code_challenge present | Almost always `S256` (SHA-256)                             |
 
 ### Step 3: User authenticates at the IdP
 
@@ -147,7 +157,7 @@ The IdP shows a consent screen:
   "App X wants to:
    ✓ Read your email
    ✓ Read your calendar
-   
+
    [Allow]  [Deny]"
 
 If the user clicks Deny, the IdP redirects back with an error.
@@ -161,7 +171,7 @@ HTTP 302 Found
 Location: https://app.example.com/callback
   ?code=AUTHORIZATION_CODE
   &state=STATE_VALUE   ← the SAME value the client sent
-  
+
 The authorization code is:
   - Short-lived (typically 30 seconds to 10 minutes)
   - Single-use (consumed at the token endpoint)
@@ -217,6 +227,7 @@ Content-Type: application/json
 ```
 
 The client now has:
+
 - **access_token** — for API calls
 - **refresh_token** — for getting new access tokens
 - **id_token** (if OIDC) — for user identity
@@ -283,11 +294,11 @@ Client (on callback):
   received_state = request.args.get("state")
   if not hmac.compare_digest(expected_state, received_state):
       raise InvalidStateError
-  
+
   if state matches:
       session.pop("oauth_state")
       proceed with token exchange
-  
+
   if state doesn't match:
       abort. probably a CSRF attempt.
 ```
@@ -337,18 +348,18 @@ This is not theoretical. It's been used in real attacks.
 1. Mobile app with a custom URL scheme (e.g., myapp://callback)
    - Another app on the device can register the same scheme
    - Or a malicious app intercepts the redirect
-   
+
 2. Native app using a loopback redirect
    - Localhost listener on the device
    - Other apps on the device can listen on the same port
-   
+
 3. Single-page app with a wildcard redirect
    - The redirect_uri is too permissive
    - Attacker can register a similar URI
 
 4. Network MITM
    - If the redirect happens over HTTP (it shouldn't, but bugs happen)
-   
+
 5. Log injection
    - If the callback URL ends up in server logs
    - Attacker reads the logs, extracts the code
@@ -381,7 +392,7 @@ Attacker tries to exchange it:
   POST /token
     code=STOLEN_CODE
     code_verifier=?  ← attacker doesn't know this
-    
+
 IdP:
   received verifier: (empty or wrong)
   stored challenge: hash(some_real_verifier)
@@ -454,7 +465,7 @@ print(code_challenge)
 ```
 S256 (recommended):    code_challenge = base64url(sha256(code_verifier))
                        Strong. Use this. The default for OAuth 2.1.
-                       
+
 plain (don't use):     code_challenge = code_verifier
                        Legacy. The verifier IS the challenge.
                        Some old servers still support it.
@@ -467,13 +478,13 @@ plain (don't use):     code_challenge = code_verifier
 ```
 You have:
   code_verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
-  
+
 You compute:
   sha256(code_verifier) = 0x7c1d3... (32 bytes)
-  
+
 You base64url-encode (no padding):
   base64url(0x7c1d3...) = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
-  
+
 You send the challenge to the IdP at auth time.
 You send the verifier to the IdP at token time.
 The IdP hashes the verifier and checks it matches the challenge.
@@ -605,18 +616,18 @@ grant_type=authorization_code
 ```
 1. client_secret_basic (most common for confidential clients)
    - HTTP Basic auth: Authorization: Basic base64(client_id:client_secret)
-   
+
 2. client_secret_post (sometimes required by old IdPs)
    - In the form body: client_id=...&client_secret=...
-   
+
 3. client_secret_jwt (signed JWT, more secure)
    - Client signs a JWT with the secret as the key
    - Sends the JWT as client_assertion
-   
+
 4. private_key_jwt (signed with the client's RSA/ECDSA private key)
    - Most secure. No shared secret. Client has a key pair.
    - Used in FAPI 2.0, B2B scenarios.
-   
+
 5. none (public clients)
    - No client authentication. PKCE is the auth.
 ```
@@ -639,7 +650,7 @@ def exchange_code_for_token(code: str, code_verifier: str,
     """
     # For confidential clients: HTTP Basic auth
     auth = (client_id, client_secret)
-    
+
     response = requests.post(
         token_endpoint,
         data={
@@ -651,7 +662,7 @@ def exchange_code_for_token(code: str, code_verifier: str,
         auth=auth,
         timeout=10,
     )
-    
+
     if response.status_code != 200:
         # Try to extract error
         try:
@@ -664,7 +675,7 @@ def exchange_code_for_token(code: str, code_verifier: str,
             raise TokenExchangeError(
                 f"token endpoint HTTP {response.status_code}: {response.text}"
             )
-    
+
     return response.json()
 ```
 
@@ -681,30 +692,30 @@ def exchange_code_for_token(code: str, code_verifier: str,
   "expires_in": 3600,
   "refresh_token": "1//09GxvXHXv...",
   "scope": "openid profile email https://api.example.com/read",
-  "id_token": "eyJhbGciOiJSUzI1NiIs..."   // only if openid scope requested
+  "id_token": "eyJhbGciOiJSUzI1NiIs..." // only if openid scope requested
 }
 ```
 
 **Field meanings:**
 
-| Field | Required? | Meaning |
-|-------|-----------|---------|
-| `access_token` | Yes | The token to use at the API |
-| `token_type` | Yes | Almost always "Bearer" |
-| `expires_in` | Recommended | Seconds until access_token expires |
-| `refresh_token` | Optional | For getting a new access_token. Some flows don't issue. |
-| `scope` | Recommended | The scopes actually granted (may be a subset of requested) |
-| `id_token` | OIDC only | The user's identity (covered in Stage 3) |
+| Field           | Required?   | Meaning                                                    |
+| --------------- | ----------- | ---------------------------------------------------------- |
+| `access_token`  | Yes         | The token to use at the API                                |
+| `token_type`    | Yes         | Almost always "Bearer"                                     |
+| `expires_in`    | Recommended | Seconds until access_token expires                         |
+| `refresh_token` | Optional    | For getting a new access_token. Some flows don't issue.    |
+| `scope`         | Recommended | The scopes actually granted (may be a subset of requested) |
+| `id_token`      | OIDC only   | The user's identity (covered in Stage 3)                   |
 
 ### Variations
 
 ```
 - Some IdPs return the access_token in a JWT format (with alg, kid, etc.)
   You can decode it, but you don't have to.
-  
+
 - Some IdPs return opaque tokens (random strings)
   You can't decode them. You use introspection (2.5) to validate.
-  
+
 - Some IdPs use a "scope" claim (space-separated string)
   Some use a "scp" claim (array of strings)
   This is normal. Both are common.
@@ -729,7 +740,7 @@ The client has an access_token. It expires. Now what?
 
 ```
 Client: "I need a new access token. Here's my refresh token."
-  
+
 POST /token HTTP/1.1
 Host: idp.example.com
 Content-Type: application/x-www-form-urlencoded
@@ -756,14 +767,14 @@ grant_type=refresh_token
 ```
 1. The IdP may issue a NEW refresh_token. The old one is now invalid.
    This is "refresh token rotation" — best practice.
-   
+
 2. The scope parameter is OPTIONAL. If present, it must be a subset
    of the originally granted scopes. The IdP may reject if you ask
    for more than originally granted.
-   
+
 3. Some IdPs return the same refresh_token (no rotation). Less secure.
    Always prefer rotation.
-   
+
 4. The new access_token may have a different expires_in than the
    original. Some IdPs shorten the lifetime with each refresh.
 ```
@@ -775,7 +786,7 @@ If the old refresh_token is presented again (after rotation):
   → The IdP revokes the entire token family
   → User is logged out everywhere
   → Re-auth required
-  
+
 This is the "refresh token theft detection" pattern.
 ```
 
@@ -813,17 +824,17 @@ Location: https://app.example.com/callback
 
 **Common error codes (RFC 6749 Section 4.1.2.1):**
 
-| Error | Meaning | When |
-|-------|---------|------|
-| `invalid_request` | Malformed request | Missing required parameter, invalid value, etc. |
-| `invalid_client` | Client auth failed | Bad client_id/client_secret, unregistered client |
-| `invalid_grant` | The grant is invalid | Code expired, code already used, PKCE failed, etc. |
-| `unauthorized_client` | Client not authorized for this grant | e.g., trying to use auth code when only client_creds is allowed |
-| `unsupported_grant_type` | Grant type not supported | e.g., device code on an IdP that doesn't support it |
-| `invalid_scope` | Requested scope is invalid/unknown | Typo in scope name |
-| `access_denied` | User denied consent | User clicked "Deny" on the consent screen |
-| `server_error` | IdP internal error | Something broke on the IdP side |
-| `temporarily_unavailable` | IdP overloaded | Try again later |
+| Error                     | Meaning                              | When                                                            |
+| ------------------------- | ------------------------------------ | --------------------------------------------------------------- |
+| `invalid_request`         | Malformed request                    | Missing required parameter, invalid value, etc.                 |
+| `invalid_client`          | Client auth failed                   | Bad client_id/client_secret, unregistered client                |
+| `invalid_grant`           | The grant is invalid                 | Code expired, code already used, PKCE failed, etc.              |
+| `unauthorized_client`     | Client not authorized for this grant | e.g., trying to use auth code when only client_creds is allowed |
+| `unsupported_grant_type`  | Grant type not supported             | e.g., device code on an IdP that doesn't support it             |
+| `invalid_scope`           | Requested scope is invalid/unknown   | Typo in scope name                                              |
+| `access_denied`           | User denied consent                  | User clicked "Deny" on the consent screen                       |
+| `server_error`            | IdP internal error                   | Something broke on the IdP side                                 |
+| `temporarily_unavailable` | IdP overloaded                       | Try again later                                                 |
 
 ### The token endpoint returns an error (HTTP 400 or 401)
 
@@ -850,22 +861,22 @@ def handle_callback(request):
         # ... handle other errors
         log.warning(f"OAuth error: {error} - {description}")
         return redirect("/login?msg=auth_failed")
-    
+
     code = request.args.get("code")
     state = request.args.get("state")
-    
+
     # Verify state
     if not verify_state(state, session.pop("oauth_state")):
         log.warning("State mismatch — possible CSRF")
         return redirect("/login?msg=state_mismatch")
-    
+
     # Exchange code for tokens
     try:
         tokens = exchange_code_for_token(...)
     except TokenExchangeError as e:
         log.error(f"Token exchange failed: {e}")
         return redirect("/login?msg=token_exchange_failed")
-    
+
     # Store tokens
     session["access_token"] = tokens["access_token"]
     session["refresh_token"] = tokens.get("refresh_token")
@@ -920,11 +931,11 @@ def login():
     code_verifier = generate_code_verifier()
     code_challenge = derive_code_challenge(code_verifier)
     state = generate_state()
-    
+
     # Store in session (must survive the redirect round trip)
     session["code_verifier"] = code_verifier
     session["oauth_state"] = state
-    
+
     # Build authorization URL
     auth_url = (
         f"{AUTH_ENDPOINT}"
@@ -947,15 +958,15 @@ def callback():
             "error": request.args["error"],
             "description": request.args.get("error_description", "")
         }), 400
-    
+
     code = request.args.get("code")
     state = request.args.get("state")
-    
+
     # Verify state (CSRF defense)
     expected_state = session.pop("oauth_state", None)
     if not state or not hmac.compare_digest(state, expected_state or ""):
         return jsonify({"error": "state_mismatch"}), 400
-    
+
     # Exchange code for tokens (server-to-server)
     code_verifier = session.pop("code_verifier")
     try:
@@ -974,11 +985,11 @@ def callback():
         tokens = resp.json()
     except requests.RequestException as e:
         return jsonify({"error": "token_exchange_failed", "detail": str(e)}), 500
-    
+
     # Store tokens (in real app, securely — encrypted, HttpOnly cookie, etc.)
     session["access_token"] = tokens["access_token"]
     session["refresh_token"] = tokens.get("refresh_token")
-    
+
     return redirect("/me")
 
 # --- Step 3: Use the access token ---
@@ -987,7 +998,7 @@ def me():
     access_token = session.get("access_token")
     if not access_token:
         return redirect("/login")
-    
+
     # Call the resource server
     resp = requests.get(
         "https://api.example.com/me",
@@ -1002,7 +1013,7 @@ def refresh():
     refresh_token = session.get("refresh_token")
     if not refresh_token:
         return jsonify({"error": "no_refresh_token"}), 400
-    
+
     try:
         resp = requests.post(
             TOKEN_ENDPOINT,
@@ -1017,11 +1028,11 @@ def refresh():
         tokens = resp.json()
     except requests.RequestException as e:
         return jsonify({"error": "refresh_failed", "detail": str(e)}), 500
-    
+
     session["access_token"] = tokens["access_token"]
     if "refresh_token" in tokens:
         session["refresh_token"] = tokens["refresh_token"]  # rotated
-    
+
     return jsonify({"status": "refreshed"})
 
 if __name__ == "__main__":
@@ -1046,7 +1057,7 @@ Without OAuth (the bad old way):
   1. You give the coat to the theater, hoping they hold it for you
   2. The theater has your coat, can do anything with it
   3. To get it back, you have to identify yourself and ask
-  
+
 With OAuth:
   1. The coat check gives you a numbered ticket (the access token)
   2. The ticket has your coat number on it, plus the time you'll
@@ -1187,7 +1198,7 @@ Common bugs:
   - HTTP vs HTTPS
   - Path case sensitivity
   - Query parameters
-  
+
 Fix: use a constant in your code. Compare exactly. Don't recompute.
 ```
 
@@ -1254,33 +1265,43 @@ This isn't really an attack vector if scopes are checked. But:
 ## 14. Exercises
 
 ### Exercise 1: Trace a real flow
+
 Take a "Sign in with Google" or "Sign in with GitHub" on a real site. Trace every redirect, every parameter, every cookie. Document the flow with screenshots.
 
 ### Exercise 2: The state without state
+
 Take the code from Section 11. Remove the state check. Try to CSRF yourself (start a flow, get the code, send it to a different browser session). Verify the attack works.
 
 ### Exercise 3: PKCE without S256
+
 Modify the code to use `code_challenge_method=plain` (challenge = verifier). Identify the attack. Then restore S256.
 
 ### Exercise 4: Build the verifier
+
 Hand-write the PKCE generation in 10 lines. Match the output of `secrets.token_urlsafe(64)` and `base64.urlsafe_b64encode(sha256(...).digest()).rstrip(b'=')`.
 
 ### Exercise 5: The redirect_uri footgun
+
 Configure an IdP with `https://app.example.com/callback` as the allowed URI. Then try to auth with `https://app.example.com/callback/`, `https://app.example.com/callback?foo=bar`, `https://APP.example.com/callback`. Document which work and which don't.
 
 ### Exercise 6: Token exchange with curl
+
 Use curl to do a complete auth code flow manually (no library). Generate PKCE values, build the URL, do the redirect (use --data-urlencode and the IdP's test endpoint), exchange the code, get the token. Save as a shell script.
 
 ### Exercise 7: The client_secret_in_app footgun
+
 Find a mobile app that uses OAuth. Check if it has a client_secret. If yes, that secret is in the app's binary. Anyone with the binary has the secret. Document the de-anonymization risk.
 
 ### Exercise 8: Token response variations
+
 Hit 5 different IdPs (Google, GitHub, Auth0, Okta, Keycloak). Compare their token responses. What fields differ? What about expires_in values?
 
 ### Exercise 9: Refresh token rotation
+
 Take the Section 11 code, add refresh logic. Test: refresh once, get new tokens. Try to use the old refresh token — should fail (rotation). Try to use the OLD access token — should still work until exp.
 
 ### Exercise 10: PKCE on confidential client
+
 Configure your IdP to require PKCE for a confidential client. Verify: with PKCE works, without PKCE fails. Document the response when PKCE is missing.
 
 ---
@@ -1292,6 +1313,7 @@ You can now implement the authorization code grant from scratch, with state and 
 → [[../stage2/03-other-grants|Stage 2.3 — Client Credentials, ROPC, Implicit (and Why to Avoid)]]
 
 **Before you move on, verify you can answer these:**
+
 1. What are the 7 steps of the authorization code flow?
 2. What does the `state` parameter defend against, and how?
 3. What does PKCE defend against, and why is S256 the only safe choice?

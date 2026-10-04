@@ -1,6 +1,17 @@
 ---
 title: "M12: Pipeline Identity & OIDC Federation"
-tags: [devsecops, stage3, deploy, oidc, iam, irsa, wif, workload-identity, cicd-auth]
+tags:
+  [
+    devsecops,
+    stage3,
+    deploy,
+    oidc,
+    iam,
+    irsa,
+    wif,
+    workload-identity,
+    cicd-auth,
+  ]
 date: 2026-06-16
 description: 'Module 12 of 20 — replacing long-lived cloud credentials in CI with short-lived OIDC tokens. GitHub Actions → AWS, GCP, Azure. IRSA, WIF, and the pattern of "no static keys anywhere."'
 ---
@@ -13,12 +24,12 @@ The single highest-leverage DevSecOps upgrade you can make this quarter: remove 
 
 By the end of this module you should be able to:
 
-  - Configure OIDC trust between GitHub Actions and AWS (IAM role)
-  - Configure OIDC trust between GitHub Actions and GCP (Workload Identity Federation)
-  - Configure OIDC trust between GitHub Actions and Azure (Workload Identity)
-  - Scope the trust to specific repos, branches, and environments
-  - Replace static cloud credentials across your pipeline
-  - Audit the rotation drill for OIDC-only pipelines
+- Configure OIDC trust between GitHub Actions and AWS (IAM role)
+- Configure OIDC trust between GitHub Actions and GCP (Workload Identity Federation)
+- Configure OIDC trust between GitHub Actions and Azure (Workload Identity)
+- Scope the trust to specific repos, branches, and environments
+- Replace static cloud credentials across your pipeline
+- Audit the rotation drill for OIDC-only pipelines
 
 ## 1. The Problem with Static Keys in CI
 
@@ -35,11 +46,12 @@ The pattern that most teams inherit:
 ```
 
 The keys:
-  - Live forever (until manually rotated)
-  - Are visible in the CI provider's secret store
-  - Are visible in every workflow that references them
-  - Can be exfiltrated by a malicious action, dependency, or PR
-  - Have admin-equivalent power if scoped carelessly
+
+- Live forever (until manually rotated)
+- Are visible in the CI provider's secret store
+- Are visible in every workflow that references them
+- Can be exfiltrated by a malicious action, dependency, or PR
+- Have admin-equivalent power if scoped carelessly
 
 The blast radius of a single leak: an attacker can call any AWS API the key is scoped to, indefinitely, until the key is revoked.
 
@@ -57,7 +69,7 @@ The OIDC fix:
   AWS APIs (with short-lived session)
 ```
 
-The JWT is not a secret. Anyone can read it. What makes it useful is that the IAM role trusts *only* JWTs from a specific repo + branch + workflow. The attacker cannot forge a JWT (they'd need GitHub's private key), and they cannot reuse an old JWT (it expires in 15 minutes).
+The JWT is not a secret. Anyone can read it. What makes it useful is that the IAM role trusts _only_ JWTs from a specific repo + branch + workflow. The attacker cannot forge a JWT (they'd need GitHub's private key), and they cannot reuse an old JWT (it expires in 15 minutes).
 
 ## 2. The OIDC Flow (Generalized)
 
@@ -103,7 +115,7 @@ aws iam create-open-id-connect-provider \
 
 ### Step 2: Create the IAM Role with a Trust Policy
 
-The trust policy is the critical security boundary. It defines *which* GitHub contexts can assume the role.
+The trust policy is the critical security boundary. It defines _which_ GitHub contexts can assume the role.
 
 ```json
 {
@@ -129,11 +141,12 @@ The trust policy is the critical security boundary. It defines *which* GitHub co
 ```
 
 The `sub` condition scopes the trust:
-  - `repo:your-org/your-repo` — only this repo
-  - `:ref:refs/heads/main` — only the main branch
-  - `:ref:refs/heads/*` — all branches (looser)
-  - `:environment:production` — only when running in the `production` environment
-  - `:pull_request` — only from PRs (separate role recommended)
+
+- `repo:your-org/your-repo` — only this repo
+- `:ref:refs/heads/main` — only the main branch
+- `:ref:refs/heads/*` — all branches (looser)
+- `:environment:production` — only when running in the `production` environment
+- `:pull_request` — only from PRs (separate role recommended)
 
 ### Step 3: Attach a Least-Privilege Policy
 
@@ -157,10 +170,7 @@ The role gets a policy with the minimum permissions needed. Common patterns:
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "ecs:UpdateService",
-        "ecs:DescribeServices"
-      ],
+      "Action": ["ecs:UpdateService", "ecs:DescribeServices"],
       "Resource": "arn:aws:ecs:us-east-1:123456789012:service/my-cluster/my-app"
     }
   ]
@@ -179,7 +189,7 @@ on:
     branches: [main]
 
 permissions:
-  id-token: write   # required for OIDC
+  id-token: write # required for OIDC
   contents: read
 
 jobs:
@@ -272,6 +282,7 @@ The OIDC trust policy is your attack surface. If it is too loose, an attacker ca
 ```
 
 Not:
+
 ```
 "sub": "*"
 ```
@@ -288,14 +299,14 @@ on:
     branches: [main]
 jobs:
   deploy-prod:
-    environment: production  # requires approval
+    environment: production # requires approval
 ```
 
 The `sub` condition can then reference `:environment:production`, which means the role can only be assumed by jobs that are running in the `production` environment, which requires manual approval.
 
 ### Rule 3: Use a Separate Role for PR Builds
 
-PRs from forks run untrusted code. They should assume a role that can *read* (to run scans) but not *write* (to push images or update infra).
+PRs from forks run untrusted code. They should assume a role that can _read_ (to run scans) but not _write_ (to push images or update infra).
 
 ```json
 {
@@ -313,10 +324,10 @@ This role: read-only ECR, read-only IAM, no deploy permissions. PRs cannot deplo
 
 The same pattern exists for other CI providers:
 
-  - **GitLab CI** — `id_tokens` keyword; cloud federation via JWT
-  - **CircleCI** — OIDC token in context; AWS/GCP federation works similarly
-  - **Buildkite** — OIDC token; AWS, GCP federation
-  - **Jenkins** — `withCredentials` + OIDC plugin; or use Vault to issue short-lived AWS creds
+- **GitLab CI** — `id_tokens` keyword; cloud federation via JWT
+- **CircleCI** — OIDC token in context; AWS/GCP federation works similarly
+- **Buildkite** — OIDC token; AWS, GCP federation
+- **Jenkins** — `withCredentials` + OIDC plugin; or use Vault to issue short-lived AWS creds
 
 For each, the pattern is the same: short-lived OIDC token, trust policy scoped to specific jobs/environments, no static keys.
 
@@ -338,48 +349,48 @@ Migrating from static keys to OIDC is a quarter-long project. Stages:
 
 ### Stage A: Inventory (Week 1)
 
-  - List every workflow that uses static cloud credentials
-  - For each, document the scope of the credential
-  - Identify high-value credentials first (prod-deploy, signing keys)
+- List every workflow that uses static cloud credentials
+- For each, document the scope of the credential
+- Identify high-value credentials first (prod-deploy, signing keys)
 
 ### Stage B: Pilot (Weeks 2–3)
 
-  - Pick one non-critical workflow
-  - Configure OIDC for that workflow
-  - Verify it works end-to-end
-  - Document the steps for the team
+- Pick one non-critical workflow
+- Configure OIDC for that workflow
+- Verify it works end-to-end
+- Document the steps for the team
 
 ### Stage C: Rollout (Weeks 4–10)
 
-  - For each workflow in priority order:
-    - Create the IAM role with trust policy
-    - Update the workflow to use OIDC
-    - Test in a non-prod environment
-    - Cut over; remove the static secret
-  - Update the rotation drill to reflect that there are no static keys to rotate
+- For each workflow in priority order:
+  - Create the IAM role with trust policy
+  - Update the workflow to use OIDC
+  - Test in a non-prod environment
+  - Cut over; remove the static secret
+- Update the rotation drill to reflect that there are no static keys to rotate
 
 ### Stage D: Cleanup (Weeks 11–12)
 
-  - Audit: any workflow still using static keys?
-  - Delete the static keys
-  - Document the new model in the security policy
+- Audit: any workflow still using static keys?
+- Delete the static keys
+- Document the new model in the security policy
 
 ## 10. Common Pitfalls
 
-| Pitfall | Consequence | Fix |
-| ------- | ----------- | --- |
-| `sub: "*"` in trust policy | Any repo can assume the role | Scope to repo + branch |
-| Same role for PR and main | PR code can deploy to prod | Separate roles, prod via environment |
-| `id-token: write` on all jobs | Larger blast radius if a job is compromised | `id-token: write` only on jobs that need it |
-| Role with `AdministratorAccess` | OIDC + admin = same risk as static key | Least privilege per role |
-| No condition on `aud` | Confused-deputy risk | Always check `aud` |
-| Stale trust policy | Old repos/branches retain access | Audit trust policies quarterly |
+| Pitfall                         | Consequence                                 | Fix                                         |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| `sub: "*"` in trust policy      | Any repo can assume the role                | Scope to repo + branch                      |
+| Same role for PR and main       | PR code can deploy to prod                  | Separate roles, prod via environment        |
+| `id-token: write` on all jobs   | Larger blast radius if a job is compromised | `id-token: write` only on jobs that need it |
+| Role with `AdministratorAccess` | OIDC + admin = same risk as static key      | Least privilege per role                    |
+| No condition on `aud`           | Confused-deputy risk                        | Always check `aud`                          |
+| Stale trust policy              | Old repos/branches retain access            | Audit trust policies quarterly              |
 
 ## 11. Self-Check
 
-  1. List every workflow that uses a static cloud credential. Pick the highest-value one and migrate it to OIDC this week.
-  2. For your prod-deploy role, what is the trust policy? Is it scoped to a specific branch + environment? If not, fix it.
-  3. Can your pipeline run from a fork PR? If yes, what role does it assume? Does that role have write permissions?
+1. List every workflow that uses a static cloud credential. Pick the highest-value one and migrate it to OIDC this week.
+2. For your prod-deploy role, what is the trust policy? Is it scoped to a specific branch + environment? If not, fix it.
+3. Can your pipeline run from a fork PR? If yes, what role does it assume? Does that role have write permissions?
 
 ## 12. The OIDC Migration Story
 
@@ -387,42 +398,42 @@ The migration from static keys to OIDC is not a one-day project. It is a 1–2 q
 
 ### Phase 1: Setup (Week 1)
 
-  - Create the OIDC provider in each cloud
-  - Define the trust policy template (with placeholders for repo, branch, env)
-  - Document the pattern in your security wiki
+- Create the OIDC provider in each cloud
+- Define the trust policy template (with placeholders for repo, branch, env)
+- Document the pattern in your security wiki
 
 ### Phase 2: Pilot (Week 2)
 
-  - Pick one non-critical workflow
-  - Migrate it to OIDC
-  - Verify the end-to-end flow
-  - Document the steps; create a checklist for other workflows
+- Pick one non-critical workflow
+- Migrate it to OIDC
+- Verify the end-to-end flow
+- Document the steps; create a checklist for other workflows
 
 ### Phase 3: Wave 1 — Read-Only (Weeks 3–6)
 
-  - All workflows that only *read* (scans, queries)
-  - Lowest risk; biggest volume
-  - OIDC role has read-only access
-  - Static keys removed after cutover
+- All workflows that only _read_ (scans, queries)
+- Lowest risk; biggest volume
+- OIDC role has read-only access
+- Static keys removed after cutover
 
 ### Phase 4: Wave 2 — Write, Non-Prod (Weeks 7–10)
 
-  - All workflows that *write* to non-prod
-  - Higher risk; OIDC role scoped to non-prod
-  - Static keys removed after cutover
+- All workflows that _write_ to non-prod
+- Higher risk; OIDC role scoped to non-prod
+- Static keys removed after cutover
 
 ### Phase 5: Wave 3 — Write, Prod (Weeks 11–14)
 
-  - All workflows that *write* to prod
-  - Highest risk; OIDC role scoped to prod
-  - Static keys removed; manual approval for prod deploys
+- All workflows that _write_ to prod
+- Highest risk; OIDC role scoped to prod
+- Static keys removed; manual approval for prod deploys
 
 ### Phase 6: Cleanup (Week 15)
 
-  - Audit: any workflow still using static keys?
-  - Delete the static keys
-  - Document the new model
-  - Update the rotation drill
+- Audit: any workflow still using static keys?
+- Delete the static keys
+- Document the new model
+- Update the rotation drill
 
 After 15 weeks, the org has no static cloud credentials in CI. The blast radius of a runner compromise is contained.
 
@@ -430,12 +441,12 @@ After 15 weeks, the org has no static cloud credentials in CI. The blast radius 
 
 Different environments get different OIDC trust policies:
 
-| Environment | Trust policy | Role |
-| ----------- | ------------ | ---- |
-| dev | `repo:org/*:ref:refs/heads/*` | read-write to dev only |
-| staging | `repo:org/*:ref:refs/heads/main` + `:environment:staging` | read-write to staging |
-| prod | `repo:org/app:ref:refs/tags/v*` + `:environment:prod` | limited, with manual approval |
-| fork PRs | `repo:org/*:pull_request` | read-only across the org |
+| Environment | Trust policy                                              | Role                          |
+| ----------- | --------------------------------------------------------- | ----------------------------- |
+| dev         | `repo:org/*:ref:refs/heads/*`                             | read-write to dev only        |
+| staging     | `repo:org/*:ref:refs/heads/main` + `:environment:staging` | read-write to staging         |
+| prod        | `repo:org/app:ref:refs/tags/v*` + `:environment:prod`     | limited, with manual approval |
+| fork PRs    | `repo:org/*:pull_request`                                 | read-only across the org      |
 
 The dev trust policy is loose because dev is cheap. The prod trust policy is tight because prod is expensive. The fork PR policy is read-only because fork PRs run untrusted code.
 
@@ -448,9 +459,10 @@ With static keys, every API call is attributed to "the IAM user" — no individu
 ## 15. OIDC and Cross-Cloud Federation
 
 For multi-cloud orgs, OIDC federation chains. A GitHub Actions workflow can:
-  1. Assume an AWS role via OIDC
-  2. From AWS, call a Lambda that assumes a GCP service account via WIF
-  3. From GCP, call the cloud API
+
+1. Assume an AWS role via OIDC
+2. From AWS, call a Lambda that assumes a GCP service account via WIF
+3. From GCP, call the cloud API
 
 Each step in the chain is short-lived and audited. The chain is auditable end-to-end.
 
@@ -476,21 +488,21 @@ M14 covers SLSA in depth. This module is the OIDC foundation.
 
 ## 17. OIDC and the Audit Trail
 
-| Control | OIDC evidence |
-| ------- | ------------- |
-| SOC 2 CC6.1 (logical access) | Trust policy, OIDC subject in CloudTrail |
-| SOC 2 CC6.6 (boundary) | Per-env trust policy |
-| SOC 2 CC8.1 (change management) | CloudTrail attribution to commit + user |
-| ISO A.8.16 (monitoring) | CloudTrail logs with OIDC subject |
-| FedRAMP AC-2 (account management) | Trust policy = explicit allow list |
-| FedRAMP IA-2 (identification) | OIDC subject = unique user identity |
+| Control                           | OIDC evidence                            |
+| --------------------------------- | ---------------------------------------- |
+| SOC 2 CC6.1 (logical access)      | Trust policy, OIDC subject in CloudTrail |
+| SOC 2 CC6.6 (boundary)            | Per-env trust policy                     |
+| SOC 2 CC8.1 (change management)   | CloudTrail attribution to commit + user  |
+| ISO A.8.16 (monitoring)           | CloudTrail logs with OIDC subject        |
+| FedRAMP AC-2 (account management) | Trust policy = explicit allow list       |
+| FedRAMP IA-2 (identification)     | OIDC subject = unique user identity      |
 
 The audit asks "who did what?" The OIDC subject is the answer. The trust policy is the rule. The CloudTrail log is the evidence.
 
 ## Related
 
-  - [[DevOps/devsecops/stage1-code/06-secrets-detection|M06: Secrets Detection]]
-  - [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
-  - [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
-  - [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
-  - [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]
+- [[DevOps/devsecops/stage1-code/06-secrets-detection|M06: Secrets Detection]]
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
+- [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
+- [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
+- [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]

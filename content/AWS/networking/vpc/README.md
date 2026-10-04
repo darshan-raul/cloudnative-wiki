@@ -16,6 +16,7 @@ A VPC is an isolated virtual network in AWS. You define the IP address range (CI
 ### CIDR Blocks
 
 Every VPC has one or more IPv4 CIDR blocks. AWS reserves5 IPs per subnet:
+
 - Network address (first IP)
 - VPC router (second IP — used for the subnet's default gateway)
 - DNS (third IP)
@@ -23,12 +24,12 @@ Every VPC has one or more IPv4 CIDR blocks. AWS reserves5 IPs per subnet:
 - Broadcast (last IP — not used in AWS but reserved)
 
 | CIDR Size | Usable IPs per Subnet |
-|-----------|----------------------|
-| /28 | 11 |
-| /27 | 27 |
-| /26 | 59 |
-| /25 | 123 |
-| /24 | 251 |
+| --------- | --------------------- |
+| /28       | 11                    |
+| /27       | 27                    |
+| /26       | 59                    |
+| /25       | 123                   |
+| /24       | 251                   |
 
 A /24 subnet in us-east-1 gives you 251 usable instances — enough for most application tiers.
 
@@ -65,6 +66,7 @@ The IGW is free and handles unlimited bandwidth. Your instance's bandwidth is li
 A NAT Gateway enables instances in private subnets to initiate outbound traffic to the internet (for OS updates, API calls, etc.) while preventing inbound connections from the internet.
 
 Key properties:
+
 - Deployed in a **public subnet** (one per AZ for HA)
 - Managed by AWS — no patching, no maintenance
 - One Elastic IP attached
@@ -78,11 +80,13 @@ NAT Gateway hourly cost + per-GB processing cost. In high-traffic private subnet
 VPC Endpoints allow private connectivity to AWS services without going through the internet. Two types:
 
 **Interface Endpoints** — An ENI with a private IP in your subnet (powered by AWS PrivateLink)
+
 - S3, DynamoDB, SQS, SNS, Lambda, KMS, CloudWatch, Secrets Manager, and 100+ services
 - Hourly cost per endpoint per AZ
 - Security group controls access
 
 **Gateway Endpoints** — A target in your route table for S3 and DynamoDB
+
 - Free to use
 - Only supports S3 and DynamoDB
 - Uses prefix lists in route tables
@@ -95,11 +99,13 @@ Flow Logs capture traffic information for your VPC, subnet, or ENI. Not real-tim
 Log format: `version account-id interface-id srcaddr dstaddr srcport dstport protocol packets bytes action log-status`
 
 Actions:
+
 - `ACCEPT` — Traffic allowed by security group/NACL
 - `REJECT` — Traffic blocked by security group/NACL
 - `REJECT` — Traffic blocked by implicit VPC deny (no matching rule)
 
 Use cases:
+
 - Security monitoring (identify unauthorized access attempts)
 - Troubleshooting connectivity (which security group rule is blocking?)
 - Forensic analysis (what IPs were involved in an incident)
@@ -133,11 +139,13 @@ RDS:10.0.0.0/16 → local
 VPC sharing allows an account to share subnets with other accounts in the same AWS Organization. The sharing account owns the VPC; member accounts launch resources into shared subnets.
 
 Benefits:
+
 - Members don't need VPC CIDR planning
 - Single VPC, multi-account usage
 - Shared infrastructure (NAT GW, Transit Gateway) managed centrally
 
 Limitations:
+
 - Cannot share subnets with accounts outside the Organization
 - All participants must be in the same Region
 
@@ -146,25 +154,26 @@ Limitations:
 AReachability Analyzer helps you understand and debug network connectivity. You specify a source and destination, and AWS simulates the traffic path to identify where it's blocked.
 
 Use when:
+
 - A security group rule should allow traffic but connections still fail
 - You want to audit connectivity before a production deployment
 - Troubleshooting cross-account VPC Peering or Transit Gateway issues
 
 ## Limits
 
-| Resource | Default Limit |
-|----------|-------------|
-| VPCs per region | 5 |
-| Subnets per VPC | 200 |
-| IPv4 CIDR blocks per VPC | 5 (max 16) |
-| IPv6 CIDR blocks per VPC | 1 (/56 default) |
-| Route tables per VPC | 200 |
-| Elastic IPs | 5 per account |
-| Security groups per VPC | 500 |
-| Rules per security group | 60 inbound + 60 outbound |
-| NACL rules per subnet | 20 inbound + 20 outbound |
+| Resource                        | Default Limit             |
+| ------------------------------- | ------------------------- |
+| VPCs per region                 | 5                         |
+| Subnets per VPC                 | 200                       |
+| IPv4 CIDR blocks per VPC        | 5 (max 16)                |
+| IPv6 CIDR blocks per VPC        | 1 (/56 default)           |
+| Route tables per VPC            | 200                       |
+| Elastic IPs                     | 5 per account             |
+| Security groups per VPC         | 500                       |
+| Rules per security group        | 60 inbound + 60 outbound  |
+| NACL rules per subnet           | 20 inbound + 20 outbound  |
 | VPC Peering connections per VPC | 50 (can request increase) |
-| NAT Gateways per AZ | 5 |
+| NAT Gateways per AZ             | 5                         |
 
 ## Operational Best Practices
 

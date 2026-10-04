@@ -25,14 +25,14 @@ npm run format
 
 ## Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run docs` | Dev server with live reload (default port 3009) |
-| `npm run quartz build` | Full production build to `public/` |
-| `npm run check` | TypeScript check + Prettier formatting |
-| `npm run format` | Auto-format all files with Prettier |
-| `npm run test` | Run tsx test suite |
-| `npm run profile` | Profile build performance |
+| Command                | Description                                     |
+| ---------------------- | ----------------------------------------------- |
+| `npm run docs`         | Dev server with live reload (default port 3009) |
+| `npm run quartz build` | Full production build to `public/`              |
+| `npm run check`        | TypeScript check + Prettier formatting          |
+| `npm run format`       | Auto-format all files with Prettier             |
+| `npm run test`         | Run tsx test suite                              |
+| `npm run profile`      | Profile build performance                       |
 
 ## Content Structure
 

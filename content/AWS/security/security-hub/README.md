@@ -56,12 +56,14 @@ Security Hub provides a centralized view of security findings across all your AW
   },
   "Title": "IAM users should not have IAM access keys older than 90 days",
   "Description": "This AWS Foundational Security Best Practice rule checks whether IAM access keys are older than 90 days...",
-  "Resources": [{
-    "Type": "AwsIamUser",
-    "Id": "arn:aws:iam::123456789012:user/alice",
-    "Partition": "aws",
-    "Region": "us-east-1"
-  }],
+  "Resources": [
+    {
+      "Type": "AwsIamUser",
+      "Id": "arn:aws:iam::123456789012:user/alice",
+      "Partition": "aws",
+      "Region": "us-east-1"
+    }
+  ],
   "Compliance": {
     "Status": "FAILED",
     "RelatedRequirements": ["AWS-1"]
@@ -124,12 +126,12 @@ aws securityhub batch-update-findings \
 
 ## Compliance Standards
 
-| Standard | Description |
-|----------|-------------|
-| AWS Foundational Security Best Practices | AWS's own security standard |
-| CIS AWS Foundations Benchmark | Center for Internet Security benchmarks |
-| PCI DSS | Payment Card Industry Data Security Standard |
-| NIST SP 800-53 | National Institute of Standards and Technology |
+| Standard                                 | Description                                    |
+| ---------------------------------------- | ---------------------------------------------- |
+| AWS Foundational Security Best Practices | AWS's own security standard                    |
+| CIS AWS Foundations Benchmark            | Center for Internet Security benchmarks        |
+| PCI DSS                                  | Payment Card Industry Data Security Standard   |
+| NIST SP 800-53                           | National Institute of Standards and Technology |
 
 ## Custom Plugins (Partner Products)
 
@@ -169,11 +171,11 @@ aws events put-targets \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
+| Component                  | Cost                                          |
+| -------------------------- | --------------------------------------------- |
 | Security Hub (per account) | $0.0010 per finding (first 10,000/month free) |
-| AWS Config rules evaluated | $0.001 per evaluation (first 50K/month free) |
-| Custom actions | Free |
+| AWS Config rules evaluated | $0.001 per evaluation (first 50K/month free)  |
+| Custom actions             | Free                                          |
 
 ## References
 

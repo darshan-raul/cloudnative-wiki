@@ -42,7 +42,7 @@ Azure VNets isolate compute workloads, enable cross-subscription peering over Mi
 └─────────────────────────┘             └─────────────────────────┘
 ```
 
-* **Non-Transitive Peering:** Spoke VNet A cannot communicate directly with Spoke VNet B across standard VNet peering. Traffic must route through the Hub's central Network Virtual Appliance (NVA / Azure Firewall) via **User Defined Routes (UDRs)**.
+- **Non-Transitive Peering:** Spoke VNet A cannot communicate directly with Spoke VNet B across standard VNet peering. Traffic must route through the Hub's central Network Virtual Appliance (NVA / Azure Firewall) via **User Defined Routes (UDRs)**.
 
 ---
 
@@ -52,39 +52,40 @@ Azure VNets isolate compute workloads, enable cross-subscription peering over Mi
 
 In every Azure subnet, Microsoft permanently reserves **5 IP addresses**. A `/24` subnet (256 theoretical addresses) yields only **251 usable IP addresses**:
 
-* `x.x.x.0`: Network address.
-* `x.x.x.1`: Default gateway assigned to the subnet router.
-* `x.x.x.2`, `x.x.x.3`: Azure DNS mapping addresses (used by Azure to resolve internal DNS and Azure PaaS endpoints).
-* `x.x.x.255`: Network broadcast address (Azure virtual networks do not broadcast, but the address is reserved).
+- `x.x.x.0`: Network address.
+- `x.x.x.1`: Default gateway assigned to the subnet router.
+- `x.x.x.2`, `x.x.x.3`: Azure DNS mapping addresses (used by Azure to resolve internal DNS and Azure PaaS endpoints).
+- `x.x.x.255`: Network broadcast address (Azure virtual networks do not broadcast, but the address is reserved).
 
 ### 2. VNet Peering & Gateway Transit
 
 VNet Peering connects two VNets directly over Microsoft's private network backbone with sub-millisecond latency:
-* **Regional Peering:** Between VNets within the same Azure region.
-* **Global VNet Peering:** Between VNets in different Azure regions across continents.
-* **Gateway Transit:** Allows spoke VNets to share a single, costly ExpressRoute or VPN Gateway located in the hub VNet:
-  * Hub sets: `--allow-gateway-transit`
-  * Spoke sets: `--use-remote-gateways`
+
+- **Regional Peering:** Between VNets within the same Azure region.
+- **Global VNet Peering:** Between VNets in different Azure regions across continents.
+- **Gateway Transit:** Allows spoke VNets to share a single, costly ExpressRoute or VPN Gateway located in the hub VNet:
+  - Hub sets: `--allow-gateway-transit`
+  - Spoke sets: `--use-remote-gateways`
 
 ### 3. Route Tables & User Defined Routes (UDRs)
 
 Azure automatically provisions **System Routes** that route traffic between subnets within the same VNet, between peered VNets, and out to the internet. **User Defined Routes (UDRs)** override these system defaults:
 
-| Next Hop Type | Purpose | Production Use Case |
-| :--- | :--- | :--- |
-| **VirtualAppliance** | Routes traffic to a private IP (e.g. Azure Firewall, Palo Alto, Fortinet) | Force all internet-bound traffic through central firewall |
-| **VirtualNetworkGateway** | Routes traffic to an on-premises VPN or ExpressRoute | Hybrid connectivity |
-| **None** | Blackholes matching packets | Drop unwanted traffic between environments |
-| **Internet** | Routes traffic directly to Azure internet edge | Bypass firewall for whitelisted SaaS traffic |
+| Next Hop Type             | Purpose                                                                   | Production Use Case                                       |
+| :------------------------ | :------------------------------------------------------------------------ | :-------------------------------------------------------- |
+| **VirtualAppliance**      | Routes traffic to a private IP (e.g. Azure Firewall, Palo Alto, Fortinet) | Force all internet-bound traffic through central firewall |
+| **VirtualNetworkGateway** | Routes traffic to an on-premises VPN or ExpressRoute                      | Hybrid connectivity                                       |
+| **None**                  | Blackholes matching packets                                               | Drop unwanted traffic between environments                |
+| **Internet**              | Routes traffic directly to Azure internet edge                            | Bypass firewall for whitelisted SaaS traffic              |
 
 ### 4. Service Endpoints vs. Private Endpoints (Private Link)
 
-| Dimension | Service Endpoints | Private Endpoints (Azure Private Link) |
-| :--- | :--- | :--- |
-| **IP Addressing** | PaaS resource retains its **public IP**; traffic routed internally | PaaS resource receives a **private RFC 1918 IP** from your local subnet |
-| **Network Reachability** | Accessible only from the configured VNet/subnet | Accessible across peered VNets, VPN, and ExpressRoute |
-| **Data Exfiltration** | Broad access to the service (e.g., all Azure Storage accounts) | **Zero exfiltration**: Restricted strictly to the specific single resource instance |
-| **Production Recommendation** | Legacy architectures; low complexity | **Modern Enterprise Standard**: Completely disables PaaS public endpoints |
+| Dimension                     | Service Endpoints                                                  | Private Endpoints (Azure Private Link)                                              |
+| :---------------------------- | :----------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| **IP Addressing**             | PaaS resource retains its **public IP**; traffic routed internally | PaaS resource receives a **private RFC 1918 IP** from your local subnet             |
+| **Network Reachability**      | Accessible only from the configured VNet/subnet                    | Accessible across peered VNets, VPN, and ExpressRoute                               |
+| **Data Exfiltration**         | Broad access to the service (e.g., all Azure Storage accounts)     | **Zero exfiltration**: Restricted strictly to the specific single resource instance |
+| **Production Recommendation** | Legacy architectures; low complexity                               | **Modern Enterprise Standard**: Completely disables PaaS public endpoints           |
 
 ---
 
@@ -171,41 +172,43 @@ az network vnet subnet update \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Virtual Networks per subscription** | 1,000 per region | Can be increased via support ticket |
-| **Subnets per Virtual Network** | 3,000 subnets | Ample capacity for micro-segmentation |
-| **VNet Peerings per VNet** | 500 peerings | Use Virtual WAN or Hub-and-Spoke to scale beyond |
-| **Routes per Route Table** | 400 user-defined routes | Aggregate CIDRs to avoid route exhaustion |
-| **NAT Gateway assigned IPs** | Up to 16 public IPs | Delivers over 1,000,000 concurrent SNAT ports |
+| Parameter                             | Limit                   | Production Notes                                 |
+| :------------------------------------ | :---------------------- | :----------------------------------------------- |
+| **Virtual Networks per subscription** | 1,000 per region        | Can be increased via support ticket              |
+| **Subnets per Virtual Network**       | 3,000 subnets           | Ample capacity for micro-segmentation            |
+| **VNet Peerings per VNet**            | 500 peerings            | Use Virtual WAN or Hub-and-Spoke to scale beyond |
+| **Routes per Route Table**            | 400 user-defined routes | Aggregate CIDRs to avoid route exhaustion        |
+| **NAT Gateway assigned IPs**          | Up to 16 public IPs     | Delivers over 1,000,000 concurrent SNAT ports    |
 
 ---
 
 ## References
 
-* **Homepage:** https://azure.microsoft.com/en-us/products/virtual-network
-* **VNet Documentation:** https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
-* **VNet Peering Overview:** https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview
-* **Azure Private Link:** https://learn.microsoft.com/en-us/azure/private-link/private-link-overview
-* **Pricing:** https://azure.microsoft.com/en-us/pricing/details/virtual-network/
+- **Homepage:** https://azure.microsoft.com/en-us/products/virtual-network
+- **VNet Documentation:** https://learn.microsoft.com/en-us/azure/virtual-network/virtual-networks-overview
+- **VNet Peering Overview:** https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview
+- **Azure Private Link:** https://learn.microsoft.com/en-us/azure/private-link/private-link-overview
+- **Pricing:** https://azure.microsoft.com/en-us/pricing/details/virtual-network/
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Enterprise Hub-and-Spoke VNet Peering
-* Hub VNet in East US peered to 10 Spoke VNets within the same region.
-* Monthly inter-VNet data transfer across peering: 20 TB ingress + 20 TB egress.
-* Intra-region peering rate: $0.01 / GB in both directions ($0.02 / GB total).
-* Data transfer cost: 20,480 GB × $0.02 = **$409.60 / month**.
-* Virtual Network and Subnets: **$0.00** (Free).
+
+- Hub VNet in East US peered to 10 Spoke VNets within the same region.
+- Monthly inter-VNet data transfer across peering: 20 TB ingress + 20 TB egress.
+- Intra-region peering rate: $0.01 / GB in both directions ($0.02 / GB total).
+- Data transfer cost: 20,480 GB × $0.02 = **$409.60 / month**.
+- Virtual Network and Subnets: **$0.00** (Free).
 
 ### Scenario 2: Azure NAT Gateway for Outbound Internet Egress
-* 1 NAT Gateway deployed to handle outbound egress for 5 subnets in East US.
-* Hourly rate: ~$0.045 / hour × 730 hours = ~$32.85.
-* Data processed: 10 TB / month at $0.045 / GB = $450.00.
-* Public IP address: Standard static IP = $3.65 / month.
-* **Total Monthly NAT Cost:** ~$32.85 + $450.00 + $3.65 = **~$486.50 / month**.
+
+- 1 NAT Gateway deployed to handle outbound egress for 5 subnets in East US.
+- Hourly rate: ~$0.045 / hour × 730 hours = ~$32.85.
+- Data processed: 10 TB / month at $0.045 / GB = $450.00.
+- Public IP address: Standard static IP = $3.65 / month.
+- **Total Monthly NAT Cost:** ~$32.85 + $450.00 + $3.65 = **~$486.50 / month**.
 
 ---
 

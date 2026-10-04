@@ -6,43 +6,44 @@
 
 #### Instant Vector Selectors
 
-*   Select all time series with the metric name `http_requests_total`:
+- Select all time series with the metric name `http_requests_total`:
 
-    ```
-    http_requests_total
-    ```
-*   Select with a label matcher:
+  ```
+  http_requests_total
+  ```
 
-    ```
-    http_requests_total{status="200"}
-    ```
+- Select with a label matcher:
+
+  ```
+  http_requests_total{status="200"}
+  ```
 
 #### Range Vector Selectors
 
-*   Select the last 5 minutes of data:
+- Select the last 5 minutes of data:
 
-    ```
-    http_requests_total[5m]
-    ```
+  ```
+  http_requests_total[5m]
+  ```
 
 #### Offset Modifier
 
-*   Select data from 1 hour ago:
+- Select data from 1 hour ago:
 
-    ```
-    http_requests_total offset 1h
-    ```
+  ```
+  http_requests_total offset 1h
+  ```
 
 ### Operators
 
 #### Arithmetic Operators
 
-* Addition: `+`
-* Subtraction: `-`
-* Multiplication: `*`
-* Division: `/`
-* Modulo: `%`
-* Power: `^`
+- Addition: `+`
+- Subtraction: `-`
+- Multiplication: `*`
+- Division: `/`
+- Modulo: `%`
+- Power: `^`
 
 Example:
 
@@ -52,12 +53,12 @@ Example:
 
 #### Comparison Operators
 
-* Equal: `==`
-* Not equal: `!=`
-* Greater than: `>`
-* Less than: `<`
-* Greater or equal: `>=`
-* Less or equal: `<=`
+- Equal: `==`
+- Not equal: `!=`
+- Greater than: `>`
+- Less than: `<`
+- Greater or equal: `>=`
+- Less or equal: `<=`
 
 Example:
 
@@ -67,9 +68,9 @@ http_requests_total > 100
 
 #### Logical Operators
 
-* and
-* or
-* unless
+- and
+- or
+- unless
 
 Example:
 
@@ -79,11 +80,11 @@ http_requests_total > 100 and http_errors_total > 5
 
 ### Aggregation Operators
 
-* Sum: `sum(http_requests_total)`
-* Average: `avg(http_requests_total)`
-* Min: `min(http_requests_total)`
-* Max: `max(http_requests_total)`
-* Count: `count(http_requests_total)`
+- Sum: `sum(http_requests_total)`
+- Average: `avg(http_requests_total)`
+- Min: `min(http_requests_total)`
+- Max: `max(http_requests_total)`
+- Count: `count(http_requests_total)`
 
 Grouping:
 
@@ -95,34 +96,35 @@ sum(http_requests_total) by (status)
 
 #### Rate and Increase
 
-*   Rate of increase per second:
+- Rate of increase per second:
 
-    ```
-    rate(http_requests_total[5m])
-    ```
-*   Total increase:
+  ```
+  rate(http_requests_total[5m])
+  ```
 
-    ```
-    increase(http_requests_total[1h])
-    ```
+- Total increase:
+
+  ```
+  increase(http_requests_total[1h])
+  ```
 
 #### Time Functions
 
-* Current timestamp: `time()`
-* Time range: `time() - 3600`
+- Current timestamp: `time()`
+- Time range: `time() - 3600`
 
 #### Label Manipulation
 
-* Replace label: `label_replace()`
-* Join: `label_join()`
+- Replace label: `label_replace()`
+- Join: `label_join()`
 
 #### Histograms
 
-*   Histogram quantile:
+- Histogram quantile:
 
-    ```
-    histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
-    ```
+  ```
+  histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+  ```
 
 ### Advanced Concepts
 
@@ -141,27 +143,27 @@ expr: rate(http_requests_total[5m])
 
 #### Staleness
 
-*   Handling stale data:
+- Handling stale data:
 
-    ```
-    http_requests_total unless on(instance) (up == 0)
-    ```
+  ```
+  http_requests_total unless on(instance) (up == 0)
+  ```
 
 #### Binary Operator Matching
 
-*   One-to-one:
+- One-to-one:
 
-    ```
-    method_code:http_errors:rate5m{code="500"} / ignoring(code) method:http_requests:rate5m
-    ```
+  ```
+  method_code:http_errors:rate5m{code="500"} / ignoring(code) method:http_requests:rate5m
+  ```
 
 #### Vector Matching
 
-*   Many-to-one:
+- Many-to-one:
 
-    ```
-    sum(http_requests_total) by (job) / group_left count(up) by (job)
-    ```
+  ```
+  sum(http_requests_total) by (job) / group_left count(up) by (job)
+  ```
 
 #### Complex Aggregations
 
@@ -171,12 +173,12 @@ topk(3, sum(rate(http_requests_total[5m])) by (path))
 
 #### Delta and Deriv
 
-*   For gauge metrics:
+- For gauge metrics:
 
-    ```
-    delta(cpu_temp_celsius{host="zeus"}[2h])
-    deriv(cpu_temp_celsius{host="zeus"}[2h])
-    ```
+  ```
+  delta(cpu_temp_celsius{host="zeus"}[2h])
+  deriv(cpu_temp_celsius{host="zeus"}[2h])
+  ```
 
 #### Predict Linear
 

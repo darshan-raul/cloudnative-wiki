@@ -51,19 +51,20 @@ The `/` in keys is just a character — S3 has no real directory hierarchy. Pref
 
 ## Storage Classes
 
-| Class | Durability | Availability | Use Case | Cost (per GB/mo) |
-|-------|-----------|--------------|----------|-------------------|
-| S3 Standard | 11 9s | 99.99% | Hot data, frequent access | ~$0.023 |
-| S3 Intelligent-Tiering | 11 9s | 99.9% | Unknown access patterns | ~$0.023 (monitoring) |
-| S3 Standard-IA | 11 9s | 99.9% | Infrequent (30+ days) | ~$0.0125 |
-| S3 Glacier IA | 11 9s | 99.99% | Rare (90+ days) | ~$0.004 |
-| S3 Glacier | 11 9s | 99.99% | Archive (180+ days) | ~$0.00099 |
-| S3 Glacier Deep Archive | 11 9s | 99.99% | Very rare (365+ days) | ~$0.00099 |
-| S3 One Zone-IA | 11 9s | 99.5% | Re-creatable infrequent | ~$0.01 |
+| Class                   | Durability | Availability | Use Case                  | Cost (per GB/mo)     |
+| ----------------------- | ---------- | ------------ | ------------------------- | -------------------- |
+| S3 Standard             | 11 9s      | 99.99%       | Hot data, frequent access | ~$0.023              |
+| S3 Intelligent-Tiering  | 11 9s      | 99.9%        | Unknown access patterns   | ~$0.023 (monitoring) |
+| S3 Standard-IA          | 11 9s      | 99.9%        | Infrequent (30+ days)     | ~$0.0125             |
+| S3 Glacier IA           | 11 9s      | 99.99%       | Rare (90+ days)           | ~$0.004              |
+| S3 Glacier              | 11 9s      | 99.99%       | Archive (180+ days)       | ~$0.00099            |
+| S3 Glacier Deep Archive | 11 9s      | 99.99%       | Very rare (365+ days)     | ~$0.00099            |
+| S3 One Zone-IA          | 11 9s      | 99.5%        | Re-creatable infrequent   | ~$0.01               |
 
 ### Intelligent-Tiering
 
 Automatically moves objects between tiers based on access patterns:
+
 - Frequent → Infrequent → Archive → Deep Archive
 - 0 monitoring/automation charge per object
 - Best for unpredictable access patterns
@@ -123,13 +124,15 @@ aws s3api list-objects-v2 --bucket my-bucket
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "PublicRead",
-    "Effect": "Allow",
-    "Principal": "*",
-    "Action": ["s3:GetObject"],
-    "Resource": "arn:aws:s3:::my-public-bucket/*"
-  }]
+  "Statement": [
+    {
+      "Sid": "PublicRead",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::my-public-bucket/*"
+    }
+  ]
 }
 ```
 
@@ -240,6 +243,7 @@ Upload to: `my-bucket.s3-accelerate.amazonaws.com`
 ### Prefix Partitioning
 
 S3 auto-scales, but partitioning keys helps:
+
 - Good: `logs/2024/01/15/app.log` (year/month/day/hour)
 - Bad: `logs/app.log` (single hot prefix)
 
@@ -312,14 +316,14 @@ aws s3control get-access-point-policy \
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Bucket name | 3-63 chars, globally unique, lowercase |
-| Object size | 5TB (single PUT), 5GB (multipart) |
-| Objects per bucket | Unlimited |
-| Buckets per account | 100 (soft limit) |
-| PUT request | 5GB |
-| Multipart upload | 10000 parts, 5MB-5GB per part |
+| Resource            | Limit                                  |
+| ------------------- | -------------------------------------- |
+| Bucket name         | 3-63 chars, globally unique, lowercase |
+| Object size         | 5TB (single PUT), 5GB (multipart)      |
+| Objects per bucket  | Unlimited                              |
+| Buckets per account | 100 (soft limit)                       |
+| PUT request         | 5GB                                    |
+| Multipart upload    | 10000 parts, 5MB-5GB per part          |
 
 ## References
 

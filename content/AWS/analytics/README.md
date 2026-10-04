@@ -35,19 +35,20 @@ Data Lake
 
 ## Real-time vs Batch Decision
 
-| Workload | Service |
-|----------|---------|
-| Ingest millions of events/sec, process in real-time | Kinesis Data Streams + Kinesis Data Analytics |
-| Deliver data to S3/Redshift/Druid with minimal processing | Kinesis Data Firehose |
-| Ad-hoc SQL on log files or data lake | Athena |
-| Dashboarding and BI on structured data | Redshift |
-| ETL between databases and data lakes | Glue |
-| Large-scale distributed processing (Spark, Hadoop) | EMR |
-| Full-text search on large datasets | OpenSearch |
+| Workload                                                  | Service                                       |
+| --------------------------------------------------------- | --------------------------------------------- |
+| Ingest millions of events/sec, process in real-time       | Kinesis Data Streams + Kinesis Data Analytics |
+| Deliver data to S3/Redshift/Druid with minimal processing | Kinesis Data Firehose                         |
+| Ad-hoc SQL on log files or data lake                      | Athena                                        |
+| Dashboarding and BI on structured data                    | Redshift                                      |
+| ETL between databases and data lakes                      | Glue                                          |
+| Large-scale distributed processing (Spark, Hadoop)        | EMR                                           |
+| Full-text search on large datasets                        | OpenSearch                                    |
 
 ## Data Flow Patterns
 
 ### Lambda Architecture (classic)
+
 ```
 Real-time layer: Kinesis → Kinesis Data Analytics (SQL) → DynamoDB/ES
 Batch layer: S3 → Glue → Redshift
@@ -55,12 +56,14 @@ Serving layer: Merge real-time + batch results for queries
 ```
 
 ### Kappa Architecture (simplified)
+
 ```
 Kinesis → Kinesis Data Analytics (continuous SQL) → serving layer
 S3 as the immutable log (no separate batch layer)
 ```
 
 ### Modern Data Stack
+
 ```
 Ingestion: DMS, Firehose, Kafka Connect
 Storage: S3 (raw) + S3 (processed)

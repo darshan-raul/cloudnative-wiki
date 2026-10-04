@@ -6,8 +6,8 @@ A foreign key is a field (or collection of fields) in one table that uniquely id
 
 **Purpose of Foreign Keys**
 
-* **Referential Integrity**: Ensures that a value in the child table corresponds to an existing value in the parent table.
-* **Relationship Management**: Establishes and enforces relationships between tables.
+- **Referential Integrity**: Ensures that a value in the child table corresponds to an existing value in the parent table.
+- **Relationship Management**: Establishes and enforces relationships between tables.
 
 **Creating Foreign Keys**
 
@@ -31,7 +31,7 @@ CREATE TABLE books (
 
 In this example:
 
-* The `books` table has a foreign key `author_id` that references `author_id` in the `authors` table.
+- The `books` table has a foreign key `author_id` that references `author_id` in the `authors` table.
 
 **Composite Foreign Keys**
 
@@ -65,8 +65,8 @@ Foreign key constraints ensure that relationships between tables remain consiste
 
 When defining a foreign key, you can specify actions that occur when the referenced row in the parent table is updated or deleted.
 
-* **ON DELETE CASCADE**: Automatically deletes rows in the child table when the corresponding row in the parent table is deleted.
-* **ON UPDATE CASCADE**: Automatically updates the value of the foreign key in the child table when the corresponding row in the parent table is updated.
+- **ON DELETE CASCADE**: Automatically deletes rows in the child table when the corresponding row in the parent table is deleted.
+- **ON UPDATE CASCADE**: Automatically updates the value of the foreign key in the child table when the corresponding row in the parent table is updated.
 
 ```sql
 CREATE TABLE orders (
@@ -77,10 +77,10 @@ CREATE TABLE orders (
 
 **Other Actions**
 
-* **SET NULL**: Sets the foreign key to `NULL` if the referenced row is deleted or updated.
-* **SET DEFAULT**: Sets the foreign key to its default value if the referenced row is deleted or updated.
-* **RESTRICT**: Prevents the deletion or update of the referenced row.
-* **NO ACTION**: Similar to `RESTRICT`, but the check is deferred until the end of the transaction.
+- **SET NULL**: Sets the foreign key to `NULL` if the referenced row is deleted or updated.
+- **SET DEFAULT**: Sets the foreign key to its default value if the referenced row is deleted or updated.
+- **RESTRICT**: Prevents the deletion or update of the referenced row.
+- **NO ACTION**: Similar to `RESTRICT`, but the check is deferred until the end of the transaction.
 
 ```sql
 CREATE TABLE orders (
@@ -170,7 +170,7 @@ CREATE TABLE room_reservations (
 
 #### Summary
 
-* **Foreign Keys**: Enforce relationships between tables and ensure referential integrity. Can have cascading actions like `CASCADE`, `SET NULL`, `SET DEFAULT`, `RESTRICT`, and `NO ACTION`.
-* **Constraints**: Ensure data integrity and correctness. Types include `NOT NULL`, `UNIQUE`, `PRIMARY KEY`, `FOREIGN KEY`, `CHECK`, and `EXCLUSION`.
+- **Foreign Keys**: Enforce relationships between tables and ensure referential integrity. Can have cascading actions like `CASCADE`, `SET NULL`, `SET DEFAULT`, `RESTRICT`, and `NO ACTION`.
+- **Constraints**: Ensure data integrity and correctness. Types include `NOT NULL`, `UNIQUE`, `PRIMARY KEY`, `FOREIGN KEY`, `CHECK`, and `EXCLUSION`.
 
 Using these constraints effectively helps maintain the integrity and reliability of the data within your PostgreSQL database.

@@ -19,10 +19,10 @@ spec:
     metadata: { labels: { app: canary-v1 } }
     spec:
       containers:
-      - name: canary-v1
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "v1" }]
-        ports: [{ containerPort: 8080 }]
+        - name: canary-v1
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "v1" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -32,8 +32,8 @@ metadata:
 spec:
   selector: { app: canary-v1 }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -48,10 +48,10 @@ spec:
     metadata: { labels: { app: canary-v2 } }
     spec:
       containers:
-      - name: canary-v2
-        image: mendhak/http-https-echo:32
-        env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "v2" }]
-        ports: [{ containerPort: 8080 }]
+        - name: canary-v2
+          image: mendhak/http-https-echo:32
+          env: [{ name: HTTP_ECHO_BACKEND_TEXT, value: "v2" }]
+          ports: [{ containerPort: 8080 }]
 ---
 apiVersion: v1
 kind: Service
@@ -61,8 +61,8 @@ metadata:
 spec:
   selector: { app: canary-v2 }
   ports:
-  - port: 80
-    targetPort: 8080
+    - port: 80
+      targetPort: 8080
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -71,16 +71,16 @@ metadata:
   namespace: app
 spec:
   parentRefs:
-  - name: eg
-    namespace: infra
+    - name: eg
+      namespace: infra
   hostnames: ["canary.example.com"]
   rules:
-  - matches:
-    - path: { type: PathPrefix, value: / }
-    backendRefs:
-    - name: canary-v1
-      port: 80
-      weight: 90
-    - name: canary-v2
-      port: 80
-      weight: 10
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: canary-v1
+          port: 80
+          weight: 90
+        - name: canary-v2
+          port: 80
+          weight: 10

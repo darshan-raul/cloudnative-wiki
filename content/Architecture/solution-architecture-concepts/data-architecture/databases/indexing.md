@@ -112,9 +112,9 @@ WHERE MATCH(title, body) AGAINST ('database indexing');
 
 #### Maintenance and Drawbacks
 
-* **Maintenance Overhead**: Indexes need to be maintained, which can add overhead during insert, update, and delete operations.
-* **Storage Space**: Indexes consume additional disk space.
-* **Index Selection**: Poorly chosen indexes can degrade performance. Careful selection and management are required to balance query performance and maintenance overhead.
+- **Maintenance Overhead**: Indexes need to be maintained, which can add overhead during insert, update, and delete operations.
+- **Storage Space**: Indexes consume additional disk space.
+- **Index Selection**: Poorly chosen indexes can degrade performance. Careful selection and management are required to balance query performance and maintenance overhead.
 
 #### Summary
 

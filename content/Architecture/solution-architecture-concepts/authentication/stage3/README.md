@@ -13,13 +13,13 @@ description: OIDC fundamentals, flows, claims, discovery, dynamic registration, 
 
 ## Modules
 
-| # | Module | Why it matters | Exit criterion |
-|---|--------|----------------|----------------|
-| [[01-oidc-fundamentals\|3.1 OIDC Fundamentals]] | ID token, UserInfo, what OIDC adds on top of OAuth | You can explain the difference in one sentence |
-| [[02-oidc-flows\|3.2 OIDC Flows]] | Auth Code + PKCE (canonical), Hybrid, legacy Implicit | You can pick the right flow for SPA vs native vs web |
-| [[03-claims-and-sub\|3.3 Claims & sub Discipline]] | Standard claims, custom claims, why `sub` must be opaque | Your multi-tenant systems survive a re-architecture |
-| [[04-discovery-registration\|3.4 Discovery & Dynamic Registration]] | `/.well-known/openid-configuration`, JWKS_URI, registration | You can onboard a new IdP by hitting two URLs |
-| [[05-session-logout\|3.5 Session Management & Logout]] | Front-channel, back-channel, RP-initiated, sid vs id_token | Your users log out everywhere, not just on the SP they clicked |
+| #                                                                   | Module                                                      | Why it matters                                                 | Exit criterion |
+| ------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------- | -------------- |
+| [[01-oidc-fundamentals\|3.1 OIDC Fundamentals]]                     | ID token, UserInfo, what OIDC adds on top of OAuth          | You can explain the difference in one sentence                 |
+| [[02-oidc-flows\|3.2 OIDC Flows]]                                   | Auth Code + PKCE (canonical), Hybrid, legacy Implicit       | You can pick the right flow for SPA vs native vs web           |
+| [[03-claims-and-sub\|3.3 Claims & sub Discipline]]                  | Standard claims, custom claims, why `sub` must be opaque    | Your multi-tenant systems survive a re-architecture            |
+| [[04-discovery-registration\|3.4 Discovery & Dynamic Registration]] | `/.well-known/openid-configuration`, JWKS_URI, registration | You can onboard a new IdP by hitting two URLs                  |
+| [[05-session-logout\|3.5 Session Management & Logout]]              | Front-channel, back-channel, RP-initiated, sid vs id_token  | Your users log out everywhere, not just on the SP they clicked |
 
 ## Connections
 

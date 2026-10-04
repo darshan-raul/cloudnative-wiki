@@ -12,7 +12,7 @@ tags:
 
 # GCP Cloud Run Jobs & Batch Processing 🚀⚙️
 
-While **Cloud Run Services** are designed for long-lived, request-driven HTTP web applications that scale down to zero when idle, **Cloud Run Jobs** are designed specifically for **run-to-completion batch workloads**. 
+While **Cloud Run Services** are designed for long-lived, request-driven HTTP web applications that scale down to zero when idle, **Cloud Run Jobs** are designed specifically for **run-to-completion batch workloads**.
 
 Jobs execute an OCI container to completion (until exit code 0 or failure) and terminate automatically. Jobs support execution durations of up to **24 hours per task**, parallel task array slicing, dynamic execution overrides, and direct VPC egress.
 
@@ -54,7 +54,7 @@ A Cloud Run Job can execute an array of independent, parallel container tasks. C
      [Schedules Task 10]                           [Schedules Task 19]
 ```
 
-* **Data Slicing:** A Python script inspects `int(os.environ["CLOUD_RUN_TASK_INDEX"])` and processes only its assigned partition of data from Cloud Storage or BigQuery, enabling effortless, serverless map-reduce parallelism.
+- **Data Slicing:** A Python script inspects `int(os.environ["CLOUD_RUN_TASK_INDEX"])` and processes only its assigned partition of data from Cloud Storage or BigQuery, enabling effortless, serverless map-reduce parallelism.
 
 ---
 
@@ -62,33 +62,35 @@ A Cloud Run Job can execute an array of independent, parallel container tasks. C
 
 ### 1. Cloud Run Services vs. Cloud Run Jobs
 
-| Dimension | Cloud Run Services | Cloud Run Jobs |
-| :--- | :--- | :--- |
-| **Invocation** | Incoming HTTP/HTTPS, WebSockets, gRPC, Pub/Sub | Explicit trigger via API, CLI, or Cloud Scheduler |
-| **Network Interface** | Must listen on `$PORT` (default 8080) | **No listening port:** Container executes and exits |
-| **Max Timeout** | 60 minutes per request | **24 hours per task** |
-| **Billing Model** | Pay per request + active vCPU-seconds | Pay strictly for the exact runtime of the task |
-| **Scaling Metric** | Ingress request concurrency | Sliced task arrays (`--tasks` and `--parallelism`) |
-| **Use Cases** | REST APIs, microservices, web apps | DB migrations, batch video rendering, nightly ETL, ML inference |
+| Dimension             | Cloud Run Services                             | Cloud Run Jobs                                                  |
+| :-------------------- | :--------------------------------------------- | :-------------------------------------------------------------- |
+| **Invocation**        | Incoming HTTP/HTTPS, WebSockets, gRPC, Pub/Sub | Explicit trigger via API, CLI, or Cloud Scheduler               |
+| **Network Interface** | Must listen on `$PORT` (default 8080)          | **No listening port:** Container executes and exits             |
+| **Max Timeout**       | 60 minutes per request                         | **24 hours per task**                                           |
+| **Billing Model**     | Pay per request + active vCPU-seconds          | Pay strictly for the exact runtime of the task                  |
+| **Scaling Metric**    | Ingress request concurrency                    | Sliced task arrays (`--tasks` and `--parallelism`)              |
+| **Use Cases**         | REST APIs, microservices, web apps             | DB migrations, batch video rendering, nightly ETL, ML inference |
 
 ### 2. Task Indices & Environment Variables
 
 Cloud Run Jobs injects the following runtime environment variables into every container task:
-* `CLOUD_RUN_TASK_INDEX`: The unique zero-based index of this specific task (e.g. `0` to `99`).
-* `CLOUD_RUN_TASK_COUNT`: The total number of tasks defined in the job (e.g. `100`).
-* `CLOUD_RUN_TASK_ATTEMPT`: The current retry attempt for this task index (starts at `0`; increments on failure).
-* `CLOUD_RUN_EXECUTION`: The unique execution identifier string.
+
+- `CLOUD_RUN_TASK_INDEX`: The unique zero-based index of this specific task (e.g. `0` to `99`).
+- `CLOUD_RUN_TASK_COUNT`: The total number of tasks defined in the job (e.g. `100`).
+- `CLOUD_RUN_TASK_ATTEMPT`: The current retry attempt for this task index (starts at `0`; increments on failure).
+- `CLOUD_RUN_EXECUTION`: The unique execution identifier string.
 
 ### 3. Fault Tolerance & Retry Policies
 
-* **`--max-retries`:** Specifies how many times Cloud Run will restart an individual task index if the container crashes or returns a non-zero exit code.
-* **Independent Failure Retries:** If Task 4 crashes but Tasks 0–3 succeed, Cloud Run retries **only Task 4**. The successfully completed tasks are not re-executed.
+- **`--max-retries`:** Specifies how many times Cloud Run will restart an individual task index if the container crashes or returns a non-zero exit code.
+- **Independent Failure Retries:** If Task 4 crashes but Tasks 0–3 succeed, Cloud Run retries **only Task 4**. The successfully completed tasks are not re-executed.
 
 ### 4. Direct VPC Egress for Batch Workers
 
 Batch jobs frequently need to query internal relational databases or push data to private Redis caches. Direct VPC Egress attaches the container directly to a private VPC subnet without requiring expensive Serverless VPC Access connector VMs:
-* Configured via `--network` and `--subnet`.
-* Egress options: `--vpc-egress=private-ranges-only` (default) or `--vpc-egress=all-traffic`.
+
+- Configured via `--network` and `--subnet`.
+- Egress options: `--vpc-egress=private-ranges-only` (default) or `--vpc-egress=all-traffic`.
 
 ---
 
@@ -172,42 +174,44 @@ if __name__ == "__main__":
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max tasks per job** | 10,000 tasks | Subdivide large workloads into tasks |
-| **Max parallelism** | 100 concurrent tasks | Can request increase via quota console |
-| **Max task execution timeout** | 24 hours (86,400s) | Up from 60 mins on Services |
-| **Max memory per task** | 32 GiB | Up to 8 vCPUs per task container |
-| **Max retries per task** | 10 retries | Exponential backoff between attempts |
+| Parameter                      | Limit                | Production Notes                       |
+| :----------------------------- | :------------------- | :------------------------------------- |
+| **Max tasks per job**          | 10,000 tasks         | Subdivide large workloads into tasks   |
+| **Max parallelism**            | 100 concurrent tasks | Can request increase via quota console |
+| **Max task execution timeout** | 24 hours (86,400s)   | Up from 60 mins on Services            |
+| **Max memory per task**        | 32 GiB               | Up to 8 vCPUs per task container       |
+| **Max retries per task**       | 10 retries           | Exponential backoff between attempts   |
 
 ---
 
 ## References
 
-* **Cloud Run Jobs Overview:** https://cloud.google.com/run/docs/create-jobs
-* **Executing Jobs Guide:** https://cloud.google.com/run/docs/execute-jobs
-* **Scheduling Cloud Run Jobs:** https://cloud.google.com/run/docs/triggering/using-scheduler
-* **Pricing:** https://cloud.google.com/run/pricing
+- **Cloud Run Jobs Overview:** https://cloud.google.com/run/docs/create-jobs
+- **Executing Jobs Guide:** https://cloud.google.com/run/docs/execute-jobs
+- **Scheduling Cloud Run Jobs:** https://cloud.google.com/run/docs/triggering/using-scheduler
+- **Pricing:** https://cloud.google.com/run/pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Nightly Database Schema Migration
-* Single task job (`--tasks=1`, 2 vCPU, 2 GB RAM).
-* Runs once every deployment or nightly test (executes in 45 seconds).
-* Compute cost: 2 vCPUs × $0.00002400 / sec × 45s = **$0.00216 / execution**.
-* 30 runs per month = **~$0.06 / month** (Falls within monthly permanent free tier).
+
+- Single task job (`--tasks=1`, 2 vCPU, 2 GB RAM).
+- Runs once every deployment or nightly test (executes in 45 seconds).
+- Compute cost: 2 vCPUs × $0.00002400 / sec × 45s = **$0.00216 / execution**.
+- 30 runs per month = **~$0.06 / month** (Falls within monthly permanent free tier).
 
 ### Scenario 2: Large-Scale Monthly Financial Report Generation
-* 50 parallel tasks (`--tasks=50`, `--parallelism=25`, 4 vCPU, 8 GB RAM).
-* Each task runs for 30 minutes (1,800 seconds).
-* Total vCPU-seconds: 50 tasks × 4 vCPU × 1,800s = 360,000 vCPU-seconds.
-* Total GiB-seconds: 50 tasks × 8 GB × 1,800s = 720,000 GiB-seconds.
-* Pricing (us-central1):
-  * vCPU: 360,000 × $0.000024 = $8.64.
-  * RAM: 720,000 × $0.0000025 = $1.80.
-* **Total Monthly Cost:** **~$10.44 / month** (Eliminates the cost of keeping a dedicated batch server running 24/7).
+
+- 50 parallel tasks (`--tasks=50`, `--parallelism=25`, 4 vCPU, 8 GB RAM).
+- Each task runs for 30 minutes (1,800 seconds).
+- Total vCPU-seconds: 50 tasks × 4 vCPU × 1,800s = 360,000 vCPU-seconds.
+- Total GiB-seconds: 50 tasks × 8 GB × 1,800s = 720,000 GiB-seconds.
+- Pricing (us-central1):
+  - vCPU: 360,000 × $0.000024 = $8.64.
+  - RAM: 720,000 × $0.0000025 = $1.80.
+- **Total Monthly Cost:** **~$10.44 / month** (Eliminates the cost of keeping a dedicated batch server running 24/7).
 
 ---
 

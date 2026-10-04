@@ -12,12 +12,12 @@ Serverless means you don't manage servers — AWS handles provisioning, scaling,
 
 ## Service Map
 
-| Service | Type | Use Case |
-|---------|------|----------|
-| [[lambda/README\|Lambda]] | Functions | Event-driven compute, glue logic |
-| [[api-gateway/README\|API Gateway]] | API | REST/WebSocket/HTTP APIs, rate limiting |
-| [[app-runner/README\|App Runner]] | Containers | Web apps, APIs without infra management |
-| [[../machine-learning/bedrock/README\|Bedrock]] | Foundation Models | LLMs, RAG, agents |
+| Service                                         | Type              | Use Case                                |
+| ----------------------------------------------- | ----------------- | --------------------------------------- |
+| [[lambda/README\|Lambda]]                       | Functions         | Event-driven compute, glue logic        |
+| [[api-gateway/README\|API Gateway]]             | API               | REST/WebSocket/HTTP APIs, rate limiting |
+| [[app-runner/README\|App Runner]]               | Containers        | Web apps, APIs without infra management |
+| [[../machine-learning/bedrock/README\|Bedrock]] | Foundation Models | LLMs, RAG, agents                       |
 
 ## When to Use Serverless
 
@@ -49,12 +49,12 @@ Request arrives
 
 ## Pricing Comparison
 
-| Service | Pricing Model |
-|---------|--------------|
-| Lambda | $0.20/1M requests + $0.0000166667/GB-second |
+| Service     | Pricing Model                                        |
+| ----------- | ---------------------------------------------------- |
+| Lambda      | $0.20/1M requests + $0.0000166667/GB-second          |
 | API Gateway | $3.50/million API calls (REST), $0.50/million (HTTP) |
-| App Runner | $0.05/vCPU-hour + $0.02/GB-hour |
-| Fargate | $0.04048/vCPU-hour + $0.004442/GB-hour |
+| App Runner  | $0.05/vCPU-hour + $0.02/GB-hour                      |
+| Fargate     | $0.04048/vCPU-hour + $0.004442/GB-hour               |
 
 ## References
 

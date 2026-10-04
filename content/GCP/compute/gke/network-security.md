@@ -71,6 +71,7 @@ In traditional Kubernetes networking, every Service and NetworkPolicy rule gener
 ## 2. Layer 7 FQDN Network Policies & DNS Snooping
 
 When an application pod attempts to contact an external service:
+
 1. The pod issues a DNS lookup: `curl https://api.stripe.com`.
 2. The Datapath V2 eBPF hook intercepts the DNS response from CoreDNS, dynamically extracting the returned IPv4/IPv6 addresses.
 3. eBPF immediately updates the kernel BPF table whitelist for that specific pod.
@@ -94,7 +95,8 @@ gcloud container clusters create prod-secure-cluster \
     --enable-network-policy \
     --project=core-infrastructure-prod
 ```
-*(Note: `--enable-dataplane-v2` automatically enables Cilium eBPF and replaces `kube-proxy`).*
+
+_(Note: `--enable-dataplane-v2` automatically enables Cilium eBPF and replaces `kube-proxy`)._
 
 ### 2. Deploy Zero-Trust Default-Deny NetworkPolicy
 
@@ -109,13 +111,13 @@ metadata:
 spec:
   podSelector: {}
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
 ```
 
 ### 3. Deploy FQDN Egress Policy (Allow Stripe & Internal DNS Only)
 
-Allow the payment processor pod to talk *only* to internal CoreDNS and external Stripe payment APIs:
+Allow the payment processor pod to talk _only_ to internal CoreDNS and external Stripe payment APIs:
 
 ```yaml
 apiVersion: networking.gke.io/v1
@@ -128,24 +130,24 @@ spec:
     matchLabels:
       app: payment-worker
   policyTypes:
-  - Egress
+    - Egress
   egress:
-  # 1. Allow UDP 53 to In-Cluster CoreDNS
-  - to:
-    - namespaceSelector: {}
-      podSelector:
-        matchLabels:
-          k8s-app: kube-dns
-    ports:
-    - protocol: UDP
-      port: 53
-  # 2. Allow Layer 7 Egress to Stripe API via FQDN
-  - to:
-    - fqdn: "api.stripe.com"
-    - fqdn: "*.stripe.com"
-    ports:
-    - protocol: TCP
-      port: 443
+    # 1. Allow UDP 53 to In-Cluster CoreDNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+    # 2. Allow Layer 7 Egress to Stripe API via FQDN
+    - to:
+        - fqdn: "api.stripe.com"
+        - fqdn: "*.stripe.com"
+      ports:
+        - protocol: TCP
+          port: 443
 ```
 
 Apply policy:
@@ -178,7 +180,7 @@ spec:
     matchLabels:
       app: payment-worker
   destinations:
-  - cidr: "198.51.100.0/24" # Partner Bank API CIDR
+    - cidr: "198.51.100.0/24" # Partner Bank API CIDR
   egressGateway:
     staticIP: "34.120.55.90" # Reserved IP from above
 ```
@@ -193,13 +195,13 @@ kubectl apply -f egress-nat-policy.yaml
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Standard Limit / Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Max Network Policies per Cluster**| 1,000+ policies | $O(1)$ eBPF hash lookup maintains performance |
-| **FQDN Rules per Policy** | 50 FQDNs per rule | Use wildcards (`*.service.com`) to consolidate |
-| **FQDN Cache TTL** | Respects DNS TTL | Minimum 30 seconds enforced by eBPF map |
-| **Datapath V2 Memory Footprint**| ~200 MiB per node | Low memory footprint compared to iptables chains |
-| **Egress NAT IP Limit** | Up to 10 static IPs per pool | Distribute across high-volume partner destinations |
+| Parameter / Dimension                | Standard Limit / Quota       | Engineering Guidance                               |
+| :----------------------------------- | :--------------------------- | :------------------------------------------------- |
+| **Max Network Policies per Cluster** | 1,000+ policies              | $O(1)$ eBPF hash lookup maintains performance      |
+| **FQDN Rules per Policy**            | 50 FQDNs per rule            | Use wildcards (`*.service.com`) to consolidate     |
+| **FQDN Cache TTL**                   | Respects DNS TTL             | Minimum 30 seconds enforced by eBPF map            |
+| **Datapath V2 Memory Footprint**     | ~200 MiB per node            | Low memory footprint compared to iptables chains   |
+| **Egress NAT IP Limit**              | Up to 10 static IPs per pool | Distribute across high-volume partner destinations |
 
 ---
 
@@ -216,6 +218,7 @@ kubectl apply -f egress-nat-policy.yaml
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **GKE Datapath V2:** Included with GKE ($0.00 platform fee).
 2. **FQDN Network Policies:** Included ($0.00).
 3. **Egress NAT Static IP:** Standard Google Cloud external IP fee ($0.005/hour while in use = ~$3.65/month) + standard egress internet bandwidth ($0.08 - $0.12/GB).
@@ -246,15 +249,17 @@ Pricing components:
 
 ## 7. Battle-Tested Nuggets & Production Gotchas
 
-1. **DNS Lookup Failure Drops FQDN Egress Packets:** FQDN network policies rely entirely on the pod performing a DNS lookup *before* connecting. If an application pod caches DNS responses in memory indefinitely (e.g., a long-lived Java application with `networkaddress.cache.ttl = -1`), the eBPF kernel DNS cache may expire the IP while the application continues to use it. Subsequent TCP packets from the application will be **immediately dropped by the kernel with connection timeouts**. Always set JVM DNS caching TTL to 60 seconds (`networkaddress.cache.ttl=60`).
+1. **DNS Lookup Failure Drops FQDN Egress Packets:** FQDN network policies rely entirely on the pod performing a DNS lookup _before_ connecting. If an application pod caches DNS responses in memory indefinitely (e.g., a long-lived Java application with `networkaddress.cache.ttl = -1`), the eBPF kernel DNS cache may expire the IP while the application continues to use it. Subsequent TCP packets from the application will be **immediately dropped by the kernel with connection timeouts**. Always set JVM DNS caching TTL to 60 seconds (`networkaddress.cache.ttl=60`).
 2. **Default Deny Breaks In-Cluster DNS Resolution:** When you apply a `default-deny` egress network policy, it blocks **all** outbound traffic, including traffic to the Kubernetes DNS service (`kube-dns`). Pods immediately fail to resolve internal service hostnames (`order-service.default.svc.cluster.local`). You **must explicitly whitelist egress on UDP/TCP port 53** targeting the `kube-system` namespace in your network policies.
 3. **Datapath V2 Cannot Be Disabled After Cluster Creation:** The choice between Datapath V1 (iptables) and Datapath V2 (Cilium eBPF) is an immutable cluster configuration. You **cannot enable or disable Datapath V2 on an existing GKE cluster**. To adopt Datapath V2, you must create a new cluster and migrate workloads.
 4. **Hardcoded IP Addresses Bypass FQDN Policies:** If a developer attempts to call a third-party API using a hardcoded raw IP address (e.g., `curl https://198.51.100.5`) instead of a domain name, the packet does not trigger a DNS lookup and is immediately blocked by FQDN network policies. Enforce code quality rules preventing hardcoded IP endpoints.
 5. **Egress NAT Policy Routing Contention with Cloud NAT:** If a subnet already has Google Cloud NAT enabled, GKE Egress NAT Policies take precedence for the specific pods matching the `podSelector`. However, if the destination CIDR in the `EgressNATPolicy` does not cover all traffic, non-matching traffic falls back to Cloud NAT. Ensure your firewall rules and destination CIDR masks are clearly documented to prevent confusion over which public IP was used.
 6. **NetworkPolicy Logging Verification:** To debug dropped packets in Datapath V2, do not install third-party network dump tools. Enable native Datapath V2 logging:
+
 ```bash
 gcloud container clusters update prod-secure-cluster \
     --enable-dataplane-v2-metrics \
     --project=core-infrastructure-prod
 ```
+
 Dropped packets are immediately queryable in Google Cloud Logging with filter: `logName:"projects/.../logs/dataplane-v2"` and `jsonPayload.disposition="DROPPED"`.

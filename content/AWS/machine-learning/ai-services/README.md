@@ -22,17 +22,17 @@ AI Services provide pre-trained ML models via simple APIs. No ML expertise, no t
 
 ## Quick Comparison
 
-| Service | What it Does | Input | Output |
-|---------|-------------|-------|--------|
-| Rekognition | Image/video analysis | Image bytes or S3 | Labels, faces, text, celebrities |
-| Comprehend | NLP text analysis | Text or S3 | Sentiment, entities, PII, topics |
-| Polly | Text-to-speech | Text | MP3/PCM audio |
-| Translate | Neural machine translation | Text or S3 | Translated text |
-| Transcribe | Speech-to-text | Audio or S3 | Transcripts |
-| Textract | Document extraction | Image/PDF or S3 | Text, tables, forms |
-| Lex | Chatbots | Text or voice | Intent/slot parsing |
-| Kendra | Enterprise search | Questions | Ranked answers |
-| Contact Lens | Contact center analytics | Audio/text | Sentiment, categories |
+| Service      | What it Does               | Input             | Output                           |
+| ------------ | -------------------------- | ----------------- | -------------------------------- |
+| Rekognition  | Image/video analysis       | Image bytes or S3 | Labels, faces, text, celebrities |
+| Comprehend   | NLP text analysis          | Text or S3        | Sentiment, entities, PII, topics |
+| Polly        | Text-to-speech             | Text              | MP3/PCM audio                    |
+| Translate    | Neural machine translation | Text or S3        | Translated text                  |
+| Transcribe   | Speech-to-text             | Audio or S3       | Transcripts                      |
+| Textract     | Document extraction        | Image/PDF or S3   | Text, tables, forms              |
+| Lex          | Chatbots                   | Text or voice     | Intent/slot parsing              |
+| Kendra       | Enterprise search          | Questions         | Ranked answers                   |
+| Contact Lens | Contact center analytics   | Audio/text        | Sentiment, categories            |
 
 ## Rekognition (Vision)
 
@@ -292,17 +292,17 @@ for result in response['ResultItems']:
 
 ## Pricing
 
-| Service | Cost |
-|---------|------|
-| Rekognition (image) | $0.0012/image (first 1M), cheaper after |
-| Rekognition (video) | $0.10/minute |
-| Comprehend (sentiment) | $0.0001/character |
-| Polly (Neural) | $0.016/1K characters |
-| Translate | $0.000015/character |
-| Transcribe | $0.024/15 seconds (standard), $0.042/15 seconds (medical) |
-| Textract (sync) | $0.0015/page (text), $0.015/page (forms/tables) |
-| Lex | $0.004/utterance |
-| Kendra | $0.25/1K queries (enterprise edition) |
+| Service                | Cost                                                      |
+| ---------------------- | --------------------------------------------------------- |
+| Rekognition (image)    | $0.0012/image (first 1M), cheaper after                   |
+| Rekognition (video)    | $0.10/minute                                              |
+| Comprehend (sentiment) | $0.0001/character                                         |
+| Polly (Neural)         | $0.016/1K characters                                      |
+| Translate              | $0.000015/character                                       |
+| Transcribe             | $0.024/15 seconds (standard), $0.042/15 seconds (medical) |
+| Textract (sync)        | $0.0015/page (text), $0.015/page (forms/tables)           |
+| Lex                    | $0.004/utterance                                          |
+| Kendra                 | $0.25/1K queries (enterprise edition)                     |
 
 ## References
 

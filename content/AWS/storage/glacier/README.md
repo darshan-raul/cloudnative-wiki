@@ -27,10 +27,10 @@ S3 Glacier
 
 ### Storage Classes
 
-| Class | Retrieval Time | Cost (per GB/mo) | Use |
-|-------|--------------|------------------|-----|
-| S3 Glacier | 1-5 min (expedited) / 3-5 hr (standard) | $0.004 | Rare (< 90 days) |
-| S3 Glacier Deep Archive | 12 hr (standard) / 48 hr (bulk) | $0.00099 | Very rare (180+ days) |
+| Class                   | Retrieval Time                          | Cost (per GB/mo) | Use                   |
+| ----------------------- | --------------------------------------- | ---------------- | --------------------- |
+| S3 Glacier              | 1-5 min (expedited) / 3-5 hr (standard) | $0.004           | Rare (< 90 days)      |
+| S3 Glacier Deep Archive | 12 hr (standard) / 48 hr (bulk)         | $0.00099         | Very rare (180+ days) |
 
 ### S3 Glacier vs S3 Standard-IA vs S3
 
@@ -94,12 +94,14 @@ aws glacier get-job-output \
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {"AWS": "arn:aws:iam::123456789012:user/backup-admin"},
-    "Action": ["glacier:UploadArchive", "glacier:DeleteArchive"],
-    "Resource": "arn:aws:glacier:us-east-1:123456789012:vaults/my-archive-vault"
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::123456789012:user/backup-admin" },
+      "Action": ["glacier:UploadArchive", "glacier:DeleteArchive"],
+      "Resource": "arn:aws:glacier:us-east-1:123456789012:vaults/my-archive-vault"
+    }
+  ]
 }
 ```
 
@@ -178,25 +180,25 @@ aws datasync create-task \
 
 ## Comparison: Glacier vs S3 + Lifecycle
 
-| | Direct Glacier | S3 → Glacier (via lifecycle) |
-|--|--|--|
-| Access | Via Glacier API | Via S3 API (S3 Glacier objects) |
-| Retrieval options | Expedited/Standard/Bulk | Standard only |
-| Vault Lock | Yes | No (use Object Lock) |
-| Vault policies | Yes | No |
-| Use | Native Glacier (legacy) | S3 Glacier (modern) |
+|                   | Direct Glacier          | S3 → Glacier (via lifecycle)    |
+| ----------------- | ----------------------- | ------------------------------- |
+| Access            | Via Glacier API         | Via S3 API (S3 Glacier objects) |
+| Retrieval options | Expedited/Standard/Bulk | Standard only                   |
+| Vault Lock        | Yes                     | No (use Object Lock)            |
+| Vault policies    | Yes                     | No                              |
+| Use               | Native Glacier (legacy) | S3 Glacier (modern)             |
 
 **Use S3 Glacier storage class** (via S3 API) for new workloads. Direct Glacier API is for legacy compatibility.
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Vaults per region | Unlimited |
-| Archives per vault | Unlimited |
-| Archive size | 50 TB (single upload) |
-| Multipart upload parts | 10,000 |
-| Vault lock policy evaluation | 7 days |
+| Resource                     | Limit                 |
+| ---------------------------- | --------------------- |
+| Vaults per region            | Unlimited             |
+| Archives per vault           | Unlimited             |
+| Archive size                 | 50 TB (single upload) |
+| Multipart upload parts       | 10,000                |
+| Vault lock policy evaluation | 7 days                |
 
 ## References
 

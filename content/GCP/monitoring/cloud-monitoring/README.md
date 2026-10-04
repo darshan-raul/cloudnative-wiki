@@ -74,6 +74,7 @@ Cloud Monitoring natively supports both **Monitoring Query Language (MQL)** and 
 MQL is a functional, pipe-delimited (`|`) language designed for sophisticated time-series algebra, multi-metric joins, and distribution percentile calculations.
 
 #### Example 1: Compute P99 Latency Across All GKE Microservices
+
 ```mql
 fetch k8s_container
 | metric 'custom.googleapis.com/http/server/duration'
@@ -84,6 +85,7 @@ fetch k8s_container
 ```
 
 #### Example 2: Ratio Calculation (HTTP 5xx Error Rate)
+
 ```mql
 fetch cloud_run_revision
 | metric 'run.googleapis.com/request_count'
@@ -146,9 +148,9 @@ spec:
     matchLabels:
       app: order-service
   endpoints:
-  - port: metrics
-    interval: 15s
-    path: /actuator/prometheus
+    - port: metrics
+      interval: 15s
+      path: /actuator/prometheus
 ```
 
 ### 3. Create a Multi-Channel Notification Channel (Slack + PagerDuty + Webhook)
@@ -230,16 +232,16 @@ gcloud monitoring services slo create \
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Parameter / Dimension | Default Quota | Engineering Guidance |
-| :--- | :--- | :--- |
-| **Monitored Projects per Scope** | Up to 375 projects | Allocate 1 scoping project per organization/environment |
-| **Alerting Policies per Project** | 500 policies | Consolidate alerts using multi-condition policies |
-| **Notification Channels** | 500 channels | Manage channels via Terraform / gcloud |
-| **Uptime Checks per Project** | 100 public checks | Runs from 6 geographical probing locations worldwide |
-| **Metric Ingestion Rate (Custom)**| 10,000 requests/sec | Soft limit; request expansion for large GMP deployments |
-| **Data Retention (System Metrics)**| 6 weeks (42 days) | Downsampled for long-term historical visibility |
-| **Data Retention (Custom / GMP)** | 24 months (730 days) | Retained without downsampling at native resolution |
-| **Scrape Frequency (GMP)** | Minimum 5 seconds | Standard production default is 15s to 30s |
+| Parameter / Dimension               | Default Quota        | Engineering Guidance                                    |
+| :---------------------------------- | :------------------- | :------------------------------------------------------ |
+| **Monitored Projects per Scope**    | Up to 375 projects   | Allocate 1 scoping project per organization/environment |
+| **Alerting Policies per Project**   | 500 policies         | Consolidate alerts using multi-condition policies       |
+| **Notification Channels**           | 500 channels         | Manage channels via Terraform / gcloud                  |
+| **Uptime Checks per Project**       | 100 public checks    | Runs from 6 geographical probing locations worldwide    |
+| **Metric Ingestion Rate (Custom)**  | 10,000 requests/sec  | Soft limit; request expansion for large GMP deployments |
+| **Data Retention (System Metrics)** | 6 weeks (42 days)    | Downsampled for long-term historical visibility         |
+| **Data Retention (Custom / GMP)**   | 24 months (730 days) | Retained without downsampling at native resolution      |
+| **Scrape Frequency (GMP)**          | Minimum 5 seconds    | Standard production default is 15s to 30s               |
 
 ---
 
@@ -256,6 +258,7 @@ gcloud monitoring services slo create \
 ## 6. Realistic Pricing Scenarios
 
 Cloud Monitoring pricing is based on:
+
 1. **Google Cloud System Metrics:** **100% Free** (Compute, GKE system, GCS, Cloud SQL, etc. incur zero ingestion charge).
 2. **Custom Metrics / Prometheus Metrics / Logs-based Metrics:**
    - First 150 MiB/month: Free.

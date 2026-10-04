@@ -1,6 +1,13 @@
+---
+title: "Kyverno"
+tags: ["kubernetes", "k8s-concepts", "security"]
+date: 2026-09-06
+description: "Kyverno — Kubernetes reference and architecture guide."
+---
+
 # Kyverno
 
-*"https://kyverno.io/"*
+_"https://kyverno.io/"_
 
 Kyverno is a **k8s-native policy engine**. Unlike OPA / Gatekeeper (which uses Rego), Kyverno policies are written as **YAML**, using standard k8s syntax. It runs as a **validating and mutating admission webhook**, and supports all the same policy use cases as Gatekeeper. The key differentiator: **no new language to learn**. If you know k8s YAML, you know Kyverno.
 
@@ -48,8 +55,8 @@ Kyverno policies are k8s resources. You can `kubectl apply` them. You can `kubec
 
 The trade-off:
 
-* **Pros** — easy to learn, no new language, k8s-native, integrates with k8s tools (kubectl, GitOps).
-* **Cons** — less expressive than Rego, can't share policies with non-k8s systems, the "match" syntax is Kyverno-specific.
+- **Pros** — easy to learn, no new language, k8s-native, integrates with k8s tools (kubectl, GitOps).
+- **Cons** — less expressive than Rego, can't share policies with non-k8s systems, the "match" syntax is Kyverno-specific.
 
 For most k8s users, Kyverno is the right choice. For multi-system policy (k8s + API gateway + CI), OPA is more flexible.
 
@@ -57,9 +64,9 @@ For most k8s users, Kyverno is the right choice. For multi-system policy (k8s + 
 
 Kyverno runs as a Deployment with two main components:
 
-* **kyverno** — the main pod. Runs the admission webhook, evaluates policies, applies mutations.
-* **kyverno-cleanup-controller** (in v1.7+) — cleans up background scan results.
-* **kyverno-background-controller** (older versions) — runs background scans on existing objects.
+- **kyverno** — the main pod. Runs the admission webhook, evaluates policies, applies mutations.
+- **kyverno-cleanup-controller** (in v1.7+) — cleans up background scan results.
+- **kyverno-background-controller** (older versions) — runs background scans on existing objects.
 
 The architecture:
 
@@ -89,60 +96,60 @@ kind: ClusterPolicy
 metadata:
   name: require-labels
 spec:
-  validationFailureAction: Enforce        # or Audit
-  background: true                        # run on existing objects
+  validationFailureAction: Enforce # or Audit
+  background: true # run on existing objects
   rules:
-  - name: check-team-label
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "all Pods must have a 'team' label with a valid value"
-      pattern:
-        metadata:
-          labels:
-            team: "?*"
-            # '?' is exactly 1 character, '*' is 0+ characters
-            # so "?*" is 1+ characters (non-empty)
-  - name: check-team-value
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "team label must be 'frontend', 'backend', or 'platform'"
-      deny:
-        conditions:
-        - key: "{{ request.object.metadata.labels.team }}"
-          operator: NotIn
-          value: ["frontend", "backend", "platform"]
+    - name: check-team-label
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "all Pods must have a 'team' label with a valid value"
+        pattern:
+          metadata:
+            labels:
+              team: "?*"
+              # '?' is exactly 1 character, '*' is 0+ characters
+              # so "?*" is 1+ characters (non-empty)
+    - name: check-team-value
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "team label must be 'frontend', 'backend', or 'platform'"
+        deny:
+          conditions:
+            - key: "{{ request.object.metadata.labels.team }}"
+              operator: NotIn
+              value: ["frontend", "backend", "platform"]
 ```
 
 A policy has:
 
-* **`validationFailureAction`** — `Enforce` (reject) or `Audit` (log only).
-* **`background`** — run on existing objects too.
-* **`rules`** — list of individual rules. Each rule can match, validate, mutate, or generate.
+- **`validationFailureAction`** — `Enforce` (reject) or `Audit` (log only).
+- **`background`** — run on existing objects too.
+- **`rules`** — list of individual rules. Each rule can match, validate, mutate, or generate.
 
 ### 3.1 The match
 
 ```yaml
 match:
   any:
-  - resources:
-      kinds: ["Pod"]
-      namespaces: ["prod", "staging"]
-      selector:
-        matchLabels:
-          enforce: true
+    - resources:
+        kinds: ["Pod"]
+        namespaces: ["prod", "staging"]
+        selector:
+          matchLabels:
+            enforce: true
   all:
-  - resources:
-      kinds: ["Deployment"]
+    - resources:
+        kinds: ["Deployment"]
   exclude:
     any:
-    - resources:
-        namespaces: ["kube-system"]
+      - resources:
+          namespaces: ["kube-system"]
 ```
 
 `match` says "this rule applies to these resources". `exclude` says "but not these". `any` is OR, `all` is AND.
@@ -151,17 +158,17 @@ match:
 
 Kyverno's `pattern` is a YAML pattern that the object must match. Wildcards:
 
-* `?` — exactly 1 character.
-* `*` — 0+ characters.
-* `(...)` — group of alternative values.
+- `?` — exactly 1 character.
+- `*` — 0+ characters.
+- `(...)` — group of alternative values.
 
 ```yaml
 pattern:
   metadata:
     labels:
-      app: "?*"      # 1+ characters
-      team: "(frontend|backend|platform)"   # one of these values
-      version: "v1.*"  # v1.something
+      app: "?*" # 1+ characters
+      team: "(frontend|backend|platform)" # one of these values
+      version: "v1.*" # v1.something
 ```
 
 If the object matches the pattern, the rule passes. If not, it's denied (or audited).
@@ -170,9 +177,9 @@ If the object matches the pattern, the rule passes. If not, it's denied (or audi
 
 A `validate` rule checks that the matched object conforms to a pattern. It can:
 
-* **Pattern match** — check the object matches a YAML pattern.
-* **Deny with conditions** — check explicit conditions.
-* **Assert** — check that a fact is true.
+- **Pattern match** — check the object matches a YAML pattern.
+- **Deny with conditions** — check explicit conditions.
+- **Assert** — check that a fact is true.
 
 ### 4.1 Pattern matching
 
@@ -182,14 +189,14 @@ validate:
   pattern:
     spec:
       containers:
-      - name: "?*"
-        resources:
-          limits:
-            memory: "?*"
-            cpu: "?*"
-          requests:
-            memory: "?*"
-            cpu: "?*"
+        - name: "?*"
+          resources:
+            limits:
+              memory: "?*"
+              cpu: "?*"
+            requests:
+              memory: "?*"
+              cpu: "?*"
 ```
 
 If the object has containers without `resources.limits` or `resources.requests`, the pattern doesn't match, and the request is denied.
@@ -201,9 +208,9 @@ validate:
   message: "image must come from the approved registry"
   deny:
     conditions:
-    - key: "{{ request.object.spec.containers[?name=='app'].image }}"
-      operator: NotContains
-      value: "gcr.io/my-project/"
+      - key: "{{ request.object.spec.containers[?name=='app'].image }}"
+        operator: NotContains
+        value: "gcr.io/my-project/"
 ```
 
 The `key` is a JMESPath or JSONPath query. The `operator` is the check. The `value` is what to compare against.
@@ -215,9 +222,9 @@ validate:
   message: "all Pods must have a 'team' label"
   assert:
     conditions:
-    - key: "{{ request.object.metadata.labels.team || '' }}"
-      operator: NotEquals
-      value: ""
+      - key: "{{ request.object.metadata.labels.team || '' }}"
+        operator: NotEquals
+        value: ""
 ```
 
 `assert` is "this fact must be true". If false, deny.
@@ -226,16 +233,16 @@ validate:
 
 A `mutate` rule **modifies the object** before it's stored. Common uses:
 
-* **Inject labels** — add a label like `team: platform` if not set.
-* **Inject sidecars** — add a sidecar container (e.g. Istio).
-* **Set defaults** — set `spec.serviceAccountName` if not set.
+- **Inject labels** — add a label like `team: platform` if not set.
+- **Inject sidecars** — add a sidecar container (e.g. Istio).
+- **Set defaults** — set `spec.serviceAccountName` if not set.
 
 ```yaml
 mutate:
   patchStrategicMerge:
     metadata:
       labels:
-        +(team): "platform"     # '+' means "add if not present"
+        +(team): "platform" # '+' means "add if not present"
   patchesJson6902: |-
     - op: add
       path: /metadata/annotations/managed-by
@@ -265,9 +272,9 @@ This adds an environment variable to the first container.
 
 A `generate` rule **creates new resources** when a matching object is created. Common uses:
 
-* **Create a NetworkPolicy** for every new Namespace.
-* **Create a ResourceQuota** for every new Namespace.
-* **Create a RoleBinding** for a ServiceAccount.
+- **Create a NetworkPolicy** for every new Namespace.
+- **Create a ResourceQuota** for every new Namespace.
+- **Create a RoleBinding** for a ServiceAccount.
 
 ```yaml
 generate:
@@ -289,23 +296,23 @@ Kyverno can **verify image signatures** (cosign from Sigstore) at admission. Thi
 
 ```yaml
 verifyImages:
-- imageReferences:
-  - "ghcr.io/my-org/*"
-  attestors:
-  - entries:
-    - keys:
-        publicKeys: |-
-          -----BEGIN PUBLIC KEY-----
-          ...
-          -----END PUBLIC KEY-----
+  - imageReferences:
+      - "ghcr.io/my-org/*"
+    attestors:
+      - entries:
+          - keys:
+              publicKeys: |-
+                -----BEGIN PUBLIC KEY-----
+                ...
+                -----END PUBLIC KEY-----
 ```
 
 The policy rejects Pods whose images aren't signed by the listed keys. See [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] for the full supply chain picture.
 
 ## 8. ClusterPolicy vs Policy
 
-* **ClusterPolicy** — cluster-wide. The standard for most policies.
-* **Policy** — namespace-scoped. Less common, useful for "this policy only applies to namespaces with a certain label".
+- **ClusterPolicy** — cluster-wide. The standard for most policies.
+- **Policy** — namespace-scoped. Less common, useful for "this policy only applies to namespaces with a certain label".
 
 Most policies are ClusterPolicy. The Policy kind is for per-tenant policies.
 
@@ -320,17 +327,17 @@ metadata: { name: require-labels }
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: check-team-label
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "all Pods must have a 'team' label"
-      pattern:
-        metadata:
-          labels:
-            team: "?*"
+    - name: check-team-label
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "all Pods must have a 'team' label"
+        pattern:
+          metadata:
+            labels:
+              team: "?*"
 ```
 
 ### 9.2 Restrict registries
@@ -342,18 +349,18 @@ metadata: { name: restrict-registries }
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: approved-registries
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "images must come from approved registries"
-      pattern:
-        spec:
-          containers:
-          - name: "?*"
-            image: "gcr.io/my-project/* | 1234.dkr.ecr.us-east-1.amazonaws.com/*"
+    - name: approved-registries
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "images must come from approved registries"
+        pattern:
+          spec:
+            containers:
+              - name: "?*"
+                image: "gcr.io/my-project/* | 1234.dkr.ecr.us-east-1.amazonaws.com/*"
 ```
 
 ### 9.3 Drop capabilities
@@ -365,20 +372,20 @@ metadata: { name: drop-capabilities }
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: drop-all
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "containers must drop ALL capabilities"
-      pattern:
-        spec:
-          containers:
-          - name: "?*"
-            securityContext:
-              capabilities:
-                drop: ["ALL"]
+    - name: drop-all
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "containers must drop ALL capabilities"
+        pattern:
+          spec:
+            containers:
+              - name: "?*"
+                securityContext:
+                  capabilities:
+                    drop: ["ALL"]
 ```
 
 ### 9.4 Disallow host namespaces
@@ -390,36 +397,36 @@ metadata: { name: disallow-host-namespaces }
 spec:
   validationFailureAction: Enforce
   rules:
-  - name: no-host-pid
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "hostPID is not allowed"
-      pattern:
-        spec:
-          hostPID: "false|nil"
-  - name: no-host-ipc
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "hostIPC is not allowed"
-      pattern:
-        spec:
-          hostIPC: "false|nil"
-  - name: no-host-network
-    match:
-      any:
-      - resources:
-          kinds: ["Pod"]
-    validate:
-      message: "hostNetwork is not allowed"
-      pattern:
-        spec:
-          hostNetwork: "false|nil"
+    - name: no-host-pid
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "hostPID is not allowed"
+        pattern:
+          spec:
+            hostPID: "false|nil"
+    - name: no-host-ipc
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "hostIPC is not allowed"
+        pattern:
+          spec:
+            hostIPC: "false|nil"
+    - name: no-host-network
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: "hostNetwork is not allowed"
+        pattern:
+          spec:
+            hostNetwork: "false|nil"
 ```
 
 ### 9.5 Add default labels
@@ -430,16 +437,16 @@ kind: ClusterPolicy
 metadata: { name: add-default-labels }
 spec:
   rules:
-  - name: add-team-label
-    match:
-      any:
-      - resources:
-          kinds: ["Pod", "Service", "Deployment"]
-    mutate:
-      patchStrategicMerge:
-        metadata:
-          labels:
-            +(team): "platform"
+    - name: add-team-label
+      match:
+        any:
+          - resources:
+              kinds: ["Pod", "Service", "Deployment"]
+      mutate:
+        patchStrategicMerge:
+          metadata:
+            labels:
+              +(team): "platform"
 ```
 
 ## 10. Background Scans
@@ -459,36 +466,36 @@ kind: PolicyReport
 metadata:
   name: polr-namespace-name
 results:
-- policy: restrict-registries
-  rule: approved-registries
-  message: "image 'docker.io/library/nginx' is not from an approved registry"
-  resources:
-  - name: my-pod
-    namespace: default
-  result: fail
+  - policy: restrict-registries
+    rule: approved-registries
+    message: "image 'docker.io/library/nginx' is not from an approved registry"
+    resources:
+      - name: my-pod
+        namespace: default
+    result: fail
 ```
 
 The PolicyReport is the audit result. Tools (like the Kyverno CLI) can summarize it.
 
 ## 11. Kyverno vs OPA / Gatekeeper
 
-| | Kyverno | OPA / Gatekeeper |
-|---|---|---|
-| **Policy language** | YAML (k8s-native) | Rego (DSL) |
-| **Engine** | Kyverno pod | OPA + Gatekeeper |
-| **Learning curve** | Low (k8s YAML) | Medium (Rego) |
-| **Expressiveness** | Medium | High |
-| **Multi-system** | k8s only | k8s, API gateway, CI, etc. |
-| **Mutations** | First-class | Limited (in 3.7+) |
-| **Image signature verification** | Built-in (cosign) | Separate (Connaisseur) |
-| **Background scans** | Yes (`background: true`) | Yes (audit mode) |
-| **CEL support** | Yes (Kyverno 1.7+) | No |
-| **Performance** | Good (in-process for CEL) | Medium (separate process) |
+|                                  | Kyverno                   | OPA / Gatekeeper           |
+| -------------------------------- | ------------------------- | -------------------------- |
+| **Policy language**              | YAML (k8s-native)         | Rego (DSL)                 |
+| **Engine**                       | Kyverno pod               | OPA + Gatekeeper           |
+| **Learning curve**               | Low (k8s YAML)            | Medium (Rego)              |
+| **Expressiveness**               | Medium                    | High                       |
+| **Multi-system**                 | k8s only                  | k8s, API gateway, CI, etc. |
+| **Mutations**                    | First-class               | Limited (in 3.7+)          |
+| **Image signature verification** | Built-in (cosign)         | Separate (Connaisseur)     |
+| **Background scans**             | Yes (`background: true`)  | Yes (audit mode)           |
+| **CEL support**                  | Yes (Kyverno 1.7+)        | No                         |
+| **Performance**                  | Good (in-process for CEL) | Medium (separate process)  |
 
 The decision:
 
-* **Use Kyverno** for k8s-only policies, especially if your team is YAML-fluent.
-* **Use OPA / Gatekeeper** for multi-system policy or if you need Rego's expressiveness.
+- **Use Kyverno** for k8s-only policies, especially if your team is YAML-fluent.
+- **Use OPA / Gatekeeper** for multi-system policy or if you need Rego's expressiveness.
 
 ## 12. Kyverno CLI
 
@@ -516,12 +523,12 @@ The test mode is what makes Kyverno policies **CI-friendly**. You can write test
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata: { name: test-policy }
-spec: {...}
+spec: { ... }
 
 # test-valid.yaml
 input:
   kind: Pod
-  spec: {...}      # valid
+  spec: { ... } # valid
 result: pass
 ```
 
@@ -541,8 +548,8 @@ validate:
   message: "image must come from approved registry"
   cel:
     expressions:
-    - expression: "object.spec.containers.all(c, c.image.startsWith('gcr.io/'))"
-      message: "image must start with gcr.io/"
+      - expression: "object.spec.containers.all(c, c.image.startsWith('gcr.io/'))"
+        message: "image must start with gcr.io/"
 ```
 
 CEL is faster (compiled, in-process) and more familiar (JavaScript-ish). For most simple policies, CEL is the better choice.
@@ -666,7 +673,7 @@ curl localhost:8000/metrics
 
 ## See also
 
-* [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — the alternative policy engine
-* [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — where Kyverno fits
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the built-in alternative
-* [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — image signature verification
+- [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — the alternative policy engine
+- [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — where Kyverno fits
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the built-in alternative
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — image signature verification

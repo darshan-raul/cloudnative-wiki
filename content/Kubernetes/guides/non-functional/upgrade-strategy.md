@@ -19,11 +19,11 @@ K8s releases four minor versions a year. Each release has ~9 months of support, 
 2023-04      v1.26 ←── EOL, no patches
 ```
 
-| Phase | Duration | Patches |
-|-------|----------|---------|
-| Active support | ~12 months | Yes |
-| Maintenance | ~1 month | Critical security only |
-| End of life | Forever | None |
+| Phase          | Duration   | Patches                |
+| -------------- | ---------- | ---------------------- |
+| Active support | ~12 months | Yes                    |
+| Maintenance    | ~1 month   | Critical security only |
+| End of life    | Forever    | None                   |
 
 **k8s supports ~3 minor versions at any time.** If you're on 1.27 and 1.30 is out, you're approaching EOL.
 
@@ -32,6 +32,7 @@ K8s releases four minor versions a year. Each release has ~9 months of support, 
 The kubelet on a node can be **up to 3 minor versions behind** the apiserver (and 1 minor version ahead of older kubelets). This lets you upgrade nodes one at a time without breaking the cluster.
 
 But the rule **applies per-node**. If you have a 5-node cluster and start with all nodes on 1.27:
+
 1. Drain node-1
 2. Upgrade node-1 to 1.28
 3. Bring node-1 back into the cluster
@@ -59,6 +60,7 @@ For cloud-managed (EKS, GKE, AKS), the cloud handles 1-3. You only do 4.
 ### EKS
 
 EKS has two planes:
+
 - **Control plane** — managed by AWS, you choose the k8s version
 - **Data plane** — your worker nodes (managed node groups, self-managed, Fargate)
 
@@ -110,6 +112,7 @@ gcloud container clusters create my-cluster \
 ```
 
 **Release channels:**
+
 - **Rapid** — newest versions first, most risk
 - **Regular** — default, balanced
 - **Stable** — older, more conservative
@@ -324,7 +327,7 @@ metadata:
 spec:
   template:
     spec:
-      version: v1.30.0   # bumped
+      version: v1.30.0 # bumped
 ```
 
 **Pros:** declarative, repeatable, canary rollouts.
@@ -334,12 +337,12 @@ spec:
 
 How often should you upgrade?
 
-| Cadence | Pros | Cons |
-|---------|------|------|
-| **Every release** (4x/year) | Always current, smaller bumps | Constant work |
-| **Quarterly** | Predictable, time to validate | May fall behind |
-| **Every 6 months** | Less work | Larger jumps, more risk |
-| **Annual** | Minimal work | Often EOL by the time you do it |
+| Cadence                     | Pros                          | Cons                            |
+| --------------------------- | ----------------------------- | ------------------------------- |
+| **Every release** (4x/year) | Always current, smaller bumps | Constant work                   |
+| **Quarterly**               | Predictable, time to validate | May fall behind                 |
+| **Every 6 months**          | Less work                     | Larger jumps, more risk         |
+| **Annual**                  | Minimal work                  | Often EOL by the time you do it |
 
 **Recommended:** every 3-4 months (quarterly), staying within 1 minor version of latest.
 
@@ -372,17 +375,17 @@ After upgrading, verify:
 
 ## Common gotchas
 
-* **You can't skip minor versions.** 1.27 → 1.30 directly is not supported. Must go 1.27 → 1.28 → 1.29 → 1.30.
-* **The kubelet skew rule is per-node, not per-cluster.** Some nodes can be ahead, some behind.
-* **CNI upgrades can be disruptive.** Some CNIs require node restarts.
-* **CRDs need to be updated with the controller that uses them.** Otherwise the controller might not recognize new fields.
-* **Helm chart versions** don't always align with k8s versions. The chart's `appVersion` is the underlying software version.
-* **etcd upgrades are critical.** A bad etcd upgrade can lose data. Always backup first.
-* **Node OS upgrades** are separate from k8s upgrades. AMI updates for worker nodes.
-* **Cloud-managed clusters still need workload-side upgrades.** The control plane is managed; your apps are yours.
-* **The "extended support" channel** for cloud-managed clusters costs more and delays inevitable upgrades. Use it sparingly.
-* **Custom controllers / operators** may have k8s version compatibility. Check before upgrading.
-* **Network plugins and CSI drivers** are part of the cluster, but separate from k8s proper. They have their own upgrade cadence.
+- **You can't skip minor versions.** 1.27 → 1.30 directly is not supported. Must go 1.27 → 1.28 → 1.29 → 1.30.
+- **The kubelet skew rule is per-node, not per-cluster.** Some nodes can be ahead, some behind.
+- **CNI upgrades can be disruptive.** Some CNIs require node restarts.
+- **CRDs need to be updated with the controller that uses them.** Otherwise the controller might not recognize new fields.
+- **Helm chart versions** don't always align with k8s versions. The chart's `appVersion` is the underlying software version.
+- **etcd upgrades are critical.** A bad etcd upgrade can lose data. Always backup first.
+- **Node OS upgrades** are separate from k8s upgrades. AMI updates for worker nodes.
+- **Cloud-managed clusters still need workload-side upgrades.** The control plane is managed; your apps are yours.
+- **The "extended support" channel** for cloud-managed clusters costs more and delays inevitable upgrades. Use it sparingly.
+- **Custom controllers / operators** may have k8s version compatibility. Check before upgrading.
+- **Network plugins and CSI drivers** are part of the cluster, but separate from k8s proper. They have their own upgrade cadence.
 
 ## A worked example
 
@@ -456,7 +459,7 @@ spec:
   replicas: 3
   template:
     spec:
-      version: v1.30.0   # bumped
+      version: v1.30.0 # bumped
       bootstrap:
         configRef:
           apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
@@ -552,6 +555,7 @@ gcloud container clusters update my-cluster \
 ```
 
 **Channels:**
+
 - **Rapid** — newest versions first, most risk
 - **Regular** — default, balanced
 - **Stable** — older, more conservative (good for production)
@@ -702,6 +706,7 @@ aws eks delete-nodegroup \
 **For cloud-managed:** the cloud can usually roll back to the previous version. Contact support.
 
 **For self-managed:**
+
 - etcd restore from snapshot (loses recent changes)
 - Re-provision with the old version
 
@@ -756,6 +761,7 @@ kubectl get events -A --sort-by='.lastTimestamp' | head
 ```
 
 **The dev cluster's upgrade should reveal:**
+
 - Deprecated APIs you forgot to fix
 - Add-on compatibility issues
 - Workload-level bugs (image pulls, etc.)
@@ -763,6 +769,7 @@ kubectl get events -A --sort-by='.lastTimestamp' | head
 ### Pre-prod cluster parity
 
 The dev cluster should mirror production:
+
 - Same k8s version
 - Same add-ons
 - Same CNI
@@ -919,7 +926,7 @@ Production cluster: 1.20 (EOL)
 
 ## See also
 
-* [[Kubernetes/guides/non-functional/deprecations|deprecations]] — what to watch
-* [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — if upgrade goes wrong
-* [[Kubernetes/guides/non-functional/high-availability|high-availability]] — designing for upgrade
-* [k8s release notes](https://kubernetes.io/releases/)
+- [[Kubernetes/guides/non-functional/deprecations|deprecations]] — what to watch
+- [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — if upgrade goes wrong
+- [[Kubernetes/guides/non-functional/high-availability|high-availability]] — designing for upgrade
+- [k8s release notes](https://kubernetes.io/releases/)

@@ -32,25 +32,25 @@ mychart/
 The `Chart.yaml` file is required for every chart.
 
 ```yaml
-apiVersion: v2                  # Chart API version (v2 for Helm 3+)
-name: mychart                   # Chart name
-version: 1.2.3                  # Chart version (SemVer 2)
-kubeVersion: ">=1.21.0"         # Optional: Compatible Kubernetes versions
-description: A Helm chart      # Single-sentence description
-type: application               # application or library
+apiVersion: v2 # Chart API version (v2 for Helm 3+)
+name: mychart # Chart name
+version: 1.2.3 # Chart version (SemVer 2)
+kubeVersion: ">=1.21.0" # Optional: Compatible Kubernetes versions
+description: A Helm chart # Single-sentence description
+type: application # application or library
 keywords:
   - web
   - application
-home: https://example.com       # Project homepage
+home: https://example.com # Project homepage
 sources:
   - https://github.com/example/mychart
-maintainers:                    # Optional: Chart maintainers
+maintainers: # Optional: Chart maintainers
   - name: John Doe
     email: john@example.com
     url: https://example.com
 icon: https://example.com/icon.png
-appVersion: "1.0.0"            # Application version (informational)
-deprecated: false               # Mark chart as deprecated
+appVersion: "1.0.0" # Application version (informational)
+deprecated: false # Mark chart as deprecated
 annotations:
   category: web
 ```
@@ -78,7 +78,7 @@ dependencies:
   - name: redis
     version: ">=2.0.0"
     repository: "https://charts.bitnami.com"
-    condition: redis.enabled      # Enable/disable based on values
+    condition: redis.enabled # Enable/disable based on values
     tags:
       - cache
       - database
@@ -107,7 +107,10 @@ Enforce structure on values.yaml:
       "properties": {
         "repository": { "type": "string" },
         "tag": { "type": "string" },
-        "pullPolicy": { "type": "string", "enum": ["IfNotPresent", "Always", "Never"] }
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["IfNotPresent", "Always", "Never"]
+        }
       },
       "required": ["repository"]
     },
@@ -120,7 +123,10 @@ Enforce structure on values.yaml:
       "type": "object",
       "properties": {
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
-        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] }
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"]
+        }
       },
       "required": ["port"]
     }
@@ -219,7 +225,7 @@ helm lint ./mychart
 
 Create reusable template snippets in `templates/_*.tpl`.
 
-### _helpers.tpl
+### \_helpers.tpl
 
 ```yaml
 {{/* Expand the name of the chart */}}
@@ -249,18 +255,15 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "mychart.name" . }}
-  labels:
-    {{- include "mychart.labels" . | nindent 4 }}
+  name: { { include "mychart.name" . } }
+  labels: { { - include "mychart.labels" . | nindent 4 } }
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: { { .Values.replicaCount } }
   selector:
-    matchLabels:
-      {{- include "mychart.selectorLabels" . | nindent 6 }}
+    matchLabels: { { - include "mychart.selectorLabels" . | nindent 6 } }
   template:
     metadata:
-      labels:
-        {{- include "mychart.selectorLabels" . | nindent 8 }}
+      labels: { { - include "mychart.selectorLabels" . | nindent 8 } }
 ```
 
 ## Accessing Files in Templates
@@ -289,7 +292,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "mychart.name" . }}
+  name: { { include "mychart.name" . } }
 data:
   config.yaml: |
     {{ .Files.Get "configs/config.yaml" | indent 4 }}
@@ -304,24 +307,24 @@ Chart hooks run Jobs at specific points in release lifecycle.
 ```yaml
 metadata:
   annotations:
-    helm.sh/hook: pre-install,post-install    # Multiple hooks
-    helm.sh/hook-weight: "5"                # Execution order (negative to positive)
+    helm.sh/hook: pre-install,post-install # Multiple hooks
+    helm.sh/hook-weight: "5" # Execution order (negative to positive)
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
 ```
 
 ### Available Hooks
 
-| Hook | When it runs |
-|------|--------------|
-| `pre-install` | After templates rendered, before resources created |
-| `post-install` | After all resources loaded into Kubernetes |
-| `pre-delete` | Before any resources deleted |
-| `post-delete` | After all resources deleted |
-| `pre-upgrade` | After templates rendered, before resources updated |
-| `post-upgrade` | After all resources upgraded |
-| `pre-rollback` | After templates rendered, before resources rolled back |
-| `post-rollback` | After all resources modified |
-| `test` | When `helm test` is invoked |
+| Hook            | When it runs                                           |
+| --------------- | ------------------------------------------------------ |
+| `pre-install`   | After templates rendered, before resources created     |
+| `post-install`  | After all resources loaded into Kubernetes             |
+| `pre-delete`    | Before any resources deleted                           |
+| `post-delete`   | After all resources deleted                            |
+| `pre-upgrade`   | After templates rendered, before resources updated     |
+| `post-upgrade`  | After all resources upgraded                           |
+| `pre-rollback`  | After templates rendered, before resources rolled back |
+| `post-rollback` | After all resources modified                           |
+| `test`          | When `helm test` is invoked                            |
 
 ### Hook Delete Policies
 
@@ -500,10 +503,10 @@ spec:
 apiVersion: stable.example.com/v1
 kind: CronTab
 metadata:
-  name: {{ .Release.Name }}
+  name: { { .Release.Name } }
 spec:
   cron: "{{ .Values.schedule }}"
-  image: {{ .Values.image }}
+  image: { { .Values.image } }
 ```
 
 ## NOTES.txt
@@ -621,33 +624,35 @@ config:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "webapp.name" . }}
-  labels:
-    {{- include "webapp.labels" . | nindent 4 }}
+  name: { { include "webapp.name" . } }
+  labels: { { - include "webapp.labels" . | nindent 4 } }
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: { { .Values.replicaCount } }
   selector:
-    matchLabels:
-      {{- include "webapp.selectorLabels" . | nindent 6 }}
+    matchLabels: { { - include "webapp.selectorLabels" . | nindent 6 } }
   template:
     metadata:
-      labels:
-        {{- include "webapp.selectorLabels" . | nindent 8 }}
+      labels: { { - include "webapp.selectorLabels" . | nindent 8 } }
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/config:
+          {
+            {
+              include (print $.Template.BasePath "/configmap.yaml") . | sha256sum,
+            },
+          }
     spec:
       containers:
         - name: webapp
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: { { .Values.image.pullPolicy } }
           ports:
-            - containerPort: {{ .Values.service.port }}
+            - containerPort: { { .Values.service.port } }
               name: http
           env:
             - name: LOG_LEVEL
-              value: {{ .Values.config.logLevel }}
+              value: { { .Values.config.logLevel } }
             - name: MAX_CONNECTIONS
-              value: {{ .Values.config.maxConnections | quote }}
+              value: { { .Values.config.maxConnections | quote } }
           livenessProbe:
             httpGet:
               path: /health
@@ -656,6 +661,5 @@ spec:
             httpGet:
               path: /ready
               port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 10 }}
+          resources: { { - toYaml .Values.resources | nindent 10 } }
 ```

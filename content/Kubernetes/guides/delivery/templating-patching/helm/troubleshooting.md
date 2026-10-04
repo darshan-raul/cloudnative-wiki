@@ -337,7 +337,12 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/config:
+          {
+            {
+              include (print $.Template.BasePath "/configmap.yaml") . | sha256sum,
+            },
+          }
 ```
 
 ### Force Deployment Roll
@@ -517,19 +522,19 @@ helm version
 
 ## Common Error Messages
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `release failed` | Resource conflict or validation error | `helm status` to see details |
-| `cannot reuse name` | Release already exists | Use `helm upgrade --install` |
-| `timed out waiting` | Cluster slow or resources not ready | Increase `--timeout` |
-| `validation error` | Values don't match schema | Check values or use `--skip-schema-validation` |
-| `hook failed` | Job/hook annotation issue | Check hook annotations, delete hook job, retry |
-| `cluster unreachable` | Kubeconfig issue | Check `kubectl config current-context` |
-| `no such host` | DNS/registry issue | Check registry URL |
-| `authentication required` | Not logged in to registry | `helm registry login` |
-| `chart not found` | Chart doesn't exist in repo | `helm repo update` and verify chart name |
-| `values file not found` | Wrong path | Check `-f` file paths |
-| `missing value` | Required value not set | Use `--set` or check `values.yaml` |
+| Error                     | Cause                                 | Solution                                       |
+| ------------------------- | ------------------------------------- | ---------------------------------------------- |
+| `release failed`          | Resource conflict or validation error | `helm status` to see details                   |
+| `cannot reuse name`       | Release already exists                | Use `helm upgrade --install`                   |
+| `timed out waiting`       | Cluster slow or resources not ready   | Increase `--timeout`                           |
+| `validation error`        | Values don't match schema             | Check values or use `--skip-schema-validation` |
+| `hook failed`             | Job/hook annotation issue             | Check hook annotations, delete hook job, retry |
+| `cluster unreachable`     | Kubeconfig issue                      | Check `kubectl config current-context`         |
+| `no such host`            | DNS/registry issue                    | Check registry URL                             |
+| `authentication required` | Not logged in to registry             | `helm registry login`                          |
+| `chart not found`         | Chart doesn't exist in repo           | `helm repo update` and verify chart name       |
+| `values file not found`   | Wrong path                            | Check `-f` file paths                          |
+| `missing value`           | Required value not set                | Use `--set` or check `values.yaml`             |
 
 ## Debugging Checklist
 

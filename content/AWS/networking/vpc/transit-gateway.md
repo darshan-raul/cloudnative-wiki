@@ -25,6 +25,7 @@ As VPC count grows, peering becomes unmanageable. TGW provides transitive routin
 ### Attachments
 
 A TGW connects to:
+
 - **VPC** — One attachment per VPC (you attach a VPC, not individual subnets — the TGW can route to any subnet with a route table entry)
 - **Site-to-Site VPN** — Your on-premises network via IPsec VPN
 - **Direct Connect** — Your on-premises via AWS Direct Connect
@@ -76,6 +77,7 @@ Account B (Prod):
 When you attach a VPN to a TGW, you create a Transit Gateway VPN attachment. The on-premises router establishes BGP with the TGW, and routes propagate automatically.
 
 Benefits over direct VPN to VPC:
+
 - One VPN connection from on-prem connects to all VPCs attached to the TGW
 - Centralized egress for all VPC traffic (for inspection)
 - VPN failover without changing on-prem router config
@@ -96,13 +98,13 @@ All attachments use the same TGW route table
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Transit Gateways per region | 5 |
-| Attachments per Transit Gateway | 50 |
-| VPCs per Transit Gateway | 50 |
-| Routes per Transit Gateway route table | 10,000 |
-| Cross-region attachments | Not supported (TGW is regional) |
+| Resource                               | Limit                           |
+| -------------------------------------- | ------------------------------- |
+| Transit Gateways per region            | 5                               |
+| Attachments per Transit Gateway        | 50                              |
+| VPCs per Transit Gateway               | 50                              |
+| Routes per Transit Gateway route table | 10,000                          |
+| Cross-region attachments               | Not supported (TGW is regional) |
 
 ## Cost
 

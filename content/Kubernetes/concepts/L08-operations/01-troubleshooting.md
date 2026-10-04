@@ -12,11 +12,11 @@ aliases:
 > https://kubernetes.io/docs/tasks/debug/
 
 A systematic decision tree and triage framework for diagnosing failures in Kubernetes. For deeper runbooks on specific symptoms, see:
+
 - [[Kubernetes/guides/troubleshooting/pod-pending|Pod Pending Playbook]]
 - [[Kubernetes/guides/troubleshooting/pvc-stuck|PVC Stuck Playbook]]
 - [[Kubernetes/troubleshooting|Kubernetes Troubleshooting Hub]]
 - Hands-on Incident Lab: [[Kubernetes/labs/08-observability-and-troubleshooting|Lab 08 — Observability & Troubleshooting]]
-
 
 ## The first question
 
@@ -26,10 +26,10 @@ When something doesn't work, the first question is always:
 
 Because:
 
-* If the Pod is `Pending`, the problem is scheduling (resources, affinity, volumes, etc.)
-* If the Pod is `ContainerCreating`, the problem is image pull / volume mount / secret mount
-* If the Pod is `CrashLoopBackOff`, the problem is the app or its config
-* If the Pod is `Running` but the app is broken, the problem is the app, the network, or the Service
+- If the Pod is `Pending`, the problem is scheduling (resources, affinity, volumes, etc.)
+- If the Pod is `ContainerCreating`, the problem is image pull / volume mount / secret mount
+- If the Pod is `CrashLoopBackOff`, the problem is the app or its config
+- If the Pod is `Running` but the app is broken, the problem is the app, the network, or the Service
 
 Knowing which **phase** the Pod is in is half the diagnosis.
 
@@ -235,16 +235,16 @@ kubectl describe pod <pod>
 
 Causes:
 
-* Wrong image name / tag
-* Image doesn't exist
-* No credentials for the registry
-* Network policy / firewall blocking the registry
+- Wrong image name / tag
+- Image doesn't exist
+- No credentials for the registry
+- Network policy / firewall blocking the registry
 
 Fixes:
 
-* Verify the image: `docker pull <image>` (locally, for dev)
-* Add `imagePullSecrets`
-* Allow egress to the registry in NetworkPolicy
+- Verify the image: `docker pull <image>` (locally, for dev)
+- Add `imagePullSecrets`
+- Allow egress to the registry in NetworkPolicy
 
 ### CrashLoopBackOff
 
@@ -257,16 +257,16 @@ kubectl describe pod <pod>
 
 Causes:
 
-* App error (config bad, code bug)
-* OOM-killed (exit code 137)
-* Liveness probe too aggressive
-* Missing config / secret / dependency
+- App error (config bad, code bug)
+- OOM-killed (exit code 137)
+- Liveness probe too aggressive
+- Missing config / secret / dependency
 
 Fixes:
 
-* Read the logs
-* Check `resources.limits.memory` if exit 137
-* Disable liveness probe temporarily to confirm
+- Read the logs
+- Check `resources.limits.memory` if exit 137
+- Disable liveness probe temporarily to confirm
 
 ### Pending
 
@@ -278,17 +278,17 @@ kubectl describe pod <pod>
 
 Causes:
 
-* Not enough cluster capacity
-* Node taints not tolerated
-* Affinity / anti-affinity can't be satisfied
-* PVC can't be bound (storage class issues)
+- Not enough cluster capacity
+- Node taints not tolerated
+- Affinity / anti-affinity can't be satisfied
+- PVC can't be bound (storage class issues)
 
 Fixes:
 
-* Add nodes (CA / Karpenter)
-* Add tolerations
-* Relax affinity
-* Check the PVC
+- Add nodes (CA / Karpenter)
+- Add tolerations
+- Relax affinity
+- Check the PVC
 
 ### Service has no endpoints
 
@@ -301,9 +301,9 @@ kubectl get pods -l app=<service-selector>
 
 The Service has no Pods matching its selector that are ready. Check:
 
-* Selector matches the Pod labels
-* Pods are `Ready` (readiness probe passing)
-* Port matches
+- Selector matches the Pod labels
+- Pods are `Ready` (readiness probe passing)
+- Port matches
 
 ### DNS not resolving
 
@@ -316,15 +316,15 @@ kubectl run -it --rm debug --image=busybox -- nslookup kubernetes.default
 
 Causes:
 
-* CoreDNS Pods aren't running
-* NetworkPolicy blocks DNS egress
-* `dnsPolicy: Default` in the Pod (uses node's resolv.conf, not cluster DNS)
+- CoreDNS Pods aren't running
+- NetworkPolicy blocks DNS egress
+- `dnsPolicy: Default` in the Pod (uses node's resolv.conf, not cluster DNS)
 
 Fixes:
 
-* Restart CoreDNS
-* Allow UDP/TCP port 53 to `kube-system` in NetworkPolicy
-* Set `dnsPolicy: ClusterFirst`
+- Restart CoreDNS
+- Allow UDP/TCP port 53 to `kube-system` in NetworkPolicy
+- Set `dnsPolicy: ClusterFirst`
 
 ## The notes in this level
 
@@ -334,6 +334,6 @@ Fixes:
 
 ## See also
 
-* [[Kubernetes/concepts/L03-workloads/10-probes|Probes]] — a common source of restart loops
-* [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — when DNS is the problem
-* [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — when the cluster itself is broken
+- [[Kubernetes/concepts/L03-workloads/10-probes|Probes]] — a common source of restart loops
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — when DNS is the problem
+- [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — when the cluster itself is broken

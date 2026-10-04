@@ -38,14 +38,14 @@ Without idempotency, retries create **duplicate records, charges, or side effect
 
 ## Idempotent by HTTP Method
 
-| Method | Idempotent? | Notes |
-|--------|-------------|-------|
-| GET | ✅ Yes | Read-only |
-| HEAD | ✅ Yes | Read-only |
-| PUT | ✅ Yes | Same state regardless of repeat |
-| DELETE | ✅ Yes | Deleting twice = already gone |
-| POST | ❌ No | Creates new resource each time |
-| PATCH | ❌ No | Depends on implementation |
+| Method | Idempotent? | Notes                           |
+| ------ | ----------- | ------------------------------- |
+| GET    | ✅ Yes      | Read-only                       |
+| HEAD   | ✅ Yes      | Read-only                       |
+| PUT    | ✅ Yes      | Same state regardless of repeat |
+| DELETE | ✅ Yes      | Deleting twice = already gone   |
+| POST   | ❌ No       | Creates new resource each time  |
+| PATCH  | ❌ No       | Depends on implementation       |
 
 ---
 
@@ -150,12 +150,12 @@ async def update_order(order_id, data, expected_version):
 
 ## Common Pitfalls
 
-| Pitfall | Problem | Fix |
-|---------|---------|-----|
-| No idempotency key on payment | Double charge on retry | Add key header |
-| Short TTL on idempotency cache | Late retry fails | Match business SLA (e.g., 7 days for payments) |
-| PATCH without version check | Lost update on concurrent edit | ETag +409 Conflict |
-| DELETE without 404 handling | Client treats 500 as error | Return 204 or 404 for already-deleted |
+| Pitfall                        | Problem                        | Fix                                            |
+| ------------------------------ | ------------------------------ | ---------------------------------------------- |
+| No idempotency key on payment  | Double charge on retry         | Add key header                                 |
+| Short TTL on idempotency cache | Late retry fails               | Match business SLA (e.g., 7 days for payments) |
+| PATCH without version check    | Lost update on concurrent edit | ETag +409 Conflict                             |
+| DELETE without 404 handling    | Client treats 500 as error     | Return 204 or 404 for already-deleted          |
 
 ---
 

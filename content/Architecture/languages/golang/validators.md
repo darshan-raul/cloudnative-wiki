@@ -51,7 +51,7 @@ Use the `validator` package to validate the struct fields according to the rules
         if _, ok := err.(*validator.InvalidValidationError); ok {
             log.Fatalf("Invalid validation error: %v", err)
         }
-        
+
         // Iterate through validation errors
         for _, err := range err.(validator.ValidationErrors) {
             fmt.Printf("Validation error: Field '%s' failed on the '%s' tag\n", err.StructField(), err.Tag())
@@ -111,8 +111,8 @@ func main() {
 
 #### Additional Tips
 
-* **Custom Validation**: You can add custom validation functions if needed using the `validator` package's `RegisterValidation` method.
-* **Validation Tags**: The `validator` package supports a variety of validation tags like `required`, `email`, `gte`, `lte`, `min`, `max`, etc.
-* **Error Handling**: Proper error handling is crucial. Ensure you handle JSON unmarshaling errors and validation errors separately and appropriately.
+- **Custom Validation**: You can add custom validation functions if needed using the `validator` package's `RegisterValidation` method.
+- **Validation Tags**: The `validator` package supports a variety of validation tags like `required`, `email`, `gte`, `lte`, `min`, `max`, etc.
+- **Error Handling**: Proper error handling is crucial. Ensure you handle JSON unmarshaling errors and validation errors separately and appropriately.
 
 This approach allows you to validate JSON data against a defined schema easily, ensuring your data conforms to expected formats and constraints before further processing.

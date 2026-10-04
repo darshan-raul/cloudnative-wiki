@@ -29,12 +29,12 @@ Each row has a timestamp, measure names (temperature, humidity), and dimensions 
 
 ### Table Structure
 
-| Component | Description |
-|-----------|-------------|
-| Time column | Timestamp (required, indexed) |
-| Dimensions | Metadata attributes (device_id, region) |
-| Measures | Time-series values (temperature, CPU) |
-| Attributes | Table-level metadata |
+| Component   | Description                             |
+| ----------- | --------------------------------------- |
+| Time column | Timestamp (required, indexed)           |
+| Dimensions  | Metadata attributes (device_id, region) |
+| Measures    | Time-series values (temperature, CPU)   |
+| Attributes  | Table-level metadata                    |
 
 ### Multi-Measure Records
 
@@ -139,14 +139,16 @@ Use IoT Rules to route MQTT messages to Timestream:
 {
   "rule": {
     "sql": "SELECT * FROM 'sensors/+'",
-    "actions": [{
-      "timestream": {
-        "database": "iot-sensors",
-        "table": "device_metrics",
-        "dimensions": [{"name": "device_id", "value": "${topic()}"}],
-        "measureName": "temperature"
+    "actions": [
+      {
+        "timestream": {
+          "database": "iot-sensors",
+          "table": "device_metrics",
+          "dimensions": [{ "name": "device_id", "value": "${topic()}" }],
+          "measureName": "temperature"
+        }
       }
-    }]
+    ]
   }
 }
 ```
@@ -235,6 +237,7 @@ This uses Random Cut Forest (RCF) to score each data point. Scores > 2 standard 
 ## Connecting from BI Tools
 
 Timestream integrates with:
+
 - Amazon QuickSight (visualization)
 - Grafana (via Timestream plugin)
 - Tableau (via JDBC driver)
@@ -253,25 +256,25 @@ aws cloudwatch get-metric-statistics \
 
 ## Pricing
 
-| Component | Cost |
-|-----------|------|
-| Write (records) | $0.50 per million |
-| Hot storage | $0.018/GB-hour |
-| Warm storage | $0.008/GB-hour |
-| Cold storage | $0.004/GB-hour |
+| Component       | Cost                 |
+| --------------- | -------------------- |
+| Write (records) | $0.50 per million    |
+| Hot storage     | $0.018/GB-hour       |
+| Warm storage    | $0.008/GB-hour       |
+| Cold storage    | $0.004/GB-hour       |
 | Query (Compute) | $0.01 per GB scanned |
-| Scheduled query | $0.008 per query |
+| Scheduled query | $0.008 per query     |
 
 ## Limits
 
-| Resource | Limit |
-|----------|-------|
-| Max record size | 1 MB |
-| Max dimensions per table | 128 |
-| Max attributes per record | 1,024 |
-| Max query timeout | 60 seconds |
-| Max results | 100,000 rows |
-| Max concurrent queries | 10 |
+| Resource                  | Limit        |
+| ------------------------- | ------------ |
+| Max record size           | 1 MB         |
+| Max dimensions per table  | 128          |
+| Max attributes per record | 1,024        |
+| Max query timeout         | 60 seconds   |
+| Max results               | 100,000 rows |
+| Max concurrent queries    | 10           |
 
 ## References
 

@@ -15,11 +15,11 @@ VPC CNI manages Elastic Network Interfaces (ENIs) and IP addresses to provide ea
 
 Each EC2 instance type has limits:
 
-| Property | Description |
-|----------|-------------|
-| Max ENIs | Maximum network interfaces per instance |
+| Property    | Description                                         |
+| ----------- | --------------------------------------------------- |
+| Max ENIs    | Maximum network interfaces per instance             |
 | IPs per ENI | Secondary IPs per interface (primary + secondaries) |
-| Max Pods | Calculated: `(ENIs × (IPs_per_ENI - 1)) + 2` |
+| Max Pods    | Calculated: `(ENIs × (IPs_per_ENI - 1)) + 2`        |
 
 ### Max Pods Formula
 
@@ -62,11 +62,11 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_WARM_ENI_TARGET=2
 ```
 
-| Setting | Behavior |
-|---------|----------|
-| `1` (default) | Keep 1 extra ENI with all IPs ready |
-| `0` | No warm pool, allocate only when needed (slower pod launches) |
-| `2` | Keep 2 extra ENIs warm |
+| Setting       | Behavior                                                      |
+| ------------- | ------------------------------------------------------------- |
+| `1` (default) | Keep 1 extra ENI with all IPs ready                           |
+| `0`           | No warm pool, allocate only when needed (slower pod launches) |
+| `2`           | Keep 2 extra ENIs warm                                        |
 
 **Trade-off**: Higher WARM_ENI_TARGET = faster pod launches but more IP addresses allocated (potential waste).
 
@@ -78,10 +78,10 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_WARM_IP_TARGET=5
 ```
 
-| Setting | Behavior |
-|---------|----------|
-| `0` or unset | Use WARM_ENI_TARGET behavior |
-| `5` | Keep 5 free IPs ready at all times |
+| Setting      | Behavior                           |
+| ------------ | ---------------------------------- |
+| `0` or unset | Use WARM_ENI_TARGET behavior       |
+| `5`          | Keep 5 free IPs ready at all times |
 
 **When to use**: When you know exactly how many IPs you need available.
 
@@ -97,10 +97,10 @@ kubectl set env daemonset/aws-node -n kube-system \
 
 **Purpose**: Pre-scale IP allocation for known pod density without wasting IPs during scale-down.
 
-| WARM_IP_TARGET | MINIMUM_IP_TARGET | Behavior |
-|----------------|-------------------|----------|
-| Not set | 30 | Pre-allocate 30 IPs, deallocate when pod count drops |
-| 3 | 30 | Keep at least 30 IPs, plus 3 free IPs warm |
+| WARM_IP_TARGET | MINIMUM_IP_TARGET | Behavior                                             |
+| -------------- | ----------------- | ---------------------------------------------------- |
+| Not set        | 30                | Pre-allocate 30 IPs, deallocate when pod count drops |
+| 3              | 30                | Keep at least 30 IPs, plus 3 free IPs warm           |
 
 **Example**: If 30 pods are expected per node, set `MINIMUM_IP_TARGET=30` to pre-allocate, with `WARM_IP_TARGET=2` for burst.
 
@@ -113,12 +113,12 @@ kubectl set env daemonset/aws-node -n kube-system \
   AWS_VPC_K8S_CNI_WARM_IP_TARGET=5
 ```
 
-| Pod Count | IPs Allocated | Free IPs | Notes |
-|-----------|---------------|----------|-------|
-| 0 | 30 | 30 | MINIMUM_IP_TARGET ensures 30 allocated |
-| 25 | 30 | 5 | WARM_IP_TARGET met |
-| 30 | 30 | 0 | All allocated |
-| 35 | 35 | 0 | +5 IPs allocated for new pods |
+| Pod Count | IPs Allocated | Free IPs | Notes                                  |
+| --------- | ------------- | -------- | -------------------------------------- |
+| 0         | 30            | 30       | MINIMUM_IP_TARGET ensures 30 allocated |
+| 25        | 30            | 5        | WARM_IP_TARGET met                     |
+| 30        | 30            | 0        | All allocated                          |
+| 35        | 35            | 0        | +5 IPs allocated for new pods          |
 
 ### WARM_PREFIX_TARGET (Prefix Delegation Mode)
 
@@ -171,8 +171,8 @@ kubectl set env daemonset/aws-node -n kube-system \
 # Use defaults - 1 warm ENI
 # Good for: Consistent pod counts, no rapid scaling
 env:
-- name: AWS_VPC_K8S_CNI_WARM_ENI_TARGET
-  value: "1"
+  - name: AWS_VPC_K8S_CNI_WARM_ENI_TARGET
+    value: "1"
 ```
 
 ### Scenario 2: Pre-scaled for Known Density
@@ -180,10 +180,10 @@ env:
 ```yaml
 # Pre-allocate for 30 pods, small warm pool for headroom
 env:
-- name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
-  value: "30"
-- name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
-  value: "5"
+  - name: AWS_VPC_K8S_CNI_MINIMUM_IP_TARGET
+    value: "30"
+  - name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
+    value: "5"
 # Good for: Known workload with occasional burst
 ```
 
@@ -192,10 +192,10 @@ env:
 ```yaml
 # Use prefix delegation with 1 warm prefix
 env:
-- name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
-  value: "true"
-- name: AWS_VPC_K8S_CNI_WARM_PREFIX_TARGET
-  value: "1"
+  - name: AWS_VPC_K8S_CNI_ENABLE_PREFIX_DELEGATION
+    value: "true"
+  - name: AWS_VPC_K8S_CNI_WARM_PREFIX_TARGET
+    value: "1"
 # Good for: Dense clusters, many pods per node
 ```
 
@@ -204,8 +204,8 @@ env:
 ```yaml
 # Minimize wasted IPs, slower pod launches
 env:
-- name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
-  value: "1"
+  - name: AWS_VPC_K8S_CNI_WARM_IP_TARGET
+    value: "1"
 # Good for: Cost-sensitive, infrequent pod creation
 ```
 
@@ -213,11 +213,11 @@ env:
 
 ### Impact of Settings
 
-| Setting | EC2 API Calls | Throttle Risk |
-|---------|---------------|---------------|
-| High WARM_ENI_TARGET | Fewer (ENI-level) | Lower |
-| High WARM_IP_TARGET | More (IP-level) | Higher |
-| Low targets | More frequent | Higher |
+| Setting              | EC2 API Calls     | Throttle Risk |
+| -------------------- | ----------------- | ------------- |
+| High WARM_ENI_TARGET | Fewer (ENI-level) | Lower         |
+| High WARM_IP_TARGET  | More (IP-level)   | Higher        |
+| Low targets          | More frequent     | Higher        |
 
 ### Reducing Throttling
 
@@ -251,11 +251,11 @@ kubectl exec -n kube-system aws-node-xxxx -- \
 
 ### Metrics to Watch
 
-| Metric | Description | Alert If |
-|--------|-------------|----------|
-| `aws_vpc_ipamd_eni_allocated` | ENIs allocated | At capacity |
-| `aws_vpc_ipamd_prefix_assigned` | Prefixes assigned | Low free |
-| EC2 API throttle % | Throttling rate | >5% |
+| Metric                          | Description       | Alert If    |
+| ------------------------------- | ----------------- | ----------- |
+| `aws_vpc_ipamd_eni_allocated`   | ENIs allocated    | At capacity |
+| `aws_vpc_ipamd_prefix_assigned` | Prefixes assigned | Low free    |
+| EC2 API throttle %              | Throttling rate   | >5%         |
 
 ### CloudWatch Insights Query for IP Exhaustion
 

@@ -220,6 +220,7 @@ lf.grant_permissions(
 Athena and Redshift Spectrum respect Lake Formation permissions. When a user queries a table through Athena, Lake Formation checks their permissions and applies column-level and row-level filters automatically.
 
 **Athena with Lake Formation:**
+
 ```sql
 -- User can only see columns and rows they're permitted to access
 SELECT user_id, department, SUM(amount)
@@ -230,6 +231,7 @@ GROUP BY user_id, department;
 ```
 
 **Redshift Spectrum with Lake Formation:**
+
 ```sql
 -- Same enforcement — Spectrum queries go through Lake Formation permissions
 SELECT * FROM spectrum.transactions WHERE amount > 1000;

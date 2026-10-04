@@ -35,55 +35,55 @@ The OTel Collector is a **vendor-neutral proxy** that receives, processes, and e
 
 Receivers ingest telemetry in vendor-specific formats:
 
-| Receiver | Protocol | Signal |
-|----------|----------|--------|
-| `otlp` | gRPC/HTTP | traces, metrics, logs |
-| `jaeger` | Thrift/gRPC | traces |
-| `zipkin` | HTTP | traces |
-| `prometheus` | HTTP pull | metrics |
-| `prometheusremotewrite` | HTTP remote write | metrics |
-| `hostmetrics` | System calls | metrics |
-| `kafka` | Kafka | traces, metrics, logs |
-| `filelog` | File tail | logs |
-| `syslog` | Syslog | logs |
+| Receiver                | Protocol          | Signal                |
+| ----------------------- | ----------------- | --------------------- |
+| `otlp`                  | gRPC/HTTP         | traces, metrics, logs |
+| `jaeger`                | Thrift/gRPC       | traces                |
+| `zipkin`                | HTTP              | traces                |
+| `prometheus`            | HTTP pull         | metrics               |
+| `prometheusremotewrite` | HTTP remote write | metrics               |
+| `hostmetrics`           | System calls      | metrics               |
+| `kafka`                 | Kafka             | traces, metrics, logs |
+| `filelog`               | File tail         | logs                  |
+| `syslog`                | Syslog            | logs                  |
 
 ### Processors
 
 Processors act on data mid-pipeline:
 
-| Processor | Function |
-|-----------|---------|
-| `batch` | Batches spans/metrics/logs to reduce export calls |
-| `memory_limiter` | Prevents OOM by rejecting data when memory is high |
-| `transform` | Modify attributes using OTTL (OpenTelemetry Transformation Language) |
-| `filter` | Filter spans/metrics/logs by criteria |
-| `resource` | Add/modify resource attributes |
-| `attributes` | Add/modify span/log attributes |
-| `probabilistic_sampler` | Sample a % of traces |
-| `tail_sampling` | Sample based on policies (error, latency, etc.) |
-| `routing` | Route to different exporters based on criteria |
-| `k8sattributes` | Inject Kubernetes metadata (pod name, namespace, etc.) |
+| Processor               | Function                                                             |
+| ----------------------- | -------------------------------------------------------------------- |
+| `batch`                 | Batches spans/metrics/logs to reduce export calls                    |
+| `memory_limiter`        | Prevents OOM by rejecting data when memory is high                   |
+| `transform`             | Modify attributes using OTTL (OpenTelemetry Transformation Language) |
+| `filter`                | Filter spans/metrics/logs by criteria                                |
+| `resource`              | Add/modify resource attributes                                       |
+| `attributes`            | Add/modify span/log attributes                                       |
+| `probabilistic_sampler` | Sample a % of traces                                                 |
+| `tail_sampling`         | Sample based on policies (error, latency, etc.)                      |
+| `routing`               | Route to different exporters based on criteria                       |
+| `k8sattributes`         | Inject Kubernetes metadata (pod name, namespace, etc.)               |
 
 ### Exporters
 
 Exporters send data to backends:
 
-| Exporter | Backend |
-|----------|---------|
-| `otlp` | Any OTel-native backend |
-| `otlphttp` | Any backend via HTTP |
-| `jaeger` | Jaeger |
-| `zipkin` | Zipkin |
-| `prometheus` | Prometheus (pull or remote_write) |
-| `prometheusremotewrite` | Prometheus via remote write |
-| `loki` | Grafana Loki (logs) |
-| `datadog` | Datadog |
-| `awsxray` | AWS X-Ray |
-| `awsemf` | AWS CloudWatch EMF (metrics) |
-| `azuremonitorexporter` | Azure Monitor |
-| `googlecloudmonitoring` | GCP Cloud Monitoring |
-| `logging` | Stdout (debug) |
-| `file` | File (debug) |
+| Exporter                | Backend                           |
+| ----------------------- | --------------------------------- |
+| `otlp`                  | Any OTel-native backend           |
+| `otlphttp`              | Any backend via HTTP              |
+| `jaeger`                | Jaeger                            |
+| `zipkin`                | Zipkin                            |
+| `prometheus`            | Prometheus (pull or remote_write) |
+| `prometheusremotewrite` | Prometheus via remote write       |
+| `loki`                  | Grafana Loki (logs)               |
+| `datadog`               | Datadog                           |
+| `awsxray`               | AWS X-Ray                         |
+| `awsemf`                | AWS CloudWatch EMF (metrics)      |
+| `azuremonitorexporter`  | Azure Monitor                     |
+| `googlecloudmonitoring` | GCP Cloud Monitoring              |
+| `logging`               | Stdout (debug)                    |
+| `file`                  | File (debug)                      |
 
 ## Minimal Collector Config
 
@@ -160,13 +160,13 @@ Use when: Small deployments, local development.
 
 Extensions are non-pipeline components (health checks, monitoring, etc.):
 
-| Extension | Purpose |
-|-----------|---------|
-| `zpages` | In-process debug pages (trace stats, span names) |
-| `health_check` | HTTP health endpoint at `/` |
-| `pprof` | Go profiling endpoint at `localhost:1777` |
-| `memory_ballast` | Allocates virtual memory to reduce GC pressure |
-| `oidcauth` | Authenticate exports using OIDC tokens |
+| Extension        | Purpose                                          |
+| ---------------- | ------------------------------------------------ |
+| `zpages`         | In-process debug pages (trace stats, span names) |
+| `health_check`   | HTTP health endpoint at `/`                      |
+| `pprof`          | Go profiling endpoint at `localhost:1777`        |
+| `memory_ballast` | Allocates virtual memory to reduce GC pressure   |
+| `oidcauth`       | Authenticate exports using OIDC tokens           |
 
 ```yaml
 extensions:
@@ -192,9 +192,9 @@ Batches data to reduce HTTP/gRPC call overhead:
 ```yaml
 processors:
   batch:
-    timeout: 5s              # Flush after N seconds
-    send_batch_size: 8192    # Or after N items
-    send_batch_max_size: 8192  # Max batch size (vs send_batch_size which is target)
+    timeout: 5s # Flush after N seconds
+    send_batch_size: 8192 # Or after N items
+    send_batch_max_size: 8192 # Max batch size (vs send_batch_size which is target)
 ```
 
 ### Memory Limiter
@@ -204,8 +204,8 @@ Protects against OOM when backend is slow/unavailable:
 ```yaml
 processors:
   memory_limiter:
-    limit_mib: 512           # Hard limit
-    spike_limit_mib: 128     # Spike allowance
+    limit_mib: 512 # Hard limit
+    spike_limit_mib: 128 # Spike allowance
     check_interval: 1s
 ```
 
@@ -256,7 +256,7 @@ processors:
         - k8s.container.name
         - k8s.container.restart_count
     filter:
-      node: ".*worker.*"   # Only pods on worker nodes
+      node: ".*worker.*" # Only pods on worker nodes
 ```
 
 ## Connectors (Beta)
@@ -273,9 +273,9 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlp, spanmetrics]  # spanmetrics connector
+      exporters: [otlp, spanmetrics] # spanmetrics connector
     metrics:
-      receivers: [spanmetrics]         # receives from spanmetrics connector
+      receivers: [spanmetrics] # receives from spanmetrics connector
       exporters: [prometheus]
 ```
 
@@ -314,10 +314,10 @@ processors:
 
 The Collector has two binaries:
 
-| Binary | Use |
-|--------|-----|
-| `otelcol` | Standard binary (import from `otel-contrib`) |
-| `otelcol-contrib` | Community-contrib receivers/exporters |
+| Binary            | Use                                          |
+| ----------------- | -------------------------------------------- |
+| `otelcol`         | Standard binary (import from `otel-contrib`) |
+| `otelcol-contrib` | Community-contrib receivers/exporters        |
 
 For Kubernetes, use the **OpenTelemetry Operator** or the **Helm chart**:
 

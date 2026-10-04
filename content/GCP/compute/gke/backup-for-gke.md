@@ -72,6 +72,7 @@ Backup for GKE operates via a managed GKE cluster add-on (`gkebackup`) that comm
 ## 2. Advanced Disaster Recovery: Cross-Region & Transformation Rules
 
 During cross-region disaster recovery, differences in infrastructure frequently prevent raw restores:
+
 - **StorageClass Substitution:** A PVC backed by `pd-ssd` in `us-central1` might need to restore onto `hyperdisk-balanced` in `europe-west1`. RestorePlans support native **Volume Data Restoration Rules** to substitute StorageClasses dynamically.
 - **Substitution / Transformation Rules:** Modify ingress hostnames, external IP references, or database connection strings dynamically during the restore process (e.g., rewriting `prod-us.example.com` to `prod-eu.example.com`).
 
@@ -107,7 +108,8 @@ gcloud beta container backup-restore backup-plans create daily-finance-backup-pl
     --encryption-key=projects/secops-kms-prod/locations/us-central1/keyRings/gke-backup-ring/cryptoKeys/backup-key \
     --project=core-infrastructure-prod
 ```
-*(Note: `--backup-delete-lock-days=7` enforces immutability; backups cannot be deleted by anyone for 7 days, protecting against ransomware).*
+
+_(Note: `--backup-delete-lock-days=7` enforces immutability; backups cannot be deleted by anyone for 7 days, protecting against ransomware)._
 
 ### 3. Trigger an Ad-Hoc On-Demand Backup
 
@@ -166,13 +168,13 @@ kubectl get pods -n database --context=dr-cluster-eu
 
 ## 4. Quotas, Performance, and Configuration Limits
 
-| Dimension / Parameter | Limit / Boundary | Operational Guidance |
-| :--- | :--- | :--- |
-| **Max BackupPlans per Cluster**| 100 plans | Organize plans by compliance tier or business service |
-| **Concurrent Restores** | Up to 10 concurrent | Restores scale with GCE disk provisioning throughput |
-| **Immutability Lock Window** | 0 to 90 days | Enforce minimum 7 days for SOC2 / ransomware defense |
-| **Cross-Region Restores** | Supported across all regions | Requires identical or remapped StorageClasses |
-| **Autopilot Support** | Fully supported | Managed agent deploys without privileged daemonset |
+| Dimension / Parameter           | Limit / Boundary             | Operational Guidance                                  |
+| :------------------------------ | :--------------------------- | :---------------------------------------------------- |
+| **Max BackupPlans per Cluster** | 100 plans                    | Organize plans by compliance tier or business service |
+| **Concurrent Restores**         | Up to 10 concurrent          | Restores scale with GCE disk provisioning throughput  |
+| **Immutability Lock Window**    | 0 to 90 days                 | Enforce minimum 7 days for SOC2 / ransomware defense  |
+| **Cross-Region Restores**       | Supported across all regions | Requires identical or remapped StorageClasses         |
+| **Autopilot Support**           | Fully supported              | Managed agent deploys without privileged daemonset    |
 
 ---
 
@@ -189,6 +191,7 @@ kubectl get pods -n database --context=dr-cluster-eu
 ## 6. Realistic Pricing Scenarios
 
 Pricing components:
+
 1. **Backup Management Fee:** Flat fee of **$0.03 per Pod per month** protected by an active backup plan.
 2. **Persistent Volume Data Snapshots:** Standard GCE VolumeSnapshot rates ($0.026 per GB-month).
 3. **Cross-Region Network Egress:** Billed only during cross-region restores ($0.02/GB).
@@ -204,7 +207,7 @@ Pricing components:
   - Backup Management Fee (50 pods): 50 pods × $0.03/pod-month = **$1.50**
   - Snapshot Storage (2,500 GB): 2,500 GB × $0.026/GB = **$65.00**
 - **Total Monthly Cost:** **$66.50 / month**
-*(Delivers enterprise disaster recovery and immutable ransomware locks for under $70/month).*
+  _(Delivers enterprise disaster recovery and immutable ransomware locks for under $70/month)._
 
 ### Scenario B: Massive Multi-Tenant Enterprise GKE Cluster (1,000 Pods)
 

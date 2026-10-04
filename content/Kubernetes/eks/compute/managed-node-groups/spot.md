@@ -55,13 +55,13 @@ spec:
   nodeSelector:
     lifecycle: Ec2Spot
   tolerations:
-  - key: "spotInstance"
-    operator: "Equal"
-    value: "true"
-    effect: "NoSchedule"
+    - key: "spotInstance"
+      operator: "Equal"
+      value: "true"
+      effect: "NoSchedule"
   containers:
-  - name: app
-    image: myapp:latest
+    - name: app
+      image: myapp:latest
 ```
 
 ## Interruption Handling

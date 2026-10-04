@@ -7,7 +7,7 @@ description: Deep dive into Kubernetes garbage collection mechanisms, owner refe
 
 # Garbage Collection
 
-*"https://kubernetes.io/docs/concepts/architecture/garbage-collection/"*
+_"https://kubernetes.io/docs/concepts/architecture/garbage-collection/"_
 
 Garbage collection is how Kubernetes **automatically deletes objects** when their owners are deleted, when labels no longer match, or when they've outlived their TTL. It's the cleanup mechanism that keeps etcd from filling up with orphaned resources.
 
@@ -29,12 +29,12 @@ kind: Pod
 metadata:
   name: web-abc
   ownerReferences:
-  - apiVersion: apps/v1
-    kind: ReplicaSet
-    name: web
-    uid: a1b2c3-d4e5f6-...
-    controller: true          # exactly one owner can be "the controller"
-    blockOwnerDeletion: true  # (optional) prevent the owner from being deleted while children exist
+    - apiVersion: apps/v1
+      kind: ReplicaSet
+      name: web
+      uid: a1b2c3-d4e5f6-...
+      controller: true # exactly one owner can be "the controller"
+      blockOwnerDeletion: true # (optional) prevent the owner from being deleted while children exist
 ```
 
 A Pod owned by a ReplicaSet. When the ReplicaSet is deleted, the Pod is deleted automatically.
@@ -43,8 +43,8 @@ A Pod owned by a ReplicaSet. When the ReplicaSet is deleted, the Pod is deleted 
 
 **Only one owner can be the controller.** This is the "primary" owner. The relationship is used to:
 
-* Determine the **controllerRef** in `kubectl get pod -o yaml` (the field that points to the "managing" object)
-* Determine which object to scale when you `kubectl scale rs` (the RS is the controller of its Pods)
+- Determine the **controllerRef** in `kubectl get pod -o yaml` (the field that points to the "managing" object)
+- Determine which object to scale when you `kubectl scale rs` (the RS is the controller of its Pods)
 
 Other owners in `ownerReferences` are still part of the cascade, just not the "controller".
 
@@ -96,7 +96,7 @@ For cascading deletion, k8s has two modes (set on the parent before deletion):
 ```yaml
 metadata:
   finalizers:
-  - foregroundDeletion
+    - foregroundDeletion
 ```
 
 The parent is marked for deletion but **stays in the API** until all dependents are deleted. The dependents are deleted first, then the parent.
@@ -129,7 +129,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   finalizers:
-  - example.com/cleanup
+    - example.com/cleanup
 ```
 
 When you `kubectl delete pod web-abc`:
@@ -175,7 +175,7 @@ apiVersion: batch/v1
 kind: Job
 metadata: { name: my-job }
 spec:
-  ttlSecondsAfterFinished: 600      # 10 minutes after completion, delete
+  ttlSecondsAfterFinished: 600 # 10 minutes after completion, delete
   template: ...
 ```
 
@@ -245,13 +245,13 @@ The "stuck finalizer" is the #1 cause of "I deleted it but it's still there" iss
 
 ## When to use which deletion mode
 
-| Scenario | Mode | Why |
-|---|---|---|
-| Deleting a Deployment (default) | Background | Fast, dependents cleaned up automatically |
-| Deleting a StatefulSet | Foreground | Pods need to be deleted in order, with stable identity |
-| Deleting a CR with custom finalizer | Foreground | The controller needs to see the parent during cleanup |
-| Promoting a child to standalone | Orphan (no cascade) | Keep the Pods running, lose the controller |
-| Cleaning up after a failed rollout | Orphan (then delete Pods) | Sometimes useful in disaster recovery |
+| Scenario                            | Mode                      | Why                                                    |
+| ----------------------------------- | ------------------------- | ------------------------------------------------------ |
+| Deleting a Deployment (default)     | Background                | Fast, dependents cleaned up automatically              |
+| Deleting a StatefulSet              | Foreground                | Pods need to be deleted in order, with stable identity |
+| Deleting a CR with custom finalizer | Foreground                | The controller needs to see the parent during cleanup  |
+| Promoting a child to standalone     | Orphan (no cascade)       | Keep the Pods running, lose the controller             |
+| Cleaning up after a failed rollout  | Orphan (then delete Pods) | Sometimes useful in disaster recovery                  |
 
 ## The interaction with owner references and admission
 
@@ -261,19 +261,19 @@ Most controllers handle this by checking `deletionTimestamp` before creating the
 
 ## Gotchas
 
-* **The default for `kubectl delete` is background cascade.** If you want to ensure dependents are deleted before the parent is gone, use foreground (`--cascade=foreground`).
-* **Orphaned resources are invisible to their old controller.** A Pod with no owner references doesn't get reconciled by anything. If you want it managed, create a new controller (e.g. a new Deployment with the same selector).
-* **Re-creation is slow.** Even with `--cascade=orphan`, the new controller takes time to notice and create new Pods. Have a buffer.
-* **Finalizers are not auto-cleaned.** A broken finalizer blocks deletion forever. Add monitoring on `deletionTimestamp + finalizers` to catch this.
-* **`blockOwnerDeletion: true` requires the parent to wait for the child.** This can cause unexpected "cannot delete" errors.
-* **Cross-namespace owners don't work.** A Pod in `default` can't be owned by a Deployment in `kube-system`. The apiserver rejects it.
-* **An owner reference must point to an object that exists.** Pointing to a non-existent UID causes the apiserver to silently drop the owner reference (since k8s 1.20).
-* **A namespace's deletion also GCs everything in it.** Deleting a namespace cascades to every namespaced object in it.
-* **The default StorageClass's `reclaimPolicy: Delete`** means deleting a PVC deletes the underlying volume. If the PV is owned by a higher-level object (e.g. a StatefulSet's volumeClaimTemplate), the deletion cascade is more complex.
-* **The `foregroundDeletion` finalizer is special** — it's added by the apiserver when you set `propagationPolicy: Foreground` on a delete.
+- **The default for `kubectl delete` is background cascade.** If you want to ensure dependents are deleted before the parent is gone, use foreground (`--cascade=foreground`).
+- **Orphaned resources are invisible to their old controller.** A Pod with no owner references doesn't get reconciled by anything. If you want it managed, create a new controller (e.g. a new Deployment with the same selector).
+- **Re-creation is slow.** Even with `--cascade=orphan`, the new controller takes time to notice and create new Pods. Have a buffer.
+- **Finalizers are not auto-cleaned.** A broken finalizer blocks deletion forever. Add monitoring on `deletionTimestamp + finalizers` to catch this.
+- **`blockOwnerDeletion: true` requires the parent to wait for the child.** This can cause unexpected "cannot delete" errors.
+- **Cross-namespace owners don't work.** A Pod in `default` can't be owned by a Deployment in `kube-system`. The apiserver rejects it.
+- **An owner reference must point to an object that exists.** Pointing to a non-existent UID causes the apiserver to silently drop the owner reference (since k8s 1.20).
+- **A namespace's deletion also GCs everything in it.** Deleting a namespace cascades to every namespaced object in it.
+- **The default StorageClass's `reclaimPolicy: Delete`** means deleting a PVC deletes the underlying volume. If the PV is owned by a higher-level object (e.g. a StatefulSet's volumeClaimTemplate), the deletion cascade is more complex.
+- **The `foregroundDeletion` finalizer is special** — it's added by the apiserver when you set `propagationPolicy: Foreground` on a delete.
 
 ## See also
 
-* [[Kubernetes/concepts/L09-advanced/05-finalizers|Finalizers]] — the cleanup hook
-* [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — who manages cleanup
-* [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — they need ordered deletion
+- [[Kubernetes/concepts/L09-advanced/05-finalizers|Finalizers]] — the cleanup hook
+- [[Kubernetes/concepts/L09-advanced/02-custom-controllers|Custom Controllers]] — who manages cleanup
+- [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — they need ordered deletion

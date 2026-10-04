@@ -27,6 +27,7 @@ ls -la /dev/
 ```
 
 Major and minor numbers:
+
 - **Major number**: identifies the driver (e.g., 8 = SCSI disk driver)
 - **Minor number**: which device instance (e.g., sda=0, sda1=1)
 
@@ -135,6 +136,7 @@ sudo rm /dev/mycdrv
 ```
 
 Normally you don't need `mknod` — udev creates device files automatically. You'd only use it for:
+
 - Driver development
 - Container environments where /dev is mounted from host
 - Recovery situations

@@ -12,14 +12,14 @@ These services connect applications and microservices through asynchronous messa
 
 ## Service Map
 
-| Service | Pattern | Use Case |
-|---------|---------|----------|
-| [[sqs/README\|SQS]] | Queue | Decouple producers/consumers, task queue |
-| [[sns/README\|SNS]] | Pub/Sub | Fan-out to many subscribers |
-| [[eventbridge/README\|EventBridge]] | Event Bus | Schema registry, rules, SaaS ingestion |
-| [[step-functions/README\|Step Functions]] | Workflow | Multi-step orchestration, long-running processes |
-| [[amazon-mq/README\|Amazon MQ]] | Broker | ActiveMQ/RabbitMQ migration, JMS, protocol support |
-| [[appsync/README\|AppSync]] | GraphQL | Managed GraphQL API, real-time subscriptions |
+| Service                                   | Pattern   | Use Case                                           |
+| ----------------------------------------- | --------- | -------------------------------------------------- |
+| [[sqs/README\|SQS]]                       | Queue     | Decouple producers/consumers, task queue           |
+| [[sns/README\|SNS]]                       | Pub/Sub   | Fan-out to many subscribers                        |
+| [[eventbridge/README\|EventBridge]]       | Event Bus | Schema registry, rules, SaaS ingestion             |
+| [[step-functions/README\|Step Functions]] | Workflow  | Multi-step orchestration, long-running processes   |
+| [[amazon-mq/README\|Amazon MQ]]           | Broker    | ActiveMQ/RabbitMQ migration, JMS, protocol support |
+| [[appsync/README\|AppSync]]               | GraphQL   | Managed GraphQL API, real-time subscriptions       |
 
 ## Choosing a Messaging Service
 

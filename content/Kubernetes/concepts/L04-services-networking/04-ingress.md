@@ -1,6 +1,13 @@
+---
+title: "Ingress"
+tags: ["kubernetes", "k8s-concepts", "networking"]
+date: 2026-09-06
+description: "Ingress — Kubernetes reference and architecture guide."
+---
+
 # Ingress
 
-*"https://kubernetes.io/docs/concepts/services-networking/ingress/"*
+_"https://kubernetes.io/docs/concepts/services-networking/ingress/"_
 
 Ingress is the k8s-native way to expose **HTTP/HTTPS routes** to services from outside the cluster. It gives you hostname-based and path-based routing, TLS termination, and a single entry point — instead of one LoadBalancer per Service. It's the right tool for **L7 traffic into a cluster**; for raw TCP/UDP, use a LoadBalancer Service.
 
@@ -59,19 +66,20 @@ The k8s API does **not** ship a controller. You install one yourself. An Ingress
 ```
 
 > [!WARNING] Retirement Notice: Community `ingress-nginx` (March 2026)
-> The community-managed **`kubernetes/ingress-nginx`** controller reached End-of-Life in March 2026 and receives no further security patches. 
+> The community-managed **`kubernetes/ingress-nginx`** controller reached End-of-Life in March 2026 and receives no further security patches.
+>
 > - **The Ingress API itself is NOT deprecated** (`networking.k8s.io/v1` is GA and supported).
 > - For new deployments, **Gateway API** (e.g., Envoy Gateway, Cilium) is the recommended standard.
 > - For Ingress resources, use maintained controllers such as **Traefik**, **HAProxy Ingress**, or commercial NGINX distributions (`nginxinc/kubernetes-ingress`).
 
 ### 1.1 Ingress & Gateway Controllers
 
-| Controller | Data Plane | Primary Role & Strengths | Considerations & Migration |
-|---|---|---|---|
-| **Envoy Gateway** | Envoy | Gateway API native, traffic splitting, modern observability | Successor standard for Kubernetes ingress routing |
-| **Traefik** | Traefik | Built-in dashboard, automatic Let's Encrypt, middleware CRDs | Actively maintained ingress controller |
-| **HAProxy Ingress** | HAProxy | Ultra-high throughput, battle-tested connection handling | Configuration via annotations/configmaps |
-| **ingress-nginx** *(Legacy)* | NGINX | Historic standard, massive existing manifest footprint | **Retired March 2026**; plan migration to Gateway API or Traefik |
+| Controller                   | Data Plane | Primary Role & Strengths                                     | Considerations & Migration                                       |
+| ---------------------------- | ---------- | ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| **Envoy Gateway**            | Envoy      | Gateway API native, traffic splitting, modern observability  | Successor standard for Kubernetes ingress routing                |
+| **Traefik**                  | Traefik    | Built-in dashboard, automatic Let's Encrypt, middleware CRDs | Actively maintained ingress controller                           |
+| **HAProxy Ingress**          | HAProxy    | Ultra-high throughput, battle-tested connection handling     | Configuration via annotations/configmaps                         |
+| **ingress-nginx** _(Legacy)_ | NGINX      | Historic standard, massive existing manifest footprint       | **Retired March 2026**; plan migration to Gateway API or Traefik |
 
 Pick based on your architecture. **Gateway API with Envoy Gateway or Cilium is the modern standard for new clusters.** If maintaining traditional Ingress manifests, choose an actively maintained controller like Traefik or HAProxy.
 
@@ -87,34 +95,34 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: app.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              number: 80
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: api
-            port:
-              number: 8080
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8080
   tls:
-  - hosts:
-    - app.example.com
-    secretName: app-tls
+    - hosts:
+        - app.example.com
+      secretName: app-tls
 ```
 
 Three rules in this Ingress:
 
-* `app.example.com/` → frontend Service
-* `app.example.com/api` → api Service
-* TLS terminated at the Ingress, cert from the `app-tls` Secret
+- `app.example.com/` → frontend Service
+- `app.example.com/api` → api Service
+- TLS terminated at the Ingress, cert from the `app-tls` Secret
 
 The `nginx.ingress.kubernetes.io/rewrite-target: /` annotation tells the NGINX controller to **strip the matched path prefix** before forwarding. So `/api/users/123` becomes `/users/123` when sent to the api Service. This is critical when the backend doesn't expect the `/api` prefix.
 
@@ -122,11 +130,11 @@ The `nginx.ingress.kubernetes.io/rewrite-target: /` annotation tells the NGINX c
 
 Each path needs a `pathType`. Three values:
 
-| pathType | Matches | Use case |
-|---|---|---|
-| `Exact` | Only the exact path | `/healthz` for a health endpoint, `/metrics` for Prometheus |
-| `Prefix` | The prefix, segment-by-segment | `/api` matches `/api`, `/api/users`, but not `/apiv2` |
-| `ImplementationSpecific` | Whatever the controller wants | Avoid — deprecated, behavior varies |
+| pathType                 | Matches                        | Use case                                                    |
+| ------------------------ | ------------------------------ | ----------------------------------------------------------- |
+| `Exact`                  | Only the exact path            | `/healthz` for a health endpoint, `/metrics` for Prometheus |
+| `Prefix`                 | The prefix, segment-by-segment | `/api` matches `/api`, `/api/users`, but not `/apiv2`       |
+| `ImplementationSpecific` | Whatever the controller wants  | Avoid — deprecated, behavior varies                         |
 
 ### 3.1 The `Prefix` semantics — segment-by-segment
 
@@ -145,8 +153,8 @@ The match is on **path segments** (separated by `/`). For substring matching, yo
 
 `/api` and `/api/` are **the same Prefix** but the redirect behavior is different. The controller decides:
 
-* `nginx.ingress.kubernetes.io/rewrite-target: /` and `path: /api` — requests to `/api/users` are rewritten to `/users` (prefix stripped).
-* No rewrite, `path: /api` — requests to `/api/users` go to the backend as `/api/users` (the backend sees the prefix).
+- `nginx.ingress.kubernetes.io/rewrite-target: /` and `path: /api` — requests to `/api/users` are rewritten to `/users` (prefix stripped).
+- No rewrite, `path: /api` — requests to `/api/users` go to the backend as `/api/users` (the backend sees the prefix).
 
 If your backend is mounted at `/` and you want the prefix stripped, use rewrite-target. If your backend is mounted at `/api`, don't.
 
@@ -156,10 +164,10 @@ If your backend is mounted at `/` and you want the prefix stripped, use rewrite-
 
 The kubernetes/community project. Most widely deployed. Uses NGINX under the hood.
 
-* **Install:** `kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml`
-* **Config:** annotations on the Ingress resource. ~50+ annotations for rewrites, CORS, rate limiting, sticky sessions, etc.
-* **Strong points:** mature, documented, the de-facto standard, lots of examples.
-* **Weak points:** annotations are sprawling and controller-specific. Porting Ingress between controllers means rewriting annotations.
+- **Install:** `kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml`
+- **Config:** annotations on the Ingress resource. ~50+ annotations for rewrites, CORS, rate limiting, sticky sessions, etc.
+- **Strong points:** mature, documented, the de-facto standard, lots of examples.
+- **Weak points:** annotations are sprawling and controller-specific. Porting Ingress between controllers means rewriting annotations.
 
 **Configmap-based tunings:** a few things are set in the controller's ConfigMap, not the Ingress annotations:
 
@@ -170,10 +178,10 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 data:
-  proxy-body-size: "100m"          # max request body size
+  proxy-body-size: "100m" # max request body size
   proxy-read-timeout: "60"
   proxy-send-timeout: "60"
-  use-forwarded-headers: "true"    # respect X-Forwarded-* from upstream LBs
+  use-forwarded-headers: "true" # respect X-Forwarded-* from upstream LBs
   enable-rewrite-log: "true"
 ```
 
@@ -192,28 +200,28 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`app.example.com`) && PathPrefix(`/api`)
-    kind: Rule
-    services:
-    - name: api
-      port: 8080
+    - match: Host(`app.example.com`) && PathPrefix(`/api`)
+      kind: Rule
+      services:
+        - name: api
+          port: 8080
   tls:
     certResolver: letsencrypt
 ```
 
-* **Install:** Helm chart.
-* **Config:** CRDs (more expressive than annotations) + a dashboard.
-* **Strong points:** simpler config, built-in dashboard, automatic Let's Encrypt with certResolver.
-* **Weak points:** uses CRDs (not standard Ingress); switching controllers means rewriting routes.
+- **Install:** Helm chart.
+- **Config:** CRDs (more expressive than annotations) + a dashboard.
+- **Strong points:** simpler config, built-in dashboard, automatic Let's Encrypt with certResolver.
+- **Weak points:** uses CRDs (not standard Ingress); switching controllers means rewriting routes.
 
 ### 4.3 HAProxy Ingress
 
 The HAProxy-based controller. Less common, but used in some on-prem setups.
 
-* **Install:** Helm chart or YAML manifests.
-* **Config:** annotations.
-* **Strong points:** HAProxy's performance, mature load-balancing logic.
-* **Weak points:** smaller community, less documentation.
+- **Install:** Helm chart or YAML manifests.
+- **Config:** annotations.
+- **Strong points:** HAProxy's performance, mature load-balancing logic.
+- **Weak points:** smaller community, less documentation.
 
 ### 4.4 Envoy-based (Contour, Envoy Gateway)
 
@@ -222,10 +230,10 @@ Envoy as the data plane. These are the most Gateway-API-native options.
 **Contour:** the Heptio / VMware project. Uses HTTPProxy CRD.
 **Envoy Gateway:** newer, the CNCF-blessed Gateway API implementation.
 
-* **Install:** Helm chart or Gateway API CRDs.
-* **Config:** Gateway API (forward-looking) or HTTPProxy (Contour's CRD).
-* **Strong points:** modern, Gateway API native, integrates with service mesh.
-* **Weak points:** newer, less documentation, Gateway API still stabilizing.
+- **Install:** Helm chart or Gateway API CRDs.
+- **Config:** Gateway API (forward-looking) or HTTPProxy (Contour's CRD).
+- **Strong points:** modern, Gateway API native, integrates with service mesh.
+- **Weak points:** newer, less documentation, Gateway API still stabilizing.
 
 ## 5. TLS Termination and Cert Management
 
@@ -234,10 +242,10 @@ Envoy as the data plane. These are the most Gateway-API-native options.
 ```yaml
 spec:
   tls:
-  - hosts:
-    - app.example.com
-    - api.example.com
-    secretName: app-tls
+    - hosts:
+        - app.example.com
+        - api.example.com
+      secretName: app-tls
 ```
 
 The `secretName` is a Kubernetes Secret of type `kubernetes.io/tls`:
@@ -255,12 +263,12 @@ The Secret must be in the **same namespace as the Ingress**. The controller read
 ```yaml
 spec:
   tls:
-  - hosts:
-    - app.example.com
-    secretName: app-tls
-  - hosts:
-    - api.example.com
-    secretName: api-tls
+    - hosts:
+        - app.example.com
+      secretName: app-tls
+    - hosts:
+        - api.example.com
+      secretName: api-tls
 ```
 
 Different hosts can have different certs. The controller does SNI routing — when a client connects, it presents the cert matching the requested hostname.
@@ -270,9 +278,9 @@ Different hosts can have different certs. The controller does SNI routing — wh
 ```yaml
 spec:
   tls:
-  - hosts:
-    - "*.example.com"
-    secretName: wildcard-tls
+    - hosts:
+        - "*.example.com"
+      secretName: wildcard-tls
 ```
 
 Wildcard certs work, but be aware: a wildcard cert for `*.example.com` doesn't cover `example.com` itself. You need a cert with both `example.com` and `*.example.com` in the SAN list.
@@ -290,7 +298,7 @@ metadata:
 spec:
   secretName: app-tls
   dnsNames:
-  - app.example.com
+    - app.example.com
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
@@ -313,8 +321,8 @@ The Ingress references the same Secret. cert-manager and the controller don't ne
 
 Most Ingress controllers support two modes:
 
-* **TLS termination** — the controller terminates TLS, decrypts the request, and forwards plain HTTP to the backend.
-* **TLS passthrough** — the controller forwards the encrypted TCP stream to the backend, which terminates TLS itself. Used when the backend needs the original cert (mTLS, mutual auth).
+- **TLS termination** — the controller terminates TLS, decrypts the request, and forwards plain HTTP to the backend.
+- **TLS passthrough** — the controller forwards the encrypted TCP stream to the backend, which terminates TLS itself. Used when the backend needs the original cert (mTLS, mutual auth).
 
 ```yaml
 # ingress-nginx TLS passthrough
@@ -323,20 +331,20 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
 spec:
   tls:
-  - hosts:
-    - app.example.com
-    secretName: app-tls      # used for SNI matching, not for termination
+    - hosts:
+        - app.example.com
+      secretName: app-tls # used for SNI matching, not for termination
   rules:
-  - host: app.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: app
-            port:
-              number: 443   # backend listens on 443
+    - host: app.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app
+                port:
+                  number: 443 # backend listens on 443
 ```
 
 The controller uses the cert for SNI (to know where to route), but the actual TLS session is between the client and the backend. **End-to-end encryption without a sidecar.**
@@ -397,7 +405,7 @@ kind: IngressClass
 metadata:
   name: nginx
 spec:
-  controller: k8s.io/ingress-nginx   # the controller that handles this class
+  controller: k8s.io/ingress-nginx # the controller that handles this class
 ```
 
 An Ingress without `ingressClassName` is treated according to the cluster's default IngressClass (if one is set):
@@ -430,16 +438,16 @@ If you want a "404 page" or "catch-all", make a real route. The new model doesn'
 ```yaml
 spec:
   rules:
-  - host: ""   # matches any host
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: catchall
-            port:
-              number: 80
+    - host: "" # matches any host
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: catchall
+                port:
+                  number: 80
 ```
 
 But be careful — this catches **everything** that doesn't match a more specific rule. Most teams don't actually need this.
@@ -448,37 +456,37 @@ But be careful — this catches **everything** that doesn't match a more specifi
 
 `host: ""` (or omitting the host entirely) matches any hostname. Use cases:
 
-* Internal cluster services that don't have a public DNS name
-* A "default vhost" that serves anything
-* Wildcard certs
+- Internal cluster services that don't have a public DNS name
+- A "default vhost" that serves anything
+- Wildcard certs
 
 ```yaml
 spec:
   ingressClassName: nginx
   rules:
-  - http:                          # no host → matches any host
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: internal-app
-            port:
-              number: 80
+    - http: # no host → matches any host
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: internal-app
+                port:
+                  number: 80
 ```
 
 ## 9. Ingress vs LoadBalancer Service
 
-| | Ingress | LoadBalancer Service |
-|---|---|---|
-| **Layer** | L7 (HTTP) | L4 (TCP/UDP) |
-| **Use case** | HTTPS routes by host/path | Raw TCP/UDP, non-HTTP (DB, game server) |
-| **Cost on cloud** | One LB for many Services | One LB per Service |
-| **TLS** | Terminated at the Ingress | At the Service / client |
-| **Path routing** | Yes | No |
-| **Hostname routing** | Yes | No (the LB is per Service) |
-| **WebSocket** | Supported | Trivial (raw TCP) |
-| **gRPC** | Supported (with controller support) | Trivial (raw TCP) |
+|                      | Ingress                             | LoadBalancer Service                    |
+| -------------------- | ----------------------------------- | --------------------------------------- |
+| **Layer**            | L7 (HTTP)                           | L4 (TCP/UDP)                            |
+| **Use case**         | HTTPS routes by host/path           | Raw TCP/UDP, non-HTTP (DB, game server) |
+| **Cost on cloud**    | One LB for many Services            | One LB per Service                      |
+| **TLS**              | Terminated at the Ingress           | At the Service / client                 |
+| **Path routing**     | Yes                                 | No                                      |
+| **Hostname routing** | Yes                                 | No (the LB is per Service)              |
+| **WebSocket**        | Supported                           | Trivial (raw TCP)                       |
+| **gRPC**             | Supported (with controller support) | Trivial (raw TCP)                       |
 
 If you have 30 microservices and 1 LB, use Ingress. If you're exposing a Postgres port, use LoadBalancer (or NodePort for dev).
 
@@ -490,11 +498,11 @@ The [Gateway API](https://gateway-api.sigs.k8s.io/) is the next-gen replacement 
 
 ### 10.1 Why Gateway API
 
-* **More expressive** — header-based routing, traffic splitting, request mirroring, A/B testing, weighted routing.
-* **Multi-tenant by design** — GatewayClass → Gateway → Routes, with RBAC at each level.
-* **Cross-protocol** — HTTP, gRPC, TCP, UDP, TLS.
-* **Portable** — the resource model is standardized, not the controller-specific annotations. Switching controllers is much easier.
-* **Better for service mesh** — Gateway API is the basis for Istio's ingress and Cilium's service mesh.
+- **More expressive** — header-based routing, traffic splitting, request mirroring, A/B testing, weighted routing.
+- **Multi-tenant by design** — GatewayClass → Gateway → Routes, with RBAC at each level.
+- **Cross-protocol** — HTTP, gRPC, TCP, UDP, TLS.
+- **Portable** — the resource model is standardized, not the controller-specific annotations. Switching controllers is much easier.
+- **Better for service mesh** — Gateway API is the basis for Istio's ingress and Cilium's service mesh.
 
 ### 10.2 The Gateway API model
 
@@ -515,6 +523,7 @@ Services
 ```
 
 Separation of concerns:
+
 - **Infra team** owns the GatewayClass and the Gateway (the load balancer, the public IP, the TLS).
 - **App team** owns the HTTPRoute (the routing rules for their app).
 
@@ -540,23 +549,23 @@ metadata:
 spec:
   gatewayClassName: envoy-gateway
   listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces:
-        from: All
-  - name: https
-    port: 443
-    protocol: HTTPS
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - name: public-cert
-        kind: Secret
-    allowedRoutes:
-      namespaces:
-        from: All
+    - name: http
+      port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: public-cert
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: All
 ---
 # HTTPRoute (app team)
 apiVersion: gateway.networking.k8s.io/v1
@@ -566,51 +575,51 @@ metadata:
   namespace: default
 spec:
   parentRefs:
-  - name: public-gateway
-    namespace: infra
+    - name: public-gateway
+      namespace: infra
   hostnames:
-  - app.example.com
+    - app.example.com
   rules:
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /api
-    backendRefs:
-    - name: api
-      port: 8080
-  - matches:
-    - path:
-        type: PathPrefix
-        value: /
-    backendRefs:
-    - name: frontend
-      port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      backendRefs:
+        - name: api
+          port: 8080
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: frontend
+          port: 80
 ```
 
 ### 10.4 Gateway API resources
 
-| Resource | Purpose |
-|---|---|
-| `GatewayClass` | Defines a controller (cluster-scoped) |
-| `Gateway` | A load balancer instance with listeners (port, protocol, TLS) |
-| `HTTPRoute` | L7 routing rules (paths, headers, methods) |
-| `TCPRoute` | L4 routing |
-| `UDPRoute` | L4 routing |
-| `TLSRoute` | TLS passthrough routing |
-| `GRPCRoute` | gRPC routing with method matching |
-| `ReferenceGrant` | RBAC for cross-namespace references |
+| Resource         | Purpose                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| `GatewayClass`   | Defines a controller (cluster-scoped)                         |
+| `Gateway`        | A load balancer instance with listeners (port, protocol, TLS) |
+| `HTTPRoute`      | L7 routing rules (paths, headers, methods)                    |
+| `TCPRoute`       | L4 routing                                                    |
+| `UDPRoute`       | L4 routing                                                    |
+| `TLSRoute`       | TLS passthrough routing                                       |
+| `GRPCRoute`      | gRPC routing with method matching                             |
+| `ReferenceGrant` | RBAC for cross-namespace references                           |
 
 ### 10.5 What Gateway API gives you that Ingress doesn't
 
-* **Header-based routing** — `match.headers: { x-version: v2 }` → backend v2.
-* **Method-based routing** — `GET /users` → read service, `POST /users` → write service.
-* **Query parameter matching** — `?debug=true` → debug backend.
-* **Traffic splitting** — 90% to v1, 10% to v2.
-* **Request mirroring** — duplicate traffic to a test backend.
-* **Request redirect / rewrite** — `redirect: { statusCode: 301, hostname: new.example.com }`.
-* **Cross-namespace references** — Route in `default` can reference Service in `prod`, with explicit RBAC.
-* **Multiple listeners** — one Gateway with HTTP and HTTPS listeners, on the same or different ports.
-* **Better RBAC** — separate permissions for GatewayClass, Gateway, Routes.
+- **Header-based routing** — `match.headers: { x-version: v2 }` → backend v2.
+- **Method-based routing** — `GET /users` → read service, `POST /users` → write service.
+- **Query parameter matching** — `?debug=true` → debug backend.
+- **Traffic splitting** — 90% to v1, 10% to v2.
+- **Request mirroring** — duplicate traffic to a test backend.
+- **Request redirect / rewrite** — `redirect: { statusCode: 301, hostname: new.example.com }`.
+- **Cross-namespace references** — Route in `default` can reference Service in `prod`, with explicit RBAC.
+- **Multiple listeners** — one Gateway with HTTP and HTTPS listeners, on the same or different ports.
+- **Better RBAC** — separate permissions for GatewayClass, Gateway, Routes.
 
 ## 11. Migration Path: Ingress → Gateway API
 
@@ -690,9 +699,9 @@ kubectl -n ingress-nginx logs <pod> --tail=20 -f
 
 A 503 from the Ingress means the controller can reach the Service but the Service has no backends. Common causes:
 
-* The Pods aren't Ready (readiness probe failing)
-* The Service has the wrong selector
-* The Service has the wrong port
+- The Pods aren't Ready (readiness probe failing)
+- The Service has the wrong selector
+- The Service has the wrong port
 
 ```bash
 # check the Service's endpoints
@@ -708,9 +717,9 @@ kubectl get pods -l <selector>
 
 A 404 from the Ingress means the controller received the request but no Ingress rule matches. Common causes:
 
-* The host doesn't match any rule's `host`
-* The path doesn't match any rule's `path`
-* The Ingress has no rules at all
+- The host doesn't match any rule's `host`
+- The path doesn't match any rule's `path`
+- The Ingress has no rules at all
 
 ```bash
 # check the Ingress
@@ -792,8 +801,8 @@ curl -v -H "Host: app.example.com" http://<ingress-ip>/
 
 ## See also
 
-* [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
-* [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — the backends Ingress routes to
-* [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how external clients find the Ingress
-* [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
-* [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking]] — the L04 mental model
+- [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — the backends Ingress routes to
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how external clients find the Ingress
+- [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs

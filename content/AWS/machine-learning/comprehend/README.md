@@ -15,17 +15,17 @@ Comprehend provides NLP APIs for text analysis — sentiment, entities, key phra
 
 ## Language Support
 
-| Language | Sentiment | Entities | Key Phrases | Syntax |
-|----------|-----------|----------|-------------|--------|
-| English | Yes | Yes | Yes | Yes |
-| Spanish | Yes | Yes | Yes | Yes |
-| German | Yes | Yes | Yes | No |
-| French | Yes | Yes | Yes | No |
-| Italian | Yes | Yes | Yes | No |
-| Portuguese | Yes | Yes | Yes | No |
-| Chinese (Simplified) | Yes | Yes | Yes | No |
-| Japanese | Yes | Yes | Yes | No |
-| Korean | Yes | Yes | Yes | No |
+| Language             | Sentiment | Entities | Key Phrases | Syntax |
+| -------------------- | --------- | -------- | ----------- | ------ |
+| English              | Yes       | Yes      | Yes         | Yes    |
+| Spanish              | Yes       | Yes      | Yes         | Yes    |
+| German               | Yes       | Yes      | Yes         | No     |
+| French               | Yes       | Yes      | Yes         | No     |
+| Italian              | Yes       | Yes      | Yes         | No     |
+| Portuguese           | Yes       | Yes      | Yes         | No     |
+| Chinese (Simplified) | Yes       | Yes      | Yes         | No     |
+| Japanese             | Yes       | Yes      | Yes         | No     |
+| Korean               | Yes       | Yes      | Yes         | No     |
 
 ## Core Operations
 
@@ -225,17 +225,17 @@ for medication in response['Medications']:
 
 ## Pricing
 
-| Operation | Cost |
-|-----------|------|
-| DetectSentiment | $0.0001/character |
-| DetectEntities | $0.0001/character |
-| DetectPiiEntities | $0.0001/character |
-| DetectKeyPhrases | $0.0001/character |
-| DetectSyntax | $0.00005/character |
-| DetectDominantLanguage | $0.0001/100 characters |
-| TopicDetection | $0.50/job + $0.0001/character |
-| CustomClassification | $0.0005/character |
-| ComprehendMedical (DetectEntities) | $0.00035/character |
+| Operation                          | Cost                          |
+| ---------------------------------- | ----------------------------- |
+| DetectSentiment                    | $0.0001/character             |
+| DetectEntities                     | $0.0001/character             |
+| DetectPiiEntities                  | $0.0001/character             |
+| DetectKeyPhrases                   | $0.0001/character             |
+| DetectSyntax                       | $0.00005/character            |
+| DetectDominantLanguage             | $0.0001/100 characters        |
+| TopicDetection                     | $0.50/job + $0.0001/character |
+| CustomClassification               | $0.0005/character             |
+| ComprehendMedical (DetectEntities) | $0.00035/character            |
 
 ## References
 

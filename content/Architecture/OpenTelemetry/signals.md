@@ -15,11 +15,11 @@ draft: false
 
 OpenTelemetry defines three **signals** — the fundamental types of telemetry.
 
-| Signal | Description |
-|--------|-------------|
-| **Traces** | End-to-end request paths (spans) |
+| Signal      | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| **Traces**  | End-to-end request paths (spans)                       |
 | **Metrics** | Aggregated measurements (counters, gauges, histograms) |
-| **Logs** | Timestamp-ordered event records |
+| **Logs**    | Timestamp-ordered event records                        |
 
 > **Note:** Baggage is **not** a signal. It is a context propagation mechanism — key-value metadata that flows alongside trace context. See [[context-propagation]].
 
@@ -40,28 +40,28 @@ Trace
 
 ### Span Model
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | string | Human-readable operation name |
-| `trace_id` | 16-byte ID | Globally unique trace identifier |
-| `span_id` | 8-byte ID | Unique span within the trace |
-| `parent_span_id` | 8-byte ID | Parent span ID (empty for root) |
-| `start_time` / `end_time` | Timestamp | Wall-clock start and end |
-| `kind` | SpanKind | `server`, `client`, `producer`, `consumer`, `internal` |
-| `status` | Status | `unset`, `ok`, `error` |
-| `attributes` | Map[string, Value] | Key-value pairs describing the span |
-| `events` | []SpanEvent | Timestamped log messages during the span |
-| `links` | []SpanLink | Links to other spans (potentially from other traces) |
+| Field                     | Type               | Description                                            |
+| ------------------------- | ------------------ | ------------------------------------------------------ |
+| `name`                    | string             | Human-readable operation name                          |
+| `trace_id`                | 16-byte ID         | Globally unique trace identifier                       |
+| `span_id`                 | 8-byte ID          | Unique span within the trace                           |
+| `parent_span_id`          | 8-byte ID          | Parent span ID (empty for root)                        |
+| `start_time` / `end_time` | Timestamp          | Wall-clock start and end                               |
+| `kind`                    | SpanKind           | `server`, `client`, `producer`, `consumer`, `internal` |
+| `status`                  | Status             | `unset`, `ok`, `error`                                 |
+| `attributes`              | Map[string, Value] | Key-value pairs describing the span                    |
+| `events`                  | []SpanEvent        | Timestamped log messages during the span               |
+| `links`                   | []SpanLink         | Links to other spans (potentially from other traces)   |
 
 ### SpanKind
 
-| Kind | Meaning |
-|------|---------|
-| `server` | Incoming request handler |
-| `client` | Outgoing request to a dependency |
+| Kind       | Meaning                                         |
+| ---------- | ----------------------------------------------- |
+| `server`   | Incoming request handler                        |
+| `client`   | Outgoing request to a dependency                |
 | `producer` | Message sent to a queue (no immediate response) |
-| `consumer` | Message received from a queue |
-| `internal` | Internal operation (default) |
+| `consumer` | Message received from a queue                   |
+| `internal` | Internal operation (default)                    |
 
 ### Example: Creating a Span (Go)
 
@@ -101,14 +101,14 @@ with tracer.start_as_current_span("outer") as span:
 
 ### Instruments
 
-| Instrument | Type | Use |
-|------------|------|-----|
-| **Counter** | Synchronous | Additive values (requests served, bytes sent) |
-| **UpDownCounter** | Synchronous | Non-additive (active connections, queue depth) |
-| **Histogram** | Synchronous | Distribution of values (request latencies, payload sizes) |
-| **ObservableCounter** | Async (callback) | System metrics from APIs (CPU usage) |
-| **ObservableUpDownCounter** | Async | Gauge-like additive metrics |
-| **ObservableGauge** | Async | Point-in-time values (temperature, queue length) |
+| Instrument                  | Type             | Use                                                       |
+| --------------------------- | ---------------- | --------------------------------------------------------- |
+| **Counter**                 | Synchronous      | Additive values (requests served, bytes sent)             |
+| **UpDownCounter**           | Synchronous      | Non-additive (active connections, queue depth)            |
+| **Histogram**               | Synchronous      | Distribution of values (request latencies, payload sizes) |
+| **ObservableCounter**       | Async (callback) | System metrics from APIs (CPU usage)                      |
+| **ObservableUpDownCounter** | Async            | Gauge-like additive metrics                               |
+| **ObservableGauge**         | Async            | Point-in-time values (temperature, queue length)          |
 
 ### Temporality
 
@@ -162,14 +162,14 @@ histogram.Record(ctx, 127.5,
 
 ### Log Record Model
 
-| Field | Description |
-|-------|-------------|
-| `timestamp` | When the event occurred |
-| `severity` | Log level (trace, debug, info, warn, error) |
-| `body` | Log message |
-| `resource` | Attributes of the emitting entity |
-| `attributes` | Structured key-value pairs |
-| `trace_id`, `span_id` | If emitted within a traced context |
+| Field                 | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `timestamp`           | When the event occurred                     |
+| `severity`            | Log level (trace, debug, info, warn, error) |
+| `body`                | Log message                                 |
+| `resource`            | Attributes of the emitting entity           |
+| `attributes`          | Structured key-value pairs                  |
+| `trace_id`, `span_id` | If emitted within a traced context          |
 
 ### Log Signal Integration
 

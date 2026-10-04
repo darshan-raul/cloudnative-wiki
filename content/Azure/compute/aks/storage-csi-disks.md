@@ -61,14 +61,14 @@ Running mission-critical stateful workloads (PostgreSQL, Cassandra, Kafka, Elast
 
 ## 2. Disk Tier Comparison Matrix for AKS Workloads
 
-| Dimension | Standard SSD (`StandardSSD_LRS`) | Premium SSD (`Premium_LRS`) | Premium SSD v2 (`PremiumV2_LRS`) | Ultra Disk (`UltraSSD_LRS`) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Max Disk IOPS** | 6,000 IOPS | 20,000 IOPS | **80,000 IOPS** | **400,000 IOPS** |
-| **Max Throughput** | 750 MB/s | 900 MB/s | **1,200 MB/s** | **10,000 MB/s** |
-| **IOPS Decoupling**| Tied to disk size | Tied to disk size (P-tier)| **Independently configurable**| **Independently configurable**|
-| **Latency Profile**| 5–10 milliseconds | Sub-5 milliseconds | **Sub-millisecond P99** | **Sub-millisecond P99** |
-| **Failover Detach Latency**| ~45–60 seconds | ~30–45 seconds | ~30–45 seconds | ~30–45 seconds |
-| **Best Workload** | Dev/Test databases | Production general state | **High-performance DBs (Postgres/Kafka)**| Low-latency In-Memory Cache |
+| Dimension                   | Standard SSD (`StandardSSD_LRS`) | Premium SSD (`Premium_LRS`) | Premium SSD v2 (`PremiumV2_LRS`)          | Ultra Disk (`UltraSSD_LRS`)    |
+| :-------------------------- | :------------------------------- | :-------------------------- | :---------------------------------------- | :----------------------------- |
+| **Max Disk IOPS**           | 6,000 IOPS                       | 20,000 IOPS                 | **80,000 IOPS**                           | **400,000 IOPS**               |
+| **Max Throughput**          | 750 MB/s                         | 900 MB/s                    | **1,200 MB/s**                            | **10,000 MB/s**                |
+| **IOPS Decoupling**         | Tied to disk size                | Tied to disk size (P-tier)  | **Independently configurable**            | **Independently configurable** |
+| **Latency Profile**         | 5–10 milliseconds                | Sub-5 milliseconds          | **Sub-millisecond P99**                   | **Sub-millisecond P99**        |
+| **Failover Detach Latency** | ~45–60 seconds                   | ~30–45 seconds              | ~30–45 seconds                            | ~30–45 seconds                 |
+| **Best Workload**           | Dev/Test databases               | Production general state    | **High-performance DBs (Postgres/Kafka)** | Low-latency In-Memory Cache    |
 
 ---
 
@@ -123,22 +123,22 @@ spec:
         app: postgresql
     spec:
       containers:
-      - name: postgresql
-        image: mcr.microsoft.com/oss/postgresql/postgresql:16
-        ports:
-        - containerPort: 5432
-        volumeMounts:
-        - name: data-volume
-          mountPath: /var/lib/postgresql/data
+        - name: postgresql
+          image: mcr.microsoft.com/oss/postgresql/postgresql:16
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data-volume
+              mountPath: /var/lib/postgresql/data
   volumeClaimTemplates:
-  - metadata:
-      name: data-volume
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: managed-csi-premium-v2
-      resources:
-        requests:
-          storage: 200Gi
+    - metadata:
+        name: data-volume
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: managed-csi-premium-v2
+        resources:
+          requests:
+            storage: 200Gi
 ```
 
 Apply StatefulSet:
@@ -165,13 +165,13 @@ kubectl -n database describe pvc data-volume-postgresql-db-0
 
 ## 4. Quotas, Performance & Configuration Limits
 
-| Parameter / Feature | Platform Limit | Production Impact |
-| :--- | :--- | :--- |
-| **Max Disks per Node** | **Up to 64 Disks** | Strictly bounded by the underlying Azure VM size |
-| **Max Disk Volume Size** | **32 TiB (32,767 GiB)** | Maximum size per individual PVC |
-| **Online Expansion** | **Supported (Ext4/XFS)**| Does not require pod restart or cordoning |
-| **Volume Shrinking** | **Strictly Prohibited** | Kubernetes and Azure Disks cannot be shrunk |
-| **Volume Binding Mode** | `WaitForFirstConsumer` | Prevents provisioning disk in Zone 1 for pod in Zone 2 |
+| Parameter / Feature      | Platform Limit           | Production Impact                                      |
+| :----------------------- | :----------------------- | :----------------------------------------------------- |
+| **Max Disks per Node**   | **Up to 64 Disks**       | Strictly bounded by the underlying Azure VM size       |
+| **Max Disk Volume Size** | **32 TiB (32,767 GiB)**  | Maximum size per individual PVC                        |
+| **Online Expansion**     | **Supported (Ext4/XFS)** | Does not require pod restart or cordoning              |
+| **Volume Shrinking**     | **Strictly Prohibited**  | Kubernetes and Azure Disks cannot be shrunk            |
+| **Volume Binding Mode**  | `WaitForFirstConsumer`   | Prevents provisioning disk in Zone 1 for pod in Zone 2 |
 
 ---
 
@@ -195,7 +195,7 @@ kubectl -n database describe pvc data-volume-postgresql-db-0
   - Base Capacity Cost (1,000 GiB): 1,000 × $0.0805/GiB = **$80.50**
   - Configured IOPS Cost (10,000 IOPS - first 3,000 free): 7,000 IOPS × $0.0051 = **$35.70**
   - Configured Throughput (250 MB/s - first 125 free): 125 MB/s × $0.057 = **$7.13**
-- **Total Monthly Disk Cost:** **$123.33 / month** *(Compared to $380+/mo on older Premium SSD P40 tier).*
+- **Total Monthly Disk Cost:** **$123.33 / month** _(Compared to $380+/mo on older Premium SSD P40 tier)._
 
 ### Scenario B: Multi-Broker Kafka Cluster (3 Brokers, 3x 500 GiB Disks)
 

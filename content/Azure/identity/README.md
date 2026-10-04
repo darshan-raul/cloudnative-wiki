@@ -42,7 +42,7 @@ A fundamental architectural pitfall in Azure is confusing Directory roles with R
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **The Separation:** A **Global Administrator** in Entra ID does **not** have access to view or delete VMs in an Azure Subscription by default! However, an Entra Global Admin has a emergency toggle ("Access management for Azure resources") that can elevate themselves to `User Access Administrator` at the root Management Group level.
+- **The Separation:** A **Global Administrator** in Entra ID does **not** have access to view or delete VMs in an Azure Subscription by default! However, an Entra Global Admin has a emergency toggle ("Access management for Azure resources") that can elevate themselves to `User Access Administrator` at the root Management Group level.
 
 ---
 
@@ -77,29 +77,31 @@ Azure RBAC permissions are inherited downward through four administrative tiers:
 └──────────────┘          └──────────────┘
 ```
 
-* **Role Assignment Components:** `Security Principal` (User, Group, Service Principal, Managed Identity) + `Role Definition` (Owner, Contributor, Reader, Custom) + `Scope` (Management Group, Subscription, Resource Group, Resource).
+- **Role Assignment Components:** `Security Principal` (User, Group, Service Principal, Managed Identity) + `Role Definition` (Owner, Contributor, Reader, Custom) + `Scope` (Management Group, Subscription, Resource Group, Resource).
 
 ### 2. Service Principals vs. Managed Identities
 
-| Dimension | Service Principal (App Registration) | System-Assigned Managed Identity | User-Assigned Managed Identity |
-| :--- | :--- | :--- | :--- |
-| **Creation** | Created manually in Entra ID | Enabled directly on an Azure resource (VM, AKS, App Service) | Created as an independent standalone Azure resource |
-| **Credential Storage** | Requires client secrets or X.509 certs that expire and must be rotated | **Zero credentials to manage:** Handled transparently by Azure platform | **Zero credentials to manage:** Handled transparently by Azure platform |
-| **Lifecycle** | Independent of Azure resources | Tied 1:1 to the hosting resource (deleted when resource is deleted) | Independent lifecycle; can be shared across multiple resources |
-| **Production Recommendation** | CI/CD pipelines outside Azure (use Workload Identity Federation) | Single-instance workloads (e.g. one VM connecting to Key Vault) | Multi-instance fleets (e.g. VMSS instances sharing DB access) |
+| Dimension                     | Service Principal (App Registration)                                   | System-Assigned Managed Identity                                        | User-Assigned Managed Identity                                          |
+| :---------------------------- | :--------------------------------------------------------------------- | :---------------------------------------------------------------------- | :---------------------------------------------------------------------- |
+| **Creation**                  | Created manually in Entra ID                                           | Enabled directly on an Azure resource (VM, AKS, App Service)            | Created as an independent standalone Azure resource                     |
+| **Credential Storage**        | Requires client secrets or X.509 certs that expire and must be rotated | **Zero credentials to manage:** Handled transparently by Azure platform | **Zero credentials to manage:** Handled transparently by Azure platform |
+| **Lifecycle**                 | Independent of Azure resources                                         | Tied 1:1 to the hosting resource (deleted when resource is deleted)     | Independent lifecycle; can be shared across multiple resources          |
+| **Production Recommendation** | CI/CD pipelines outside Azure (use Workload Identity Federation)       | Single-instance workloads (e.g. one VM connecting to Key Vault)         | Multi-instance fleets (e.g. VMSS instances sharing DB access)           |
 
 ### 3. Privileged Identity Management (PIM)
 
 Privileged Identity Management enforces Just-In-Time (JIT) access for high-privilege roles (e.g., `Owner`, `Global Administrator`):
-* Permanent standing administrator access is strictly prohibited.
-* Users are marked **Eligible** rather than active.
-* To perform administrative tasks, users activate the role for a limited window (e.g., 4 hours), requiring MFA, business justification, and optional peer approval.
+
+- Permanent standing administrator access is strictly prohibited.
+- Users are marked **Eligible** rather than active.
+- To perform administrative tasks, users activate the role for a limited window (e.g., 4 hours), requiring MFA, business justification, and optional peer approval.
 
 ### 4. Conditional Access Policies
 
 Zero Trust policy engine evaluating context before issuing tokens:
-* **Signals:** User risk score, geographic IP location, device compliance (Intune), client application.
-* **Decisions:** Block access, require Phishing-resistant MFA, require Microsoft Entra hybrid joined device, require password change.
+
+- **Signals:** User risk score, geographic IP location, device compliance (Intune), client application.
+- **Decisions:** Block access, require Phishing-resistant MFA, require Microsoft Entra hybrid joined device, require password change.
 
 ---
 
@@ -146,39 +148,41 @@ curl -s -H Metadata:true \
 
 ## Quotas & Limits
 
-| Parameter | Limit | Production Notes |
-| :--- | :--- | :--- |
-| **Max RBAC assignments per subscription** | 4,000 assignments | Assign roles to Security Groups rather than individual users |
-| **Max custom roles per tenant** | 5,000 custom roles | Keep custom roles modular |
-| **Management Group nesting depth** | Up to 6 levels deep | Root → Core → Department → Environment → ... |
-| **Managed Identities per resource** | 1 System-Assigned + up to 32 User-Assigned | Standard VM attachment limit |
-| **App Registration client secret max validity** | 24 months | Rotate regularly or switch to Federated Credentials |
+| Parameter                                       | Limit                                      | Production Notes                                             |
+| :---------------------------------------------- | :----------------------------------------- | :----------------------------------------------------------- |
+| **Max RBAC assignments per subscription**       | 4,000 assignments                          | Assign roles to Security Groups rather than individual users |
+| **Max custom roles per tenant**                 | 5,000 custom roles                         | Keep custom roles modular                                    |
+| **Management Group nesting depth**              | Up to 6 levels deep                        | Root → Core → Department → Environment → ...                 |
+| **Managed Identities per resource**             | 1 System-Assigned + up to 32 User-Assigned | Standard VM attachment limit                                 |
+| **App Registration client secret max validity** | 24 months                                  | Rotate regularly or switch to Federated Credentials          |
 
 ---
 
 ## References
 
-* **Homepage:** https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id
-* **Azure RBAC Documentation:** https://learn.microsoft.com/en-us/azure/role-based-access-control/overview
-* **Managed Identities Overview:** https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
-* **Privileged Identity Management (PIM):** https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure
-* **Pricing:** https://www.microsoft.com/en-us/security/business/microsoft-entra-pricing
+- **Homepage:** https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id
+- **Azure RBAC Documentation:** https://learn.microsoft.com/en-us/azure/role-based-access-control/overview
+- **Managed Identities Overview:** https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview
+- **Privileged Identity Management (PIM):** https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-configure
+- **Pricing:** https://www.microsoft.com/en-us/security/business/microsoft-entra-pricing
 
 ---
 
 ## Pricing Examples
 
 ### Scenario 1: Standard Enterprise Cloud Infrastructure
-* 20 Azure Subscriptions, 500 virtual machines, 50 AKS clusters using Managed Identities and standard RBAC.
-* Azure RBAC operations, Managed Identity generation, and IMDS token requests: **$0.00** (Included free with Azure).
-* Basic Microsoft Entra ID tier: **Free**.
-* **Total Infrastructure IAM Cost:** **$0.00 / month**.
+
+- 20 Azure Subscriptions, 500 virtual machines, 50 AKS clusters using Managed Identities and standard RBAC.
+- Azure RBAC operations, Managed Identity generation, and IMDS token requests: **$0.00** (Included free with Azure).
+- Basic Microsoft Entra ID tier: **Free**.
+- **Total Infrastructure IAM Cost:** **$0.00 / month**.
 
 ### Scenario 2: Zero Trust Governance with Entra ID P2 & PIM
-* Enterprise requiring Privileged Identity Management (PIM), Risk-based Conditional Access, and Access Reviews for 250 privileged IT and DevOps administrators.
-* Microsoft Entra ID P2 License: ~$9.00 / user / month.
-* Monthly cost: 250 × $9.00 = **$2,250.00 / month**.
-* General business employees remain on Entra ID Free or Microsoft 365 E3 licenses.
+
+- Enterprise requiring Privileged Identity Management (PIM), Risk-based Conditional Access, and Access Reviews for 250 privileged IT and DevOps administrators.
+- Microsoft Entra ID P2 License: ~$9.00 / user / month.
+- Monthly cost: 250 × $9.00 = **$2,250.00 / month**.
+- General business employees remain on Entra ID Free or Microsoft 365 E3 licenses.
 
 ---
 

@@ -13,14 +13,14 @@ AWS provides services for managing multiple accounts, governing infrastructure a
 
 ## Service Map
 
-| Service | What It Does | When to Use |
-|---------|-------------|-------------|
-| [[organizations/README|Organizations]] | Hierarchical account management, SCPs, consolidated billing | Multi-account AWS environments |
-| [[control-tower/README|Control Tower]] | Pre-configured landing zone with guardrails | New multi-account setup |
-| [[cloudformation/README|CloudFormation]] | YAML/JSON IaC for AWS resources | Infrastructure provisioning |
-| [[cdk/README|CDK]] | Programmatic IaC (TypeScript, Python, Java) | Developers who prefer code over YAML |
-| [[cli/README|CLI]] | Unified tool for AWS API access | Automation, scripting, CI/CD |
-| [[systems-manager/README|Systems Manager]] | Patch management, run commands, session manager, inventory | Day-2 operations, fleet management |
+| Service                  | What It Does      | When to Use                                                 |
+| ------------------------ | ----------------- | ----------------------------------------------------------- | ------------------------------------ |
+| [[organizations/README   | Organizations]]   | Hierarchical account management, SCPs, consolidated billing | Multi-account AWS environments       |
+| [[control-tower/README   | Control Tower]]   | Pre-configured landing zone with guardrails                 | New multi-account setup              |
+| [[cloudformation/README  | CloudFormation]]  | YAML/JSON IaC for AWS resources                             | Infrastructure provisioning          |
+| [[cdk/README             | CDK]]             | Programmatic IaC (TypeScript, Python, Java)                 | Developers who prefer code over YAML |
+| [[cli/README             | CLI]]             | Unified tool for AWS API access                             | Automation, scripting, CI/CD         |
+| [[systems-manager/README | Systems Manager]] | Patch management, run commands, session manager, inventory  | Day-2 operations, fleet management   |
 
 ## Section Architecture
 
