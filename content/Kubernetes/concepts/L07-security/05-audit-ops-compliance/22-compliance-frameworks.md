@@ -475,3 +475,9 @@ trivy image myapp:1.0
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — control plane controls
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — node-level controls
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — supply chain (SLSA)
+
+## Across the wiki
+
+- [[Linux/security/linux-cis-hardening|Linux CIS Hardening]] — hardening (Linux)
+- [[Security/endpoint-security/hardening/README|Linux Host Hardening]] — hardening (Security)
+- [[Linux/security/systemd-service-hardening|systemd Service Hardening]] — hardening (Linux)

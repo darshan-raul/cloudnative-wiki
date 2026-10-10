@@ -9,6 +9,7 @@ tags:
   - velero
   - business-continuity
   - front-door
+date: 2026-09-06
 ---
 
 # AKS Backup, Disaster Recovery, and Cross-Region Business Continuity 🛡️🌍
@@ -218,3 +219,10 @@ az dataprotection backup-instance restore trigger \
 3. **Cross-Region PVC StorageClass Compatibility:** When restoring a backup from East US into West US, if your PVC references a StorageClass configured with a local zonal SKU (e.g., `PremiumV2_LRS` or custom UltraDisk flags) that is unavailable in the target region's secondary datacenter, the restore operation will stall with `ProvisioningFailed: StorageClass not found`. Ensure StorageClasses in the standby cluster have identical naming and configuration.
 4. **Active-Active Split-Brain Database Collisions:** Deploying identical microservices in two active regions fronted by Azure Front Door is straightforward for stateless code, but **catastrophic for relational state**. If both regions attempt to write simultaneously to single-master Azure SQL or PostgreSQL without distributed conflict resolution, data becomes irrevocably corrupted. Use active-passive failover for databases or adopt globally distributed multi-master stores like **Azure Cosmos DB**.
 5. **Backup Extension Workload Identity Permission Drops:** When re-imaging nodes or rotating Managed Identity credentials, if the Backup Extension's federated credential is deleted or expires, backup jobs will silently begin failing. Configure **Azure Monitor Action Groups** to fire high-priority Slack/PagerDuty alerts whenever `BackupJobStatus != "Completed"`.
+
+## Across the wiki
+
+- [[GCP/compute/gke/backup-for-gke|Backup for GKE Architecture, Stateful Disaster Recovery, and Cross-Region Restoration]] — backup and disaster recovery (GCP)
+- [[Kubernetes/guides/non-functional/backup-restore|Backup & Restore]] — backup and disaster recovery (Kubernetes)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/disaster-recovery|Disaster Recovery]] — backup and disaster recovery (Architecture)
+- [[AWS/solutions-architect-professional/domain-2/2.2-business-continuity|2.2 Business Continuity]] — backup and disaster recovery (AWS)

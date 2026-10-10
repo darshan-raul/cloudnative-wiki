@@ -6,6 +6,7 @@ tags:
   - monitoring
   - logs
   - cloudwatch
+date: 2026-06-06
 ---
 
 # CloudWatch Logs
@@ -245,3 +246,10 @@ CloudWatch Logs Live Tail provides real-time streaming of log events in the Cons
 - **CloudWatch Agent logs can silently fail if permissions are wrong:** If the IAM role attached to the EC2 instance doesn't have `logs:CreateLogGroup` and `logs:PutLogEvents`, the agent logs to its own local file (`/opt/aws/amazon-cloudwatch-agent/logs/`) but nothing appears in CloudWatch. Check the agent log file when debugging.
 - **PutLogEvents has a 1MB batch limit and 10,000 events per call:** For high-volume log producers (100K+ events/minute), you must batch correctly. The CloudWatch Agent handles this automatically, but if you're using the SDK directly, you must implement batching.
 - **Log group names with special characters (like forward slashes) create confusing Console navigation:** `/aws/lambda/my-function` shows under "AWS" in the Console. `/var/app/myapp` shows under "/var". This is cosmetic but can confuse team members navigating logs.
+
+## Across the wiki
+
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)

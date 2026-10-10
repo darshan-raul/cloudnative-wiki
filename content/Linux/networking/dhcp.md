@@ -4,6 +4,7 @@ description: Linux DHCP — DHCP discovery, DORA process, systemd-networkd, Netw
 tags:
   - linux
   - networking
+date: 2026-01-30
 ---
 
 # DHCP

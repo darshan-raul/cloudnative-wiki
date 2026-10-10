@@ -1,5 +1,8 @@
 ---
 title: Performance
+tags: [architecture, foundations, non-functional-requirements, performance]
+date: 2026-06-06
+description: "Performance is the measure of how fast a system responds to requests and how much work it can accomplish within a given timeframe."
 ---
 
 # Performance
@@ -140,4 +143,11 @@ Performance budgets are per-endpoint. `/api/checkout` might need p99 < 200ms whi
 - [[scalability|Scalability]] — handling growing load
 - [[performance-testing|Performance Testing]] — load testing methodology
 - [[caching|Caching]] — cache patterns and invalidation
-- [[back-of-the-envelope-calculations|Back-of-the-Envelope Calculations]] — quick capacity estimates
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/capacity-planning|Back-of-the-Envelope Calculations]] — quick capacity estimates
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/chaos-engineering|Chaos Engineering]] — performance and chaos testing (Kubernetes)
+- [[Linux/networking/network-performance-tuning|Network Performance Tuning]] — performance and chaos testing (Linux)
+- [[AWS/solutions-architect-professional/domain-2/2.5-performance-objectives|2.5 Performance Objectives]] — performance and chaos testing (AWS)
+- [[Kubernetes/guides/non-functional/performance-tuning|Performance Tuning]] — performance and chaos testing (Kubernetes)

@@ -1,3 +1,10 @@
+---
+title: "Methods"
+tags: [architecture, languages, golang, methods]
+date: 2026-01-30
+description: "Value receivers versus pointer receivers in Go, and how to choose between them."
+---
+
 # Methods
 
 Yes, in Go, there are two ways you can define methods for a struct. The difference between these two approaches is whether you define the method for a value type (structname) or a pointer type (\*structname).

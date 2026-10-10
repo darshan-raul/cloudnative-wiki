@@ -1,5 +1,8 @@
 ---
 title: Expand-Contract Pattern
+tags: [architecture, migration-patterns, expand-contract]
+date: 2026-06-06
+description: "The expand-contract pattern (also called parallel change or never break the contract) is a technique for safely evolving a shared API or database schema without downtime."
 ---
 
 # Expand-Contract Pattern

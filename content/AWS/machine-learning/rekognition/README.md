@@ -7,6 +7,7 @@ tags:
   - rekognition
   - computer-vision
   - ai-services
+date: 2026-06-06
 ---
 
 # Amazon Rekognition

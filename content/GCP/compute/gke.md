@@ -7,6 +7,7 @@ tags:
   - kubernetes
   - gke
   - containers
+date: 2026-09-06
 ---
 
 # Google Kubernetes Engine (GKE) ☸️
@@ -279,3 +280,10 @@ spec:
 3. **Autopilot Resource Request Enforcement:** In GKE Autopilot, Google bills you based on **Resource Requests**, not limits. Furthermore, if you specify `limits` without `requests`, Autopilot automatically sets `requests = limits`. If an unconfigured pod has a memory limit of 8 GiB, Autopilot charges you for 8 GiB from the instant it schedules!
 4. **Maintenance Windows & Automated Upgrades:** GKE automatically upgrades control planes and nodes to track the selected Release Channel. Without a configured **Maintenance Window and Exclusion Window**, upgrades can trigger during peak production hours, causing rolling pod restarts. Always configure an explicit maintenance window (e.g., Saturday 02:00-06:00 UTC).
 5. **Kubelet Eviction on Boot Disk Exhaustion:** In GKE Standard, container logs written to stdout/stderr are stored on the node's root boot disk under `/var/log/pods`. If an application enters a crash loop and emits gigabytes of logs per minute, the node's boot disk will fill to 85%, triggering `DiskPressure` and evicting all non-daemonset pods from that node.
+
+## Across the wiki
+
+- [[AWS/compute/eks/README|Amazon EKS]] — managed Kubernetes (AWS)
+- [[Kubernetes/eks/README|Amazon EKS]] — managed Kubernetes (Kubernetes)
+- [[Azure/compute/aks|Azure Kubernetes Service (AKS) Architecture Hub]] — managed Kubernetes (Azure)
+- [[Kubernetes/concepts/00-hub|Kubernetes Concepts]] — managed Kubernetes (Kubernetes)

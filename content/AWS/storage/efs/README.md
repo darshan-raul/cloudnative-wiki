@@ -6,6 +6,7 @@ tags:
   - storage
   - efs
   - nfs
+date: 2026-06-06
 ---
 
 # Amazon EFS (Elastic File System)
@@ -263,3 +264,9 @@ aws backup create-backup-plan \
 - **EFS One Zone has no cross-AZ redundancy — a single AZ failure loses your data:** EFS One Zone is cheaper but a AZ failure means data loss. Use it only for non-critical data, or ensure you have S3 backups via DataSync or a custom sync script.
 - **Lifecycle policies move files to EFS IA based on last access time, not last modification:** A file that was read last week (for a report) but modified 6 months ago will be moved to IA because access time is recent. This is correct for some use cases (cold storage) but wrong for active datasets.
 - **Mounting EFS from an instance in a different AZ adds cross-AZ traffic costs:** EFS in us-east-1a mounted from an instance in us-east-1b costs $0.02/GB for cross-AZ traffic. For high-throughput workloads, deploy EC2 instances in the same AZ as the EFS mount target.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/efs-csi|EFS CSI Driver]] — shared file storage (Kubernetes)
+- [[Azure/compute/aks/storage-csi-files-blob|AKS Shared Storage CSI — Azure Files (NFS/SMB) and Azure Blob CSI Architecture]] — shared file storage (Azure)
+- [[GCP/compute/gke/filestore-csi|GKE Filestore CSI Driver — Managed NFS and ReadWriteMany (RWX) Architecture]] — shared file storage (GCP)

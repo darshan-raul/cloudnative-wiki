@@ -4,6 +4,7 @@ description: AWS Reserved Instances — Standard vs Convertible, regional vs zon
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Reserved Instances
@@ -151,3 +152,8 @@ An RI with 50% utilization means half the reserved capacity sat idle. You paid f
 - **Windows RIs have separate license billing:** RI pricing for Windows is the base compute rate. If you need SQL Server licensing through AWS, that's a separate charge on top of the RI price.
 - **RI coverage doesn't mean RI utilization:** You can have 100% coverage (all instances covered by RI) but only 60% utilization (your RIs are 40% idle because you over-bought). Coverage is about financial coverage, not efficiency.
 - **Selling on RI Marketplace requires 30 days minimum remaining:** If you migrate a workload 60 days into a 3-year RI, you can sell the remaining ~1,000 days on the RI Marketplace. But not if less than 30 days remain.
+
+## Across the wiki
+
+- [[GCP/cost-management/pricing-models/README|GCP Cost Optimization, Committed Use Discounts (CUDs), and FinOps]] — cost management (GCP)
+- [[Kubernetes/guides/non-functional/cost-optimization|Cost Optimization]] — cost management (Kubernetes)

@@ -964,3 +964,9 @@ helm get hooks myapp
 - [Chart Releaser Action](https://github.com/helm/chart-releaser-action)
 - [Trivy Security Scanner](https://aquasecurity.github.io/trivy/)
 - [helm-secrets Plugin](https://github.com/jkroepke/helm-secrets)
+
+## Across the wiki
+
+- [[DevOps/ci-cd/README|Continuous Integration & Continuous Delivery (CI/CD)]] — CI/CD pipelines (DevOps)
+- [[DevOps/ci-cd/pipeline-design|Pipeline Design]] — CI/CD pipelines (DevOps)
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]] — CI/CD pipelines (DevOps)

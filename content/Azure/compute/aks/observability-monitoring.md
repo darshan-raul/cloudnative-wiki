@@ -10,6 +10,7 @@ tags:
   - grafana
   - log-analytics
   - kql
+date: 2026-09-06
 ---
 
 # AKS Observability — Container Insights, Managed Prometheus, and ContainerLogV2 📊🔍
@@ -195,3 +196,10 @@ ContainerLogV2
 3. **Log Ingestion Latency (The 2-Minute Lag):** Azure Monitor Container Insights is a batched asynchronous log collection pipeline. There is an inherent **1 to 3 minute ingestion latency** between when a container writes to stdout and when the row appears in Log Analytics KQL search results. For real-time incident triage during an active outage, always use `kubectl logs -n <ns> <pod> --tail=100 -f` rather than waiting on Log Analytics.
 4. **Agentless vs. DaemonSet AMA Performance Overhead:** The Azure Monitor Linux agent (`ama-logs`) runs as a DaemonSet on every node. If not configured with resource limits, the logging agent can consume 1 to 2 vCPUs on nodes processing heavy log bursts. Ensure the DaemonSet CPU request is capped at `250m` to prevent stealing compute from customer microservices.
 5. **Grafana Managed Identity Authorization Failures:** When creating an Azure Managed Grafana instance, Azure does not automatically grant it read permissions on existing Azure Monitor Workspaces. Grafana dashboards will report `Permission Denied / No Data`. You must explicitly assign the Grafana managed identity the **"Monitoring Reader"** role on the Azure Monitor Workspace resource group.
+
+## Across the wiki
+
+- [[Kubernetes/eks/observability/README|Observability on EKS]] — cluster observability (Kubernetes)
+- [[GCP/compute/gke/observability-gmp|GKE Observability Architecture — Managed Prometheus (GMP), Logging, and Trace]] — cluster observability (GCP)
+- [[Observability/prometheus/README|Prometheus Architecture]] — cluster observability (Observability)
+- [[Kubernetes/concepts/L08-operations/04-metrics-sources|Metrics Sources & Observability Architecture]] — cluster observability (Kubernetes)

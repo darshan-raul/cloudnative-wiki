@@ -67,3 +67,21 @@ A **6-stage, 26-submodule curriculum** that takes you from "what is a token?" to
 - Know JWT, need OAuth? Jump to [[stage2/README|Stage 2]]
 - Auditing an existing system? Go to [[stage5/01-top-12-attacks|Stage 5.1 — The Top 12 Attacks]]
 - Want to build it end-to-end? The [[capstone/01-keycloak-lab|Keycloak capstone]] walks a full local lab
+
+## More in this section
+
+- [[Architecture/solution-architecture-concepts/authentication/saml|SAML]] — Imagine a scenario: You need to access multiple web applications at work, each with its own login system. Logging in to each one…
+
+## Further reading
+
+- [Oauth2 (thread)](https://x.com/alexxubyte/status/1688566454722183168)
+- [OIDC — openid.net](https://openid.net/developers/how-connect-works/)
+- [OIDC: To understand the concepts in a practical way — oauth.com](https://oauth.com/playground)
+- [OIDC: Comprehensive Video covering most of the topics (video)](https://www.youtube.com/watch?v=8aCyojTIW6U)
+
+## Across the wiki
+
+- [[AWS/security/iam/README|AWS IAM]] — identity and access (AWS)
+- [[Azure/identity/entraid|EntraID]] — identity and access (Azure)
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]] — identity and access (Kubernetes)

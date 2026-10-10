@@ -4,6 +4,7 @@ description: Linux logging — journalctl, /var/log, log levels, syslog, reading
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 08 — Logging
@@ -218,3 +219,10 @@ sudo lastb
 sudo logrotate -f /etc/logrotate.d/nginx  # force rotation
 sudo logrotate -d /etc/logrotate.conf    # dry run
 ```
+
+## Across the wiki
+
+- [[Kubernetes/eks/observability/logging/pod-logging|Pod Logging on EKS]] — host and container logs (Kubernetes)
+- [[AWS/analytics/opensearch/README|Amazon OpenSearch]] — host and container logs (AWS)
+- [[Security/siem/elastic-security/README|Elastic Security]] — host and container logs (Security)
+- [[Kubernetes/eks/observability/opensearch|OpenSearch for EKS Logs]] — host and container logs (Kubernetes)

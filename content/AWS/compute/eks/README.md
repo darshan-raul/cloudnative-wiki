@@ -7,6 +7,7 @@ tags:
   - containers
   - kubernetes
   - eks
+date: 2026-06-06
 ---
 
 # Amazon EKS (Elastic Kubernetes Service)
@@ -382,3 +383,10 @@ kubectl apply -f https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch
 - **Karpenter and Cluster Autoscaler conflict — use one or the other:** If you install both, they'll fight over node provisioning. Use Karpenter for new clusters (it's AWS's recommended approach). Migrate from Cluster Autoscaler by uninstalling it first.
 - **The VPC CNI creates secondary ENIs — each ENI has a limit on IP addresses:** A `m5.xlarge` has a primary ENI + 3 secondary ENIs. With 15 IPs per ENI = 60 pods max. For more pods, use larger instances or enable prefix delegation (assign /28 subnets per ENI).
 - **EKS add-ons are upgraded automatically by AWS (minor versions) — but you can pin to a version:** If you need to test upgrades before they auto-apply, pin the add-on version. Unpinning is required to resume auto-upgrades.
+
+## Across the wiki
+
+- [[Kubernetes/eks/README|Amazon EKS]] — managed Kubernetes (Kubernetes)
+- [[Azure/compute/aks|Azure Kubernetes Service (AKS) Architecture Hub]] — managed Kubernetes (Azure)
+- [[GCP/compute/gke|Google Kubernetes Engine (GKE)]] — managed Kubernetes (GCP)
+- [[Kubernetes/concepts/00-hub|Kubernetes Concepts]] — managed Kubernetes (Kubernetes)

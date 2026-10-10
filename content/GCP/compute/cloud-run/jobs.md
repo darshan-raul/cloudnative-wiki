@@ -8,6 +8,7 @@ tags:
   - serverless
   - batch
   - containers
+date: 2026-09-06
 ---
 
 # GCP Cloud Run Jobs & Batch Processing 🚀⚙️
@@ -222,3 +223,9 @@ if __name__ == "__main__":
 3. **The Ephemeral RAM Disk Trap (`/tmp` Consumption):** Just like Cloud Run Services, the local `/tmp` filesystem is an in-memory RAM disk. If a batch task downloads a 5 GB video file to `/tmp` on a container with 4 GB allocated RAM, the container will instantly be killed with an `OutOfMemory` (OOM) error. Stream files directly to Cloud Storage or allocate sufficient RAM.
 4. **Cloud Scheduler Requires Explicit OIDC/OAuth IAM Permissions:** When triggering a job via Cloud Scheduler, the Scheduler service account must have the IAM role `roles/run.invoker` on the job. Without this specific binding, the scheduled execution will fail silently with an HTTP 403 Forbidden in Cloud Scheduler logs.
 5. **Dynamic Argument Overrides Replace, Not Append:** When using `gcloud run jobs execute --args="..."`, the supplied arguments **completely replace** the default container arguments rather than appending to them. Ensure your override string includes all necessary operational flags.
+
+## Across the wiki
+
+- [[Azure/compute/aks/batch-workloads|AKS Batch Workloads, Job Orchestration, and Kueue Fair-Share Scheduling]] — batch workloads (Azure)
+- [[Kubernetes/concepts/L03-workloads/06-job|Jobs — Run-to-Completion Workloads]] — batch workloads (Kubernetes)
+- [[AWS/compute/batch/README|AWS Batch]] — batch workloads (AWS)

@@ -1,3 +1,10 @@
+---
+title: "PKI"
+tags: [architecture, cryptography, pki]
+date: 2026-01-30
+description: "A hands-on PKI tutorial with OpenSSL: create a root CA, build a certificate chain, sign requests and verify them."
+---
+
 # PKI
 
 Here's a comprehensive tutorial using OpenSSL to create a Root CA, generate a certificate chain, sign a request, and verify the signature from the client side:
@@ -146,3 +153,17 @@ Essentially, the verification process works backwards from the signing process:
   1. Decrypt the signature with the CA's public key (revealing the original hash).
   2. Calculate a fresh hash of the certificate data.
   3. Compare the hashes – a match indicates a valid signature.
+
+## Further reading
+
+- [TLS — jamielinux.com](https://jamielinux.com/docs/openssl-certificate-authority/)
+- [TLS — tls.ulfheim.net](https://tls.ulfheim.net/)
+- [TLS — thesslstore.com](https://www.thesslstore.com/blog/explaining-ssl-handshake/)
+- [HTTPS — moserware.com](http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html)
+
+## Across the wiki
+
+- [[AWS/security/kms/README|AWS KMS]] — key management (AWS)
+- [[Azure/security/key-vault/README|Azure Key Vault Architecture, Managed HSM, and Cryptographic Governance]] — key management (Azure)
+- [[GCP/security/kms/README|Cloud KMS, Cloud HSM, and CMEK Envelope Encryption]] — key management (GCP)
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — key management (Kubernetes)

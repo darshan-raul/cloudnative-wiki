@@ -5,6 +5,7 @@ tags:
   - linux
   - observability
   - logging
+date: 2026-06-06
 ---
 
 # Log Management
@@ -356,3 +357,10 @@ tail -f /var/log/syslog
 tail -f /var/log/secure
 tail -f /var/log/auth.log
 ```
+
+## Across the wiki
+
+- [[Kubernetes/eks/observability/logging/pod-logging|Pod Logging on EKS]] — host and container logs (Kubernetes)
+- [[AWS/analytics/opensearch/README|Amazon OpenSearch]] — host and container logs (AWS)
+- [[Security/siem/elastic-security/README|Elastic Security]] — host and container logs (Security)
+- [[Kubernetes/eks/observability/opensearch|OpenSearch for EKS Logs]] — host and container logs (Kubernetes)

@@ -1,3 +1,10 @@
+---
+title: "Interfaces"
+tags: [architecture, languages, golang, interfaces]
+date: 2026-01-30
+description: "In Go, if a struct implements more methods than defined in an interface, you can still call the extra methods, but you cannot call them directly on a variable of the interface type without type…"
+---
+
 # Interfaces
 
 ---

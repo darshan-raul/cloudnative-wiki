@@ -26,24 +26,24 @@ Helm uses a packaging format called **charts** - a collection of files that desc
 
 ### Getting Started
 
-- [[helm/commands]] - Complete Helm CLI commands reference
-- [[helm/charts]] - Chart structure, templates, values, and dependencies
-- [[helm/library-charts]] - Creating shared library charts for code reuse
+- [[Kubernetes/guides/delivery/templating-patching/helm/commands|commands]] - Complete Helm CLI commands reference
+- [[Kubernetes/guides/delivery/templating-patching/helm/charts|charts]] - Chart structure, templates, values, and dependencies
+- [[Kubernetes/guides/delivery/templating-patching/helm/library-charts|library charts]] - Creating shared library charts for code reuse
 
 ### Testing & Quality
 
-- [[helm/testing]] - Chart testing, linting, and validation
+- [[Kubernetes/guides/delivery/templating-patching/helm/testing|testing]] - Chart testing, linting, and validation
 
 ### Production & Operations
 
-- [[helm/production]] - Multi-cluster, multi-environment deployments
-- [[helm/oci]] - OCI registries, provenance, and chart signing
-- [[helm/troubleshooting]] - Debugging failed releases and rollback strategies
+- [[Kubernetes/guides/delivery/templating-patching/helm/production|production]] - Multi-cluster, multi-environment deployments
+- [[Kubernetes/guides/delivery/templating-patching/helm/oci|oci]] - OCI registries, provenance, and chart signing
+- [[Kubernetes/guides/delivery/templating-patching/helm/troubleshooting|troubleshooting]] - Debugging failed releases and rollback strategies
 
 ### CI/CD & GitOps
 
-- [[helm/gitops]] - GitOps workflows with ArgoCD and Flux
-- [[helm/cicd]] - CI/CD pipeline integration
+- [[Kubernetes/guides/delivery/templating-patching/helm/gitops|gitops]] - GitOps workflows with ArgoCD and Flux
+- [[Kubernetes/guides/delivery/templating-patching/helm/cicd|cicd]] - CI/CD pipeline integration
 
 ## Quick Reference
 
@@ -92,6 +92,10 @@ Charts are available on:
 
 - [Artifact Hub](https://artifacthub.io/) - Search 800+ charts from multiple repositories
 - [CNCF Landscape](https://landscape.cncf.io/card-mode?category=platform&grouping=category) - Enterprise-grade charts
+
+## More in this section
+
+- [[Kubernetes/guides/delivery/templating-patching/helm/helmfile|Helmfile]] — Helmfile declarative deployments for multi-environment Kubernetes
 
 ## References
 

@@ -1,3 +1,10 @@
+---
+title: "Hashing"
+tags: [architecture, data-architecture, hashing]
+date: 2026-01-30
+description: "The Git commit hash is a 40-character hexadecimal string that uniquely identifies a specific commit in a Git repository. It's created by hashing the following information."
+---
+
 # Hashing
 
 The Git commit hash is a 40-character hexadecimal string that uniquely identifies a specific commit in a Git repository. It's created by hashing the following information:

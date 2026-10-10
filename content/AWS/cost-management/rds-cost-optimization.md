@@ -7,6 +7,7 @@ tags:
   - rds
   - aurora
   - database
+date: 2026-10-04
 ---
 
 # Amazon RDS Cost Optimization

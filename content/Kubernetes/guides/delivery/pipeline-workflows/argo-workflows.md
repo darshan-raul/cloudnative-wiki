@@ -5,7 +5,11 @@ tags:
   - Delivery
   - CI/CD
   - Argo Workflows
+date: 2026-01-30
+description: "Argo Workflows is a container-native workflow engine for k8s. Each step in a workflow runs in its own pod. You get parallelism, retries, artifacts, and a DAG for free."
 ---
+
+# Argo Workflows
 
 Argo Workflows is a **container-native workflow engine** for k8s. Each step in a workflow runs in its own pod. You get parallelism, retries, artifacts, and a DAG for free. Use it for batch jobs, ML pipelines, CI/CD, and any "run these steps in order, retry on failure" need.
 

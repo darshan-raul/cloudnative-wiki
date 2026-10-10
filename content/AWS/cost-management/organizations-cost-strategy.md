@@ -4,6 +4,7 @@ description: AWS Organizations cost strategy — consolidated billing, volume di
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Organizations Cost Strategy

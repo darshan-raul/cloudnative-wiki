@@ -8,6 +8,7 @@ tags:
   - security
   - vpc
   - governance
+date: 2026-09-06
 ---
 
 # GCP Firewalls & Hierarchical Policies 🛡️🧱
@@ -204,3 +205,10 @@ gcloud compute firewall-rules create allow-gcp-health-checks \
 3. **`0.0.0.0/0` Ingress Rule With Broad Priority Overwrites Defaults:** If a junior engineer creates an allow rule with `--source-ranges=0.0.0.0/0` and priority 1000 without specifying ports, it opens **all 65,535 TCP and UDP ports to the entire public internet** for every VM in that VPC. Always mandate that firewall rules specify explicit `--rules=tcp:<port>` and narrow source ranges.
 4. **Hierarchical Policy Inheritance Terminations:** If a packet matches a rule in an Organization-level hierarchical policy with action `ALLOW`, evaluation stops immediately. The packet is admitted to the VM **even if a project-level VPC rule explicitly attempts to DENY it**! Use `goto_next` if you want lower-level project rules to have the final say.
 5. **Firewall Rule Logging Sampling Overhead:** Enabling Firewall Rules Logging on a rule that matches 100,000 packets per second with `--sample-rate=1.0` (100% logging) will generate terabytes of logs in Cloud Logging within hours, resulting in massive surprise bills. In high-traffic environments, configure sampling rates between `0.01` (1%) and `0.1` (10%) or use log metadata exclusions.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[Azure/networking/nsg|Azure Network Security Groups (NSGs) & ASGs]] — network firewalls (Azure)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

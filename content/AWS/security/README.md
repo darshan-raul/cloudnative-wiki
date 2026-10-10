@@ -4,6 +4,7 @@ description: AWS security services — IAM for identity, KMS for encryption, Clo
 tags:
   - aws
   - security
+date: 2026-06-06
 ---
 
 # AWS Security
@@ -12,19 +13,19 @@ AWS provides a comprehensive set of security services covering identity, encrypt
 
 ## Service Map
 
-| Service                      | Category              | Use Case               |
-| ---------------------------- | --------------------- | ---------------------- | ------------------------------------------------------ |
-| [[iam/README                 | IAM]]                 | Identity               | Users, groups, roles, policies, federation             |
-| [[kms/README                 | KMS]]                 | Encryption             | Data at rest encryption, CMK, envelope encryption      |
-| [[cloudtrail/README          | CloudTrail]]          | Audit                  | API call logging, compliance, forensics                |
-| [[config/README              | Config]]              | Compliance             | Resource inventory, change tracking, conformance packs |
-| [[guardduty/README           | GuardDuty]]           | Threat Detection       | DNS/CloudTrail/VPC flow analysis, malware detection    |
-| [[security-hub/README        | Security Hub]]        | Centralized Security   | Aggregates findings from all security services         |
-| [[inspector/README           | Inspector]]           | Vulnerability Scanning | EC2, ECR, Lambda vulnerability assessment              |
-| [[macie/README               | Macie]]               | Data Privacy           | S3 data classification, PII detection                  |
-| [[secrets-manager/README     | Secrets Manager]]     | Secrets                | Passwords, API keys, rotation                          |
-| [[certificate-manager/README | Certificate Manager]] | TLS/SSL                | Public/private certificates, managed renewal           |
-| [[detective/README           | Detective]]           | Investigation          | Graph-based security investigation                     |
+| Service                                             | Category               | Use Case                                               |
+| --------------------------------------------------- | ---------------------- | ------------------------------------------------------ |
+| [[iam/README\|IAM]]                                 | Identity               | Users, groups, roles, policies, federation             |
+| [[kms/README\|KMS]]                                 | Encryption             | Data at rest encryption, CMK, envelope encryption      |
+| [[cloudtrail/README\|CloudTrail]]                   | Audit                  | API call logging, compliance, forensics                |
+| [[config/README\|Config]]                           | Compliance             | Resource inventory, change tracking, conformance packs |
+| [[guardduty/README\|GuardDuty]]                     | Threat Detection       | DNS/CloudTrail/VPC flow analysis, malware detection    |
+| [[security-hub/README\|Security Hub]]               | Centralized Security   | Aggregates findings from all security services         |
+| [[inspector/README\|Inspector]]                     | Vulnerability Scanning | EC2, ECR, Lambda vulnerability assessment              |
+| [[macie/README\|Macie]]                             | Data Privacy           | S3 data classification, PII detection                  |
+| [[secrets-manager/README\|Secrets Manager]]         | Secrets                | Passwords, API keys, rotation                          |
+| [[certificate-manager/README\|Certificate Manager]] | TLS/SSL                | Public/private certificates, managed renewal           |
+| [[detective/README\|Detective]]                     | Investigation          | Graph-based security investigation                     |
 
 ## Shared Responsibility Model
 
@@ -92,3 +93,10 @@ Customer Responsible:
 - **Most AWS security breaches follow the same pattern — compromised credentials or misconfigured resources:** GuardDuty, Security Hub, and Macie help detect these, but prevention (least privilege IAM, proper encryption) is better than detection.
 - **Security Hub doesn't prevent threats — it aggregates findings from other services:** You need GuardDuty for threat detection, Inspector for vulnerabilities, and Macie for data privacy to generate findings that Security Hub then correlates.
 - **AWS security services generate findings that require human review — automate triage with EventBridge + Lambda:** Without automation, you'll be overwhelmed by security findings. Build automated remediation for common issues (e.g., S3 bucket made public → auto-apply block public access).
+
+## Across the wiki
+
+- [[Security/cloud-security/README|Cloud Security Hub]] — cloud security posture (Security)
+- [[GCP/compute/gke/security|GKE Security & Hardening — Workload Identity & Binary Authorization]] — cloud security posture (GCP)
+- [[Security/cloud-security/aws/README|AWS Security]] — cloud security posture (Security)
+- [[Security/cloud-security/azure/README|Azure Security]] — cloud security posture (Security)

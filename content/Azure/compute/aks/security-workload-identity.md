@@ -9,6 +9,7 @@ tags:
   - entra-id
   - workload-identity
   - rbac
+date: 2026-09-06
 ---
 
 # AKS Security & Microsoft Entra Workload Identity Architecture 🔐🛡️
@@ -234,3 +235,10 @@ In addition to pod identities, AKS supports **Azure RBAC for Kubernetes Authoriz
 3. **Federated Credential Limit (20 per Managed Identity):** Microsoft Entra ID enforces a strict limit of **20 federated identity credentials per Managed Identity**. If you have 30 microservices that attempt to reuse the exact same Managed Identity across different namespaces or clusters, the 21st credential creation will fail. Create dedicated, domain-scoped Managed Identities per microservice domain.
 4. **Azure SDK Client Version Incompatibility:** Workload Identity relies on standard Azure SDKs (`Azure.Identity` in .NET, `@azure/identity` in Node.js, `azure-identity` in Python) that support token projection. If an application utilizes legacy SDK versions authored before 2022, the library will not know how to read `AZURE_FEDERATED_TOKEN_FILE` and will fail back to trying IMDS, which times out. Always verify that application dependencies use modern Azure SDKs.
 5. **Azure RBAC Role Propagation Lag:** When an engineer is activated via Privileged Identity Management (PIM) for emergency cluster access, Azure RBAC role assignments take **3 to 5 minutes** to replicate across Microsoft Entra ID and the AKS API server. Attempting to run `kubectl get pods` immediately after PIM approval will fail with `Unauthorized`. Advise SRE teams to wait 3 minutes before executing incident runbooks.
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/pod-identity|EKS Pod Identity]] — workload identity (Kubernetes)
+- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]] — workload identity (GCP)
+- [[AWS/security/iam/README|AWS IAM]] — workload identity (AWS)
+- [[Kubernetes/eks/security/iam-roles-for-sa|IAM Roles for Service Accounts (IRSA)]] — workload identity (Kubernetes)

@@ -7,6 +7,7 @@ tags:
   - rag
   - vector-search
   - embeddings
+date: 2026-01-30
 ---
 
 # Retrieval-Augmented Generation (RAG) Architecture
@@ -172,3 +173,10 @@ Do not evaluate RAG using anecdotal eye-tests. Use **Ragas (Retrieval Augmented 
 2. **Answer Relevance (Generation Quality):** Does the answer directly address the user's question?
 3. **Context Precision (Retrieval Quality):** Are all relevant chunks ranked near the top of the context window?
 4. **Context Recall (Retrieval Quality):** Did the retriever fetch all facts necessary to answer the question?
+
+## Across the wiki
+
+- [[AWS/machine-learning/bedrock/README|Amazon Bedrock]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/sagemaker/README|Amazon SageMaker]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/ai-services/README|AWS AI Services]] — generative AI platforms (AWS)
+- [[AWS/serverless/README|AWS Serverless]] — generative AI platforms (AWS)

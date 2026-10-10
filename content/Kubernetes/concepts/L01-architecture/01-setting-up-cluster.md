@@ -314,3 +314,8 @@ The path from "I have a cluster" to "I have a production cluster" is 80% install
 - [[Kubernetes/eks/README|EKS]] — AWS-managed k8s
 - [[Kubernetes/guides/non-functional/upgrade-strategy|Cluster API Guide]] — declarative cluster management
 - [[Kubernetes/concepts/L01-architecture/04-local-deployment|Local Deployment]] — detailed local-cluster comparison
+
+## Across the wiki
+
+- [[Linux/boot-init/systemd|systemd]] — service lifecycle (Linux)
+- [[Linux/concepts/06-services|06 — System Services]] — service lifecycle (Linux)

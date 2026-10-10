@@ -4,6 +4,7 @@ description: AWS Cost Anomaly Detection — ML-based spend monitoring, alert sub
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Cost Anomaly Detection

@@ -76,3 +76,10 @@ Hunt query → Positive result → Auto-create Planio ticket + Slack alert
 
 - [[Security/siem/wazuh/README|Wazuh]]
 - [[Security/siem/wazuh/threat-hunting/README|Wazuh Threat Hunting]]
+
+## Across the wiki
+
+- [[AWS/security/guardduty/README|AWS GuardDuty]] — threat detection (AWS)
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
+- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]] — threat detection (GCP)
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)

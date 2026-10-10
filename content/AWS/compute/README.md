@@ -4,6 +4,7 @@ description: AWS compute services — EC2 for virtual servers, Lambda for server
 tags:
   - aws
   - compute
+date: 2026-06-06
 ---
 
 # AWS Compute
@@ -12,14 +13,14 @@ AWS compute covers the full spectrum from bare-metal servers to fully managed se
 
 ## Service Map
 
-| Service            | Compute Model | Control                                | Use Case              |
-| ------------------ | ------------- | -------------------------------------- | --------------------- | ----------------------------------- |
-| [[ec2/README       | EC2]]         | Virtual machine (bare metal available) | Full control          | Long-running, predictable workloads |
-| [[lambda/README    | Lambda]]      | Serverless functions                   | None (managed)        | Event-driven, spiky, short-duration |
-| [[ecs/README       | ECS]]         | Docker containers on EC2 or Fargate    | Shared responsibility | Containerized microservices         |
-| [[eks/README       | EKS]]         | Kubernetes on EC2 or Fargate           | Full K8s API          | Complex container orchestration     |
-| [[batch/README     | Batch]]       | Batch jobs on managed infra            | Job definitions       | Scheduled/queued batch processing   |
-| [[lightsail/README | Lightsail]]   | Simple VPS                             | Simplified            | Simple websites, dev/test           |
+| Service                         | Compute Model                          | Control               | Use Case                            |
+| ------------------------------- | -------------------------------------- | --------------------- | ----------------------------------- |
+| [[ec2/README\|EC2]]             | Virtual machine (bare metal available) | Full control          | Long-running, predictable workloads |
+| [[lambda/README\|Lambda]]       | Serverless functions                   | None (managed)        | Event-driven, spiky, short-duration |
+| [[ecs/README\|ECS]]             | Docker containers on EC2 or Fargate    | Shared responsibility | Containerized microservices         |
+| [[eks/README\|EKS]]             | Kubernetes on EC2 or Fargate           | Full K8s API          | Complex container orchestration     |
+| [[batch/README\|Batch]]         | Batch jobs on managed infra            | Job definitions       | Scheduled/queued batch processing   |
+| [[lightsail/README\|Lightsail]] | Simple VPS                             | Simplified            | Simple websites, dev/test           |
 
 ## Compute Decision Tree
 

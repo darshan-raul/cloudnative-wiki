@@ -7,6 +7,7 @@ tags:
   - load-balancing
   - cloud-armor
   - security
+date: 2026-09-06
 ---
 
 # GCP Cloud Load Balancing & Cloud Armor ⚖️🛡️
@@ -204,3 +205,10 @@ gcloud compute backend-services add-backend cloudrun-backend-service \
 3. **Firewall Rules Must Target GFE IP Ranges:** For Global ALBs, traffic arrives at your backend VMs/Pods from Google's GFE probe proxies (`130.211.0.0/22` and `35.191.0.0/16`), **not** from the client's public IP address. The original client IP is preserved in the `X-Forwarded-For` header. Ensure your ingress firewall permits Google's proxy ranges.
 4. **Cloud Armor Rule Evaluation Priority:** Rules in Cloud Armor are evaluated strictly in ascending order by **Priority number** (lower numbers evaluate first). The first rule that matches an incoming request terminates evaluation. Always leave numeric gaps between rules (e.g., 1000, 1100, 1200) so you can insert emergency mitigation rules during an active incident.
 5. **Session Affinity Breaches with Auto-Scaling:** Enabling `GENERATED_COOKIE` or `CLIENT_IP` session affinity on a backend service does not guarantee sticky sessions if instances auto-scale or fail health checks. Maglev and Envoy will redistribute traffic across surviving endpoints, breaking local in-memory session states. Always store persistent sessions in an external cache like Memorystore (Redis).
+
+## Across the wiki
+
+- [[Azure/compute/aks/ingress-appgw-gateway|AKS Ingress, Application Gateway for Containers, and Gateway API Architecture]] — ingress and load balancing (Azure)
+- [[Kubernetes/concepts/L04-services-networking/09-gateway-api|Gateway API]] — ingress and load balancing (Kubernetes)
+- [[AWS/networking/load-balancing/README|Elastic Load Balancing]] — ingress and load balancing (AWS)
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — ingress and load balancing (Architecture)

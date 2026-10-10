@@ -4,6 +4,7 @@ description: AWS cost allocation tags — user-defined tags, AWS-generated tags,
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Cost Allocation Tags

@@ -31,6 +31,7 @@ Pods are ephemeral and get random IPs. Networking in Kubernetes is the layer tha
 | [[Kubernetes/concepts/L04-services-networking/04-ingress\|Ingress]]                               | ✅     | The HTTP routing layer, ingressClassName, TLS, path rewrites, Ingress vs Gateway API                                                 |
 | [[Kubernetes/concepts/L04-services-networking/05-network-policy\|NetworkPolicy]]                  | ✅     | Pod-to-pod firewall rules, selectors, default-deny recipes, CNI-implementation differences                                           |
 | [[Kubernetes/concepts/L04-services-networking/06-cni\|CNI]]                                       | ✅     | How Pods actually get IPs, overlay vs underlay, plugin comparison (Flannel, Calico, Cilium)                                          |
+| [[Kubernetes/concepts/L04-services-networking/09-gateway-api\|Gateway API]]                       | ✅     | The role-aware successor to Ingress: GatewayClass, Gateway, HTTPRoute, ReferenceGrant, policy attachment, conformance, Ingress diff  |
 | [[Kubernetes/concepts/L04-services-networking/08-endpoint-slices\|EndpointSlices]]                | 🟡     | Scalable endpoint tracking, topology hints, why it replaced Endpoints, the 100-endpoint limit                                        |
 | [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive\|Networking Deep Dive]] | ✅     | Pod-to-pod, pod-to-service, service-to-external — packet-level walkthroughs, NAT, hairpin                                            |
 

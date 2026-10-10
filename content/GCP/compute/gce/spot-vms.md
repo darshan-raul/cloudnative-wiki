@@ -8,6 +8,7 @@ tags:
   - spot-vms
   - finops
   - cost-optimization
+date: 2026-09-06
 ---
 
 # GCP Spot VMs & Preemption Engineering 💰⚡
@@ -219,3 +220,10 @@ if __name__ == "__main__":
 3. **Spot VMs Do Not Support In-Place Live Migration:** Standard Compute Engine VMs seamlessly live-migrate to new hardware hosts during hypervisor maintenance without downtime. Spot VMs **do not support Live Migration**; during host maintenance, a Spot VM is simply preempted and stopped.
 4. **Persistent Disk Costs Continue While Stopped:** If you configure `--instance-termination-action=STOP`, the VM stops compute billing when preempted. However, its attached boot and data Persistent Disks remain provisioned and continue to incur standard monthly storage charges ($0.10/GB/month) until the instance is explicitly deleted.
 5. **Zone-Specific Spot Availability Crises:** Spot availability fluctuates dynamically per availability zone based on real-time on-demand consumption. If `us-central1-a` experiences high demand, Spot VM creation in that zone will fail repeatedly with `ZONE_RESOURCE_POOL_EXHAUSTED`. Always design multi-zone or multi-region failover scripts that automatically target alternative zones (e.g. fallback to `us-central1-b` or `us-central1-f`).
+
+## Across the wiki
+
+- [[Kubernetes/eks/compute/managed-node-groups/README|Managed Node Groups]] — node pools and spot capacity (Kubernetes)
+- [[Azure/compute/aks/node-pools-heterogeneous|AKS Heterogeneous Node Pools — System vs User, Ephemeral OS Disks, and Azure Linux]] — node pools and spot capacity (Azure)
+- [[AWS/cost-management/pricing-models|AWS Pricing Models]] — node pools and spot capacity (AWS)
+- [[Kubernetes/eks/compute/managed-node-groups/spot|Spot Instances on EKS]] — node pools and spot capacity (Kubernetes)

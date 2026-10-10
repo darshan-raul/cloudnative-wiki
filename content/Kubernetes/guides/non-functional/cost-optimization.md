@@ -5,7 +5,11 @@ tags:
   - Non-Functional
   - Cost
   - FinOps
+date: 2026-06-12
+description: "K8s clusters are easy to over-spend on. The default behavior is to provision conservatively (lots of headroom, big nodes, no spot), and bills grow linearly with the number of services."
 ---
+
+# Cost Optimization
 
 K8s clusters are easy to over-spend on. The default behavior is to provision conservatively (lots of headroom, big nodes, no spot), and bills grow linearly with the number of services. The good news: a few well-placed levers can cut your bill 50-70% without changing the workload.
 
@@ -626,3 +630,13 @@ Cluster: 50 nodes, mostly `m5.2xlarge` (8 CPU, 32Gi). 200 namespaces, mixed dev/
 - [[Kubernetes/guides/non-functional/performance-tuning|performance-tuning]] — right-sizing
 - [[Kubernetes/guides/non-functional/high-availability|high-availability]] — cost vs reliability tradeoffs
 - [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — storage costs
+
+## Across the wiki
+
+- [[Azure/compute/aks/cost-optimization-finops|AKS FinOps, Cost Allocation, and Cloud Spend Optimization]] — Kubernetes cost (Azure)
+- [[GCP/compute/gke/cost-optimization-finops|GKE Cost Optimization, FinOps, and GKE Cost Allocation Architecture]] — Kubernetes cost (GCP)
+- [[AWS/cost-management/README|AWS Cost Management]] — Kubernetes cost (AWS)
+- [[GCP/cost-management/pricing-models/README|GCP Cost Optimization, Committed Use Discounts (CUDs), and FinOps]] — Kubernetes cost (GCP)
+- [[AWS/cost-management/cost-explorer|Cost Explorer]] — cost management (AWS)
+- [[AWS/concepts/cost-management|Cost Management]] — cost management (AWS)
+- [[AWS/solutions-architect-professional/domain-1/1.5-cost-optimization-and-visibility|1.5 Cost Optimization & Visibility]] — cost management (AWS)

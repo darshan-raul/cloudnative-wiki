@@ -4,6 +4,7 @@ description: AWS analytics services — Kinesis for streaming data, Athena for S
 tags:
   - aws
   - analytics
+date: 2026-06-06
 ---
 
 # AWS Analytics
@@ -71,3 +72,9 @@ Catalog: Glue Data Catalog
 Processing: Glue ETL, Athena, Redshift Spectrum
 Visualization: QuickSight, Tableau, Grafana
 ```
+
+## Across the wiki
+
+- [[GCP/databases/bigquery|Google BigQuery]] — analytics and warehouses (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/columnar-databases|Columnar Databases]] — analytics and warehouses (Architecture)
+- [[GCP/analytics/dataflow/README|Cloud Dataflow Architecture & Streaming Pipelines]] — analytics and warehouses (GCP)

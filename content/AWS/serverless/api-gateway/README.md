@@ -8,6 +8,7 @@ tags:
   - rest-api
   - http-api
   - websocket
+date: 2026-06-06
 ---
 
 # Amazon API Gateway
@@ -258,6 +259,10 @@ aws apigatewayv2 create-integration \
 | WebSocket    | $1.00/million messages + $0.25/million connection-minutes |
 | REST caching | $0.020/hour per GB                                        |
 
+## More in this section
+
+- [[AWS/serverless/api-gateway/usage-plan|Usage Plan]] — In Amazon API Gateway, a Usage Plan is essentially a "service contract" you offer to your API consumers.
+
 ## References
 
 - **Homepage:** https://aws.amazon.com/api-gateway/
@@ -271,3 +276,10 @@ aws apigatewayv2 create-integration \
 - **HTTP API doesn't support API keys or usage plans — if you need client identification, use REST API or Cognito:** HTTP APIs are designed for service-to-service communication. They support JWT/Cognito but not API key authentication.
 - **API Gateway caching is per stage — if you have multiple environments (dev/staging/prod) sharing the same API, caching affects all:** Cache is keyed by route+query params, not by stage. If your API returns different data per user, enable authorization for cache control.
 - **WebSocket connections stay open — each connection costs money even when idle:** $0.25/million connection-minutes means 10K always-open connections cost $180/month. Implement connection timeout/disconnect logic to avoid idle connection costs.
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/api-design/README|API Design]] — API design and gateways (Architecture)
+- [[Architecture/solution-architecture-concepts/performance/rate-limiting|Rate Limiting Algorithms, Distributed Architecture & HTTP 429]] — API design and gateways (Architecture)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/api-error-codes|API Error Codes, HTTP Status Standards & RFC 7807 Problem Details]] — API design and gateways (Architecture)
+- [[Architecture/solution-architecture-concepts/protocols/README|Protocols]] — API design and gateways (Architecture)

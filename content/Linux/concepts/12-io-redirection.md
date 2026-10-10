@@ -4,6 +4,7 @@ description: Linux I/O redirection — stdin, stdout, stderr, pipes, tee, xargs,
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 12 — Input/Output Redirection

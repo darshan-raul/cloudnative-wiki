@@ -6,7 +6,11 @@ tags:
   - Ingress
   - Traefik
   - Gateway API
+date: 2026-06-12
+description: "Traefik is a modern reverse proxy and load balancer that integrates natively with k8s, Docker, and many other backends."
 ---
+
+# Traefik
 
 Traefik is a **modern reverse proxy and load balancer** that integrates natively with k8s, Docker, and many other backends. It auto-discovers services, supports Ingress, IngressRoute (CRD), and Gateway API, and is the most flexible open-source ingress controller.
 
@@ -714,3 +718,8 @@ spec:
 - [[Kubernetes/guides/networking/istio|istio]] — service mesh
 - [[Kubernetes/guides/troubleshooting/ingress-404|ingress-404]] — troubleshooting
 - [Traefik docs](https://doc.traefik.io/traefik/)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/reverse-proxy|Reverse Proxy Architecture: Functions, Headers & Proxies]] — proxies (Architecture)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/forward-proxy|Forward Proxy]] — proxies (Architecture)

@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - emr
+date: 2026-06-06
 ---
 
 # Amazon EMR

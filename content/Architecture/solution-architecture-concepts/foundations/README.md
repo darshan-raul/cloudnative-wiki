@@ -30,16 +30,16 @@ This section covers the **mental models, processes, and frameworks** that define
 - [[non-functional-requirements/maintainability|Maintainability]] — Modifiability, technical debt, CI/CD quality gates
 - [[non-functional-requirements/disaster-recovery|Disaster Recovery]] — RPO/RTO, backup/restore, failover strategies
 - [[non-functional-requirements/capacity-planning|Capacity Planning]] — Resource forecasting, cost modeling, right-sizing
-- [[non-functional-requirements/back-of-the-envelope-calculations]] — Quick capacity estimates
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/capacity-planning|back of the envelope calculations]] — Quick capacity estimates
 - [[non-functional-requirements/reliability-vs-availability]] — The distinction that matters
 
 ### Migration Patterns
 
-- [[migration-patterns/README]] — Strategies for safe system and data migration
-- [[migration-patterns/blue-green-deployments|Blue-Green Deployments]] — Zero-downtime deployment with instant rollback
-- [[migration-patterns/expand-contract|Expand-Contract]] — Safe API and schema evolution without breaking consumers
-- [[migration-patterns/strangler-fig|Strangler Fig]] — Incremental legacy system replacement
-- [[migration-patterns/data-migration|Data Migration]] — Bulk data movement with zero downtime
+- [[Architecture/solution-architecture-concepts/migration-patterns/README|README]] — Strategies for safe system and data migration
+- [[Architecture/solution-architecture-concepts/migration-patterns/blue-green-deployments|Blue-Green Deployments]] — Zero-downtime deployment with instant rollback
+- [[Architecture/solution-architecture-concepts/migration-patterns/expand-contract|Expand-Contract]] — Safe API and schema evolution without breaking consumers
+- [[Architecture/solution-architecture-concepts/migration-patterns/strangler-fig|Strangler Fig]] — Incremental legacy system replacement
+- [[Architecture/solution-architecture-concepts/migration-patterns/data-migration|Data Migration]] — Bulk data movement with zero downtime
 
 ### Design Principles
 

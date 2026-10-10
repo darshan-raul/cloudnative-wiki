@@ -4,6 +4,7 @@ description: Linux systemd-tmpfiles.d — volatile runtime directories, /run, /t
 tags:
   - linux
   - boot-init
+date: 2026-06-06
 ---
 
 # systemd-tmpfiles.d

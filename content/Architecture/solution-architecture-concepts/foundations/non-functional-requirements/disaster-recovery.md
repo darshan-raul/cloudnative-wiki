@@ -1,5 +1,9 @@
 ---
 title: Disaster Recovery
+tags:
+  [architecture, foundations, non-functional-requirements, disaster-recovery]
+date: 2026-06-06
+description: "Disaster recovery (DR) is the ability to restore full service after a major failure that takes out one or more critical components."
 ---
 
 # Disaster Recovery
@@ -243,4 +247,11 @@ Most companies discover their RTO is 2-10x their planned RTO when they first tes
 
 - [[availability|Availability]] — uptime architecture
 - [[reliability|Reliability]] — fault tolerance patterns
-- [[back-of-the-envelope-calculations|Back-of-the-Envelope Calculations]] — capacity for DR infra
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/capacity-planning|Back-of-the-Envelope Calculations]] — capacity for DR infra
+
+## Across the wiki
+
+- [[Azure/compute/aks/backup-disaster-recovery|AKS Backup, Disaster Recovery, and Cross-Region Business Continuity]] — backup and disaster recovery (Azure)
+- [[GCP/compute/gke/backup-for-gke|Backup for GKE Architecture, Stateful Disaster Recovery, and Cross-Region Restoration]] — backup and disaster recovery (GCP)
+- [[Kubernetes/guides/non-functional/backup-restore|Backup & Restore]] — backup and disaster recovery (Kubernetes)
+- [[AWS/solutions-architect-professional/domain-2/2.2-business-continuity|2.2 Business Continuity]] — backup and disaster recovery (AWS)

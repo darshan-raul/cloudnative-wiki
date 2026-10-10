@@ -6,6 +6,7 @@ tags:
   - networking
   - cdn
   - cloudfront
+date: 2026-06-06
 ---
 
 # Amazon CloudFront
@@ -238,3 +239,9 @@ Browser → CloudFront → /static/* → S3 (static assets)
 - **OAI doesn't work with S3 Transfer Acceleration:** If you enable S3 Transfer Acceleration on the bucket, OAI access breaks. Use CloudFront exclusively for S3 access, not Transfer Acceleration.
 - **CloudFront default TTL is 24 hours:** A file cached at edge stays there for 24 hours even if you update it in S3. Use Cache-Control headers from origin or create invalidations. The `stale-while-revalidate` directive tells CloudFront to serve stale content while revalidating in background.
 - **CloudFront does not cache HTTP 206 partial content by default:** For video streaming with byte-range requests, you need to configure CloudFront to cache 206 responses. Without it, every video segment request goes to the origin.
+
+## Across the wiki
+
+- [[GCP/networking/cloud-cdn/README|GCP Cloud CDN Architecture & Edge Caching]] — CDN and edge caching (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/cdn|CDN]] — CDN and edge caching (Architecture)
+- [[Architecture/solution-architecture-concepts/caching|Caching]] — CDN and edge caching (Architecture)

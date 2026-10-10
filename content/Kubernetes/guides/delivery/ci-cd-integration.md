@@ -8,7 +8,11 @@ tags:
   - GitLab CI
   - BuildKit
   - Kaniko
+date: 2026-06-12
+description: "How CI/CD systems integrate with k8s. The CI does the build/test/scan/push; the GitOps controller does the deploy."
 ---
+
+# CI/CD Integration
 
 How CI/CD systems integrate with k8s. The CI does the build/test/scan/push; the GitOps controller does the deploy. This covers the patterns, the secrets handling, the image registry, and the common tools.
 
@@ -591,3 +595,9 @@ jobs:
 - [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — safe deploys
 - [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — full CI/CD
 - [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for CI
+
+## Across the wiki
+
+- [[DevOps/ci-cd/README|Continuous Integration & Continuous Delivery (CI/CD)]] — CI/CD pipelines (DevOps)
+- [[DevOps/ci-cd/pipeline-design|Pipeline Design]] — CI/CD pipelines (DevOps)
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]] — CI/CD pipelines (DevOps)

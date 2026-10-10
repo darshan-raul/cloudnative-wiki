@@ -215,3 +215,9 @@ spire-server entry create \
 We have mastered current production standards. In the final module of Stage 6, we examine the bleeding edge of the identity industry: **Emerging Standards — DPoP, PAR, RAR, FAPI 2.0, and Verifiable Credentials**.
 
 → [[04-emerging-standards|Stage 6.4 — Emerging Standards: DPoP, PAR, RAR, FAPI 2.0, and OID4VCI]]
+
+## Across the wiki
+
+- [[Security/zero-trust|Zero-Trust Architecture (NIST SP 800-207)]] — zero trust (Security)
+- [[Security/assume-breach-principle|Assume Breach Principle]] — zero trust (Security)
+- [[Security/application-security/README|Application Security]] — zero trust (Security)

@@ -7,6 +7,7 @@ tags:
   - observability
   - sre
   - prometheus
+date: 2026-09-06
 ---
 
 # Cloud Monitoring Architecture, MQL, and SRE Observability 📈🛡️
@@ -304,3 +305,10 @@ Cloud Monitoring pricing is based on:
 4. **Scoping Project Centralization Prevents IAM Sprawl:** Never create independent alert notification channels or dashboards inside every individual project. Create an isolated project (e.g., `company-observability-prod`), add all departmental GCP projects to its **Metrics Scope**, and manage all notification channels, SLOs, and MQL dashboards in this single hub. This guarantees engineers only need read access to the scoping project to view telemetry across the entire corporate estate.
 5. **PromQL Metric Name Sanitization in GMP:** When migrating Prometheus PromQL dashboards to Cloud Monitoring, note that Google Cloud Managed Service for Prometheus prepends custom metrics with the prefix `prometheus.googleapis.com/`. While raw PromQL queries in the Cloud Console automatically handle metric name resolution, querying via the standard Cloud Monitoring REST API or Terraform requires the fully qualified name (e.g., `prometheus.googleapis.com/http_requests_total/counter`).
 6. **Uptime Check Source IP Range Whitelisting:** Cloud Monitoring public uptime checks originate from dynamic Google probing servers worldwide. If your firewall rules or Cloud Armor security policies block unauthenticated external traffic, uptime checks will report false-positive outages. Either whitelist the official Google Cloud Uptime Check IP range (`gcloud monitoring uptime-check-ips list`) or deploy **Private Uptime Checks** targeting internal VPC endpoints via Private Service Connect.
+
+## Across the wiki
+
+- [[AWS/monitoring/README|AWS Monitoring]] — cloud logging and monitoring (AWS)
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)

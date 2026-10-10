@@ -5,7 +5,11 @@ tags:
   - GitOps
   - Argo CD
   - Operator
+date: 2026-06-12
+description: "How to install and configure Argo CD in production. The install is one thing; the production-grade configuration is another."
 ---
+
+# Argo CD Operator Install
 
 How to install and configure Argo CD in production. The install is one thing; the production-grade configuration is another. This covers the HA install, the RBAC, the SSO, the notifications, and the integration patterns that make Argo CD work at scale.
 

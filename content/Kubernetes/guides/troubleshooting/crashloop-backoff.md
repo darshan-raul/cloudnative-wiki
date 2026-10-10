@@ -4,7 +4,11 @@ tags:
   - Kubernetes
   - Troubleshooting
   - Pods
+date: 2026-01-30
+description: "The most common pod failure mode. A container starts, exits with an error, the kubelet restarts it (per restartPolicy), it exits again, and after a few cycles the kubelet gives up for a while before…"
 ---
+
+# CrashLoopBackOff
 
 The most common pod failure mode. A container starts, exits with an error, the kubelet restarts it (per `restartPolicy`), it exits again, and after a few cycles the kubelet gives up for a while before retrying. The pod's status reads `CrashLoopBackOff`.
 

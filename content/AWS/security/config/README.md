@@ -5,6 +5,7 @@ tags:
   - aws
   - security
   - config
+date: 2026-06-06
 ---
 
 # AWS Config
@@ -249,3 +250,10 @@ aws configservice put-config-rule \
 - **Config rule evaluation is triggered by configuration changes — NOT on a schedule by default:** If a resource is already non-compliant and you don't change it, Config won't re-evaluate. Use the `MaximumExecutionFrequency` to evaluate periodically (e.g., daily).
 - **Config's `select-resource-config` SQL is limited — no JOINs, no subqueries:** You can query individual resource types but can't correlate across resources (e.g., "find all EC2 instances with SGs that allow port 22"). For that, use Athena with CloudTrail logs.
 - **Config recording of global resource types (IAM) requires `includeGlobalResourceTypes: true`:** IAM resources are global. If you don't enable this, IAM changes won't appear in Config.
+
+## Across the wiki
+
+- [[Security/cloud-security/README|Cloud Security Hub]] — cloud security posture (Security)
+- [[GCP/compute/gke/security|GKE Security & Hardening — Workload Identity & Binary Authorization]] — cloud security posture (GCP)
+- [[Security/cloud-security/aws/README|AWS Security]] — cloud security posture (Security)
+- [[Security/cloud-security/azure/README|Azure Security]] — cloud security posture (Security)

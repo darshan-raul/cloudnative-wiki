@@ -5,6 +5,7 @@ tags:
   - aws
   - management
   - cdk
+date: 2026-06-06
 ---
 
 # AWS CDK (Cloud Development Kit)
@@ -222,3 +223,10 @@ cdk metadata                  # Show metadata
 - **`cdk destroy` doesn't clean up everything:** CDK will delete the CloudFormation stack, but resources outside the stack (like S3 buckets created with `bucketName` or DynamoDB tables) may fail to delete due to Retain DeletionPolicy or protection settings. Always verify deletion.
 - **Constructs without scope need an explicit `scope` in constructor:** When creating L2 constructs, always pass `this` as the first argument (scope). Forgetting it causes the resource to be created in the wrong stack or without proper hierarchy.
 - **CDK synth uses the default AWS profile's region — stacks may deploy to the wrong region:** If you have multiple AWS profiles configured, CDK uses the `default` profile's region. Always specify `env` in stack props or set `AWS_DEFAULT_REGION` in your environment.
+
+## Across the wiki
+
+- [[DevOps/infrastructure-as-code/README|Infrastructure as Code]] — infrastructure as code (DevOps)
+- [[Kubernetes/eks/automation/control-planes/ack|AWS Controllers for Kubernetes (ACK)]] — infrastructure as code (Kubernetes)
+- [[DevOps/devsecops/stage2-build/10-iac-security|M10: Infrastructure-as-Code Security]] — infrastructure as code (DevOps)
+- [[Kubernetes/eks/getting-started/cluster-creation|Cluster Creation]] — infrastructure as code (Kubernetes)

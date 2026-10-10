@@ -4,6 +4,7 @@ description: Linux common issues — OOM killer, disk full, permission denied, s
 tags:
   - linux
   - troubleshooting
+date: 2026-06-06
 ---
 
 # Common Issues

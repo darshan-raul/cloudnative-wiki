@@ -5,6 +5,7 @@ tags:
   - aws
   - networking
   - transit-gateway
+date: 2026-06-06
 ---
 
 # AWS Transit Gateway
@@ -134,3 +135,10 @@ At scale: 10 VPCs, 500GB/month cross-VPC traffic = $0.20/hr × 720hr + $3.50 = ~
 - **VPN attachment to TGW uses BGP for route propagation:** Unlike VPC attachments (static routes), VPN attachments learn routes via BGP. If your on-premises router doesn't support BGP, you can't use TGW VPN attachment — you'd need direct VPN to each VPC.
 - **TGW attachments inherit routing behavior based on their associated route table:** A VPC attachment can only send traffic to destinations listed in its associated TGW route table. If the route table doesn't have a route to on-prem, the VPC can't reach on-prem even if the VPN attachment can.
 - **Shared TGW from AWS Organizations requires RAM:** If you share a TGW with member accounts via AWS Organizations, those accounts need RAM invitations accepted. If RAM sharing is disabled in the Organization, cross-account TGW sharing doesn't work.
+
+## Across the wiki
+
+- [[Azure/networking/private-link/README|Azure Private Link, Private Endpoints, and Private DNS Architecture]] — private connectivity (Azure)
+- [[GCP/networking/private-service-connect/README|GCP Private Service Connect (PSC)]] — private connectivity (GCP)
+- [[Kubernetes/eks/networking/vpc-lattice/README|Amazon VPC Lattice]] — private connectivity (Kubernetes)
+- [[Azure/networking/virtual-wan/README|Azure Virtual WAN (vWAN) Architecture & Global Transit Routing]] — private connectivity (Azure)

@@ -1567,3 +1567,10 @@ ip link show | grep veth
 ---
 
 _This document accompanies `k8s-networking.html` — the interactive visualization. See the HTML file for visual diagrams and animations of the concepts described here._
+
+## Across the wiki
+
+- [[Linux/networking/routing|Routing]] — packet path (Linux)
+- [[Architecture/solution-architecture-concepts/networking/tcpip|TCP/IP Architecture, Handshakes & Congestion Control]] — packet path (Architecture)
+- [[Linux/networking/tcp-ip-model|TCP/IP Model]] — packet path (Linux)
+- [[Architecture/solution-architecture-concepts/networking/osi-model|The OSI 7-Layer Model in Modern Systems Engineering]] — packet path (Architecture)

@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - Testing
+date: 2026-06-12
+description: "Two layers, different tradeoffs."
 ---
+
+# LangChain — Testing
 
 > **Part 10.** Testing without hitting a real LLM — `FakeListChatModel`,
 > `FakeMessagesListChatModel`, tool schema tests, and the no-network
@@ -372,3 +376,10 @@ right package:
 - [[AI/langchain/07-memory-callbacks|07-memory-callbacks]] — `BaseCallbackHandler` for cost tracking
 - [[AI/langchain/09-streaming|09-streaming]] — testing streaming code
 - [LangChain testing guide](https://python.langchain.com/docs/how_to/fake_chat_model/)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/testing/README|Testing]] — testing (Architecture)
+- [[Kubernetes/guides/delivery/templating-patching/helm/testing|Helm Chart Testing]] — testing (Kubernetes)
+- [[DevOps/ci-cd/pipeline-design|Pipeline Design]] — testing (DevOps)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/testing/unit-testing|Unit Testing Principles & Test-Driven Development (TDD)]] — testing (Architecture)

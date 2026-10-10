@@ -8,6 +8,7 @@ tags:
   - security
   - ebpf
   - cilium
+date: 2026-09-06
 ---
 
 # GKE Advanced Network Security — Datapath V2 eBPF, FQDN Policies, and Egress NAT 🛡️⚡

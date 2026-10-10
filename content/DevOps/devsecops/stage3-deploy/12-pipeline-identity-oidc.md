@@ -506,3 +506,10 @@ The audit asks "who did what?" The OIDC subject is the answer. The trust policy 
 - [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
 - [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
 - [[DevOps/devsecops/stage3-deploy/README|Stage 3 — Deploy]]
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/oidc-integration|OIDC Integration]] — OIDC federation (Kubernetes)
+- [[Architecture/solution-architecture-concepts/authentication/stage3/01-oidc-fundamentals|3.1 — OpenID Connect (OIDC) Fundamentals]] — OIDC federation (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|Authentication vs Authorization]] — OIDC federation (Kubernetes)
+- [[Architecture/solution-architecture-concepts/authentication/saml|SAML]] — OIDC federation (Architecture)

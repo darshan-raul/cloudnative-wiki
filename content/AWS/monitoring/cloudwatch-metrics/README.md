@@ -6,6 +6,7 @@ tags:
   - monitoring
   - metrics
   - cloudwatch
+date: 2026-06-06
 ---
 
 # CloudWatch Metrics
@@ -234,3 +235,10 @@ aws cloudwatch get-metric-widget-image \
 - **Metric math expressions are evaluated independently of source metrics' retention periods:** If you use SEARCH() to aggregate metrics, the resulting metric math metric inherits the minimum retention period of the source metrics. For 5-minute basic monitoring, the math result is also 5-minute.
 - **Dimensions are case-sensitive — "InstanceId" not "instanceid":** If you query a metric with dimensions and get no results, check the dimension name casing. The CloudWatch API treats `InstanceId` and `instanceId` as different dimensions.
 - **EC2 basic monitoring (5-min) is free but detailed monitoring (1-min) costs $0.30/instance/month:** Before enabling detailed monitoring on all instances, consider that for a 100-instance fleet, that's $30/month. For production, detailed monitoring is worth it. For dev/test, basic monitoring is sufficient.
+
+## Across the wiki
+
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)

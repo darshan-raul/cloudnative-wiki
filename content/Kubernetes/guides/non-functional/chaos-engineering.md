@@ -5,7 +5,11 @@ tags:
   - Non-Functional
   - Chaos-Engineering
   - Resilience
+date: 2026-01-30
+description: "Chaos engineering is the practice of deliberately breaking things to learn how the system fails."
 ---
+
+# Chaos Engineering
 
 Chaos engineering is the practice of **deliberately breaking things** to learn how the system fails. The goal: find weaknesses before they cause outages, build confidence in your HA, and train the team to respond.
 
@@ -723,3 +727,10 @@ Once you're running continuous chaos, you'll have an experiment fire at 3am. **M
 - [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — broader failure modes
 - [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — real-world failure
 - [Principles of Chaos](https://principlesofchaos.org/)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/performance-testing|Performance Testing]] — performance and chaos testing (Architecture)
+- [[Linux/networking/network-performance-tuning|Network Performance Tuning]] — performance and chaos testing (Linux)
+- [[AWS/solutions-architect-professional/domain-2/2.5-performance-objectives|2.5 Performance Objectives]] — performance and chaos testing (AWS)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/performance|Performance]] — performance and chaos testing (Architecture)

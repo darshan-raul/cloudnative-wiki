@@ -7,6 +7,7 @@ tags:
   - streaming
   - messaging
   - event-driven
+date: 2026-09-06
 ---
 
 # Cloud Pub/Sub Architecture & Streaming Mechanics 📨⚡
@@ -284,3 +285,10 @@ Pub/Sub pricing is based primarily on:
 4. **Client-Side Flow Control & Out-Of-Memory (OOM):** The official Pub/Sub client libraries use asynchronous gRPC StreamingPull under the hood. By default, client libraries aggressively buffer hundreds of megabytes of messages in memory. If a downstream consumer slows down (e.g., waiting on slow SQL writes), the client process can experience sudden memory spikes and OOM crashes. Always configure strict flow control settings in code (e.g., `FlowControlSettings.newBuilder().setMaxOutstandingElementCount(1000).setMaxOutstandingRequestBytes(50 * 1024 * 1024).build()`).
 5. **Exactly-Once Delivery Adds Acknowledgment Latency:** Enabling `enable-exactly-once-delivery` guarantees that retried network packets do not trigger duplicate execution. However, this relies on global Paxos/Spanner-backed acknowledgment token validation across Google's distributed consensus layer. Standard subscriptions acknowledge in ~1-5ms; exactly-once subscriptions incur 20-50ms ACK response latencies and can encounter `ALREADY_EXISTS` or `FAILED_PRECONDITION` errors if client ack deadlines are configured too aggressively.
 6. **Cross-Region Network Egress Surcharge:** Publishing to a topic from an AWS server or an on-premises datacenter via the public internet incurs standard Google Cloud external ingress (free) and egress (charged). However, if your GKE cluster resides in `europe-west1` and pulls messages from a Pub/Sub topic where data storage was pinned to `us-central1`, you will incur silent inter-continental cross-region networking egress fees ($0.02 - $0.08 per GB). Define explicit `allowedPersistenceRegions` in topic settings to keep message storage co-located with your compute clusters.
+
+## Across the wiki
+
+- [[AWS/application-integration/sqs/README|Amazon SQS]] — messaging and streaming (AWS)
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
+- [[AWS/application-integration/sns/README|Amazon SNS]] — messaging and streaming (AWS)

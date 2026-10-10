@@ -9,6 +9,7 @@ tags:
   - kubernetes
   - oidc
   - security
+date: 2026-09-06
 ---
 
 # Azure Workload Identity & Federated Credentials 🔑🚫
@@ -202,3 +203,10 @@ az ad app federated-credential create \
 3. **Audience Must Be `api://AzureADTokenExchange`:** When creating federated identity credentials for both AKS and GitHub Actions, the audience **must** be set to `api://AzureADTokenExchange`. Setting this to custom values will cause token exchange validation to fail.
 4. **Proxy & Firewall Blockers to AKS OIDC Discovery:** During token exchange, Microsoft Entra ID connects back to the AKS cluster's public OIDC Issuer URL to fetch its JSON Web Key Set (`/.well-known/openid-configuration` and `/openid/v1/jwks`). If the AKS cluster is deployed in an isolated enterprise network where outbound internet egress or Microsoft telemetry is blocked, Entra ID cannot retrieve the signing keys.
 5. **Multiple Containers in a Single Pod:** If a pod contains multiple containers (e.g., application container + logging sidecar), the webhook injects the federated token volume into all containers. However, ensure that each container's process has filesystem permissions to read the projected token file at `/var/run/secrets/azure/tokens/azure-identity-token`.
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/pod-identity|EKS Pod Identity]] — workload identity (Kubernetes)
+- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]] — workload identity (GCP)
+- [[AWS/security/iam/README|AWS IAM]] — workload identity (AWS)
+- [[Kubernetes/eks/security/iam-roles-for-sa|IAM Roles for Service Accounts (IRSA)]] — workload identity (Kubernetes)

@@ -811,3 +811,10 @@ kubectl create sa <sa-name> -n <ns>
 - [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — encrypting the SA's data
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
 - [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]] — AWS-specific
+
+## Across the wiki
+
+- [[Azure/compute/aks/security-workload-identity|AKS Security & Microsoft Entra Workload Identity Architecture]] — workload identity (Azure)
+- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]] — workload identity (GCP)
+- [[AWS/security/iam/README|AWS IAM]] — workload identity (AWS)
+- [[Azure/identity/workload-identity|Azure Workload Identity & Federated Credentials]] — workload identity (Azure)

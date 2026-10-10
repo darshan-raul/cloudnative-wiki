@@ -704,3 +704,9 @@ kubectl get hpa <name>
 - [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — L06 overview
 - [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — the vertical counterpart
 - [[Kubernetes/concepts/L06-scheduling-scaling/08-karpenter|Karpenter]] — node autoscaling
+
+## Across the wiki
+
+- [[Azure/compute/aks/autoscaling-keda|AKS Autoscaling Architecture — Cluster Autoscaler, KEDA, and Virtual Nodes]] — autoscaling (Azure)
+- [[GCP/compute/gke/autoscaling|GKE Autoscaling Architecture — Cluster Autoscaler, NAP, HPA v2, and VPA]] — autoscaling (GCP)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability|Scalability]] — autoscaling (Architecture)

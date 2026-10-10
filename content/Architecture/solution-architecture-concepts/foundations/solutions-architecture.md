@@ -6,6 +6,7 @@ tags:
   - solutions-architecture
   - nfr
   - system-design
+date: 2026-01-30
 ---
 
 # Solution Architecture Foundations & Non-Functional Requirements
@@ -66,10 +67,10 @@ mindmap
       FinOps Guardrails
 ```
 
-| NFR Category                   | Core Architectural Strategy                                                   | Detailed Guide                                                                                                                            |
-| :----------------------------- | :---------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Availability & Reliability** | Multi-AZ redundancy, active-active failover, circuit breakers                 | [[non-functional-requirements/availability\|Availability]] & [[non-functional-requirements/reliability\|Reliability]]                     |
-| **Scalability**                | Horizontal Pod Autoscaling (HPA), database read-replicas, asynchronous queues | [[non-functional-requirements/scalability\|Scalability]] & [[non-functional-requirements/scaling\|Scaling Patterns]]                      |
-| **Performance**                | In-memory caching (Redis), CDN edge termination, database indexing            | [[non-functional-requirements/performance\|Performance]] & [[non-functional-requirements/back-of-the-envelope-calculations\|Estimations]] |
-| **Security & Compliance**      | Defense-in-depth, TLS 1.3, least privilege IAM, audit telemetry               | [[non-functional-requirements/security\|Security Architecture]]                                                                           |
-| **Disaster Recovery**          | RTO/RPO tiering, automated backups, multi-region replication                  | [[non-functional-requirements/disaster-recovery\|Disaster Recovery]]                                                                      |
+| NFR Category                   | Core Architectural Strategy                                                   | Detailed Guide                                                                                                                                                                    |
+| :----------------------------- | :---------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Availability & Reliability** | Multi-AZ redundancy, active-active failover, circuit breakers                 | [[non-functional-requirements/availability\|Availability]] & [[non-functional-requirements/reliability\|Reliability]]                                                             |
+| **Scalability**                | Horizontal Pod Autoscaling (HPA), database read-replicas, asynchronous queues | [[non-functional-requirements/scalability\|Scalability]] & [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability\|Scaling Patterns]]  |
+| **Performance**                | In-memory caching (Redis), CDN edge termination, database indexing            | [[non-functional-requirements/performance\|Performance]] & [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/capacity-planning\|Estimations]] |
+| **Security & Compliance**      | Defense-in-depth, TLS 1.3, least privilege IAM, audit telemetry               | [[non-functional-requirements/security\|Security Architecture]]                                                                                                                   |
+| **Disaster Recovery**          | RTO/RPO tiering, automated backups, multi-region replication                  | [[non-functional-requirements/disaster-recovery\|Disaster Recovery]]                                                                                                              |

@@ -7,6 +7,7 @@ tags:
   - apache-beam
   - streaming
   - big-data
+date: 2026-09-06
 ---
 
 # Cloud Dataflow Architecture & Streaming Pipelines 🌊⚡
@@ -277,3 +278,10 @@ Dataflow charges based on:
 4. **Fusion Optimization Can Block Autoscaling:** Dataflow's fusion optimizer aggregates steps into single threads. If you have an expensive step following a step that reads from a fixed source, Dataflow might fuse them into one stage and run it on a single worker VM. If you observe CPU saturation on one worker while Dataflow refuses to scale up, break fusion intentionally by inserting an intermediate reshuffle step (`beam.Reshuffle()`).
 5. **Private Subnet Configuration Gotchas (`--disable-public-ips`):** Production enterprises require that Dataflow worker VMs do not receive public IP addresses. However, if you specify `--disable-public-ips` and the worker subnet does not have **Private Google Access** enabled or lacks a functioning **Cloud NAT Gateway**, worker VMs will fail to download container harness images from Google Artifact Registry (`pkg.dev`) or fail to reach the Dataflow control plane. The job will sit in `JOB_STATE_STARTING` for 20 minutes before abruptly crashing with a worker startup timeout.
 6. **System Lag vs Data Watermark Lag Monitoring:** When setting up alerts for streaming Dataflow pipelines in Cloud Monitoring, track both `dataflow.googleapis.com/job/system_lag` (the delay between data generation and worker processing) and `dataflow.googleapis.com/job/watermark_age` (the event-time processing lag). A spiking watermark age with stable CPU utilization indicates late-arriving data holding the watermark back, not a pipeline bottleneck.
+
+## Across the wiki
+
+- [[AWS/databases/redshift/README|Amazon Redshift]] — analytics and warehouses (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/columnar-databases|Columnar Databases]] — analytics and warehouses (Architecture)
+- [[AWS/analytics/redshift/README|Amazon Redshift]] — analytics and warehouses (AWS)
+- [[AWS/analytics/athena/README|Athena]] — analytics and warehouses (AWS)

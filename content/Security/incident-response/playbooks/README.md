@@ -135,3 +135,9 @@ aws cloudtrail lookup-events --lookup-attributes AttributeKey=S3BucketName,Attri
 
 - [[Security/incident-response/README|IR Hub]]
 - [[Security/siem/wazuh/integrations/README|n8n Integrations]]
+
+## Across the wiki
+
+- [[DevOps/sre/on-call|On-Call]] — incident response (DevOps)
+- [[Kubernetes/concepts/L08-operations/03-common-failure-modes|Common Failure Modes & Triage]] — incident response (Kubernetes)
+- [[Architecture/solution-architecture-concepts/authentication/capstone/02-incident-tabletop|Capstone C.2 — Identity Incident Tabletop: 3 Realistic Scenarios]] — incident response (Architecture)

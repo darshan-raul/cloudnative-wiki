@@ -3,7 +3,11 @@ title: "LangGraph — Production"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "Build the graph once at module scope, not per request."
 ---
+
+# LangGraph — Production
 
 > **Part 11.** Deployment, recursion limits, error handling,
 > debugging strategies, and what changes when you move to prod.

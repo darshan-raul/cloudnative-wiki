@@ -22,12 +22,12 @@ Data architecture covers **how data is stored, accessed, and flows** through a s
 
 ### Databases
 
-- [[databases/README]] — Database selection guide
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/README|README]] — Database selection guide
 - [[databases/postgres/README]] — PostgreSQL deep dive
 - [[databases/mongodb/README]] — MongoDB deep dive
 - [[databases/normalization]] — Normal forms and when to denormalize
 - [[databases/indexing]] — Index design for query performance
-- [[databases/database-schema-design]] — Schema design principles
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/README|database schema design]] — Schema design principles
 - [[databases/foreign-keys-and-constraints]] — Referential integrity
 - [[databases/opm-or-not-to-orm]] — ORM trade-offs
 
@@ -61,6 +61,6 @@ Data architecture covers **how data is stored, accessed, and flows** through a s
 
 ## Related
 
-- [[../performance/caching]] — Caching layer in front of databases
-- [[../reliability/availability]] — Database availability patterns
+- [[Architecture/solution-architecture-concepts/caching|caching]] — Caching layer in front of databases
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability|availability]] — Database availability patterns
 - [[../event-driven-architecture/README]] — Async data pipelines

@@ -6,6 +6,7 @@ tags:
   - security
   - audit
   - cloudtrail
+date: 2026-06-06
 ---
 
 # AWS CloudTrail
@@ -235,3 +236,10 @@ CloudTrail encrypts log files with the specified CMK. You pay for KMS API calls 
 - **S3 data events generate 2 events per object operation (List and Get/Put):** A single `aws s3 cp file.txt s3://bucket/` generates 2 CloudTrail events. For heavy S3 use, this multiplies costs fast.
 - **CloudTrail log validation (hash chain) detects deletion but not modification:** File validation uses a hash chain to prove integrity. If someone deletes a log file, validation fails. If someone modifies a log file, the hash won't match. But the hash is stored in a separate file.
 - **CloudTrail Insights costs extra ($0.10/100K) — it auto-detects unusual API patterns:** If you don't need automated anomaly detection, skip Insights. It's useful for security but adds cost. Monitor your CloudTrail costs and enable selectively.
+
+## Across the wiki
+
+- [[Linux/security/auditd|auditd]] — audit trails (Linux)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — audit trails (Kubernetes)
+- [[Security/siem/wazuh/README|Wazuh]] — audit trails (Security)
+- [[Kubernetes/eks/observability/logging/control-plane-logs|EKS Control Plane Logs]] — audit trails (Kubernetes)

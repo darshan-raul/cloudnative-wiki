@@ -570,3 +570,9 @@ The init container runs to completion before the app starts. If you have a one-s
 - [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — when you need stable identity
 - [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — automated scaling
 - [[Kubernetes/concepts/L08-operations/01-troubleshooting|Troubleshooting]] — when a Deployment is acting up
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/migration-patterns/blue-green-deployments|Blue-Green Deployments]] — deployment strategies (Architecture)
+- [[DevOps/ci-cd/deployment-strategies|Deployment Strategies]] — deployment strategies (DevOps)
+- [[AWS/solutions-architect-professional/domain-2/2.1-deployment-strategy|2.1 Deployment Strategy]] — deployment strategies (AWS)

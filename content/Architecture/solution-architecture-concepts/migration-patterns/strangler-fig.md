@@ -1,5 +1,8 @@
 ---
 title: Strangler Fig Pattern
+tags: [architecture, migration-patterns, strangler-fig]
+date: 2026-06-06
+description: "The strangler fig pattern is a migration strategy for replacing a legacy system incrementally — routing pieces of functionality to the new system while the old system still runs, until the old system…"
 ---
 
 # Strangler Fig Pattern
@@ -217,4 +220,11 @@ A system with 50 features migrated but 90% of traffic still hitting legacy is no
 - [[blue-green-deployments|Blue-Green Deployments]] — deployment strategy
 - [[expand-contract|Expand-Contract Pattern]] — API/schema evolution
 - [[data-migration|Data Migration Patterns]] — bulk data movement
-- [[event-driven-architecture/README|Event-Driven Architecture]] — CDC and event sourcing
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/README|Event-Driven Architecture]] — CDC and event sourcing
+
+## Across the wiki
+
+- [[AWS/migration/README|AWS Migration]] — migration (AWS)
+- [[AWS/migration/dms/README|Database Migration Service (DMS)]] — migration (AWS)
+- [[AWS/solutions-architect-professional/domain-4/4.2-migration-approach|4.2 Migration Approach]] — migration (AWS)
+- [[AWS/migration/datasync/README|DataSync]] — migration (AWS)

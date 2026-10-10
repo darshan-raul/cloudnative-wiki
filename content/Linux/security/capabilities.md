@@ -5,6 +5,7 @@ tags:
   - linux
   - security
   - containers
+date: 2026-06-06
 ---
 
 # Linux Capabilities
@@ -236,3 +237,10 @@ cat /proc/$$/status | grep CapEff
 python3 -c "import os; print(os.geteuid() == 0 or True)"  # check effective uid
 getpcaps $$   # shows caps of current process
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp and AppArmor]] — kernel sandboxing (Kubernetes)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — kernel sandboxing (Containers)
+- [[Security/kubernetes-security/pod-security/README|Pod Security]] — kernel sandboxing (Security)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — kernel sandboxing (Kubernetes)

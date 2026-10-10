@@ -1,3 +1,10 @@
+---
+title: "Ollama Best Practices Guide"
+tags: [ai, run-locally, ollama-best-practices]
+date: 2026-05-16
+description: "Running models locally with Ollama: hardware sizing, quantization, context and performance tuning, and operational practices."
+---
+
 # Ollama Best Practices Guide
 
 ## Optimizing Local LLM Inference for Code Generation (2025)
@@ -607,3 +614,10 @@ ollama serve
 
 _Document compiled: May 2025_
 _Last updated: Add date as needed_
+
+## Across the wiki
+
+- [[Azure/compute/aks/gpu-orchestration-ai|AKS GPU Orchestration for AI/ML — NVIDIA H100/A100, InfiniBand RDMA, and KubeRay]] — GPU and AI workloads (Azure)
+- [[GCP/compute/gke/gpu-tpu-orchestration|GKE GPU & TPU Orchestration — AI/ML Accelerators, Ray on GKE, and Kueue]] — GPU and AI workloads (GCP)
+- [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources and Device Plugins]] — GPU and AI workloads (Kubernetes)
+- [[AWS/machine-learning/README|AWS Machine Learning]] — GPU and AI workloads (AWS)

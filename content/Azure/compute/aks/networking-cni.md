@@ -9,6 +9,7 @@ tags:
   - cni-overlay
   - ipam
   - routing
+date: 2026-09-06
 ---
 
 # AKS Networking Deep Dive — Azure CNI, CNI Overlay, and Dynamic Pod IP Allocation 🌐🔌
@@ -199,3 +200,10 @@ kubectl get nodes -o custom-columns=NAME:.metadata.name,POD_CIDR:.spec.podCIDR,I
 3. **Pod CIDR Overlap with On-Premises Networks:** Even though the `--pod-cidr` in Azure CNI Overlay is not routable directly outside the cluster, **it must never overlap with any on-premises CIDR, peered VNet, or Azure service CIDR** that pods need to reach. If your `--pod-cidr` is `10.0.0.0/16` and your on-premises datacenter database lives on `10.0.50.10`, the host Linux kernel will assume the target database is an internal pod and drop the packet locally!
 4. **Cannot Switch Network Plugins Post-Creation:** AKS does **not support converting an existing cluster from Kubenet or Traditional Azure CNI to Azure CNI Overlay in place**. Changing the network plugin requires provisioning a fresh AKS cluster and migrating workloads via DNS cutover.
 5. **Kubenet 400-Node Scale Ceiling:** Kubenet creates an Azure Route Table (UDR) in the node resource group and injects one route per node. Because Azure Route Tables have a hard platform limit of **400 user-defined routes per table**, Kubenet clusters can never scale past 400 nodes.
+
+## Across the wiki
+
+- [[Kubernetes/eks/networking/vpc-cni/README|Amazon VPC CNI]] — pod networking (Kubernetes)
+- [[GCP/compute/gke/networking|GKE Networking Deep Dive — Datapath V2, Alias IPs & Gateway API]] — pod networking (GCP)
+- [[Linux/virtualization/network-namespace|Network Namespaces]] — pod networking (Linux)
+- [[Containers/container-networking|Container Networking]] — pod networking (Containers)

@@ -8,6 +8,7 @@ tags:
   - asg
   - security
   - firewall
+date: 2026-09-06
 ---
 
 # Azure Network Security Groups (NSGs) & ASGs 🛡️🧱
@@ -226,3 +227,10 @@ az network nsg rule create \
 3. **ASGs Require All VMs to Be in the Same VNet:** Application Security Groups **cannot span across multiple VNets**. If your web frontend resides in VNet-Spoke-1 and your database resides in VNet-Spoke-2 across VNet peering, you cannot use an ASG as the source or destination across the peering boundary; you must fall back to explicit subnet CIDRs.
 4. **Stateful Connection Tracking & Asymmetric Routing Drops:** Azure NSGs are strictly stateful: if inbound traffic is permitted on port 443, the outbound return traffic is automatically allowed regardless of egress rules. However, if traffic enters via a public IP on NIC 1 and the operating system's routing table attempts to send return packets out via an NVA or VPN on NIC 2, Azure drops the connection due to asymmetric routing.
 5. **Subnet vs. NIC NSG Administrative Confusion:** Best practice in modern Azure architecture is to **attach NSGs exclusively at the Subnet level** and avoid NIC-level NSGs entirely. Managing rules across both layers leads to severe operational troubleshooting confusion where an allowed rule on the subnet is secretly dropped by an forgotten NIC rule.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

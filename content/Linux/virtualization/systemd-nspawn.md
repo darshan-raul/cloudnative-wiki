@@ -5,6 +5,7 @@ tags:
   - linux
   - containers
   - virtualization
+date: 2026-06-06
 ---
 
 # systemd-nspawn

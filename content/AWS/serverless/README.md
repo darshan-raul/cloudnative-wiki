@@ -4,6 +4,7 @@ description: AWS serverless services — Lambda (compute), API Gateway (HTTP/RES
 tags:
   - aws
   - serverless
+date: 2026-06-06
 ---
 
 # AWS Serverless
@@ -69,3 +70,10 @@ Request arrives
 - **Lambda has a 15-minute maximum execution time — for longer jobs, use Step Functions or ECS/Fargate:** If your job takes 30 minutes, Lambda will timeout at 15 minutes. Break into smaller steps or use a different service.
 - **App Runner is NOT the same as Lambda — you manage the container image, not just code:** App Runner runs containers, so you need a Dockerfile and container registry. Lambda lets you just upload code/zip. App Runner is for when you need full runtime control.
 - **Serverless pricing can be unexpectedly high at scale — 100M Lambda invocations/month = $20K/month:** At low volume, serverless is cheap. At high volume (millions of requests/minute), a persistent service (ECS/Fargate) is often cheaper. Model your costs before going all-in on serverless.
+
+## Across the wiki
+
+- [[AI/aws/bedrock|Amazon Bedrock Architecture & Implementation]] — generative AI platforms (AI)
+- [[AI/rag|Retrieval-Augmented Generation (RAG) Architecture]] — generative AI platforms (AI)
+- [[AI/aws/sagemaker/README|Sagemaker]] — generative AI platforms (AI)
+- [[AI/aws/services|Services]] — generative AI platforms (AI)

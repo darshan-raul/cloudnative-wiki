@@ -6,7 +6,11 @@ tags:
   - Service Mesh
   - Istio
   - mTLS
+date: 2026-06-12
+description: "Istio is a full-featured service mesh. Sidecar proxies (Envoy) intercept all pod traffic. You get mTLS, traffic management, observability, and policy, all without changing app code."
 ---
+
+# Istio
 
 Istio is a **full-featured service mesh**. Sidecar proxies (Envoy) intercept all pod traffic. You get mTLS, traffic management, observability, and policy, all without changing app code. **Powerful but complex.** Best for large, security-sensitive deployments.
 

@@ -93,3 +93,14 @@ spec:
 
 - [[Security/kubernetes-security/README|K8s Security Hub]]
 - [[Security/siem/wazuh/integrations/README|n8n Integrations]]
+
+## Further reading
+
+- [Vault (video)](https://www.youtube.com/watch?v=MRQjCvsel-U)
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/secrets-management/README|Secrets Management on EKS]] — secrets management (Kubernetes)
+- [[Azure/compute/aks/security-key-vault-csi|AKS Secrets Management — Azure Key Vault Provider for Secrets Store CSI Driver]] — secrets management (Azure)
+- [[AWS/security/secrets-manager/README|AWS Secrets Manager]] — secrets management (AWS)
+- [[DevOps/devsecops/stage4-runtime/16-secret-management|M16: Runtime Secret Management]] — secrets management (DevOps)

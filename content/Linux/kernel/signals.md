@@ -4,6 +4,7 @@ description: Linux signals — SIGTERM, SIGKILL, SIGCHLD, SIGSEGV, signal handli
 tags:
   - linux
   - processes
+date: 2026-06-06
 ---
 
 # Signals
@@ -195,3 +196,9 @@ kill -TERM -$(pgrep -f myapp)   # negative PID = process group
 # Send to all processes with a specific signal
 killall -TERM nginx
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|Pods Deep Dive & Manifest Reference]] — process lifecycle and signals (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — process lifecycle and signals (Containers)
+- [[Kubernetes/concepts/L06-scheduling-scaling/06-restart-policy|Restart Policy]] — process lifecycle and signals (Kubernetes)

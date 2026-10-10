@@ -8,6 +8,7 @@ tags:
   - elasticache
   - redis
   - memcached
+date: 2026-06-06
 ---
 
 # Amazon ElastiCache
@@ -314,3 +315,10 @@ Serverless: $0.00006 per request + $0.00012 per GB-hour.
 - **Memcached has NO replication — each node is independent:** If a Memcached node fails, data on that node is lost. Use `autodiscovery` for client-side failover and set `expected-updates` correctly in your client. For HA, use Redis instead.
 - **Redis `BGSAVE` and `AOF` rewrite use fork() — on large datasets, this can cause latency spikes:** The `fork()` operation copies the parent's page table. On a 100GB Redis instance, this can be several seconds of latency. Use `BGREWRITEAOF` during low-traffic periods or disable AOF with `appendonly no`.
 - **ElastiCache nodes don't have public IPs — they must be accessed from within the VPC:** Your application (EC2, Lambda, ECS) must be in the same VPC and subnet group as the ElastiCache cluster. For local development, use a local Redis container instead.
+
+## Across the wiki
+
+- [[Azure/databases/redis/README|Azure Cache for Redis Architecture, Clustering, and Enterprise Tiers]] — in-memory caches (Azure)
+- [[GCP/databases/memorystore/README|GCP Memorystore (Managed Redis & Memcached)]] — in-memory caches (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/redis|Redis]] — in-memory caches (Architecture)
+- [[Architecture/solution-architecture-concepts/caching|Caching]] — in-memory caches (Architecture)

@@ -5,6 +5,7 @@ tags:
   - aws
   - management
   - systems-manager
+date: 2026-06-06
 ---
 
 # AWS Systems Manager (SSM)
@@ -259,6 +260,10 @@ aws ssm create-activation \
 sudo amazon-ssm-agent -register -code "activation-code" -id "activation-id" -region "us-east-1"
 ```
 
+## More in this section
+
+- [[AWS/management-governance/systems-manager/patch-manager|Patch Manager]] — Patch Manager explained from first principles to production, for a large mixed fleet across AWS and Azure, Linux and Windows.
+
 ## References
 
 - **Homepage:** https://aws.amazon.com/systems-manager/
@@ -278,3 +283,9 @@ sudo amazon-ssm-agent -register -code "activation-code" -id "activation-id" -reg
 - **Parameter Store has a 4KB default limit for standard parameters:** 4KB is enough for most secrets and connection strings. For larger secrets (certificates, keys), use advanced parameters ($0.05/parameter/month for >4KB).
 - **Session Manager logs can cost money if not managed:** If you enable Session Manager logging to CloudWatch Logs, every session (bash command, output) is logged. A busy team with 50 sessions/day × 30 days × 1MB/session = 1.5GB/month ingested. CloudWatch Logs ingestion: $0.50/GB = $0.75/month. Manageable but track it.
 - **Run Command rate limits to 100 concurrent executions:** If you target 1000 instances with Run Command, only 100 execute at once. The rest queue. This prevents accidental overload but means large fleet operations take time.
+
+## Across the wiki
+
+- [[Linux/ssh/ssh-config|SSH Config and Tricks]] — remote access (Linux)
+- [[Kubernetes/eks/security/access/endpoint-access|Cluster Endpoint Access]] — remote access (Kubernetes)
+- [[Kubernetes/concepts/L08-operations/02-kubectl-debug|kubectl Debug Toolkit]] — remote access (Kubernetes)

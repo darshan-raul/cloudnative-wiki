@@ -7,6 +7,7 @@ tags:
   - scc
   - secrets
   - kms
+date: 2026-09-06
 ---
 
 # GCP Security Command Center (SCC) & Secret Manager 🛡️🔑
@@ -162,3 +163,10 @@ gcloud scc findings-exports create scc-to-siem \
 3. **CMEK Revocation Can Freeze Resources Irreversibly:** If you configure Customer-Managed Encryption Keys on BigQuery or Cloud Storage and later disable or delete the KMS key in Cloud KMS, all reads and writes to those tables and buckets fail instantly. If a key is destroyed after the 30-day scheduled destruction window, the encrypted data is **permanently and irreversibly lost**.
 4. **Agentless VMTD Limitations:** Virtual Machine Threat Detection (VMTD) operates directly inside the hypervisor, meaning it cannot be disabled or blinded by an attacker who gains root on the guest OS. However, VMTD is only supported on specific machine series (N1, N2, N2D, C2) and cannot inspect memory on ARM-based T2A instances.
 5. **Secret Version Destruction Grace Period:** When you destroy a secret version, it immediately becomes inaccessible to workloads. However, Google retains the metadata in a `DESTROYED` state for 30 days before permanent deletion. You cannot reuse the numeric version ID (e.g. version 2 will never be re-allocated).
+
+## Across the wiki
+
+- [[AWS/security/guardduty/README|AWS GuardDuty]] — threat detection (AWS)
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
+- [[Security/siem/README|SIEM]] — threat detection (Security)
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)

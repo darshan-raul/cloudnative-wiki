@@ -5,6 +5,7 @@ tags:
   - aws
   - migration
   - database
+date: 2026-06-06
 ---
 
 # Database Migration Service (DMS)
@@ -336,3 +337,10 @@ The S3 target writes database tables as CSV or Parquet files in S3, with optiona
 - **Secrets Manager:** If using, costs for secret storage
 
 **Cost tip:** Stop the replication instance after migration completes. You don't need it running if you're not doing ongoing replication.
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/migration-patterns/README|Migration Patterns]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/data-migration|Data Migration Patterns]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/change-data-capture|Change Data Capture (CDC)]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/strangler-fig|Strangler Fig Pattern]] — migration (Architecture)

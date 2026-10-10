@@ -7,6 +7,7 @@ tags:
   - analytics
   - redshift
   - data-warehouse
+date: 2026-06-06
 ---
 
 # Amazon Redshift
@@ -334,3 +335,9 @@ aws redshift resize-cluster \
 - **Sort keys are NOT the same as indexes — they determine physical order on disk:** A sort key on `date` means all data is physically ordered by date. Queries filtering on date will scan less data. But inserting with incorrect order requires `VACUUM` to re-sort.
 - **Redshift Spectrum has a 10-query concurrency limit per cluster — if you run 11 queries simultaneously, the 11th waits:** For high-concurrency workloads, use Redshift provisioned concurrency or Athena instead.
 - **The `CONVERT_TO_CHAR` and `DECIMAL` type handling differs from PostgreSQL — test your queries:** Redshift is based on PostgreSQL 8.0.2 (heavily modified), not current PostgreSQL. Functions like `NOW()` return different types. Always test in dev before running in production.
+
+## Across the wiki
+
+- [[GCP/databases/bigquery|Google BigQuery]] — analytics and warehouses (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/columnar-databases|Columnar Databases]] — analytics and warehouses (Architecture)
+- [[GCP/analytics/dataflow/README|Cloud Dataflow Architecture & Streaming Pipelines]] — analytics and warehouses (GCP)

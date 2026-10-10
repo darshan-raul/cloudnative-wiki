@@ -4,6 +4,7 @@ description: Linux networking — TCP/IP model, routing, DNS, iptables, firewall
 tags:
   - linux
   - networking
+date: 2026-01-30
 ---
 
 # Linux Networking
@@ -43,3 +44,10 @@ Start with [[tcp-ip-model]] if you want the big-picture foundation. The rest can
 ## Container Networking
 
 **[[network-namespace|Network Namespaces]]** — How containers get isolated network stacks. `ip netns`, veth pairs, the bridge driver, and how Docker's `bridge` network actually works. How NAT enables containers to reach the outside world. The `--network=host` and `--publish` flags explained through namespace behavior.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/README|Amazon VPC]] — virtual networks (AWS)
+- [[Azure/networking/vnet|Azure Virtual Network (VNet) & Hybrid Routing]] — virtual networks (Azure)
+- [[GCP/networking/vpc|GCP Virtual Private Cloud (VPC) & Networking]] — virtual networks (GCP)
+- [[Architecture/solution-architecture-concepts/networking/README|Cloud-Native Networking Architecture Guide]] — virtual networks (Architecture)

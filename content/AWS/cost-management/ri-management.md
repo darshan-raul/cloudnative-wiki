@@ -4,6 +4,7 @@ description: Reserved Instance management — coverage reports, utilization repo
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Reserved Instance Management

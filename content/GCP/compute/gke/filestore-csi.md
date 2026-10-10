@@ -8,6 +8,7 @@ tags:
   - filestore
   - nfs
   - rwx
+date: 2026-09-06
 ---
 
 # GKE Filestore CSI Driver — Managed NFS and ReadWriteMany (RWX) Architecture 📁⚡
@@ -269,3 +270,10 @@ Pricing components:
 4. **The 1 TiB Minimum Billing Boundary:** You can declare a Kubernetes PVC requesting `10Gi` of Filestore storage. However, if your StorageClass specifies `tier: enterprise` without `multishare: "true"`, the Filestore API will provision a full 1 TiB physical instance behind the scenes, and **you will be billed for 1,024 GiB ($675.84/month)** for a 10 GiB PVC. Always set `multishare: "true"` when allocating small RWX volumes.
 5. **NFS Client Caching Attribute Latency (`acregmin` / `acregmax`):** When Pod A writes a file to the Filestore share, Pod B on a different node might not see the new file for 3 to 30 seconds due to Linux NFS client attribute caching (`actimeo`). If your application architecture relies on Pod A writing a file and immediately signaling Pod B via Pub/Sub to read it, Pod B will throw `FileNotFoundException`. Fix this by tuning mount options in the StorageClass: `mountOptions: ["acregmin=0", "acregmax=0"]` (at the cost of slightly higher metadata I/O).
 6. **Cross-Zone Network Egress with Basic Tier:** Filestore Basic tiers are strictly zonal (deployed in a single availability zone, e.g., `us-central1-a`). If worker pods in `us-central1-b` and `us-central1-c` mount that Basic volume, every gigabyte of read/write traffic crosses zone boundaries, incurring GCP cross-zone egress charges ($0.01/GB) and adding 1-2ms network latency. For multi-zone regional GKE clusters, always use **Filestore Enterprise**, which replicates synchronously across multiple zones and optimizes local-zone reads.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/efs-csi|EFS CSI Driver]] — shared file storage (Kubernetes)
+- [[Azure/compute/aks/storage-csi-files-blob|AKS Shared Storage CSI — Azure Files (NFS/SMB) and Azure Blob CSI Architecture]] — shared file storage (Azure)
+- [[AWS/storage/efs/README|Amazon EFS]] — shared file storage (AWS)
+- [[AWS/storage/fsx/README|Amazon FSx]] — shared file storage (AWS)

@@ -4,6 +4,7 @@ description: tmux — terminal multiplexer, sessions, windows, panes, keybinding
 tags:
   - linux
   - tools
+date: 2026-01-30
 ---
 
 # tmux
@@ -355,3 +356,9 @@ tmux send-keys -t session 'cmd' Enter   # send command
 tmux capture-pane -t session:0.0 -p    # capture output
 tmux pipe-pane -t session:0.0 -t log   # log pane to file
 ```
+
+## Across the wiki
+
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — command-line tooling (Kubernetes)
+- [[AWS/management-governance/cli/README|AWS CLI]] — command-line tooling (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/psql|psql]] — command-line tooling (Architecture)

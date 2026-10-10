@@ -4,6 +4,7 @@ description: Linux process management — ps, top, htop, kill, signals, pstree, 
 tags:
   - linux
   - processes
+date: 2026-06-06
 ---
 
 # Process Management
@@ -227,3 +228,9 @@ fuser 80/tcp                  # process using port 80
 strace -p PID                 # trace syscalls
 watch -n 1 'ps -eo pid,stat,cmd --sort=-cpu | head'  # live top
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|Pods Deep Dive & Manifest Reference]] — process lifecycle and signals (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — process lifecycle and signals (Containers)
+- [[Kubernetes/concepts/L06-scheduling-scaling/06-restart-policy|Restart Policy]] — process lifecycle and signals (Kubernetes)

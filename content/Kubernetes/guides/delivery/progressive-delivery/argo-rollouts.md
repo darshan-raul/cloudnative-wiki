@@ -7,7 +7,11 @@ tags:
   - Argo Rollouts
   - Canary
   - Blue-Green
+date: 2026-01-30
+description: "Argo Rollouts is a drop-in replacement for Deployments that supports advanced deployment strategies: canary, blue-green, traffic shifting, and analysis."
 ---
+
+# Argo Rollouts
 
 Argo Rollouts is a **drop-in replacement for Deployments** that supports advanced deployment strategies: canary, blue-green, traffic shifting, and analysis. The controller watches the Rollout resource, manages ReplicaSets, and shifts traffic via Ingress / Service Mesh / Gateway API.
 
@@ -693,3 +697,9 @@ kubectl argo rollouts get rollout web --watch
 - [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — CI for image builds
 - [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — break things safely
 - [Argo Rollouts docs](https://argoproj.github.io/argo-rollouts/)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/migration-patterns/blue-green-deployments|Blue-Green Deployments]] — deployment strategies (Architecture)
+- [[DevOps/ci-cd/deployment-strategies|Deployment Strategies]] — deployment strategies (DevOps)
+- [[AWS/solutions-architect-professional/domain-2/2.1-deployment-strategy|2.1 Deployment Strategy]] — deployment strategies (AWS)

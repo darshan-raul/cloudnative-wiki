@@ -6,6 +6,7 @@ tags:
   - namespaces
   - security
   - containers
+date: 2026-06-06
 ---
 
 # User Namespaces
@@ -191,3 +192,10 @@ ls -la /proc/self/ns/user
 # Enter a user namespace
 nsenter --target $PID --user bash
 ```
+
+## Across the wiki
+
+- [[Containers/runtimes|Container Runtimes]] — container internals (Containers)
+- [[Kubernetes/concepts/L09-advanced/09-pause-container|The Pause Container]] — container internals (Kubernetes)
+- [[Containers/images-and-layers|Container Images and Layers]] — container internals (Containers)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing (gVisor, Kata Containers)]] — container internals (Kubernetes)

@@ -13,7 +13,7 @@ Reliability = the ability of a system to keep working correctly over time, even 
 
 ## What's Here
 
-- [[availability]] — SLA, SLO, error budgets, availability tiers
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability|availability]] — SLA, SLO, error budgets, availability tiers
 - [[resilience]] — Circuit breakers, retries with backoff, bulkheads, graceful degradation
 - [[load-balancing]] — LB algorithms, health checks, L4 vs L7
 - [[idempotency]] — Designing APIs that are safe to retry
@@ -52,6 +52,13 @@ Reliability Patterns (in order of impact):
 
 ## Related
 
-- [[../performance/caching]] — Caching impacts reliability (cache failures cascade)
+- [[Architecture/solution-architecture-concepts/caching|caching]] — Caching impacts reliability (cache failures cascade)
 - [[../security/shift-left]] — Security testing improves reliability
-- [[../foundations/non-functional-requirements/scaling]] — Scaling for reliability
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability|scaling]] — Scaling for reliability
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/high-availability|High Availability]] — high availability (Kubernetes)
+- [[DevOps/sre/slos-and-error-budgets|SLOs and Error Budgets]] — high availability (DevOps)
+- [[AWS/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures|1.3 Design Reliable and Resilient Architectures]] — high availability (AWS)
+- [[Azure/compute/aks/cluster-tiers-sla|AKS Cluster Tiers, High Availability Control Plane, and Private Cluster Architecture]] — high availability (Azure)

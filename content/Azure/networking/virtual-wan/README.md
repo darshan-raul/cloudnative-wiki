@@ -7,6 +7,7 @@ tags:
   - virtual-wan
   - vwan
   - hybrid-cloud
+date: 2026-09-06
 ---
 
 # Azure Virtual WAN (vWAN) Architecture & Global Transit Routing 🌐🛤️
@@ -256,3 +257,10 @@ Azure Virtual WAN pricing includes:
 4. **Hub-to-Hub Transit Requires "Standard" SKU:** Azure offers a "Basic" Virtual WAN SKU and a "Standard" SKU. Basic only supports Site-to-Site VPN and does not support VNet-to-VNet transit, ExpressRoute, or Hub-to-Hub inter-region transit. If you create a Basic vWAN, you cannot convert it in-place to Standard without deleting and rebuilding your hub topology. Always create **Standard Virtual WAN** from day one.
 5. **ExpressRoute Gateway Scale Units Cannot Be Set to Zero:** Once you deploy an ExpressRoute or VPN Gateway inside a Virtual Hub, you cannot scale it down to 0 units to pause billing during a testing hiatus. The gateway will bill for at least 1 Scale Unit ($263 - $306/month) 24/7. To stop charges in development environments, you must delete the gateway resource completely.
 6. **BGP AS Number Collisions with On-Premises:** Azure Virtual Hub uses Autonomous System Number (ASN) `65515` by default. If your corporate on-premises datacenter router or an existing ExpressRoute circuit is already configured with ASN `65515`, BGP route peering will fail immediately due to AS-Path loop prevention rules. Verify and customize your BGP ASN settings before establishing hybrid connections.
+
+## Across the wiki
+
+- [[GCP/networking/private-service-connect/README|GCP Private Service Connect (PSC)]] — private connectivity (GCP)
+- [[AWS/concepts/vpc-lattice|Amazon VPC Lattice]] — private connectivity (AWS)
+- [[Kubernetes/eks/networking/vpc-lattice/README|Amazon VPC Lattice]] — private connectivity (Kubernetes)
+- [[GCP/networking/vpc/shared-vpc|GCP Shared VPC Architecture & Cross-Project Networking]] — private connectivity (GCP)

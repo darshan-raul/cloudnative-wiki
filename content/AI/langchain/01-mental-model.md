@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - LCEL
+date: 2026-06-12
+description: "When you talk to an LLM directly, you send a prompt and get a response. That's simple. But real applications need more."
 ---
+
+# LangChain — Mental Model
 
 > **Start here.** This is the foundation. Read this first, then
 > work through the files in order. Everything builds on this.

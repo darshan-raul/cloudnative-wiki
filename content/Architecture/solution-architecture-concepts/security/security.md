@@ -182,3 +182,9 @@ Operations
 - [OWASP Top 10](https://owasp.org/Top10/)
 - [NIST Zero Trust Architecture](https://csrc.nist.gov/publications/detail/sp/800-207/final)
 - [CISA Zero Trust Maturity Model](https://www.cisa.gov/zero-trust-maturity-model)
+
+## Across the wiki
+
+- [[Security/zero-trust|Zero-Trust Architecture (NIST SP 800-207)]] — zero trust (Security)
+- [[Security/assume-breach-principle|Assume Breach Principle]] — zero trust (Security)
+- [[Security/application-security/README|Application Security]] — zero trust (Security)

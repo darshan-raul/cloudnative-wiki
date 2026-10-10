@@ -5,7 +5,11 @@ tags:
   - Troubleshooting
   - Networking
   - Services
+date: 2026-06-11
+description: "The most common k8s networking problem: a Service exists, pods are running, but traffic to the Service doesn't reach a pod. This is a routing problem, not a code problem."
 ---
+
+# Service Unreachable
 
 The most common k8s networking problem: a Service exists, pods are running, but traffic to the Service doesn't reach a pod. This is a **routing** problem, not a code problem.
 

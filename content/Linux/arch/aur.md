@@ -1,5 +1,8 @@
 ---
 title: AUR & Software Management
+tags: [linux, arch, aur]
+date: 2026-05-24
+description: "The AUR is a community-driven repository of ~80,000+ package build scripts (PKGBUILDs) for software not in the official repos. It powers Arch's massive software availability."
 ---
 
 # 3. AUR & Software Management

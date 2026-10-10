@@ -11,6 +11,7 @@ tags:
   - service-mesh
   - gitops
   - opa
+date: 2026-09-06
 ---
 
 # GKE Fleets, Cloud Service Mesh (formerly ASM), and Policy Controller Governance 🌐🏛️
@@ -252,3 +253,9 @@ Pricing structure:
 4. **Fleet Registration Requires Unique Membership Names:** When registering clusters to a Fleet, every membership name must be globally unique within the Google Cloud project. Attempting to register two clusters with the name `production-cluster` (even if located in different regions like `us-central1` and `europe-west1`) will result in an `ALREADY_EXISTS` error. Use regional suffixes (`gke-prod-us-central1` and `gke-prod-europe-west1`).
 5. **Config Sync Git Repository Access Token Expiration:** When configuring Config Sync to pull Kubernetes manifests from a private GitHub or GitLab repository, engineers often use Personal Access Tokens (PATs). When the PAT expires after 90 days, Config Sync halts synchronization silently, leaving cluster configurations out of sync with Git without alerting developers. Always authenticate Config Sync via **Workload Identity OIDC federation** or deploy an automated secret refresher.
 6. **Envoy Sidecar Memory Leaks on High-Connection Gateways:** When microservices handle tens of thousands of concurrent WebSocket connections or long-lived gRPC streams, the Envoy sidecar container (`istio-proxy`) can consume significant RAM tracking connection state. If the pod specification does not declare explicit resource limits for the injected sidecar (`sidecar.istio.io/proxyMemoryLimit`), Envoy can consume all node memory, triggering the Linux kernel Out-Of-Memory (`OOMKilled`) killer on your application container.
+
+## Across the wiki
+
+- [[Azure/compute/aks/fleet-manager-multicluster|Azure Kubernetes Fleet Manager — Multi-Cluster Governance, Staged Upgrades, and Multi-Cluster Services (MCS)]] — multi-cluster (Azure)
+- [[Kubernetes/guides/tools/multi-cluster|Multi-Cluster]] — multi-cluster (Kubernetes)
+- [[Kubernetes/eks/advanced/advanced-networking|Advanced EKS Networking]] — multi-cluster (Kubernetes)

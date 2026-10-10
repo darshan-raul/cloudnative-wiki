@@ -3,7 +3,11 @@ title: "LangGraph — Memory Store"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "These are two different systems."
 ---
+
+# LangGraph — Memory Store
 
 > **Part 9.** The memory store (`InMemoryStore`, `PostgresStore`) —
 > cross-thread, long-term storage that persists across conversations.

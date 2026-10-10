@@ -70,3 +70,10 @@ subjects:
 
 - [[Security/kubernetes-security/README|K8s Security Hub]]
 - [[Kubernetes/eks/security/pod-identity|Pod Identity (IRSA)]]
+
+## Across the wiki
+
+- [[AWS/security/iam/README|AWS IAM]] — identity and access (AWS)
+- [[Azure/identity/entraid|EntraID]] — identity and access (Azure)
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)

@@ -1,3 +1,10 @@
+---
+title: "Cores?"
+tags: [architecture, software-engineering-concepts, cores]
+date: 2026-01-30
+description: "How clock speed (GHz) relates to core count, and what each means for performance."
+---
+
 # Cores?
 
 Here's how GHz relates to dual-core and quad-core machines:

@@ -5,6 +5,7 @@ tags:
   - aws
   - networking
   - vpc-peering
+date: 2026-06-06
 ---
 
 # VPC Peering
@@ -93,3 +94,10 @@ If you want instances in VPC-B to resolve DNS names in VPC-A, enable **DNS resol
 - **Peering doesn't support IPv6 by default:** IPv6 traffic requires the VPC to have an IPv6 CIDR block and the peering connection to be configured for IPv6. Not all use cases need this, but it's a gotcha for IPv6 workloads.
 - **Security groups referencing peer VPC SGs require the SG to exist in both accounts:** If Account A has sg-123 and it references sg-456 in Account B's VPC, sg-456 must exist and be assigned to instances in Account B's VPC. This cross-account SG reference is valid only when the peering connection is active.
 - **DNS resolution for peering must be explicitly enabled:** By default, instances in VPC-B cannot resolve DNS names in VPC-A (or vice versa). ==You must enable "DNS resolution" on the peering connection.== This is a common cause of mysterious "can't resolve hostname" issues after setting up peering.
+
+## Across the wiki
+
+- [[Azure/networking/private-link/README|Azure Private Link, Private Endpoints, and Private DNS Architecture]] — private connectivity (Azure)
+- [[GCP/networking/private-service-connect/README|GCP Private Service Connect (PSC)]] — private connectivity (GCP)
+- [[Kubernetes/eks/networking/vpc-lattice/README|Amazon VPC Lattice]] — private connectivity (Kubernetes)
+- [[Azure/networking/virtual-wan/README|Azure Virtual WAN (vWAN) Architecture & Global Transit Routing]] — private connectivity (Azure)

@@ -262,3 +262,7 @@ Phase 2 (Commit):   If all YES → send commit
 - [A Journey in Synchronous Concurrent Burgers](https://fastapi.tiangolo.com/async/#concurrent-burgers) (great intro)
 - [Go Concurrency Patterns — Google](https://go.dev/tour/concurrency)
 - [The Actor Model in 10 Minutes](https://www.b稟w.com/actor-model)
+
+## Further reading
+
+- [Deadlock (video)](https://youtu.be/y7DOHyBTWps)

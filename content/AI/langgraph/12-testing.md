@@ -3,7 +3,11 @@ title: "LangGraph — Testing"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "Test the graph, not the model. Use FakeListChatModel to simulate model responses without hitting the API."
 ---
+
+# LangGraph — Testing
 
 > **Part 12.** Testing LangGraph applications — `FakeListChatModel`,
 > graph assertions, no-network discipline, and fixture patterns.

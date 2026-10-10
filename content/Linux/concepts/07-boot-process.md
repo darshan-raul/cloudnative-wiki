@@ -4,6 +4,7 @@ description: Linux boot process — BIOS/UEFI, POST, bootloader, kernel, initram
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 07 — Boot Process

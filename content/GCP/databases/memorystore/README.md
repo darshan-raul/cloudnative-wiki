@@ -8,6 +8,7 @@ tags:
   - redis
   - caching
   - in-memory
+date: 2026-09-06
 ---
 
 # GCP Memorystore (Managed Redis & Memcached) ⚡🧠
@@ -163,3 +164,10 @@ gcloud redis clusters create prod-redis-cluster \
 3. **Private Services Access IP Subnet Exhaustion:** Memorystore connects to your VPC via **Private Services Access** (a peered Google tenant network). If the allocated IP range (e.g. `/24`) is exhausted by Cloud SQL and other managed services, creating a new Memorystore instance will fail with `IP_SPACE_EXHAUSTED`. Plan a `/20` or `/21` range for Private Services Access.
 4. **Connection Pool Dropped on Failover:** During a Standard HA failover (~15–30 seconds), the virtual IP is transferred to the replica. Existing TCP connections to the old primary are abruptly terminated. Client libraries that do not handle reconnections with exponential backoff will enter crash loops. Always configure client-side connection retry policies.
 5. **Slow Queries Block the Single-Threaded Event Loop:** Redis is single-threaded. Running commands like `KEYS *`, `FLUSHALL`, or heavy Lua scripts on a large database will block the Redis event loop for seconds. During this freeze, health checks fail and Memorystore can trigger an unnecessary failover! Always use `SCAN` instead of `KEYS *`.
+
+## Across the wiki
+
+- [[AWS/databases/elasticache/README|Amazon ElastiCache]] — in-memory caches (AWS)
+- [[Azure/databases/redis/README|Azure Cache for Redis Architecture, Clustering, and Enterprise Tiers]] — in-memory caches (Azure)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/redis|Redis]] — in-memory caches (Architecture)
+- [[Architecture/solution-architecture-concepts/caching|Caching]] — in-memory caches (Architecture)

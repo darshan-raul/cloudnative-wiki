@@ -6,6 +6,7 @@ tags:
   - networking
   - dns
   - route53
+date: 2026-06-06
 ---
 
 # Amazon Route 53
@@ -216,3 +217,10 @@ Gradually increase green weight as confidence grows
 - **Health checks are performed from multiple global locations — not from your VPC:** A health check that passes from Route 53's checkers might still fail from inside your VPC due to network policies. Use CloudWatch alarm health checks for accurate internal monitoring.
 - **Health check interval of 10 seconds detects failures faster but costs 3x:** 30-second interval = $0.50/health check/month. 10-second interval = $1.50/health check/month. For critical production endpoints, 10-second detection is worth the cost.
 - **Private hosted zones don't automatically resolve across VPCs:** You must associate the private hosted zone with each VPC that needs to resolve it. If a new VPC is created and doesn't resolve internal names, check that it's associated with the private hosted zone.
+
+## Across the wiki
+
+- [[GCP/networking/cloud-dns/README|GCP Cloud DNS Architecture]] — DNS (GCP)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/README|DNS]] — DNS (Architecture)
+- [[Linux/networking/dns-resolution|DNS Resolution]] — DNS (Linux)
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS in Kubernetes]] — DNS (Kubernetes)

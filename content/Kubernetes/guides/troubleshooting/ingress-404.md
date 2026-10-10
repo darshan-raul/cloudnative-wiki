@@ -5,7 +5,11 @@ tags:
   - Troubleshooting
   - Networking
   - Ingress
+date: 2026-06-11
+description: "External traffic hits your cluster, but the response is wrong: 404 (no route), 502 (bad gateway), 503 (service unavailable), or hangs."
 ---
+
+# Ingress 404 / 502 / 503
 
 External traffic hits your cluster, but the response is wrong: 404 (no route), 502 (bad gateway), 503 (service unavailable), or hangs. This is **Ingress** or **Ingress controller** trouble — the path from outside the cluster to a pod is broken.
 

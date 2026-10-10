@@ -1,3 +1,10 @@
+---
+title: "Security Groups"
+tags: [azure, security-groups]
+date: 2026-01-30
+description: "An Azure Network Security Group (NSG) is a fundamental security component that acts as a virtual firewall for filtering network traffic to and from Azure resources in a virtual network (VNet)."
+---
+
 # Security Groups
 
 ### 🔐 1 Core Concepts: NSGs and ASGs
@@ -251,3 +258,10 @@ Azure Network Security Groups and Application Security Groups are powerful tools
 7. **Think Beyond Perimeter**: Complement network segmentation with identity-based controls and monitoring for a defense-in-depth approach.
 
 By mastering NSGs and ASGs, you can effectively implement network segmentation, control traffic flow, and enhance the security posture of your Azure deployments. Start with simple, well-documented configurations, and gradually adopt more advanced patterns as your requirements evolve.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

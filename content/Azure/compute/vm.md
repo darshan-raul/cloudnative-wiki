@@ -7,6 +7,7 @@ tags:
   - vms
   - vmss
   - infrastructure
+date: 2026-09-06
 ---
 
 # Azure Virtual Machines & Scale Sets (VMSS) 🖥️⚡
@@ -186,3 +187,10 @@ az monitor autoscale rule create \
 3. **Availability Zones vs. Regional Disk Locks:** If a VM in Zone 1 crashes, its attached Zonal Managed Disk cannot be attached to a VM in Zone 2. Availability Zones are physically isolated hardware boundaries. For cross-zone disk failover, stateful applications must replicate data at the software layer or use Azure NetApp Files / shared filesystems.
 4. **Scheduled Events Polling Requirement:** Azure notifies VMs of Spot preemption, host maintenance, and reboots via the Scheduled Events API at `http://169.254.169.254/metadata/scheduledevents`. However, unlike push notifications, your application or monitoring daemon **must continuously poll this endpoint every 1–5 seconds** to catch the 30-second shutdown notice.
 5. **Azure Bastion Subnet Sizing:** Azure Bastion requires a dedicated subnet named strictly `AzureBastionSubnet`. The subnet must be at least `/26` to support scaling. If created as a `/27` or smaller, Bastion will fail to provision or scale during multi-user sessions.
+
+## Across the wiki
+
+- [[AWS/compute/ec2/README|Amazon EC2]] — virtual machines (AWS)
+- [[GCP/compute/gce|GCP Compute Engine (GCE)]] — virtual machines (GCP)
+- [[Linux/virtualization/hypervisors|Hypervisors]] — virtual machines (Linux)
+- [[GCP/compute/gce/migs|GCP Managed Instance Groups (MIGs)]] — virtual machines (GCP)

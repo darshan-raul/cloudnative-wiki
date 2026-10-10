@@ -7,7 +7,11 @@ tags:
   - Canary
   - Blue-Green
   - A/B Testing
+date: 2026-06-12
+description: "Progressive delivery = deploy to a subset of users, observe, gradually expand. The opposite of big-bang releases. Strategies: rolling update, canary, blue-green, A/B, feature flags, shadow."
 ---
+
+# Progressive Delivery Strategies
 
 Progressive delivery = **deploy to a subset of users, observe, gradually expand**. The opposite of big-bang releases. Strategies: rolling update, canary, blue-green, A/B, feature flags, shadow. **Pick the right one for the risk.**
 
@@ -584,3 +588,9 @@ If a canary issue is detected at 5%, blast radius is 50k. Detected at 100%, blas
 - [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — the controller model
 - [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing the system
 - [Progressive Delivery book](https://www.progressive-delivery.com/) (free)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/migration-patterns/blue-green-deployments|Blue-Green Deployments]] — deployment strategies (Architecture)
+- [[DevOps/ci-cd/deployment-strategies|Deployment Strategies]] — deployment strategies (DevOps)
+- [[AWS/solutions-architect-professional/domain-2/2.1-deployment-strategy|2.1 Deployment Strategy]] — deployment strategies (AWS)

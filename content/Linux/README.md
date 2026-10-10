@@ -3,6 +3,7 @@ title: Linux
 description: "Linux operating system — beginner to advanced: filesystem, users, processes, networking, storage, boot, security, virtualization"
 tags:
   - linux
+date: 2026-01-30
 ---
 
 # Linux
@@ -75,3 +76,11 @@ bash cheatsheet, shell redirection, here-docs, process substitution, shell expan
 ### [[Linux/troubleshooting/README|Troubleshooting]] — Debugging methodology
 
 Systematic debugging, common issues, diagnosis framework.
+
+- [[Linux/arch/README|Arch Linux]] — A comprehensive guide to Arch Linux and Manjaro — rolling release distributions built on the KISS principle.
+- [[Linux/tools/README|Tools]] — Command-line tools worth knowing well, with worked examples.
+
+## Further reading
+
+- [Combined Cheatsheets — devhints.io](https://devhints.io/)
+- [Linux — github.com](https://github.com/trinib/Linux-Bash-Commands#quick-cheat-sheet-)

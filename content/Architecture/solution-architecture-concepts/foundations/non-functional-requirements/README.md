@@ -1,5 +1,8 @@
 ---
 title: Non-Functional Requirements
+tags: [architecture, foundations, non-functional-requirements]
+date: 2026-06-06
+description: "Non-functional requirements (NFRs) define the quality attributes of a system — the characteristics that determine how well the system works, not what it does."
 ---
 
 # Non-Functional Requirements
@@ -25,16 +28,16 @@ Improving one often costs another. A solution architect's job is finding the rig
 
 Each NFR is covered in depth in its own file:
 
-| NFR                 | File                | What it covers                                                                      |
-| ------------------- | ------------------- | ----------------------------------------------------------------------------------- |
-| [[performance       | Performance]]       | Latency, throughput, resource efficiency, caching, database performance patterns    |
-| [[availability      | Availability]]      | The nines, redundancy, health checks, circuit breakers, SLOs vs SLAs                |
-| [[scalability       | Scalability]]       | Vertical vs horizontal, stateless architecture, sharding, auto-scaling              |
-| [[reliability       | Reliability]]       | Failure modes, fault tolerance patterns, MTTR, MTBF, observability                  |
-| [[security          | Security]]          | CIA triad, defense in depth, threat modeling, encryption, compliance                |
-| [[maintainability   | Maintainability]]   | Modifiability, testability, operability, technical debt, CI/CD quality gates        |
-| [[disaster-recovery | Disaster Recovery]] | RPO/RTO, backup/restore, pilot light, warm standby, active-active, failover testing |
-| [[capacity-planning | Capacity Planning]] | Resource dimensions, forecasting, cost modeling, right-sizing, monitoring           |
+| NFR                                      | File                                                                                | What it covers |
+| ---------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
+| [[performance\|Performance]]             | Latency, throughput, resource efficiency, caching, database performance patterns    |
+| [[availability\|Availability]]           | The nines, redundancy, health checks, circuit breakers, SLOs vs SLAs                |
+| [[scalability\|Scalability]]             | Vertical vs horizontal, stateless architecture, sharding, auto-scaling              |
+| [[reliability\|Reliability]]             | Failure modes, fault tolerance patterns, MTTR, MTBF, observability                  |
+| [[security\|Security]]                   | CIA triad, defense in depth, threat modeling, encryption, compliance                |
+| [[maintainability\|Maintainability]]     | Modifiability, testability, operability, technical debt, CI/CD quality gates        |
+| [[disaster-recovery\|Disaster Recovery]] | RPO/RTO, backup/restore, pilot light, warm standby, active-active, failover testing |
+| [[capacity-planning\|Capacity Planning]] | Resource dimensions, forecasting, cost modeling, right-sizing, monitoring           |
 
 ## Cross-NFR Concerns
 
@@ -90,6 +93,6 @@ A system you can't modify reliably is a system that degrades over time. Technica
 
 ## Related
 
-- [[back-of-the-envelope-calculations|Back-of-the-Envelope Calculations]] — quick NFR estimates
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/capacity-planning|Back-of-the-Envelope Calculations]] — quick NFR estimates
 - [[performance-testing|Performance Testing]] — validating performance targets
-- [[foundations/README|Foundations]] — foundational solution architecture concepts
+- [[Architecture/solution-architecture-concepts/foundations/README|Foundations]] — foundational solution architecture concepts

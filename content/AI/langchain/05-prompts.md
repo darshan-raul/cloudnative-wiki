@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - Prompts
+date: 2026-06-12
+description: "Literal SystemMessage + HumanMessage works for static, single-turn cases."
 ---
+
+# LangChain — Prompts
 
 > **Part 5.** `ChatPromptTemplate` — building a messages list from
 > template variables. `MessagesPlaceholder`, `partial`, the four

@@ -4,6 +4,7 @@ description: Linux filesystem hierarchy — what /, /home, /var, /etc, /tmp, /op
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 01 — Filesystem Hierarchy

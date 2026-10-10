@@ -3,7 +3,11 @@ title: "LangGraph — Checkpointers"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "A checkpointer saves the graph state after each step. On the next call with the same threadid, it restores the state and resumes from where the graph left off."
 ---
+
+# LangGraph — Checkpointers
 
 > **Part 8.** How checkpointers save and restore graph state,
 > `MemorySaver`, `SqliteSaver`, `PostgresSaver`, and how to

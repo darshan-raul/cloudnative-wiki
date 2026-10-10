@@ -6,6 +6,7 @@ tags:
   - monitoring
   - events
   - cloudwatch
+date: 2026-06-06
 ---
 
 # CloudWatch Events
@@ -220,3 +221,9 @@ aws events put-rule \
 - **EventBridge can't trigger cross-region Lambda functions by default:** A rule in us-east-1 can only trigger Lambda in us-east-1. For cross-region automation, use EventBridge in the target region or trigger a Lambda that calls the other region's resources.
 - **Schedule expressions use UTC — always specify timezone:** `cron(0 10 * * ? *)` means 10:00 UTC, not 10:00 local time. If your team is in New York (EST), 10:00 UTC is 5:00 AM EST. Use `cron(0 15 * * ? *)` for 10:00 EST.
 - **Dead letter queue is per target, not per rule:** If a rule has 3 targets and one fails, only that target's events go to the DLQ. The other 2 targets continue to receive events. This is the correct behavior but can be confusing when debugging.
+
+## Across the wiki
+
+- [[Linux/boot-init/cron-anacron|Cron and Anacron]] — scheduled work (Linux)
+- [[Kubernetes/concepts/L03-workloads/07-cronjob|CronJobs — Time-Scheduled Workloads]] — scheduled work (Kubernetes)
+- [[Linux/boot-init/systemd-timers|systemd Timers]] — scheduled work (Linux)

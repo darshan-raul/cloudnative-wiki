@@ -1,3 +1,10 @@
+---
+title: "Websocket"
+tags: [architecture, protocols, websocket]
+date: 2026-01-30
+description: "WebSockets provide a two-way communication channel between a web client (browser) and a web server."
+---
+
 # Websocket
 
 WebSockets provide a two-way communication channel between a web client (browser) and a web server. Unlike traditional HTTP requests, which are short-lived interactions, WebSockets establish a persistent connection, enabling real-time data exchange.
@@ -24,3 +31,8 @@ WebSockets provide a two-way communication channel between a web client (browser
 "https://youtu.be/d3RJ9o7pXG4?si=ybs__UG3iqR7Ss_8"
 
 "https://youtu.be/vXJsJ52vwAA?si=CD8WPkFXILylE2L0"
+
+## Across the wiki
+
+- [[AWS/serverless/api-gateway/README|Amazon API Gateway]] — API design and gateways (AWS)
+- [[AWS/application-integration/appsync/README|AWS AppSync]] — API design and gateways (AWS)

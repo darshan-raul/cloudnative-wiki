@@ -7,6 +7,7 @@ tags:
   - observability
   - log-analytics
   - bigquery
+date: 2026-09-06
 ---
 
 # Cloud Logging Architecture, Log Router, and Log Analytics 📜🔍
@@ -256,3 +257,10 @@ Cloud Logging pricing is based on:
 4. **Log-Based Metrics Cannot Retroactively Parse Past Logs:** When you create a new log-based counter or distribution metric, it begins evaluating data from the exact second of creation forward. It cannot backfill or extract metrics from historical logs already stored in log buckets. Always declare critical operational and security log-based metrics during initial Terraform infrastructure provisioning.
 5. **BigQuery Linked Dataset Metadata Overhead:** When running SQL queries on a BigQuery linked dataset (`_AllLogs`), queries scan the underlying partitioned storage. If you omit the `timestamp` filter in your `WHERE` clause, BigQuery scans the entire multi-month retention history of your log bucket, incurring massive on-demand query scanning costs. Always enforce strict timestamp bounds (e.g., `WHERE timestamp > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 HOUR)`).
 6. **Application Stdout/Stderr Formatting Matters:** When running containers on GKE or Cloud Run, standard output strings are ingested as `textPayload`. If your microservice outputs structured JSON strings (e.g., `{"message": "user login", "severity": "WARNING", "userId": 123}`), Cloud Logging automatically promotes it to `jsonPayload` and elevates the log entry's severity level to `WARNING`. If you log unformatted text with the word "error" in the middle, the entry will be ingested with default severity `INFO`, rendering severity-based alerts blind to the incident.
+
+## Across the wiki
+
+- [[AWS/monitoring/README|AWS Monitoring]] — cloud logging and monitoring (AWS)
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)

@@ -2,115 +2,122 @@
 title: EFS CSI Driver
 tags: [eks, storage, efs, csi]
 date: 2026-05-17
-description: Amazon EFS Container Storage Interface driver for EKS
+description: Shared NFS storage on EKS with the Amazon EFS CSI driver — access-point provisioning, networking requirements, identity, performance trade-offs and Fargate support.
 ---
 
 # EFS CSI Driver
 
-## Overview
+The EFS CSI driver mounts an [[AWS/storage/efs/README|Amazon EFS]] file system into pods over NFS. Reach for it when several pods, possibly on different nodes and in different zones, need to read and write the same files: shared uploads, CMS content, ML training data, build caches.
 
-The EFS CSI driver provides persistent multi-az file storage for EKS pods.
+It is the opposite trade-off from [[Kubernetes/eks/storage/ebs-csi|EBS]]: you gain `ReadWriteMany` and multi-AZ access, and you pay with higher per-operation latency.
 
-## Install EFS CSI Driver
+## How it works
 
-```bash
-helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver
-helm repo update
+One EFS file system is shared by many PersistentVolumes. Isolation between them comes from **EFS access points**: each access point is a directory inside the file system with an enforced POSIX user, group and root path. With dynamic provisioning, every PVC gets its own access point.
 
-helm install aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver \
-  --namespace kube-system
+```
+EFS file system fs-0123 (regional, mount target in each AZ)
+├── /dynamic/pvc-aaa   ← access point, uid 1001   → PVC "uploads"
+├── /dynamic/pvc-bbb   ← access point, uid 1002   → PVC "reports"
+└── /shared            ← static PV, mounted by several teams
 ```
 
-## Create EFS File System
+Pods reach the file system through a **mount target**, an ENI in each Availability Zone. This is plain [[AWS/networking/vpc/README|VPC]] networking, so two things must be true before anything mounts:
+
+1. A mount target exists in every zone where nodes run.
+2. The mount target's [[AWS/networking/vpc/security-groups|security group]] allows inbound TCP 2049 from the node security group (or the pod security group, if you use [[Kubernetes/eks/networking/vpc-cni/security-groups-for-pods|security groups for pods]]).
+
+A missing rule here is the most common EFS failure on EKS, and it shows up as a pod stuck in `ContainerCreating` with a mount timeout.
+
+## Install
 
 ```bash
-# Create security group for EFS
-aws ec2 create-security-group \
-  --group-name efs-sg \
-  --description "EFS for EKS"
-
-# Create EFS file system
-aws efs create-file-system \
-  --creation-token eks-storage \
-  --tags Key=Name,Value=eks-efs
+aws eks create-addon \
+  --cluster-name my-cluster \
+  --addon-name aws-efs-csi-driver \
+  --pod-identity-associations \
+    serviceAccount=efs-csi-controller-sa,roleArn=arn:aws:iam::111122223333:role/efs-csi-controller
 ```
 
-## Create StorageClass
+The role uses the managed policy `AmazonEFSCSIDriverPolicy`, which lets the controller create and delete access points. Static provisioning needs no AWS permissions at all, because nothing is created — the driver only mounts.
+
+## Dynamic provisioning
 
 ```yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: efs-sc
+  name: efs
 provisioner: efs.csi.aws.com
 parameters:
   provisioningMode: efs-ap
-  fileSystemId: fs-12345678
+  fileSystemId: fs-0123456789abcdef0
   directoryPerms: "700"
+  basePath: /dynamic
   gidRangeStart: "1000"
   gidRangeEnd: "2000"
-```
-
-## Dynamic Provisioning
-
-```yaml
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: efs-claim
+  name: uploads
 spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: efs-sc
+  accessModes: [ReadWriteMany]
+  storageClassName: efs
   resources:
     requests:
-      storage: 5Gi
+      storage: 5Gi # required by the API, ignored by EFS
 ```
 
-## Use in Pod
+The `storage` request is not a quota. EFS is elastic and the driver does not enforce the size, so a single noisy PVC can grow without limit and you are billed for what is stored.
 
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: app-with-efs
-spec:
-  containers:
-    - name: app
-      image: nginx
-      volumeMounts:
-        - mountPath: /shared-data
-          name: efs-volume
-  volumes:
-    - name: efs-volume
-      persistentVolumeClaim:
-        claimName: efs-claim
-```
+## Static provisioning
 
-## Access Points
+Use a hand-written PV when the file system already holds data or is shared across clusters:
 
 ```yaml
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: efs-pv
+  name: shared-assets
 spec:
   capacity:
     storage: 5Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteMany
+  accessModes: [ReadWriteMany]
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: efs-sc
+  storageClassName: ""
   csi:
     driver: efs.csi.aws.com
-    volumeHandle: fs-12345678
-    volumeArn: arn:aws:efs:us-west-2:123456789:file-system/fs-12345678
-    directoryPerms: "700"
-    fsxDirPath: /my-access-point
+    volumeHandle: fs-0123456789abcdef0::fsap-0aaaabbbbccccdddd
 ```
 
-## References
+The `volumeHandle` format is `fileSystemId:subPath:accessPointId`; leave parts empty to mount the root.
 
-- [EFS CSI Driver](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html)
-- [EKS Workshop - EFS](https://www.eksworkshop.com/docs/fundamentals/storage/efs/)
+## Performance and cost
+
+- **Latency.** Every operation is a network round trip, typically low single-digit milliseconds. Databases, anything doing many small fsyncs, and tools that walk large directory trees (`node_modules`, Git checkouts) run badly on EFS.
+- **Throughput mode.** Elastic throughput scales automatically and bills per GB transferred; it suits spiky workloads. Provisioned throughput is cheaper when load is steady and predictable.
+- **Storage classes.** Lifecycle policies move cold files to Infrequent Access and Archive automatically. See [[AWS/cost-management/efs-cost-optimization|EFS cost optimization]].
+- **Encryption.** In transit is on by default through the driver's TLS tunnel; at rest is a property of the file system and must be chosen at creation.
+
+## Limits
+
+| Limit                         | Detail                                                                                                      |
+| :---------------------------- | :---------------------------------------------------------------------------------------------------------- |
+| Access points per file system | 1,000, which caps dynamically provisioned PVCs per file system                                              |
+| Fargate                       | Static provisioning only; the driver is built into [[Kubernetes/eks/compute/fargate/README\|Fargate]] nodes |
+| File locking and ownership    | An access point forces one uid/gid, so `chown` inside the container fails — set `fsGroup` to match instead  |
+| Windows nodes                 | Not supported                                                                                               |
+
+## Related
+
+- [[Kubernetes/eks/storage/README|Storage on EKS]]
+- [[Kubernetes/eks/storage/fsx-netapp-ontap|FSx for NetApp ONTAP]] — when you need NFS with snapshots, clones or lower latency
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volumes]] and [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolumes]]
+- [Amazon EFS CSI driver user guide](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html)
+
+## Across the wiki
+
+- [[Azure/compute/aks/storage-csi-files-blob|AKS Shared Storage CSI — Azure Files (NFS/SMB) and Azure Blob CSI Architecture]] — shared file storage (Azure)
+- [[GCP/compute/gke/filestore-csi|GKE Filestore CSI Driver — Managed NFS and ReadWriteMany (RWX) Architecture]] — shared file storage (GCP)
+- [[AWS/storage/fsx/README|Amazon FSx]] — shared file storage (AWS)

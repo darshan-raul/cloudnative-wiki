@@ -4,6 +4,7 @@ description: Linux security — capabilities, seccomp, AppArmor, auditd, PAM, sy
 tags:
   - linux
   - security
+date: 2026-06-06
 ---
 
 # Linux Security

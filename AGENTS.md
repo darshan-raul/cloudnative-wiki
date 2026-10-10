@@ -7,10 +7,11 @@ This is a **Quartz v4** site — a static site generator for digital gardens. It
 ## Key commands
 
 - `npm run quartz build` — full production build
-- `npm run docs build --serve` — dev server with live reload (default port 3009)
-- `npm run check` — run `tsc --noEmit && npx prettier . --check`
+- `npm run docs` — dev server with live reload (port 3009)
+- `npm run check` — run `tsc --noEmit`, the content validator (`npm run check:content`), and `npx prettier . --check`
+- `npm run check:content` — validate every note in `content/` (frontmatter, headings, tables, wikilinks, orphans); `npm run check:k8s` reports on `content/Kubernetes/` only
 - `npm run format` — auto-format all files with prettier
-- `npm run test` — run tsx test suite
+- `npm run test` — run tsx test suite, then `npm run check:content`
 - `npm run profile` — profile build performance with 0x
 
 ## Architecture
@@ -32,7 +33,10 @@ This is a **Quartz v4** site — a static site generator for digital gardens. It
 
 ## Content conventions
 
-- Frontmatter fields: `title`, `tags`, `date`, `draft`, `description`
+- Frontmatter fields: `title`, `tags`, `date`, `description` (all required), plus optional `draft` and `aliases`
+- Every note needs one `# H1` and at least one inbound wikilink; add new notes to their folder's index page
+- Inside tables, write wikilink aliases with an escaped pipe: `[[path\|Alias]]`
+- Working documents (plans, trackers, audits) go in `planning/`, not `content/`
 - Aliases via explicit `aliases` frontmatter or `content/aliases/` directory
 - `tags` are hierarchical (`platform-engineering/kubernetes`)
 

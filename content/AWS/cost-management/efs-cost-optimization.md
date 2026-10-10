@@ -6,6 +6,7 @@ tags:
   - cost-management
   - efs
   - storage
+date: 2026-10-04
 ---
 
 # Amazon EFS Cost Optimization

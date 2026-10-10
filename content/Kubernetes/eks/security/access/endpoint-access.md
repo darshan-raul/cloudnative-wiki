@@ -405,3 +405,8 @@ nc -zv node-ip 10250
 - [EKS Cluster Endpoint](https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
 - [EKS Security Group Requirements](https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html)
 - [Linux Bastion Hosts on AWS](https://aws.amazon.com/quickstart/architecture/linux-bastion/)
+
+## Across the wiki
+
+- [[Linux/ssh/ssh-config|SSH Config and Tricks]] — remote access (Linux)
+- [[AWS/management-governance/systems-manager/README|AWS Systems Manager]] — remote access (AWS)

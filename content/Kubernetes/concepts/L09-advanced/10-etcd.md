@@ -644,3 +644,10 @@ Solutions:
 - [[Kubernetes/concepts/L09-advanced/09-pause-container|Pause Container]] — the infra container in every Pod
 - [[Kubernetes/concepts/L01-architecture/02-high-availability|HA Topology]] — where etcd fits in an HA cluster
 - [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how Pods find each other via Services
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/cluster-management/raft|RAFT]] — consensus and coordination (Architecture)
+- [[Architecture/solution-architecture-concepts/cluster-management/gossip-protocol|Gossip Protocol]] — consensus and coordination (Architecture)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/kraft-vs-zookeeper|Kraft vs Zookeeper]] — consensus and coordination (Architecture)
+- [[Architecture/solution-architecture-concepts/cluster-management/README|Cluster Management]] — consensus and coordination (Architecture)

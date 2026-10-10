@@ -1,3 +1,10 @@
+---
+title: "Prompt Engineering"
+tags: [ai, prompt-engineering]
+date: 2026-01-30
+description: "Prompt engineering is an emerging discipline focused on developing optimized prompts to efficiently apply language models to various tasks."
+---
+
 # Prompt Engineering
 
 Prompt engineering is an emerging discipline focused on developing optimized prompts to efficiently apply language models to various tasks. Prompt engineering helps researchers understand the abilities and limits of large language models (LLMs). By using various prompt engineering techniques, you can often get better answers from the foundation models without spending effort and cost on retraining or fine-tuning them.

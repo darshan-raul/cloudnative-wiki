@@ -4,6 +4,7 @@ description: Linux exit codes — $?, set -e, set -u, error handling, ||, &&, ex
 tags:
   - linux
   - shell
+date: 2026-06-06
 ---
 
 # Exit Codes

@@ -44,7 +44,7 @@ Software architecture, system design, and engineering concepts.
 
 ### Observability & Telemetry
 
-- [[Architecture/OpenTelemetry/index|OpenTelemetry (OTel)]] — Tracing, Metrics, Logs, Collector, Semantic Conventions, and Context Propagation
+- [[Observability/opentelemetry/index|OpenTelemetry (OTel)]] — Tracing, Metrics, Logs, Collector, Semantic Conventions, and Context Propagation
 
 ### Architecture Foundations
 
@@ -55,17 +55,17 @@ Software architecture, system design, and engineering concepts.
 
 ### Reliability
 
-- [[Architecture/solution-architecture-concepts/reliability/availability|Availability]] - SLA, SLO, error budgets
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability|Availability]] - SLA, SLO, error budgets
 - [[Architecture/solution-architecture-concepts/reliability/resilience|Resilience]] - Circuit breakers, retries, graceful degradation
 - [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]]
 - [[Architecture/solution-architecture-concepts/reliability/idempotency|Idempotency]]
 
 ### Performance
 
-- [[Architecture/solution-architecture-concepts/performance/caching|Caching]] - Cache patterns, Redis
+- [[Architecture/solution-architecture-concepts/caching|Caching]] - Cache patterns, Redis
 - [[Architecture/solution-architecture-concepts/performance/rate-limiting|Rate Limiting]]
-- [[Architecture/solution-architecture-concepts/performance/percentile|Percentiles]] - p50, p95, p99
-- [[Architecture/solution-architecture-concepts/performance/performance-testing|Performance Testing]]
+- [[Architecture/solution-architecture-concepts/percentile|Percentiles]] - p50, p95, p99
+- [[Architecture/solution-architecture-concepts/performance-testing|Performance Testing]]
 
 ### Security
 
@@ -83,7 +83,12 @@ Software architecture, system design, and engineering concepts.
 
 ### Data Architecture
 
-- [[Architecture/solution-architecture-concepts/data-architecture/databases/README|Databases]] - Postgres, MongoDB, schema design
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/README|Databases]] - Choosing a database, families and trade-offs
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] - MVCC, vacuum, indexes, connection pooling
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/replication-and-ha|PostgreSQL replication and HA]] - Failover, backups, point-in-time recovery
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/redis|Redis]] - Data structures, persistence, caching patterns
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/README|Event-driven architecture]] - Events, outbox, sagas, idempotency
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] - Partitions, replication, consumer groups, delivery semantics
 - [[Architecture/solution-architecture-concepts/data-architecture/hashing|Hashing]]
 - [[Architecture/solution-architecture-concepts/data-architecture/cdn|CDN]]
 
@@ -101,7 +106,14 @@ Software architecture, system design, and engineering concepts.
 
 ### Developer Tooling
 
-- [[Architecture/solution-architecture-concepts/developer-tooling/README|Debugging & Tooling]]
+- [[Architecture/languages/README|Languages]] — Language-specific notes. The emphasis is on the parts of each language that matter for building and operating backend services.
+- [[Architecture/solution-architecture-concepts/data-architecture/README|Data Architecture]] — Data modeling, database selection, and data flow architecture
+- [[Architecture/solution-architecture-concepts/reliability/README|Reliability]] — Patterns for building fault-tolerant, highly available distributed systems
+- [[Architecture/solution-architecture-concepts/security/README|Security]] — Security architecture patterns, zero-trust, and secure-by-design principles
+
+## More in this section
+
+- [[Architecture/solution-architecture-concepts/basics|Architecture Basics]] — Foundational concepts for understanding system architecture
 
 ## Related
 

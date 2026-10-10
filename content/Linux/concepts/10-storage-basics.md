@@ -4,6 +4,7 @@ description: Linux storage — disks, partitions, filesystems, mount, fstab, UUI
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 10 — Storage Basics
@@ -235,3 +236,8 @@ du -sh /var/log/*
 # LVM
 pvs; vgs; lvs
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — volumes and filesystems (Kubernetes)
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume (PV)]] — volumes and filesystems (Kubernetes)

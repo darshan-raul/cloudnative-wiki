@@ -7,6 +7,7 @@ tags:
   - vnet
   - hybrid
   - security
+date: 2026-09-06
 ---
 
 # Azure Virtual Network (VNet) & Hybrid Routing 🌐
@@ -219,3 +220,10 @@ az network vnet subnet update \
 3. **Private Endpoint DNS Resolution Pitfalls:** When deploying a Private Endpoint for an Azure Storage Account (`privatelink.blob.core.windows.net`), your VNet must be linked to the Azure Private DNS Zone. If the VNet link is missing, applications will resolve the storage account to its public IP address instead of its private endpoint, failing with a firewall or network timeout error.
 4. **VNet Peering Overlapping CIDRs Cannot Be Fixed Online:** If VNet A (`10.0.0.0/16`) and VNet B have even a single overlapping IP range, Azure will refuse to establish VNet Peering with an `AddressSpaceOverlaps` error. You cannot shrink or alter an existing VNet address space while subnets are active; fixing this requires tearing down resources and recreating subnets.
 5. **GatewaySubnet Must Be Named Exactly `GatewaySubnet`:** To deploy a Virtual Network Gateway (VPN or ExpressRoute), Azure strictly mandates that the hosting subnet be named `GatewaySubnet` (case-sensitive). Furthermore, never associate an NSG or Route Table with `GatewaySubnet`, as this disrupts gateway control plane communication with Microsoft controllers.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/README|Amazon VPC]] — virtual networks (AWS)
+- [[GCP/networking/vpc|GCP Virtual Private Cloud (VPC) & Networking]] — virtual networks (GCP)
+- [[Architecture/solution-architecture-concepts/networking/README|Cloud-Native Networking Architecture Guide]] — virtual networks (Architecture)
+- [[Linux/networking/README|Linux Networking]] — virtual networks (Linux)

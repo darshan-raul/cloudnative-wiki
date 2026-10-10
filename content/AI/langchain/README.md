@@ -4,6 +4,8 @@ tags:
   - AI
   - LangChain
   - LCEL
+date: 2026-06-12
+description: "LangChain is a framework for building LLM applications. It provides abstractions for prompts, chat models, tools, memory, and composition."
 ---
 
 # LangChain
@@ -96,3 +98,8 @@ For the authoritative docs, see [python.langchain.com](https://python.langchain.
 
 - [[AI/langgraph/README|LangGraph]] — the agent framework built on LangChain (comes after this section)
 - [[AI/inner-workings/README|LLM Foundations & Inner Workings]] — the machine learning concepts underneath LLMs
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/protocols/server-sent-events|Server-Sent Events (SSE) Architecture & LLM Streaming]] — LLM applications (Architecture)
+- [[Security/application-security/README|Application Security]] — LLM applications (Security)

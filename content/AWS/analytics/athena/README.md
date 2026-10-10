@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - athena
+date: 2026-06-06
 ---
 
 # Athena
@@ -336,3 +337,9 @@ Crawlers infer schema from file content and create tables in the Glue Data Catal
 - **Workgroups enforce query limits and billing controls:** You can set per-workgroup data usage limits (e.g., 100MB/query max) and query timeout (30 minutes). Use workgroups to isolate BI tools from ad-hoc analyst queries.
 - **Athena uses Hive Metastore under the hood:** Tables created in Athena are accessible to Glue crawlers, EMR, Redshift Spectrum. The catalog is shared. A table created by an Athena query is visible to all services.
 - ** Federated queries (Data Catalog Connectors) cost extra:** Using Athena to query RDS, DynamoDB, or on-prem data via federation connectors incurs additional charges per query. Check the specific connector pricing before building federated architectures.
+
+## Across the wiki
+
+- [[GCP/databases/bigquery|Google BigQuery]] — analytics and warehouses (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/columnar-databases|Columnar Databases]] — analytics and warehouses (Architecture)
+- [[GCP/analytics/dataflow/README|Cloud Dataflow Architecture & Streaming Pipelines]] — analytics and warehouses (GCP)

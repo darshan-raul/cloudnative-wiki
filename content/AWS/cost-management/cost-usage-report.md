@@ -6,6 +6,7 @@ tags:
   - cost-management
   - cur
   - athena
+date: 2026-10-04
 ---
 
 # AWS Cost and Usage Report (CUR)

@@ -153,3 +153,10 @@ The full path for, say, "average Pod memory usage":
 - Prometheus is the de-facto k8s monitoring stack. See [[Kubernetes/eks/observability/metrics/prometheus]] for the EKS observability guide.
 - `metrics-server` deployment — usually via the `metrics-server` Helm chart or k8s add-on
 - `kube-state-metrics` — usually via Helm or kube-prometheus-stack
+
+## Across the wiki
+
+- [[Azure/compute/aks/observability-monitoring|AKS Observability — Container Insights, Managed Prometheus, and ContainerLogV2]] — cluster observability (Azure)
+- [[GCP/compute/gke/observability-gmp|GKE Observability Architecture — Managed Prometheus (GMP), Logging, and Trace]] — cluster observability (GCP)
+- [[Observability/prometheus/README|Prometheus Architecture]] — cluster observability (Observability)
+- [[Observability/fundamentals|Observability Architecture & Implementation Guide]] — cluster observability (Observability)

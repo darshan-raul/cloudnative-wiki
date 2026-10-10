@@ -1,3 +1,10 @@
+---
+title: "base64 Encoding"
+tags: [architecture, data-architecture, base64-encoding]
+date: 2026-01-30
+description: "How Base64 encoding works, its size overhead, and what to consider when encoding large files."
+---
+
 # base64 Encoding
 
 Absolutely! You can base64 encode a 1GB file, but it's important to understand how it works and the implications of doing so.

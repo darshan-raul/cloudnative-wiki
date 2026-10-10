@@ -5,6 +5,8 @@ date: 2026-09-06
 description: "Explicit is better than implicit — Kubernetes reference and architecture guide."
 ---
 
+# Explicit is better than implicit
+
 ## Kubernetes NetworkPolicy — Complete Reference
 
 > "[https://kubernetes.io/docs/concepts/services-networking/network-policies/](https://kubernetes.io/docs/concepts/services-networking/network-policies/)"
@@ -1841,14 +1843,14 @@ When hardening a namespace with NetworkPolicy, work through this checklist:
 
 ### Cross-Reference
 
-| Related Topic            | Link                                                                                    |
-| ------------------------ | --------------------------------------------------------------------------------------- | ---------------------- |
-| Security Context (L0/L1) | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context]]`       |
-| Pod Security Standards   | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards]]` |
-| Service Mesh (L7)        | `[[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls                  | mTLS & Service Mesh]]` |
-| DNS in Kubernetes        | `[[Kubernetes/concepts/L04-services-networking/03-dns                                   | DNS in Kubernetes]]`   |
-| Calico NetworkPolicy     | `[[Kubernetes/concepts/L04-services-networking/06-cni                                   | CNI & Calico]]`        |
-| Cilium NetworkPolicy     | `[[Kubernetes/concepts/L04-services-networking/06-cni                                   | CNI & Cilium]]`        |
+| Related Topic            | Link                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| Security Context (L0/L1) | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context]]`              |
+| Pod Security Standards   | `[[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards]]`        |
+| Service Mesh (L7)        | `[[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls\|mTLS & Service Mesh]]` |
+| DNS in Kubernetes        | `[[Kubernetes/concepts/L04-services-networking/03-dns\|DNS in Kubernetes]]`                    |
+| Calico NetworkPolicy     | `[[Kubernetes/concepts/L04-services-networking/06-cni\|CNI & Calico]]`                         |
+| Cilium NetworkPolicy     | `[[Kubernetes/concepts/L04-services-networking/06-cni\|CNI & Cilium]]`                         |
 
 ==**Services do not come into the picture at all.**== This is one of the most common mental traps in Kubernetes. NetworkPolicies **completely ignore Services**—they look right through them and apply rules directly to the underlying **Pods** via their IP addresses.
 
@@ -1942,3 +1944,10 @@ If a Pod tries to communicate with _itself_ or another Pod in its own deployment
 ### Gotcha #3: CoreDNS is a Service, too!
 
 When you write an Egress policy to allow DNS, you usually target the `kube-system` namespace. You don't target the `kube-dns` Service IP. You target the CoreDNS _Pods_. Because CoreDNS scales up and down, your Egress rule allows traffic to the entire `kube-system` namespace on port 53, ensuring that no matter which CoreDNS Pod `kube-proxy` routes the packet to, the CNI will let it pass.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[Azure/networking/nsg|Azure Network Security Groups (NSGs) & ASGs]] — network firewalls (Azure)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)

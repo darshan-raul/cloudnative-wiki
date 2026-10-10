@@ -37,11 +37,11 @@ Access to an EKS cluster involves two layers:
 
 ### Workload Access (Pods)
 
-| Method                                     | Setup            | Use Case                       |
-| ------------------------------------------ | ---------------- | ------------------------------ | ------------------- |
-| [[Kubernetes/eks/security/iam-roles-for-sa | IRSA]]           | OIDC provider + IAM role trust | Full AWS SDK access |
-| [[Kubernetes/eks/security/pod-identity     | Pod Identity]]   | EKS-managed associations       | Simpler than IRSA   |
-| Node IAM Role                              | Instance profile | Fallback (not recommended)     |
+| Method                                                 | Setup                          | Use Case                   |
+| ------------------------------------------------------ | ------------------------------ | -------------------------- |
+| [[Kubernetes/eks/security/iam-roles-for-sa\|IRSA]]     | OIDC provider + IAM role trust | Full AWS SDK access        |
+| [[Kubernetes/eks/security/pod-identity\|Pod Identity]] | EKS-managed associations       | Simpler than IRSA          |
+| Node IAM Role                                          | Instance profile               | Fallback (not recommended) |
 
 ## IAM and RBAC Relationship
 

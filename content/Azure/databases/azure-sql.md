@@ -7,6 +7,7 @@ tags:
   - sql-server
   - azure-sql
   - relational
+date: 2026-09-06
 ---
 
 # Azure SQL Database & Managed Instance 🗄️⚡
@@ -163,3 +164,10 @@ az sql failover-group create \
 3. **Firewall "Allow Azure Services" Security Hole:** In the Azure Portal, checking the box _"Allow Azure services and resources to access this server"_ does **not** restrict access to your subscriptions. It permits **any VM or tenant in the entire worldwide Azure ecosystem** to reach your database port 1433! Always uncheck this box and connect exclusively via **Private Endpoints**.
 4. **TempDB Bottlenecks in General Purpose:** In the General Purpose tier, `tempdb` runs on remote Azure Premium Storage, which can bottleneck heavy sorting, CTEs, and table variables. The **Business Critical** and **Hyperscale** tiers run `tempdb` directly on local NVMe SSDs, yielding 5x–10x higher write throughput for complex queries.
 5. **Cross-Database Queries Not Supported on Single DB:** If your legacy application executes queries like `SELECT * FROM DatabaseA.dbo.Table JOIN DatabaseB.dbo.Table`, Azure SQL Single Database **does not support this syntax**. You must either rewrite queries via Elastic Queries or deploy **Azure SQL Managed Instance**.
+
+## Across the wiki
+
+- [[AWS/databases/rds/README|Amazon RDS]] — relational databases (AWS)
+- [[GCP/databases/cloud-sql|GCP Cloud SQL]] — relational databases (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — relational databases (Architecture)
+- [[AWS/databases/aurora/README|Amazon Aurora]] — relational databases (AWS)

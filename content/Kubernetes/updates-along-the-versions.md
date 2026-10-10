@@ -327,3 +327,8 @@ _Current Baseline Release:_
 - <mark style="background-color:red;">**Cgroup v1 Hard-Fail:**</mark> Kubelet now hard-fails by default on nodes running cgroup v1.
 - <mark style="background-color:red;">**Static Pod Security Restriction:**</mark> Static Pods can no longer reference ConfigMaps or Secrets.
 - <mark style="background-color:red;">**IPVS Deprecation Clock:**</mark> IPVS mode scheduled for future removal; warning emitted if used. `nftables` is the recommended Linux backend.
+
+## Across the wiki
+
+- [[Azure/compute/aks/upgrades-maintenance|AKS Upgrades, Maintenance Windows, and Safe Rollout Strategies]] — cluster upgrades (Azure)
+- [[GCP/compute/gke/release-channels-upgrades|GKE Release Channels, Node Upgrades, Surge vs Blue-Green, and SRE Lifecycle]] — cluster upgrades (GCP)

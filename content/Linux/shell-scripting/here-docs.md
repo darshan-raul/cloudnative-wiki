@@ -4,6 +4,7 @@ description: Linux here-docs and here-strings — <<, <<<, inline text in shell 
 tags:
   - linux
   - shell
+date: 2026-06-06
 ---
 
 # Here-Docs and Here-Strings

@@ -8,6 +8,7 @@ tags:
   - kafka
   - streaming
   - big-data
+date: 2026-09-06
 ---
 
 # Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion 🌊📡
@@ -226,3 +227,10 @@ Azure Event Hubs pricing is based on:
 4. **Kafka Compaction is NOT Supported in Standard/Premium:** Traditional Kafka clusters support topic log compaction (`cleanup.policy=compact`), keeping only the latest value for each key. Azure Event Hubs operates purely as a chronological retention log and **does not support Kafka log compaction**. If your architecture relies on Kafka state stores (e.g., Kafka Streams KTables) backed by compacted changelog topics, you cannot use Event Hubs Standard/Premium directly.
 5. **Event Hubs Capture Skips Empty Buffers:** When configuring Event Hubs Capture with a 5-minute interval, if zero events are published to a partition during that 5-minute window, Capture writes a 0-byte or minimal metadata Avro file depending on the `skip_empty_archives` flag. Ensure downstream ETL pipelines (e.g., Azure Data Factory, Spark) handle empty or missing hourly Avro files gracefully without throwing missing partition exceptions.
 6. **Entra ID Token Expiration in Kafka Client Libraries:** When configuring Apache Kafka clients to authenticate to Event Hubs via Microsoft Entra ID (OIDC OAuth2) instead of static Shared Access Signature (SAS) strings, the OAuth bearer token expires after 60 minutes. The Kafka client must implement an automated background token refresher callback (`AuthenticateCallbackHandler`), or client connections will abruptly fail after exactly 1 hour with `SASL authentication failed: invalid token`.
+
+## Across the wiki
+
+- [[AWS/application-integration/sqs/README|Amazon SQS]] — messaging and streaming (AWS)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
+- [[AWS/application-integration/sns/README|Amazon SNS]] — messaging and streaming (AWS)

@@ -7,6 +7,7 @@ tags:
   - postgresql
   - flexible-server
   - ha
+date: 2026-09-06
 ---
 
 # Azure Database for PostgreSQL Flexible Server Architecture & Operations 🐘⚡
@@ -252,3 +253,10 @@ Pricing is based on:
 4. **Zone Failovers Trigger Temporary DNS Caching Delays:** During a zone-redundant HA failover, the database FQDN's DNS A-record is updated to point to the new primary VM in Zone 2. However, Java Virtual Machines (JVMs) cache DNS resolutions forever by default (`networkaddress.cache.ttl = -1`). If a failover occurs, Java services will attempt to connect to the dead Zone 1 IP indefinitely until the JVM is restarted. Always set `networkaddress.cache.ttl=10` in your container `java.security` properties.
 5. **Autovacuum Wraparound Emergency Lockouts:** PostgreSQL requires vacuuming to prevent transaction ID wraparound (`autovacuum_freeze_max_age`). On heavily loaded databases where long-running analytical queries block autovacuum workers, the database may reach transaction ID starvation. Flexible Server will forcefully place the database into **read-only mode** to protect against data corruption. Set up Cloud Monitoring alerts for `maximum_used_transaction_id` crossing 70% of 2 billion.
 6. **VNet Integration vs Public Access Toggle is One-Way at Creation:** When creating an Azure PostgreSQL Flexible Server, you must choose between **Private access (VNet Integration)** or **Public access (allowed IP addresses and Private Endpoints)**. You **cannot change the networking method** after the server is created. If you create a server with public access and later want native delegated VNet integration, you must provision a new server and migrate all data.
+
+## Across the wiki
+
+- [[AWS/databases/rds/README|Amazon RDS]] — relational databases (AWS)
+- [[GCP/databases/cloud-sql|GCP Cloud SQL]] — relational databases (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — relational databases (Architecture)
+- [[AWS/databases/aurora/README|Amazon Aurora]] — relational databases (AWS)

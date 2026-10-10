@@ -6,6 +6,7 @@ tags:
   - compute
   - serverless
   - lambda
+date: 2026-06-06
 ---
 
 # AWS Lambda
@@ -294,3 +295,8 @@ Key metrics:
 - **Lambda has a 15-minute max execution time — not 15 minutes of CPU time:** If your function sleeps for 14 minutes while waiting for an API response, you've consumed 14 minutes of wall-clock time (not CPU time, which is cheap). Lambda bills duration, not CPU.
 - **VPC-connected Lambda functions take ~10 seconds to cold-start due to ENI attachment:** If your function needs VPC access and latency matters, either use Provisioned Concurrency or rethink the architecture (Lambda should call VPC resources, not live in the VPC unless necessary).
 - **SQS FIFO queues with Lambda require batch size = 1 — Lambda processes one message at a time from FIFO:** Standard SQS allows batch size up to 10. For high-throughput FIFO processing, use an SQS trigger with `MaximumBatchingWindow` or switch to standard queue.
+
+## Across the wiki
+
+- [[GCP/compute/cloud-functions/README|GCP Cloud Functions (2nd Gen) & Eventarc]] — functions (GCP)
+- [[Architecture/solution-architecture-concepts/api-design/stateful-vs-stateless|Stateful vs Stateless]] — functions (Architecture)

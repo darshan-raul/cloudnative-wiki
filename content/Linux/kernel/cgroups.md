@@ -5,6 +5,7 @@ tags:
   - linux
   - cgroups
   - kernel
+date: 2026-06-06
 ---
 
 # Cgroups v2
@@ -210,3 +211,9 @@ cat /proc/1/cgroup
 - **Forgetting subtree_control:** Parent won't pass controller to children without it.
 - **Bytes vs percentages:** `memory.max` takes bytes, not percentages. `536870912` = 512 MiB.
 - **Confusing v1 and v2 paths:** v1 = `/cgroup/cpu/`, v2 = `/sys/fs/cgroup/system.slice/`
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests and Limits]] — resource limits (Kubernetes)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — resource limits (Containers)
+- [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota and LimitRange]] — resource limits (Kubernetes)

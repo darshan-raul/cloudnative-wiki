@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - Streaming
+date: 2026-06-12
+description: "LangChain has three progressively more powerful streaming interfaces."
 ---
+
+# LangChain — Streaming
 
 > **Part 9.** `stream`/`astream` for simple token streaming,
 > `astream_events` for full lifecycle visibility, and how to

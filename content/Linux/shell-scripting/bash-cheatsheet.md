@@ -5,6 +5,7 @@ tags:
   - linux
   - shell
   - cheatsheet
+date: 2026-06-06
 ---
 
 # Bash Scripting Cheatsheet
@@ -698,3 +699,9 @@ ${!arr[@]}          # all indices
 ${#arr[@]}          # array length
 ${arr[@]:1:2}       # slice
 ```
+
+## Across the wiki
+
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — command-line tooling (Kubernetes)
+- [[AWS/management-governance/cli/README|AWS CLI]] — command-line tooling (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/psql|psql]] — command-line tooling (Architecture)

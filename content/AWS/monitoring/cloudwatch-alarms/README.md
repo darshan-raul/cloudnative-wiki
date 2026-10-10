@@ -6,6 +6,7 @@ tags:
   - monitoring
   - alarms
   - cloudwatch
+date: 2026-06-06
 ---
 
 # CloudWatch Alarms

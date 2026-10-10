@@ -8,6 +8,7 @@ tags:
   - csi
   - hyperdisk
   - stateful
+date: 2026-09-06
 ---
 
 # GKE Storage Architecture — Compute Persistent Disk CSI, Hyperdisk, and Volume Snapshots 💽📦
@@ -279,3 +280,10 @@ Pricing components:
 4. **Local SSDs Are NOT Persistent Volumes:** Do not confuse GCE Persistent Disks with Local NVMe SSDs. Local SSDs cannot be managed via the standard GCE PD CSI driver; they are ephemeral. If you need local SSD performance managed as a PV, deploy the open-source **Kubernetes Local Storage Operator (LSO)** or use GKE's native ephemeral storage local SSD feature.
 5. **StatefulSet VolumeClaimTemplates Retain Disks on Deletion:** When you scale down a StatefulSet from 5 replicas to 3, or delete the StatefulSet entirely, **Kubernetes intentionally DOES NOT delete the underlying PVCs or GCE Persistent Disks**. This safety mechanism prevents catastrophic data loss, but orphaned disks continue to accrue full storage billing. Implement automated clean-up pipelines to purge orphaned PVCs.
 6. **Hyperdisk Requires Compatible Machine Series:** Hyperdisk Balanced and Extreme cannot be attached to legacy N1 or E2 machine series. They **strictly require third-generation or newer compute instances (C3, C3D, N4, G2, A3)**. If your node pool runs `n2-standard-4` and you attempt to mount a Hyperdisk PVC, the pod will fail to schedule with `FailedAttachVolume: Hyperdisk is not supported on machine type n2-standard-4`.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/README|Storage on EKS]] — block storage (Kubernetes)
+- [[Azure/compute/aks/storage-csi-disks|AKS Storage CSI Architecture — Azure Managed Disks, Premium SSD v2, and Elastic SAN]] — block storage (Azure)
+- [[Linux/storage/README|Linux Storage]] — block storage (Linux)
+- [[AWS/storage/ebs/README|Amazon EBS]] — block storage (AWS)

@@ -13,8 +13,6 @@ Proven structural solutions to recurring architectural problems. Patterns are no
 
 ## What's Here
 
-- [[architecture-patterns]] — Catalog of cloud-native architecture patterns
-
 ---
 
 ## Common Patterns Quick Reference
@@ -51,4 +49,8 @@ Strangler Fig:
 
 - [[../foundations/thinking-like-an-architect]] — How to evaluate pattern trade-offs
 - [[../reliability/resilience]] — Implementation of resilience patterns
-- [[../system-design/README]] — System design interview patterns
+- [[Architecture/solution-architecture-concepts/system-design/README|System Design Primer]] — System design interview patterns
+
+## Further reading
+
+- [Architecture Patterns (video)](https://www.youtube.com/watch?v=nH4qjmP2KEE)

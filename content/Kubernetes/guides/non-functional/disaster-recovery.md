@@ -6,7 +6,11 @@ tags:
   - Disaster-Recovery
   - Backup
   - DR
+date: 2026-06-12
+description: 'DR is the answer to "what if the cluster is gone?" The cluster doesn''t fail often, but when it does — region outage, ransomware, accidental deletion, infra-as-code gone wrong — the only thing that…'
 ---
+
+# Disaster Recovery
 
 DR is the answer to "what if the cluster is gone?" The cluster doesn't fail often, but when it does — region outage, ransomware, accidental deletion, infra-as-code gone wrong — the only thing that saves you is the backup you took earlier.
 
@@ -646,3 +650,10 @@ When disaster strikes:
 - [[Kubernetes/guides/non-functional/high-availability|high-availability]] — preventing disasters
 - [[Kubernetes/guides/non-functional/chaos-engineering|chaos-engineering]] — testing the plan
 - [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — DR has a cost
+
+## Across the wiki
+
+- [[Azure/compute/aks/backup-disaster-recovery|AKS Backup, Disaster Recovery, and Cross-Region Business Continuity]] — backup and disaster recovery (Azure)
+- [[GCP/compute/gke/backup-for-gke|Backup for GKE Architecture, Stateful Disaster Recovery, and Cross-Region Restoration]] — backup and disaster recovery (GCP)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/disaster-recovery|Disaster Recovery]] — backup and disaster recovery (Architecture)
+- [[AWS/solutions-architect-professional/domain-2/2.2-business-continuity|2.2 Business Continuity]] — backup and disaster recovery (AWS)

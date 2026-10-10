@@ -5,6 +5,7 @@ tags:
   - linux
   - networking
   - firewall
+date: 2026-06-06
 ---
 
 # firewalld
@@ -169,3 +170,10 @@ podman network inspect podman | jq '.[].network_interface'
 # Add podman to firewalld (newer versions):
 firewall-cmd --add-interface=cni0 --zone=trusted
 ```
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[Azure/networking/nsg|Azure Network Security Groups (NSGs) & ASGs]] — network firewalls (Azure)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

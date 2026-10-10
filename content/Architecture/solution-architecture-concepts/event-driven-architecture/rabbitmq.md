@@ -1,3 +1,10 @@
+---
+title: "RabbitMQ"
+tags: [architecture, event-driven-architecture, rabbitmq]
+date: 2026-01-30
+description: "Learning RabbitMQ from the ground up to a professional level is a fantastic goal. It's a powerful and widely used message broker. Let's structure this into a comprehensive curriculum."
+---
+
 # RabbitMQ
 
 Learning RabbitMQ from the ground up to a professional level is a fantastic goal. It's a powerful and widely used message broker. Let's structure this into a comprehensive curriculum.
@@ -329,3 +336,10 @@ This command downloads and installs the `pika` library, which is the most widely
 ---
 
 ## module 1.3
+
+## Across the wiki
+
+- [[AWS/application-integration/sqs/README|Amazon SQS]] — messaging and streaming (AWS)
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
+- [[AWS/application-integration/sns/README|Amazon SNS]] — messaging and streaming (AWS)

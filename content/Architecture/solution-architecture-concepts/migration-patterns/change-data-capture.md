@@ -1,5 +1,8 @@
 ---
 title: Change Data Capture (CDC)
+tags: [architecture, migration-patterns, change-data-capture]
+date: 2026-06-06
+description: "CDC is a pattern for watching a database for changes and streaming those changes to downstream systems in real-time — without polling, without batch jobs, without touching the source tables after the…"
 ---
 
 # Change Data Capture (CDC)
@@ -254,5 +257,12 @@ CDC sits between polling (slow, batch) and dual-write (fast but application-leve
 
 - [[data-migration|Data Migration]] — using CDC in zero-downtime migration workflows
 - [[strangler-fig|Strangler Fig]] — CDC as the sync mechanism for legacy replacement
-- [[event-driven-architecture/README|Event-Driven Architecture]] — CDC feeds into event streams
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/README|Event-Driven Architecture]] — CDC feeds into event streams
 - [[expand-contract|Expand-Contract]] — schema evolution when CDC is involved
+
+## Across the wiki
+
+- [[AWS/migration/README|AWS Migration]] — migration (AWS)
+- [[AWS/migration/dms/README|Database Migration Service (DMS)]] — migration (AWS)
+- [[AWS/solutions-architect-professional/domain-4/4.2-migration-approach|4.2 Migration Approach]] — migration (AWS)
+- [[AWS/migration/datasync/README|DataSync]] — migration (AWS)

@@ -10,6 +10,7 @@ tags:
   - infiniband
   - ray
   - llm
+date: 2026-09-06
 ---
 
 # AKS GPU Orchestration for AI/ML — NVIDIA H100/A100, InfiniBand RDMA, and KubeRay 🤖⚡
@@ -222,3 +223,10 @@ kubectl apply -f vllm-mistral-deployment.yaml
 3. **MIG Slicing Taints Prevent Standard Pod Scheduling:** If you partition an A100 GPU into Multi-Instance GPU (MIG) slices (e.g., `1g.10gb`), the Kubernetes node labels mutate to expose `nvidia.com/mig-1g.10gb` instead of `nvidia.com/gpu`. Any deployment requesting standard `nvidia.com/gpu` will remain in a permanent `Pending` state. Update workload manifests to request the exact MIG slice resource identifier.
 4. **Host Caching Prohibited on GPU VM Disks:** Similar to high-performance database disks, attaching Azure Managed Disks to N-series GPU worker nodes requires setting host caching to `None`. Attempting to mount data disks with `ReadWrite` caching enabled can cause I/O lockups when CUDA kernels execute direct DMA memory transfers.
 5. **GPU Driver Kernel Mismatch during Ubuntu Auto-Patches:** If you run the unmanaged node OS upgrade channel (`--node-os-upgrade-channel Unmanaged`), the underlying Ubuntu VM will run `unattended-upgrades`, updating the Linux kernel from `5.15.0-88` to `5.15.0-91`. If the NVIDIA kernel module was built against the older kernel headers, **the GPU driver crashes upon reboot**, leaving `nvidia.com/gpu: 0` allocatable. **Always use `--node-os-upgrade-channel NodeImage` to ensure the entire VHD (kernel + NVIDIA driver) is upgraded as a pre-tested atomic unit.**
+
+## Across the wiki
+
+- [[GCP/compute/gke/gpu-tpu-orchestration|GKE GPU & TPU Orchestration — AI/ML Accelerators, Ray on GKE, and Kueue]] — GPU and AI workloads (GCP)
+- [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources and Device Plugins]] — GPU and AI workloads (Kubernetes)
+- [[AI/run-locally/ollama-best-practices|Ollama Best Practices Guide]] — GPU and AI workloads (AI)
+- [[AWS/machine-learning/README|AWS Machine Learning]] — GPU and AI workloads (AWS)

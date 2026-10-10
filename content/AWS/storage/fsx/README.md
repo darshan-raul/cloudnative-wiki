@@ -7,6 +7,7 @@ tags:
   - fsx
   - windows
   - lustre
+date: 2026-06-06
 ---
 
 # Amazon FSx
@@ -207,3 +208,9 @@ Fully managed ONTAP file system with advanced features:
 - **Lustre imports from S3 are lazy (on-demand) — first access is slow:** When you first read a file from S3 via Lustre, it fetches from S3 and caches. This first-read latency can be 10-30 seconds for large files. For ML training, use `hdf5` or preload data before training starts.
 - **FSx for Windows charges for throughput capacity (MB/s) even when idle:** A 256 MB/s file system costs ~$3.33/month even if unused. Right-size throughput capacity — a small team doesn't need 256 MB/s.
 - **Lustre file system size is fixed at creation — you can't expand without creating a new one:** Plan capacity ahead. For ML workloads with growing datasets, create the file system with enough headroom or plan migration to a larger one.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/efs-csi|EFS CSI Driver]] — shared file storage (Kubernetes)
+- [[Azure/compute/aks/storage-csi-files-blob|AKS Shared Storage CSI — Azure Files (NFS/SMB) and Azure Blob CSI Architecture]] — shared file storage (Azure)
+- [[GCP/compute/gke/filestore-csi|GKE Filestore CSI Driver — Managed NFS and ReadWriteMany (RWX) Architecture]] — shared file storage (GCP)

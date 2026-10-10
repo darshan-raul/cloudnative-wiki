@@ -5,6 +5,7 @@ tags:
   - aws
   - security
   - iam
+date: 2026-06-06
 ---
 
 # AWS IAM (Identity and Access Management)
@@ -328,6 +329,10 @@ aws sso-admin create-permission-set \
 | Policy size                  | 6,144 characters (IAM), 5,120 (service role) |
 | Attached policies per entity | 10 (managed)                                 |
 
+## More in this section
+
+- [[AWS/security/iam/external-id-and-confused-deputy-problem|External ID and Confused deputy problem]] — Adding an External ID to an IAM role’s trust policy is like adding a "unique passcode" to a door that only certain people are…
+
 ## References
 
 - **Homepage:** https://aws.amazon.com/iam/
@@ -347,3 +352,14 @@ aws sso-admin create-permission-set \
 - **IAM policy wildcards in Resource are evaluated strictly — `Resource: "arn:aws:s3:::bucket/*"` doesn't include bucket-level actions:** You need `Resource: "arn:aws:s3:::bucket"` for `s3:ListBucket`, and `Resource: "arn:aws:s3:::bucket/*"` for `s3:GetObject`.
 - **Service-linked roles are pre-created by AWS — you can't delete them:** Roles like `AWSServiceRoleForAutoScaling` are managed by AWS. If you delete the service, the role is deleted automatically.
 - **IAM Access Analyzer doesn't analyze inline policies — only managed policies attached to resources:** If you use inline policies extensively, Access Analyzer won't flag overly permissive rules. Consider converting inline policies to managed policies for better visibility.
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/pod-identity|EKS Pod Identity]] — workload identity (Kubernetes)
+- [[Azure/compute/aks/security-workload-identity|AKS Security & Microsoft Entra Workload Identity Architecture]] — workload identity (Azure)
+- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]] — workload identity (GCP)
+- [[Kubernetes/eks/security/iam-roles-for-sa|IAM Roles for Service Accounts (IRSA)]] — workload identity (Kubernetes)
+- [[Azure/identity/entraid|EntraID]] — identity and access (Azure)
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]] — identity and access (Kubernetes)

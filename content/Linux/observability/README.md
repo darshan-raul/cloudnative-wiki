@@ -4,6 +4,7 @@ description: Linux observability — journalctl, log management, monitoring (top
 tags:
   - linux
   - observability
+date: 2026-06-06
 ---
 
 # Linux Observability
@@ -31,3 +32,10 @@ When something breaks — a service won't start, CPU is at 100%, a container is 
 ## Tracing and Debugging
 
 **[[strace|strace]]** — The syscall tracer. Attach to a running process (`-p PID`) or start a command under strace (`strace -f -e trace=network,file cmd`). Reading the output: every line is a syscall with its arguments and return value. `-o` to write to file, `-c` for a summary count of which syscalls were called. Using strace to debug why a command fails, what files it opens, what network connections it makes.
+
+## Across the wiki
+
+- [[AWS/monitoring/README|AWS Monitoring]] — cloud logging and monitoring (AWS)
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)

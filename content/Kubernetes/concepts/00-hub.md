@@ -51,3 +51,9 @@ Each numbered folder has a README that lists every note with a status:
 - ✅ **Core** — solid reference note, read with confidence
 - 🟡 **Outline** — real content but incomplete, good for orientation
 - ⚪ **Stub** — placeholder, content to be filled in
+
+## Across the wiki
+
+- [[AWS/compute/eks/README|Amazon EKS]] — managed Kubernetes (AWS)
+- [[Azure/compute/aks|Azure Kubernetes Service (AKS) Architecture Hub]] — managed Kubernetes (Azure)
+- [[GCP/compute/gke|Google Kubernetes Engine (GKE)]] — managed Kubernetes (GCP)

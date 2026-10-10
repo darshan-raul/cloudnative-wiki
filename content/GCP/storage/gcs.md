@@ -7,6 +7,7 @@ tags:
   - gcs
   - object-storage
   - security
+date: 2026-09-06
 ---
 
 # Google Cloud Storage (GCS) 🪣
@@ -174,3 +175,9 @@ gcloud storage sign-url gs://prod-company-artifacts/uploads/incoming.dat \
 3. **Bucket Lock Is 100% Irreversible:** Once a retention policy is locked via `gcloud storage buckets update gs://bucket --lock-retention-policy`, it is impossible to undo. If a developer sets a retention period of 100 years by mistake, Google Cloud engineers **cannot** delete the bucket. Test retention policies thoroughly before locking.
 4. **Soft Delete Storage Costs:** Soft Delete keeps deleted objects in a restorable state for 7 to 90 days. During this window, you continue to pay the object's base storage rate. If you delete 50 TB of data to cut costs, your bill will not decrease until the Soft Delete retention period elapses.
 5. **Turbo Replication SLA Conditions:** Turbo Replication (15-minute inter-region RPO) is only available on **Dual-Region buckets** and requires an extra fee (~$0.02/GB written). It is not available on Multi-Region buckets (`us`, `eu`).
+
+## Across the wiki
+
+- [[AWS/storage/s3/README|Amazon S3]] — object storage (AWS)
+- [[Azure/storage/blob|Azure Blob Storage & Data Lake Storage Gen2]] — object storage (Azure)
+- [[Kubernetes/eks/storage/mountpoint-s3|Mountpoint for Amazon S3 CSI Driver]] — object storage (Kubernetes)

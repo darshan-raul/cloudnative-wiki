@@ -1,3 +1,10 @@
+---
+title: "TOTP"
+tags: [architecture, security, totp]
+date: 2026-01-30
+description: "How Totp, the one used in google authenticator and similar such apps works behind the scenes!"
+---
+
 # TOTP
 
 How Totp, the one used in google authenticator and similar such apps works behind the scenes!

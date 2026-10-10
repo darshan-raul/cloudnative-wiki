@@ -6,6 +6,7 @@ tags:
   - databases
   - dynamodb
   - nosql
+date: 2026-06-06
 ---
 
 # Amazon DynamoDB
@@ -344,3 +345,10 @@ If one PK gets more traffic than others (celebrity problem):
 - **GSIs have their own provisioned throughput and cannot be updated without recreating the index:** If you need to change the GSI key schema, you must create a new GSI, backfill data, and switch. Plan your GSI design carefully.
 - **On-demand DynamoDB is more expensive than provisioned for consistent high-throughput workloads:** If you know your traffic pattern, use provisioned with auto-scaling. On-demand is for unpredictable, spiky, or low-traffic tables.
 - **DynamoDB doesn't support joins — you must denormalize or use multiple queries:** If you need related data (orders + customer info), embed it in the item or make separate queries. For complex queries, consider using Elasticsearch or Athena.
+
+## Across the wiki
+
+- [[Azure/databases/cosmos-db|Azure Cosmos DB]] — NoSQL databases (Azure)
+- [[GCP/databases/firestore/README|Google Cloud Firestore]] — NoSQL databases (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/mongodb/README|MongoDB]] — NoSQL databases (Architecture)
+- [[GCP/databases/bigtable/README|Google Cloud Bigtable]] — NoSQL databases (GCP)

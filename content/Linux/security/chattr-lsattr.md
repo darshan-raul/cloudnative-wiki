@@ -4,6 +4,7 @@ description: Linux chattr and lsattr — immutable files, append-only, file attr
 tags:
   - linux
   - security
+date: 2026-06-06
 ---
 
 # chattr and lsattr

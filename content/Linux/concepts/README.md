@@ -4,6 +4,7 @@ description: Linux fundamentals — beginner curriculum covering filesystem, per
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # Linux Concepts
@@ -63,3 +64,12 @@ Standalone topics useful at any level:
 [[spool-directory]]      — /var/spool: mail, print queues, at-jobs
 [[bash-cheatsheet]]     — bash quick reference (devhints.io style)
 ```
+
+## More in this section
+
+- [[Linux/concepts/hardlink-vs-softlink|hardlink vs softlink]] — Choosing between hard links and soft (symbolic) links in Linux is about understanding how they work, their strengths, weaknesses,…
+- [[Linux/concepts/sockets|Sockets]] — What sockets are, the socket types, and how processes use them to communicate locally and over the network.
+- [[Linux/concepts/spool-directory|Spool directory]] — A spool directory in Linux is a designated location where data is temporarily stored before it is processed by another service or…
+- [[Linux/concepts/tmpfs|TMPFS]] — Linux tmpfs — RAM-based filesystem, /dev/shm, /run, /tmp, size limits, mtmpfs
+- [[Linux/concepts/tty-pty|tty vs pty]] — In Linux, TTY and PTY are integral components of the system's terminal interface, facilitating user interactions with the…
+- [[Linux/concepts/ulimit|ulimit]] — ulimit in Linux refers to a command used to manage user-level resource limits, helping control the system resources that…

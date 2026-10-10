@@ -8,6 +8,7 @@ tags:
   - security
   - gvisor
   - pss
+date: 2026-09-06
 ---
 
 # GKE Multi-Tenancy Architecture — Hard vs Soft Isolation, GKE Sandbox (gVisor), and PSS 🏢🔒
@@ -280,3 +281,10 @@ Multi-tenancy cluster consolidation delivers massive cost savings by eliminating
 4. **Tenant LoadBalancer Service Quota Exhaustion:** If you do not restrict service types via ResourceQuotas (`spec.hard.services.loadbalancers: "0"`), an unauthorized tenant can deploy 20 Kubernetes `type: LoadBalancer` services. Each service provisions a Google Cloud external Network Load Balancer and public IP address ($0.025/hr + IP charges), rapidly exhausting your project's regional load balancer forwarding rule quota and increasing cloud bills.
 5. **Cross-Tenant NetworkPolicy Default Isolation:** Creating separate namespaces does **not** restrict network traffic between them; by default, any pod in namespace `tenant-b` can initiate TCP connections to `tenant-a.internal.svc.cluster.local`. You **must enforce a default-deny Ingress NetworkPolicy** across all tenant namespaces, explicitly whitelisting only authorized ingress traffic.
 6. **Hierarchical Namespace Controller (HNC) Tree Inheritance:** When using HNC to create parent-child namespace hierarchies (e.g., parent namespace `enterprise-org` propagates RBAC and NetworkPolicies down to child namespaces `team-a` and `team-b`), modifying a policy on the parent namespace **instantly propagates down to all children**. Test parent policy updates in staging to avoid accidentally locking out dozens of child tenant namespaces simultaneously.
+
+## Across the wiki
+
+- [[Azure/compute/aks/multi-tenancy-isolation|AKS Multi-Tenancy, Hard Isolation, and Confidential Containers]] — multi-tenancy (Azure)
+- [[Kubernetes/guides/non-functional/multi-tenancy|Multi-Tenancy]] — multi-tenancy (Kubernetes)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/multi-tenancy|Multi-Tenant Software Architecture & Data Isolation Patterns]] — multi-tenancy (Architecture)
+- [[Kubernetes/concepts/L01-architecture/03-namespaces|Namespaces]] — multi-tenancy (Kubernetes)

@@ -6,6 +6,7 @@ tags:
   - application-integration
   - step-functions
   - orchestration
+date: 2026-06-06
 ---
 
 # AWS Step Functions
@@ -307,3 +308,9 @@ while True:
 - **Express workflows DON'T have full execution history in CloudWatch — only async Express:** If you need detailed step-by-step logging (for debugging), use Standard workflows. Express synchronous workflows don't log history at all.
 - **Map state runs items IN PARALLEL by default — if you need sequential processing, set "Mode": "Inline" and "MaxConcurrency": 1:** The default is parallel. If your items must be processed in order, set `MaxConcurrency: 1`.
 - **Nested workflow results are NOT automatically merged — you must explicitly extract and combine outputs:** When a child workflow completes, its output is in `$.<task-name>`. You need to use `ResultPath` or `OutputPath` to merge it into the parent state.
+
+## Across the wiki
+
+- [[Linux/boot-init/cron-anacron|Cron and Anacron]] — scheduled work (Linux)
+- [[Kubernetes/concepts/L03-workloads/07-cronjob|CronJobs — Time-Scheduled Workloads]] — scheduled work (Kubernetes)
+- [[Linux/boot-init/systemd-timers|systemd Timers]] — scheduled work (Linux)

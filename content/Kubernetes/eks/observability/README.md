@@ -52,3 +52,10 @@ EKS --> AMP (Prometheus) --> AMG (Grafana)
 
 - [EKS Observability](https://docs.aws.amazon.com/eks/latest/userguide/observability.html)
 - [EKS Workshop - Observability](https://www.eksworkshop.com/docs/observability/)
+
+## Across the wiki
+
+- [[Azure/compute/aks/observability-monitoring|AKS Observability — Container Insights, Managed Prometheus, and ContainerLogV2]] — cluster observability (Azure)
+- [[GCP/compute/gke/observability-gmp|GKE Observability Architecture — Managed Prometheus (GMP), Logging, and Trace]] — cluster observability (GCP)
+- [[Observability/prometheus/README|Prometheus Architecture]] — cluster observability (Observability)
+- [[Observability/fundamentals|Observability Architecture & Implementation Guide]] — cluster observability (Observability)

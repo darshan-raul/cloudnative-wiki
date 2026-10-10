@@ -5,7 +5,11 @@ tags:
   - Non-Functional
   - High-Availability
   - Reliability
+date: 2026-06-12
+description: "A HA cluster survives node loss, zone loss, control plane failure, and partial network partitions without dropping traffic. The 9s you achieve are a function of design choices, not luck."
 ---
+
+# High Availability
 
 A HA cluster survives **node loss, zone loss, control plane failure, and partial network partitions** without dropping traffic. The 9s you achieve are a function of design choices, not luck.
 
@@ -708,3 +712,10 @@ After 90 days: you have a cluster that survives most failures.
 - [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — beyond HA, full failover
 - [[Kubernetes/guides/non-functional/backup-restore|backup-restore]] — data protection
 - [[Kubernetes/guides/troubleshooting/node-not-ready|node-not-ready]] — when nodes fail
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability|Availability]] — high availability (Architecture)
+- [[DevOps/sre/slos-and-error-budgets|SLOs and Error Budgets]] — high availability (DevOps)
+- [[AWS/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures|1.3 Design Reliable and Resilient Architectures]] — high availability (AWS)
+- [[Azure/compute/aks/cluster-tiers-sla|AKS Cluster Tiers, High Availability Control Plane, and Private Cluster Architecture]] — high availability (Azure)

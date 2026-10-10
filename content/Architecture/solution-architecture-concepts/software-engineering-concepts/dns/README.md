@@ -1,3 +1,10 @@
+---
+title: "DNS"
+tags: [architecture, software-engineering-concepts, dns]
+date: 2026-01-30
+description: "DNS zones and related concepts are fundamental to understanding how the Domain Name System (DNS) works. Here’s an in-depth look at these topics."
+---
+
 # DNS
 
 "https://www.youtube.com/watch?v=g_gKI2HCElk"
@@ -82,3 +89,16 @@ DNS caching improves the efficiency and performance of DNS by storing DNS query 
 #### Conclusion
 
 Understanding DNS zones and related concepts is crucial for managing domain names and ensuring the proper functioning of DNS infrastructure. DNS is a critical component of the internet, enabling user-friendly domain names to be translated into the IP addresses necessary for routing and connecting to servers and services.
+
+## More in this section
+
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/bind9|bind9]] — Managing DNS zones with BIND9 involves several steps, from installing and configuring BIND9 to creating and managing zone files.…
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/dnsmasq|dnsmasq]] — dnsmasq as a lightweight DNS forwarder and DHCP server, with step-by-step configuration.
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/mail-related-records|Mail related records]] — SPF, DKIM, and DMARC are three core email authentication technologies that work together to protect your domain's reputation and…
+
+## Across the wiki
+
+- [[AWS/networking/dns/README|Amazon Route 53]] — DNS (AWS)
+- [[GCP/networking/cloud-dns/README|GCP Cloud DNS Architecture]] — DNS (GCP)
+- [[Linux/networking/dns-resolution|DNS Resolution]] — DNS (Linux)
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS in Kubernetes]] — DNS (Kubernetes)

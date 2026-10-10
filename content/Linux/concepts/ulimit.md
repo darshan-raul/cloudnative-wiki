@@ -1,3 +1,10 @@
+---
+title: "ulimit"
+tags: [linux, ulimit]
+date: 2026-01-30
+description: "ulimit in Linux refers to a command used to manage user-level resource limits, helping control the system resources that individual users and processes can consume."
+---
+
 # ulimit
 
 `ulimit` in Linux refers to a command used to manage user-level resource limits, helping control the system resources that individual users and processes can consume. It is part of the shell built-in commands and interacts with the Linux kernel's resource management system.
@@ -41,3 +48,9 @@ There are different categories of resource limits that can be controlled by `uli
   ```
 
 These limits are especially important for controlling resource usage in multi-user environments or on servers where resource exhaustion can affect system stability.
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests and Limits]] — resource limits (Kubernetes)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — resource limits (Containers)
+- [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota and LimitRange]] — resource limits (Kubernetes)

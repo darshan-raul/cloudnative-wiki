@@ -4,6 +4,7 @@ description: AWS Cost Budgets — creating cost and usage budgets, alert thresho
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Cost Budgets

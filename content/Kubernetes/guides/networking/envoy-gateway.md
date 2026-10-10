@@ -11,6 +11,8 @@ description: Manage Envoy Proxy as a Kubernetes-based application gateway using 
 
 Envoy Gateway simplifies configuring Envoy Proxy by implementing and extending the Kubernetes Gateway API. You define high-level traffic rules using resources like `Gateway`, `HTTPRoute`, or `TLSRoute`, and Envoy Gateway automatically translates them into detailed Envoy Proxy configurations.
 
+> For controller internals, release model and day-2 operations see [[Kubernetes/guides/networking/envoy-gateway-internals|Envoy Gateway — Architecture & Operations Reference]]. For the API spec see [[Kubernetes/concepts/L04-services-networking/09-gateway-api|Gateway API]].
+
 ## Overview
 
 An API gateway is a centralized entry point for managing, securing, and routing requests to backend services. It handles cross-cutting concerns like authentication, rate limiting, and protocol translation, so individual services don't have to.
@@ -659,3 +661,10 @@ eksctl delete iamserviceaccount \
   --namespace envoy-gateway-system \
   --cluster <cluster-name>
 ```
+
+## Across the wiki
+
+- [[Azure/compute/aks/ingress-appgw-gateway|AKS Ingress, Application Gateway for Containers, and Gateway API Architecture]] — ingress and load balancing (Azure)
+- [[GCP/compute/gke/gateway-api|GKE Gateway API Architecture, HTTPRoute, and Cloud Armor Integration]] — ingress and load balancing (GCP)
+- [[AWS/networking/load-balancing/README|Elastic Load Balancing]] — ingress and load balancing (AWS)
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — ingress and load balancing (Architecture)

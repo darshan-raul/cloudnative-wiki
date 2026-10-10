@@ -1,142 +1,154 @@
 ---
-title: Crossplane
-tags: [eks, automation, crossplane, infrastructure]
+title: Crossplane on EKS
+tags:
+  [
+    eks,
+    crossplane,
+    control-planes,
+    platform-engineering,
+    infrastructure-as-code,
+  ]
 date: 2026-05-17
-description: Cloud-native infrastructure management with Crossplane
+description: Using Crossplane on EKS to provision AWS infrastructure through the Kubernetes API — providers and their IAM, managed resources, compositions as platform APIs, and how it compares with ACK, kro and Terraform.
 ---
 
-# Crossplane
+# Crossplane on EKS
 
-## Overview
+Crossplane turns a Kubernetes cluster into a control plane for infrastructure. You declare an S3 bucket or an RDS instance as a Kubernetes object, and a controller creates it in AWS and keeps it matching the declaration — the same reconcile loop that keeps a Deployment at three replicas, applied to cloud resources.
 
-Crossplane is an open source multicloud control plane that extends Kubernetes to manage infrastructure.
+Its real purpose is one level higher: letting a platform team publish its **own APIs** ("a `PostgresDatabase` with a size and a version") that hide dozens of underlying resources. That makes it a building block for [[DevOps/platform-engineering/README|platform engineering]].
 
-## Install Crossplane
+## The pieces
+
+| Concept                               | What it is                                                                           |
+| :------------------------------------ | :----------------------------------------------------------------------------------- |
+| **Provider**                          | A controller package for one API family, e.g. `provider-aws-s3`, `provider-aws-rds`  |
+| **Managed resource (MR)**             | One Kubernetes object per cloud resource — `Bucket`, `Instance`, `Role`              |
+| **ProviderConfig**                    | How a provider authenticates: which credentials, which account                       |
+| **XRD** (CompositeResourceDefinition) | The schema of an API you define                                                      |
+| **Composition**                       | The implementation of that API: a pipeline of functions that emits managed resources |
+| **XR** (composite resource)           | An instance of your API, created by a platform user                                  |
+
+## Install and authenticate
 
 ```bash
-# Add Helm repo
-helm repo add crossplane https://charts.crossplane.io/stable
-helm repo update
-
-# Install Crossplane
-helm install crossplane crossplane/crossplane \
-  --namespace crossplane-system \
-  --create-namespace
+helm repo add crossplane-stable https://charts.crossplane.io/stable
+helm upgrade --install crossplane crossplane-stable/crossplane \
+  --namespace crossplane-system --create-namespace
 ```
 
-## Install AWS Provider
+Install only the provider families you need. The AWS provider is split per service precisely because the monolithic one installed nearly a thousand CRDs and strained the API server.
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-aws
+  name: provider-aws-s3
 spec:
-  package: xpkg.upbound.io/crossplane/provider-aws:v0.42.0
+  package: xpkg.upbound.io/upbound/provider-aws-s3:v1
+  runtimeConfigRef:
+    name: aws-irsa
 ---
-apiVersion: aws.crossplane.io/v1alpha1
+apiVersion: aws.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
   name: default
 spec:
   credentials:
-    source: InjectedIdentity
+    source: IRSA
 ```
 
-## Create Managed Resources
+The provider pod's service account gets an [[AWS/security/iam/README|IAM]] role through [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]] or [[Kubernetes/eks/security/pod-identity|Pod Identity]]. No access keys are stored. For multi-account setups, that role assumes a role in each target account, selected by a per-account `ProviderConfig`.
 
-### S3 Bucket
+**The provider's role is as powerful as the infrastructure it manages.** Anyone who can create a managed resource in the cluster can make AWS create it. Scope the role, set a permissions boundary, and control who can create which resource kinds with [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] and [[Kubernetes/eks/security/policy-management|admission policy]].
+
+## A managed resource
 
 ```yaml
-apiVersion: s3.aws.crossplane.io/v1beta1
+apiVersion: s3.aws.upbound.io/v1beta2
 kind: Bucket
 metadata:
-  name: my-bucket
+  name: payments-exports
 spec:
   forProvider:
-    locationConstraint: us-west-2
-    versioningConfiguration:
-      status: Enabled
+    region: eu-west-1
+    tags: { team: payments }
+  deletionPolicy: Orphan
   providerConfigRef:
     name: default
 ```
 
-### RDS Instance
+`kubectl get bucket` shows `READY` and `SYNCED`. If someone changes the bucket in the console, Crossplane changes it back at the next reconcile. `deletionPolicy: Orphan` leaves the cloud resource in place when the object is deleted — the safe setting for anything holding data.
+
+## Building a platform API
+
+Developers should not write raw managed resources. Define what they may ask for:
 
 ```yaml
-apiVersion: rds.aws.crossplane.io/v1alpha1
-kind: DBInstance
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
 metadata:
-  name: my-database
+  name: databases.platform.example.com
 spec:
-  forProvider:
-    dbInstanceClass: db.t3.medium
-    engine: postgres
-    engineVersion: "15.3"
-    allocatedStorage: 20
-    masterUsername: admin
-    publiclyAccessible: false
-    dbSubnetGroupNameRef:
-      name: my-db-subnet-group
-    vpcSecurityGroupIDs:
-      - sg-1234567890abcdef0
-  providerConfigRef:
-    name: default
+  scope: Namespaced
+  group: platform.example.com
+  names: { kind: Database, plural: databases }
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                size: { type: string, enum: [small, medium, large] }
+                engineVersion: { type: string, default: "16" }
+              required: [size]
 ```
 
-## Composite Resources (XR)
+A **Composition** then maps `size: small` to an instance class, a subnet group, a security group, a parameter group, a KMS key and a Secrets Manager entry, using a pipeline of composition functions (patch-and-transform, Go templates, KCL or Python). A developer's entire request becomes:
 
 ```yaml
-apiVersion: apiextensions.crossplane.io/v1
-kind: Composition
+apiVersion: platform.example.com/v1alpha1
+kind: Database
 metadata:
-  name: database
+  name: orders
+  namespace: payments
 spec:
-  resources:
-    - base:
-        apiVersion: rds.aws.crossplane.io/v1alpha1
-        kind: DBInstance
-      patches:
-        - fromFieldPath: spec.parameters.engine
-          toFieldPath: spec.forProvider.engine
-        - fromFieldPath: spec.parameters.instanceClass
-          toFieldPath: spec.forProvider.dbInstanceClass
-      connectionDetails:
-        - fromConnectionSecretKeyRef:
-            name: db-creds
-            key: username
-        - fromConnectionSecretKeyRef:
-            name: db-creds
-            key: password
----
-apiVersion: database.example.com/v1alpha1
-kind: PostgreSQLInstance
-metadata:
-  name: my-postgres
-spec:
-  parameters:
-    engine: postgres
-    instanceClass: db.t3.medium
-  compositionRef:
-    name: database
-  publishConnectionDetailsTo:
-    name: db-creds
+  size: small
 ```
 
-## Usage
+The platform team owns the Composition and can change defaults — encryption, backups, instance generation — for every database at once.
 
-```bash
-# Create database instance
-kubectl apply -f postgres-instance.yaml
+## How it compares
 
-# View managed resources
-kubectl get managed
+|                     | Crossplane                 | [[Kubernetes/eks/automation/control-planes/ack\|ACK]] | [[Kubernetes/eks/automation/control-planes/kro\|kro]] | Terraform / OpenTofu           |
+| :------------------ | :------------------------- | :---------------------------------------------------- | :---------------------------------------------------- | :----------------------------- |
+| Model               | Continuous reconcile       | Continuous reconcile                                  | Continuous reconcile                                  | Plan and apply on demand       |
+| Clouds              | Many                       | AWS only                                              | Any CRDs present in the cluster                       | Many                           |
+| Custom abstractions | XRDs and Compositions      | None                                                  | ResourceGraphDefinitions                              | Modules                        |
+| State               | The Kubernetes API (etcd)  | The Kubernetes API                                    | The Kubernetes API                                    | A state file                   |
+| Preview of changes  | Limited                    | None                                                  | None                                                  | `plan` — its biggest advantage |
+| Maturity            | High, steep learning curve | Per-service, AWS-maintained                           | Young                                                 | Very high                      |
 
-# View connection secret
-kubectl get secret db-creds -o yaml
-```
+A pragmatic split: [[DevOps/infrastructure-as-code/terraform|Terraform]] for foundations that change rarely and need a reviewed plan (accounts, VPCs, the cluster itself), and a control plane for resources that belong to an application's lifecycle and are requested self-service.
 
-## References
+## Operating notes
 
-- [Crossplane Documentation](https://crossplane.io/)
-- [EKS Workshop - Crossplane](https://www.eksworkshop.com/docs/automation/controlplanes/crossplane/)
+- **The cluster becomes critical infrastructure.** Deleting an XR can delete a database. Back up the cluster's API objects, use `Orphan` for stateful resources, and protect namespaces from accidental deletion.
+- **CRD count** affects API server memory and client discovery time; install the minimum set of providers.
+- **Rate limits.** Many resources reconciling against the same AWS API get throttled. Tune poll intervals and provider concurrency.
+- **Debugging** is `kubectl describe` on the managed resource: the `Synced` condition carries the AWS error message verbatim. `crossplane beta trace <kind> <name>` shows the whole tree under an XR.
+- **Importing** existing resources is done by setting the `crossplane.io/external-name` annotation, optionally with `managementPolicies: ["Observe"]` to adopt without changing anything.
+- Deliver XRs and Compositions with [[Kubernetes/eks/automation/gitops/argocd|Argo CD]] or [[Kubernetes/eks/automation/gitops/flux|Flux]], so infrastructure requests are pull requests.
+
+## Related
+
+- [[Kubernetes/eks/automation/README|Automation on EKS]]
+- [[DevOps/platform-engineering/crossplane|Crossplane in platform engineering]]
+- [[Kubernetes/concepts/L09-advanced/03-customresourcedefinitions|CustomResourceDefinitions]] and [[Kubernetes/concepts/L09-advanced/01-operators|operators]]
+- [[DevOps/infrastructure-as-code/README|Infrastructure as code]]
+- [Crossplane documentation](https://docs.crossplane.io/)

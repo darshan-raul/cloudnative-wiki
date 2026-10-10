@@ -7,6 +7,7 @@ tags:
   - redis
   - caching
   - in-memory
+date: 2026-09-06
 ---
 
 # Azure Cache for Redis Architecture, Clustering, and Enterprise Tiers ⚡🧠
@@ -227,3 +228,10 @@ Azure Cache for Redis pricing is billed hourly per cache instance:
 4. **VNet Injection Deprecation in Favor of Private Endpoints:** In older documentation, Redis Premium used legacy "VNet Injection," which required dedicated subnets and complex NSG rule openings (ports 15000-15001). Microsoft has deprecated VNet injection for Azure Cache for Redis in favor of **Azure Private Link & Private Endpoints**. Private Endpoints operate over standard subnets with zero custom inbound NSG rules required.
 5. **AOF Persistence Severely Degrades Write Throughput:** While Append-Only File (AOF) persistence guarantees maximum durability by journaling writes every second, it incurs a **20% to 40% throughput penalty on write-heavy workloads** compared to in-memory caching or hourly RDB snapshots. If your cache can survive regenerating state from PostgreSQL or Cosmos DB upon disaster recovery, use **RDB snapshots** instead of continuous AOF.
 6. **Threadpool Starvation in .NET `StackExchange.Redis`:** In .NET applications, a sudden burst of Redis queries can saturate the .NET CLR ThreadPool, resulting in `Timeout awaiting response... ThreadPool: (worker: 4, completion: 0)`. The error message appears to blame Redis latency, but the bottleneck is actually client-side thread starvation waiting to dequeue response bytes. Fix this by pre-allocating ThreadPool threads at application startup (`ThreadPool.SetMinThreads(200, 200)`).
+
+## Across the wiki
+
+- [[AWS/databases/elasticache/README|Amazon ElastiCache]] — in-memory caches (AWS)
+- [[GCP/databases/memorystore/README|GCP Memorystore (Managed Redis & Memcached)]] — in-memory caches (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/redis|Redis]] — in-memory caches (Architecture)
+- [[Architecture/solution-architecture-concepts/caching|Caching]] — in-memory caches (Architecture)

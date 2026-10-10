@@ -1,3 +1,10 @@
+---
+title: "Patch Manager"
+tags: [aws, management-governance, systems-manager, patch-manager]
+date: 2026-01-30
+description: "Patch Manager explained from first principles to production, for a large mixed fleet across AWS and Azure, Linux and Windows."
+---
+
 # Patch Manager
 
 "https://www.youtube.com/watch?v=PhIiVsCEBu8"

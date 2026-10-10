@@ -5,6 +5,7 @@ tags:
   - linux
   - shell
   - bash
+date: 2026-06-06
 ---
 
 # Shell Redirection

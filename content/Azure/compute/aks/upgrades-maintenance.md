@@ -9,6 +9,7 @@ tags:
   - lifecycle
   - pdb
   - sre
+date: 2026-09-06
 ---
 
 # AKS Upgrades, Maintenance Windows, and Safe Rollout Strategies 🔄🛡️
@@ -195,3 +196,10 @@ kubectl apply -f order-api-pdb.yaml
 3. **Weekly `NodeImage` Rollouts Rebooting Single-Replica Pods:** Many teams assume that setting the cluster Kubernetes version to manual prevents unexpected reboots. However, if `--node-os-upgrade-channel` is set to `NodeImage`, Microsoft re-images nodes weekly. If an internal tool runs as a single replica without high availability, it will experience downtime every week during the maintenance window. Always run at least 2 replicas for all services.
 4. **DaemonSet Image Pull BackOff Locking Drains:** During a node surge upgrade, the new surge node must pull all DaemonSet images (Cilium, Datadog, Falco) before application pods can be scheduled onto it. If a private container registry (ACR) credentials expired or if rate limits are hit, the surge node enters a perpetual `NotReady` state, blocking the entire cluster upgrade indefinitely.
 5. **Major Version Leapfrogging is Strictly Forbidden:** Kubernetes upstream and AKS do **not support skipping minor versions** (e.g., upgrading directly from Kubernetes 1.28 to 1.30). Attempting to submit an upgrade request skipping a minor version is rejected by the Azure API. You must perform sequential upgrades (`1.28 -> 1.29 -> 1.30`), testing each minor release along the path.
+
+## Across the wiki
+
+- [[Kubernetes/eks/cluster-upgrades/README|Cluster Upgrades]] — cluster upgrades (Kubernetes)
+- [[GCP/compute/gke/release-channels-upgrades|GKE Release Channels, Node Upgrades, Surge vs Blue-Green, and SRE Lifecycle]] — cluster upgrades (GCP)
+- [[Kubernetes/guides/non-functional/upgrade-strategy|Upgrade Strategy]] — cluster upgrades (Kubernetes)
+- [[Kubernetes/guides/non-functional/deprecations|Deprecations]] — cluster upgrades (Kubernetes)

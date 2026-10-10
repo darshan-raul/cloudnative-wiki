@@ -1,3 +1,10 @@
+---
+title: "Hypervisors"
+tags: [linux, virtualization, hypervisors]
+date: 2026-01-30
+description: "Hypervisors — notes and reference."
+---
+
 # Hypervisors
 
 - **Level 0 (L0):** This is the base level, representing the physical hardware (the actual server) and the hypervisor that runs directly on it. In cloud environments like Google Cloud or AWS, the cloud provider manages this layer. This L0 hypervisor is responsible for virtualizing the physical hardware and presenting it to the next layer up. &#x20;
@@ -16,3 +23,10 @@ The primary differences between Level 1 and Level 2 virtualization lie in their 
 | **Perceived Host**  | The physical hardware (virtualized by L0).                         | The Level 1 VM (acting as a host).                                                                       |
 
 In essence, Level 1 virtualization is the initial layer of abstraction provided by the cloud provider's hypervisor, while Level 2 virtualization is the layer you create by installing and running your own hypervisor within that Level 1 VM. This nested structure allows for scenarios like running a different hypervisor within your cloud instance or creating complex virtualized environments for testing, development, or specific application requirements.
+
+## Across the wiki
+
+- [[AWS/compute/ec2/README|Amazon EC2]] — virtual machines (AWS)
+- [[Azure/compute/vm|Azure Virtual Machines & Scale Sets (VMSS)]] — virtual machines (Azure)
+- [[GCP/compute/gce|GCP Compute Engine (GCE)]] — virtual machines (GCP)
+- [[GCP/compute/gce/migs|GCP Managed Instance Groups (MIGs)]] — virtual machines (GCP)

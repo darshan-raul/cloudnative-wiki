@@ -1,3 +1,10 @@
+---
+title: "Sync"
+tags: [architecture, languages, golang, concurrency, sync]
+date: 2026-01-30
+description: "The sync package in Go provides synchronization primitives that are commonly needed in concurrent programming."
+---
+
 # Sync
 
 The `sync` package in Go provides synchronization primitives that are commonly needed in concurrent programming. It includes tools for mutual exclusion (mutexes), wait groups, once execution, and other synchronization needs. Here’s an overview of some of the key components and their use cases:

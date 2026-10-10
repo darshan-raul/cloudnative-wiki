@@ -5,7 +5,11 @@ tags:
   - Troubleshooting
   - Images
   - Registry
+date: 2026-06-11
+description: "The kubelet can't pull the container image. The pod sits in ImagePullBackOff (or ErrImagePull for the very first attempt) and the kubelet backs off retries."
 ---
+
+# ImagePullBackOff / ErrImagePull
 
 The kubelet can't pull the container image. The pod sits in `ImagePullBackOff` (or `ErrImagePull` for the very first attempt) and the kubelet backs off retries. This is **registry or credentials**, not the application.
 

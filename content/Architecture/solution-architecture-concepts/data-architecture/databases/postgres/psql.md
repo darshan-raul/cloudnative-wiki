@@ -1,3 +1,10 @@
+---
+title: "psql"
+tags: [architecture, data-architecture, databases, postgres, psql]
+date: 2026-01-30
+description: "A cheat sheet for psql, the PostgreSQL command-line client: connecting, meta-commands, output formatting and scripting."
+---
+
 # psql
 
 Sure, here is a comprehensive cheat sheet for the PostgreSQL command-line interface (`psql`). This should cover most common scenarios you might encounter while working with PostgreSQL.
@@ -296,3 +303,10 @@ Sure, here is a comprehensive cheat sheet for the PostgreSQL command-line interf
   ```
 
 This cheat sheet should help you navigate and use `psql` effectively for most scenarios you might encounter while working with PostgreSQL.
+
+## Across the wiki
+
+- [[Linux/shell-scripting/README|Shell Scripting]] — command-line tooling (Linux)
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — command-line tooling (Kubernetes)
+- [[AWS/management-governance/cli/README|AWS CLI]] — command-line tooling (AWS)
+- [[Linux/shell-scripting/bash-cheatsheet|Bash Scripting Cheatsheet]] — command-line tooling (Linux)

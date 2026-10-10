@@ -6,6 +6,7 @@ tags:
   - data-science
   - machine-learning
   - crisp-dm
+date: 2026-01-30
 ---
 
 # The Data Science Lifecycle & CRISP-DM Process

@@ -5,6 +5,7 @@ tags:
   - aws
   - cost-management
   - serverless
+date: 2026-06-06
 ---
 
 # Lambda Cost Optimization

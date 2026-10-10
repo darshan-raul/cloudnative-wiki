@@ -4,6 +4,7 @@ description: AWS Migration Evaluator — generates TCO reports and right-sizing 
 tags:
   - aws
   - migration
+date: 2026-06-06
 ---
 
 # Migration Evaluator

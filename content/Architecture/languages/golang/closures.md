@@ -1,3 +1,10 @@
+---
+title: "Closures"
+tags: [architecture, languages, golang, closures]
+date: 2026-01-30
+description: "Closures — notes and reference."
+---
+
 # Closures
 
 **What is a Closure?**

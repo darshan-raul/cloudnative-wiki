@@ -467,3 +467,10 @@ The pipeline is the _implementation_ of change management. The audit evidence is
 - [[DevOps/devsecops/stage3-deploy/13-artifact-signing|M13: Artifact Signing]]
 - [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations|M14: Supply Chain Attestations]]
 - [[DevOps/devsecops/stage2-build/README|Stage 2 — Build]]
+
+## Across the wiki
+
+- [[Kubernetes/guides/delivery/ci-cd-integration|CI/CD Integration]] — CI/CD pipelines (Kubernetes)
+- [[Kubernetes/eks/automation/continuous-delivery/codepipeline|AWS CodePipeline for EKS]] — CI/CD pipelines (Kubernetes)
+- [[Kubernetes/guides/delivery/pipeline-workflows/tekton-pipelines|Tekton Pipelines]] — CI/CD pipelines (Kubernetes)
+- [[Kubernetes/guides/delivery/templating-patching/helm/cicd|Helm CI/CD]] — CI/CD pipelines (Kubernetes)

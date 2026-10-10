@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - Messages
+date: 2026-06-12
+description: "Everything in LangChain is built on five message types from langchaincore.messages."
 ---
+
+# LangChain — Messages
 
 > **Part 2.** Messages are the atom of LangChain. Every chat model
 > call is "send a list of messages, get back a new message." Read

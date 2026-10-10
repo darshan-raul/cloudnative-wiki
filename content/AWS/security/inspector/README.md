@@ -5,6 +5,7 @@ tags:
   - aws
   - security
   - inspector
+date: 2026-06-06
 ---
 
 # AWS Inspector
@@ -234,3 +235,10 @@ First 500 resources/month are free.
 - **ECR enhanced scanning uses Inspector (not ECR's basic scan) and costs $0.09/image/month:** Basic ECR scanning (CVEs only, no Lambda dependencies) is free. Enhanced scanning (full dependency analysis) uses Inspector and costs money. Know which you're using.
 - **Inspector findings don't auto-remediate — you need EventBridge + SSM for that:** Inspector identifies vulnerabilities but doesn't patch them. Build a pipeline: Inspector findings → Security Hub → EventBridge → SSM Patch Manager.
 - **Lambda layer vulnerabilities are scanned separately from function code:** If your Lambda uses layers, both the function code AND each layer are scanned. A vulnerable layer = a finding on your function.
+
+## Across the wiki
+
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning & Hardening]] — software supply chain (DevOps)
+- [[Security/kubernetes-security/vulnerability-scanning/README|Kubernetes Vulnerability Scanning]] — software supply chain (Security)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — software supply chain (Kubernetes)
+- [[Containers/registries|Container Registries]] — software supply chain (Containers)

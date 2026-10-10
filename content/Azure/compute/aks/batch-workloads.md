@@ -9,6 +9,7 @@ tags:
   - jobs
   - spot-vms
   - ai-ml
+date: 2026-09-06
 ---
 
 # AKS Batch Workloads, Job Orchestration, and Kueue Fair-Share Scheduling 📊⏳
@@ -252,3 +253,10 @@ kubectl apply -f parallel-indexed-job.yaml
 3. **Spot Eviction Checkpointing Race Condition:** When Azure reclaims a Spot node, it delivers an eviction signal 30 seconds before termination. If a batch pod processes a massive 5 GB memory dataset and attempts to serialize and upload it to Azure Blob Storage during the 30-second window, network saturation will prevent the upload from completing before the hard `SIGKILL` arrives. Architect batch tasks to write lightweight incremental checkpoints every 5 minutes.
 4. **Kueue Job Admission Webhook Latency:** Kueue uses a validating and mutating admission webhook to intercept Job submissions. If the `kueue-controller-manager` deployment crashes or runs out of CPU, all future `kubectl apply -f job.yaml` and Helm batch deployments will hang and time out with `Internal error occurred: failed calling webhook`. Monitor Kueue pod health with Azure Monitor.
 5. **IndexedJob Image Pull Thrashing:** When an IndexedJob with `parallelism: 100` is admitted simultaneously, 100 pods are scheduled across newly provisioned nodes at the exact same second. If the container image is 5 GB, 100 nodes will concurrently pull the image from Azure Container Registry (ACR), **saturating the registry rate limits (`429 Throttling`)**. Pre-bake batch images into custom VM images or leverage Azure Container Registry Artifact Cache.
+
+## Across the wiki
+
+- [[GCP/compute/gke/batch-workloads-kueue|GKE Batch Workloads & Kueue Job Orchestration Architecture]] — batch workloads (GCP)
+- [[Kubernetes/concepts/L03-workloads/06-job|Jobs — Run-to-Completion Workloads]] — batch workloads (Kubernetes)
+- [[AWS/compute/batch/README|AWS Batch]] — batch workloads (AWS)
+- [[GCP/compute/cloud-run/jobs|GCP Cloud Run Jobs & Batch Processing]] — batch workloads (GCP)

@@ -1,3 +1,10 @@
+---
+title: "Foreign Keys and Constraints"
+tags: [architecture, data-architecture, databases, foreign-keys-and-constraints]
+date: 2026-01-30
+description: "A foreign key is a field (or collection of fields) in one table that uniquely identifies a row of another table."
+---
+
 # Foreign Keys and Constraints
 
 #### Foreign Keys in PostgreSQL

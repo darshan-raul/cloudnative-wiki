@@ -272,3 +272,10 @@ For infrastructure like k8s control planes, 99.99% is achievable. For applicatio
 - [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — for proper scheduling
 - [[Kubernetes/concepts/L03-workloads/03-deployments|Deployments]] — rolling updates
 - [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — for stateful HA
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability|Availability]] — high availability (Architecture)
+- [[DevOps/sre/slos-and-error-budgets|SLOs and Error Budgets]] — high availability (DevOps)
+- [[AWS/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures|1.3 Design Reliable and Resilient Architectures]] — high availability (AWS)
+- [[Azure/compute/aks/cluster-tiers-sla|AKS Cluster Tiers, High Availability Control Plane, and Private Cluster Architecture]] — high availability (Azure)

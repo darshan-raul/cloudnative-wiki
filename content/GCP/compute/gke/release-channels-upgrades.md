@@ -7,6 +7,7 @@ tags:
   - upgrades
   - lifecycle
   - sre
+date: 2026-09-06
 ---
 
 # GKE Release Channels, Node Upgrades, Surge vs Blue-Green, and SRE Lifecycle 🔄⚙️
@@ -254,3 +255,10 @@ Upgrade pricing components:
 4. **Auto-Upgrade Ignores PDBs After Drain Timeout:** If a pod refuses to terminate (e.g., hanging on an uninterruptible file lock or broken pre-stop hook), GKE respects the PDB up to the `--drain-timeout` limit. Once the timeout expires, **GKE forcefully deletes the node and hard-kills all remaining pods (`SIGKILL`)**. Ensure your application containers implement graceful shutdown handlers that finish within 30 to 60 seconds.
 5. **Release Channel Version Jumps Break Custom Admission Webhooks:** Subscribing to the `Rapid` or `Regular` release channel means Google automatically increments minor versions (e.g., 1.29 to 1.30). If your cluster runs custom mutating/validating admission webhooks (e.g., older versions of cert-manager, OPA Gatekeeper, or Kyverno) that reference deprecated Kubernetes API versions, the API server upgrade can cause the admission webhook to fail closed, blocking **all future pod deployments across the entire cluster**. Audit API deprecations with `kube-no-trouble` (`kubent`) before channel rollouts.
 6. **Blue-Green Node Soak Phase Must Be Active:** When running a Blue-Green upgrade, the upgrade is not complete when workloads land on the Green pool—it enters the `SOAKING` state. If an automated CI/CD pipeline does not call `gcloud container node-pools complete-upgrade`, the Green pool remains in soak testing for the full duration of `--node-pool-soak-duration` (e.g., 24 hours), during which **you are paying double compute for both Blue and Green pools**.
+
+## Across the wiki
+
+- [[Kubernetes/eks/cluster-upgrades/README|Cluster Upgrades]] — cluster upgrades (Kubernetes)
+- [[Azure/compute/aks/upgrades-maintenance|AKS Upgrades, Maintenance Windows, and Safe Rollout Strategies]] — cluster upgrades (Azure)
+- [[Kubernetes/guides/non-functional/upgrade-strategy|Upgrade Strategy]] — cluster upgrades (Kubernetes)
+- [[Kubernetes/guides/non-functional/deprecations|Deprecations]] — cluster upgrades (Kubernetes)

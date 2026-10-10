@@ -4,6 +4,7 @@ description: AWS migration services — DMS for database migration, DataSync for
 tags:
   - aws
   - migration
+date: 2026-06-06
 ---
 
 # AWS Migration
@@ -372,6 +373,11 @@ aws migrationhub update-application-state \
 - **DataSync:** Pay per GB transferred. For large migrations, DataSync is cheaper than manual transfer.
 - **S3 Intelligent-Tiering:** For migration staging areas (temporary data), use Intelligent-Tiering to avoid paying for Standard storage.
 
+## Sections
+
+- [[AWS/migration/application-discovery-service/README|Application Discovery Service]] — AWS Application Discovery Service — discovers on-premises infrastructure (servers, dependencies, utilization) via agentless and…
+- [[AWS/migration/server-migration-service/README|Server Migration Service (SMS)]] — AWS Server Migration Service (SMS) — older lift-and-shift service superseded by MGN. Comparison, migration path from SMS to MGN,…
+
 ## References
 
 - **Homepage:** https://aws.amazon.com/products/database-migration/
@@ -389,3 +395,10 @@ aws migrationhub update-application-state \
 - **DMS replication instance runs 24/7 during migration:** A dms.r5.large at $0.51/hr runs $367/month. Even if you're only actively migrating for 2 weeks, you're paying for the full month. Size the instance appropriately and terminate when done.
 - **DMS CDC uses CDC credits:** Small replication instances have CDC credit limits. For busy OLTP databases with high write rates, the CDC backlog can exceed the credit limit, causing replication lag. Monitor `CDCIncomingChanges` CloudWatch metric.
 - **DataSync has a per-TB cost that jumps at 50TB:** First 50TB/month is $0.003/GB ($3/TB). Above 50TB, the rate changes. For very large migrations, calculate the total cost and compare to Snowball ($0.003/GB + shipping).
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/migration-patterns/README|Migration Patterns]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/data-migration|Data Migration Patterns]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/change-data-capture|Change Data Capture (CDC)]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/strangler-fig|Strangler Fig Pattern]] — migration (Architecture)

@@ -5,6 +5,7 @@ tags:
   - aws
   - management
   - organizations
+date: 2026-06-06
 ---
 
 # AWS Organizations
@@ -147,6 +148,10 @@ aws organizations attach-policy \
 | SCP policy size           | 5,120 bytes                               |
 | Depth of OU nesting       | 5 levels                                  |
 
+## More in this section
+
+- [[AWS/management-governance/organizations/delegated-admin|Delegated Admin]] — The Delegated Administrator feature in AWS allows you to assign specific administrative privileges to AWS accounts within your…
+
 ## References
 
 - **Homepage:** https://aws.amazon.com/organizations/
@@ -166,3 +171,10 @@ aws organizations attach-policy \
 - **When you remove an account from an organization, it loses access to organization resources:** The account loses access to SCPs, consolidated billing, and shared Reserved Instances. The account becomes a standalone account with its own billing.
 - **Organization-wide CloudTrail requires all features enabled:** If you create an organization with consolidated billing only (legacy), CloudTrail can only be configured per account. With all features enabled, CloudTrail can be configured once in the management account and applied to all member accounts.
 - **SCPs affect every user in the account including the root:** SCPs apply to all accounts under the OU, including the account's IAM users and roles. If you attach an SCP that denies S3 to a Production OU, no one in any Production account can access S3, including the account administrator.
+
+## Across the wiki
+
+- [[Azure/governance/policy|Azure Governance — Management Groups, Policy & Locks]] — policy and governance (Azure)
+- [[GCP/compute/gke/binary-authorization|GKE Binary Authorization, Container Attestations, and Supply Chain Security]] — policy and governance (GCP)
+- [[Kubernetes/eks/security/policy-management|Policy Management on EKS]] — policy and governance (Kubernetes)
+- [[Azure/compute/aks/governance-azure-policy|AKS Governance — Azure Policy for Kubernetes and OPA Gatekeeper Guardrails]] — policy and governance (Azure)

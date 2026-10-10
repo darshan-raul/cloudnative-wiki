@@ -206,3 +206,8 @@ ETCDCTL_API=3 etcdctl endpoint health \
   --cert=/etc/kubernetes/pki/etcd/server.crt \
   --key=/etc/kubernetes/pki/etcd/server.key
 ```
+
+## Across the wiki
+
+- [[Linux/ssh/ssh-config|SSH Config and Tricks]] — remote access (Linux)
+- [[AWS/management-governance/systems-manager/README|AWS Systems Manager]] — remote access (AWS)

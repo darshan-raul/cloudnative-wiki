@@ -7,6 +7,7 @@ tags:
   - spot-vms
   - finops
   - resilience
+date: 2026-09-06
 ---
 
 # Azure Spot VMs & Scheduled Events Eviction Engineering 📉⚡
@@ -273,3 +274,10 @@ Azure Spot VM pricing fluctuates dynamically based on demand in each specific Az
 4. **Use Spot Allocation Strategy `Capacity-Optimized` in VMSS:** When deploying Virtual Machine Scale Sets with Spot VMs, set the orchestration mode to Flexible and configure the Spot allocation strategy to `Capacity-Optimized`. Azure will automatically analyze regional hardware availability across multiple VM sizes and provision instances in the specific fault domains and sizes that have the lowest risk of eviction.
 5. **Spot Max Price Set to `-1` Avoids Market Bidding Flips:** Early Spot VM adopters frequently tried to set explicit max price caps (e.g., $0.08/hr). If the spot market price temporarily spikes to $0.081 for 10 minutes, Azure evicts all your instances even though hardware capacity was abundant. Setting `--max-price -1` caps your maximum price at the standard on-demand rate, ensuring you are never evicted due to pricing spikes—only due to genuine physical hardware shortages.
 6. **Deploy Node Termination Handler for AKS:** Instead of writing custom Python metadata polling daemons for Kubernetes, deploy the open-source **Azure Scheduled Events Proxy** or **Node Termination Handler**. It automatically listens to `http://169.254.169.254`, marks the Kubernetes node as `Unschedulable` (cordoned), and initiates pod eviction with `kubectl drain` the microsecond Azure issues a `Preempt` notification.
+
+## Across the wiki
+
+- [[Kubernetes/eks/compute/managed-node-groups/README|Managed Node Groups]] — node pools and spot capacity (Kubernetes)
+- [[GCP/compute/gke/node-pools-heterogeneous|GKE Heterogeneous Node Pools, Taints, Tolerations, and Accelerator Topologies]] — node pools and spot capacity (GCP)
+- [[AWS/cost-management/pricing-models|AWS Pricing Models]] — node pools and spot capacity (AWS)
+- [[Kubernetes/eks/compute/managed-node-groups/spot|Spot Instances on EKS]] — node pools and spot capacity (Kubernetes)

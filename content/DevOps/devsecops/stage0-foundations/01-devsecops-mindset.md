@@ -205,15 +205,15 @@ Notice: zero human security review, zero scheduled meetings, zero email threads.
 
 ## 8. Your Stack in This Wiki
 
-| Component             | Where it lives in this wiki                                            |
-| --------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------ |
-| Trivy (container/SCA) | Covered in [[DevOps/devsecops/stage2-build/09-container-image-scanning | 09 Container Image Scanning]], [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning | 07 SCA Dependency Scanning]]   |
-| Gitleaks (secrets)    | [[DevOps/devsecops/stage1-code/06-secrets-detection                    | 06 Secrets Detection]]                                                                   |
-| Semgrep (SAST)        | [[DevOps/devsecops/stage1-code/05-static-analysis-sast                 | 05 Static Analysis (SAST)]]                                                              |
-| Sigstore/cosign       | [[DevOps/devsecops/stage3-deploy/13-artifact-signing                   | 13 Artifact Signing]], [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations     | 14 Supply Chain Attestations]] |
-| Wazuh (runtime SIEM)  | Out of scope — see [[Security/siem/wazuh/README                        | Wazuh SIEM]]                                                                             |
-| OPA / Kyverno         | [[DevOps/devsecops/stage3-deploy/15-policy-as-code                     | 15 Policy as Code]]                                                                      |
-| n8n (workflow auto)   | Out of scope — see [[Security/siem/wazuh/integrations/README           | Wazuh & n8n Automation]]                                                                 |
+| Component             | Where it lives in this wiki                                                                                                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trivy (container/SCA) | Covered in [[DevOps/devsecops/stage2-build/09-container-image-scanning\|09 Container Image Scanning]], [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning\|07 SCA Dependency Scanning]] |
+| Gitleaks (secrets)    | [[DevOps/devsecops/stage1-code/06-secrets-detection\|06 Secrets Detection]]                                                                                                                    |
+| Semgrep (SAST)        | [[DevOps/devsecops/stage1-code/05-static-analysis-sast\|05 Static Analysis (SAST)]]                                                                                                            |
+| Sigstore/cosign       | [[DevOps/devsecops/stage3-deploy/13-artifact-signing\|13 Artifact Signing]], [[DevOps/devsecops/stage3-deploy/14-supply-chain-attestations\|14 Supply Chain Attestations]]                     |
+| Wazuh (runtime SIEM)  | Out of scope — see [[Security/siem/wazuh/README\|Wazuh SIEM]]                                                                                                                                  |
+| OPA / Kyverno         | [[DevOps/devsecops/stage3-deploy/15-policy-as-code\|15 Policy as Code]]                                                                                                                        |
+| n8n (workflow auto)   | Out of scope — see [[Security/siem/wazuh/integrations/README\|Wazuh & n8n Automation]]                                                                                                         |
 
 ## 9. Self-Check
 

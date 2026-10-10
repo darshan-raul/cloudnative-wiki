@@ -7,6 +7,7 @@ tags:
   - real-time
   - media
   - video
+date: 2026-01-30
 ---
 
 # WebRTC Architecture: Signaling, NAT Traversal (ICE/STUN/TURN) & SFU Media Servers

@@ -1,5 +1,8 @@
 ---
 title: Arch Linux Philosophy & Foundation
+tags: [linux, arch, philosophy]
+date: 2026-05-24
+description: 'Unlike versioned distributions (Ubuntu, Fedora) that ship discrete releases, Arch is a rolling release — the system is always up-to-date. There''s no concept of "Ubuntu 22.04" or "Fedora 39".'
 ---
 
 # 1. Philosophy & Foundation

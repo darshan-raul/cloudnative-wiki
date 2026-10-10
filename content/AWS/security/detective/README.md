@@ -5,6 +5,7 @@ tags:
   - aws
   - security
   - detective
+date: 2026-06-06
 ---
 
 # AWS Detective

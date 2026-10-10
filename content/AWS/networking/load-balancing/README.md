@@ -7,6 +7,7 @@ tags:
   - load-balancing
   - alb
   - nlb
+date: 2026-06-06
 ---
 
 # Elastic Load Balancing (ELB)
@@ -170,3 +171,10 @@ Connection draining timeout: 300 seconds (default, configurable 1-3600)
 - **ALB health checks are HTTP — targets must respond to GET /health:** If your service doesn't expose an HTTP endpoint, use TCP health checks (ALB supports TCP health checks too). A service that only accepts POST requests will always fail HTTP health checks.
 - **Connection draining has a 5-minute default timeout:** During deployments, targets are deregistered and new ones added. With connection draining, old targets complete in-flight requests before terminating. Set it appropriately — 300 seconds is conservative for most web apps, 60 seconds is fine for stateless services.
 - **ALB deregistration delay vs connection draining:** Deregistration delay is the new name for connection draining. Same concept, new name. Use deregistration delay in ALB configuration, connection draining in NLB configuration.
+
+## Across the wiki
+
+- [[Azure/compute/aks/ingress-appgw-gateway|AKS Ingress, Application Gateway for Containers, and Gateway API Architecture]] — ingress and load balancing (Azure)
+- [[GCP/compute/gke/gateway-api|GKE Gateway API Architecture, HTTPRoute, and Cloud Armor Integration]] — ingress and load balancing (GCP)
+- [[Kubernetes/concepts/L04-services-networking/09-gateway-api|Gateway API]] — ingress and load balancing (Kubernetes)
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — ingress and load balancing (Architecture)

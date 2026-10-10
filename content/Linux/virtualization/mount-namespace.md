@@ -6,6 +6,7 @@ tags:
   - namespaces
   - containers
   - filesystem
+date: 2026-06-06
 ---
 
 # Mount Namespaces
@@ -197,3 +198,10 @@ cat /proc/self/mountinfo | head -20
 # 36 31 0:32 / /sys/fs/cgroup/memory ...
 #   ↑ mount_id parent_id major:minor root mount_point options super_options
 ```
+
+## Across the wiki
+
+- [[Containers/runtimes|Container Runtimes]] — container internals (Containers)
+- [[Kubernetes/concepts/L09-advanced/09-pause-container|The Pause Container]] — container internals (Kubernetes)
+- [[Containers/images-and-layers|Container Images and Layers]] — container internals (Containers)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing (gVisor, Kata Containers)]] — container internals (Kubernetes)

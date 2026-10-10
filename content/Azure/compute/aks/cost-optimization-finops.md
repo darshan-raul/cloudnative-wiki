@@ -9,6 +9,7 @@ tags:
   - savings-plans
   - spot-vms
   - kubecost
+date: 2026-09-06
 ---
 
 # AKS FinOps, Cost Allocation, and Cloud Spend Optimization 💰📉
@@ -205,3 +206,10 @@ _When a real production pod arrives, Kubernetes instantly evicts the pause pods 
 3. **Savings Plans vs. Reserved Instances Commitment Trap:** A 3-year Azure Reserved Instance (RI) locks you into a specific VM family (e.g., D-series v5) in a specific region. If Microsoft releases a newer, faster, cheaper VM series (e.g., D-series v6), exchanging RIs across families can be cumbersome. For rapid Kubernetes modernization, choose **Azure Savings Plans for Compute**, which apply dynamically across any VM family, region, or container compute.
 4. **VPA Automatic Mode Eviction Storms:** Never set a production Vertical Pod Autoscaler to `updateMode: "Auto"` or `"Recreate"`. In automatic mode, whenever the VPA decides a pod requires more memory, it forcefully terminates the running pod to restart it with new limits. If 50 microservice pods are resized concurrently during high traffic, your service experiences a self-inflicted cascading outage. Use VPA in `"Off"` mode and update deployment YAMLs through GitOps.
 5. **Spot Node Pools with No-Schedule Taints Avoided by Developers:** When deploying a Spot node pool, platform teams apply a taint like `kubernetes.azure.com/scalesetpriority=spot:NoSchedule`. If developers fail to add the matching toleration to their Job manifests, the batch jobs will never schedule on the 80% discounted Spot pool; they will spill over onto the expensive On-Demand user node pool! Deploy an admission webhook or Kyverno rule to auto-inject Spot tolerations onto batch jobs.
+
+## Across the wiki
+
+- [[Kubernetes/eks/advanced/cost-optimization|EKS Cost Optimization]] — Kubernetes cost (Kubernetes)
+- [[GCP/compute/gke/cost-optimization-finops|GKE Cost Optimization, FinOps, and GKE Cost Allocation Architecture]] — Kubernetes cost (GCP)
+- [[AWS/cost-management/README|AWS Cost Management]] — Kubernetes cost (AWS)
+- [[Kubernetes/guides/non-functional/cost-optimization|Cost Optimization]] — Kubernetes cost (Kubernetes)

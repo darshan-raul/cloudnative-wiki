@@ -10,6 +10,7 @@ tags:
   - azure-linux
   - spot-vms
   - vmss
+date: 2026-09-06
 ---
 
 # AKS Heterogeneous Node Pools — System vs User, Ephemeral OS Disks, and Azure Linux 🖥️⚡
@@ -218,3 +219,10 @@ az aks nodepool add \
 3. **Spot Eviction Handling with Azure Scheduled Events:** When Azure needs Spot capacity back, it provides only a **30-second warning** via the Azure Instance Metadata Service (IMDS). Standard Kubernetes drain operations take longer than 30 seconds. Deploy the **Azure Node Termination Handler (or AKS Spot Node Drainer)** to intercept IMDS preemption events, issue immediate `cordon`, and send `SIGTERM` signals before Azure violently powers off the VM.
 4. **Arm64 Architecture Node Pool Scheduling Conflicts:** Deploying Ampere Altra Arm-based VM shapes (e.g., `Standard_D8ps_v5`) provides extraordinary price-performance. However, if microservices are built solely for `linux/amd64`, pods scheduled onto Arm nodes will fail with `CrashLoopBackOff (exec format error)`. Ensure your CI/CD builds multi-arch container images (`docker buildx`) and declare `nodeSelector: kubernetes.io/arch: arm64` explicitly.
 5. **System Node Pool Cannot Be Deleted While Active:** An AKS cluster must always possess at least one operational System Node Pool. Attempting to run `az aks nodepool delete --name systempool` will fail with an error. To migrate system pods to a new VM shape, you must create a _second_ System Node Pool (`--mode System`), wait for all core add-ons to migrate, and only then delete the original pool.
+
+## Across the wiki
+
+- [[Kubernetes/eks/compute/managed-node-groups/README|Managed Node Groups]] — node pools and spot capacity (Kubernetes)
+- [[GCP/compute/gke/node-pools-heterogeneous|GKE Heterogeneous Node Pools, Taints, Tolerations, and Accelerator Topologies]] — node pools and spot capacity (GCP)
+- [[AWS/cost-management/pricing-models|AWS Pricing Models]] — node pools and spot capacity (AWS)
+- [[Kubernetes/eks/compute/managed-node-groups/spot|Spot Instances on EKS]] — node pools and spot capacity (Kubernetes)

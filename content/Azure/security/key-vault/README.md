@@ -8,6 +8,7 @@ tags:
   - hsm
   - encryption
   - secrets-management
+date: 2026-09-06
 ---
 
 # Azure Key Vault Architecture, Managed HSM, and Cryptographic Governance 🔐🏛️
@@ -271,3 +272,14 @@ Pricing components:
 4. **Secrets Are Not Monitored by Default:** While Key Vault stores secrets securely, it does not alert anyone when an API secret or certificate is about to expire. When a production database credential expires at midnight, services crash without warning. Integrate Key Vault with **Azure Event Grid** to listen to `Microsoft.KeyVault.SecretNearExpiry` events and trigger automated PagerDuty tickets or Slack notifications 30 days prior to expiration.
 5. **Private Endpoint DNS Loopback Trap:** When deploying a Private Endpoint for Key Vault, ensure your VNet resolves `kv-enterprise-core-prod.vault.azure.net` to the private IP via the `privatelink.vaultcore.azure.net` Private DNS Zone. If local DNS resolution fails or returns public IP `20.x.x.x`, calls to Key Vault will be rejected by the vault's firewall with `ForbiddenByFirewall: Public network access is disabled`.
 6. **Managed HSM Security Domain Quorum Requirement:** When provisioning an Azure Managed HSM, you must download and distribute the **Security Domain** among 3 to 10 security officers (using an $M$-of-$N$ Shamir's Secret Sharing quorum, e.g., 3 of 5 keys required). If a regional disaster occurs and you need to restore your Managed HSM pool, **it is physically impossible to restore without the Security Domain quorum keys**. Store these quorum keys in physical safes in separate geographic locations.
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/secrets-management/README|Secrets Management on EKS]] — secrets management (Kubernetes)
+- [[AWS/security/secrets-manager/README|AWS Secrets Manager]] — secrets management (AWS)
+- [[Security/kubernetes-security/secrets/README|Kubernetes Secrets Management]] — secrets management (Security)
+- [[DevOps/devsecops/stage4-runtime/16-secret-management|M16: Runtime Secret Management]] — secrets management (DevOps)
+- [[AWS/security/kms/README|AWS KMS]] — key management (AWS)
+- [[GCP/security/kms/README|Cloud KMS, Cloud HSM, and CMEK Envelope Encryption]] — key management (GCP)
+- [[Architecture/solution-architecture-concepts/cryptography/README|Cryptography]] — key management (Architecture)
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — key management (Kubernetes)

@@ -7,6 +7,7 @@ tags:
   - vpc
   - vpn
   - ipsec
+date: 2026-10-04
 ---
 
 # AWS Site-to-Site VPN & Client VPN
@@ -59,3 +60,8 @@ For individual remote workers (laptops/workstations):
 - Managed client-based VPN service based on **OpenVPN**.
 - Integrates with corporate identity providers via **Active Directory (SAML 2.0 / OIDC)** or mutual certificate authentication.
 - Elastic and serverless: scales connection capacity automatically.
+
+## Across the wiki
+
+- [[GCP/networking/hybrid/README|GCP Cloud Interconnect & HA VPN]] — hybrid connectivity (GCP)
+- [[Kubernetes/eks/compute/hybrid-nodes/README|EKS Hybrid Nodes]] — hybrid connectivity (Kubernetes)

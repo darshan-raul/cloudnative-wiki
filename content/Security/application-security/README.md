@@ -14,7 +14,7 @@ Security for applications — authentication, secrets management, dependency sca
 - **Authentication** — [[Architecture/solution-architecture-concepts/authentication/README|OAuth2/OIDC/JWT]]
 - **Secrets Management** — HashiCorp Vault, AWS Secrets Manager, Kubernetes secrets
 - **Dependency Scanning** — Trivy, Snyk, Grype, Dependabot
-- **Supply Chain Security** — [[Resources/guides/security/supply-chain-security|SBOM, Sigstore, SLSA]]
+- **Supply Chain Security** — [[DevOps/devsecops/README|SBOM, Sigstore, SLSA]]
 
 ## Key Concepts
 
@@ -48,3 +48,14 @@ snyk test --all-projects
 
 - [[Security/devsecops/README|DevSecOps]] — Shift-left security
 - [[Security/incident-response/README|Incident Response]] — AppSec incident response
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/authentication/stage6/03-zero-trust-spiffe|6.3 — Zero-Trust & Workload Identity: SPIFFE/SPIRE and Multi-Cloud Federation]] — zero trust (Architecture)
+- [[Architecture/solution-architecture-concepts/security/security|Security Architecture]] — zero trust (Architecture)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/security|Security]] — zero trust (Architecture)
+- [[Architecture/solution-architecture-concepts/security/README|Security]] — zero trust (Architecture)
+- [[AI/agents|AI Agents]] — LLM applications (AI)
+- [[Architecture/solution-architecture-concepts/protocols/server-sent-events|Server-Sent Events (SSE) Architecture & LLM Streaming]] — LLM applications (Architecture)
+- [[AI/langgraph/README|LangGraph]] — LLM applications (AI)
+- [[AI/langchain/README|LangChain]] — LLM applications (AI)

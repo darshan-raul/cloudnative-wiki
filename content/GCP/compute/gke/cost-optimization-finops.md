@@ -8,6 +8,7 @@ tags:
   - cost-optimization
   - cuds
   - bigquery
+date: 2026-09-06
 ---
 
 # GKE Cost Optimization, FinOps, and GKE Cost Allocation Architecture 💰📊
@@ -263,3 +264,10 @@ FinOps optimization systematically cuts cluster waste:
 4. **Spot Node Evictions Triggering On-Demand Failover Churn:** If you configure a cluster to fall back to on-demand nodes when Spot capacity is preempted, ensure your Cluster Autoscaler includes scaling priority policies (`expander: priority`). Without priority expanders, CA may continue spinning up expensive on-demand nodes and refuse to return to Spot nodes when Spot capacity recovers, leaving workloads on high-cost compute indefinitely.
 5. **Orphaned Persistent Disks in Scale-Down Events:** When Cluster Autoscaler terminates a node, or when a developer deletes a namespace containing StatefulSets, the underlying GCE Persistent Disks are retained by default. If a cluster churns through 50 stateful test jobs a week, hundreds of detached 100 GB SSD disks accumulate in the GCP project, costing $17/disk-month in silent waste. Run automated cron scripts to delete detached disks older than 7 days (`gcloud compute disks list --filter="users:-"`).
 6. **Autopilot vs Standard Cost Inflection Point:** GKE Autopilot charges for exact Pod requests without node overhead, making it dramatically cheaper for small clusters (< 20 nodes) or variable workloads where node slack would otherwise be wasted. However, for a stable, highly optimized enterprise cluster running at $\ge 85\%$ CPU/RAM bin-packing density with 3-year CUDs, GKE Standard can be **15% to 25% cheaper than Autopilot** because you leverage hardware economies of scale. Perform a FinOps audit annually to determine the optimal compute model.
+
+## Across the wiki
+
+- [[Kubernetes/eks/advanced/cost-optimization|EKS Cost Optimization]] — Kubernetes cost (Kubernetes)
+- [[Azure/compute/aks/cost-optimization-finops|AKS FinOps, Cost Allocation, and Cloud Spend Optimization]] — Kubernetes cost (Azure)
+- [[AWS/cost-management/README|AWS Cost Management]] — Kubernetes cost (AWS)
+- [[Kubernetes/guides/non-functional/cost-optimization|Cost Optimization]] — Kubernetes cost (Kubernetes)

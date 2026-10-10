@@ -62,8 +62,13 @@ Comprehensive 12-part deep dive on cyclic graphs, persistent memory, and agent o
 
 ## 3. RAG, Agents & Standards
 
+- **[[AI/agents|AI Agents]]** — The agent loop, tool design, workflows versus agents, context management, guardrails
+- **[[AI/evals|Evaluating LLM Systems]]** — Datasets, code and model graders, offline and online evaluation, metrics for RAG and agents
 - **[[AI/rag|Retrieval-Augmented Generation (RAG)]]** — Advanced RAG pipelines, chunking, hybrid search, and re-ranking
+- **[[AI/rag-in-production|RAG in Production]]** — Ingestion, freshness, access control, diagnosing bad answers, cost and latency
+- **[[AI/vector-databases|Vector Databases]]** — ANN indexes, quantization, filtering, hybrid search, pgvector versus dedicated engines
 - **[[AI/mcp|Model Context Protocol (MCP)]]** — Standardized client-server protocol for connecting AI agents to tools and data
+- **[[AI/mcp-in-production|MCP in Production]]** — Transports, OAuth authorization, tool design, security threats, deployment
 - **[[AI/prompt-injection|Prompt Injection & Jailbreaks]]** — Security risks, indirect injection, and mitigation guardrails
 
 ---
@@ -83,3 +88,15 @@ Comprehensive 12-part deep dive on cyclic graphs, persistent memory, and agent o
 - ☁️ **[[AWS/compute/ec2/README|AWS GPU Compute]]** — P4d/P5 instances, Trainium, and Inferentia
 - 🔷 **[[Azure/compute/aks/gpu-orchestration-ai|Azure AKS GPU Infrastructure]]** — InfiniBand, NVIDIA H100/H200, and KubeRay
 - 🐧 **[[Linux/kernel/README|Linux Kernel & Drivers]]** — NVIDIA CUDA drivers, NUMA, and sysctl tuning
+
+## Further reading
+
+- [Is AI going to take our jobs? (video)](https://youtu.be/UqYSaAuKwjU)
+- [Is AI going to take our jobs? (video)](https://youtu.be/iTjYuHDNooM)
+- [GenAI/LLMS: Basics (video)](https://youtu.be/2IK3DFHRFfw)
+- [GenAI/LLMS: Basics (video)](https://www.youtube.com/watch?v=zjkBMFhNj_g)
+- [Future with AI (video)](https://www.youtube.com/watch?v=SMnH3obzCDk)
+- [Future with AI (video)](https://www.youtube.com/watch?v=eUIPFRNxDV8)
+- [Future with AI (video)](https://youtu.be/ieH5ZNI1iS0)
+- [Is SAAS dead? (video)](https://youtu.be/GuqAUv4UKXo)
+- [Jobs — stackoverflow.blog](https://stackoverflow.blog/2024/06/10/generative-ai-is-not-going-to-build-your-engineering-team-for-you/)

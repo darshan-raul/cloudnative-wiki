@@ -1,3 +1,10 @@
+---
+title: "RAFT"
+tags: [architecture, cluster-management, raft]
+date: 2026-01-30
+description: "Raft is a consensus algorithm designed to be easy to understand compared to alternatives like Paxos."
+---
+
 # RAFT
 
 ### Raft Consensus Algorithm
@@ -35,3 +42,8 @@ Overall, Raft provides a robust and practical consensus algorithm that has becom
 "https://youtu.be/IujMVjKvWP4?si=8NsUEGrspi5ZshRe"
 
 "https://youtu.be/P9Ydif5_qvE?si=L_cx04PwHx1IiHjO"
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L09-advanced/10-etcd|etcd in Kubernetes]] — consensus and coordination (Kubernetes)
+- [[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]] — consensus and coordination (Kubernetes)

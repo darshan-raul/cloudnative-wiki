@@ -5,6 +5,7 @@ tags:
   - aws
   - networking
   - security-groups
+date: 2026-06-06
 ---
 
 # Security Groups
@@ -120,3 +121,10 @@ Security Groups are free to create and free to attach. The cost is in the EC2 in
 - **References to security groups create implicit dependencies:** If SG-A allows traffic from SG-B, you can't delete SG-B while SG-A rules reference it. This creates coupling between resources that isn't visible in the console. Document SG dependencies.
 - **Cross-account SG references require VPC Peering or Transit Gateway:** A security group in Account A can't reference a security group in Account B unless the VPCs are peered or connected via TGW. Shared VPCs in AWS Organizations can share SGs within the same Organization.
 - **Default security group rules are a common attack surface:** The default SG allows all traffic from other instances with the same SG. If you launch an instance with the default SG and that instance is compromised, it can reach all other instances using the default SG. Use dedicated security groups per workload.
+
+## Across the wiki
+
+- [[Azure/networking/nsg|Azure Network Security Groups (NSGs) & ASGs]] — network firewalls (Azure)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

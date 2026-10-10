@@ -1,3 +1,10 @@
+---
+title: "Roles"
+tags: [aws, security, iam, various-types-of-roles]
+date: 2026-01-30
+description: "In AWS, IAM (Identity and Access Management) roles allow you to delegate access to different AWS services and resources without using long-term credentials like passwords or access keys."
+---
+
 # Roles
 
 In AWS, IAM (Identity and Access Management) roles allow you to delegate access to different AWS services and resources without using long-term credentials like passwords or access keys. Here are the different types of IAM roles in AWS and their purposes, explained with analogies:
@@ -48,3 +55,10 @@ In AWS, IAM (Identity and Access Management) roles allow you to delegate access 
 - **IAM Role for ECS**: Grants ECS tasks permissions to interact with other AWS services.
 
 Each type of IAM role serves a specific purpose in managing permissions and ensuring secure access to AWS resources, analogous to granting specific keys or passes for accessing different parts of a house or performing specific tasks.
+
+## Across the wiki
+
+- [[Azure/identity/entraid|EntraID]] — identity and access (Azure)
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]] — identity and access (Kubernetes)

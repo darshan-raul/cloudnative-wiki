@@ -33,3 +33,15 @@ openssl x509 -req -in client.csr -CA ca.pem -CAkey ca-key.pem -out client-cert.p
 
 - [[Security/endpoint-security/README|Endpoint Security]] — Host-based network protection
 - [[Architecture/solution-architecture-concepts/authentication/README|Auth]] — Identity-based access
+
+## Further reading
+
+- [Boundary (video)](https://www.youtube.com/watch?v=pGfSITzcTQ0)
+- [Boundary (video)](https://www.youtube.com/watch?v=N8zmfKdE_Q0)
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[Azure/networking/nsg|Azure Network Security Groups (NSGs) & ASGs]] — network firewalls (Azure)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)

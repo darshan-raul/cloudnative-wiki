@@ -7,6 +7,7 @@ tags:
   - spanner
   - distributed-systems
   - sql
+date: 2026-09-06
 ---
 
 # Google Cloud Spanner 🌐⚡
@@ -176,3 +177,10 @@ gcloud spanner instances update prod-spanner-db \
 3. **80,000 Mutations Limit per Commit:** A single transaction cannot exceed 80,000 mutations. Note that a "mutation" is **not** a single row: inserting 1 row into a table with 5 secondary indexes counts as 6 mutations! If you attempt to bulk-insert 15,000 rows in a single transaction, the commit will crash with `FAILED_PRECONDITION: The transaction contains too many mutations`.
 4. **Stale Reads for High-Throughput Analytics:** If your query does not require real-time read-your-writes consistency, use **Stale Reads** (`read_timestamp` set to 15 seconds in the past). Stale reads bypass Paxos leader leases entirely and execute on local replicas without locking or impacting active write transactions.
 5. **Schema Changes Run Asynchronous Background Jobs:** Running `ALTER TABLE` in Spanner does not lock tables or block reads/writes. However, adding a secondary index to an existing 100-million-row table triggers a massive background backfill process across all storage splits that can take several hours to complete.
+
+## Across the wiki
+
+- [[AWS/databases/rds/README|Amazon RDS]] — relational databases (AWS)
+- [[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]] — relational databases (Azure)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — relational databases (Architecture)
+- [[AWS/databases/aurora/README|Amazon Aurora]] — relational databases (AWS)

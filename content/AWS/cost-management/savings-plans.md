@@ -4,6 +4,7 @@ description: AWS Savings Plans — Compute SP vs EC2 Instance SP vs SageMaker SP
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Savings Plans
@@ -152,3 +153,8 @@ Target: 80-90% coverage for stable production workloads. Lower for dev/test. Hig
 - **Compute SP does not cover RDS, ElastiCache, or Redshift:** Only EC2, Lambda, and Fargate. For databases you still need RIs.
 - **EC2 Instance SP doesn't cover other instance families:** If you buy an m6i Instance SP, it won't cover your c6i or r6i instances — they'll be On-Demand.
 - **SP commitment is per account:** A SP bought in account A doesn't cover usage in account B, even within the same AWS Organization (use consolidated billing for RI/SP sharing instead).
+
+## Across the wiki
+
+- [[GCP/cost-management/pricing-models/README|GCP Cost Optimization, Committed Use Discounts (CUDs), and FinOps]] — cost management (GCP)
+- [[Kubernetes/guides/non-functional/cost-optimization|Cost Optimization]] — cost management (Kubernetes)

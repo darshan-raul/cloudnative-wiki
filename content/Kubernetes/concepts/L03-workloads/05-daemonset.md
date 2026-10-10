@@ -1193,3 +1193,8 @@ Rule: if the answer to "why per-node?" is "well, it's not really, but it's conve
 | Security context                   | [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context\|L07 — Security Context]]        |
 | Host network (CNI, kube-proxy)     | [[Kubernetes/concepts/L04-services-networking/01-networking\|L04 — Networking]]                                |
 | Static Pods (kubelet-managed)      | [[Kubernetes/concepts/L03-workloads/11-static-pods\|11 — Static Pods]]                                         |
+
+## Across the wiki
+
+- [[Linux/boot-init/systemd|systemd]] — service lifecycle (Linux)
+- [[Linux/concepts/06-services|06 — System Services]] — service lifecycle (Linux)

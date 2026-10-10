@@ -716,3 +716,10 @@ If the volume was created but with the wrong parameters (e.g. wrong type, wrong 
 - [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API
 - [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
 - [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level storage quotas
+
+## Across the wiki
+
+- [[Azure/compute/aks/storage-csi-disks|AKS Storage CSI Architecture — Azure Managed Disks, Premium SSD v2, and Elastic SAN]] — block storage (Azure)
+- [[GCP/compute/gke/storage-csi|GKE Storage Architecture — Compute Persistent Disk CSI, Hyperdisk, and Volume Snapshots]] — block storage (GCP)
+- [[Linux/storage/README|Linux Storage]] — block storage (Linux)
+- [[AWS/storage/ebs/README|Amazon EBS]] — block storage (AWS)

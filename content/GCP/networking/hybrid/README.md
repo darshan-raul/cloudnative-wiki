@@ -8,6 +8,7 @@ tags:
   - vpn
   - interconnect
   - bgp
+date: 2026-09-06
 ---
 
 # GCP Cloud Interconnect & HA VPN 🌐🔌
@@ -220,3 +221,10 @@ gcloud compute routers add-bgp-peer prod-vpn-router \
 3. **BGP Learned Route Quota Overflow Drops Connectivity:** By default, Cloud Router accepts a maximum of **100 learned routes** from on-premises BGP peers. If an on-premises network engineer accidentally redistributes an internal BGP table containing 101 routes, Cloud Router will drop the BGP session entirely! Always filter on-premises route advertisements to aggregate supernets before advertising to GCP.
 4. **MTU Mismatches Cause Silent Packet Drops:** Cloud HA VPN supports an MTU of up to **1440 bytes** (or 1460 bytes in custom configurations). If on-premises client machines transmit standard 1500-byte packets without TCP Path MTU Discovery (`pmtud`) or MSS clamping enabled, large packets will be dropped silently without error, causing HTTPS handshakes to hang indefinitely.
 5. **VPC Dynamic Routing Mode Pitfall:** If your VPC network uses **Regional Dynamic Routing**, a VM in `europe-west1` cannot communicate over a Cloud Interconnect established in `us-central1`. To enable global reachability from any cloud region across a single interconnect, you must update the VPC network setting to **Global Dynamic Routing** (`--bgp-routing-mode=global`).
+
+## Across the wiki
+
+- [[AWS/networking/hybrid/README|AWS Hybrid Connectivity]] — hybrid connectivity (AWS)
+- [[Kubernetes/eks/compute/hybrid-nodes/README|EKS Hybrid Nodes]] — hybrid connectivity (Kubernetes)
+- [[AWS/networking/vpc/vpn|AWS Site-to-Site VPN & Client VPN]] — hybrid connectivity (AWS)
+- [[AWS/solutions-architect-professional/domain-1/1.1-network-connectivity|1.1 Architect Network Connectivity Strategies]] — hybrid connectivity (AWS)

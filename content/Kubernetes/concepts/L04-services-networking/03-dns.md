@@ -683,3 +683,10 @@ kubectl -n kube-system logs -l k8s-app=kube-dns --tail=100 | grep -i error
 - [[Kubernetes/concepts/L04-services-networking/04-ingress|Ingress]] — L7 routing
 - [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
 - [[Kubernetes/concepts/L03-workloads/04-statefulsets|StatefulSets]] — primary consumer of per-Pod DNS
+
+## Across the wiki
+
+- [[AWS/networking/dns/README|Amazon Route 53]] — DNS (AWS)
+- [[GCP/networking/cloud-dns/README|GCP Cloud DNS Architecture]] — DNS (GCP)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/README|DNS]] — DNS (Architecture)
+- [[Linux/networking/dns-resolution|DNS Resolution]] — DNS (Linux)

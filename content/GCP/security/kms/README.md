@@ -7,6 +7,7 @@ tags:
   - kms
   - hsm
   - encryption
+date: 2026-09-06
 ---
 
 # Cloud KMS, Cloud HSM, and CMEK Envelope Encryption 🔐🏛️
@@ -256,3 +257,10 @@ Cloud KMS pricing is based on:
 4. **Disabling a CMEK Key Instantly Kills Compute & Databases:** If an administrator disables or destroys a CMEK key used by a Compute Engine boot disk, GKE node pool, or Cloud SQL database, the virtual machines are halted or enter an error state within 15 to 30 minutes when memory leases expire. Disabling a key is the ultimate cryptographic "kill switch," but it must be guarded by strict IAM deny policies and Break-Glass procedures.
 5. **Separation of Duties (Project-Level Isolation):** Never store Cloud KMS keys in the same GCP project as the workloads consuming them. If an attacker compromises a project owner credential in `app-production`, they could grant themselves decryption rights or delete keys. Place KMS in a dedicated `secops-kms-prod` project where only security administrators have IAM admin privileges, granting application service accounts only the granular `roles/cloudkms.cryptoKeyEncrypterDecrypter` role.
 6. **Cloud HSM vs Cloud EKM Latency Realities:** While Cloud HSM delivers sub-5 millisecond response times inside Google's datacenters, Cloud EKM forwards cryptographic requests over external internet or Interconnect connections to an external on-premises HSM. If your external HSM or internet connection experiences latency or jitter, all Cloud Storage uploads and database queries will experience severe latency degradation or timeout errors. Implement client-side DEK caching whenever possible.
+
+## Across the wiki
+
+- [[AWS/security/kms/README|AWS KMS]] — key management (AWS)
+- [[Azure/security/key-vault/README|Azure Key Vault Architecture, Managed HSM, and Cryptographic Governance]] — key management (Azure)
+- [[Architecture/solution-architecture-concepts/cryptography/README|Cryptography]] — key management (Architecture)
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — key management (Kubernetes)

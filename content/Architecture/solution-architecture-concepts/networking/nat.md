@@ -1,3 +1,10 @@
+---
+title: "Nat"
+tags: [architecture, networking, nat]
+date: 2026-01-30
+description: "Nat — notes and reference."
+---
+
 # Nat
 
 References:&#x20;
@@ -83,3 +90,9 @@ Source IP: 198.51.100.20 -> Destination IP: 192.168.1.10
 #### Summary
 
 SNAT and DNAT are both essential tools for network address translation, serving different purposes depending on the direction of the traffic and the specific requirements of the network. SNAT is primarily used for translating the source IP address of outbound traffic, allowing internal devices to communicate with external networks. In contrast, DNAT is used for translating the destination IP address of inbound traffic, enabling external devices to access internal network services.
+
+## Across the wiki
+
+- [[GCP/networking/vpc/cloud-nat|GCP Cloud NAT Deep Dive & SNAT Port Allocation]] — NAT and egress (GCP)
+- [[AWS/cost-management/network-cost-optimization|Network Cost Optimization]] — NAT and egress (AWS)
+- [[AWS/concepts/magic-ips-169.254|Magic ips/ 169.254]] — NAT and egress (AWS)

@@ -4,6 +4,7 @@ description: Linux kernel internals — subsystems, syscalls, cgroups, /proc, /s
 tags:
   - linux
   - kernel
+date: 2026-06-06
 ---
 
 # Linux Kernel

@@ -9,6 +9,7 @@ tags:
   - hpa
   - karpenter
   - aci
+date: 2026-09-06
 ---
 
 # AKS Autoscaling Architecture — Cluster Autoscaler, KEDA, and Virtual Nodes 📈⚡
@@ -250,3 +251,10 @@ kubectl apply -f api-hpa-v2.yaml
 3. **Pods Blocked by Local Storage Blocking Cluster Autoscaler Scale-Down:** By default, the Cluster Autoscaler will **refuse to terminate a node** if any pod on that node uses an `emptyDir` local volume, unless that pod declares the annotation `"cluster-autoscaler.kubernetes.io/safe-to-evict": "true"`. If developers omit this annotation on caching pods, nodes will remain active at 5% utilization, wasting thousands of dollars monthly.
 4. **Virtual Nodes Cannot Mount Azure Managed Disks:** Azure Virtual Nodes execute pods inside Azure Container Instances (ACI). ACI does **not support attaching Azure Managed Disks (ReadWriteOnce block storage)**. If a pod requires persistent storage, it must mount an Azure Files share (SMB/NFS) or Azure Blob Storage.
 5. **Autoscaler Deadlocks Caused by Zone Unbalance:** When Cluster Autoscaler is deployed across Availability Zones 1, 2, and 3, it attempts to maintain balanced node counts. If Azure temporarily runs out of VM capacity in Zone 1 (Azure Compute allocation failure), the autoscaler may stall scaling across all zones, leaving pods in a permanent `Pending` state. Enable `--balance-similar-node-groups` or migrate to Node Auto-Provisioning (Karpenter).
+
+## Across the wiki
+
+- [[Kubernetes/eks/advanced/autoscaling|Advanced Autoscaling]] — autoscaling (Kubernetes)
+- [[GCP/compute/gke/autoscaling|GKE Autoscaling Architecture — Cluster Autoscaler, NAP, HPA v2, and VPA]] — autoscaling (GCP)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability|Scalability]] — autoscaling (Architecture)
+- [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — autoscaling (Kubernetes)

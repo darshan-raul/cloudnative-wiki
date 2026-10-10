@@ -7,6 +7,7 @@ tags:
   - bigtable
   - nosql
   - big-data
+date: 2026-09-06
 ---
 
 # Google Cloud Bigtable 🗄️⚡
@@ -177,3 +178,10 @@ cbt read sensor_metrics prefix="sensor#1002"
 3. **The 5 TB Per Node Storage Floor:** Bigtable mandates a minimum of 1 node per 5 TB of SSD storage. If your dataset reaches 21 TB, the cluster will automatically scale to and enforce a minimum of **5 nodes ($2,372/month)**, even if your application CPU utilization is hovering near 1%!
 4. **Garbage Collection Is Asynchronous:** Deleting data via a Garbage Collection policy (e.g. `maxage=7d`) does not immediately reclaim disk space or delete data instantly. Expired cells are masked from query results immediately, but physical storage blocks are only purged during background **Major Compactions**.
 5. **No Atomic Multi-Row Transactions:** Bigtable supports atomicity **strictly within a single row** (`CheckAndMutateRow`, `ReadModifyWriteRow`). It is mathematically impossible to execute an atomic transaction that spans across two different rows. For multi-row ACID transactions, use **Google Cloud Spanner**.
+
+## Across the wiki
+
+- [[AWS/databases/dynamodb/README|Amazon DynamoDB]] — NoSQL databases (AWS)
+- [[Azure/databases/cosmos-db|Azure Cosmos DB]] — NoSQL databases (Azure)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/mongodb/README|MongoDB]] — NoSQL databases (Architecture)
+- [[AWS/databases/documentdb/README|Amazon DocumentDB]] — NoSQL databases (AWS)

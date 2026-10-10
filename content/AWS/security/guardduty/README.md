@@ -5,6 +5,7 @@ tags:
   - aws
   - security
   - guardduty
+date: 2026-06-06
 ---
 
 # AWS GuardDuty
@@ -272,3 +273,10 @@ aws cloudwatch get-metric-statistics \
 - **GuardDuty findings auto-expire after 90 days — export important findings to S3 or Security Hub:** If you need long-term retention, create an EventBridge rule to capture HIGH severity findings to S3 or SIEM.
 - **GuardDuty RDS protection only covers Aurora and RDS (not DocumentDB, Neptune, etc.):** If you use DocumentDB or Neptune, GuardDuty won't log database login attempts for those engines. Use database-native audit logging for those.
 - **GuardDuty malware protection requires GuardDuty to have an IAM role that can access EC2 instances — enable via `ServiceRoleArn`:** Without this role, the malware scan won't run even if enabled.
+
+## Across the wiki
+
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
+- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]] — threat detection (GCP)
+- [[Security/siem/README|SIEM]] — threat detection (Security)
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)

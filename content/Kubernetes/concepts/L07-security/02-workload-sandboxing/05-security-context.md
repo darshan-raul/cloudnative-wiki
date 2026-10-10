@@ -676,3 +676,14 @@ crictl inspect <container-id> | grep -i 'seccomp\|capabilit'
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata for stronger isolation
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — build non-root images
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+
+## Across the wiki
+
+- [[Linux/security/seccomp|seccomp]] — kernel sandboxing (Linux)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — kernel sandboxing (Containers)
+- [[Security/kubernetes-security/pod-security/README|Pod Security]] — kernel sandboxing (Security)
+- [[Linux/security/apparmor|AppArmor]] — kernel sandboxing (Linux)
+- [[Linux/users-groups/README|Linux Users & Groups]] — users and permissions (Linux)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — users and permissions (Containers)
+- [[Linux/concepts/02-file-permissions|02 — File Permissions]] — users and permissions (Linux)
+- [[Linux/concepts/04-users-and-groups|04 — Users and Groups]] — users and permissions (Linux)

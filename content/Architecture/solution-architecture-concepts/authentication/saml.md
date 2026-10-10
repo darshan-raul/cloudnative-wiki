@@ -1,3 +1,10 @@
+---
+title: "SAML"
+tags: [architecture, authentication, saml]
+date: 2026-01-30
+description: "Imagine a scenario: You need to access multiple web applications at work, each with its own login system. Logging in to each one repeatedly can be tedious and inefficient."
+---
+
 # SAML
 
 **Imagine a scenario:** You need to access multiple web applications at work, each with its own login system. Logging in to each one repeatedly can be tedious and inefficient. SAML offers a solution for this by enabling Single Sign-On (SSO) across different applications.
@@ -34,3 +41,10 @@
 - SAML primarily focuses on authentication, not authorization (access control within applications).
 
 By using SAML, you can achieve a more streamlined and secure login experience across various applications within your organization.
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/oidc-integration|OIDC Integration]] — OIDC federation (Kubernetes)
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC Federation]] — OIDC federation (DevOps)
+- [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|Authentication vs Authorization]] — OIDC federation (Kubernetes)
+- [[DevOps/ci-cd/github-actions|GitHub Actions Architecture & Best Practices]] — OIDC federation (DevOps)

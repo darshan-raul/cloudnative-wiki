@@ -1,3 +1,16 @@
+---
+title: "Reliability vs Availability"
+tags:
+  [
+    architecture,
+    foundations,
+    non-functional-requirements,
+    reliability-vs-availability,
+  ]
+date: 2026-01-30
+description: "This statement highlights the distinction between the concepts of reliability and availability in system design and engineering."
+---
+
 # Reliability vs Availability
 
 This statement highlights the distinction between the concepts of reliability and availability in system design and engineering.

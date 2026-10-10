@@ -4,6 +4,7 @@ description: Linux system services — what is a daemon, systemd basics, systemc
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 06 — System Services
@@ -254,3 +255,9 @@ journalctl -u nginx --since "1 hour ago"
 systemctl list-units --type=service
 systemctl list-units --type=service --state=running
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/11-static-pods|Static Pods]] — service lifecycle (Kubernetes)
+- [[Kubernetes/concepts/L01-architecture/01-setting-up-cluster|Setting up a Cluster]] — service lifecycle (Kubernetes)
+- [[Kubernetes/concepts/L03-workloads/05-daemonset|DaemonSet — One Pod Per Node]] — service lifecycle (Kubernetes)

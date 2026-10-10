@@ -6,6 +6,7 @@ tags:
   - application-integration
   - eventbridge
   - event-driven
+date: 2026-06-06
 ---
 
 # EventBridge
@@ -267,3 +268,10 @@ events.put_rule(
 - **EventBridge's `detail-type` is just a string — there's no enforcement of format:** You can put anything in `detail-type`. Use a naming convention like `com.mycompany.orders.OrderShipped` to avoid conflicts.
 - **EventBridge replay replays ALL events from the archive that match the filter — not just failed events:** If you archive 100K events and only want to replay the failed ones, you need to filter by event content when replaying or pre-archive selectively.
 - **EventBridge cross-account delivery costs $1/million events — it's not free:** Each event delivered across accounts counts as a custom event. For high-volume cross-account scenarios, consider using EventBridge in the producer account with rules that fan out to SQS queues in each consumer account.
+
+## Across the wiki
+
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
+- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)

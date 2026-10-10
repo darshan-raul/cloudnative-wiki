@@ -10,6 +10,7 @@ tags:
   - azure-blob
   - rwx
   - nfs
+date: 2026-09-06
 ---
 
 # AKS Shared Storage CSI — Azure Files (NFS/SMB) and Azure Blob CSI Architecture 📂⚡
@@ -233,3 +234,10 @@ kubectl apply -f shared-web-deployment.yaml
 3. **BlobFuse2 Memory Bloat on Large Parallel Writes:** When pods write massive multi-gigabyte files to a Blob CSI volume, BlobFuse2 buffers data chunks in the container's local memory or temporary local disk before flushing them as block blobs to Azure. If container memory limits are tightly constrained (e.g., 2 GiB), the pod will be abruptly killed with **`OOMKilled (Exit Code 137)`**. Configure `--file-cache-timeout-in-seconds` and allocate adequate memory requests.
 4. **NFS Multiplexing with `nconnect=4`:** Default Linux NFS mount parameters establish only a single TCP connection between a worker node and the Azure Storage account, capping throughput at ~1.5 Gbps. Adding the mount option `nconnect=4` to your StorageClass instructs the Linux kernel to open **4 parallel TCP connections**, quadrupling single-node network throughput to over 6 Gbps.
 5. **Storage Account Name 24-Character Limit Collision:** When Azure Files or Blob CSI dynamically provisions a dedicated Storage Account on demand, it derives the name by hashing the cluster and PVC metadata. Storage Account names must be globally unique across all of Azure and strictly **under 24 alphanumeric characters**. If an AKS cluster name is exceptionally long, automated name generation can truncate awkwardly or fail. Use pre-provisioned Storage Accounts for critical enterprise state.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/efs-csi|EFS CSI Driver]] — shared file storage (Kubernetes)
+- [[GCP/compute/gke/filestore-csi|GKE Filestore CSI Driver — Managed NFS and ReadWriteMany (RWX) Architecture]] — shared file storage (GCP)
+- [[AWS/storage/efs/README|Amazon EFS]] — shared file storage (AWS)
+- [[AWS/storage/fsx/README|Amazon FSx]] — shared file storage (AWS)

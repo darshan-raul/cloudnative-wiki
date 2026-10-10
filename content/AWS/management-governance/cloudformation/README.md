@@ -6,6 +6,7 @@ tags:
   - management
   - infrastructure-as-code
   - cloudformation
+date: 2026-06-06
 ---
 
 # AWS CloudFormation
@@ -259,3 +260,10 @@ SAM translates to CloudFormation and adds additional resource types for serverle
 - **CloudFormation doesn't track resources created outside itself:** If you manually create an S3 bucket in the Console and then add it to a CloudFormation template, CloudFormation won't detect it as an existing resource — it will try to create a new bucket with the same name and fail. Use `!If` or `!Ref` with conditionals to handle existing resources.
 - **Nested stack outputs are not directly accessible from the parent stack — you must pass them as parameters:** If nested stack A creates a VPC ID and nested stack B needs that VPC ID, you must pass the VPC ID as a parameter from the root stack to nested stack B. There's no direct cross-nested-stack reference.
 - **Change sets don't show all changes:** Change sets don't preview changes to drift-detected resources or to resources managed by AWS IAM policies (e.g., a role that CloudFormation creates but the template doesn't own). Always review the full change set output.
+
+## Across the wiki
+
+- [[DevOps/infrastructure-as-code/README|Infrastructure as Code]] — infrastructure as code (DevOps)
+- [[Kubernetes/eks/automation/control-planes/ack|AWS Controllers for Kubernetes (ACK)]] — infrastructure as code (Kubernetes)
+- [[DevOps/devsecops/stage2-build/10-iac-security|M10: Infrastructure-as-Code Security]] — infrastructure as code (DevOps)
+- [[Kubernetes/eks/getting-started/cluster-creation|Cluster Creation]] — infrastructure as code (Kubernetes)

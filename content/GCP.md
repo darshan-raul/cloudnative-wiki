@@ -9,8 +9,6 @@ description: "Google Cloud Platform — comprehensive architectural deep dives a
 
 Google Cloud Platform — comprehensive architectural deep dives covering Google's global private network, container platforms, distributed storage, and analytics engines. Built to match the depth of the AWS knowledge base with **Architecture & Mental Models + Production `gcloud` CLI + Quotas & Limits + References + 2 Realistic Pricing Scenarios + 5+ Battle-Tested Nuggets & Gotchas**.
 
-Track overall progress in [[GCP/PROGRESS|GCP Vault Progress]].
-
 ---
 
 ## Service Catalog

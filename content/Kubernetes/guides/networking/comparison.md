@@ -8,7 +8,11 @@ tags:
   - Istio
   - Linkerd
   - Cilium
+date: 2026-06-12
+description: "How to pick between Istio, Linkerd, and Cilium for your cluster. The three are the main service-mesh options in 2024+. Each has trade-offs in features, performance, complexity, and operational cost."
 ---
+
+# Service Mesh Comparison
 
 How to pick between **Istio, Linkerd, and Cilium** for your cluster. The three are the main service-mesh options in 2024+. Each has trade-offs in features, performance, complexity, and operational cost.
 
@@ -572,3 +576,8 @@ But the user base is **large, complex organizations**. Smaller teams use Linkerd
 - [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — Gateway API
 - [[Kubernetes/guides/networking/traefik|traefik]] — ingress alternative
 - [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — security patterns
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/reverse-proxy|Reverse Proxy Architecture: Functions, Headers & Proxies]] — proxies (Architecture)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/forward-proxy|Forward Proxy]] — proxies (Architecture)

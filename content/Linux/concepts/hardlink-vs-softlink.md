@@ -1,3 +1,10 @@
+---
+title: "hardlink vs softlink"
+tags: [linux, hardlink-vs-softlink]
+date: 2026-01-30
+description: "Choosing between hard links and soft (symbolic) links in Linux is about understanding how they work, their strengths, weaknesses, and ideal use cases."
+---
+
 # hardlink vs softlink
 
 Choosing between hard links and soft (symbolic) links in Linux is about understanding how they work, their strengths, weaknesses, and ideal use cases. The search results provide excellent foundational information, which I'll expand upon with practical examples and a decision-making framework.

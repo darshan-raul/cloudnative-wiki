@@ -1,5 +1,9 @@
 ---
 title: Capacity Planning
+tags:
+  [architecture, foundations, non-functional-requirements, capacity-planning]
+date: 2026-06-06
+description: 'Capacity planning answers: "Do we have enough resources to handle the expected load — now, and in the future?" It''s the bridge between business growth projections and infrastructure investment.'
 ---
 
 # Capacity Planning
@@ -225,7 +229,10 @@ Key signals that predict capacity exhaustion:
 
 ## Related
 
-- [[back-of-the-envelope-calculations|Back-of-the-Envelope Calculations]] — quick estimates
 - [[scalability|Scalability]] — scaling patterns
 - [[performance|Performance]] — latency and throughput
 - [[reliability|Reliability]] — capacity for resilience
+
+## Further reading
+
+- [Back of the Envelope Calculations — systemdesign.one](https://systemdesign.one/back-of-the-envelope/)

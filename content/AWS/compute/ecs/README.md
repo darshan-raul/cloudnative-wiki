@@ -6,6 +6,7 @@ tags:
   - compute
   - containers
   - ecs
+date: 2026-06-06
 ---
 
 # Amazon ECS (Elastic Container Service)
@@ -330,3 +331,10 @@ aws ecs update-service \
 - **Fargate tasks can't use instance store volumes — only EFS or bind mounts:** If your application needs temporary storage (e.g., `/tmp`), Fargate provides 200GB ephemeral storage by default (from `/proc/sys/fs/aio-nr`). For persistent storage between task runs, use EFS.
 - **ECS agent on EC2 must be up-to-date — old agent versions have bugs with new task definition features:** If your task definition with new features (e.g., firelens log routing) doesn't work, check the ECS agent version on your container instance and update it.
 - **ECS service auto scaling uses CloudWatch metrics — if your app doesn't emit metrics, CPU utilization won't be visible:** For Fargate, ensure your containers emit CloudWatch metrics or use the `ECSServiceAverageCPUUtilization` metric. If your app is I/O bound (not CPU bound), use a custom metric or target tracking on a different metric.
+
+## Across the wiki
+
+- [[Azure/compute/container-apps/README|Azure Container Apps (ACA), KEDA, and Dapr Microservices]] — serverless containers (Azure)
+- [[GCP/compute/cloud-run|GCP Cloud Run]] — serverless containers (GCP)
+- [[Kubernetes/eks/compute/fargate/README|AWS Fargate on EKS]] — serverless containers (Kubernetes)
+- [[Azure/compute/app-service/README|Azure App Service Architecture, Deployment Slots, and VNet Integration]] — serverless containers (Azure)

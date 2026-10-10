@@ -4,7 +4,11 @@ tags:
   - Kubernetes
   - Troubleshooting
   - Scheduling
+date: 2026-06-11
+description: "A pod that's stuck in Pending hasn't even started yet. The scheduler hasn't placed it on a node, or it can't be placed. This is scheduling, not container-level issues."
 ---
+
+# Pod Pending
 
 A pod that's stuck in `Pending` hasn't even started yet. The scheduler hasn't placed it on a node, or it can't be placed. This is **scheduling**, not container-level issues.
 

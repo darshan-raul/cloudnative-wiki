@@ -6,6 +6,7 @@ tags:
   - databases
   - documentdb
   - mongodb
+date: 2026-06-06
 ---
 
 # Amazon DocumentDB (with MongoDB compatibility)
@@ -293,3 +294,10 @@ aws cloudwatch get-metric-statistics \
 - **DocumentDB's $regex doesn't support case-insensitive regex (i) on indexed fields:** Use text indexes instead. For large collections, consider Elasticsearch or OpenSearch for complex text search.
 - **DocumentDB doesn't support MongoDB Atlas-specific features (Charts, Realm, Atlas Search):** If you rely on Atlas Search (Lucene-based full-text), you'll need a different approach in DocumentDB — use `$text` search or external search service.
 - **DocumentDB's `instance-hour` billing includes partial hours — a 30-minute use = 1 hour:** Unlike some services that bill per second, DocumentDB rounds up to the nearest hour for instance billing.
+
+## Across the wiki
+
+- [[Azure/databases/cosmos-db|Azure Cosmos DB]] — NoSQL databases (Azure)
+- [[GCP/databases/firestore/README|Google Cloud Firestore]] — NoSQL databases (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/mongodb/README|MongoDB]] — NoSQL databases (Architecture)
+- [[GCP/databases/bigtable/README|Google Cloud Bigtable]] — NoSQL databases (GCP)

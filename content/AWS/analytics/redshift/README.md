@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - redshift
+date: 2026-06-06
 ---
 
 # Amazon Redshift
@@ -302,3 +303,9 @@ CREATE DATABASE consumer_db FROM DATASHARE salesshare OF ACCOUNT '123456789012';
 - **Dense compute nodes (dc2.8xlarge) have local NVMe storage for temp data:** If your queries use a lot of intermediate sort/join spill, dc2.8xlarge is faster (local SSD) than ds2.xlarge (EBS). The NVMe-based dc2 nodes are better for heavy analytics.
 - **Pause and resume has a warm-up time:** Resuming a paused cluster takes 5-10 minutes for the cluster to become available. It's not suitable for always-on workloads. Consider RA3 with minimal compute for always-on but lightly queried data.
 - **WLM concurrency limits are per-cluster, not per-database:** If you have multiple databases in one cluster sharing WLM slots, a runaway query in one database consumes slots from all databases. Use separate clusters for workloads that need strict isolation.
+
+## Across the wiki
+
+- [[GCP/databases/bigquery|Google BigQuery]] — analytics and warehouses (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/columnar-databases|Columnar Databases]] — analytics and warehouses (Architecture)
+- [[GCP/analytics/dataflow/README|Cloud Dataflow Architecture & Streaming Pipelines]] — analytics and warehouses (GCP)

@@ -4,6 +4,7 @@ description: Linux /proc and /sys filesystems — kernel data, process info, tun
 tags:
   - linux
   - kernel
+date: 2026-06-06
 ---
 
 # /proc and /sys

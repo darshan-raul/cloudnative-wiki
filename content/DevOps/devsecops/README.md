@@ -146,16 +146,16 @@ The other modules fill the gaps. The capstone is the integration.
 
 ## Your Stack in This Wiki
 
-| Component             | Where it lives in this wiki                               |
-| --------------------- | --------------------------------------------------------- | ------------------------------------------------------------------ | ----- |
-| Trivy (container/SCA) | [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning | M07]], [[DevOps/devsecops/stage2-build/09-container-image-scanning | M09]] |
-| Gitleaks (secrets)    | [[DevOps/devsecops/stage1-code/06-secrets-detection       | M06]]                                                              |
-| Semgrep (SAST)        | [[DevOps/devsecops/stage1-code/05-static-analysis-sast    | M05]]                                                              |
-| Checkov / tfsec (IaC) | [[DevOps/devsecops/stage2-build/10-iac-security           | M10]]                                                              |
-| Sigstore / cosign     | [[DevOps/devsecops/stage3-deploy/13-artifact-signing      | M13]]                                                              |
-| OPA / Kyverno         | [[DevOps/devsecops/stage3-deploy/15-policy-as-code        | M15]]                                                              |
-| Wazuh (SIEM)          | [[Security/siem/wazuh/README]]                            |
-| Falco (runtime)       | [[DevOps/devsecops/stage4-runtime/17-runtime-detection    | M17]]                                                              |
+| Component             | Where it lives in this wiki                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Trivy (container/SCA) | [[DevOps/devsecops/stage1-code/07-sca-dependency-scanning\|M07]], [[DevOps/devsecops/stage2-build/09-container-image-scanning\|M09]] |
+| Gitleaks (secrets)    | [[DevOps/devsecops/stage1-code/06-secrets-detection\|M06]]                                                                           |
+| Semgrep (SAST)        | [[DevOps/devsecops/stage1-code/05-static-analysis-sast\|M05]]                                                                        |
+| Checkov / tfsec (IaC) | [[DevOps/devsecops/stage2-build/10-iac-security\|M10]]                                                                               |
+| Sigstore / cosign     | [[DevOps/devsecops/stage3-deploy/13-artifact-signing\|M13]]                                                                          |
+| OPA / Kyverno         | [[DevOps/devsecops/stage3-deploy/15-policy-as-code\|M15]]                                                                            |
+| Wazuh (SIEM)          | [[Security/siem/wazuh/README]]                                                                                                       |
+| Falco (runtime)       | [[DevOps/devsecops/stage4-runtime/17-runtime-detection\|M17]]                                                                        |
 
 ## Related
 
@@ -167,3 +167,7 @@ The other modules fill the gaps. The capstone is the integration.
 - [[DevOps/devsecops/stage4-runtime/README|Stage 4 README]]
 - [[Security/devsecops/README|Security DevSecOps Hub]]
 - [[Architecture/solution-architecture-concepts/security/shift-left|Shift-Left Notes]]
+
+## Further reading
+
+- [Supply Chain Security (video)](https://www.youtube.com/watch?v=vFLmm8NnHFg&t=2397s)

@@ -209,4 +209,4 @@ In a Pod spec, `volumes` can be:
 - [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume]] — the cluster-scoped object
 - [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the request
 - [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
-- [[Kubernetes/concepts/eks/storage/README|EKS Storage]] — AWS-specific details for EKS
+- [[Kubernetes/eks/storage/README|EKS Storage]] — AWS-specific details for EKS

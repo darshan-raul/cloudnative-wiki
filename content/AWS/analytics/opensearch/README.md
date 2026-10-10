@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - opensearch
+date: 2026-06-06
 ---
 
 # Amazon OpenSearch
@@ -329,3 +330,14 @@ POST /_bulk
 - **Master nodes handle cluster management, not search:** If your hot/warm tier has 10 data nodes, a 3-node master tier is sufficient. Putting master-eligible nodes in the data tier causes search latency spikes during cluster management operations.
 - **Automated snapshot retention is 14 days:** Snapshots for recovery are stored in a managed S3 bucket and retained for 14 days by default. For longer recovery windows, configure longer retention or store snapshots in your own S3 bucket.
 - **T3 instances are burstable and can cause cluster instability:** Under heavy load, T3 instances exhaust their CPU credits and drop to baseline (10% CPU). For production clusters, use M6g or R6g instances. T3 is fine for dev/test only.
+
+## Across the wiki
+
+- [[Linux/observability/journalctl|journalctl]] — host and container logs (Linux)
+- [[Kubernetes/eks/observability/logging/pod-logging|Pod Logging on EKS]] — host and container logs (Kubernetes)
+- [[Security/siem/elastic-security/README|Elastic Security]] — host and container logs (Security)
+- [[Linux/concepts/08-logging|08 — Logging]] — host and container logs (Linux)
+- [[AI/inner-workings/embeddings|Embeddings]] — embeddings and search (AI)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/indexing|Indexing]] — embeddings and search (Architecture)
+- [[AI/vector-databases|Vector Databases]] — embeddings and search (AI)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — embeddings and search (Architecture)

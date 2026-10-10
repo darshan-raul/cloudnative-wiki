@@ -7,6 +7,7 @@ tags:
   - acm
   - tls
   - ssl
+date: 2026-06-06
 ---
 
 # AWS Certificate Manager (ACM)
@@ -240,3 +241,10 @@ aws cloudwatch put-metric-alarm \
 - **ACM certificates for CloudFront must be in us-east-1 (N. Virginia) — even if your CloudFront is in another region:** This is a CloudFront limitation. All ACM certificates used with CloudFront must be in us-east-1.
 - **ACM Private CA certificates can't be exported — they're managed by AWS:** If you need the private key (for non-AWS services), use ACM PCA with a template that allows export, or import a certificate with its private key.
 - **ACM certificate CNAME records must remain in DNS even after validation — AWS checks periodically:** If you remove the validation CNAME after the certificate is issued, AWS may re-validate and fail. Keep the CNAME record in place as long as the certificate is active.
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS and mTLS in Kubernetes]] — TLS and certificates (Kubernetes)
+- [[Architecture/solution-architecture-concepts/authentication/stage0/03-http-tls-foundations|0.3 — HTTP & TLS Foundations Every Auth Engineer Must Know]] — TLS and certificates (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — TLS and certificates (Kubernetes)
+- [[Architecture/solution-architecture-concepts/cryptography/keystore|Keystore]] — TLS and certificates (Architecture)

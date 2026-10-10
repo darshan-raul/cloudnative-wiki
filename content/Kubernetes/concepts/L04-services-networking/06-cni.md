@@ -656,3 +656,10 @@ ip route show
 - [[Kubernetes/concepts/L04-services-networking/05-network-policy|NetworkPolicy]] — needs a CNI that supports it
 - [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs
 - [[Kubernetes/concepts/L09-advanced/08-ipvs|IPVS]] — kube-proxy mode that some CNIs replace
+
+## Across the wiki
+
+- [[Azure/compute/aks/networking-cni|AKS Networking Deep Dive — Azure CNI, CNI Overlay, and Dynamic Pod IP Allocation]] — pod networking (Azure)
+- [[GCP/compute/gke/networking|GKE Networking Deep Dive — Datapath V2, Alias IPs & Gateway API]] — pod networking (GCP)
+- [[Linux/virtualization/network-namespace|Network Namespaces]] — pod networking (Linux)
+- [[Containers/container-networking|Container Networking]] — pod networking (Containers)

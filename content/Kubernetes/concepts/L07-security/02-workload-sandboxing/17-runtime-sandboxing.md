@@ -523,3 +523,10 @@ crictl logs <container-id>
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp / AppArmor]] — the kernel-level filters
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detecting exploits even in sandboxes
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — reduce the attack surface before runtime
+
+## Across the wiki
+
+- [[Linux/virtualization/container-runtimes|Container Runtimes]] — container internals (Linux)
+- [[Containers/runtimes|Container Runtimes]] — container internals (Containers)
+- [[Linux/virtualization/overlayfs|OverlayFS]] — container internals (Linux)
+- [[Containers/images-and-layers|Container Images and Layers]] — container internals (Containers)

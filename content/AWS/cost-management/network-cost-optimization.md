@@ -5,6 +5,7 @@ tags:
   - aws
   - cost-management
   - networking
+date: 2026-06-06
 ---
 
 # Network Cost Optimization
@@ -161,3 +162,8 @@ Direct Connect is almost always more expensive than S2S VPN for moderate data vo
 - **S3 Gateway Endpoint is free, S3 Interface Endpoint is not:** A Gateway VPC Endpoint for S3 routes traffic through AWS's internal network and costs nothing. An Interface Endpoint (for PrivateLink access to S3 from on-prem) costs $0.01/GB + $0.005 per availability zone/hour. Use Gateway endpoints where possible.
 - **CloudFront cache miss costs more than direct S3:** When CloudFront misses cache, it fetches from origin (S3) and then serves to the user. You pay S3 egress (for the origin fetch) AND CloudFront data transfer out. For rarely-accessed objects, direct S3 access is cheaper than CloudFront.
 - **PrivateLink charges for each AZ it's deployed in:** If you deploy an Interface Endpoint for an AWS service in 3 AZs, you pay 3 × hourly rate. If your Lambda only runs in 1 AZ, deploy the Interface Endpoint only in that AZ. Most services only need to be reachable from 1-2 AZs.
+
+## Across the wiki
+
+- [[GCP/networking/vpc/cloud-nat|GCP Cloud NAT Deep Dive & SNAT Port Allocation]] — NAT and egress (GCP)
+- [[Architecture/solution-architecture-concepts/networking/nat|Nat]] — NAT and egress (Architecture)

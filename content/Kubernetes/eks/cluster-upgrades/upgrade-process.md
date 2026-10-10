@@ -1,130 +1,131 @@
 ---
-title: EKS Cluster Upgrade Process
-tags: [eks, cluster-upgrades, process]
+title: EKS Upgrade Process
+tags: [eks, upgrades, operations, lifecycle]
 date: 2026-05-17
-description: Step-by-step EKS cluster upgrade process
+description: A step-by-step EKS upgrade — version support and skew rules, pre-flight checks with cluster insights, upgrading the control plane, add-ons and nodes in order, validation, what cannot be rolled back, and in-place versus blue-green.
 ---
 
-# EKS Cluster Upgrade Process
+# EKS Upgrade Process
 
-## Pre-upgrade Checklist
+Kubernetes releases a minor version about three times a year, and EKS supports each for a limited time. Upgrading is therefore routine work, not a project — as long as it is done the same way each time and before deadlines force it.
 
-### 1. Review Kubernetes Changes
+## The rules that shape everything
 
-- Read Kubernetes release notes for target version
-- Check [EKS Kubernetes versions](https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html)
-- Identify deprecated APIs
+| Rule                                                                                                                                        | Consequence                                                  |
+| :------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------- |
+| The control plane moves **one minor version at a time**                                                                                     | Going from 1.31 to 1.34 is three upgrades                    |
+| A control plane upgrade **cannot be rolled back**                                                                                           | Test first; the only "undo" is a new cluster                 |
+| The control plane upgrades **before** the nodes                                                                                             | Nodes may lag; they may never lead                           |
+| The kubelet may be up to **three minor versions older** than the API server                                                                 | You can batch node upgrades, but do not rely on the full gap |
+| **Standard support** lasts about 14 months per version, then **extended support** for 12 more at a significantly higher control-plane price | Staying current is cheaper                                   |
+| At the end of extended support, AWS **upgrades the cluster automatically**                                                                  | An unplanned upgrade is the worst kind                       |
 
-### 2. Check Addon Compatibility
+Set the cluster's upgrade policy to `STANDARD` if you would rather be forced to upgrade than pay for extended support by accident.
 
-```bash
-# List addons and versions
-aws eks describe-addon-versions \
-  --kubernetes-version 1.30 \
-  --addons-name aws-ebs-csi-driver
+## The order
 
-# Check VpcCni version
-kubectl describe daemonset aws-node -n kube-system | grep Image
+```
+1. prepare ─► 2. control plane ─► 3. add-ons ─► 4. nodes ─► 5. validate
+   (days)        (~10–20 min)       (minutes)     (rolling)
 ```
 
-### 3. Update Addons First
+### 1. Prepare
+
+**Read the release notes** for the target version: removed APIs, changed defaults, and the EKS-specific notes. Track changes in [[Kubernetes/updates-along-the-versions|updates along the versions]] and [[Kubernetes/guides/non-functional/deprecations|deprecations]].
+
+**Check cluster insights.** EKS scans the audit log and configuration for known upgrade blockers:
 
 ```bash
-# Update VPC CNI
-aws eks update-addon \
-  --cluster-name my-cluster \
-  --addon-name vpc-cni \
-  --addon-version latest \
-  --resolve-conflicts
-
-# Update CoreDNS
-kubectl rollout restart -n kube-system deployment/coredns
-
-# Update kube-proxy
-kubectl rollout restart -n kube-system deployment/kube-proxy
+aws eks list-insights --cluster-name my-cluster \
+  --filter '{"categories":["UPGRADE_READINESS"]}' \
+  --query 'insights[].{name:name,status:insightStatus.status}' --output table
 ```
 
-### 4. Review Applications
+Insights flag deprecated API usage (and which client is calling it), kubelet and kube-proxy version skew, and add-on incompatibilities. An `ERROR` blocks the upgrade unless you force it.
+
+**Find removed APIs in what you deploy**, not only what is running: scan manifests and Helm charts in Git with tools such as `pluto` or `kubent`. A removed API in a chart breaks the _next_ deployment, after the upgrade looked fine.
+
+**Check everything that talks to the API**: add-ons, operators, admission webhooks, CI tooling, `kubectl` versions. Confirm each supports the target version.
+
+**Check capacity and safety nets**: at least five free IP addresses in the cluster subnets (the upgrade needs them), [[Kubernetes/concepts/L06-scheduling-scaling/04-poddisruptionbudget|PodDisruptionBudgets]] on every multi-replica workload, and a recent [[Kubernetes/guides/non-functional/backup-restore|backup]].
+
+**Rehearse** in a non-production cluster that resembles production, with the same add-ons and workloads.
+
+### 2. Control plane
 
 ```bash
-# Check for deprecated APIs
-kubectl api-resources
-kubectl get all -A -o yaml > pre-upgrade-backup.yaml
+aws eks update-cluster-version --name my-cluster --kubernetes-version 1.34
+aws eks describe-update --name my-cluster --update-id <id>
 ```
 
-## Upgrade Steps
+AWS replaces the API server instances with a rolling, health-checked process. The API stays available; expect brief connection resets, which well-behaved clients retry. Running workloads are not touched. If the new control plane fails health checks, AWS rolls the update back itself.
 
-### 1. Upgrade Control Plane
+### 3. Add-ons
+
+Update in this order, checking each is healthy before the next:
+
+1. **VPC CNI** — one minor version at a time
+2. **CoreDNS**
+3. **kube-proxy** — must not be newer than the control plane or more than a few versions older
+4. **CSI drivers, Pod Identity agent**, and other EKS add-ons
+5. **Self-managed controllers**: load balancer controller, autoscaler (Cluster Autoscaler must match the cluster's minor version), ingress, cert-manager, policy engines
 
 ```bash
-# Update cluster version
-aws eks update-cluster-version \
-  --name my-cluster \
-  --kubernetes-version 1.30 \
-  --profile my-profile
-
-# Monitor upgrade status
-aws eks describe-cluster \
-  --name my-cluster \
-  --query 'cluster.status'
-
-# Wait for completion
-aws eks wait cluster-active --name my-cluster
+aws eks describe-addon-versions --kubernetes-version 1.34 --addon-name vpc-cni \
+  --query 'addons[].addonVersions[].{v:addonVersion,default:compatibilities[0].defaultVersion}'
+aws eks update-addon --cluster-name my-cluster --addon-name vpc-cni \
+  --addon-version <version> --resolve-conflicts PRESERVE
 ```
 
-### 2. Upgrade Managed Node Groups
+`PRESERVE` keeps your custom configuration; the default overwrites it.
+
+### 4. Nodes
+
+| Compute                                                                    | How                                                                                     |
+| :------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------- |
+| [[Kubernetes/eks/compute/managed-node-groups/basics\|Managed node groups]] | `aws eks update-nodegroup-version` — a rolling replacement that respects PDBs           |
+| [[Kubernetes/eks/compute/karpenter/README\|Karpenter]]                     | Update the AMI in the `EC2NodeClass`; drift replaces nodes within the disruption budget |
+| [[Kubernetes/eks/compute/eks-auto-mode/README\|Auto Mode]]                 | Automatic                                                                               |
+| [[Kubernetes/eks/compute/fargate/README\|Fargate]]                         | Restart the pods: `kubectl rollout restart`                                             |
+| Self-managed                                                               | New launch template and an instance refresh, or a new group and a drain                 |
+
+Node rollouts are where disruption actually happens. A PDB that allows zero evictions stalls the rollout; a workload with one replica and no PDB takes downtime. Surge rather than running short, and watch error rates as nodes turn over.
+
+### 5. Validate
 
 ```bash
-# Update each node group
-aws eks update-nodegroup-version \
-  --cluster-name my-cluster \
-  --nodegroup-name standard-workers \
-  --kubernetes-version 1.30
-
-# Or use eksctl
-eksctl upgrade nodegroup \
-  --cluster my-cluster \
-  --name standard-workers \
-  --kubernetes-version 1.30
+kubectl version
+kubectl get nodes -o wide                      # all on the new version, all Ready
+kubectl get pods -A | grep -v "Running\|Completed"
+aws eks list-addons --cluster-name my-cluster
 ```
 
-### 3. Verify Upgrade
+Then check what users would notice: [[DevOps/sre/slos-and-error-budgets|SLO]] dashboards, a deployment through the normal pipeline, a scale-up, a DNS lookup from a new pod, and a volume attach.
 
-```bash
-# Check cluster version
-kubectl version --short
-kubectl get nodes
+## In place or blue-green
 
-# Check pod status
-kubectl get pods -A | grep -v Running
+|                   | In-place                     | Blue-green cluster                                                       |
+| :---------------- | :--------------------------- | :----------------------------------------------------------------------- |
+| How               | Upgrade the existing cluster | Build a new cluster on the target version, shift traffic                 |
+| Rollback          | None for the control plane   | Shift traffic back                                                       |
+| Skipping versions | No                           | Yes                                                                      |
+| Effort and cost   | Low                          | High: two clusters, data and DNS migration                               |
+| Suits             | Routine upgrades             | Several versions behind, high-risk changes, strict rollback requirements |
 
-# Verify addons
-kubectl get pods -n kube-system
-```
+Blue-green is only practical when cluster configuration is fully reproducible from code ([[DevOps/infrastructure-as-code/README|infrastructure as code]] plus [[Kubernetes/guides/delivery/gitops/basics|GitOps]]) and state lives outside the cluster. If that is true, it is also your disaster-recovery mechanism.
 
-## Post-upgrade Tasks
+## Making it routine
 
-1. **Test applications** - Verify workloads function correctly
-2. **Update kubectl** - Ensure local kubectl matches cluster version
-3. **Update Helm charts** - Update to latest chart versions
-4. **Update CI/CD** - Update kubectl versions in pipelines
+- Upgrade on a calendar, shortly after each version has been available for a while, not when support is ending.
+- Promote through environments with a soak period: dev, staging, then production.
+- Keep a checklist in the repository and improve it after every upgrade.
+- Alert on cluster insights and on end-of-support dates.
+- Keep add-ons current _between_ cluster upgrades, so each upgrade is a small step.
 
-## Rollback
+## Related
 
-Node group can be rolled back to previous version if issues occur:
-
-```bash
-# Rollback node group
-aws eks update-nodegroup-version \
-  --cluster-name my-cluster \
-  --nodegroup-name standard-workers \
-  --kubernetes-version 1.29 \
-  --force
-```
-
-Control plane cannot be rolled back.
-
-## References
-
-- [Updating an EKS cluster](https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html)
-- [AWS EKS Upgrade Workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/693bdee4-bc31-41d5-841f-54e3e54f8f4a/en-US)
+- [[Kubernetes/eks/cluster-upgrades/README|Cluster upgrades overview]]
+- [[Kubernetes/eks/cluster-upgrades/upgrade-journey|Upgrade journey]] — what changed in each version
+- [[Kubernetes/guides/non-functional/upgrade-strategy|Kubernetes upgrade strategy]]
+- [[Kubernetes/eks/troubleshooting/common-issues|Common EKS issues]]
+- [EKS best practices: cluster upgrades](https://docs.aws.amazon.com/eks/latest/best-practices/cluster-upgrades.html)

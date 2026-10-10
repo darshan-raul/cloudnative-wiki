@@ -521,3 +521,10 @@ IPVS rules persist until the next kube-proxy sync or node reboot. The rollback i
 - [[Kubernetes/concepts/L04-services-networking/02-services|Services]] — what IPVS implements
 - [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the network layer below
 - [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — how Pods land on nodes
+
+## Across the wiki
+
+- [[Linux/networking/routing|Routing]] — packet path (Linux)
+- [[Architecture/solution-architecture-concepts/networking/tcpip|TCP/IP Architecture, Handshakes & Congestion Control]] — packet path (Architecture)
+- [[Linux/networking/tcp-ip-model|TCP/IP Model]] — packet path (Linux)
+- [[Architecture/solution-architecture-concepts/networking/osi-model|The OSI 7-Layer Model in Modern Systems Engineering]] — packet path (Architecture)

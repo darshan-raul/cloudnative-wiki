@@ -1,3 +1,10 @@
+---
+title: "Emulator vs Virtualization"
+tags: [linux, virtualization, emulator-vs-virtualization]
+date: 2026-01-30
+description: "When running a virtual machine (VM), virtualization and emulation take fundamentally different approaches, each with distinct implications for performance, compatibility, and use cases."
+---
+
 # Emulator vs Virtualization
 
 When running a virtual machine (VM), **virtualization** and **emulation** take fundamentally different approaches, each with distinct implications for performance, compatibility, and use cases.
@@ -49,3 +56,10 @@ When running a virtual machine (VM), **virtualization** and **emulation** take f
 In essence, **virtualization** is about efficiently sharing hardware resources among multiple operating systems that are compatible with the host's architecture, offering high performance and scalability. **Emulation**, on the other hand, focuses on replicating different hardware environments, providing flexibility at the cost of performance.
 
 Understanding the distinctions between these approaches is crucial for selecting the appropriate technology based on specific requirements, such as performance needs, compatibility considerations, and intended use cases.
+
+## Across the wiki
+
+- [[AWS/compute/ec2/README|Amazon EC2]] — virtual machines (AWS)
+- [[Azure/compute/vm|Azure Virtual Machines & Scale Sets (VMSS)]] — virtual machines (Azure)
+- [[GCP/compute/gce|GCP Compute Engine (GCE)]] — virtual machines (GCP)
+- [[GCP/compute/gce/migs|GCP Managed Instance Groups (MIGs)]] — virtual machines (GCP)

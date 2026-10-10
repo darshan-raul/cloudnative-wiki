@@ -5,6 +5,7 @@ tags:
   - aws
   - storage
   - s3
+date: 2026-06-06
 ---
 
 # Amazon S3 (Simple Storage Service)
@@ -344,3 +345,10 @@ aws s3control get-access-point-policy \
 - **S3's eventual consistency applies to DELETE and PUT in certain regions — reads may return stale data briefly:** For critical reads, use strong consistency (available since 2020). But note: strong consistency costs more and has higher latency.
 - **S3 costs come from storage + requests + data transfer — storage is usually the smallest line item:** A bucket with 10M small objects ($0.023/GB = $0.23/month for 10GB) may cost $50/month in GET requests (10M × $0.0004/1K). Monitor request costs separately.
 - **S3 Transfer Acceleration can double data transfer costs — use it only for global uploads:** Transfer Acceleration adds $0.04-$0.08/GB on top of normal egress. For uploads from a single region, use standard S3. For global CDN origin pull, it's worth it.
+
+## Across the wiki
+
+- [[Azure/storage/blob|Azure Blob Storage & Data Lake Storage Gen2]] — object storage (Azure)
+- [[GCP/storage/gcs|Google Cloud Storage (GCS)]] — object storage (GCP)
+- [[Kubernetes/eks/storage/mountpoint-s3|Mountpoint for Amazon S3 CSI Driver]] — object storage (Kubernetes)
+- [[GCP/compute/gke/cloud-storage-fuse|GKE Cloud Storage FUSE CSI Driver — AI/ML Object Storage as a File System]] — object storage (GCP)

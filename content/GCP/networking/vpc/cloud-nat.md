@@ -8,6 +8,7 @@ tags:
   - vpc
   - security
   - snat
+date: 2026-09-06
 ---
 
 # GCP Cloud NAT Deep Dive & SNAT Port Allocation 🌐🔄
@@ -169,3 +170,9 @@ gcloud monitoring metrics list \
 3. **Endpoint-Independent Mapping Multiplies Port Consumption:** Setting `--enable-endpoint-independent-mapping=TRUE` (Full Cone NAT) forces Cloud NAT to use the exact same external port for a VM regardless of the destination IP. This exhausts allocated ports dramatically faster. Leave this disabled (`FALSE`) unless specifically required for peer-to-peer VoIP or WebRTC protocols.
 4. **Cloud NAT Requires Subnets in the Same Region:** A Cloud NAT gateway in `us-central1` can only translate traffic for subnets located in `us-central1`. It **cannot** provide NAT translation for instances residing in `us-east1` or `europe-west1`. You must create a dedicated Cloud NAT gateway in every region where private instances reside.
 5. **Port Allocation Reductions Are Not Dynamic:** If a VM's traffic surges and Dynamic Port Allocation scales its allocated ports from 64 to 512, Cloud NAT **will not immediately shrink the allocation back to 64** when traffic subsides. Port allocations are maintained to prevent connection thrashing, gradually reconciling over time.
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/networking/nat|Nat]] — NAT and egress (Architecture)
+- [[AWS/cost-management/network-cost-optimization|Network Cost Optimization]] — NAT and egress (AWS)
+- [[AWS/concepts/magic-ips-169.254|Magic ips/ 169.254]] — NAT and egress (AWS)

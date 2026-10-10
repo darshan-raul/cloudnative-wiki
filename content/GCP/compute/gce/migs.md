@@ -8,6 +8,7 @@ tags:
   - migs
   - autoscaling
   - reliability
+date: 2026-09-06
 ---
 
 # GCP Managed Instance Groups (MIGs) 🖥️🔄
@@ -227,3 +228,10 @@ gcloud compute instance-groups managed rolling-action start-update prod-api-mig 
 3. **Health Check Probes Must Hit Internal Firewall IP Ranges:** Health checks for auto-healing do not originate from within your subnet; they originate from Google's centralized health-checking probes: `35.191.0.0/16` and `130.211.0.0/22`. If you fail to add an explicit ingress firewall rule allowing traffic from these CIDRs to your health check port, every VM in the MIG will be declared unhealthy and auto-healing will destroy all instances.
 4. **Stateful MIG Instance Deletion Mechanics:** When deleting a specific instance from a stateful MIG via `gcloud compute instance-groups managed delete-instances`, the stateful disks and static IPs are **deleted by default** unless you explicitly specify `--preserve-state` or configure the per-instance configs to retain attached disks.
 5. **Autoscaler Scale-Down Throttling (Flapping Prevention):** The MIG autoscaler is designed with built-in stabilization windows to prevent rapid instance creation and destruction (flapping). When traffic drops, the autoscaler waits for the **stabilization window** (default 10 minutes) before terminating instances to ensure the drop is not a momentary dip.
+
+## Across the wiki
+
+- [[AWS/compute/ec2/README|Amazon EC2]] — virtual machines (AWS)
+- [[Azure/compute/vm|Azure Virtual Machines & Scale Sets (VMSS)]] — virtual machines (Azure)
+- [[Linux/virtualization/hypervisors|Hypervisors]] — virtual machines (Linux)
+- [[Linux/virtualization/emulator-vs-virtualization|Emulator vs Virtualization]] — virtual machines (Linux)

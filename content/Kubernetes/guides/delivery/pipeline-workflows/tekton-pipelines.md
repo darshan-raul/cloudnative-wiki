@@ -5,7 +5,11 @@ tags:
   - Delivery
   - CI/CD
   - Tekton
+date: 2026-01-30
+description: "Tekton is the k8s-native CI/CD framework. Where Argo Workflows is general-purpose, Tekton is purpose-built for CI/CD. Pipelines are made of Tasks, Pipelines, and PipelineRuns."
 ---
+
+# Tekton Pipelines
 
 Tekton is the **k8s-native CI/CD framework**. Where Argo Workflows is general-purpose, Tekton is purpose-built for CI/CD. Pipelines are made of `Task`s, `Pipeline`s, and `PipelineRun`s. Every step runs in a pod. You get triggers, workspaces, and a real k8s resource model.
 
@@ -576,3 +580,9 @@ The `update-gitops` task uses `kustomize edit set image` to update the manifest 
 - [[Kubernetes/guides/delivery/gitops/basics|gitops-basics]] — what Tekton deploys to
 - [[Kubernetes/guides/delivery/templating-patching/kustomize|kustomize]] — image updates
 - [Tekton docs](https://tekton.dev/docs/)
+
+## Across the wiki
+
+- [[DevOps/ci-cd/README|Continuous Integration & Continuous Delivery (CI/CD)]] — CI/CD pipelines (DevOps)
+- [[DevOps/ci-cd/pipeline-design|Pipeline Design]] — CI/CD pipelines (DevOps)
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]] — CI/CD pipelines (DevOps)

@@ -1,3 +1,10 @@
+---
+title: "Indexing"
+tags: [architecture, data-architecture, databases, indexing]
+date: 2026-01-30
+description: "Database indexing is a technique used to improve the speed of data retrieval operations on a database table."
+---
+
 # Indexing
 
 "https://youtu.be/5t1fW3KG920?si=YCYOL_LecLzrpET5"
@@ -119,3 +126,9 @@ WHERE MATCH(title, body) AGAINST ('database indexing');
 #### Summary
 
 Indexing is a powerful tool in database management that significantly improves query performance by reducing the amount of data MySQL needs to scan. However, it's essential to use indexes judiciously, as they can introduce additional storage requirements and maintenance overhead.
+
+## Across the wiki
+
+- [[AI/inner-workings/embeddings|Embeddings]] — embeddings and search (AI)
+- [[AWS/analytics/opensearch/README|Amazon OpenSearch]] — embeddings and search (AWS)
+- [[AI/vector-databases|Vector Databases]] — embeddings and search (AI)

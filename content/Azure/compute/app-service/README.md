@@ -7,6 +7,7 @@ tags:
   - app-service
   - webapps
   - paas
+date: 2026-09-06
 ---
 
 # Azure App Service Architecture, Deployment Slots, and VNet Integration 🌐⚡
@@ -248,3 +249,10 @@ App Service pricing is billed per hour for the **App Service Plan**, regardless 
 4. **Slot Swap Pre-Warm Custom Action (`applicationInitialization`):** During a slot swap, Azure checks if the app returns HTTP 200 on the root path `/`. If your application takes 30 seconds to compile Razor views, load caches, or establish database connection pools, Azure may swap traffic before the app is genuinely ready, resulting in 502 Bad Gateway errors for early requests. Configure the `web.config` or Linux startup script with `<applicationInitialization>` specifying exact health check paths to wait for before declaring warm-up complete.
 5. **Sticky Settings Can Break Deployments Silently:** If you mark an App Setting as "Deployment Slot Setting" (sticky), it remains on the slot and never swaps. If your application code in version 2 requires a new configuration key that was only added to the staging slot as a sticky setting, when the swap executes, the production slot will lack the setting and crash immediately upon receiving production traffic.
 6. **Always Set `WEBSITE_RUN_FROM_PACKAGE = 1`:** Deploying via standard FTP or Git sync copies files loosely into `/home/site/wwwroot`, leaving files locked while node or .NET runs, leading to partial file copy errors and runtime crashes. Setting `WEBSITE_RUN_FROM_PACKAGE = 1` mounts a read-only zip package as the virtual file system, guaranteeing atomic zero-latency deployments without file lock conflicts.
+
+## Across the wiki
+
+- [[GCP/compute/cloud-run|GCP Cloud Run]] — serverless containers (GCP)
+- [[AWS/serverless/app-runner/README|AWS App Runner]] — serverless containers (AWS)
+- [[Kubernetes/eks/compute/fargate/README|AWS Fargate on EKS]] — serverless containers (Kubernetes)
+- [[AWS/compute/ecs/README|Amazon ECS]] — serverless containers (AWS)

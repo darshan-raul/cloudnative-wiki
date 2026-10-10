@@ -1,3 +1,10 @@
+---
+title: "OPM or not to ORM"
+tags: [architecture, data-architecture, databases, opm-or-not-to-orm]
+date: 2026-01-30
+description: "There are several reasons why some developers prefer not to use Object-Relational Mapping (ORM) tools to operate with databases from their code. Here are some of the most common reasons."
+---
+
 # OPM or not to ORM
 
 There are several reasons why some developers prefer not to use Object-Relational Mapping (ORM) tools to operate with databases from their code. Here are some of the most common reasons:

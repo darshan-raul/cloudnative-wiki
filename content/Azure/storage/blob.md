@@ -7,6 +7,7 @@ tags:
   - blob
   - adls
   - object-storage
+date: 2026-09-06
 ---
 
 # Azure Blob Storage & Data Lake Storage Gen2 🪣📊
@@ -169,3 +170,10 @@ az storage account management-policy create \
 3. **Hierarchical Namespace (HNS) Cannot Be Enabled After Creation:** You cannot turn an existing standard Blob Storage account into an ADLS Gen2 Hierarchical Namespace account in place. If your data team later needs Databricks or atomic directory renames, you must create a new HNS-enabled storage account and migrate all data over AzCopy.
 4. **Primary Key Storage Account Compromise:** The two master Access Keys (`key1` and `key2`) have unrestricted root administrative ownership over the entire storage account, completely bypassing all Azure RBAC policies. Always disable key-based access (`--allow-shared-key-access false`) and enforce Microsoft Entra ID authentication.
 5. **Soft Delete vs. Retention Lock:** Azure Blob Soft Delete protects against accidental file deletions. However, if an attacker deletes the **entire Storage Account resource**, all blobs inside it are wiped instantly. Enable an Azure Resource Lock (`CanNotDelete`) on the storage account resource itself.
+
+## Across the wiki
+
+- [[AWS/storage/s3/README|Amazon S3]] — object storage (AWS)
+- [[GCP/storage/gcs|Google Cloud Storage (GCS)]] — object storage (GCP)
+- [[Kubernetes/eks/storage/mountpoint-s3|Mountpoint for Amazon S3 CSI Driver]] — object storage (Kubernetes)
+- [[GCP/compute/gke/cloud-storage-fuse|GKE Cloud Storage FUSE CSI Driver — AI/ML Object Storage as a File System]] — object storage (GCP)

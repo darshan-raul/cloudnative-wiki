@@ -1,3 +1,10 @@
+---
+title: "MongoDB"
+tags: [architecture, data-architecture, databases, mongodb]
+date: 2026-01-30
+description: "Basic concepts of MongoDB."
+---
+
 # MongoDB
 
 "https://www.mongodb.com"
@@ -146,3 +153,10 @@ Basic concepts of MongoDB:
 #### Conclusion
 
 MongoDB is a flexible, scalable, and powerful NoSQL database that supports a wide range of use cases through its document-oriented storage, rich query language, and robust data management features. Understanding these basic concepts will help you effectively design and interact with MongoDB databases.
+
+## Across the wiki
+
+- [[AWS/databases/dynamodb/README|Amazon DynamoDB]] — NoSQL databases (AWS)
+- [[Azure/databases/cosmos-db|Azure Cosmos DB]] — NoSQL databases (Azure)
+- [[GCP/databases/firestore/README|Google Cloud Firestore]] — NoSQL databases (GCP)
+- [[AWS/databases/documentdb/README|Amazon DocumentDB]] — NoSQL databases (AWS)

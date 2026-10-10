@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - Chat Models
+date: 2026-06-12
+description: "All chat models in LangChain inherit from BaseChatModel. They all implement the Runnable interface — invoke, stream, ainvoke, astream, batch, abatch."
 ---
+
+# LangChain — Chat Models
 
 > **Part 3.** How chat models work in LangChain — the `BaseChatModel`
 > interface, `ChatOpenAI`, `bind_tools`, `with_structured_output`,

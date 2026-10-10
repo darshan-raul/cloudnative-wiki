@@ -6,6 +6,7 @@ tags:
   - application-integration
   - appsync
   - graphql
+date: 2026-06-06
 ---
 
 # AWS AppSync
@@ -264,3 +265,10 @@ type Mutation {
 - **AppSync subscriptions use WebSockets — they stay open permanently, consuming connection slots:** Each subscription = 1 persistent WebSocket connection. On mobile, if users have poor connectivity, connections can pile up. Set CloudWatch alarms for connection count.
 - **AppSync API Keys expire after 365 days by default — if they expire, API calls fail silently:** If you're using API_KEY auth and your app breaks, check if the key expired. Use Cognito User Pools or IAM auth for production.
 - **AppSync doesn't support real-time filtering on the server — clients receive all subscription events and filter client-side:** If you need server-side filtering (only notify relevant users), you must implement filtering in your Lambda resolver before returning the payload.
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/api-design/README|API Design]] — API design and gateways (Architecture)
+- [[Architecture/solution-architecture-concepts/performance/rate-limiting|Rate Limiting Algorithms, Distributed Architecture & HTTP 429]] — API design and gateways (Architecture)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/api-error-codes|API Error Codes, HTTP Status Standards & RFC 7807 Problem Details]] — API design and gateways (Architecture)
+- [[Architecture/solution-architecture-concepts/protocols/README|Protocols]] — API design and gateways (Architecture)

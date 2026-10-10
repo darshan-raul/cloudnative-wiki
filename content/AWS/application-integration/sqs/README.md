@@ -7,6 +7,7 @@ tags:
   - sqs
   - queue
   - messaging
+date: 2026-06-06
 ---
 
 # Amazon SQS
@@ -215,3 +216,10 @@ aws lambda create-event-source-mapping \
 - **SQS message size is 256KB hard limit — for larger payloads, store in S3 and send S3 reference:** Use the SQS extended client library which automatically stores large payloads in S3 and sends the reference in SQS.
 - **SQS FIFO ordering is per message group ID — messages with different group IDs can be delivered out of order:** If you need global ordering, use a single group ID. For partial ordering (per customer), use customer ID as group ID.
 - **SQS visibility timeout doesn't pause while your consumer is idle — it counts down from the moment the message is received:** If your VisibilityTimeout is 30s and you spend 25s on processing before calling delete, you only have 5s left. Set it to 2-3x your expected processing time.
+
+## Across the wiki
+
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
+- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)

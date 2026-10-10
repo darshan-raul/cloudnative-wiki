@@ -871,3 +871,10 @@ cosign sign myregistry/myapp:1.0.0.sbom
 - [[Kubernetes/guides/delivery/ci-cd-integration|security-scanning]] — image scanning in practice
 - [[Kubernetes/guides/delivery/ci-cd-integration|image-signing]] — image signing in practice
 - See [[Kubernetes/guides/delivery/ci-cd-integration]] (Cosign, Notary) and [[Kubernetes/guides/delivery/ci-cd-integration]] (image scanning) for the supply-chain tooling layer.
+
+## Across the wiki
+
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning & Hardening]] — software supply chain (DevOps)
+- [[Security/kubernetes-security/vulnerability-scanning/README|Kubernetes Vulnerability Scanning]] — software supply chain (Security)
+- [[Containers/registries|Container Registries]] — software supply chain (Containers)
+- [[AWS/security/inspector/README|AWS Inspector]] — software supply chain (AWS)

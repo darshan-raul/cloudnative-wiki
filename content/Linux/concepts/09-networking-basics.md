@@ -4,6 +4,7 @@ description: Linux networking fundamentals — IP addresses, subnets, gateway, D
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 09 — Networking Basics
@@ -233,3 +234,10 @@ ss -tn | grep ESTAB
 sudo ufw status
 sudo ufw allow 22/tcp
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking (L04 Overview)]] — packet path (Kubernetes)
+- [[Architecture/solution-architecture-concepts/networking/tcpip|TCP/IP Architecture, Handshakes & Congestion Control]] — packet path (Architecture)
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Kubernetes Networking — Deep Dive]] — packet path (Kubernetes)
+- [[Architecture/solution-architecture-concepts/networking/osi-model|The OSI 7-Layer Model in Modern Systems Engineering]] — packet path (Architecture)

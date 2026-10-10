@@ -5,6 +5,7 @@ tags:
   - linux
   - filesystem
   - containers
+date: 2026-06-06
 ---
 
 # OverlayFS
@@ -185,3 +186,10 @@ docker inspect <container> --format '{{json .GraphDriver.Data}}' | jq
 - **Large files that get partially modified** (databases): partial overwrite copies the whole file → lots of I/O
 - **Overlay only works on the same filesystem** (can't cross device boundaries for upper/lower)
 - **NFS or CIFS backing**: overlay over network filesystems has limitations (requires same underlying fs features)
+
+## Across the wiki
+
+- [[Containers/runtimes|Container Runtimes]] — container internals (Containers)
+- [[Kubernetes/concepts/L09-advanced/09-pause-container|The Pause Container]] — container internals (Kubernetes)
+- [[Containers/images-and-layers|Container Images and Layers]] — container internals (Containers)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing (gVisor, Kata Containers)]] — container internals (Kubernetes)

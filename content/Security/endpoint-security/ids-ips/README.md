@@ -84,4 +84,4 @@ IDS alerts become actionable when routed through a security pipeline:
 - [[Security/siem/wazuh/README|Wazuh SIEM Master Hub]]
 - [[Security/endpoint-security/hardening/README|Linux Host Hardening]]
 - [[Security/endpoint-security/falco/README|Falco Runtime Security & eBPF]]
-- [[Resources/guides/security/ids|Network & Host IDS Field Guide]]
+- [[Security/endpoint-security/ids-ips/ids-types|Network & Host IDS Field Guide]]

@@ -1,3 +1,10 @@
+---
+title: "Services"
+tags: [ai, aws, services]
+date: 2026-01-30
+description: "AWS provides a broad spectrum of AI services and tools, including."
+---
+
 # Services
 
 AWS provides a broad spectrum of AI services and tools, including:
@@ -20,3 +27,10 @@ AWS provides a broad spectrum of AI services and tools, including:
 - **Amazon Q:** An AI assistant to get fast, relevant answers, generate content, and take actions\[2]\[6]\[8].
 
 AWS also provides specialized AI infrastructure and a data foundation to support various AI workloads\[5]. They offer services like Amazon Augmented AI (A2I) for human review of ML predictions\[2]\[3].
+
+## Across the wiki
+
+- [[AWS/machine-learning/bedrock/README|Amazon Bedrock]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/sagemaker/README|Amazon SageMaker]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/ai-services/README|AWS AI Services]] — generative AI platforms (AWS)
+- [[AWS/serverless/README|AWS Serverless]] — generative AI platforms (AWS)

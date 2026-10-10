@@ -294,3 +294,10 @@ def verify_id_token(id_token: str, expected_nonce: str) -> dict:
 Now that the core principles and tokens of OIDC are understood, we examine the execution mechanics: the flows (Auth Code + PKCE, Hybrid, and the deprecated Implicit Flow) and response modes.
 
 → [[02-oidc-flows|Stage 3.2 — OIDC Flows: Authorization Code, Hybrid, and Implicit]]
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/oidc-integration|OIDC Integration]] — OIDC federation (Kubernetes)
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC Federation]] — OIDC federation (DevOps)
+- [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|Authentication vs Authorization]] — OIDC federation (Kubernetes)
+- [[DevOps/ci-cd/github-actions|GitHub Actions Architecture & Best Practices]] — OIDC federation (DevOps)

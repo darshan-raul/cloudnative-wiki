@@ -9,6 +9,7 @@ tags:
   - mcs
   - governance
   - gitops
+date: 2026-09-06
 ---
 
 # Azure Kubernetes Fleet Manager — Multi-Cluster Governance, Staged Upgrades, and Multi-Cluster Services (MCS) 🌐🏛️
@@ -237,3 +238,10 @@ _Pods in `aks-prod-weur` can now query `catalog-service.e-commerce.svc.clusterse
 3. **Hubless vs. Hub-Enabled Fleet Cannot Be Converted in Place:** When creating a Fleet, you choose between a **Hubless Fleet** (simple grouping for basic updates) and a **Hub-Enabled Fleet** (provisions a managed Kubernetes API endpoint for GitOps and CRP). You **cannot convert a Hubless fleet to Hub-enabled later**. Always provision with `--enable-hub` if you plan to use `ClusterResourcePlacement`.
 4. **ServiceExport Namespace Sameness Rule:** Multi-Cluster Services enforces **Namespace Sameness**: an exported service in namespace `production` on Cluster A can only be imported into namespace `production` on Cluster B. If the target namespace does not exist on the remote cluster, the `ServiceImport` object will not be generated.
 5. **Fleet Hub RBAC vs. Member Cluster RBAC:** Granting an engineer `Contributor` permissions on the Azure Kubernetes Fleet Manager resource allows them to orchestrate global rollouts and placement rules, but **does not automatically grant them `cluster-admin` inside the member clusters' local Kubernetes API servers**. Access to member clusters must still be granted via Microsoft Entra ID or Azure RBAC.
+
+## Across the wiki
+
+- [[GCP/compute/gke/fleets-and-anthos|GKE Fleets, Cloud Service Mesh (formerly ASM), and Policy Controller Governance]] — multi-cluster (GCP)
+- [[Kubernetes/guides/tools/multi-cluster|Multi-Cluster]] — multi-cluster (Kubernetes)
+- [[GCP/compute/gke/multi-cluster-services|GKE Multi-Cluster Services (MCS) and Multi-Cluster Ingress (MCI) Architecture]] — multi-cluster (GCP)
+- [[Kubernetes/eks/advanced/advanced-networking|Advanced EKS Networking]] — multi-cluster (Kubernetes)

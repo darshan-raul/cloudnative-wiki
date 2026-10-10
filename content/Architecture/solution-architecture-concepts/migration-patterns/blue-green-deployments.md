@@ -1,5 +1,8 @@
 ---
 title: Blue-Green Deployments
+tags: [architecture, migration-patterns, blue-green-deployments]
+date: 2026-06-06
+description: "Blue-green deployment is a release strategy that maintains two identical production environments — blue (current live) and green (new version) — and switches traffic between them instantly."
 ---
 
 # Blue-Green Deployments
@@ -205,3 +208,10 @@ Benefits:
 - [[expand-contract|Expand-Contract Pattern]] — safe database schema changes
 - [[strangler-fig|Strangler Fig Pattern]] — incremental migration from legacy systems
 - [[data-migration|Data Migration Patterns]] — bulk data movement strategies
+
+## Across the wiki
+
+- [[Kubernetes/guides/delivery/progressive-delivery/strategies|Progressive Delivery Strategies]] — deployment strategies (Kubernetes)
+- [[DevOps/ci-cd/deployment-strategies|Deployment Strategies]] — deployment strategies (DevOps)
+- [[AWS/solutions-architect-professional/domain-2/2.1-deployment-strategy|2.1 Deployment Strategy]] — deployment strategies (AWS)
+- [[Kubernetes/concepts/L03-workloads/03-deployments|Deployments]] — deployment strategies (Kubernetes)

@@ -602,3 +602,10 @@ du -sh /var/log/kubernetes/audit/
 - [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — RBAC decisions in the audit log
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — enabling audit in the apiserver config
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — workload-level activity (Falco)
+
+## Across the wiki
+
+- [[Linux/security/auditd|auditd]] — audit trails (Linux)
+- [[AWS/security/cloudtrail/README|AWS CloudTrail]] — audit trails (AWS)
+- [[Security/siem/wazuh/README|Wazuh]] — audit trails (Security)
+- [[Security/incident-response/forensics/README|Forensics]] — audit trails (Security)

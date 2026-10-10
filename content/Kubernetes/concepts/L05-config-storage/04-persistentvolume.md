@@ -767,3 +767,10 @@ This binds the existing PV to the new PVC. Useful for recovering data from a Rel
 - [[Kubernetes/concepts/L05-config-storage/05-persistentvolumeclaim|PersistentVolumeClaim]] — the user-facing API
 - [[Kubernetes/concepts/L05-config-storage/06-storageclass|StorageClass]] — dynamic provisioning
 - [[Kubernetes/concepts/L05-config-storage/07-storage|Storage]] — the L05 mental model
+
+## Across the wiki
+
+- [[Linux/storage/filesystems|Filesystems]] — volumes and filesystems (Linux)
+- [[Linux/storage/lvm|LVM]] — volumes and filesystems (Linux)
+- [[Linux/concepts/10-storage-basics|10 — Storage Basics]] — volumes and filesystems (Linux)
+- [[Linux/concepts/tmpfs|TMPFS]] — volumes and filesystems (Linux)

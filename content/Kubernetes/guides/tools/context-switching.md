@@ -4,7 +4,11 @@ tags:
   - Kubernetes
   - Tools
   - kubeconfig
+date: 2026-01-30
+description: "Sources: kubeconfig docs, kubectx"
 ---
+
+# Context Switching
 
 _Sources: [kubeconfig docs](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/), [kubectx](https://github.com/ahmetb/kubectx)_
 

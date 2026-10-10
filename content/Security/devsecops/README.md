@@ -18,8 +18,8 @@ Shift-left security principles — integrating security into CI/CD pipelines, co
 
 ## Sections
 
-- [[Security/devsecops/pipeline-security/README|Pipeline Security]] — Securing CI/CD pipelines, GitHub Actions hardening, secrets management
-- [[Security/devsecops/container-security/README|Container Security]] — Image scanning, distroless, rootless, capabilities
+- [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|Pipeline Security]] — Securing CI/CD pipelines, GitHub Actions hardening, secrets management
+- [[Linux/security/container-security|Container Security]] — Image scanning, distroless, rootless, capabilities
 
 ## Pipeline Security Checks
 
@@ -41,5 +41,12 @@ Shift-left security principles — integrating security into CI/CD pipelines, co
 
 ## Related
 
-- [[Resources/guides/security/supply-chain-security|Supply Chain Security]] — SBOM, Sigstore, SLSA
+- [[DevOps/devsecops/README|Supply Chain Security]] — SBOM, Sigstore, SLSA
 - [[Security/incident-response/README|Incident Response]] — CI/CD security incidents
+
+## Across the wiki
+
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning & Hardening]] — software supply chain (DevOps)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — software supply chain (Kubernetes)
+- [[Containers/registries|Container Registries]] — software supply chain (Containers)
+- [[AWS/security/inspector/README|AWS Inspector]] — software supply chain (AWS)

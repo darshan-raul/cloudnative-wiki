@@ -386,3 +386,9 @@ NamespaceLifecycle admission blocks new objects
     ↓
 Namespace object deleted from etcd
 ```
+
+## Across the wiki
+
+- [[Azure/compute/aks/multi-tenancy-isolation|AKS Multi-Tenancy, Hard Isolation, and Confidential Containers]] — multi-tenancy (Azure)
+- [[GCP/compute/gke/multi-tenancy-isolation|GKE Multi-Tenancy Architecture — Hard vs Soft Isolation, GKE Sandbox (gVisor), and PSS]] — multi-tenancy (GCP)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/multi-tenancy|Multi-Tenant Software Architecture & Data Isolation Patterns]] — multi-tenancy (Architecture)

@@ -8,6 +8,7 @@ tags:
   - kubernetes
   - security
   - supply-chain
+date: 2026-09-06
 ---
 
 # GKE Security & Hardening — Workload Identity & Binary Authorization 🛡️☸️
@@ -236,3 +237,10 @@ spec:
 3. **Master Authorized Networks CIDR Lockout:** If an administrator enables Master Authorized Networks and provides their home office dynamic IP address (e.g. `203.0.113.5/32`), their ISP may rotate their IP the next day. The administrator will be completely locked out of running `kubectl` against the cluster API server until they update the authorized CIDR via `gcloud container clusters update`.
 4. **Binary Authorization System Image Whitelisting:** When configuring a custom Binary Authorization policy, ensure you enable the option **"Allow Google-maintained system images"**. Disabling this will block GKE system pods (like `kube-dns`, metrics-server, and the CSI driver) from booting, bricking the cluster on its next upgrade.
 5. **Node Service Account Privilege Revocation:** When Workload Identity is enabled, remember to remove the `Editor` role from the node's underlying Compute Engine service account. If the node VM retains `Editor`, an attacker who escapes a container or compromises a `hostNetwork: true` pod can still access the node's elevated credentials.
+
+## Across the wiki
+
+- [[Security/cloud-security/README|Cloud Security Hub]] — cloud security posture (Security)
+- [[AWS/security/README|AWS Security]] — cloud security posture (AWS)
+- [[Security/cloud-security/aws/README|AWS Security]] — cloud security posture (Security)
+- [[AWS/security/config/README|AWS Config]] — cloud security posture (AWS)

@@ -4,6 +4,7 @@ description: Linux package managers — apt, pacman, dnf — how packages work, 
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 05 — Package Management
@@ -275,3 +276,9 @@ dpkg -S /path/to/file  # which package owns this file
 apt-file update      # update apt-file cache
 apt-file search file # find which package provides a file
 ```
+
+## Across the wiki
+
+- [[Containers/images-and-layers|Container Images and Layers]] — packaging (Containers)
+- [[Kubernetes/guides/delivery/templating-patching/helm/charts|Helm Charts]] — packaging (Kubernetes)
+- [[DevOps/ci-cd/release-and-versioning|Release and Versioning]] — packaging (DevOps)

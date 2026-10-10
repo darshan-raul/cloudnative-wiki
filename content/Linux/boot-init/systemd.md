@@ -4,6 +4,7 @@ description: Linux systemd — units, targets, systemctl, service files, socket 
 tags:
   - linux
   - init
+date: 2026-06-06
 ---
 
 # systemd
@@ -278,3 +279,9 @@ Environment="HOME=/var/lib/myapp"
 Environment="PORT=8080"
 EnvironmentFile=/etc/myapp/env    # load from file
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/11-static-pods|Static Pods]] — service lifecycle (Kubernetes)
+- [[Kubernetes/concepts/L01-architecture/01-setting-up-cluster|Setting up a Cluster]] — service lifecycle (Kubernetes)
+- [[Kubernetes/concepts/L03-workloads/05-daemonset|DaemonSet — One Pod Per Node]] — service lifecycle (Kubernetes)

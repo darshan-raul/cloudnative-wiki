@@ -3,7 +3,11 @@ title: "LangGraph — Streaming"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "When you call graph.stream(input, streammode=...), LangGraph can stream in two modes."
 ---
+
+# LangGraph — Streaming
 
 > **Part 7.** How LangGraph streams output — `stream_mode="values"`,
 > `stream_mode="messages"`, and `astream_events` for full lifecycle

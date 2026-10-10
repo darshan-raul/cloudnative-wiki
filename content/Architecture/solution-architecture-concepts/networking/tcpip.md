@@ -7,6 +7,7 @@ tags:
   - ip
   - protocols
   - performance
+date: 2026-01-30
 ---
 
 # TCP/IP Architecture, Handshakes & Congestion Control
@@ -107,3 +108,10 @@ While flow control protects the _receiver_, congestion control protects the _net
 - **Maximum Segment Size (MSS):** The largest L4 TCP data payload:
   $$\text{MSS} = \text{MTU} - 20\text{ (IPv4 Header)} - 20\text{ (TCP Header)} = 1,460\text{ bytes}$$
 - **Path MTU Discovery (PMTUD):** Packets set the `DF` (Don't Fragment) bit in the IP header. If an intermediate router has a smaller MTU, it drops the packet and sends back an ICMP Type 3 Code 4 (_Fragmentation Needed_). If firewalls block ICMP, connections experience a "PMTUD Blackhole" (small pings work, large HTTP transfers hang indefinitely).
+
+## Across the wiki
+
+- [[Linux/networking/routing|Routing]] — packet path (Linux)
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking (L04 Overview)]] — packet path (Kubernetes)
+- [[Linux/networking/tcp-ip-model|TCP/IP Model]] — packet path (Linux)
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Kubernetes Networking — Deep Dive]] — packet path (Kubernetes)

@@ -4,6 +4,7 @@ description: Netplan — YAML network configuration for systemd-networkd and Net
 tags:
   - linux
   - networking
+date: 2026-01-30
 ---
 
 # Netplan

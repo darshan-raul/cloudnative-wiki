@@ -48,3 +48,7 @@ Below are some of the concepts that are specific to Argo CD.
   - Restrict Argo CD's access to certain kinds of resources, e.g. secrets.
 
 "https://www.youtube.com/watch?v=fQ9846hRiFo"
+
+## Across the wiki
+
+- [[DevOps/ci-cd/git|Git Strategy, Trunk-Based Development & Configuration]] — GitOps (DevOps)

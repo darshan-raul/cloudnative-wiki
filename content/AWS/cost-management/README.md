@@ -4,6 +4,7 @@ description: AWS cost management — pricing models, Cost Explorer, budgets, tag
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # AWS Cost Management
@@ -93,3 +94,10 @@ This section covers the full cost management stack: pricing models, visibility t
 - **NAT Gateway has two cost components:** You pay per hour ($0.045/hr in us-east-1) PLUS per GB processed ($0.045/GB). A busy Lambda workload in a VPC can generate surprising NAT Gateway bills.
 - **EBS volumes charge even when stopped:** An EC2 instance that is stopped still has its EBS volumes attached and accruing storage charges. Detach volumes or delete the instance to stop the charges.
 - **Cost Explorer has a data delay:** Cost Explorer shows data with a 24-48 hour delay. Real-time spend monitoring requires CloudWatch billing alerts or third-party tools.
+
+## Across the wiki
+
+- [[Kubernetes/eks/advanced/cost-optimization|EKS Cost Optimization]] — Kubernetes cost (Kubernetes)
+- [[Azure/compute/aks/cost-optimization-finops|AKS FinOps, Cost Allocation, and Cloud Spend Optimization]] — Kubernetes cost (Azure)
+- [[GCP/compute/gke/cost-optimization-finops|GKE Cost Optimization, FinOps, and GKE Cost Allocation Architecture]] — Kubernetes cost (GCP)
+- [[Kubernetes/guides/non-functional/cost-optimization|Cost Optimization]] — Kubernetes cost (Kubernetes)

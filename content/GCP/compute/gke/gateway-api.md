@@ -7,6 +7,7 @@ tags:
   - gateway-api
   - networking
   - ingress
+date: 2026-09-06
 ---
 
 # GKE Gateway API Architecture, HTTPRoute, and Cloud Armor Integration 🚪🌐
@@ -282,3 +283,10 @@ rules:
 ```
 
 Omitting the port 80 listener causes client HTTP requests to time out rather than redirecting.
+
+## Across the wiki
+
+- [[Azure/compute/aks/ingress-appgw-gateway|AKS Ingress, Application Gateway for Containers, and Gateway API Architecture]] — ingress and load balancing (Azure)
+- [[Kubernetes/concepts/L04-services-networking/09-gateway-api|Gateway API]] — ingress and load balancing (Kubernetes)
+- [[AWS/networking/load-balancing/README|Elastic Load Balancing]] — ingress and load balancing (AWS)
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — ingress and load balancing (Architecture)

@@ -161,3 +161,10 @@ CP AP
 
 - [Eric Brewer — CAP Theorem (original)](https://people.eecs.berkeley.edu/~brewer/cs262b-2004.pdf)
 - [DBMS Musings — CAP and PACELC](https://www.dbms2.com/2010/04/23/cap-and-pacelc/)
+
+## Across the wiki
+
+- [[AWS/databases/dynamodb/README|Amazon DynamoDB]] — NoSQL databases (AWS)
+- [[Azure/databases/cosmos-db|Azure Cosmos DB]] — NoSQL databases (Azure)
+- [[GCP/databases/firestore/README|Google Cloud Firestore]] — NoSQL databases (GCP)
+- [[AWS/databases/documentdb/README|Amazon DocumentDB]] — NoSQL databases (AWS)

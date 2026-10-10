@@ -8,6 +8,7 @@ tags:
   - hpa
   - vpa
   - cluster-autoscaler
+date: 2026-09-06
 ---
 
 # GKE Autoscaling Architecture — Cluster Autoscaler, NAP, HPA v2, and VPA 📈⚡
@@ -301,3 +302,10 @@ Autoscaling optimization directly impacts cloud spend:
 4. **HPA Scale-Down Flapping (Stabilization Window):** By default in Kubernetes, HPA waits 5 minutes (`stabilizationWindowSeconds: 300`) before executing a scale-down. If a developer overrides this to 0 seconds, a brief 30-second lull in incoming web traffic causes HPA to immediately delete 80% of your pods. When traffic spikes 10 seconds later, remaining pods are overwhelmed and crash. Always enforce a scale-down stabilization window of at least 300 seconds.
 5. **GCE Zone Quota Exhaustion Halts Cluster Autoscaler:** When HPA triggers pending pods, CA attempts to provision VMs in the cluster's node zones. If your GCP project exhausts its regional `CPUS_ALL_REGIONS` or zonal `N2_CPUS` compute quota, GCE rejects the VM creation request. Pods remain in `Pending` indefinitely, and `kubectl describe pod` outputs `FailedScaleUp: Pod group couldn't be scheduled on any node pool`. Always set up GCP quota alerting before scaling up production limits.
 6. **NAP Creates Unexpected High-Cost Shapes if Unconstrained:** When Node Auto-Provisioning (NAP) is enabled without specifying explicit allowed machine families, NAP can choose expensive memory-optimized (M2) or accelerator shapes if a single developer submits a pod requesting large amounts of memory without a node selector. Always restrict NAP using `--autoprovisioning-locations` and set strict maximum resource bounds (`--max-cpu` and `--max-memory`).
+
+## Across the wiki
+
+- [[Kubernetes/eks/advanced/autoscaling|Advanced Autoscaling]] — autoscaling (Kubernetes)
+- [[Azure/compute/aks/autoscaling-keda|AKS Autoscaling Architecture — Cluster Autoscaler, KEDA, and Virtual Nodes]] — autoscaling (Azure)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability|Scalability]] — autoscaling (Architecture)
+- [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — autoscaling (Kubernetes)

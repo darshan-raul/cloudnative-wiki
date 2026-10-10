@@ -4,6 +4,7 @@ description: Linux auditd — audit subsystem, audit.rules, syscall auditing, fi
 tags:
   - linux
   - security
+date: 2026-06-06
 ---
 
 # auditd
@@ -272,3 +273,10 @@ admin_space_left_action = SUSPEND
 disk_full_action = SUSPEND
 disk_error_action = SUSPEND
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — audit trails (Kubernetes)
+- [[AWS/security/cloudtrail/README|AWS CloudTrail]] — audit trails (AWS)
+- [[Security/siem/wazuh/README|Wazuh]] — audit trails (Security)
+- [[Kubernetes/eks/observability/logging/control-plane-logs|EKS Control Plane Logs]] — audit trails (Kubernetes)

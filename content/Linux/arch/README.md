@@ -1,5 +1,8 @@
 ---
 title: Arch Linux
+tags: [linux, arch]
+date: 2026-05-24
+description: "A comprehensive guide to Arch Linux and Manjaro — rolling release distributions built on the KISS principle."
 ---
 
 # Arch Linux

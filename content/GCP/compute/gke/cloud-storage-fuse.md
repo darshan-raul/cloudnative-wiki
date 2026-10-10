@@ -8,6 +8,7 @@ tags:
   - fuse
   - csi
   - ai-ml
+date: 2026-09-06
 ---
 
 # GKE Cloud Storage FUSE CSI Driver — AI/ML Object Storage as a File System 🪣📂
@@ -237,3 +238,9 @@ Pricing components:
 4. **Local File Cache Eviction Thrashing:** When enabling `file-cache:max-size-mb`, if the cache capacity is smaller than the dataset being scanned in a single training epoch, the local cache continuously writes and purges blocks (cache thrashing), burning local SSD write endurance and increasing CPU usage. Size the local cache to be $\ge 120\%$ of the active working set, or rely on streaming sequential reads without local file caching.
 5. **No File Locking (`flock`) Support:** Cloud Storage does not support POSIX file advisory locks (`fcntl` / `flock`). Applications (such as SQLite or older file-based lock daemons) that require file-level concurrency locking will fail immediately with `Operation not supported`. Do not attempt to run relational databases directly on top of GCS FUSE.
 6. **Workload Identity Service Account Token Lifetime:** GCS FUSE uses background token refreshers to maintain long-lived GCS access. If your pod's ServiceAccount IAM binding is deleted or modified while an active 48-hour training job is executing, subsequent file reads will fail mid-run with `401 Unauthorized: token expired`. Guard Workload Identity IAM policies against uncoordinated terraform applies.
+
+## Across the wiki
+
+- [[AWS/storage/s3/README|Amazon S3]] — object storage (AWS)
+- [[Azure/storage/blob|Azure Blob Storage & Data Lake Storage Gen2]] — object storage (Azure)
+- [[Kubernetes/eks/storage/mountpoint-s3|Mountpoint for Amazon S3 CSI Driver]] — object storage (Kubernetes)

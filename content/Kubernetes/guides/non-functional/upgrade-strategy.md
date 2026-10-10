@@ -5,7 +5,11 @@ tags:
   - Non-Functional
   - Upgrades
   - Lifecycle
+date: 2026-06-12
+description: 'K8s releases four minor versions a year. Each release has ~9 months of support, then 1 month of "you really should upgrade" support.'
 ---
+
+# Upgrade Strategy
 
 K8s releases four minor versions a year. Each release has ~9 months of support, then 1 month of "you really should upgrade" support. **Skipping a minor version is not supported** — you must upgrade sequentially.
 
@@ -930,3 +934,8 @@ Production cluster: 1.20 (EOL)
 - [[Kubernetes/guides/non-functional/disaster-recovery|disaster-recovery]] — if upgrade goes wrong
 - [[Kubernetes/guides/non-functional/high-availability|high-availability]] — designing for upgrade
 - [k8s release notes](https://kubernetes.io/releases/)
+
+## Across the wiki
+
+- [[Azure/compute/aks/upgrades-maintenance|AKS Upgrades, Maintenance Windows, and Safe Rollout Strategies]] — cluster upgrades (Azure)
+- [[GCP/compute/gke/release-channels-upgrades|GKE Release Channels, Node Upgrades, Surge vs Blue-Green, and SRE Lifecycle]] — cluster upgrades (GCP)

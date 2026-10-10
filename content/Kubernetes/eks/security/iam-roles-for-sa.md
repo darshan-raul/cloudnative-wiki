@@ -495,3 +495,10 @@ aws ec2 describe-vpc-endpoints \
 - [EKS Workshop - IRSA](https://www.eksworkshop.com/docs/security/iam-roles-for-service-accounts/)
 - [OIDC Background](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html#irsa-oid)
 - [Best Practices](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
+
+## Across the wiki
+
+- [[Azure/compute/aks/security-workload-identity|AKS Security & Microsoft Entra Workload Identity Architecture]] — workload identity (Azure)
+- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]] — workload identity (GCP)
+- [[AWS/security/iam/README|AWS IAM]] — workload identity (AWS)
+- [[Azure/identity/workload-identity|Azure Workload Identity & Federated Credentials]] — workload identity (Azure)

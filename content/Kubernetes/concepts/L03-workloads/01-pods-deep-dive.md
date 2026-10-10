@@ -192,3 +192,10 @@ kubectl get pod <pod-name> -o jsonpath='{.status.containerStatuses[*].lastState.
 - [[Kubernetes/concepts/L05-config-storage/03-volumes|Volumes & Storage Types]]
 - [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests, Limits & In-Place Resize]]
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|Security Context & Pod Security Standards]]
+
+## Across the wiki
+
+- [[Linux/kernel/signals|Signals]] — process lifecycle and signals (Linux)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — process lifecycle and signals (Containers)
+- [[Linux/concepts/03-processes|03 — Processes]] — process lifecycle and signals (Linux)
+- [[Linux/kernel/process-management|Process Management]] — process lifecycle and signals (Linux)

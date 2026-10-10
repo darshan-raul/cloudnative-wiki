@@ -806,3 +806,10 @@ curl -v -H "Host: app.example.com" http://<ingress-ip>/
 - [[Kubernetes/concepts/L04-services-networking/03-dns|DNS]] — how external clients find the Ingress
 - [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — the layer below
 - [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet walkthroughs
+
+## Across the wiki
+
+- [[Azure/compute/aks/ingress-appgw-gateway|AKS Ingress, Application Gateway for Containers, and Gateway API Architecture]] — ingress and load balancing (Azure)
+- [[GCP/compute/gke/gateway-api|GKE Gateway API Architecture, HTTPRoute, and Cloud Armor Integration]] — ingress and load balancing (GCP)
+- [[AWS/networking/load-balancing/README|Elastic Load Balancing]] — ingress and load balancing (AWS)
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — ingress and load balancing (Architecture)

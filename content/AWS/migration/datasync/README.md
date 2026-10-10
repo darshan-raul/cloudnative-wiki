@@ -5,6 +5,7 @@ tags:
   - aws
   - migration
   - storage
+date: 2026-06-06
 ---
 
 # DataSync
@@ -333,3 +334,10 @@ aws datasync create-task \
 - Supported protocols: NFS v3, SMB v2+, S3 (as source or destination), EFS, FSx for Windows, FSx for OpenZFS
 - Agent must be able to reach DataSync service endpoints (port 443)
 - For SMB, the agent must be able to resolve the SMB server's hostname
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/migration-patterns/README|Migration Patterns]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/data-migration|Data Migration Patterns]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/change-data-capture|Change Data Capture (CDC)]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/strangler-fig|Strangler Fig Pattern]] — migration (Architecture)

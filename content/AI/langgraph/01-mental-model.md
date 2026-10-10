@@ -3,7 +3,11 @@ title: "LangGraph — Mental Model"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "The agent loop looks like this."
 ---
+
+# LangGraph — Mental Model
 
 > **Start here.** This explains what LangGraph is, why you need it,
 > and the four concepts everything else builds on. Read this before

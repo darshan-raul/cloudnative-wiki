@@ -7,6 +7,7 @@ tags:
   - rate-limiting
   - redis
   - algorithms
+date: 2026-01-30
 ---
 
 # Rate Limiting Algorithms, Distributed Architecture & HTTP 429
@@ -120,3 +121,8 @@ def calculate_backoff(attempt: int, base: float = 0.5, cap: float = 30.0) -> flo
     sleep_duration = random.uniform(0, temp)
     return sleep_duration
 ```
+
+## Across the wiki
+
+- [[AWS/serverless/api-gateway/README|Amazon API Gateway]] — API design and gateways (AWS)
+- [[AWS/application-integration/appsync/README|AWS AppSync]] — API design and gateways (AWS)

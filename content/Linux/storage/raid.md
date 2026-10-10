@@ -1,3 +1,10 @@
+---
+title: "RAID"
+tags: [linux, storage, raid]
+date: 2026-01-30
+description: "Parity in RAID (Redundant Array of Independent Disks) systems is used for error detection and correction, ensuring data integrity and providing fault tolerance."
+---
+
 # RAID
 
 Parity in RAID (Redundant Array of Independent Disks) systems is used for error detection and correction, ensuring data integrity and providing fault tolerance. Here’s a more detailed look at the purpose and role of parity in RAID systems:

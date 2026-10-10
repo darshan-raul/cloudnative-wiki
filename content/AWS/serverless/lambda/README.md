@@ -6,6 +6,7 @@ tags:
   - serverless
   - lambda
   - functions
+date: 2026-06-06
 ---
 
 # AWS Lambda
@@ -271,3 +272,8 @@ Total: $8.53/month
 - **Lambda ARM/Graviton2 is 20% cheaper and often faster — prefer `nodejs20.x` or Python 3.12 on ARM:** Graviton2 functions cost less and have better performance for most workloads. Only use x86 if you have native dependencies that don't support ARM.
 - **Lambda's concurrent execution limit is shared across ALL functions in an account — one function hogging resources affects others:** Set reserved concurrency per function to guarantee capacity. Without it, one runaway function can throttle all others.
 - **Lambda layers are NOT automatically updated — if you update a layer, you must re-deploy functions to pick up changes:** Layers are immutable once published. Updating the layer version doesn't update existing functions. You must `update-function-configuration` on each function.
+
+## Across the wiki
+
+- [[GCP/compute/cloud-functions/README|GCP Cloud Functions (2nd Gen) & Eventarc]] — functions (GCP)
+- [[Architecture/solution-architecture-concepts/api-design/stateful-vs-stateless|Stateful vs Stateless]] — functions (Architecture)

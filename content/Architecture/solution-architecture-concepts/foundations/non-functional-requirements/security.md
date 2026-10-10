@@ -1,5 +1,8 @@
 ---
 title: Security
+tags: [architecture, foundations, non-functional-requirements, security]
+date: 2026-06-06
+description: "Security in solution architecture is not a feature you add at the end — it's a dimension that shapes every structural decision. The architecture you choose determines your attack surface."
 ---
 
 # Security
@@ -41,7 +44,7 @@ Each layer buys time and reduces blast radius.
 | **Zero Trust**                            | Every request verified, no implicit trust | Higher latency, complexity          |
 | **最小权限 (PoLP)**                       | Default-deny posture                      | Requires precise permission scoping |
 
-See [[authentication/README|Authentication]] for JWT, OAuth2, OIDC, SAML patterns.
+See [[Architecture/solution-architecture-concepts/authentication/README|Authentication]] for JWT, OAuth2, OIDC, SAML patterns.
 
 ### Network Segmentation
 
@@ -152,6 +155,12 @@ See [[shift-left|Shift Left]] for moving security earlier in the development pro
 ## Related
 
 - [[shift-left|Shift Left]] — moving security earlier in the lifecycle
-- [[authentication/README|Authentication]] — auth patterns
-- [[cryptography/README|Cryptography]] — encryption, signing, PKI
+- [[Architecture/solution-architecture-concepts/authentication/README|Authentication]] — auth patterns
+- [[Architecture/solution-architecture-concepts/cryptography/README|Cryptography]] — encryption, signing, PKI
 - [[totp|TOTP]] — time-based one-time passwords
+
+## Across the wiki
+
+- [[Security/zero-trust|Zero-Trust Architecture (NIST SP 800-207)]] — zero trust (Security)
+- [[Security/assume-breach-principle|Assume Breach Principle]] — zero trust (Security)
+- [[Security/application-security/README|Application Security]] — zero trust (Security)

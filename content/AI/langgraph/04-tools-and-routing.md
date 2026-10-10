@@ -3,7 +3,11 @@ title: "LangGraph — Tools & Routing"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "ToolNode from langgraph.prebuilt is the standard way to run tools."
 ---
+
+# LangGraph — Tools & Routing
 
 > **Part 4.** `ToolNode` (how tools run), `tools_condition` (how
 > routing is decided), and how to bind tools to the model so the

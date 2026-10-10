@@ -1,3 +1,10 @@
+---
+title: "External ID and Confused deputy problem"
+tags: [aws, security, iam, external-id-and-confused-deputy-problem]
+date: 2026-01-30
+description: 'Adding an External ID to an IAM role’s trust policy is like adding a "unique passcode" to a door that only certain people are allowed to open.'
+---
+
 # External ID and Confused deputy problem
 
 Adding an External ID to an IAM role’s trust policy is like adding a "unique passcode" to a door that only certain people are allowed to open. While a standard trust policy says, "I trust Account B to enter," the External ID adds, "...but only if Account B also provides this specific secret code."

@@ -3,6 +3,7 @@ title: Boot Process
 description: Linux boot process — UEFI/BIOS, bootloader (GRUB), kernel, initramfs, systemd, runlevels, target units
 tags:
   - linux
+date: 2026-06-06
 ---
 
 # Boot Process

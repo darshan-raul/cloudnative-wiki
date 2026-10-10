@@ -5,6 +5,7 @@ tags:
   - linux
   - security
   - debugging
+date: 2026-06-06
 ---
 
 # Core Dumps

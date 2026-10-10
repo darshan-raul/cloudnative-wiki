@@ -10,6 +10,7 @@ tags:
   - opa
   - security
   - compliance
+date: 2026-09-06
 ---
 
 # AKS Governance — Azure Policy for Kubernetes and OPA Gatekeeper Guardrails 🏛️📜
@@ -225,3 +226,10 @@ kubectl run test-rogue-pod --image=nginx:alpine
 3. **Audit Mode First: Never Deploy Direct to Deny:** Never apply a new security policy directly in `Deny` mode to a running production cluster. Even if existing pods remain running, subsequent rolling deployments, autoscaling events, or emergency bug fixes will be abruptly blocked. Always run in `Audit` mode for at least two weeks to identify and remediate non-compliant workloads.
 4. **Policy Sync Latency between Azure and AKS:** When you assign an Azure Policy via the Azure Portal or ARM template, it takes **15 to 30 minutes** for the Azure Policy pod in the cluster to pull the new policy definition and compile the Gatekeeper CRD. Do not expect instantaneous enforcement after creating an Azure Policy assignment.
 5. **Rego Memory Leaks on High-Churn Object Auditing:** Rego rules that use unbounded cross-object references (`data.inventory.namespace[_]`) force Gatekeeper to replicate large portions of the Kubernetes API state into RAM. In clusters with rapid pod churn, the `gatekeeper-controller-manager` pod will exhaust memory and be killed with **`OOMKilled (Exit Code 137)`**. Avoid `data.inventory` queries unless strictly necessary.
+
+## Across the wiki
+
+- [[GCP/compute/gke/binary-authorization|GKE Binary Authorization, Container Attestations, and Supply Chain Security]] — policy and governance (GCP)
+- [[Kubernetes/eks/security/policy-management|Policy Management on EKS]] — policy and governance (Kubernetes)
+- [[AWS/management-governance/organizations/README|AWS Organizations]] — policy and governance (AWS)
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — policy and governance (Kubernetes)

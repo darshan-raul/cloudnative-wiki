@@ -5,7 +5,11 @@ tags:
   - Troubleshooting
   - Storage
   - PVC
+date: 2026-06-11
+description: "A PersistentVolumeClaim that's stuck in Pending is waiting for a volume to be provisioned or bound. The pod that uses it can't schedule. This is a storage problem."
 ---
+
+# PVC Stuck
 
 A `PersistentVolumeClaim` that's stuck in `Pending` is waiting for a volume to be provisioned or bound. The pod that uses it can't schedule. This is a **storage** problem.
 

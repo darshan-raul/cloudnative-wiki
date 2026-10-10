@@ -1,3 +1,10 @@
+---
+title: "dns over https"
+tags: [architecture, networking, dns-over-https]
+date: 2026-01-30
+description: "DNS over HTTPS (DoH) works by taking the traditional process of looking up a website's IP address and wrapping it in the same encryption used for secure websites, making your DNS queries private and…"
+---
+
 # dns over https
 
 DNS over HTTPS (DoH) works by taking the traditional process of looking up a website's IP address and wrapping it in the same encryption used for secure websites, making your DNS queries private and tamper-proof.
@@ -25,3 +32,10 @@ While DoH enhances privacy, its implementation has trade-offs:
 
 - **Security & Privacy vs. Visibility**: The encryption that protects you from eavesdroppers also makes DNS traffic invisible to network security tools. This can bypass **corporate web filters, parental controls, or security monitoring** that rely on inspecting DNS queries. In enterprise settings, it's often recommended to use an internal DoH resolver instead of public ones to maintain security policies.
 - **Centralization Concern**: DoH can centralize DNS traffic with a few large public providers (like Google or Cloudflare), giving them broad visibility into browsing patterns, even though the traffic is encrypted between you and them.
+
+## Across the wiki
+
+- [[AWS/networking/dns/README|Amazon Route 53]] — DNS (AWS)
+- [[GCP/networking/cloud-dns/README|GCP Cloud DNS Architecture]] — DNS (GCP)
+- [[Linux/networking/dns-resolution|DNS Resolution]] — DNS (Linux)
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS in Kubernetes]] — DNS (Kubernetes)

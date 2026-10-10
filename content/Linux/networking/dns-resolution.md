@@ -4,6 +4,7 @@ description: Linux DNS resolution — /etc/resolv.conf, nsswitch.conf, getent, s
 tags:
   - linux
   - networking
+date: 2026-06-06
 ---
 
 # DNS Resolution
@@ -214,3 +215,10 @@ dig -x 8.8.8.8
 host 8.8.8.8
 nslookup 8.8.8.8
 ```
+
+## Across the wiki
+
+- [[AWS/networking/dns/README|Amazon Route 53]] — DNS (AWS)
+- [[GCP/networking/cloud-dns/README|GCP Cloud DNS Architecture]] — DNS (GCP)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/README|DNS]] — DNS (Architecture)
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS in Kubernetes]] — DNS (Kubernetes)

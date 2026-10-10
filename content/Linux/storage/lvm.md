@@ -4,6 +4,7 @@ description: Linux LVM — physical volumes, volume groups, logical volumes, thi
 tags:
   - linux
   - storage
+date: 2026-06-06
 ---
 
 # LVM
@@ -249,3 +250,8 @@ mount -a
 - **Reducing LV without reducing filesystem first**: Data loss/corruption.
 - **Thin pool fills up**: All thin volumes become read-only until pool expanded.
 - **Snapshot fills up**: Snapshot becomes invalid (marked as "snapshot-invalid").
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — volumes and filesystems (Kubernetes)
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume (PV)]] — volumes and filesystems (Kubernetes)

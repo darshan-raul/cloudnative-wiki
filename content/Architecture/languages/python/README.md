@@ -7,6 +7,7 @@ tags:
   - architecture
   - backend
   - ai
+date: 2026-01-30
 ---
 
 # Python Architecture, Tooling & Production Engineering
@@ -18,8 +19,6 @@ Python is the preeminent language for Artificial Intelligence, Machine Learning,
 ## 1. Core Modules & Guides
 
 - [[decorators|Decorators & Metaprogramming]] — Function and class decorators, `@wraps`, timing middleware, and memoization patterns.
-- [[logging|Structured Logging]] — Production JSON logging, correlation IDs, log levels, and integrating with OpenSearch/Wazuh.
-- [[virtualenvs|Virtual Environments & Packaging]] — Dependency isolation, `venv`, `uv`, Poetry, and containerized Docker environments.
 
 ---
 
@@ -28,3 +27,9 @@ Python is the preeminent language for Artificial Intelligence, Machine Learning,
 1. **Packaging with `uv`:** Use Astral's `uv` (Rust-based Python package manager) for 10x-100x faster dependency resolution and deterministic virtual environments.
 2. **Type Annotations (PEP 484 / 526):** Enforce strict static typing with `mypy` or `pyright` to prevent runtime `AttributeError` bugs in microservices.
 3. **Asynchronous I/O (`asyncio`):** Use `async`/`await` with `uvicorn` and `asyncpg` to achieve 10,000+ requests per second without blocking the GIL (Global Interpreter Lock).
+
+## Further reading
+
+- [Python — pythoncheatsheet.org](https://www.pythoncheatsheet.org/)
+- [Logging (video)](https://www.youtube.com/watch?v=JJ9zZ8cyaEk)
+- [VirtualEnvs — fastapi.tiangolo.com](https://fastapi.tiangolo.com/virtual-environments/#what-does-activating-a-virtual-environment-mean)

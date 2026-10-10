@@ -1,3 +1,10 @@
+---
+title: "MCP"
+tags: [ai, mcp]
+date: 2026-01-30
+description: "Model Context Protocol (MCP): Complete Overview"
+---
+
 # MCP
 
 "https://www.youtube.com/watch?v=5B__zNXrFmg"
@@ -113,3 +120,8 @@ if __name__ == '__main__':
 18. [https://ai.pydantic.dev/mcp/run-python/](https://ai.pydantic.dev/mcp/run-python/)
 19. [https://www.linkedin.com/pulse/build-custom-mcp-client-server-from-scratch-using-python-tavargere-odq2c](https://www.linkedin.com/pulse/build-custom-mcp-client-server-from-scratch-using-python-tavargere-odq2c)
 20. [https://scrapfly.io/blog/how-to-build-an-mcp-server-in-python-a-complete-guide/](https://scrapfly.io/blog/how-to-build-an-mcp-server-in-python-a-complete-guide/)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/protocols/server-sent-events|Server-Sent Events (SSE) Architecture & LLM Streaming]] — LLM applications (Architecture)
+- [[Security/application-security/README|Application Security]] — LLM applications (Security)

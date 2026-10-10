@@ -4,6 +4,7 @@ description: Linux shell basics — bash, environment, PATH, aliases, history, t
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 11 — Shell Basics

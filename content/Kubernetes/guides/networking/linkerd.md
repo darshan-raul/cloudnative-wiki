@@ -6,7 +6,11 @@ tags:
   - Service Mesh
   - Linkerd
   - mTLS
+date: 2026-06-12
+description: "Linkerd is the lightweight service mesh for k8s. Built on Rust (Linkerd2-proxy, linkerd2-proxy), it's faster and smaller than Envoy-based meshes."
 ---
+
+# Linkerd
 
 Linkerd is the **lightweight service mesh** for k8s. Built on Rust (Linkerd2-proxy, linkerd2-proxy), it's faster and smaller than Envoy-based meshes. **mTLS, telemetry, and traffic management without the operational overhead of Istio.**
 

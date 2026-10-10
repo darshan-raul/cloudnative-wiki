@@ -7,6 +7,7 @@ tags:
   - kubernetes
   - architecture
   - high-availability
+date: 2026-09-06
 ---
 
 # GKE Cluster Topologies — Zonal vs Multi-Zonal vs Regional Clusters 🏛️🌐
@@ -211,3 +212,10 @@ Pricing considerations:
 4. **Maintenance Exclusions Expire Silently:** A maintenance exclusion can be set for a maximum of 30 days. When the 30-day window expires, GKE immediately triggers all deferred control plane and node pool upgrades. If a critical business launch extends past the 30-day mark, GKE might initiate an upgrade mid-day. Configure calendar alerts at day 25 to renew or adjust the exclusion window.
 5. **Node Auto-Repair During Regional Infrastructure Degrades:** If an entire Google Cloud zone experiences an infrastructure failure (e.g., cooling or network cut), GKE Node Auto-Repair might detect worker nodes in that zone as `NotReady` and attempt to reboot or recreate them. Because the underlying zone is degraded, replacement VMs cannot be scheduled, leading to churn. When managing critical stateful workloads, set `--no-enable-autorepair` on dedicated stateful node pools and manage drain/eviction manually.
 6. **etcd Quorum Loss on Asymmetric Cluster Sizing:** In a regional cluster, never manually delete or cordoned nodes in such a way that all worker pods are evacuated into a single zone while persistent volume claims (PVCs) remain pinned to another zone. Kubernetes Persistent Disks are zonal; a pod scheduled in Zone A cannot mount a disk provisioned in Zone B, resulting in `FailedMount: volume is in zone us-central1-b, pod scheduled in us-central1-a`.
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/high-availability|High Availability]] — high availability (Kubernetes)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability|Availability]] — high availability (Architecture)
+- [[DevOps/sre/slos-and-error-budgets|SLOs and Error Budgets]] — high availability (DevOps)
+- [[AWS/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures|1.3 Design Reliable and Resilient Architectures]] — high availability (AWS)

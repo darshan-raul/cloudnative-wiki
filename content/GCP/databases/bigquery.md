@@ -7,6 +7,7 @@ tags:
   - bigquery
   - analytics
   - data-warehouse
+date: 2026-09-06
 ---
 
 # Google BigQuery 📊⚡
@@ -186,3 +187,10 @@ bq query \
 3. **Partition Limits and Granularity:** BigQuery caps tables at 4,000 partitions. If you partition by hour instead of day, you will exhaust your partition ceiling in under 166 days (`4000 / 24`). Use hourly partitioning only for high-throughput, short-retention ingestion buffers.
 4. **Streaming Ingestion Buffer Latency:** Data inserted via the Storage Write API or legacy streaming buffer is immediately available for querying in real time. However, data in the streaming buffer is held in temporary memory before being compacted into Capacitor files on Colossus; during this 90-minute window, `UPDATE` and `DELETE` operations on those specific streaming rows will fail with `UPDATE or DELETE statement over table would affect rows in the streaming buffer`.
 5. **Clustering Column Order Matters:** When clustering by multiple columns (e.g. `CLUSTER BY department, employee_id`), column order determines filter efficiency. Queries filtering on `department` will efficiently prune blocks, but queries filtering _only_ on `employee_id` without specifying `department` will see significantly less clustering optimization.
+
+## Across the wiki
+
+- [[AWS/databases/redshift/README|Amazon Redshift]] — analytics and warehouses (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/columnar-databases|Columnar Databases]] — analytics and warehouses (Architecture)
+- [[AWS/analytics/redshift/README|Amazon Redshift]] — analytics and warehouses (AWS)
+- [[AWS/analytics/athena/README|Athena]] — analytics and warehouses (AWS)

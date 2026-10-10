@@ -8,7 +8,11 @@ tags:
   - DR
   - Velero
   - etcd
+date: 2026-01-30
+description: 'How to actually back up and restore a k8s cluster, day to day. This is the "when things break, here''s how you fix it" guide.'
 ---
+
+# Backup & Restore
 
 How to actually back up and restore a k8s cluster, day to day. This is the "**when things break, here's how you fix it**" guide. The patterns work for self-managed and cloud-managed clusters (with adjustments for who manages etcd).
 
@@ -532,3 +536,10 @@ kubectl get all -A
 - [[Kubernetes/guides/non-functional/upgrade-strategy|upgrade-strategy]] — backup before upgrade
 - [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — encrypting backups
 - [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — per-tenant restore
+
+## Across the wiki
+
+- [[Azure/compute/aks/backup-disaster-recovery|AKS Backup, Disaster Recovery, and Cross-Region Business Continuity]] — backup and disaster recovery (Azure)
+- [[GCP/compute/gke/backup-for-gke|Backup for GKE Architecture, Stateful Disaster Recovery, and Cross-Region Restoration]] — backup and disaster recovery (GCP)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/disaster-recovery|Disaster Recovery]] — backup and disaster recovery (Architecture)
+- [[AWS/solutions-architect-professional/domain-2/2.2-business-continuity|2.2 Business Continuity]] — backup and disaster recovery (AWS)

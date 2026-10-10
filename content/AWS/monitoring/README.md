@@ -5,6 +5,7 @@ tags:
   - aws
   - monitoring
   - observability
+date: 2026-06-06
 ---
 
 # AWS Monitoring
@@ -13,14 +14,14 @@ AWS monitoring is built around CloudWatch — a centralized service for metrics,
 
 ## Service Map
 
-| Service                        | What It Does | When to Use                                   |
-| ------------------------------ | ------------ | --------------------------------------------- | ------------------------------------------------------ |
-| [[cloudwatch-metrics/README    | Metrics]]    | Time-series data for AWS and custom resources | Every service emits metrics — query with GetMetricData |
-| [[cloudwatch-logs/README       | Logs]]       | Centralized log storage and management        | Every application should stream logs here              |
-| [[cloudwatch-alarms/README     | Alarms]]     | Alerting based on metric thresholds           | Alert when latency spikes, error rate rises            |
-| [[cloudwatch-dashboards/README | Dashboards]] | Custom metric visualization                   | Build custom views for business/SRE metrics            |
-| [[cloudwatch-events/README     | Events]]     | Event-driven automation via rules             | React to AWS API events, schedules                     |
-| [[cloudwatch-insights/README   | Insights]]   | Log query language for CloudWatch Logs        | Debug production issues, search logs                   |
+| Service                                      | What It Does                                  | When to Use                                            |
+| -------------------------------------------- | --------------------------------------------- | ------------------------------------------------------ |
+| [[cloudwatch-metrics/README\|Metrics]]       | Time-series data for AWS and custom resources | Every service emits metrics — query with GetMetricData |
+| [[cloudwatch-logs/README\|Logs]]             | Centralized log storage and management        | Every application should stream logs here              |
+| [[cloudwatch-alarms/README\|Alarms]]         | Alerting based on metric thresholds           | Alert when latency spikes, error rate rises            |
+| [[cloudwatch-dashboards/README\|Dashboards]] | Custom metric visualization                   | Build custom views for business/SRE metrics            |
+| [[cloudwatch-events/README\|Events]]         | Event-driven automation via rules             | React to AWS API events, schedules                     |
+| [[cloudwatch-insights/README\|Insights]]     | Log query language for CloudWatch Logs        | Debug production issues, search logs                   |
 
 ## Three Pillars of Observability
 
@@ -133,3 +134,10 @@ Member Account
 - **Metric math with GetMetricData is cheaper than multiple GetMetricStatistics calls:** One GetMetricData call with math on 500 metrics costs the same as one GetMetricStatistics call. Batch your metric queries.
 - **CloudWatch Agent uses the StatsD protocol — you can emit custom metrics from any application:** The CloudWatch Agent listens on UDP port 8125 for StatsD messages. Any application can send `nginx.requests:100|c` and it appears in CloudWatch as a custom metric.
 - **Alarms have a 10-second evaluation period minimum — you cannot set sub-10-second alerting:** For real-time alerting with sub-10-second detection, use CloudWatch Contributor Insights or a third-party monitoring tool like Datadog or Grafana.
+
+## Across the wiki
+
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)

@@ -1,3 +1,10 @@
+---
+title: "Signing and Verifying"
+tags: [architecture, cryptography, signing-and-verifying]
+date: 2026-01-30
+description: "Steps to Create a Signature"
+---
+
 # Signing and Verifying
 
 "https://pagefault.blog/2019/04/22/how-to-sign-and-verify-using-openssl/"
@@ -44,3 +51,10 @@
     openssl dgst -verify key.pub -keyform PEM -sha256 -signature data.zip.sign -binary data.zip
     Verified OK
     ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS and mTLS in Kubernetes]] — TLS and certificates (Kubernetes)
+- [[AWS/security/certificate-manager/README|AWS ACM]] — TLS and certificates (AWS)
+- [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — TLS and certificates (Kubernetes)
+- [[Kubernetes/guides/networking/service-mesh|Service Mesh]] — TLS and certificates (Kubernetes)

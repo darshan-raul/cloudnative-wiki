@@ -101,3 +101,10 @@ aws ec2 describe-instance-status --instance-id <id>
 
 - [[Security/incident-response/README|IR Hub]]
 - [[Security/endpoint-security/README|Endpoint Security]]
+
+## Across the wiki
+
+- [[Linux/security/auditd|auditd]] — audit trails (Linux)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — audit trails (Kubernetes)
+- [[AWS/security/cloudtrail/README|AWS CloudTrail]] — audit trails (AWS)
+- [[Kubernetes/eks/observability/logging/control-plane-logs|EKS Control Plane Logs]] — audit trails (Kubernetes)

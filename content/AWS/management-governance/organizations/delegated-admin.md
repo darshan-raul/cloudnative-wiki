@@ -1,3 +1,10 @@
+---
+title: "Delegated Admin"
+tags: [aws, management-governance, organizations, delegated-admin]
+date: 2026-01-30
+description: "The Delegated Administrator feature in AWS allows you to assign specific administrative privileges to AWS accounts within your organization for managing specific services."
+---
+
 # Delegated Admin
 
 The **Delegated Administrator** feature in AWS allows you to assign specific administrative privileges to AWS accounts within your organization for managing specific services. This is a part of **AWS Organizations** and helps decentralize management of AWS resources by delegating specific administrative tasks to trusted accounts without granting full control over the entire organization.

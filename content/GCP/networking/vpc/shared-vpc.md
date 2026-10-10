@@ -8,6 +8,7 @@ tags:
   - vpc
   - governance
   - security
+date: 2026-09-06
 ---
 
 # GCP Shared VPC Architecture & Cross-Project Networking 🌐🏢
@@ -188,3 +189,10 @@ gcloud compute instances create payment-api-01 \
 3. **A Service Project Can Attach to Only ONE Host Project:** A single Google Cloud project cannot be attached to two different Shared VPC Host Projects simultaneously. If an application needs to bridge between a Legacy Host VPC and a Modern Host VPC, it must use **Private Service Connect** or **Cloud VPN** rather than multiple Shared VPC memberships.
 4. **Compute Engine Default Service Account Needs Subnet Access:** When developers launch instances in a Service Project without specifying a custom service account, the VM attempts to use the Service Project's default Compute Engine SA (`<service-proj-num>-compute@developer.gserviceaccount.com`). This service account **must also be granted `roles/compute.networkUser` on the host subnet**, otherwise instance creation fails with `PermissionDenied`.
 5. **Shared VPC Cannot Be Disabled While Resources Are Attached:** If you attempt to disable a Host Project or disassociate a Service Project while active VMs or GKE clusters are attached to host subnets, the operation will fail immediately with `ProjectHasActiveResources`. You must migrate or destroy all attached instances in all service projects before disassociating.
+
+## Across the wiki
+
+- [[Azure/networking/private-link/README|Azure Private Link, Private Endpoints, and Private DNS Architecture]] — private connectivity (Azure)
+- [[AWS/concepts/vpc-lattice|Amazon VPC Lattice]] — private connectivity (AWS)
+- [[Kubernetes/eks/networking/vpc-lattice/README|Amazon VPC Lattice]] — private connectivity (Kubernetes)
+- [[Azure/networking/virtual-wan/README|Azure Virtual WAN (vWAN) Architecture & Global Transit Routing]] — private connectivity (Azure)

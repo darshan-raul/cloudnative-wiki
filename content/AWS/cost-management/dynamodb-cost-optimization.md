@@ -5,6 +5,7 @@ tags:
   - aws
   - cost-management
   - databases
+date: 2026-06-06
 ---
 
 # DynamoDB Cost Optimization

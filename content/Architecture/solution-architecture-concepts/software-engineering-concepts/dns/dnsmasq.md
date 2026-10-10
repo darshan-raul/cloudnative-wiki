@@ -1,3 +1,10 @@
+---
+title: "dnsmasq"
+tags: [architecture, software-engineering-concepts, dns, dnsmasq]
+date: 2026-01-30
+description: "dnsmasq as a lightweight DNS forwarder and DHCP server, with step-by-step configuration."
+---
+
 # dnsmasq
 
 Below is an overview of **dnsmasq**, a lightweight DNS forwarder and DHCP server, along with step-by-step examples showing how to install, configure, and use it in real-world scenarios.

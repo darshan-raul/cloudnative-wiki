@@ -1,3 +1,10 @@
+---
+title: "Embeddings"
+tags: [ai, inner-workings, embeddings]
+date: 2026-01-30
+description: "Embeddings are a fundamental concept in AI models, particularly in natural language processing (NLP) and computer vision."
+---
+
 # Embeddings
 
 Embeddings are a fundamental concept in AI models, particularly in natural language processing (NLP) and computer vision. In simple terms, an embedding is a way to represent complex data, such as words, images, or audio, as dense vectors in a high-dimensional space.What's the purpose of embeddings?The primary goal of embeddings is to capture the semantic meaning and relationships between data points. By mapping data to a vector space, embeddings enable AI models to perform various tasks, such as:
@@ -44,3 +51,9 @@ Using embeddings in RAG provides several benefits:
 3. Increased efficiency: Embeddings can be computed efficiently using techniques like matrix multiplication, making it possible to process large amounts of data quickly.
 
 "https://aws.amazon.com/what-is/embeddings-in-machine-learning/"
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/indexing|Indexing]] — embeddings and search (Architecture)
+- [[AWS/analytics/opensearch/README|Amazon OpenSearch]] — embeddings and search (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — embeddings and search (Architecture)

@@ -4,6 +4,7 @@ description: AWS cost automation — Lambda functions for automated cleanup, Clo
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # Cost Automation

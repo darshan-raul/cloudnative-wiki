@@ -8,6 +8,7 @@ tags:
   - keda
   - dapr
   - serverless
+date: 2026-09-06
 ---
 
 # Azure Container Apps (ACA), KEDA, and Dapr Microservices 🚀📦
@@ -260,3 +261,10 @@ Azure Container Apps Consumption pricing is charged per second:
 4. **Log Analytics Workspace Log Ingestion Volume Shock:** By default, Envoy access logs, system events, and container console output (`stdout`/`stderr`) are streamed into the linked Log Analytics workspace under the `ContainerAppConsoleLogs_CL` and `ContainerAppSystemLogs_CL` tables. High-volume logging can easily rack up hundreds of gigabytes in Log Analytics ingestion fees ($2.30/GB). Ensure application logging levels are set to `WARN` or `ERROR` in production.
 5. **Dapr Actor State Management Bottlenecks:** When leveraging Dapr actors inside ACA, state persistence relies on external components (e.g., Azure Cosmos DB or Azure Cache for Redis). Ensure the connection pool and request timeout of your Dapr state store component match the max replica concurrency of your container apps, or Dapr sidecars will throw `HTTP 500 Dapr Actor Placement Service Timeout` errors under sudden burst traffic.
 6. **Managed Identity Token Caching Inside Containers:** ACA injects the Azure Managed Identity endpoint inside the container via `IDENTITY_ENDPOINT` and `IDENTITY_HEADER` environment variables. Microservices should use the Azure Identity SDK (`DefaultAzureCredential`) to request OAuth2 access tokens. Always cache tokens until their expiration (`expires_in`); requesting a fresh token over HTTP on every incoming request will trigger platform throttling from Entra ID (`AADSTS50196: Client loop detected`).
+
+## Across the wiki
+
+- [[GCP/compute/cloud-run|GCP Cloud Run]] — serverless containers (GCP)
+- [[AWS/serverless/app-runner/README|AWS App Runner]] — serverless containers (AWS)
+- [[Kubernetes/eks/compute/fargate/README|AWS Fargate on EKS]] — serverless containers (Kubernetes)
+- [[AWS/compute/ecs/README|Amazon ECS]] — serverless containers (AWS)

@@ -1,3 +1,10 @@
+---
+title: "Fine tuning"
+tags: [ai, inner-workings, fine-tuning]
+date: 2026-01-30
+description: "Fine-tuning is the process of taking a pre-trained model and training it further on a smaller, specific dataset to adapt it to a particular task."
+---
+
 # Fine tuning
 
 Fine-tuning is the process of taking a pre-trained model and training it further on a smaller, specific dataset to adapt it to a particular task.

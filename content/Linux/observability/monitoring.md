@@ -4,6 +4,7 @@ description: Linux monitoring — top, htop, vmstat, iostat, sar, mpstat, pidsta
 tags:
   - linux
   - observability
+date: 2026-06-06
 ---
 
 # Monitoring
@@ -261,3 +262,10 @@ sar -n DEV 1              # packets/second per interface
 ss -s                     # socket summary
 netstat -i                # interface errors
 ```
+
+## Across the wiki
+
+- [[AWS/monitoring/README|AWS Monitoring]] — cloud logging and monitoring (AWS)
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)

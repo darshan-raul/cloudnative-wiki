@@ -597,3 +597,10 @@ nvidia-smi    # on the node
 - [[Kubernetes/concepts/L06-scheduling-scaling/02-scheduling|Scheduling]] — the broader scheduling context
 - [[Kubernetes/concepts/L06-scheduling-scaling/12-scheduler-internals|Scheduler Internals]] — the NodeResourcesFit plugin
 - [[Kubernetes/concepts/L05-config-storage/08-resource-quota|ResourceQuota]] — namespace-level extended resource quotas
+
+## Across the wiki
+
+- [[Azure/compute/aks/gpu-orchestration-ai|AKS GPU Orchestration for AI/ML — NVIDIA H100/A100, InfiniBand RDMA, and KubeRay]] — GPU and AI workloads (Azure)
+- [[GCP/compute/gke/gpu-tpu-orchestration|GKE GPU & TPU Orchestration — AI/ML Accelerators, Ray on GKE, and Kueue]] — GPU and AI workloads (GCP)
+- [[AI/run-locally/ollama-best-practices|Ollama Best Practices Guide]] — GPU and AI workloads (AI)
+- [[AWS/machine-learning/README|AWS Machine Learning]] — GPU and AI workloads (AWS)

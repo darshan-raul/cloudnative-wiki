@@ -1,3 +1,10 @@
+---
+title: "Nologin user"
+tags: [linux, users-groups, nologin-user]
+date: 2026-01-30
+description: 'In Linux, a "nologin" user is a user account that is specifically designed to prevent interactive logins. It''s typically used for.'
+---
+
 # Nologin user
 
 In Linux, a "nologin" user is a user account that is specifically designed to prevent interactive logins. It's typically used for:

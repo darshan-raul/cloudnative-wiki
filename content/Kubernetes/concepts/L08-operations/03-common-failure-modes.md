@@ -665,3 +665,10 @@ cat /proc/sys/kernel/pid_max
 - [[Kubernetes/concepts/L03-workloads/10-probes|Probes]] — liveness/readiness probes are a common crash cause
 - [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits|Resource Requests & Limits]] — OOM and CPU throttling
 - [[Kubernetes/concepts/L09-advanced/10-etcd|etcd]] — when the cluster itself is broken
+
+## Across the wiki
+
+- [[Security/incident-response/README|Incident Response]] — incident response (Security)
+- [[DevOps/sre/on-call|On-Call]] — incident response (DevOps)
+- [[Architecture/solution-architecture-concepts/authentication/capstone/02-incident-tabletop|Capstone C.2 — Identity Incident Tabletop: 3 Realistic Scenarios]] — incident response (Architecture)
+- [[Security/incident-response/postmortem/README|Postmortem]] — incident response (Security)

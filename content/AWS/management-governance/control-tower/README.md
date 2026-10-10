@@ -5,6 +5,7 @@ tags:
   - aws
   - management
   - control-tower
+date: 2026-06-06
 ---
 
 # AWS Control Tower
@@ -177,3 +178,10 @@ Drift detected:
 - **Detective guardrails detect but do not auto-remediate non-compliant resources:** A detective guardrail will flag an unencrypted EBS volume as non-compliant, but it won't automatically encrypt it. You must remediate manually or via AWS Config remediation actions.
 - **Control Tower requires AWS IAM Identity Center (formerly AWS SSO):** If you already use a third-party SAML-based SSO, Control Tower will replace it with IAM Identity Center. This is a significant integration change that affects all users.
 - **Control Tower Guardrails apply to all accounts in an OU:** When you enable a preventive guardrail on the Sandbox OU, it applies to every account in the Sandbox OU. If you want different guardrails per account, you need to put each account in its own OU, which doesn't scale.
+
+## Across the wiki
+
+- [[Azure/governance/policy|Azure Governance — Management Groups, Policy & Locks]] — policy and governance (Azure)
+- [[GCP/compute/gke/binary-authorization|GKE Binary Authorization, Container Attestations, and Supply Chain Security]] — policy and governance (GCP)
+- [[Kubernetes/eks/security/policy-management|Policy Management on EKS]] — policy and governance (Kubernetes)
+- [[Azure/compute/aks/governance-azure-policy|AKS Governance — Azure Policy for Kubernetes and OPA Gatekeeper Guardrails]] — policy and governance (Azure)

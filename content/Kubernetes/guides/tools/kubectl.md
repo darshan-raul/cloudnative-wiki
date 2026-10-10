@@ -4,7 +4,11 @@ tags:
   - Kubernetes
   - Tools
   - CLI
+date: 2026-01-30
+description: "Source: kubectl reference"
 ---
+
+# kubectl
 
 _Source: [kubectl reference](https://kubernetes.io/docs/reference/kubectl/)_
 
@@ -489,3 +493,10 @@ complete -F __start_kubectl k
 - [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — operating many clusters
 - [kubectl reference](https://kubernetes.io/docs/reference/kubectl/)
 - [kubectl book](https://kubectl.docs.kubernetes.io/) — concept-level walkthrough
+
+## Across the wiki
+
+- [[Linux/shell-scripting/README|Shell Scripting]] — command-line tooling (Linux)
+- [[AWS/management-governance/cli/README|AWS CLI]] — command-line tooling (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/psql|psql]] — command-line tooling (Architecture)
+- [[Linux/shell-scripting/bash-cheatsheet|Bash Scripting Cheatsheet]] — command-line tooling (Linux)

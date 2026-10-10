@@ -558,3 +558,10 @@ The ROI: the initial effort is days; the ongoing savings are years.
 - [[DevOps/devsecops/stage2-build/10-iac-security|M10: IaC Security]]
 - [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|M11: CI/CD Pipeline Hardening]]
 - [[DevOps/devsecops/stage2-build/README|Stage 2 — Build]]
+
+## Across the wiki
+
+- [[Security/kubernetes-security/vulnerability-scanning/README|Kubernetes Vulnerability Scanning]] — software supply chain (Security)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — software supply chain (Kubernetes)
+- [[Containers/registries|Container Registries]] — software supply chain (Containers)
+- [[AWS/security/inspector/README|AWS Inspector]] — software supply chain (AWS)

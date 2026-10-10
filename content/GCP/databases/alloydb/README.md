@@ -7,6 +7,7 @@ tags:
   - alloydb
   - postgresql
   - enterprise
+date: 2026-09-06
 ---
 
 # AlloyDB for PostgreSQL Architecture & Operations 🐘⚡
@@ -268,3 +269,10 @@ AlloyDB pricing is based on:
 4. **Primary Instance Resizing Causes a 15-30 Second Cutover:** Modifying the CPU shape of an AlloyDB primary instance (e.g., from 8 vCPUs to 16 vCPUs) uses rolling infrastructure replacement. For Regional HA clusters, the standby instance is updated first, a fast failover is executed (< 30 seconds), and the old primary is updated. While downtime is minimal, in-flight non-idempotent write transactions will receive an immediate `connection reset by peer` error and must be retried with application-level exponential backoff.
 5. **Private IP Allocation Size Must Account for Future Read Pools:** AlloyDB instances allocate IP addresses from the reserved Service Networking range. Each primary instance, standby instance, and read pool node consumes an internal IP. If you allocate a small `/24` subnet for service networking and deploy multiple AlloyDB clusters, Cloud SQL, and Memorystore instances, you will encounter `IP_SPACE_EXHAUSTED` errors when attempting to scale up read pool node counts during traffic spikes. Always allocate at least a `/20` or `/19` CIDR block for production VPC peering.
 6. **Vector Search Acceleration (`pgvector` + ScaNN index):** AlloyDB includes specialized optimizations for `pgvector` that integrate Google's proprietary **ScaNN (Scalable Nearest Neighbors)** vector search algorithm. By utilizing `CREATE INDEX ... USING scann`, query latencies on millions of 768-dimensional or 1536-dimensional embedding vectors achieve up to 10x higher QPS and significantly lower P99 latencies compared to standard HNSW or IVFFlat indexes in community PostgreSQL.
+
+## Across the wiki
+
+- [[AWS/databases/rds/README|Amazon RDS]] — relational databases (AWS)
+- [[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]] — relational databases (Azure)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — relational databases (Architecture)
+- [[AWS/databases/aurora/README|Amazon Aurora]] — relational databases (AWS)

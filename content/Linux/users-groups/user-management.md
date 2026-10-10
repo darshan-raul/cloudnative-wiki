@@ -3,6 +3,7 @@ title: User Management
 description: Linux user management — useradd, usermod, userdel, /etc/passwd, /etc/shadow, /etc/group, UID/GID ranges
 tags:
   - linux
+date: 2026-06-06
 ---
 
 # User Management

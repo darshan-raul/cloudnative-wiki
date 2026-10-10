@@ -1,3 +1,10 @@
+---
+title: "sha256sum"
+tags: [linux, tools, sha256sum]
+date: 2026-01-30
+description: "The sha256sum command is used to compute and verify SHA-256 cryptographic hash values for files."
+---
+
 # sha256sum
 
 The `sha256sum` command is used to compute and verify SHA-256 cryptographic hash values for files. SHA-256 (Secure Hash Algorithm 256-bit) generates a fixed-size 256-bit (32-byte) hash value, which is unique to the input data. Here's how it helps in checking integrity:

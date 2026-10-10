@@ -42,3 +42,10 @@ What runs inside a Kubernetes cluster, and where. Once this is clear, every othe
 ## Where to go next
 
 → [[Kubernetes/concepts/L02-objects/00-README|L02 — Objects]]: now that you know the components, learn the data model they manipulate.
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/cluster-management/raft|RAFT]] — consensus and coordination (Architecture)
+- [[Architecture/solution-architecture-concepts/cluster-management/gossip-protocol|Gossip Protocol]] — consensus and coordination (Architecture)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/kraft-vs-zookeeper|Kraft vs Zookeeper]] — consensus and coordination (Architecture)
+- [[Architecture/solution-architecture-concepts/cluster-management/README|Cluster Management]] — consensus and coordination (Architecture)

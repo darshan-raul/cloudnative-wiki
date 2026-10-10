@@ -5,6 +5,7 @@ tags:
   - aws
   - compute
   - lightsail
+date: 2026-06-06
 ---
 
 # Amazon Lightsail

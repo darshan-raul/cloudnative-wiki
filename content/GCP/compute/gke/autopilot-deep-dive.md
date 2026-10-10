@@ -7,6 +7,7 @@ tags:
   - autopilot
   - kubernetes
   - sre
+date: 2026-09-06
 ---
 
 # GKE Autopilot Architecture, SRE Mechanics, and Enterprise Production Guide ☸️🤖

@@ -3,7 +3,11 @@ title: "LangGraph — State & Reducers"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "State is a TypedDict. Every field is a key that nodes read and write."
 ---
+
+# State And Reducers
 
 > **Part 2.** How to define the state schema, what `add_messages`
 > does, how custom reducers work, and how `MessagesState` simplifies

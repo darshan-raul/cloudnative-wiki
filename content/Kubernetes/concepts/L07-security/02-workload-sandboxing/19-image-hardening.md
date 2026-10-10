@@ -608,3 +608,10 @@ docker image ls myapp:1.0
 - [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — for image signature verification
 - [[Kubernetes/concepts/L07-security/04-admission-policy/11-opa-gatekeeper|OPA / Gatekeeper]] — alternative policy engine
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — detect what's not prevented
+
+## Across the wiki
+
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning & Hardening]] — software supply chain (DevOps)
+- [[Security/kubernetes-security/vulnerability-scanning/README|Kubernetes Vulnerability Scanning]] — software supply chain (Security)
+- [[Containers/registries|Container Registries]] — software supply chain (Containers)
+- [[AWS/security/inspector/README|AWS Inspector]] — software supply chain (AWS)

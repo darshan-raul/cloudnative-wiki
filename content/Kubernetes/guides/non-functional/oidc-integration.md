@@ -6,7 +6,11 @@ tags:
   - OIDC
   - Authentication
   - Keycloak
+date: 2026-06-12
+description: "Cluster auth with OIDC: every cluster trusts the same IdP (Keycloak, Okta, Azure AD). One set of credentials, mapped to k8s groups, mapped to RBAC roles."
 ---
+
+# OIDC Integration
 
 Cluster auth with OIDC: every cluster trusts the same IdP (Keycloak, Okta, Azure AD). One set of credentials, mapped to k8s groups, mapped to RBAC roles. **Get this right once and you never manage cluster credentials again.**
 
@@ -581,3 +585,10 @@ roleRef:
 - [[Kubernetes/guides/tools/context-switching|context-switching]] — kubeconfig
 - [kubelogin](https://github.com/int128/kubelogin)
 - [Keycloak docs](https://www.keycloak.org/documentation.html)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/authentication/stage3/01-oidc-fundamentals|3.1 — OpenID Connect (OIDC) Fundamentals]] — OIDC federation (Architecture)
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC Federation]] — OIDC federation (DevOps)
+- [[Architecture/solution-architecture-concepts/authentication/saml|SAML]] — OIDC federation (Architecture)
+- [[DevOps/ci-cd/github-actions|GitHub Actions Architecture & Best Practices]] — OIDC federation (DevOps)

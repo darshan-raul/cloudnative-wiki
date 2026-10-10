@@ -6,7 +6,11 @@ tags:
   - Delivery
   - Argo CD
   - Flux
+date: 2026-01-30
+description: "GitOps: git is the source of truth for both app code AND infrastructure. A controller (Argo CD, Flux) pulls from git, applies to the cluster, and reconciles continuously."
 ---
+
+# GitOps Basics
 
 GitOps: **git is the source of truth for both app code AND infrastructure**. A controller (Argo CD, Flux) pulls from git, applies to the cluster, and reconciles continuously. The cluster is always told what to look like, not told what to do.
 
@@ -670,3 +674,7 @@ Same GitOps flow, but for cluster components (CNI, ingress, cert-manager, etc.).
 - [[Kubernetes/guides/delivery/pipeline-workflows/argo-workflows|argo-workflows]] — CI for image builds
 - [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|argo-rollouts]] — safe rollouts
 - [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth for the controller
+
+## Across the wiki
+
+- [[DevOps/ci-cd/git|Git Strategy, Trunk-Based Development & Configuration]] — GitOps (DevOps)

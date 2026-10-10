@@ -4,6 +4,7 @@ description: Linux processes — what they are, PID, parent/child, zombie, daemo
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 03 — Processes
@@ -246,3 +247,9 @@ ps -eo pid,stat,cmd | grep R    # running
 ps -eo pid,stat,cmd | grep Z    # zombies
 ps -eo pid,stat,cmd | grep D    # uninterruptible sleep
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|Pods Deep Dive & Manifest Reference]] — process lifecycle and signals (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — process lifecycle and signals (Containers)
+- [[Kubernetes/concepts/L06-scheduling-scaling/06-restart-policy|Restart Policy]] — process lifecycle and signals (Kubernetes)

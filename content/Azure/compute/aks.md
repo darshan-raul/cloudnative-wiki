@@ -8,6 +8,7 @@ tags:
   - aks
   - containers
   - hub
+date: 2026-09-06
 ---
 
 # Azure Kubernetes Service (AKS) Architecture Hub ☸️☁️
@@ -92,3 +93,10 @@ This hub serves as the master engineering directory for enterprise AKS architect
 | **High-Performance DBs**     | **Premium SSD v2 (`WaitForFirstConsumer`)**     | Sub-millisecond latency; independently scales IOPS (up to 80,000) and throughput.     |
 | **Shared Multi-Pod State**   | **Azure Files Premium NFS v4.1 (`nconnect=4`)** | Full Linux POSIX file locking; multiplexes parallel TCP connections for 10 GB/s.      |
 | **Multi-Cluster Federation** | **Azure Kubernetes Fleet Manager (Fleet Hub)**  | Staged rolling updates across clusters and cross-cluster service discovery (MCS).     |
+
+## Across the wiki
+
+- [[AWS/compute/eks/README|Amazon EKS]] — managed Kubernetes (AWS)
+- [[Kubernetes/eks/README|Amazon EKS]] — managed Kubernetes (Kubernetes)
+- [[GCP/compute/gke|Google Kubernetes Engine (GKE)]] — managed Kubernetes (GCP)
+- [[Kubernetes/concepts/00-hub|Kubernetes Concepts]] — managed Kubernetes (Kubernetes)

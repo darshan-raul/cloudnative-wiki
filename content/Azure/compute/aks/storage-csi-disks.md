@@ -9,6 +9,7 @@ tags:
   - disks
   - stateful
   - elastic-san
+date: 2026-09-06
 ---
 
 # AKS Storage CSI Architecture — Azure Managed Disks, Premium SSD v2, and Elastic SAN 💽📦
@@ -216,3 +217,10 @@ kubectl -n database describe pvc data-volume-postgresql-db-0
 3. **VM Max Data Disk Limit Exhaustion:** Every Azure VM shape has a hard hardware ceiling on how many data disks can be attached simultaneously (e.g., `Standard_D4ds_v5` supports a maximum of 8 data disks). If you schedule 10 stateful pods (each requesting a PVC) onto a single D4ds_v5 node, 2 pods will remain stuck in `Pending` with `VolumeAttachLimitReached`. Ensure stateful pods have anti-affinity rules to distribute them evenly across nodes.
 4. **Volume Expansion Must Never Shrink:** Kubernetes supports expanding PersistentVolumeClaims online by editing `.spec.resources.requests.storage`. However, **Azure Managed Disks do not support shrinking**. If an engineer accidentally edits a PVC from 500Gi to 5000Gi, the 5 TB disk is provisioned and billed immediately, and there is no way to revert the size without backing up the database and creating a new volume.
 5. **CachingMode Conflicts on Premium SSD v2:** Standard Premium SSDs support `cachingMode: ReadOnly` or `ReadWrite` (host VM cache). However, **Premium SSD v2 and Ultra Disks strictly prohibit host caching (`cachingMode: None`)**. Specifying any caching parameter other than `None` in the StorageClass will cause PVC provisioning to fail with `InvalidParameter: Host caching is not supported for disk type`.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/README|Storage on EKS]] — block storage (Kubernetes)
+- [[GCP/compute/gke/storage-csi|GKE Storage Architecture — Compute Persistent Disk CSI, Hyperdisk, and Volume Snapshots]] — block storage (GCP)
+- [[Linux/storage/README|Linux Storage]] — block storage (Linux)
+- [[AWS/storage/ebs/README|Amazon EBS]] — block storage (AWS)

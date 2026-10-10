@@ -142,3 +142,9 @@ aws eks list-access-entries --cluster-name production-cluster
 - [EKS Official Documentation](https://docs.aws.amazon.com/eks/latest/userguide/)
 - [EKS Workshop](https://www.eksworkshop.com/)
 - [Karpenter Official Documentation](https://karpenter.sh/)
+
+## Across the wiki
+
+- [[AWS/compute/eks/README|Amazon EKS]] — managed Kubernetes (AWS)
+- [[Azure/compute/aks|Azure Kubernetes Service (AKS) Architecture Hub]] — managed Kubernetes (Azure)
+- [[GCP/compute/gke|Google Kubernetes Engine (GKE)]] — managed Kubernetes (GCP)

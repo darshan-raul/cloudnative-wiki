@@ -198,3 +198,10 @@ Congratulations! By completing Stages 0 through 6 and the Capstone exercises, yo
 - [x] **Stage 5:** Top 12 auth attacks, token storage, zero-downtime key rotation, and SIEM detection.
 - [x] **Stage 6:** Multi-region active/active HA, edge auth caching, SPIFFE workload identity, and emerging standards (DPoP, PAR, FAPI 2.0).
 - [x] **Capstone:** Reproducible Keycloak lab and production incident response tabletops.
+
+## Across the wiki
+
+- [[Security/incident-response/README|Incident Response]] — incident response (Security)
+- [[DevOps/sre/on-call|On-Call]] — incident response (DevOps)
+- [[Kubernetes/concepts/L08-operations/03-common-failure-modes|Common Failure Modes & Triage]] — incident response (Kubernetes)
+- [[Security/incident-response/postmortem/README|Postmortem]] — incident response (Security)

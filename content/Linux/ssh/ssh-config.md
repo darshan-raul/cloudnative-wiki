@@ -5,6 +5,7 @@ tags:
   - linux
   - ssh
   - networking
+date: 2026-06-06
 ---
 
 # SSH Config and Tricks
@@ -299,3 +300,9 @@ AddKeysToAgent        # add key to agent on use
 IdentitiesOnly        # only use specified identity
 Match                # conditional settings
 ```
+
+## Across the wiki
+
+- [[AWS/management-governance/systems-manager/README|AWS Systems Manager]] — remote access (AWS)
+- [[Kubernetes/eks/security/access/endpoint-access|Cluster Endpoint Access]] — remote access (Kubernetes)
+- [[Kubernetes/concepts/L08-operations/02-kubectl-debug|kubectl Debug Toolkit]] — remote access (Kubernetes)

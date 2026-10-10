@@ -1,3 +1,10 @@
+---
+title: "Overfitting vs underfitting"
+tags: [ai, inner-workings, overfitting-vs-underfitting]
+date: 2026-01-30
+description: "Two fundamental concepts in machine learning."
+---
+
 # Overfitting vs underfitting
 
 Two fundamental concepts in machine learning:

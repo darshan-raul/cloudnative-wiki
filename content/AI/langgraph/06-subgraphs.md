@@ -3,7 +3,11 @@ title: "LangGraph — Subgraphs & Fan-out"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "A subgraph is a compiled graph used as a node inside another graph. Use it when."
 ---
+
+# LangGraph — Subgraphs & Fan-out
 
 > **Part 6.** Subgraphs (composing graphs inside graphs), the `Send`
 > primitive for fan-out/fan-in, and when to use each.

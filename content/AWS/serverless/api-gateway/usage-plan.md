@@ -1,3 +1,10 @@
+---
+title: "Usage Plan"
+tags: [aws, serverless, api-gateway, usage-plan]
+date: 2026-01-30
+description: 'In Amazon API Gateway, a Usage Plan is essentially a "service contract" you offer to your API consumers.'
+---
+
 # Usage Plan
 
 In Amazon API Gateway, a Usage Plan is essentially a "service contract" you offer to your API consumers. It allows you to control who can access your API, how fast they can call it, and how many total calls they can make over a period of time.

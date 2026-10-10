@@ -8,6 +8,7 @@ tags:
   - application-gateway
   - front-door
   - waf
+date: 2026-09-06
 ---
 
 # Azure Load Balancing, Application Gateway & Front Door ⚖️🛡️
@@ -198,3 +199,10 @@ az network application-gateway create \
 3. **Health Probe IP `168.63.129.16` Must Never Be Blocked:** Azure uses the magic virtual IP `168.63.129.16` to communicate health probes, DHCP renewals, and DNS queries to your VMs. If an aggressive NSG rule drops inbound traffic from this IP, Azure Load Balancer will mark every VM in your backend pool dead.
 4. **App Gateway 502 Bad Gateway on Host Mismatches:** When Application Gateway routes HTTPS traffic to backend VMs or App Services, it expects the backend TLS certificate to match the hostname requested by the client. If your backend listens on a custom internal domain or IP without `--pick-host-name-from-backend-address`, Application Gateway will reject the backend TLS handshake and return an instant `HTTP 502 Bad Gateway`.
 5. **Direct Server Return (Floating IP) Requires Guest OS Loopback Config:** Enabling Floating IP on Azure Load Balancer preserves the frontend IP in the packet destination header. If you do not configure a dummy loopback adapter with that IP inside the Windows or Linux guest OS, the OS network stack will drop the packet because the destination IP does not match its primary NIC IP.
+
+## Across the wiki
+
+- [[GCP/compute/gke/gateway-api|GKE Gateway API Architecture, HTTPRoute, and Cloud Armor Integration]] — ingress and load balancing (GCP)
+- [[Kubernetes/concepts/L04-services-networking/09-gateway-api|Gateway API]] — ingress and load balancing (Kubernetes)
+- [[AWS/networking/load-balancing/README|Elastic Load Balancing]] — ingress and load balancing (AWS)
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — ingress and load balancing (Architecture)

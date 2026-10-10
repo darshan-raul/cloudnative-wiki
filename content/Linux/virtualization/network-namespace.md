@@ -6,6 +6,7 @@ tags:
   - namespaces
   - networking
   - containers
+date: 2026-06-06
 ---
 
 # Network Namespaces
@@ -208,3 +209,10 @@ mount --bind /proc/$$/ns/net /var/run/netns/myns
 # Now you can enter it even after the creating process exits
 ip netns exec myns bash
 ```
+
+## Across the wiki
+
+- [[Kubernetes/eks/networking/vpc-cni/README|Amazon VPC CNI]] — pod networking (Kubernetes)
+- [[Azure/compute/aks/networking-cni|AKS Networking Deep Dive — Azure CNI, CNI Overlay, and Dynamic Pod IP Allocation]] — pod networking (Azure)
+- [[GCP/compute/gke/networking|GKE Networking Deep Dive — Datapath V2, Alias IPs & Gateway API]] — pod networking (GCP)
+- [[Containers/container-networking|Container Networking]] — pod networking (Containers)

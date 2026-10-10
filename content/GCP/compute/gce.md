@@ -7,6 +7,7 @@ tags:
   - gce
   - vms
   - infrastructure
+date: 2026-09-06
 ---
 
 # GCP Compute Engine (GCE) 🖥️
@@ -185,3 +186,10 @@ gcloud compute instance-groups managed set-autoscaling prod-api-mig \
 3. **OS Login Overrides Metadata SSH Keys:** Enabling OS Login (`enable-oslogin=TRUE`) at the project or instance level instantly disables all legacy SSH keys stored in instance or project metadata. If an automated script connects using a raw SSH key without Google Cloud IAM authorization, it will be locked out immediately.
 4. **MIG Auto-Healing `initial-delay` Trap:** When configuring auto-healing on a MIG, the `--initial-delay` flag must exceed the time it takes your application container or JVM to start. If your application takes 90 seconds to boot but `initial-delay` is set to 30 seconds, the auto-healer will kill the VM before it ever finishes launching, entering an infinite reboot loop.
 5. **E2 Machine CPU Steal on Overcommit:** The `e2` series uses dynamic resource sharing on host processors. During severe noisy-neighbor spikes or prolonged 100% CPU loads, E2 instances can experience CPU throttling and variable latency. For latency-sensitive databases, Kafka brokers, or high-throughput APIs, use dedicated-core **N2** or **C3** instances instead.
+
+## Across the wiki
+
+- [[AWS/compute/ec2/README|Amazon EC2]] — virtual machines (AWS)
+- [[Azure/compute/vm|Azure Virtual Machines & Scale Sets (VMSS)]] — virtual machines (Azure)
+- [[Linux/virtualization/hypervisors|Hypervisors]] — virtual machines (Linux)
+- [[Linux/virtualization/emulator-vs-virtualization|Emulator vs Virtualization]] — virtual machines (Linux)

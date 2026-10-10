@@ -1,5 +1,8 @@
 ---
 title: Migration Patterns
+tags: [architecture, migration-patterns]
+date: 2026-06-06
+description: "Migration patterns are strategies for safely transitioning systems, data, and infrastructure without service interruption."
 ---
 
 # Migration Patterns
@@ -8,13 +11,13 @@ Migration patterns are strategies for safely transitioning systems, data, and in
 
 ## When to Use Each Pattern
 
-| Pattern                  | Use When                 |
-| ------------------------ | ------------------------ | -------------------------------------------------------------------- |
-| [[blue-green-deployments | Blue-Green Deployments]] | Deploying a new version of a system with instant rollback capability |
-| [[expand-contract        | Expand-Contract]]        | Evolving a shared API or database schema without breaking consumers  |
-| [[strangler-fig          | Strangler Fig]]          | Replacing a legacy monolith incrementally without big-bang rewrite   |
-| [[data-migration         | Data Migration]]         | Moving or transforming large datasets between systems                |
-| [[change-data-capture    | Change Data Capture]]    | Streaming database changes to downstream systems in real-time        |
+| Pattern                                            | Use When                                                             |
+| -------------------------------------------------- | -------------------------------------------------------------------- |
+| [[blue-green-deployments\|Blue-Green Deployments]] | Deploying a new version of a system with instant rollback capability |
+| [[expand-contract\|Expand-Contract]]               | Evolving a shared API or database schema without breaking consumers  |
+| [[strangler-fig\|Strangler Fig]]                   | Replacing a legacy monolith incrementally without big-bang rewrite   |
+| [[data-migration\|Data Migration]]                 | Moving or transforming large datasets between systems                |
+| [[change-data-capture\|Change Data Capture]]       | Streaming database changes to downstream systems in real-time        |
 
 ## The Core Principle
 
@@ -51,6 +54,13 @@ Before any migration:
 
 ## Related Sections
 
-- [[foundations/non-functional-requirements/README|Non-Functional Requirements]] — NFRs that apply to migrations (availability, RPO/RTO)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/README|Non-Functional Requirements]] — NFRs that apply to migrations (availability, RPO/RTO)
 - [[reliability|Reliability]] — fault tolerance during migration
-- [[databases/README|Databases]] — database-specific migration patterns
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/README|Databases]] — database-specific migration patterns
+
+## Across the wiki
+
+- [[AWS/migration/README|AWS Migration]] — migration (AWS)
+- [[AWS/migration/dms/README|Database Migration Service (DMS)]] — migration (AWS)
+- [[AWS/solutions-architect-professional/domain-4/4.2-migration-approach|4.2 Migration Approach]] — migration (AWS)
+- [[AWS/migration/datasync/README|DataSync]] — migration (AWS)

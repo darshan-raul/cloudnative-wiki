@@ -5,7 +5,11 @@ tags:
   - Non-Functional
   - Performance
   - Tuning
+date: 2026-06-12
+description: "A slow cluster usually isn't slow because of k8s — it's slow because the apps are over-provisioned, under-provisioned, or fighting the scheduler."
 ---
+
+# Performance Tuning
 
 A slow cluster usually isn't slow because of k8s — it's slow because the apps are over-provisioned, under-provisioned, or fighting the scheduler. This note covers the practical levers to make workloads fast.
 
@@ -516,3 +520,10 @@ resources:
 - [[Kubernetes/guides/non-functional/auto-scaling|auto-scaling]] — HPA on resources
 - [[Kubernetes/guides/non-functional/cost-optimization|cost-optimization]] — right-sizing is cost
 - [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — OOMKilled diagnostics
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/performance-testing|Performance Testing]] — performance and chaos testing (Architecture)
+- [[Linux/networking/network-performance-tuning|Network Performance Tuning]] — performance and chaos testing (Linux)
+- [[AWS/solutions-architect-professional/domain-2/2.5-performance-objectives|2.5 Performance Objectives]] — performance and chaos testing (AWS)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/performance|Performance]] — performance and chaos testing (Architecture)

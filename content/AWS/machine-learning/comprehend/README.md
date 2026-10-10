@@ -7,6 +7,7 @@ tags:
   - comprehend
   - nlp
   - ai-services
+date: 2026-06-06
 ---
 
 # Amazon Comprehend

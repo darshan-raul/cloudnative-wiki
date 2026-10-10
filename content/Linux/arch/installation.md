@@ -1,5 +1,8 @@
 ---
 title: Arch Linux Installation & Setup
+tags: [linux, arch, installation]
+date: 2026-05-24
+description: "Arch's official installer is the archinstall script — a curses-based CLI wizard."
 ---
 
 # 2. Installation & Setup

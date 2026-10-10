@@ -1,3 +1,10 @@
+---
+title: "Wazuh Production Plan — File Index"
+tags: [security, siem, wazuh, production-plan]
+date: 2026-05-24
+description: "Why org+OS: Targeted rule deployment, differential alerting, selective upgrade rollout, inventory clarity, mirrors cross-account trust model."
+---
+
 # Wazuh Production Plan — File Index
 
 # Generated as part of the complete production execution plan

@@ -5,6 +5,7 @@ tags:
   - linux
   - namespaces
   - containers
+date: 2026-06-06
 ---
 
 # Process Namespaces
@@ -165,3 +166,10 @@ PID namespace isolation means:
 - Signal routing: SIGTERM sent to PID 1 inside container terminates the container's PID 1
 - `/proc/PID` on the host shows the host PID; inside the container it shows the container PID
 - `kill -9 1` inside the container kills the container's init, not the host's
+
+## Across the wiki
+
+- [[Containers/runtimes|Container Runtimes]] — container internals (Containers)
+- [[Kubernetes/concepts/L09-advanced/09-pause-container|The Pause Container]] — container internals (Kubernetes)
+- [[Containers/images-and-layers|Container Images and Layers]] — container internals (Containers)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing (gVisor, Kata Containers)]] — container internals (Kubernetes)

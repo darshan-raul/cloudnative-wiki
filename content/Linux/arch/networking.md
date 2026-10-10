@@ -1,5 +1,8 @@
 ---
 title: Arch Linux Networking
+tags: [linux, arch, networking]
+date: 2026-05-24
+description: "NetworkManager is the standard for desktop Arch/Manjaro. It handles WiFi, Ethernet, VPN, and mobile broadband."
 ---
 
 # 5. Networking

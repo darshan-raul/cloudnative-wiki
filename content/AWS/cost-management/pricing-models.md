@@ -4,6 +4,7 @@ description: AWS pricing models — On-Demand, Reserved Instances, Savings Plans
 tags:
   - aws
   - cost-management
+date: 2026-06-06
 ---
 
 # AWS Pricing Models
@@ -122,3 +123,10 @@ A common architect mistake: designing a multi-tier system where services in diff
 - **On-Demand limits are per account per region:** Default limit is 20 instances per instance type per region. Running a large auto-scaling group requires requesting a limit increase.
 - **Data transfer between AZs costs $0.01/GB:** A microservices architecture where services in different AZs communicate heavily will accumulate significant AZ-to-AZ transfer costs. Keep synchronous inter-service communication within the same AZ where possible.
 - **Savings Plans don't reserve capacity:** A Compute SP covers the cost of your usage but doesn't guarantee capacity. If AWS needs the capacity back, SP customers are not protected — only zonal RIs reserve actual capacity.
+
+## Across the wiki
+
+- [[Kubernetes/eks/compute/managed-node-groups/README|Managed Node Groups]] — node pools and spot capacity (Kubernetes)
+- [[Azure/compute/aks/node-pools-heterogeneous|AKS Heterogeneous Node Pools — System vs User, Ephemeral OS Disks, and Azure Linux]] — node pools and spot capacity (Azure)
+- [[GCP/compute/gke/node-pools-heterogeneous|GKE Heterogeneous Node Pools, Taints, Tolerations, and Accelerator Topologies]] — node pools and spot capacity (GCP)
+- [[Kubernetes/eks/compute/managed-node-groups/spot|Spot Instances on EKS]] — node pools and spot capacity (Kubernetes)

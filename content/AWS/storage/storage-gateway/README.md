@@ -6,6 +6,7 @@ tags:
   - storage
   - hybrid
   - gateway
+date: 2026-06-06
 ---
 
 # AWS Storage Gateway

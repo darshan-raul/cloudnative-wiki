@@ -1,3 +1,10 @@
+---
+title: "Whats a T in GPT?"
+tags: [ai, inner-workings, whats-a-t-in-gpt]
+date: 2026-01-30
+description: "A transformer is a type of neural network architecture that's particularly well-suited for natural language processing (NLP) tasks."
+---
+
 # Whats a T in GPT?
 
 A transformer is a type of neural network architecture that's particularly well-suited for natural language processing (NLP) tasks. It was introduced in the paper "[Attention Is All You Need](https://en.wikipedia.org/wiki/Attention_Is_All_You_Need)" by Vaswani et al. in 2017.

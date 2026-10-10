@@ -4,6 +4,7 @@ description: Linux shell expansion — brace, tilde, parameter, variable, comman
 tags:
   - linux
   - shell
+date: 2026-06-06
 ---
 
 # Shell Expansion

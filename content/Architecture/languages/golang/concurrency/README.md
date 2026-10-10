@@ -1,5 +1,14 @@
+---
+title: "Concurrency"
+tags: [architecture, languages, golang, concurrency]
+date: 2026-01-30
+description: "Go's concurrency primitives beyond channels: the sync package, and how to use it safely."
+---
+
 # Concurrency
 
-"https://www.youtube.com/live/P4tckkcyef0?si=ymqu1rQse1BxhZFf"
+Go's concurrency primitives beyond channels: the `sync` package, and how to use it safely.
 
-"https://blog.stackademic.com/go-concurrency-visually-explained-channel-c6f88070aafa"
+## Notes in this section
+
+- [[Architecture/languages/golang/concurrency/sync|Sync]] — The sync package in Go provides synchronization primitives that are commonly needed in concurrent programming.

@@ -8,6 +8,7 @@ tags:
   - database
   - postgres
   - rls
+date: 2026-01-30
 ---
 
 # Multi-Tenant Software Architecture & Data Isolation Patterns
@@ -89,3 +90,10 @@ When Tenant A triggers a massive batch export, they must not starve Tenant B of 
 1. **Per-Tenant Rate Limiting:** Enforce requests-per-second ceilings per tenant at the API Gateway.
 2. **Fair-Queue Background Workers:** In Celery/Sidekiq, partition background queues by tenant (`queue_tenant_a`, `queue_tenant_b`) or use a Round-Robin multiplexer so one tenant cannot monopolize worker threads.
 3. **VIP Tenant Pods:** Allow enterprise tier tenants to run on isolated Kubernetes node groups while standard tier tenants share pooled pods.
+
+## Across the wiki
+
+- [[Azure/compute/aks/multi-tenancy-isolation|AKS Multi-Tenancy, Hard Isolation, and Confidential Containers]] — multi-tenancy (Azure)
+- [[GCP/compute/gke/multi-tenancy-isolation|GKE Multi-Tenancy Architecture — Hard vs Soft Isolation, GKE Sandbox (gVisor), and PSS]] — multi-tenancy (GCP)
+- [[Kubernetes/guides/non-functional/multi-tenancy|Multi-Tenancy]] — multi-tenancy (Kubernetes)
+- [[Kubernetes/concepts/L01-architecture/03-namespaces|Namespaces]] — multi-tenancy (Kubernetes)

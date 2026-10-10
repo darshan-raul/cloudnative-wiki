@@ -8,6 +8,7 @@ tags:
   - postgres
   - mysql
   - security
+date: 2026-09-06
 ---
 
 # GCP Cloud SQL 🗄️
@@ -193,3 +194,10 @@ spec:
 3. **IAM Authentication Token Expiration:** IAM database authentication tokens expire after **60 minutes**. When using Cloud SQL Auth Proxy, the proxy handles token renewal automatically in the background. However, if your application manages IAM tokens directly, long-lived pooled connections that exceed 60 minutes will fail authorization upon reconnection.
 4. **`max_connections` Memory Allocation Traps:** Cloud SQL scales `max_connections` proportionally with RAM. However, each PostgreSQL backend process consumes up to `work_mem` (default 4MB) for sorting and hashing. If 500 concurrent connections execute memory-intensive aggregations simultaneously, the database instance will run out of memory, triggering the Linux kernel Out-Of-Memory (`oom-killer`) to kill the Postgres master process.
 5. **Private IP Cloud SQL Requires Service Networking Peering:** Provisioning Cloud SQL with a Private IP does not place the database VM directly inside your subnet. Instead, Google creates the database inside a Google-managed tenant VPC and bridges it to your VPC using a **Service Networking Peering** connection with an allocated IP range (e.g. `/24` or `/20`).
+
+## Across the wiki
+
+- [[AWS/databases/rds/README|Amazon RDS]] — relational databases (AWS)
+- [[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]] — relational databases (Azure)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — relational databases (Architecture)
+- [[AWS/databases/aurora/README|Amazon Aurora]] — relational databases (AWS)

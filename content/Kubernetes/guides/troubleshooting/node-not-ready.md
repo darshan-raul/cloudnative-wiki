@@ -4,7 +4,11 @@ tags:
   - Kubernetes
   - Troubleshooting
   - Nodes
+date: 2026-06-11
+description: "A NotReady node can't run new pods, and the pods on it can become unreachable."
 ---
+
+# Node Not Ready
 
 A `NotReady` node can't run new pods, and the pods on it can become unreachable. This is a **node-level** problem — the kubelet can't communicate with the control plane, or the node has a critical condition.
 

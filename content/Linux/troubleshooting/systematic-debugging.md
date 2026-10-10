@@ -4,6 +4,7 @@ description: Linux debugging methodology — gather, hypothesize, isolate, verif
 tags:
   - linux
   - troubleshooting
+date: 2026-06-06
 ---
 
 # Systematic Debugging
@@ -196,3 +197,14 @@ kill -STOP $(pgrep <service>)   # pause first to get core
 strace -p $(pgrep <service>)    # see what it's doing
 kill -CONT $(pgrep <service>)    # resume
 ```
+
+## Further reading
+
+- [Troubleshooting (video)](https://www.youtube.com/watch?v=RRCGywYTsxI)
+
+## Across the wiki
+
+- [[Kubernetes/eks/troubleshooting/README|EKS Troubleshooting]] — troubleshooting (Kubernetes)
+- [[Azure/compute/aks/troubleshooting-runbook|AKS SRE Troubleshooting & Incident Runbook — CrashLoopBackOff, Node NotReady, and CNI Leaks]] — troubleshooting (Azure)
+- [[GCP/compute/gke/troubleshooting-runbook|GKE SRE Incident Response & Production Troubleshooting Runbook]] — troubleshooting (GCP)
+- [[DevOps/sre/incident-management|Incident Management and Postmortems]] — troubleshooting (DevOps)

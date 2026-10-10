@@ -86,9 +86,21 @@ Avoid building a monolithic internal platform before understanding team needs:
 
 ---
 
+## Notes in this section
+
+- [[DevOps/platform-engineering/internal-developer-platforms|Internal Developer Platforms]] — Capabilities, portal versus platform, platform as a product, metrics and failure modes
+- [[DevOps/platform-engineering/golden-paths|Golden Paths]] — Designing paved roads, guardrails over gates, the day-two problem
+- [[DevOps/platform-engineering/backstage|Backstage]] — Software catalog, templates, TechDocs, plugins and operating cost
+- [[DevOps/platform-engineering/crossplane|Crossplane for Platform APIs]] — Designing and evolving self-service infrastructure APIs
+- [[DevOps/platform-engineering/platform-vs-devops-vs-sre|Platform Engineering vs DevOps vs SRE]] — Principles and how the disciplines differ
+- [[DevOps/infrastructure-as-code/README|Infrastructure as Code]] — The building blocks underneath
+- [[DevOps/sre/README|Site Reliability Engineering]] — Running the platform itself
+
+---
+
 ## Related Knowledge Bases
 
 - ☸️ **[[Kubernetes/guides/delivery/gitops/argo-cd/README|Argo CD & GitOps]]** — Declarative continuous delivery
 - 🚀 **[[DevOps/ci-cd/README|CI/CD Pipelines]]** — Integration and delivery pipelines
 - 🔐 **[[DevOps/devsecops/README|DevSecOps Curriculum]]** — Embedding security into golden paths
-- 📊 **[[Observability/README|Observability]]** — OpenTelemetry and monitoring for platform services
+- 📊 **[[Observability|Observability]]** — OpenTelemetry and monitoring for platform services

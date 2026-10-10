@@ -1,3 +1,10 @@
+---
+title: "Type Assertion"
+tags: [architecture, languages, golang, type-assertion]
+date: 2026-01-30
+description: "In Go, type assertion is a way to extract the underlying concrete value from an interface type."
+---
+
 # Type Assertion
 
 #### Type Assertion in Go

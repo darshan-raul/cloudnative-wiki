@@ -9,6 +9,7 @@ tags:
   - application-gateway
   - nginx
   - waf
+date: 2026-09-06
 ---
 
 # AKS Ingress, Application Gateway for Containers, and Gateway API Architecture 🚦🌐
@@ -217,3 +218,10 @@ Application Gateway for Containers uses a consumption-based pricing model based 
 3. **HTTPRoute Hostname Wildcard Matching Precedence:** When defining multiple `HTTPRoute` resources, exact hostnames (`app.contoso.com`) always take precedence over wildcard hostnames (`*.contoso.com`). If a developer accidentally creates an exact match route targeting a dead service, all traffic is blackholed, bypassing the wildcard fallback route.
 4. **Automated TLS Certificate Sync Lag:** When syncing TLS certificates from Azure Key Vault into the Gateway via Secret sync, rotation is not instantaneous. If a certificate is rotated in Key Vault, the secret provider polls every few minutes. Ensure certificates are rotated at least 7 days before expiration to prevent transient SSL handshake rejections.
 5. **BackendTLSPolicy for Strict End-to-End Encryption:** If your pods handle sensitive banking data, terminating TLS at the Gateway and sending unencrypted plaintext over the internal VNet violates PCI-DSS. With Gateway API, use **`BackendTLSPolicy`** to re-encrypt traffic from the AGfC proxy to the backend pod, validating the pod's internal TLS certificate authority.
+
+## Across the wiki
+
+- [[GCP/compute/gke/gateway-api|GKE Gateway API Architecture, HTTPRoute, and Cloud Armor Integration]] — ingress and load balancing (GCP)
+- [[Kubernetes/concepts/L04-services-networking/09-gateway-api|Gateway API]] — ingress and load balancing (Kubernetes)
+- [[AWS/networking/load-balancing/README|Elastic Load Balancing]] — ingress and load balancing (AWS)
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — ingress and load balancing (Architecture)

@@ -8,6 +8,7 @@ tags:
   - mcs
   - mci
   - disaster-recovery
+date: 2026-09-06
 ---
 
 # GKE Multi-Cluster Services (MCS) and Multi-Cluster Ingress (MCI) Architecture 🌐🛰️
@@ -276,3 +277,9 @@ Pricing components:
 4. **Namespace Sameness Enforcement:** In GKE Fleets, if a service is exported in namespace `analytics`, the receiving pods in another cluster must also reside in namespace `analytics`. If team A deploys in `analytics-prod` and exports a service, team B cannot import it into namespace `reporting`. Design your enterprise namespace naming conventions uniformly across all clusters from day one.
 5. **Session Affinity Does Not Span Clusters:** While GKE load balancers support cookie-based or client-IP-based session affinity, session affinity is pinned to a specific backend service within a specific cluster. If an application requires sticky server sessions and the primary regional cluster experiences performance degradation, MCI will reroute traffic to the secondary cluster, breaking the user's session and forcing re-authentication. State must be externalized (e.g., in Memorystore Redis) for multi-cluster architectures.
 6. **Firewall Rules for Cross-Cluster Health Checking:** When using Multi-Cluster Ingress, Google Cloud health check probers (`130.211.0.0/22` and `35.191.0.0/16`) must be able to reach the node ports and pod ports of _all_ member clusters. If a cluster's VPC firewall rule only whitelists traffic from its own subnet, the global load balancer will declare all backends in that cluster `UNHEALTHY` and refuse to route traffic to it.
+
+## Across the wiki
+
+- [[Azure/compute/aks/fleet-manager-multicluster|Azure Kubernetes Fleet Manager — Multi-Cluster Governance, Staged Upgrades, and Multi-Cluster Services (MCS)]] — multi-cluster (Azure)
+- [[Kubernetes/guides/tools/multi-cluster|Multi-Cluster]] — multi-cluster (Kubernetes)
+- [[Kubernetes/eks/advanced/advanced-networking|Advanced EKS Networking]] — multi-cluster (Kubernetes)

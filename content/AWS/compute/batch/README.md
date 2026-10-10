@@ -5,6 +5,7 @@ tags:
   - aws
   - compute
   - batch
+date: 2026-06-06
 ---
 
 # AWS Batch
@@ -330,3 +331,10 @@ AWS Batch (submit job)
 - **Fargate compute environments have a 16-vCPU limit per job — for larger jobs use EC2:** If you try to submit a job with 32 vCPU to a Fargate environment, it will fail. Use EC2 for high-vCPU workloads.
 - **Jobs timeout based on `attemptDurationSeconds` — if your job takes > 1 hour and you forget to set timeout, it will fail:** Default timeout is infinite (no timeout). Set `timeout.attemptDurationSeconds` to a value slightly above your expected runtime.
 - **The `jobQueue` parameter on submit-job is required — don't confuse it with `computeEnvironmentOrder`:** The queue is where you submit jobs. The compute environment is what the queue maps to. You can't submit directly to a compute environment.
+
+## Across the wiki
+
+- [[Azure/compute/aks/batch-workloads|AKS Batch Workloads, Job Orchestration, and Kueue Fair-Share Scheduling]] — batch workloads (Azure)
+- [[GCP/compute/gke/batch-workloads-kueue|GKE Batch Workloads & Kueue Job Orchestration Architecture]] — batch workloads (GCP)
+- [[Kubernetes/concepts/L03-workloads/06-job|Jobs — Run-to-Completion Workloads]] — batch workloads (Kubernetes)
+- [[GCP/compute/cloud-run/jobs|GCP Cloud Run Jobs & Batch Processing]] — batch workloads (GCP)

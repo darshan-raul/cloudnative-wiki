@@ -4,6 +4,7 @@ description: Linux filesystems — ext4, xfs, btrfs, vfat, swap, mount options, 
 tags:
   - linux
   - storage
+date: 2026-06-06
 ---
 
 # Filesystems
@@ -206,3 +207,8 @@ noauto      # don't mount at boot
 | Online grow   | Yes          | Yes  | Yes       |
 | Online shrink | No           | No   | Yes       |
 | Default on    | Ubuntu       | RHEL | OpenSUSE  |
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — volumes and filesystems (Kubernetes)
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume (PV)]] — volumes and filesystems (Kubernetes)

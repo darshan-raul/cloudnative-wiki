@@ -7,6 +7,7 @@ tags:
   - entra-id
   - rbac
   - security
+date: 2026-01-30
 ---
 
 # Microsoft Entra ID & Azure RBAC 🔐
@@ -193,3 +194,10 @@ curl -s -H Metadata:true \
 3. **IMDS Header Requirement:** Just as GCP requires `Metadata-Flavor: Google`, Azure IMDS calls to `http://169.254.169.254/metadata/identity/oauth2/token` strictly require the HTTP header `Metadata: true`. Calls lacking this header are instantly rejected with an HTTP 400 Bad Request to prevent basic SSRF vulnerabilities.
 4. **Custom Role AssignableScopes Cannot Exceed 100 Scopes:** A custom Azure RBAC role defines `assignableScopes` (where the role can be applied). If you list individual subscriptions, you will hit the hard limit of 100 assignable scopes. To use a custom role across an enterprise, set `assignableScopes` to a top-level **Management Group** (`/providers/Microsoft.Management/managementGroups/my-enterprise-mg`).
 5. **Subscription Role Inheritance Cannot Be Blocked:** Azure RBAC permissions are strictly additive and flow downward. There is no concept of a "Deny" rule in standard Azure RBAC (Deny assignments only exist in Azure Blueprints and Managed Applications). If an engineer has `Contributor` at the Subscription level, you cannot restrict their access to a sensitive `prod-secrets-rg` Resource Group inside that subscription. Place sensitive workloads into a dedicated, isolated Subscription.
+
+## Across the wiki
+
+- [[AWS/security/iam/README|AWS IAM]] — identity and access (AWS)
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]] — identity and access (Kubernetes)

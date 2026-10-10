@@ -5,6 +5,7 @@ tags:
   - aws
   - databases
   - rds
+date: 2026-06-06
 ---
 
 # Amazon RDS (Relational Database Service)
@@ -279,3 +280,10 @@ View in Console: RDS → Instances → my-db → Performance Insights
 - **MySQL/RDS read replicas use binary log replication — this adds load to the primary:** For heavily write-intensive workloads, binary log replication can cause replication lag. Use PostgreSQL's WAL-based replication if you need less overhead.
 - **RDS automated backups run in the maintenance window — don't schedule backups during peak hours:** The default 30-minute window runs during your configured time. Set it to off-peak (e.g., 3 AM).
 - **You cannot connect to RDS from the internet — it must be in a VPC with proper security groups:** If you try to `telnet rds-endpoint 5432` from outside AWS and it fails, check your VPC (should be private subnet), security group (allow your IP on port 5432), and subnet routing (should not have IGW, should use NAT for outbound).
+
+## Across the wiki
+
+- [[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]] — relational databases (Azure)
+- [[GCP/databases/cloud-sql|GCP Cloud SQL]] — relational databases (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — relational databases (Architecture)
+- [[Azure/databases/postgres-flexible/README|Azure Database for PostgreSQL Flexible Server Architecture & Operations]] — relational databases (Azure)

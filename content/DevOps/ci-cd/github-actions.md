@@ -144,3 +144,10 @@ Always cache language dependencies (`actions/setup-node`, `actions/setup-go`, `a
 - [[DevOps/ci-cd/README|CI/CD Master Architecture]]
 - [[DevOps/devsecops/stage2-build/11-cicd-pipeline-hardening|CI/CD Pipeline Hardening]]
 - [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|Pipeline Identity & OIDC Deep Dive]]
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/oidc-integration|OIDC Integration]] — OIDC federation (Kubernetes)
+- [[Architecture/solution-architecture-concepts/authentication/stage3/01-oidc-fundamentals|3.1 — OpenID Connect (OIDC) Fundamentals]] — OIDC federation (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/01-authentication-authorization|Authentication vs Authorization]] — OIDC federation (Kubernetes)
+- [[Architecture/solution-architecture-concepts/authentication/saml|SAML]] — OIDC federation (Architecture)

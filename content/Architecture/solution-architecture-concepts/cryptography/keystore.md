@@ -1,3 +1,10 @@
+---
+title: "Keystore"
+tags: [architecture, cryptography, keystore]
+date: 2026-01-30
+description: "Using a Java KeyStore (JKS) to hold a certificate chain and a server's private key."
+---
+
 # Keystore
 
 Here's a guide on using a Java KeyStore (JKS) to store a certificate chain and a server's private key.
@@ -54,3 +61,10 @@ Here's a guide on using a Java KeyStore (JKS) to store a certificate chain and a
 - **Passwords:** The `keytool` will prompt you for a keystore password and also a separate password for the key entry. Choose strong passwords.
 - **Certificate Chain Order:** If you imported multiple certificates, ensure the correct order within the chain (certificate chain file, PKCS#12 bundle).
 - **Security:** Protect your JKS keystore file and the passwords associated with it.
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS and mTLS in Kubernetes]] — TLS and certificates (Kubernetes)
+- [[AWS/security/certificate-manager/README|AWS ACM]] — TLS and certificates (AWS)
+- [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — TLS and certificates (Kubernetes)
+- [[Kubernetes/guides/networking/service-mesh|Service Mesh]] — TLS and certificates (Kubernetes)

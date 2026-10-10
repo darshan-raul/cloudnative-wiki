@@ -4,6 +4,7 @@ description: Linux storage — disks, partitioning, LVM, RAID, filesystems, moun
 tags:
   - linux
   - storage
+date: 2026-06-06
 ---
 
 # Linux Storage
@@ -35,3 +36,10 @@ Start with [[disks-partitions]] if you need to understand the disk → partition
 ## Performance
 
 **[[storage-performance-tuning|Storage Performance Tuning]]** — I/O schedulers (`mq-deadline`, `bfq`, `noop`) and when to switch them. `blockdev --setra` for read-ahead. Filesystem mount options: `noatime`, `nodiratime`, `relatime`, `discard` (for SSDs). `fstrim` for SSDTRIM. `hdparm` and `sdparm` for drive diagnostics. Swappiness and the virtual memory subsystem.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/README|Storage on EKS]] — block storage (Kubernetes)
+- [[Azure/compute/aks/storage-csi-disks|AKS Storage CSI Architecture — Azure Managed Disks, Premium SSD v2, and Elastic SAN]] — block storage (Azure)
+- [[GCP/compute/gke/storage-csi|GKE Storage Architecture — Compute Persistent Disk CSI, Hyperdisk, and Volume Snapshots]] — block storage (GCP)
+- [[AWS/storage/ebs/README|Amazon EBS]] — block storage (AWS)

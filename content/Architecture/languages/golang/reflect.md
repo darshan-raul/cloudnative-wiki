@@ -1,3 +1,10 @@
+---
+title: "Reflect"
+tags: [architecture, languages, golang, reflect]
+date: 2026-01-30
+description: "The reflect package in Go provides functionality for inspecting and manipulating objects at runtime."
+---
+
 # Reflect
 
 "https://www.youtube.com/watch?v=ZGZU37A2p2E"

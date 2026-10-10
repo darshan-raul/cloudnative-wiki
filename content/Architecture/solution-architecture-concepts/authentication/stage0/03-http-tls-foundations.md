@@ -1092,3 +1092,10 @@ You now have the cryptographic alphabet (Stage 0.1), the encoding/signing mechan
 4. What does the CORS preflight do, and when is it sent?
 5. What's the difference between session and token auth, and what's the modern hybrid approach?
 6. Why is `Access-Control-Allow-Origin: *` incompatible with credentials?
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/08-tls-mtls|TLS and mTLS in Kubernetes]] — TLS and certificates (Kubernetes)
+- [[AWS/security/certificate-manager/README|AWS ACM]] — TLS and certificates (AWS)
+- [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — TLS and certificates (Kubernetes)
+- [[Kubernetes/guides/networking/service-mesh|Service Mesh]] — TLS and certificates (Kubernetes)

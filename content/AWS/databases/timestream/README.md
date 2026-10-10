@@ -7,6 +7,7 @@ tags:
   - timestream
   - time-series
   - iot
+date: 2026-06-06
 ---
 
 # Amazon Timestream

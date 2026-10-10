@@ -3,6 +3,7 @@ title: Linux Boot & Init
 description: Linux boot process and init systems — UEFI/BIOS, GRUB, kernel, systemd, cron, timers
 tags:
   - linux
+date: 2026-06-06
 ---
 
 # Linux Boot & Init

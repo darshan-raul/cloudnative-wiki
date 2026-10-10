@@ -1,3 +1,10 @@
+---
+title: "Sockets"
+tags: [linux, sockets]
+date: 2026-01-30
+description: "What sockets are, the socket types, and how processes use them to communicate locally and over the network."
+---
+
 # Sockets
 
 Sure, let's break this down:

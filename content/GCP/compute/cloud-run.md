@@ -7,6 +7,7 @@ tags:
   - serverless
   - containers
   - cloud-run
+date: 2026-09-06
 ---
 
 # GCP Cloud Run 🚀📦
@@ -185,3 +186,10 @@ gcloud run jobs execute data-indexer --region=us-central1 --wait
 3. **Cold Starts and Ephemeral Filesystem Limits:** The container filesystem is an in-memory `tmpfs` RAM disk. Writing large files (e.g., generating 1 GB PDFs or video exports) directly to `/tmp` consumes the container's allocated RAM memory quota. If RAM runs out, the container is immediately killed with an `OutOfMemory (OOM)` error.
 4. **Direct VPC Egress Requires Private Google Access:** When using Direct VPC Egress with `--vpc-egress=all-traffic`, outbound calls from Cloud Run to public Google APIs (like BigQuery or Secret Manager) are routed through your VPC subnet. If that subnet lacks `Private Google Access` or a Cloud NAT gateway, all outbound Google API calls will time out.
 5. **Database Connection Pool Explosions:** If traffic surges and Cloud Run autoscales from 2 instances to 100 instances, each container instance opening a connection pool of 20 database connections will suddenly bombard Cloud SQL with 2,000 simultaneous connections, crashing Postgres or MySQL. Always use **Cloud SQL Auth Proxy** with connection limits or deploy an external pooler like **PgBouncer**.
+
+## Across the wiki
+
+- [[Azure/compute/container-apps/README|Azure Container Apps (ACA), KEDA, and Dapr Microservices]] — serverless containers (Azure)
+- [[AWS/serverless/app-runner/README|AWS App Runner]] — serverless containers (AWS)
+- [[Kubernetes/eks/compute/fargate/README|AWS Fargate on EKS]] — serverless containers (Kubernetes)
+- [[Azure/compute/app-service/README|Azure App Service Architecture, Deployment Slots, and VNet Integration]] — serverless containers (Azure)

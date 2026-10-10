@@ -1,3 +1,10 @@
+---
+title: "AppArmor"
+tags: [linux, security, apparmor]
+date: 2026-01-30
+description: "AppArmor mandatory access control: profiles, modes, and how to write and debug them."
+---
+
 # AppArmor
 
 Absolutely! Let's dive into the details of AppArmor.
@@ -153,3 +160,10 @@ There are two main ways to create a new profile:
 - Start with a broad profile in complain mode and gradually refine it as you observe the program's behavior.
 - Use comments (`#`) to explain your rules and make the profile easier to understand.
 - Refer to the official AppArmor documentation for a complete list of rules and syntax details: [https://ubuntu.com/server/docs/apparmor](https://ubuntu.com/server/docs/apparmor)
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp and AppArmor]] — kernel sandboxing (Kubernetes)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — kernel sandboxing (Containers)
+- [[Security/kubernetes-security/pod-security/README|Pod Security]] — kernel sandboxing (Security)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — kernel sandboxing (Kubernetes)

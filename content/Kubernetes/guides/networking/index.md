@@ -31,11 +31,13 @@ flowchart TD
 
 ### 1. Ingress & Gateway API
 
+- [[Kubernetes/guides/networking/envoy-gateway-internals|Envoy Gateway internals]]: Controller and data plane architecture, `EnvoyProxy` customization, upgrades and troubleshooting.
 - [[Kubernetes/guides/networking/envoy-gateway|Envoy Gateway]]: Implementing the Gateway API standard using Envoy Proxy for L4/L7 routing, traffic splitting, and TLS termination.
 - [[Kubernetes/guides/networking/traefik|Traefik]]: Cloud-native reverse proxy and Ingress controller with automatic TLS and middleware support.
 
 ### 2. Service Mesh & In-Cluster Connectivity
 
+- [[Kubernetes/guides/networking/service-mesh|Service Mesh]]: What a mesh is for, sidecar versus sidecarless data planes, mTLS identity, and whether you need one.
 - [[Kubernetes/guides/networking/comparison|Service Mesh & Ingress Comparison]]: Architectural comparison between Envoy Gateway, Traefik, Istio, Linkerd, and Cilium Service Mesh.
 - [[Kubernetes/guides/networking/istio|Istio]]: Enterprise service mesh for mTLS, traffic management, telemetry, and authorization policies.
 - [[Kubernetes/guides/networking/linkerd|Linkerd]]: Ultra-lightweight, zero-config Rust-based service mesh focusing on security and operational simplicity.

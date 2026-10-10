@@ -1,5 +1,8 @@
 ---
 title: Data Migration Patterns
+tags: [architecture, migration-patterns, data-migration]
+date: 2026-06-06
+description: "Data migration is the process of moving data from one system, format, or storage to another."
 ---
 
 # Data Migration Patterns
@@ -299,4 +302,11 @@ Idempotent migration = safe to re-run. Use UPSERT (INSERT ... ON CONFLICT UPDATE
 - [[expand-contract|Expand-Contract Pattern]] — schema evolution
 - [[strangler-fig|Strangler Fig Pattern]] — legacy system replacement
 - [[blue-green-deployments|Blue-Green Deployments]] — deployment with data changes
-- [[databases/README|Databases]] — specific database patterns
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/README|Databases]] — specific database patterns
+
+## Across the wiki
+
+- [[AWS/migration/README|AWS Migration]] — migration (AWS)
+- [[AWS/migration/dms/README|Database Migration Service (DMS)]] — migration (AWS)
+- [[AWS/solutions-architect-professional/domain-4/4.2-migration-approach|4.2 Migration Approach]] — migration (AWS)
+- [[AWS/migration/datasync/README|DataSync]] — migration (AWS)

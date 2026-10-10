@@ -6,6 +6,7 @@ tags:
   - architecture
   - osi
   - protocols
+date: 2026-01-30
 ---
 
 # The OSI 7-Layer Model in Modern Systems Engineering
@@ -86,3 +87,10 @@ L4 Check: Is the port listening and TCP handshake completing?
 L7 Check: Does the application respond with valid HTTP status?
   $ curl -Iv https://10.0.1.50/healthz
 ```
+
+## Across the wiki
+
+- [[Linux/networking/routing|Routing]] — packet path (Linux)
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking (L04 Overview)]] — packet path (Kubernetes)
+- [[Linux/networking/tcp-ip-model|TCP/IP Model]] — packet path (Linux)
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Kubernetes Networking — Deep Dive]] — packet path (Kubernetes)

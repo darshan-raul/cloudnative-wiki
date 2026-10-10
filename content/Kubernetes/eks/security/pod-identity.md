@@ -544,3 +544,10 @@ kubectl exec -it my-app -- aws configure list
 - [Pod Identity Documentation](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html)
 - [EKS Workshop - Pod Identity](https://www.eksworkshop.com/docs/security/amazon-eks-pod-identity/)
 - [Pod Identity Agent Setup](https://docs.aws.amazon.com/eks/latest/userguide/pod-id-agent-setup.html)
+
+## Across the wiki
+
+- [[Azure/compute/aks/security-workload-identity|AKS Security & Microsoft Entra Workload Identity Architecture]] — workload identity (Azure)
+- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]] — workload identity (GCP)
+- [[AWS/security/iam/README|AWS IAM]] — workload identity (AWS)
+- [[Azure/identity/workload-identity|Azure Workload Identity & Federated Credentials]] — workload identity (Azure)

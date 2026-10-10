@@ -4,6 +4,7 @@ description: AWS storage services — S3 for object storage, EBS for block stora
 tags:
   - aws
   - storage
+date: 2026-06-06
 ---
 
 # AWS Storage
@@ -12,14 +13,14 @@ AWS offers a comprehensive suite of storage services across three categories: **
 
 ## Service Map
 
-| Service                  | Type              | Access Pattern | Common Use                     |
-| ------------------------ | ----------------- | -------------- | ------------------------------ | -------------------------------- |
-| [[s3/README              | S3]]              | Object         | HTTP REST API (PUT/GET/DELETE) | Static assets, data lake, backup |
-| [[ebs/README             | EBS]]             | Block          | EC2 attachment (iSCSI)         | OS disks, databases, app data    |
-| [[efs/README             | EFS]]             | File           | NFSv4 (mounted as drive)       | Shared file system, CI runners   |
-| [[fsx/README             | FSx]]             | File           | SMB/NFS (Windows/Lustre)       | Enterprise apps, HPC             |
-| [[glacier/README         | Glacier]]         | Object         | HTTP (via S3 or direct)        | Long-term archive, compliance    |
-| [[storage-gateway/README | Storage Gateway]] | Hybrid         | SMB/NFS/iSCSI                  | On-prem to cloud backup          |
+| Service                                     | Type   | Access Pattern                 | Common Use                       |
+| ------------------------------------------- | ------ | ------------------------------ | -------------------------------- |
+| [[s3/README\|S3]]                           | Object | HTTP REST API (PUT/GET/DELETE) | Static assets, data lake, backup |
+| [[ebs/README\|EBS]]                         | Block  | EC2 attachment (iSCSI)         | OS disks, databases, app data    |
+| [[efs/README\|EFS]]                         | File   | NFSv4 (mounted as drive)       | Shared file system, CI runners   |
+| [[fsx/README\|FSx]]                         | File   | SMB/NFS (Windows/Lustre)       | Enterprise apps, HPC             |
+| [[glacier/README\|Glacier]]                 | Object | HTTP (via S3 or direct)        | Long-term archive, compliance    |
+| [[storage-gateway/README\|Storage Gateway]] | Hybrid | SMB/NFS/iSCSI                  | On-prem to cloud backup          |
 
 ## Storage Hierarchy
 

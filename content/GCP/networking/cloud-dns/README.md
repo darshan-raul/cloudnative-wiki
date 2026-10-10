@@ -7,6 +7,7 @@ tags:
   - dns
   - cloud-dns
   - security
+date: 2026-09-06
 ---
 
 # GCP Cloud DNS Architecture 🌐📡
@@ -196,3 +197,10 @@ gcloud dns record-sets transaction execute --zone=internal-company-zone
 3. **DNS Forwarding Targets Must Not Loop Back:** If you configure a Cloud DNS Forwarding Zone for `corp.internal` pointing to an on-prem server, and that on-prem server has a forwarder pointing back to GCP for `corp.internal`, queries will enter an **infinite recursive DNS loop**, causing queries to time out and exhausting resolver connections.
 4. **VPC Peering Does Not Peer DNS Automatically:** Establishing VPC Network Peering between VPC A and VPC B allows network IP routing, but **does not share private DNS zones**. Instances in VPC B cannot resolve VPC A's private DNS records unless VPC A explicitly adds VPC B to the private zone's authorized networks or sets up a DNS Peering zone.
 5. **DNS Propagation Time vs TTL Caching:** While updates to Cloud DNS records propagate across Google's global Anycast nameservers in under **5 seconds**, recursive resolvers on the public internet cache records according to the record's **Time-to-Live (TTL)**. When planning an IP migration, lower the record's TTL to 60 seconds at least 48 hours in advance.
+
+## Across the wiki
+
+- [[AWS/networking/dns/README|Amazon Route 53]] — DNS (AWS)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/README|DNS]] — DNS (Architecture)
+- [[Linux/networking/dns-resolution|DNS Resolution]] — DNS (Linux)
+- [[Kubernetes/concepts/L04-services-networking/03-dns|DNS in Kubernetes]] — DNS (Kubernetes)

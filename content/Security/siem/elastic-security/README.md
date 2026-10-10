@@ -56,3 +56,10 @@ If you're using Wazuh as primary SIEM, Elastic Security is a potential migration
 
 - [[Security/siem/README|SIEM Overview]]
 - [[Security/siem/wazuh/README|Wazuh]]
+
+## Across the wiki
+
+- [[Linux/observability/journalctl|journalctl]] — host and container logs (Linux)
+- [[Kubernetes/eks/observability/logging/pod-logging|Pod Logging on EKS]] — host and container logs (Kubernetes)
+- [[AWS/analytics/opensearch/README|Amazon OpenSearch]] — host and container logs (AWS)
+- [[Linux/concepts/08-logging|08 — Logging]] — host and container logs (Linux)

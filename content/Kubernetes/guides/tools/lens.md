@@ -5,7 +5,11 @@ tags:
   - Tools
   - Desktop
   - Dashboard
+date: 2026-06-11
+description: "macOS — notes and reference."
 ---
+
+# Lens
 
 _Source: [k8slens.dev](https://k8slens.dev/)_
 

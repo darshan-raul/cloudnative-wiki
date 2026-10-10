@@ -5,6 +5,7 @@ tags:
   - aws
   - cost-management
   - storage
+date: 2026-06-06
 ---
 
 # S3 Cost Optimization

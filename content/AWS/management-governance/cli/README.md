@@ -5,6 +5,7 @@ tags:
   - aws
   - management
   - cli
+date: 2026-06-06
 ---
 
 # AWS CLI
@@ -276,3 +277,10 @@ aws iam simulate-principal-policy \
 - **`--output text` strips quotes from strings — don't use it for file paths:** If a bucket name has special characters, `--output text` may strip quotes and cause issues in scripts. Use `--output json` for programmatic use.
 - **CLI pagination can silently skip results if rate limited:** If the CLI hits a rate limit (e.g., 1000 calls/minute for some APIs), it retries but may not retry all pages correctly. For high-volume scripts, use `--max-items` and handle pagination manually with `--starting-token`.
 - **`aws configure sso` requires SSO to be set up first:** If you run `aws configure sso` without having SSO configured in IAM Identity Center, it fails with an unclear error. Set up SSO first via the AWS SSO console.
+
+## Across the wiki
+
+- [[Linux/shell-scripting/README|Shell Scripting]] — command-line tooling (Linux)
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — command-line tooling (Kubernetes)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/psql|psql]] — command-line tooling (Architecture)
+- [[Linux/shell-scripting/bash-cheatsheet|Bash Scripting Cheatsheet]] — command-line tooling (Linux)

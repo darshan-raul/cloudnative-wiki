@@ -7,6 +7,7 @@ tags:
   - logs
   - insights
   - cloudwatch
+date: 2026-06-06
 ---
 
 # CloudWatch Logs Insights

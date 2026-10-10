@@ -8,6 +8,7 @@ tags:
   - oidc
   - security
   - kubernetes
+date: 2026-09-06
 ---
 
 # GCP Workload Identity & Federation 🔑🚫
@@ -239,3 +240,10 @@ jobs:
 3. **The `attribute-condition` Injection Trap:** Always enforce an `--attribute-condition` matching `assertion.repository_owner == '<your-org>'` or `assertion.repository == '<your-org>/<your-repo>'` at the provider level. If you create a GitHub Actions provider without a repository restriction and only bind permissions loosely at the pool, _any_ public GitHub repository could theoretically exchange a token against your pool.
 4. **HostNetwork Pods Bypass Workload Identity:** Pods running with `hostNetwork: true` share the network namespace of the GKE node. Because of this, their requests to `169.254.169.254` bypass the GKE Metadata Server daemonset filter and always receive the node's machine service account credentials. **Never use `hostNetwork: true` for pods requiring fine-grained Workload Identity.**
 5. **Node Pool Upgrades & Metadata Server Restart Blips:** During GKE node pool rolling upgrades, the local metadata server pod is briefly restarted on newly scheduled nodes. Applications initiating connections during pod startup should implement standard exponential backoff retries when fetching initial tokens from the metadata endpoint.
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/pod-identity|EKS Pod Identity]] — workload identity (Kubernetes)
+- [[Azure/compute/aks/security-workload-identity|AKS Security & Microsoft Entra Workload Identity Architecture]] — workload identity (Azure)
+- [[AWS/security/iam/README|AWS IAM]] — workload identity (AWS)
+- [[Kubernetes/eks/security/iam-roles-for-sa|IAM Roles for Service Accounts (IRSA)]] — workload identity (Kubernetes)

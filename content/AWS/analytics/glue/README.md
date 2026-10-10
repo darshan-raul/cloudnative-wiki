@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - glue
+date: 2026-06-06
 ---
 
 # AWS Glue

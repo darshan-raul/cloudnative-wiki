@@ -9,6 +9,7 @@ tags:
   - sre
   - incident-response
   - debugging
+date: 2026-09-06
 ---
 
 # AKS SRE Troubleshooting & Incident Runbook — CrashLoopBackOff, Node NotReady, and CNI Leaks 🚨🩺
@@ -208,3 +209,10 @@ az aks kollect \
 3. **Log Disk Saturation Freezing Worker Nodes:** When a container enters a rapid crash loop and writes gigabytes of stack traces to stdout/stderr, Docker/containerd stores these in `/var/log/pods`. If log rotation is disabled or lagging, the OS root disk hits **100% capacity (`DiskPressure`)**, causing the Kubelet to reject all container executions. Run `df -h` inside the node shell to verify root filesystem capacity.
 4. **VNet NSG Outbound Blocking API Server Drops:** If an enterprise security engineer applies an aggressive Network Security Group (NSG) to the AKS node subnet that blocks outbound TCP port 443 or port 9000 (Konnectivity tunnel), worker nodes lose connectivity to the managed control plane. All nodes will abruptly transition to `NotReady`. Ensure NSGs whitelist the `AzureCloud` service tag.
 5. **ImagePullBackOff Caused by ACR Managed Identity Desync:** When AKS pulls images from Azure Container Registry (ACR), it authenticates using the cluster's `kubeletidentity`. If someone accidentally removes the **"AcrPull"** role assignment on the ACR resource group, all rolling deployments will suddenly fail with `ImagePullBackOff: 401 Unauthorized`. Run `az aks check-acr` to immediately audit registry connectivity.
+
+## Across the wiki
+
+- [[Kubernetes/eks/troubleshooting/README|EKS Troubleshooting]] — troubleshooting (Kubernetes)
+- [[GCP/compute/gke/troubleshooting-runbook|GKE SRE Incident Response & Production Troubleshooting Runbook]] — troubleshooting (GCP)
+- [[Linux/troubleshooting/README|Linux Troubleshooting]] — troubleshooting (Linux)
+- [[DevOps/sre/incident-management|Incident Management and Postmortems]] — troubleshooting (DevOps)

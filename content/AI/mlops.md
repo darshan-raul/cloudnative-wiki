@@ -8,6 +8,7 @@ tags:
   - machine-learning
   - kubeflow
   - mlflow
+date: 2026-01-30
 ---
 
 # MLOps Architecture & Production Lifecycle
@@ -87,3 +88,10 @@ Traditional monitoring tracks CPU, memory, and HTTP 500 rates. MLOps monitors **
 1. **Data Drift (Covariate Shift):** The distribution of input features $P(X)$ changes over time (e.g. inflation alters purchase prices). Detected via Kolmogorov-Smirnov (KS) tests or Population Stability Index (PSI).
 2. **Concept Drift:** The relationship between inputs and targets $P(Y|X)$ changes (e.g. consumer purchasing patterns change after a macroeconomic shift).
 3. **Evidently AI / Great Expectations:** Automated data quality assertions and drift dashboards.
+
+## Across the wiki
+
+- [[Azure/compute/aks/gpu-orchestration-ai|AKS GPU Orchestration for AI/ML — NVIDIA H100/A100, InfiniBand RDMA, and KubeRay]] — GPU and AI workloads (Azure)
+- [[GCP/compute/gke/gpu-tpu-orchestration|GKE GPU & TPU Orchestration — AI/ML Accelerators, Ray on GKE, and Kueue]] — GPU and AI workloads (GCP)
+- [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources and Device Plugins]] — GPU and AI workloads (Kubernetes)
+- [[AWS/machine-learning/README|AWS Machine Learning]] — GPU and AI workloads (AWS)

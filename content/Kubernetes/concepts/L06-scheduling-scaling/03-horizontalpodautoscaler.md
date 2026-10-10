@@ -710,3 +710,9 @@ kubectl edit deployment <name>
 - [[Kubernetes/concepts/L06-scheduling-scaling/10-keda|KEDA]] — the event-driven variant
 - [[Kubernetes/concepts/L06-scheduling-scaling/04-poddisruptionbudget|PDB]] — how PDBs interact with HPA scale-down
 - [[Kubernetes/concepts/L06-scheduling-scaling/05-scaling|Scaling]] — the L06 overview
+
+## Across the wiki
+
+- [[Azure/compute/aks/autoscaling-keda|AKS Autoscaling Architecture — Cluster Autoscaler, KEDA, and Virtual Nodes]] — autoscaling (Azure)
+- [[GCP/compute/gke/autoscaling|GKE Autoscaling Architecture — Cluster Autoscaler, NAP, HPA v2, and VPA]] — autoscaling (GCP)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability|Scalability]] — autoscaling (Architecture)

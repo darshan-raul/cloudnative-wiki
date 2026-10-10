@@ -7,6 +7,7 @@ tags:
   - http
   - rfc7807
   - rest
+date: 2026-01-30
 ---
 
 # API Error Codes, HTTP Status Standards & RFC 7807 Problem Details
@@ -80,3 +81,8 @@ Content-Type: application/problem+json
 
 - **Client Response:** Return clean RFC 7807 errors with an opaque `error_id` / `trace_id`.
 - **Internal Logs:** Log the full exception, call stack, and context in your internal APM / SIEM correlated to that same `trace_id`.
+
+## Across the wiki
+
+- [[AWS/serverless/api-gateway/README|Amazon API Gateway]] — API design and gateways (AWS)
+- [[AWS/application-integration/appsync/README|AWS AppSync]] — API design and gateways (AWS)

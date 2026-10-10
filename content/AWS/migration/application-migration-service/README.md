@@ -4,6 +4,7 @@ description: AWS MGN — lift-and-shift service for Windows and Linux servers, c
 tags:
   - aws
   - migration
+date: 2026-06-06
 ---
 
 # Application Migration Service (MGN)

@@ -7,6 +7,7 @@ tags:
   - direct-connect
   - vpn
   - hybrid
+date: 2026-06-06
 ---
 
 # AWS Hybrid Connectivity
@@ -200,3 +201,8 @@ Direct Connect becomes cheaper than VPN at higher data transfer volumes. VPN has
 - **Direct Connect MACSec encryption is per-hop:** Direct Connect offers MACsec (Layer 2 encryption) at the physical layer, but once traffic leaves the DX location, it's on the AWS backbone (which is encrypted at Layer 3). You still need TLS/HTTPS for end-to-end encryption of application data.
 - **BGP prefix limits apply:** By default, Direct Connect and VPN allow 100 BGP prefixes. If you're running full BGP table routing (140K+ prefixes from the internet), you need to request an increase or use route summarization on your router.
 - **VPN connections via VGW cannot use BGP route propagation to VPC route tables:** When using a VGW, VPN routes are propagated to VPC route tables via BGP. But you cannot control the routing policy (e.g., prefer DX over VPN) using BGP attributes. Use Transit Gateway for advanced routing policies.
+
+## Across the wiki
+
+- [[GCP/networking/hybrid/README|GCP Cloud Interconnect & HA VPN]] — hybrid connectivity (GCP)
+- [[Kubernetes/eks/compute/hybrid-nodes/README|EKS Hybrid Nodes]] — hybrid connectivity (Kubernetes)

@@ -13,11 +13,12 @@
   },
   "scripts": {
     "quartz": "./quartz/bootstrap-cli.mjs",
-    "docs": "npx quartz build --serve -d docs",
-    "check": "tsc --noEmit && npm run check:k8s && npx prettier . --check",
-    "check:k8s": "node scripts/check-k8s-content.mjs",
+    "docs": "npx quartz build --serve --port 3009",
+    "check": "tsc --noEmit && npm run check:content && npx prettier . --check",
+    "check:content": "node scripts/check-content.mjs",
+    "check:k8s": "node scripts/check-content.mjs Kubernetes",
     "format": "npx prettier . --write",
-    "test": "tsx --test && npm run check:k8s",
+    "test": "tsx --test && npm run check:content",
     "profile": "0x -D prof ./quartz/bootstrap-cli.mjs build --concurrency=1"
   },
   "engines": {

@@ -5,6 +5,7 @@ tags:
   - linux
   - shell
   - bash
+date: 2026-06-06
 ---
 
 # Shell Scripting
@@ -36,3 +37,15 @@ Bash scripting turns sequences of commands into repeatable, automatable scripts.
 **[[../concepts/12-io-redirection|I/O Redirection]]** — Part of the beginner curriculum, covers the foundational concept of stdin/stdout/stderr, pipes, tee, and xargs.
 
 **[[../concepts/11-shell-basics|Shell Basics]]** — Part of the beginner curriculum, covers environment variables, PATH, aliases, history, and job control.
+
+## Further reading
+
+- [Bash: more reading — tldp.org](http://tldp.org/LDP/abs/html/index.html)
+- [Bash: more reading — tldp.org](http://tldp.org/HOWTO/Bash-Prog-Intro-HOWTO.html#toc)
+- [Bash: more reading — mywiki.wooledge.org](http://mywiki.wooledge.org/BashGuide)
+
+## Across the wiki
+
+- [[Kubernetes/guides/tools/kubectl|kubectl]] — command-line tooling (Kubernetes)
+- [[AWS/management-governance/cli/README|AWS CLI]] — command-line tooling (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/psql|psql]] — command-line tooling (Architecture)

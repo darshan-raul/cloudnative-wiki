@@ -1,3 +1,10 @@
+---
+title: "CDN"
+tags: [architecture, data-architecture, cdn]
+date: 2026-01-30
+description: "Content Delivery Networks (CDNs) help deliver web content quickly by caching it at various points globally. There are two primary types of CDNs: push-based and pull-based."
+---
+
 # CDN
 
 Content Delivery Networks (CDNs) help deliver web content quickly by caching it at various points globally. There are two primary types of CDNs: push-based and pull-based. Here's a detailed explanation and examples of each type:
@@ -80,3 +87,8 @@ Content Delivery Networks (CDNs) help deliver web content quickly by caching it 
   - **Media Streaming**: Pre-recorded videos or music files that need to be available immediately without latency.
 
 Understanding the differences between pull-based and push-based CDNs helps in selecting the appropriate solution based on the specific needs of content delivery, frequency of content updates, and management preferences.
+
+## Across the wiki
+
+- [[AWS/networking/cdn/README|Amazon CloudFront]] — CDN and edge caching (AWS)
+- [[GCP/networking/cloud-cdn/README|GCP Cloud CDN Architecture & Edge Caching]] — CDN and edge caching (GCP)

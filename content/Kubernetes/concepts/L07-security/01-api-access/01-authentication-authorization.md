@@ -842,3 +842,10 @@ kubectl get rolebinding <name> -n <ns> -o yaml
 - [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC]] — the authorization model
 - [[Kubernetes/concepts/L07-security/01-api-access/04-certificates|Certificates]] — the X.509 piece
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/authentication/stage3/01-oidc-fundamentals|3.1 — OpenID Connect (OIDC) Fundamentals]] — OIDC federation (Architecture)
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC Federation]] — OIDC federation (DevOps)
+- [[Architecture/solution-architecture-concepts/authentication/saml|SAML]] — OIDC federation (Architecture)
+- [[DevOps/ci-cd/github-actions|GitHub Actions Architecture & Best Practices]] — OIDC federation (DevOps)

@@ -5,6 +5,7 @@ tags:
   - aws
   - security
   - security-hub
+date: 2026-06-06
 ---
 
 # AWS Security Hub
@@ -196,3 +197,10 @@ aws events put-targets \
 - **Security Hub's "BatchUpdateFindings" with "Workflow.Status = RESOLVED" doesn't actually fix the issue — it just marks it as resolved in the console:** The underlying misconfiguration still exists. You must run actual remediation (SSM Automation, Lambda) before or after marking as resolved.
 - **Not all Security Hub findings have remediations — some require manual review:** Finding "IAM.1: Access keys older than 90 days" requires human decision (rotate the key or mark as intentional). Automated remediation is only appropriate for clear-cut issues.
 - **Security Hub requires AWS Config to be enabled for compliance standards to work:** If you disable AWS Config, the compliance standards (CIS, PCI, FSBP) won't generate findings.
+
+## Across the wiki
+
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
+- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]] — threat detection (GCP)
+- [[Security/siem/README|SIEM]] — threat detection (Security)
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)

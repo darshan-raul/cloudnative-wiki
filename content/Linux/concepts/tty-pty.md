@@ -1,3 +1,10 @@
+---
+title: "tty vs pty"
+tags: [linux, tty-pty]
+date: 2026-01-30
+description: "In Linux, TTY and PTY are integral components of the system's terminal interface, facilitating user interactions with the operating system."
+---
+
 # tty vs pty
 
 In Linux, **TTY** and **PTY** are integral components of the system's terminal interface, facilitating user interactions with the operating system.

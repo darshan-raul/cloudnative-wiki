@@ -5,6 +5,7 @@ tags:
   - aws
   - compute
   - ec2
+date: 2026-06-06
 ---
 
 # Amazon EC2 (Elastic Compute Cloud)
@@ -317,3 +318,10 @@ aws ssm send-command \
 - **Spot instances can be interrupted with 2-minute notice — never run stateful workloads without checkpoints:** For databases, use a persistent launch template with restart on interruption. For batch jobs, enable checkpointing to S3.
 - **The default limit is 20 instances per region — request increase for production:** If you try to launch > 20 instances, you'll get `MaxInstanceCountExceeded`. Request via AWS console or CLI before deploying.
 - **Instance user-data runs once at first launch — it does not re-run on reboot:** To re-run a script, use cloud-init with `runcmd` or Systems Manager State Manager. User-data is for initial setup only.
+
+## Across the wiki
+
+- [[Azure/compute/vm|Azure Virtual Machines & Scale Sets (VMSS)]] — virtual machines (Azure)
+- [[GCP/compute/gce|GCP Compute Engine (GCE)]] — virtual machines (GCP)
+- [[Linux/virtualization/hypervisors|Hypervisors]] — virtual machines (Linux)
+- [[GCP/compute/gce/migs|GCP Managed Instance Groups (MIGs)]] — virtual machines (GCP)

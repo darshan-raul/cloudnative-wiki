@@ -5,6 +5,7 @@ tags:
   - linux
   - networking
   - tools
+date: 2026-06-06
 ---
 
 # ss and netstat

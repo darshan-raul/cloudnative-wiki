@@ -1,3 +1,10 @@
+---
+title: "Channels"
+tags: [architecture, languages, golang, channels]
+date: 2026-01-30
+description: "Go channels and the common patterns for using them to communicate between goroutines."
+---
+
 # Channels
 
 Sure, channels are a powerful concurrency primitive in Go, used for communication between goroutines. Here are the common patterns for using channels in Go:

@@ -7,6 +7,7 @@ tags:
   - sagemaker
   - sagemaker-canvas
   - no-code
+date: 2026-06-06
 ---
 
 # Amazon SageMaker Canvas

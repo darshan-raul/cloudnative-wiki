@@ -1,3 +1,10 @@
+---
+title: "GHz?"
+tags: [architecture, software-engineering-concepts, ghz]
+date: 2026-01-30
+description: "GHz? — notes and reference."
+---
+
 # GHz?
 
 **What is GHz?**
@@ -30,3 +37,10 @@
 
 - **Don't just compare clock speeds:** Look at the number of cores, cache size, and CPU generation when comparing processors. A higher clock speed on an older generation processor might not outperform a newer generation processor with a slightly lower clock speed.
 - **Software requirements:** Understand your usage needs. Demanding software will benefit more from a faster CPU.
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/chaos-engineering|Chaos Engineering]] — performance and chaos testing (Kubernetes)
+- [[Linux/networking/network-performance-tuning|Network Performance Tuning]] — performance and chaos testing (Linux)
+- [[AWS/solutions-architect-professional/domain-2/2.5-performance-objectives|2.5 Performance Objectives]] — performance and chaos testing (AWS)
+- [[Kubernetes/guides/non-functional/performance-tuning|Performance Tuning]] — performance and chaos testing (Kubernetes)

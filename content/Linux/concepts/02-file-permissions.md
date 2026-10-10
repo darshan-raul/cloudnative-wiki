@@ -4,6 +4,7 @@ description: Linux file permissions — rwx, chmod, chown, chgrp, umask, sticky 
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 02 — File Permissions
@@ -269,3 +270,8 @@ setfacl -m u:alice:rw file
 umask                  # show current
 umask 027              # set for session
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — users and permissions (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — users and permissions (Containers)

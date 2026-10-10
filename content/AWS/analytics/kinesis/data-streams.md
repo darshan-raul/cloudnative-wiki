@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - kinesis
+date: 2026-06-06
 ---
 
 # Kinesis Data Streams

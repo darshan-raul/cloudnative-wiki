@@ -1,3 +1,10 @@
+---
+title: "Mail related records"
+tags: [architecture, software-engineering-concepts, dns, mail-related-records]
+date: 2026-01-30
+description: "SPF, DKIM, and DMARC are three core email authentication technologies that work together to protect your domain's reputation and combat email fraud. Here's a breakdown of each and how they relate."
+---
+
 # Mail related records
 
 SPF, DKIM, and DMARC are three core email authentication technologies that work together to protect your domain's reputation and combat email fraud. Here's a breakdown of each and how they relate:

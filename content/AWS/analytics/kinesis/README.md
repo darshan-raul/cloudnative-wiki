@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - kinesis
+date: 2026-06-06
 ---
 
 # Amazon Kinesis
@@ -116,3 +117,14 @@ User actions → Kinesis Streams → multiple consumers
   ├── Audit log archival (Firehose → S3)
   └── Real-time dashboards (Kinesis Analytics)
 ```
+
+## More in this section
+
+- [[AWS/analytics/kinesis/data-streams|Kinesis Data Streams]] — Kinesis Data Streams — shards, producers, consumers, enhanced fan-out, scaling, capacity planning, and use cases
+
+## Across the wiki
+
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
+- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)

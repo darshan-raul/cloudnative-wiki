@@ -1,3 +1,10 @@
+---
+title: "Stack/Heap and Stack Overflow"
+tags: [architecture, programming-concepts, stack-heap-and-stack-overflow]
+date: 2026-01-30
+description: "Stack and heap memory, how each is allocated and freed, and what causes a stack overflow."
+---
+
 # Stack/Heap and Stack Overflow
 
 Absolutely! Let's break down what stacks and heaps are in the context of computer memory, along with the concept of a stack overflow:

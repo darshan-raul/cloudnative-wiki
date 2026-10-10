@@ -502,3 +502,10 @@ dmesg | grep -i apparmor
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — requires `RuntimeDefault` seccomp for `restricted`
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/17-runtime-sandboxing|Runtime Sandboxing]] — gVisor / Kata as stronger alternatives
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/18-runtime-detection|Runtime Detection]] — Falco / Tetragon detect syscall anomalies
+
+## Across the wiki
+
+- [[Linux/security/seccomp|seccomp]] — kernel sandboxing (Linux)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — kernel sandboxing (Containers)
+- [[Security/kubernetes-security/pod-security/README|Pod Security]] — kernel sandboxing (Security)
+- [[Linux/security/apparmor|AppArmor]] — kernel sandboxing (Linux)

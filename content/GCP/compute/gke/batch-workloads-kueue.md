@@ -8,6 +8,7 @@ tags:
   - kueue
   - jobs
   - scheduling
+date: 2026-09-06
 ---
 
 # GKE Batch Workloads & Kueue Job Orchestration Architecture ⏱️📦
@@ -293,3 +294,9 @@ Batch pricing relies heavily on **Compute Engine Spot VMs**:
 4. **Indexed Jobs Require Atomic State Checkpoints:** When using `completionMode: Indexed`, if a worker pod processing index 42 crashes 90% of the way through its task, Kubernetes restarts a new pod with the same index 42. If the application did not write state atomically (e.g., uploading partially written corrupt parquet files to GCS), the retried worker will produce duplicate or corrupt data. Always write to a temporary file (`shard_42.tmp`) and atomically rename it (`shard_42.parquet`) upon successful completion.
 5. **Scale-to-Zero Node Pool Scheduling Deadlocks:** If your batch node pool autoscales to 0 nodes (`--min-nodes=0`), and you submit a Job requesting specialized taints or resource requests, the Cluster Autoscaler must simulate node provisioning. If the Job specification contains conflicting node selectors or impossible CPU requests (e.g., requesting 34 vCPUs on a 32-vCPU machine), the autoscaler will ignore the pods, and the Job will sit in `Pending` forever without triggering autoscaling.
 6. **Kueue Cohort Borrowing Starvation:** If Team A and Team B belong to the same Cohort, and Team A submits 10,000 short 10-second batch tasks, Kueue will allow Team A to borrow Team B's idle quota. If Team B subsequently submits a high-priority Job, Kueue must wait for Team A's running tasks to finish or actively preempt them. Configure `preemption.withinClusterQueue: LowerPriority` and assign explicit priority classes to ensure mission-critical jobs preempt borrowed capacity immediately.
+
+## Across the wiki
+
+- [[Azure/compute/aks/batch-workloads|AKS Batch Workloads, Job Orchestration, and Kueue Fair-Share Scheduling]] — batch workloads (Azure)
+- [[Kubernetes/concepts/L03-workloads/06-job|Jobs — Run-to-Completion Workloads]] — batch workloads (Kubernetes)
+- [[AWS/compute/batch/README|AWS Batch]] — batch workloads (AWS)

@@ -8,6 +8,7 @@ tags:
   - prometheus
   - gmp
   - logging
+date: 2026-09-06
 ---
 
 # GKE Observability Architecture — Managed Prometheus (GMP), Logging, and Trace 📈🔍
@@ -241,3 +242,10 @@ Pricing components:
 4. **ContainerLogV2 JSON Parsing Truncation:** ContainerLogV2 parses structured JSON output from containers into queryable fields (`jsonPayload`). However, if an application emits a single JSON log line exceeding 256 KB (e.g., a massive base64 string or giant GraphQL trace), Cloud Logging silently truncates the line, invalidating the JSON. The entry is degraded to raw `textPayload`, causing JSON-based alerting filters to fail silently.
 5. **Multiple PodMonitorings Scraping the Same Pod Duplicates Costs:** If Team A creates a `PodMonitoring` matching `app: order-service` in namespace `finance`, and the platform team deploys a `ClusterPodMonitoring` matching `app.kubernetes.io/part-of: e-commerce`, **both collectors will scrape the pod concurrently**. Every metric will be ingested twice, doubling your monitoring invoice and causing fluctuating step artifacts in PromQL graphs. Audit active scrape targets using `kubectl get podmonitoring,clusterpodmonitoring --all-namespaces`.
 6. **Log Exclusion Filters Save Thousands on GKE Clusters:** A default GKE cluster running 50 nodes generates over 500 GB of routine system logs (Kubelet probe checks, container start/stop events, health checks) every month ($250/month in useless logging). Deploying an exclusion filter on the `_Default` sink targeting `jsonPayload.path="/healthz"` and `jsonPayload.status=200` eliminates this noise with zero impact on operational troubleshooting.
+
+## Across the wiki
+
+- [[Kubernetes/eks/observability/README|Observability on EKS]] — cluster observability (Kubernetes)
+- [[Azure/compute/aks/observability-monitoring|AKS Observability — Container Insights, Managed Prometheus, and ContainerLogV2]] — cluster observability (Azure)
+- [[Observability/prometheus/README|Prometheus Architecture]] — cluster observability (Observability)
+- [[Kubernetes/concepts/L08-operations/04-metrics-sources|Metrics Sources & Observability Architecture]] — cluster observability (Kubernetes)

@@ -51,11 +51,11 @@ EKS uses two-layer authentication:
 
 ### For Workloads (Pods)
 
-| Method                                     | AuthN            | Use Case                   |
-| ------------------------------------------ | ---------------- | -------------------------- | -------------- |
-| [[Kubernetes/eks/security/pod-identity     | Pod Identity]]   | IAM role                   | AWS SDK access |
-| [[Kubernetes/eks/security/iam-roles-for-sa | IRSA]]           | IAM role via OIDC          | AWS SDK access |
-| Node IAM role                              | Instance profile | Fallback (not recommended) |
+| Method                                                 | AuthN             | Use Case                   |
+| ------------------------------------------------------ | ----------------- | -------------------------- |
+| [[Kubernetes/eks/security/pod-identity\|Pod Identity]] | IAM role          | AWS SDK access             |
+| [[Kubernetes/eks/security/iam-roles-for-sa\|IRSA]]     | IAM role via OIDC | AWS SDK access             |
+| Node IAM role                                          | Instance profile  | Fallback (not recommended) |
 
 ## Pod Authentication Deep-Dive
 
@@ -432,3 +432,10 @@ RUN aws configure set aws_access_key_id xxx
 - [IRSA Documentation](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html)
 - [Pod Identity Documentation](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html)
 - [EKS Best Practices - IAM](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/authentication/stage3/01-oidc-fundamentals|3.1 — OpenID Connect (OIDC) Fundamentals]] — OIDC federation (Architecture)
+- [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC Federation]] — OIDC federation (DevOps)
+- [[Architecture/solution-architecture-concepts/authentication/saml|SAML]] — OIDC federation (Architecture)
+- [[DevOps/ci-cd/github-actions|GitHub Actions Architecture & Best Practices]] — OIDC federation (DevOps)

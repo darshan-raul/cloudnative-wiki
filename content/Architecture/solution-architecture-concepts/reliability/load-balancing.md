@@ -193,3 +193,10 @@ Load balancer weight-based routing enables canary without duplicate infrastructu
 
 - [Samwho.dev — Load Balancing](https://samwho.dev/load-balancing/) (interactive visualization)
 - [AWS — Load Balancing Best Practices](https://aws.amazon.com/architecture/load-balancing/)
+
+## Across the wiki
+
+- [[Azure/compute/aks/ingress-appgw-gateway|AKS Ingress, Application Gateway for Containers, and Gateway API Architecture]] — ingress and load balancing (Azure)
+- [[GCP/compute/gke/gateway-api|GKE Gateway API Architecture, HTTPRoute, and Cloud Armor Integration]] — ingress and load balancing (GCP)
+- [[Kubernetes/concepts/L04-services-networking/09-gateway-api|Gateway API]] — ingress and load balancing (Kubernetes)
+- [[AWS/networking/load-balancing/README|Elastic Load Balancing]] — ingress and load balancing (AWS)

@@ -1,3 +1,10 @@
+---
+title: "context"
+tags: [architecture, languages, golang, context]
+date: 2026-01-30
+description: "The context package in Go is used for passing request-scoped values, cancellation signals, and deadlines across API boundaries to all the goroutines involved in handling a particular request."
+---
+
 # context
 
 "https://www.youtube.com/watch?v=Q0BdETrs1Ok&t=127s"

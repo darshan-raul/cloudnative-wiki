@@ -8,6 +8,7 @@ tags:
   - runbook
   - sre
   - incident-response
+date: 2026-09-06
 ---
 
 # GKE SRE Incident Response & Production Troubleshooting Runbook 🚨🛠️
@@ -217,3 +218,10 @@ During a P1 Outage on GKE, follow this structured runbook:
       `kubectl get pods -n kube-system -l k8s-app=cilium`
 - [ ] **Step 6: Check Quota Availability in GCP Console**
       Verify `CPUS_ALL_REGIONS` and `IN_USE_ADDRESSES` are below 90% utilization.
+
+## Across the wiki
+
+- [[Kubernetes/eks/troubleshooting/README|EKS Troubleshooting]] — troubleshooting (Kubernetes)
+- [[Azure/compute/aks/troubleshooting-runbook|AKS SRE Troubleshooting & Incident Runbook — CrashLoopBackOff, Node NotReady, and CNI Leaks]] — troubleshooting (Azure)
+- [[Linux/troubleshooting/README|Linux Troubleshooting]] — troubleshooting (Linux)
+- [[DevOps/sre/incident-management|Incident Management and Postmortems]] — troubleshooting (DevOps)

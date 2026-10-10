@@ -5,6 +5,7 @@ tags:
   - linux
   - networking
   - performance
+date: 2026-06-06
 ---
 
 # Network Performance Tuning
@@ -332,3 +333,10 @@ ss -s
 ss -tulnp
 ss -ti state time-wait
 ```
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/chaos-engineering|Chaos Engineering]] — performance and chaos testing (Kubernetes)
+- [[Architecture/solution-architecture-concepts/performance-testing|Performance Testing]] — performance and chaos testing (Architecture)
+- [[AWS/solutions-architect-professional/domain-2/2.5-performance-objectives|2.5 Performance Objectives]] — performance and chaos testing (AWS)
+- [[Kubernetes/guides/non-functional/performance-tuning|Performance Tuning]] — performance and chaos testing (Kubernetes)

@@ -1021,3 +1021,10 @@ kubectl delete pod <pod> --force --grace-period=0
 | Taints and tolerations           | [[Kubernetes/concepts/L06-scheduling-scaling/00-README\|L06 — Scheduling and Scaling]]                         |
 | TTL controller (advanced)        | [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|L09 — Garbage Collection]]                           |
 | Finalizers (advanced)            | [[Kubernetes/concepts/L09-advanced/05-finalizers\|L09 — Finalizers]]                                           |
+
+## Across the wiki
+
+- [[Azure/compute/aks/batch-workloads|AKS Batch Workloads, Job Orchestration, and Kueue Fair-Share Scheduling]] — batch workloads (Azure)
+- [[GCP/compute/gke/batch-workloads-kueue|GKE Batch Workloads & Kueue Job Orchestration Architecture]] — batch workloads (GCP)
+- [[AWS/compute/batch/README|AWS Batch]] — batch workloads (AWS)
+- [[GCP/compute/cloud-run/jobs|GCP Cloud Run Jobs & Batch Processing]] — batch workloads (GCP)

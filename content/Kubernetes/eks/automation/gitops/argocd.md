@@ -1,152 +1,149 @@
 ---
-title: Argo CD
-tags: [eks, automation, gitops, argocd]
+title: Argo CD on EKS
+tags: [eks, gitops, argocd, continuous-delivery]
 date: 2026-05-17
-description: GitOps continuous delivery with Argo CD on EKS
+description: Running Argo CD on EKS — installation choices, exposing it through an ALB, IAM-based access to other EKS clusters, ECR-hosted Helm charts, and the operational settings that matter at scale.
 ---
 
-# Argo CD
+# Argo CD on EKS
 
-## Overview
+Argo CD is a GitOps controller: it continuously compares what is declared in Git with what is running in the cluster, shows the difference, and can correct it. The concepts — Applications, sync, health, app-of-apps — are in [[Kubernetes/guides/delivery/gitops/argo-cd/README|the Argo CD guide]] and [[Kubernetes/guides/delivery/gitops/basics|GitOps basics]]. This page covers what is specific to running it on AWS.
 
-Argo CD is a declarative, GitOps-based continuous delivery tool for Kubernetes.
+## Three ways to get it
 
-## Install Argo CD
+| Option                                                                           | You operate                | Notes                                                                                                                      |
+| :------------------------------------------------------------------------------- | :------------------------- | :------------------------------------------------------------------------------------------------------------------------- |
+| Helm chart / manifests                                                           | Everything                 | Full control, any version, any plugin                                                                                      |
+| [[Kubernetes/guides/delivery/gitops/argo-cd/operator-install\|Argo CD Operator]] | The operator and instances | Declarative multi-instance management                                                                                      |
+| EKS Capability for Argo CD (managed)                                             | Applications only          | AWS runs the controllers outside your cluster and integrates sign-in with IAM Identity Center; fewer customisation options |
 
-```bash
-# Add Helm repo
-helm repo add argo https://argoproj.github.io/arg-helm-charts
-helm repo update
+The managed capability is attractive for a hub that deploys to many clusters, because the control plane is no longer a workload you patch. Self-manage when you need config management plugins, custom tooling images or tight version control.
 
-# Install Argo CD
-helm install argocd argo/argo-cd \
-  --namespace argocd \
-  --create-namespace \
-  --set server.service.type=LoadBalancer
-```
-
-## Access Argo CD UI
+## Self-managed install
 
 ```bash
-# Get admin password
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d
-
-# Port-forward to UI
-kubectl port-forward -n argocd svc/argocd-server 8080:443
+helm repo add argo https://argoproj.github.io/argo-helm
+helm upgrade --install argocd argo/argo-cd \
+  --namespace argocd --create-namespace \
+  --values values.yaml
 ```
-
-## Create Application
 
 ```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: my-app
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/my-org/app-manifests
-    targetRevision: main
-    path: ./app
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: default
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+# values.yaml — the parts that matter on EKS
+global:
+  domain: argocd.example.com
+configs:
+  params:
+    server.insecure: true # TLS terminates at the ALB
+redis-ha:
+  enabled: true
+controller:
+  replicas: 2 # sharded across clusters
+repoServer:
+  autoscaling: { enabled: true, minReplicas: 2 }
+server:
+  autoscaling: { enabled: true, minReplicas: 2 }
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internal
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/backend-protocol: HTTP
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-1:111122223333:certificate/abc
 ```
 
-## ApplicationSet (Multi-cluster)
+Keep the load balancer **internal**. Argo CD holds credentials for every cluster it manages; it should not be reachable from the internet. The CLI uses gRPC, which works through an ALB when the target group protocol version is gRPC, or use `--grpc-web`.
+
+## Deploying to other EKS clusters without static credentials
+
+The hub-and-spoke pattern: one Argo CD in a management cluster deploys to many workload clusters. On EKS this is done with [[AWS/security/iam/README|IAM]], not long-lived tokens.
+
+1. Give the `argocd-application-controller` and `argocd-server` service accounts an IAM role through [[Kubernetes/eks/security/pod-identity|Pod Identity]] or [[Kubernetes/eks/security/iam-roles-for-sa|IRSA]].
+2. In each spoke account, create a role that the hub role may assume, and register it on the spoke cluster with an [[Kubernetes/eks/security/access/cluster-access-management|access entry]] and an access policy.
+3. Register the cluster in Argo CD with a secret that tells it to fetch tokens through IAM:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prod-eu-west-1
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: cluster
+    environment: production
+stringData:
+  name: prod-eu-west-1
+  server: https://ABCDEF0123456789.gr7.eu-west-1.eks.amazonaws.com
+  config: |
+    {
+      "awsAuthConfig": {
+        "clusterName": "prod",
+        "roleARN": "arn:aws:iam::444455556666:role/argocd-deployer"
+      },
+      "tlsClientConfig": { "caData": "<base64 CA>" }
+    }
+```
+
+The hub needs network reachability to each spoke's API endpoint: private endpoints require peering or Transit Gateway — see [[Kubernetes/eks/security/access/endpoint-access|endpoint access]].
+
+Grant the deployer role only what it deploys. Cluster admin on every spoke turns Argo CD into the single most valuable target in the organisation.
+
+## Helm charts in ECR
+
+ECR stores Helm charts as OCI artifacts. ECR tokens expire after 12 hours, so a static repository password stops working overnight. Either let the repo server authenticate with its IAM role, or refresh a repository secret on a schedule (External Secrets Operator has an ECR token generator for this). The chart side is covered in [[Kubernetes/guides/delivery/templating-patching/helm/oci|Helm OCI registries]].
+
+## Bootstrapping a fleet
+
+Use an `ApplicationSet` with the **cluster generator** to install the same add-ons on every registered cluster, selecting by the labels on the cluster secrets:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: my-app-multicluster
+  name: cluster-addons
   namespace: argocd
 spec:
   generators:
     - clusters:
-        values:
-          destinationServer: https://kubernetes.default.svc
+        selector:
+          matchLabels: { environment: production }
   template:
     metadata:
-      name: "{{name}}-my-app"
+      name: "addons-{{name}}"
     spec:
-      project: default
+      project: platform
       source:
-        repoURL: https://github.com/my-org/app-manifests
+        repoURL: https://github.com/example/platform.git
+        path: "addons/overlays/{{metadata.labels.environment}}"
         targetRevision: main
-        path: "./apps/{{name}}"
       destination:
-        server: "{{values.destinationServer}}"
-        namespace: default
+        server: "{{server}}"
+        namespace: kube-system
       syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
+        automated: { prune: true, selfHeal: true }
 ```
 
-## Sync and Health
+A common companion is the "GitOps bridge": Terraform creates the cluster and writes account IDs, role ARNs and VPC IDs as annotations on the cluster secret, and the ApplicationSet injects them into Helm values. That removes the hand-copied ARNs from Git.
 
-```bash
-# Sync application
-argocd app sync my-app
+## Operating notes
 
-# View application status
-argocd app get my-app
+- **Sharding.** One application controller struggles past a few hundred applications or a few dozen clusters. Increase controller replicas so clusters are distributed across shards.
+- **Repo server** renders manifests and is CPU-bound during Helm and Kustomize builds; scale it horizontally and give it a cache.
+- **Ignore differences** for fields that controllers legitimately mutate — HPA-managed `replicas`, webhook CA bundles — or applications stay `OutOfSync` forever.
+- **Sync waves and hooks** order dependent resources: CRDs before custom resources, the [[Kubernetes/eks/storage/ebs-csi|CSI driver]] before workloads that need volumes.
+- **Projects** are the tenancy boundary. Restrict each team's project to its repositories, clusters and namespaces.
+- **Secrets** never go into Git in plain text — use [[Kubernetes/eks/security/secrets-management/secrets-manager|Secrets Manager integrations]] or [[Kubernetes/eks/security/secrets-management/sealed-secrets|Sealed Secrets]].
 
-# Sync multiple apps
-argocd app sync --all
-```
+## Related
 
-## Resource Hooks
+- [[Kubernetes/eks/automation/README|Automation on EKS]]
+- [[Kubernetes/eks/automation/gitops/flux|Flux on EKS]] — the alternative
+- [[Kubernetes/guides/delivery/progressive-delivery/argo-rollouts|Argo Rollouts]] — canary and blue-green on top of Argo CD
+- [[DevOps/ci-cd/README|CI/CD]] — where GitOps fits in the pipeline
+- [Argo CD documentation](https://argo-cd.readthedocs.io/)
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: my-app
-spec:
-  syncPolicy:
-    syncOptions:
-      - PruneLast=true
-  hooks:
-    sync/PreSync:
-      - name: database-migration
-        selector:
-          kind: Job
-        template:
-          name: database-migration
-```
+## Across the wiki
 
-## Kustomize Integration
-
-```yaml
-# kustomization.yaml in Git
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
-commonLabels:
-  app: my-app
-```
-
-```bash
-# Argo CD automatically detects kustomization.yaml
-argocd app create my-app \
-  --repo https://github.com/my-org/app-manifests \
-  --path ./app \
-  --dest-server https://kubernetes.default.svc \
-  --dest-namespace default
-```
-
-## References
-
-- [Argo CD Documentation](https://argo-cd.readthedocs.io/)
-- [EKS Workshop - Argo CD](https://www.eksworkshop.com/docs/automation/gitops/argocd/)
+- [[DevOps/ci-cd/git|Git Strategy, Trunk-Based Development & Configuration]] — GitOps (DevOps)

@@ -48,6 +48,10 @@ Modern CI spins up isolated preview environments per Pull Request (e.g., using K
 
 ## 3. Topics & Guides
 
+- 🧱 **[[DevOps/ci-cd/pipeline-design|Pipeline Design]]** — Stages, build once and promote, test strategy, speed, security and flaky tests
+- 🚦 **[[DevOps/ci-cd/deployment-strategies|Deployment Strategies]]** — Rolling, blue-green, canary, shadow, feature flags and rollback
+- 🏷️ **[[DevOps/ci-cd/release-and-versioning|Release and Versioning]]** — Versioning schemes, immutable artifacts, promotion and changelogs
+- 📈 **[[DevOps/ci-cd/dora-metrics|DORA Metrics]]** — Measuring delivery performance
 - ⚙️ **[[DevOps/ci-cd/github-actions|GitHub Actions Deep Dive]]** — Reusable workflows, composite actions, matrix builds, runner security, and OIDC federation
 - 🌿 **[[DevOps/ci-cd/git|Git Strategy & Best Practices]]** — Trunk-based development, conventional commits, rebase workflows, and signing
 - 🔐 **[[DevOps/devsecops/README|DevSecOps Curriculum]]** — 20-module end-to-end security pipeline from SAST to runtime defense
@@ -60,3 +64,10 @@ Modern CI spins up isolated preview environments per Pull Request (e.g., using K
 - 🔐 **[[Security/devsecops/README|DevSecOps Security Controls]]** — Pipeline hardening and supply chain
 - ☁️ **[[AWS/compute/ecs/README|AWS ECS Deployment]]** — Blue-green deployments via CodeDeploy
 - 🐧 **[[Linux/shell-scripting/README|Shell Scripting]]** — Automation scripting for CI runners
+
+## Across the wiki
+
+- [[Kubernetes/guides/delivery/ci-cd-integration|CI/CD Integration]] — CI/CD pipelines (Kubernetes)
+- [[Kubernetes/eks/automation/continuous-delivery/codepipeline|AWS CodePipeline for EKS]] — CI/CD pipelines (Kubernetes)
+- [[Kubernetes/guides/delivery/pipeline-workflows/tekton-pipelines|Tekton Pipelines]] — CI/CD pipelines (Kubernetes)
+- [[Kubernetes/guides/delivery/templating-patching/helm/cicd|Helm CI/CD]] — CI/CD pipelines (Kubernetes)

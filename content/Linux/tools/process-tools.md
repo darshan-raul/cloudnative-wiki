@@ -5,6 +5,7 @@ tags:
   - linux
   - tools
   - processes
+date: 2026-06-06
 ---
 
 # Process Management Tools

@@ -4,6 +4,7 @@ description: AWS Server Migration Service (SMS) — older lift-and-shift service
 tags:
   - aws
   - migration
+date: 2026-06-06
 ---
 
 # Server Migration Service (SMS)

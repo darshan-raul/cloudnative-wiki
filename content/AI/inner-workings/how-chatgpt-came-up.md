@@ -7,6 +7,7 @@ tags:
   - chatgpt
   - transformers
   - rlhf
+date: 2026-01-30
 ---
 
 # The Road to ChatGPT — Architectural Evolution of Large Language Models

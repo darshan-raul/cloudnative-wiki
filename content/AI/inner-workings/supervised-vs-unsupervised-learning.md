@@ -1,3 +1,10 @@
+---
+title: "Supervised vs Unsupervised Learning"
+tags: [ai, inner-workings, supervised-vs-unsupervised-learning]
+date: 2026-01-30
+description: "In supervised learning, you train the model with a set of input data and a corresponding set of paired labeled output data. The labeling is typically done manually."
+---
+
 # Supervised vs Unsupervised Learning
 
 In supervised learning, you train the model with a set of input data and a corresponding set of paired labeled output data. The labeling is typically done manually.

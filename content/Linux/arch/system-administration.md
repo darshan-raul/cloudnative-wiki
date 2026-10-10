@@ -1,5 +1,8 @@
 ---
 title: Arch Linux System Administration
+tags: [linux, arch, system-administration]
+date: 2026-05-24
+description: "systemd is Arch's init system and service manager. Virtually all Arch-based distros use it."
 ---
 
 # 4. System Administration

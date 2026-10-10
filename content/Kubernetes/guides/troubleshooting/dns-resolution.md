@@ -6,7 +6,11 @@ tags:
   - Networking
   - DNS
   - CoreDNS
+date: 2026-06-11
+description: "Pods can resolve Service names through CoreDNS. When DNS doesn't work, every Service-to-Service call fails, even though the Services themselves are healthy."
 ---
+
+# DNS Resolution Failures
 
 Pods can resolve Service names through CoreDNS. When DNS doesn't work, **every Service-to-Service call fails**, even though the Services themselves are healthy. This is the third most common k8s issue (after CrashLoopBackOff and pending pods).
 
@@ -647,3 +651,10 @@ The fix: either use the FQDN in the app config, or set `ndots:2` to make the sea
 - [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when CoreDNS is the crashing thing
 - [[Kubernetes/concepts/L04-services-networking/03-dns|dns]] — how k8s DNS works
 - [CoreDNS docs](https://coredns.io/manual/toc/)
+
+## Across the wiki
+
+- [[AWS/networking/dns/README|Amazon Route 53]] — DNS (AWS)
+- [[GCP/networking/cloud-dns/README|GCP Cloud DNS Architecture]] — DNS (GCP)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/dns/README|DNS]] — DNS (Architecture)
+- [[Linux/networking/dns-resolution|DNS Resolution]] — DNS (Linux)

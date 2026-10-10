@@ -126,3 +126,10 @@ When Falco detects a critical threat (e.g., crypto miner or reverse shell):
 - [[Security/endpoint-security/hardening/README|Linux Host Hardening]]
 - [[Security/siem/wazuh/README|Wazuh SIEM Security Platform]]
 - [[Linux/kernel/README|Linux Kernel Internals & cgroups]]
+
+## Across the wiki
+
+- [[AWS/security/guardduty/README|AWS GuardDuty]] — threat detection (AWS)
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
+- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]] — threat detection (GCP)
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)

@@ -4,6 +4,7 @@ description: AWS messaging and integration services — SQS (queues), SNS (pub/s
 tags:
   - aws
   - application-integration
+date: 2026-06-06
 ---
 
 # AWS Application Integration

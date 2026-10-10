@@ -7,6 +7,7 @@ tags:
   - sns
   - pub-sub
   - notifications
+date: 2026-06-06
 ---
 
 # Amazon SNS
@@ -227,3 +228,10 @@ sns.get_sms_attributes()
 - **SNS message filtering is evaluated at the SUBSCRIPTION level, not the topic level:** Each subscription can have its own filter policy. Messages not matching a subscription's filter are silently discarded (no error to publisher).
 - **SNS FIFO topics have lower throughput than standard (300/s vs unlimited) — plan accordingly:** FIFO topics are limited to 300 messages/second per topic. For higher throughput, shard across multiple FIFO topics.
 - **SNS doesn't guarantee delivery order to multiple subscribers — use SQS FIFO if ordering matters across subscribers:** If subscriber A and subscriber B both receive the same SNS message, the timing of their processing is not coordinated.
+
+## Across the wiki
+
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
+- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)

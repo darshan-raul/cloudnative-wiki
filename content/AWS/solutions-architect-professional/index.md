@@ -63,3 +63,10 @@ Focuses on moving workloads to AWS and modernizing them.
 - **Management:** Organizations, Control Tower, Systems Manager, CloudFormation, Auto Scaling.
 - **Security:** IAM, KMS, WAF, Shield, Security Hub, GuardDuty.
 - **Integration:** SQS, SNS, EventBridge, Step Functions, API Gateway.
+
+## Sections
+
+- [[AWS/solutions-architect-professional/domain-1/index|Domain 1: Design Solutions for Organizational Complexity]] — This domain constitutes 26% of the exam and focuses on multi-account strategies and complex networking.
+- [[AWS/solutions-architect-professional/domain-2/index|Domain 2: Design for New Solutions]] — This domain constitutes 29% of the exam and focuses on designing architectures from scratch to meet specific business…
+- [[AWS/solutions-architect-professional/domain-3/index|Domain 3: Continuous Improvement for Existing Solutions]] — This domain constitutes 25% of the exam and focuses on optimizing architectures that are already running.
+- [[AWS/solutions-architect-professional/domain-4/index|Domain 4: Accelerate Workload Migration and Modernization]] — This domain constitutes 20% of the exam and focuses on moving workloads to AWS and modernizing them.

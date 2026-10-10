@@ -5,7 +5,10 @@ tags:
   - Networking
   - L04
 date: 2024-02-10
+description: "Sources: k8s networking docs, CNI spec, kube-proxy doc"
 ---
+
+# Networking (L04 Overview)
 
 _Sources: [k8s networking docs](https://kubernetes.io/docs/concepts/cluster-administration/networking/), [CNI spec](https://github.com/containernetworking/cni/blob/master/SPEC.md), [kube-proxy doc](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/)_
 
@@ -430,3 +433,10 @@ L04 covers a lot. The hierarchy of decisions:
 → [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — understand the layer below all of this
 → [[Kubernetes/concepts/L04-services-networking/08-endpoint-slices|EndpointSlices]] — the scalable version of Endpoints
 → [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Networking Deep Dive]] — packet-level walkthroughs
+
+## Across the wiki
+
+- [[Linux/networking/routing|Routing]] — packet path (Linux)
+- [[Architecture/solution-architecture-concepts/networking/tcpip|TCP/IP Architecture, Handshakes & Congestion Control]] — packet path (Architecture)
+- [[Linux/networking/tcp-ip-model|TCP/IP Model]] — packet path (Linux)
+- [[Architecture/solution-architecture-concepts/networking/osi-model|The OSI 7-Layer Model in Modern Systems Engineering]] — packet path (Architecture)

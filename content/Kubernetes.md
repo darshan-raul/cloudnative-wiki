@@ -123,9 +123,16 @@ High-density references for experienced practitioners, technical interviews, and
 
 ---
 
+## More in this section
+
+- [[Kubernetes/updates-along-the-versions|Kubernetes Version Updates (v1.19 – v1.37)]] — Comprehensive feature matrix and version-by-version changes across Kubernetes releases from v1.19 through current v1.37.
+
 ## Related Knowledge Bases
 
+- [[Containers]]: What a container is, images and registries, and the runtime stack beneath the kubelet.
 - [[Linux/virtualization/container-runtimes|Container Runtimes (CRI, containerd, runc)]]: The engine executing container processes.
 - [[Linux]]: OS primitives powering containers (namespaces, cgroups v2, seccomp).
 - [[Observability]]: Metrics, distributed tracing, and Prometheus/Grafana architecture.
+- [[DevOps]]: Pipelines, GitOps, infrastructure as code and SRE practice.
+- [[Security]]: Zero trust, SIEM and incident response around the cluster.
 - [[AWS]]: Cloud infrastructure, IAM, and VPC networking foundation.

@@ -8,6 +8,7 @@ tags:
   - ospf
   - ecmp
   - infrastructure
+date: 2026-01-30
 ---
 
 # IP Routing Fundamentals, BGP & ECMP Architecture
@@ -77,3 +78,10 @@ $$\text{Hash} = \text{CRC32}(\text{src\_ip}, \text{dst\_ip}, \text{src\_port}, \
 
 - **Per-Flow Consistency:** All packets belonging to the same TCP connection hash to the exact same physical link. This guarantees packets arrive **in order** and avoids TCP retransmissions.
 - **Hash Polarization Pitfall:** If two consecutive tiers of network switches use the same hash algorithm and seed, traffic concentrates onto a single downstream link. Modern spine-leaf datacenter switches use randomized seeds per tier.
+
+## Across the wiki
+
+- [[Linux/networking/routing|Routing]] — packet path (Linux)
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking (L04 Overview)]] — packet path (Kubernetes)
+- [[Linux/networking/tcp-ip-model|TCP/IP Model]] — packet path (Linux)
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Kubernetes Networking — Deep Dive]] — packet path (Kubernetes)

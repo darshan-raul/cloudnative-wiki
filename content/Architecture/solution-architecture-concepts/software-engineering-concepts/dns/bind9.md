@@ -1,3 +1,10 @@
+---
+title: "bind9"
+tags: [architecture, software-engineering-concepts, dns, bind9]
+date: 2026-01-30
+description: "Managing DNS zones with BIND9 involves several steps, from installing and configuring BIND9 to creating and managing zone files. Here’s a detailed guide on how to manage DNS zones with BIND9."
+---
+
 # bind9
 
 Managing DNS zones with BIND9 involves several steps, from installing and configuring BIND9 to creating and managing zone files. Here’s a detailed guide on how to manage DNS zones with BIND9:

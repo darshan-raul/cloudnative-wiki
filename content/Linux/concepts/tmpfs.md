@@ -5,6 +5,7 @@ tags:
   - linux
   - filesystem
   - memory
+date: 2026-06-06
 ---
 
 # tmpfs
@@ -172,3 +173,8 @@ mount -t tmpfs -o nosuid,noexec,nodev,mode=1777 tmpfs /mnt
 # Common tmpfs flags:
 # rw, nosuid, nodev, noexec, relatime, size=...
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L05-config-storage/03-volumes|Volume Types]] — volumes and filesystems (Kubernetes)
+- [[Kubernetes/concepts/L05-config-storage/04-persistentvolume|PersistentVolume (PV)]] — volumes and filesystems (Kubernetes)

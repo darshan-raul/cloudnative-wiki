@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - Tools
+date: 2026-06-12
+description: "Turn any Python function into a LangChain tool."
 ---
+
+# LangChain — Tools
 
 > **Part 4.** A tool is a function the model can decide to call.
 > This covers `@tool`, the schema generation from type annotations,

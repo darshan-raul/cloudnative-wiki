@@ -1,3 +1,10 @@
+---
+title: "EntraID"
+tags: [azure, identity, entraid]
+date: 2026-01-30
+description: "Based on the sources provided, Microsoft Entra ID is a modern identity provider and cloud-based directory service that acts as the backbone for securing access, empowering users, and enabling…"
+---
+
 # EntraID
 
 Based on the sources provided, **Microsoft Entra ID** is a modern **identity provider** and cloud-based directory service that acts as the backbone for securing access, empowering users, and enabling collaboration in digital environments. It serves as the central hub for managing identities—whether they are users, devices, or applications—and controls how they access resources in the cloud and on-premises.
@@ -132,3 +139,10 @@ Once created, this custom role will appear in your list of roles and can be assi
 **Based on the provided sources:** The sources do not explicitly state whether **Custom Roles** specifically require a P1 or P2 license in the same way they explicitly state that **Company Branding** and **Custom Security Attributes** are P1/P2 features. However, the sources do note generally that the **Free** edition is for basic services, while **Premium (P1/P2)** licenses are required if you are looking to "add additional features" and advanced capabilities.
 
 **Information not from the sources:** Please note that according to standard Microsoft Entra ID documentation, **Custom Roles** are indeed a feature that requires a **Microsoft Entra ID P1 or P2 license**. You should verify your specific licensing agreement to ensure coverage.
+
+## Across the wiki
+
+- [[AWS/security/iam/README|AWS IAM]] — identity and access (AWS)
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]] — identity and access (Kubernetes)

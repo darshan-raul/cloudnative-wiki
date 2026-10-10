@@ -1,3 +1,10 @@
+---
+title: "Sagemaker"
+tags: [ai, aws, sagemaker]
+date: 2026-01-30
+description: "Use Amazon SageMaker Canvas to automatically explore different solutions and find the best model for your given dataset."
+---
+
 # Sagemaker
 
 ## Features
@@ -141,3 +148,14 @@ Easily discover, connect to, create, terminate and manage Amazon EMR clusters in
 [SageMaker Training Compiler](https://docs.aws.amazon.com/sagemaker/latest/dg/training-compiler.html)
 
 Train deep learning models faster on scalable GPU instances managed by SageMaker AI.<br>
+
+## More in this section
+
+- [[AI/aws/sagemaker/inference-methods|Inference methods]] — Amazon SageMaker offers a variety of inference options to suit different machine learning deployment needs. These options include.
+
+## Across the wiki
+
+- [[AWS/machine-learning/bedrock/README|Amazon Bedrock]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/sagemaker/README|Amazon SageMaker]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/ai-services/README|AWS AI Services]] — generative AI platforms (AWS)
+- [[AWS/serverless/README|AWS Serverless]] — generative AI platforms (AWS)

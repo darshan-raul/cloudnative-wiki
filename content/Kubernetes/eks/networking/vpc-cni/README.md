@@ -124,3 +124,10 @@ kubectl get nodes -o custom-columns=NAME:.metadata.name,MAX_PODS:.status.capacit
 - [EKS VPC CNI Documentation](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html)
 - [EKS Workshop - VPC CNI](https://www.eksworkshop.com/docs/networking/vpc-cni/)
 - [EKS Best Practices - Networking](https://aws.github.io/aws-eks-best-practices/networking/)
+
+## Across the wiki
+
+- [[Azure/compute/aks/networking-cni|AKS Networking Deep Dive — Azure CNI, CNI Overlay, and Dynamic Pod IP Allocation]] — pod networking (Azure)
+- [[GCP/compute/gke/networking|GKE Networking Deep Dive — Datapath V2, Alias IPs & Gateway API]] — pod networking (GCP)
+- [[Linux/virtualization/network-namespace|Network Namespaces]] — pod networking (Linux)
+- [[Containers/container-networking|Container Networking]] — pod networking (Containers)

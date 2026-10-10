@@ -4,6 +4,7 @@ description: Linux device files — /dev/, mknod, character vs block devices, ud
 tags:
   - linux
   - filesystem
+date: 2026-06-06
 ---
 
 # Device Files

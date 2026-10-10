@@ -30,3 +30,10 @@ Managed Node Groups let you provision and manage EC2 instances for your EKS clus
 
 - [EKS Managed Node Groups](https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html)
 - [EKS Workshop - Managed Node Groups](https://www.eksworkshop.com/docs/fundamentals/compute/managed-node-groups/)
+
+## Across the wiki
+
+- [[Azure/compute/aks/node-pools-heterogeneous|AKS Heterogeneous Node Pools — System vs User, Ephemeral OS Disks, and Azure Linux]] — node pools and spot capacity (Azure)
+- [[GCP/compute/gke/node-pools-heterogeneous|GKE Heterogeneous Node Pools, Taints, Tolerations, and Accelerator Topologies]] — node pools and spot capacity (GCP)
+- [[AWS/cost-management/pricing-models|AWS Pricing Models]] — node pools and spot capacity (AWS)
+- [[Azure/compute/vm/spot-vms|Azure Spot VMs & Scheduled Events Eviction Engineering]] — node pools and spot capacity (Azure)

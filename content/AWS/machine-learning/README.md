@@ -5,6 +5,7 @@ tags:
   - aws
   - machine-learning
   - ai
+date: 2026-06-06
 ---
 
 # AWS Machine Learning
@@ -91,3 +92,10 @@ Do you need to build a custom model?
 - **Bedrock's data processing varies by model provider — Anthropic, Meta, Mistral have different data policies:** Before using Bedrock for sensitive data, read the model provider's data policy. Some models train on input data (opt-out available).
 - **AI Services pricing is per API call — at scale, costs add up fast:** Rekognition at $0.0012/image × 10M images/month = $12,000/month. Budget carefully before deploying AI Services at production scale.
 - **SageMaker Canvas produces models but doesn't give you the model artifact — you're locked into Canvas predictions:** If you need to deploy the model elsewhere (edge, mobile), use SageMaker Pipelines to export the model or use the built-in model registry.
+
+## Across the wiki
+
+- [[Azure/compute/aks/gpu-orchestration-ai|AKS GPU Orchestration for AI/ML — NVIDIA H100/A100, InfiniBand RDMA, and KubeRay]] — GPU and AI workloads (Azure)
+- [[GCP/compute/gke/gpu-tpu-orchestration|GKE GPU & TPU Orchestration — AI/ML Accelerators, Ray on GKE, and Kueue]] — GPU and AI workloads (GCP)
+- [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources and Device Plugins]] — GPU and AI workloads (Kubernetes)
+- [[AI/run-locally/ollama-best-practices|Ollama Best Practices Guide]] — GPU and AI workloads (AI)

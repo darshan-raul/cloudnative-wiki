@@ -7,6 +7,7 @@ tags:
   - backup
   - disaster-recovery
   - stateful
+date: 2026-09-06
 ---
 
 # Backup for GKE Architecture, Stateful Disaster Recovery, and Cross-Region Restoration 💾🛡️
@@ -229,3 +230,10 @@ Pricing components:
 4. **Delete-Lock Protection Blocks Cluster Deletion:** If you enable `--backup-delete-lock-days=30`, you cannot delete the BackupPlan or its backups for 30 days under any circumstances—even if you delete the source GKE cluster or attempt deletion with the Google Cloud Organization Admin account. Size delete-lock windows carefully in development environments to avoid orphan storage billing.
 5. **Namespace Conflict Resolution Policy Pitfall:** In a RestorePlan, if you configure `--namespaced-resource-conflict-policy=FAIL_ON_CONFLICT`, and a single ConfigMap or Secret already exists in the target namespace with the same name, **the entire restore job halts immediately and rolls back**. For disaster recovery into an existing cluster, configure `USE_EXISTING_VERSION` or `REPLACE_EXISTING_VERSION`.
 6. **Local NVMe SSD Ephemeral Data Cannot Be Backed Up:** Backup for GKE specifically protects persistent disks managed by the GCE CSI driver. Data residing in ephemeral storage (`emptyDir`), RAM disks, or physical Local NVMe SSDs is **not captured in VolumeSnapshots**. Ensure that all mission-critical state resides on persistent volume claims.
+
+## Across the wiki
+
+- [[Azure/compute/aks/backup-disaster-recovery|AKS Backup, Disaster Recovery, and Cross-Region Business Continuity]] — backup and disaster recovery (Azure)
+- [[Kubernetes/guides/non-functional/backup-restore|Backup & Restore]] — backup and disaster recovery (Kubernetes)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/disaster-recovery|Disaster Recovery]] — backup and disaster recovery (Architecture)
+- [[AWS/solutions-architect-professional/domain-2/2.2-business-continuity|2.2 Business Continuity]] — backup and disaster recovery (AWS)

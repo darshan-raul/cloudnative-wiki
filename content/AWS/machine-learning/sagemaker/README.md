@@ -5,6 +5,7 @@ tags:
   - aws
   - machine-learning
   - sagemaker
+date: 2026-06-06
 ---
 
 # Amazon SageMaker
@@ -313,3 +314,10 @@ edge_packager.create_model(
 - **SageMaker Pipelines uses a different execution engine than you might expect — it runs steps as separate Lambda or Step Functions under the hood:** Pipeline steps are executed asynchronously. If a step fails, check the step's CloudWatch logs.
 - **SageMaker Feature Store online store is expensive at scale — $0.05/10000 reads adds up:** If you're reading features 100K times/second, that's $0.50/second = $43K/day. Consider caching frequently-read features in ElastiCache or DynamoDB.
 - **SageMaker JumpStart models are NOT fine-tuned on your data — they're pre-trained:** JumpStart gives you a head start with pre-trained weights, but you still need to fine-tune or use RAG for domain-specific tasks.
+
+## Across the wiki
+
+- [[AI/aws/bedrock|Amazon Bedrock Architecture & Implementation]] — generative AI platforms (AI)
+- [[AI/rag|Retrieval-Augmented Generation (RAG) Architecture]] — generative AI platforms (AI)
+- [[AI/aws/sagemaker/README|Sagemaker]] — generative AI platforms (AI)
+- [[AI/aws/services|Services]] — generative AI platforms (AI)

@@ -117,3 +117,9 @@ Kubernetes workloads consume VPC Lattice via the official **AWS Gateway API Cont
 - [[AWS/concepts/app-mesh-vs-vpc-lattice|App Mesh vs Amazon VPC Lattice]]
 - [[AWS/networking/vpc/README|AWS VPC Fundamentals]]
 - [[AWS/security/iam/README|AWS IAM Policies & SigV4]]
+
+## Across the wiki
+
+- [[Azure/networking/private-link/README|Azure Private Link, Private Endpoints, and Private DNS Architecture]] — private connectivity (Azure)
+- [[GCP/networking/private-service-connect/README|GCP Private Service Connect (PSC)]] — private connectivity (GCP)
+- [[Azure/networking/virtual-wan/README|Azure Virtual WAN (vWAN) Architecture & Global Transit Routing]] — private connectivity (Azure)

@@ -1,3 +1,10 @@
+---
+title: "Cloud Architect Areas"
+tags: [aws, cloud-architect-areas]
+date: 2026-01-30
+description: "As a cloud architect, dividing cloud infrastructure management and architecting into categories is essential for clarity, responsibility assignment, and effective governance."
+---
+
 # Cloud Architect Areas
 
 As a cloud architect, dividing cloud infrastructure management and architecting into categories is essential for clarity, responsibility assignment, and effective governance. The division can be approached from multiple perspectives. Here’s a comprehensive breakdown, combining industry best practices (like AWS Well-Architected Framework, Azure CAF) and practical organizational views.

@@ -3,7 +3,11 @@ title: "LangGraph — Nodes & Edges"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "A node is any callable (state) - dict | Command."
 ---
+
+# LangGraph — Nodes & Edges
 
 > **Part 3.** How to add nodes and edges to a `StateGraph`,
 > unconditional vs conditional routing, the `Send` primitive for

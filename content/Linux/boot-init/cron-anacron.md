@@ -4,6 +4,7 @@ description: Linux cron and anacron — scheduled tasks, crontab syntax, @hourly
 tags:
   - linux
   - boot-init
+date: 2026-06-06
 ---
 
 # Cron and Anacron
@@ -231,3 +232,9 @@ systemctl list-timers
 
 # MAILTO="" in crontab suppresses email
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/07-cronjob|CronJobs — Time-Scheduled Workloads]] — scheduled work (Kubernetes)
+- [[AWS/application-integration/step-functions/README|AWS Step Functions]] — scheduled work (AWS)
+- [[AWS/monitoring/cloudwatch-events/README|CloudWatch Events]] — scheduled work (AWS)

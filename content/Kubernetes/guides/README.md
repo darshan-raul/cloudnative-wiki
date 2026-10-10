@@ -4,6 +4,8 @@ tags:
   - Kubernetes
   - Guides
   - Hub
+date: 2026-01-30
+description: "Practical, day-2 k8s content. Concepts explain what and why — Guides explain how: how to use the tools, how to recover from breakage, how to operate against non-functional requirements, and how to…"
 ---
 
 # Kubernetes Guides
@@ -84,7 +86,8 @@ Practical / network-side notes. Complements L04 concepts with hands-on controlle
 - [[Kubernetes/guides/networking/envoy-gateway|envoy-gateway]] — Gateway API implementation ✅
 - traefik — Traefik ingress controller
 - nginx — NGINX ingress controller
-- gateway-api — overview, points to envoy-gateway
+- [[Kubernetes/concepts/L04-services-networking/09-gateway-api|gateway-api]] — the API itself (concepts L04) ✅
+- [[Kubernetes/guides/networking/envoy-gateway-internals|envoy-gateway-internals]] — architecture and operations ✅
 - [[Kubernetes/guides/networking/comparison|comparison]] — ingress and service mesh overview
   - [[Kubernetes/guides/networking/istio|istio]] — Istio service mesh
   - [[Kubernetes/guides/networking/linkerd|linkerd]] — Linkerd service mesh

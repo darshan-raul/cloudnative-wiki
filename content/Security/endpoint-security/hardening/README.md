@@ -134,5 +134,12 @@ Restrict process execution boundaries regardless of root privileges:
 
 - [[Linux/security/README|Linux Security Subsystem]] — Linux capabilities, seccomp, auditd
 - [[Linux/security/pam|PAM Authentication & Sudoers]] — Pluggable authentication modules
-- [[Linux/security/apparmor|AppArmor Deep Dive]] — Profile syntax and Kubernetes annotations
+- [[Linux/security/apparmor|AppArmor Deep Dive]] — AppArmor mandatory access control: profiles, modes, and how to write and debug them.
 - [[Security/endpoint-security/ids-ips/README|Host IDS/IPS]] — Wazuh and Suricata intrusion detection
+
+## Across the wiki
+
+- [[Linux/security/linux-cis-hardening|Linux CIS Hardening]] — hardening (Linux)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — hardening (Kubernetes)
+- [[Linux/security/systemd-service-hardening|systemd Service Hardening]] — hardening (Linux)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening (Control Plane, apiserver flags, etcd)]] — hardening (Kubernetes)

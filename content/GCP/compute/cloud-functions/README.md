@@ -8,6 +8,7 @@ tags:
   - serverless
   - eventarc
   - cloudevents
+date: 2026-09-06
 ---
 
 # GCP Cloud Functions (2nd Gen) & Eventarc ⚡📨
@@ -226,3 +227,9 @@ def generate_thumbnail(cloudevent: CloudEvent):
 3. **Missing Eventarc Service Agent Permissions:** When deploying an event-driven function for the first time, Eventarc requires permission to publish events from your services. If you see `FAILED_PRECONDITION: Eventarc Service Agent lacks roles/eventarc.serviceAgent`, you must explicitly grant the service agent role or allow GCP to auto-generate it.
 4. **Default Concurrency is 1 (Not Cloud Run's 80):** When deploying a service directly via Cloud Run, concurrency defaults to 80. However, when deploying via `gcloud functions deploy --gen2`, concurrency defaults to **1** to maintain backwards compatibility with 1st Gen single-threaded behavior! To take advantage of multi-request cost savings, you must explicitly pass `--concurrency=80`.
 5. **Cold Starts on Min-Instances Scaling:** Setting `--min-instances=1` ensures that the _first_ instance is warm. However, if traffic suddenly bursts to 50 concurrent requests and your function has `--concurrency=1`, Cloud Run must provision 49 new instances simultaneously. All 49 new instances will experience cold starts. Tune `--concurrency` alongside `--min-instances`.
+
+## Across the wiki
+
+- [[AWS/serverless/lambda/README|AWS Lambda]] — functions (AWS)
+- [[Architecture/solution-architecture-concepts/api-design/stateful-vs-stateless|Stateful vs Stateless]] — functions (Architecture)
+- [[AWS/compute/lambda/README|AWS Lambda]] — functions (AWS)

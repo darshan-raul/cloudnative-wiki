@@ -83,4 +83,11 @@ securityContext:
 ## Related
 
 - [[Security/kubernetes-security/README|K8s Security Hub]]
-- [[Security/devsecops/container-security/README|Container Security]]
+- [[Linux/security/container-security|Container Security]]
+
+## Across the wiki
+
+- [[Linux/security/seccomp|seccomp]] — kernel sandboxing (Linux)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/16-seccomp-apparmor|Seccomp and AppArmor]] — kernel sandboxing (Kubernetes)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — kernel sandboxing (Containers)
+- [[Linux/security/apparmor|AppArmor]] — kernel sandboxing (Linux)

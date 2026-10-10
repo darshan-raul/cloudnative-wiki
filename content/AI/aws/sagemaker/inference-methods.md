@@ -1,3 +1,10 @@
+---
+title: "Inference methods"
+tags: [ai, aws, sagemaker, inference-methods]
+date: 2026-01-30
+description: "Amazon SageMaker offers a variety of inference options to suit different machine learning deployment needs. These options include."
+---
+
 # Inference methods
 
 Amazon SageMaker offers a variety of inference options to suit different machine learning deployment needs\[1]\[2]. These options include:

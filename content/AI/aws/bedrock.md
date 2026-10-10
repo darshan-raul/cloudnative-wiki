@@ -7,6 +7,7 @@ tags:
   - bedrock
   - llm
   - rag
+date: 2026-01-30
 ---
 
 # Amazon Bedrock Architecture & Implementation
@@ -120,3 +121,10 @@ try:
 except ClientError as err:
     print(f"Bedrock Error: {err.response['Error']['Message']}")
 ```
+
+## Across the wiki
+
+- [[AWS/machine-learning/bedrock/README|Amazon Bedrock]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/sagemaker/README|Amazon SageMaker]] — generative AI platforms (AWS)
+- [[AWS/machine-learning/ai-services/README|AWS AI Services]] — generative AI platforms (AWS)
+- [[AWS/serverless/README|AWS Serverless]] — generative AI platforms (AWS)

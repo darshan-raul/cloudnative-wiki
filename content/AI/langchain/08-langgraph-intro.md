@@ -4,7 +4,11 @@ tags:
   - AI
   - LangChain
   - LangGraph
+date: 2026-06-12
+description: "A chain is a linear pipeline: start → step1 → step2 → end. It can't do this."
 ---
+
+# LangChain — LangGraph Intro
 
 > **Part 8.** Why chains aren't enough, what LangGraph adds (state,
 > nodes, edges, the agent loop), and how `StateGraph`, `ToolNode`,

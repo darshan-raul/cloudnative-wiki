@@ -46,3 +46,10 @@ Security tooling and configuration across AWS, Azure, and GCP.
 
 - [[Security/siem/wazuh/README|Wazuh]]
 - [[Security/incident-response/README|Incident Response]]
+
+## Across the wiki
+
+- [[AWS/security/README|AWS Security]] — cloud security posture (AWS)
+- [[GCP/compute/gke/security|GKE Security & Hardening — Workload Identity & Binary Authorization]] — cloud security posture (GCP)
+- [[AWS/security/config/README|AWS Config]] — cloud security posture (AWS)
+- [[AWS/solutions-architect-professional/domain-1/1.2-prescribe-security-controls|1.2 Prescribe Security Controls]] — cloud security posture (AWS)

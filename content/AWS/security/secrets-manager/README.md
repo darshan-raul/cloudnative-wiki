@@ -5,6 +5,7 @@ tags:
   - aws
   - security
   - secrets-manager
+date: 2026-06-06
 ---
 
 # AWS Secrets Manager
@@ -248,3 +249,10 @@ aws secretsmanager describe-secret --secret-id prod/db-credentials
 - **Secrets Manager doesn't encrypt secrets at the application level — the secret IS the plaintext:** When you call `GetSecretValue`, Secrets Manager decrypts and returns the plaintext. Your application is responsible for protecting that plaintext (don't log it, don't hardcode it).
 - **Cross-region replication is one-way (primary → replica) — you can't promote a replica to primary:** If you need multi-region active-active secrets, you need separate secrets in each region and a custom sync mechanism.
 - **Rotation Lambda needs `secretsmanager:PutSecretValue` and `secretsmanager:DescribeSecret` permissions:** If your rotation Lambda fails with access denied, check both the execution role AND the secret resource policy (if one exists, it may deny the Lambda).
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/secrets-management/README|Secrets Management on EKS]] — secrets management (Kubernetes)
+- [[Azure/compute/aks/security-key-vault-csi|AKS Secrets Management — Azure Key Vault Provider for Secrets Store CSI Driver]] — secrets management (Azure)
+- [[Security/kubernetes-security/secrets/README|Kubernetes Secrets Management]] — secrets management (Security)
+- [[DevOps/devsecops/stage4-runtime/16-secret-management|M16: Runtime Secret Management]] — secrets management (DevOps)

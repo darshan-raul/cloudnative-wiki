@@ -740,3 +740,9 @@ kubectl get pods -A --field-selector spec.nodeName=<node>
 - [[Kubernetes/concepts/L06-scheduling-scaling/03-horizontalpodautoscaler|HPA]] — uses requests as the baseline
 - [[Kubernetes/concepts/L06-scheduling-scaling/07-vertical-pod-autoscaler|VPA]] — tunes requests automatically
 - [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources]] — GPU and other opaque resources
+
+## Across the wiki
+
+- [[Linux/kernel/cgroups|Cgroups v2]] — resource limits (Linux)
+- [[Containers/namespaces-and-cgroups|Namespaces and cgroups — What a Container Really Is]] — resource limits (Containers)
+- [[Linux/concepts/ulimit|ulimit]] — resource limits (Linux)

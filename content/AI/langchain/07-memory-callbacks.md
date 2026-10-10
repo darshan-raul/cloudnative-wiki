@@ -6,7 +6,11 @@ tags:
   - Memory
   - Callbacks
   - Tracing
+date: 2026-06-12
+description: "setllmcache(...) installs a global cache. Subsequent calls with the same (model, messages, kwargs) tuple return the cached result without hitting the model."
 ---
+
+# LangChain — Memory, Callbacks & Tracing
 
 > **Part 7.** Caching, the `BaseCallbackHandler` interface, LangSmith
 > tracing, and why LangChain's own memory classes are legacy.

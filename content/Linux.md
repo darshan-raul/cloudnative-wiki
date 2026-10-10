@@ -56,7 +56,7 @@ Linux Capabilities (`cap_net_admin`, `cap_sys_admin`), seccomp syscall filtering
 
 ### 7. [[Linux/virtualization/README|Containers & Virtualization]]
 
-Container runtimes (`runc`, `containerd`), Linux namespaces (mount, PID, net, IPC, UTS, user), `overlayfs` storage driver, Podman rootless containers, and KVM/QEMU hypervisors.
+Container runtimes (`runc`, `containerd`), Linux namespaces (mount, PID, net, IPC, UTS, user), `overlayfs` storage driver, Podman rootless containers, and KVM/QEMU hypervisors. The [[Containers]] section builds on these: [[Containers/namespaces-and-cgroups|namespaces and cgroups]], [[Containers/images-and-layers|images]] and [[Containers/container-networking|container networking]].
 
 ### 8. [[Linux/packaging/README|Package Management]]
 

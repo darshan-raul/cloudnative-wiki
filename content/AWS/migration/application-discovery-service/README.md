@@ -4,6 +4,7 @@ description: AWS Application Discovery Service — discovers on-premises infrast
 tags:
   - aws
   - migration
+date: 2026-06-06
 ---
 
 # Application Discovery Service

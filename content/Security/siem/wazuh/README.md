@@ -345,6 +345,10 @@ IR team investigates
 
 Configure in indexer ILM policies.
 
+## Sections
+
+- [[Security/siem/wazuh/production-plan/INDEX|Wazuh Production Plan — File Index]] — Why org+OS: Targeted rule deployment, differential alerting, selective upgrade rollout, inventory clarity, mirrors cross-account…
+
 ## Related
 
 - [[Security/siem/README|SIEM Overview]]
@@ -352,3 +356,10 @@ Configure in indexer ILM policies.
 - [[Security/siem/wazuh/rules-decoders/README|Rules & Decoders]] — Custom detection rules
 - [[Security/siem/wazuh/integrations/README|Integrations]] — n8n, PagerDuty, Slack
 - [[Security/siem/wazuh/threat-hunting/README|Threat Hunting]] — Hunting queries
+
+## Across the wiki
+
+- [[Linux/security/auditd|auditd]] — audit trails (Linux)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — audit trails (Kubernetes)
+- [[AWS/security/cloudtrail/README|AWS CloudTrail]] — audit trails (AWS)
+- [[Kubernetes/eks/observability/logging/control-plane-logs|EKS Control Plane Logs]] — audit trails (Kubernetes)

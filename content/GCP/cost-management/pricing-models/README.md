@@ -7,6 +7,7 @@ tags:
   - cost-optimization
   - cuds
   - suds
+date: 2026-09-06
 ---
 
 # GCP Cost Optimization, Committed Use Discounts (CUDs), and FinOps 💰📊
@@ -244,3 +245,13 @@ gcloud billing budgets create \
 4. **Billing Export Labels Are Not Retroactive:** BigQuery detailed billing export only records labels and tags that existed on the resources _at the moment the usage occurred_. If you add an `environment: production` or `cost-center: 4010` label to a fleet of 200 persistent disks today, you cannot back-query or attribute last month's costs by that label. Enforce resource labeling at birth via Terraform or Google Cloud Policy (`require-labels`).
 5. **Over-Rightsizing Memory Can Trigger OOM Failures:** Active Assist Recommender analyzes historical P95 and P99 memory utilization. If an application utilizes JVM or Python memory pools that occasionally spike during end-of-month financial reconciliation runs, an 8-day recommender window will suggest downsizing RAM. Blindly applying rightsizing recommendations via automated scripts can cause fatal Out-Of-Memory (`OOMKilled`) pod evictions during unexpected traffic bursts.
 6. **Cross-Project Discount Sharing Must Be Actively Verified:** In large enterprise organizations with multiple billing subaccounts, verify that **Commitment Discount Sharing** is explicitly turned on in the Cloud Billing Console. If discount sharing is disabled, a project running at 200% capacity in `us-central1` cannot consume surplus CUDs purchased by a sister project in the exact same region, resulting in wasted commitments on one project and full on-demand surcharges on the other.
+
+## Across the wiki
+
+- [[Kubernetes/eks/advanced/cost-optimization|EKS Cost Optimization]] — Kubernetes cost (Kubernetes)
+- [[Azure/compute/aks/cost-optimization-finops|AKS FinOps, Cost Allocation, and Cloud Spend Optimization]] — Kubernetes cost (Azure)
+- [[AWS/cost-management/README|AWS Cost Management]] — Kubernetes cost (AWS)
+- [[Kubernetes/guides/non-functional/cost-optimization|Cost Optimization]] — Kubernetes cost (Kubernetes)
+- [[AWS/cost-management/cost-explorer|Cost Explorer]] — cost management (AWS)
+- [[AWS/concepts/cost-management|Cost Management]] — cost management (AWS)
+- [[AWS/solutions-architect-professional/domain-1/1.5-cost-optimization-and-visibility|1.5 Cost Optimization & Visibility]] — cost management (AWS)

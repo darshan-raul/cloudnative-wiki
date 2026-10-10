@@ -21,13 +21,13 @@ Security Information and Event Management (SIEM) platforms centralize log collec
 
 ## SIEM Tools Comparison
 
-| Tool                                    | Type               | Strengths                           | Best For                                       |
-| --------------------------------------- | ------------------ | ----------------------------------- | ---------------------------------------------- | ----------------------------------------- |
-| [[Security/siem/wazuh/README            | Wazuh]]            | Open source                         | CloudTrail native, agentless AWS, built-in XDR | Your multi-account AWS (40+ org), homelab |
-| [[Security/siem/elastic-security/README | Elastic Security]] | Open source                         | Scale, performance, ML features                | High-volume environments                  |
-| [[Security/siem/splunk/README           | Splunk]]           | Commercial                          | SPL language, enterprise integrations          | Large enterprises                         |
-| Microsoft Sentinel                      | SaaS               | Azure integration, M365 integration | Azure-heavy shops                              |
-| XSIAM (Palo Alto)                       | SaaS               | ML-driven, automated response       | Advanced SOCs                                  |
+| Tool                                                        | Type        | Strengths                                      | Best For                                  |
+| ----------------------------------------------------------- | ----------- | ---------------------------------------------- | ----------------------------------------- |
+| [[Security/siem/wazuh/README\|Wazuh]]                       | Open source | CloudTrail native, agentless AWS, built-in XDR | Your multi-account AWS (40+ org), homelab |
+| [[Security/siem/elastic-security/README\|Elastic Security]] | Open source | Scale, performance, ML features                | High-volume environments                  |
+| [[Security/siem/splunk/README\|Splunk]]                     | Commercial  | SPL language, enterprise integrations          | Large enterprises                         |
+| Microsoft Sentinel                                          | SaaS        | Azure integration, M365 integration            | Azure-heavy shops                         |
+| XSIAM (Palo Alto)                                           | SaaS        | ML-driven, automated response                  | Advanced SOCs                             |
 
 ## Your Setup: Wazuh
 
@@ -81,3 +81,10 @@ Log Source → Wazuh Agent/Agentless → Manager (parse/rule) → Alert
 - [[Security/siem/alerting/README|Alerting]] — Alert design best practices
 - [[Security/siem/elastic-security/README|Elastic Security]] — Alternative open-source SIEM
 - [[Security/siem/splunk/README|Splunk]] — Commercial SIEM
+
+## Across the wiki
+
+- [[AWS/security/guardduty/README|AWS GuardDuty]] — threat detection (AWS)
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
+- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]] — threat detection (GCP)
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)

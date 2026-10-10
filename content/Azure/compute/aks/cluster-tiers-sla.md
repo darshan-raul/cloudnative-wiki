@@ -9,6 +9,7 @@ tags:
   - networking
   - private-link
   - security
+date: 2026-09-06
 ---
 
 # AKS Cluster Tiers, High Availability Control Plane, and Private Cluster Architecture 🏛️🛡️
@@ -220,3 +221,10 @@ az aks update \
 3. **Outbound Type `UserDefinedRouting` (UDR) Asymmetric Routing:** When configuring `--outbound-type userDefinedRouting` to force all egress through an Azure Firewall, the cluster node subnet must have a Default Route (`0.0.0.0/0` -> Next Hop: Firewall Private IP). If an Azure Load Balancer with public frontend IPs is attached to a service, return packets will be routed out through the Firewall instead of directly back to the client, triggering **TCP SYN/ACK drops due to asymmetric routing**. Configure Azure Firewall SNAT or use internal load balancers with Application Gateway.
 4. **etcd Size Creep from Custom Resource Definitions (CRDs):** Operators and CI/CD pipelines deploying high volumes of Helm releases often store large secrets or CRD instances in etcd. Because AKS enforces an **8 GiB hard quota on the underlying etcd database**, exceeding this quota locks etcd into read-only mode, crashing the control plane. Continuously monitor `etcd_mvcc_db_total_size_in_bytes` and prune outdated Helm release secrets.
 5. **Private Endpoint IP Collision during Subnet Migration:** Once a private AKS cluster is created with an Azure Private Endpoint, the Private Endpoint's IP cannot be changed dynamically. If network engineering re-architects VNet CIDRs or migrates subnets, the cluster cannot be "moved"—you must build a new cluster in the new subnet and migrate workloads using GitOps.
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/high-availability|High Availability]] — high availability (Kubernetes)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/availability|Availability]] — high availability (Architecture)
+- [[DevOps/sre/slos-and-error-budgets|SLOs and Error Budgets]] — high availability (DevOps)
+- [[AWS/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures|1.3 Design Reliable and Resilient Architectures]] — high availability (AWS)

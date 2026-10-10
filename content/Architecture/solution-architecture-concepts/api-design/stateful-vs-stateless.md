@@ -1,3 +1,10 @@
+---
+title: "Stateful vs Stateless"
+tags: [architecture, api-design, stateful-vs-stateless]
+date: 2026-01-30
+description: 'The concepts of stateless and stateful applications revolve around how an application handles and stores data (or "state") between requests.'
+---
+
 # Stateful vs Stateless
 
 The concepts of **stateless** and **stateful** applications revolve around how an application handles and stores data (or "state") between requests. This is particularly important when scaling applications, deploying in distributed environments like cloud, or discussing microservices architecture.
@@ -95,3 +102,9 @@ A **REST API** that provides read-only access to a resource, like fetching a pub
 #### In Conclusion:
 
 Even though your chat app stores state externally (in Redis or SQL), it's still **stateful** because it **depends on state across requests** to function properly. State is still being **managed** and **maintained** (just not in the app memory), which qualifies it as stateful.
+
+## Across the wiki
+
+- [[AWS/serverless/lambda/README|AWS Lambda]] — functions (AWS)
+- [[GCP/compute/cloud-functions/README|GCP Cloud Functions (2nd Gen) & Eventarc]] — functions (GCP)
+- [[AWS/compute/lambda/README|AWS Lambda]] — functions (AWS)

@@ -4,6 +4,7 @@ description: Linux sysctl — kernel parameter tuning, /proc/sys, /etc/sysctl.co
 tags:
   - linux
   - security
+date: 2026-06-06
 ---
 
 # sysctl

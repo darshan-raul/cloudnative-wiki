@@ -8,6 +8,7 @@ tags:
   - taints-tolerations
   - gpu
   - tpu
+date: 2026-09-06
 ---
 
 # GKE Heterogeneous Node Pools, Taints, Tolerations, and Accelerator Topologies 🖥️⚡
@@ -244,3 +245,10 @@ Heterogeneous node pools allow aggressive optimization by segregating cheap comp
 4. **GPU Driver Installation DaemonSet Failures:** When creating GPU node pools, GKE can automatically install NVIDIA drivers using `--accelerator=...,gpu-driver-version=default`. However, if you specify `--accelerator=...,gpu-driver-version=disabled` or run custom kernels, the NVIDIA driver daemonset will not initialize, and pods requesting `nvidia.com/gpu: 1` will sit in `Pending` forever with `0/10 nodes available: Insufficient nvidia.com/gpu`.
 5. **Autoscaler Scale-to-Zero on Tainted Pools:** When creating specialized node pools (such as GPU or batch Spot pools) configured to autoscale from 0 to $N$ nodes (`--min-nodes=0`), the Cluster Autoscaler inspects pending pod specs. If a pending pod does not possess the **exact matching Toleration AND NodeAffinity**, the autoscaler will consider the pool ineligible and refuse to spin up the nodes.
 6. **Topology Spread Constraints Overriding Node Pool Affinity:** If you define a `topologySpreadConstraint` matching `topologyKey: topology.kubernetes.io/zone` with `whenUnsatisfiable: DoNotSchedule`, and one of your heterogeneous node pools is pinned to only 2 zones (while the cluster spans 3 zones), the scheduler may fail to place pods because it cannot satisfy the 3-zone spread constraint. Ensure topology constraints align with the zonal availability of your heterogeneous node pools.
+
+## Across the wiki
+
+- [[Kubernetes/eks/compute/managed-node-groups/README|Managed Node Groups]] — node pools and spot capacity (Kubernetes)
+- [[Azure/compute/aks/node-pools-heterogeneous|AKS Heterogeneous Node Pools — System vs User, Ephemeral OS Disks, and Azure Linux]] — node pools and spot capacity (Azure)
+- [[AWS/cost-management/pricing-models|AWS Pricing Models]] — node pools and spot capacity (AWS)
+- [[Kubernetes/eks/compute/managed-node-groups/spot|Spot Instances on EKS]] — node pools and spot capacity (Kubernetes)

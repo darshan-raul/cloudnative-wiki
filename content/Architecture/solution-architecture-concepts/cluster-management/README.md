@@ -1,3 +1,10 @@
+---
+title: "Cluster Management"
+tags: [architecture, cluster-management]
+date: 2026-01-30
+description: "There are several cluster techniques apart from Raft, including."
+---
+
 # Cluster Management
 
 There are several cluster techniques apart from Raft, including:
@@ -30,3 +37,12 @@ There are several cluster techniques apart from Raft, including:
 These are just a few examples of the many cluster techniques available. Each technique has its strengths and weaknesses, and the choice of which one to use depends on the specific requirements of the distributed system being designed\[1]\[2].
 
 Citations: \[1] https://www.researchgate.net/figure/Compared-availabilities-of-Raft-clusters-with-and-without-witnesses\_fig2\_280091830 \[2] https://www.geeksforgeeks.org/raft-consensus-algorithm/ \[3] https://en.wikipedia.org/wiki/Raft\_%28algorithm%29 \[4] https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-2973-4 \[5] https://www.linkedin.com/pulse/raft-algorithm-consensus-distributed-systems-aditya-joshi
+
+## More in this section
+
+- [[Architecture/solution-architecture-concepts/cluster-management/gossip-protocol|Gossip Protocol]] — How gossip protocols spread state through a cluster, and where they are used.
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L09-advanced/10-etcd|etcd in Kubernetes]] — consensus and coordination (Kubernetes)
+- [[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]] — consensus and coordination (Kubernetes)

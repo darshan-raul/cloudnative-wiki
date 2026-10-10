@@ -7,6 +7,7 @@ tags:
   - firewall
   - security
   - idps
+date: 2026-09-06
 ---
 
 # Azure Firewall Architecture, TLS Inspection, and IDPS 🛡️🔥
@@ -286,3 +287,10 @@ Azure Firewall pricing is based on:
 4. **Asymmetric Routing Disasters with ExpressRoute/VPN:** If a spoke VM receives incoming traffic from an on-premises datacenter via ExpressRoute, but the spoke subnet has a UDR sending `0.0.0.0/0` to Azure Firewall, the return packets will route to the firewall instead of back through the ExpressRoute Gateway. Because Azure Firewall is stateful and never saw the initial SYN packet, it will drop the return packet immediately as invalid state. To prevent this, add a specific route in the UDR for your on-premises CIDR block pointing directly to `VirtualNetworkGateway`.
 5. **TLS Inspection Requires Intermediate CA Chain Installation:** To use TLS Inspection on Azure Firewall Premium, you must import a CA certificate into Azure Key Vault and grant the firewall managed identity access to it. If the client machines (VMs, container pods) in your spoke VNets do not have the Root CA of that intermediate certificate installed in their local OS trust stores (`/etc/ssl/certs/` or Windows Certificate Store), every single HTTPS call made by `curl`, Python `requests`, or Java will fail with `SSL_CERTIFICATE_VERIFY_FAILED`.
 6. **Use IP Groups to Prevent Rule Compilation Delays:** If your firewall policy contains thousands of individual IP addresses entered directly into rule lines, Azure Firewall Policy updates take 10 to 20 minutes to compile and distribute across instances. Group your CIDR blocks into **Azure IP Groups** (`az network ip-group`). Updating an IP Group updates all linked rules in seconds without recompiling the entire policy.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

@@ -5,6 +5,7 @@ tags:
   - aws
   - analytics
   - lake-formation
+date: 2026-06-06
 ---
 
 # AWS Lake Formation

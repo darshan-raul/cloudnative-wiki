@@ -4,6 +4,7 @@ description: Arch Linux / Manjaro pacman — package management, /etc/pacman.con
 tags:
   - linux
   - packaging
+date: 2026-06-06
 ---
 
 # pacman

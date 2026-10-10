@@ -8,6 +8,7 @@ tags:
   - management-groups
   - compliance
   - security
+date: 2026-09-06
 ---
 
 # Azure Governance — Management Groups, Policy & Locks 🏛️📋
@@ -186,3 +187,10 @@ az policy state trigger-scan --resource-group prod-core-rg
 3. **DeployIfNotExists (DINE) Requires a Managed Identity:** When assigning a policy with the `DeployIfNotExists` or `Modify` effect, Azure Policy creates a system-assigned managed identity for the assignment. If you forget to grant this managed identity appropriate RBAC permissions (e.g. `Contributor`) over the target subscription, automated remediation will fail with `UnauthorizedOperation`.
 4. **Subscription Moves Drop Resource Locks:** If you move a resource group from Subscription A to Subscription B, Azure Resource Locks attached at the Subscription level do not follow the resources. Verify and reapply resource locks immediately following any subscription reorganization.
 5. **Enforcement Mode "DoNotEnforce" for Dry-Runs:** Never assign an unfamiliar `Deny` policy with default enforcement into production. Always assign the policy with `--enforcement-mode DoNotEnforce` first. This enables compliance auditing without blocking active developer deployments, allowing you to review the blast radius before turning on strict denial.
+
+## Across the wiki
+
+- [[GCP/compute/gke/binary-authorization|GKE Binary Authorization, Container Attestations, and Supply Chain Security]] — policy and governance (GCP)
+- [[Kubernetes/eks/security/policy-management|Policy Management on EKS]] — policy and governance (Kubernetes)
+- [[AWS/management-governance/organizations/README|AWS Organizations]] — policy and governance (AWS)
+- [[Kubernetes/concepts/L07-security/04-admission-policy/12-kyverno|Kyverno]] — policy and governance (Kubernetes)

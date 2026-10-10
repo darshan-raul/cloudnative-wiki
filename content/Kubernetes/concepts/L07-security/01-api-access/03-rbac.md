@@ -850,3 +850,10 @@ kubectl api-resources | grep <crd-name>
 - [[Kubernetes/concepts/L07-security/07-security|Security Overview]] — the security model end-to-end
 - [[Kubernetes/concepts/L07-security/02-workload-sandboxing/06-pod-security-standards|PSS]] — the workload-side complement
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — the apiserver flags
+
+## Across the wiki
+
+- [[AWS/security/iam/README|AWS IAM]] — identity and access (AWS)
+- [[Azure/identity/entraid|EntraID]] — identity and access (Azure)
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)

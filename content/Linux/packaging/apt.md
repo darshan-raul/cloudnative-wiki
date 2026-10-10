@@ -4,6 +4,7 @@ description: Debian/Ubuntu apt — package management, /etc/apt/sources.list, ap
 tags:
   - linux
   - packaging
+date: 2026-06-06
 ---
 
 # apt

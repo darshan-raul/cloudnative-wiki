@@ -5,7 +5,11 @@ tags:
   - LangChain
   - LCEL
   - Runnables
+date: 2026-06-12
+description: "Every LangChain component — models, prompts, tools, parsers, retrievers — implements Runnable. This means they all share the same interface."
 ---
+
+# LangChain — Runnables & LCEL
 
 > **Part 6.** The `Runnable` interface — everything in LangChain
 > implements it. The `|` operator (LCEL), the composition primitives,

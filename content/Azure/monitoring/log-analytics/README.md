@@ -7,6 +7,7 @@ tags:
   - observability
   - log-analytics
   - kql
+date: 2026-09-06
 ---
 
 # Azure Monitor & Log Analytics Architecture, KQL, and Observability 📊🔍
@@ -260,3 +261,10 @@ Azure Monitor Log Analytics pricing is based on:
 4. **Data Collection Rules (DCR) Ingestion Transformations Save 50% on Bills:** Many services log verbose JSON payloads containing useless headers, cookies, or debug traces. Using DCR ingestion-time transformations, you can apply KQL expressions (e.g., `source | project-away UserAgent, RawHeaders | where LogLevel != "DEBUG"`) directly at the Azure ingestion pipeline. The discarded data never lands on disk and is **not billed for ingestion**.
 5. **Basic Logs Tier for High-Volume Firewalls and Proxy Logs:** Azure Firewall, Application Gateway, and NGINX ingress controllers generate millions of routine HTTP flow logs that are rarely queried interactively. Switching these specific tables from the `Analytics` tier ($2.30/GB) to the `Basic` tier ($0.50/GB) cuts ingestion costs for those tables by **nearly 80%**.
 6. **Time Skew in Diagnostic Logs:** Diagnostic settings from certain Azure services (like Cosmos DB or Azure SQL) batch events and emit them with an ingestion delay of 2 to 5 minutes. If an alert rule checks `where TimeGenerated > ago(5m)` every 5 minutes, events delayed in transit might miss the query evaluation window. Set the alert rule query window to 10 or 15 minutes (`ago(15m)`) with an evaluation frequency of 5 minutes to guarantee 100% event capture.
+
+## Across the wiki
+
+- [[AWS/monitoring/README|AWS Monitoring]] — cloud logging and monitoring (AWS)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)

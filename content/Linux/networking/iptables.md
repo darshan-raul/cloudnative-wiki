@@ -5,6 +5,7 @@ tags:
   - linux
   - networking
   - firewall
+date: 2026-06-06
 ---
 
 # iptables
@@ -240,3 +241,10 @@ nft add rule ip filter INPUT drop
 ```
 
 nftables has performance advantages for large rule sets and replaces iptables/ip6tables/ebtables/arptables with one tool.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/security-groups|Security Groups]] — network firewalls (AWS)
+- [[Azure/networking/nsg|Azure Network Security Groups (NSGs) & ASGs]] — network firewalls (Azure)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

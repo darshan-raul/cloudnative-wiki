@@ -9,6 +9,7 @@ tags:
   - kata-containers
   - confidential-computing
   - isolation
+date: 2026-09-06
 ---
 
 # AKS Multi-Tenancy, Hard Isolation, and Confidential Containers 🏢🔒
@@ -233,3 +234,10 @@ kubectl apply -f tenant-alpha-governance.yaml
 3. **Kata Containers Micro-VM Memory Sizing:** When declaring pod memory limits for Kata containers, the pod memory limit must encompass both the application container _and_ the lightweight guest Linux kernel (~25–35 MiB). If you declare an extremely small memory limit (e.g., `memory: 32Mi`), the pod will be abruptly killed before the application even boots.
 4. **Confidential Containers Signature Verification Bottlenecks:** Confidential Containers on AKS enforce image signature verification and attestation before booting. If container images are stored in an external registry with high network latency, container boot times can stretch to **15–30 seconds**. Always co-locate container images inside an Azure Container Registry (ACR) Premium in the same Azure region.
 5. **ResourceQuota Saturation Silent Pipeline Failures:** When a tenant reaches their namespace CPU or pod count `ResourceQuota`, Kubernetes does not queue new pods; it rejects the API deployment outright. If an automated CI/CD pipeline does not inspect the error code, deployments silently fail while reporting success. Configure alert rules on `kube_resourcequota{type="used"}` exceeding 85%.
+
+## Across the wiki
+
+- [[GCP/compute/gke/multi-tenancy-isolation|GKE Multi-Tenancy Architecture — Hard vs Soft Isolation, GKE Sandbox (gVisor), and PSS]] — multi-tenancy (GCP)
+- [[Kubernetes/guides/non-functional/multi-tenancy|Multi-Tenancy]] — multi-tenancy (Kubernetes)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/multi-tenancy|Multi-Tenant Software Architecture & Data Isolation Patterns]] — multi-tenancy (Architecture)
+- [[Kubernetes/concepts/L01-architecture/03-namespaces|Namespaces]] — multi-tenancy (Kubernetes)

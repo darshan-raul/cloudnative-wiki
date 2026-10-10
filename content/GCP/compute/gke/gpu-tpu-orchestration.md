@@ -9,6 +9,7 @@ tags:
   - tpu
   - ray
   - llm
+date: 2026-09-06
 ---
 
 # GKE GPU & TPU Orchestration — AI/ML Accelerators, Ray on GKE, and Kueue 🤖⚡
@@ -298,3 +299,10 @@ Accelerator pricing is the largest component of AI cloud infrastructure bills:
 4. **Out-of-Memory (CUDA OOM) Kills Containers Without Warning:** When a neural network batch size exceeds GPU VRAM, NVIDIA CUDA triggers a fatal `CUDA out of memory` exception inside the Python process. Because this is an application exception and not an OS-level cgroup violation, Kubernetes does **not** report `OOMKilled` (Exit Code 137)—it reports standard application failure `Error (Exit Code 1)`. SREs frequently misdiagnose CUDA VRAM exhaustion as code bugs; always inspect container `stdout` for `torch.cuda.OutOfMemoryError`.
 5. **Fast Socket Requirement for Multi-Node H100 Training:** When training across multiple A3 (H100) nodes, GKE includes a specialized network kernel plugin called **Fast Socket**. Fast Socket bypasses the Linux TCP stack to allow multi-stream communication directly over GPUDirect RDMA. If you build custom training container images that overwrite the base system dynamic linker (`LD_LIBRARY_PATH`), you can accidentally break Fast Socket libraries, causing cross-node gradient synchronization throughput to drop from 3.2 Tbps to standard 50 Gbps TCP rates.
 6. **Spot GPU Preemption Cascades:** Running distributed training on Spot GPUs can reduce compute costs by 70%. However, if **one single Spot node in an 8-node training cluster is preempted**, the entire PyTorch DDP rank ring collapses, terminating the entire training run. When running training on Spot GPUs, you **must** configure frequent checkpointing (e.g., saving model weights to GCS via GCS FUSE every 15 minutes) and implement automated checkpoint recovery in code.
+
+## Across the wiki
+
+- [[Azure/compute/aks/gpu-orchestration-ai|AKS GPU Orchestration for AI/ML — NVIDIA H100/A100, InfiniBand RDMA, and KubeRay]] — GPU and AI workloads (Azure)
+- [[Kubernetes/concepts/L06-scheduling-scaling/14-extended-resources|Extended Resources and Device Plugins]] — GPU and AI workloads (Kubernetes)
+- [[AI/run-locally/ollama-best-practices|Ollama Best Practices Guide]] — GPU and AI workloads (AI)
+- [[AWS/machine-learning/README|AWS Machine Learning]] — GPU and AI workloads (AWS)

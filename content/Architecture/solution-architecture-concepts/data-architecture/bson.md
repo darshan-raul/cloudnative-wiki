@@ -1,3 +1,10 @@
+---
+title: "BSON"
+tags: [architecture, data-architecture, bson]
+date: 2026-01-30
+description: "BSON stands for Binary JSON. It is a binary-encoded serialization of JSON-like documents."
+---
+
 # BSON
 
 #### What is BSON?
@@ -60,3 +67,7 @@ The same document above in BSON format would be binary-encoded, including type i
 #### Conclusion
 
 **BSON** is a binary-encoded serialization format that extends JSON to support more data types and provide better efficiency in storage and processing. It is widely used in systems where performance and flexibility are crucial, with MongoDB being a primary example. By supporting additional data types and maintaining field order, BSON is well-suited for modern database applications.
+
+## Further reading
+
+- [BSON — mongodb.com](https://www.mongodb.com/resources/basics/json-and-bson)

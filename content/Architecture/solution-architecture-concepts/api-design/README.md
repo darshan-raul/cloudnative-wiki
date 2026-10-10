@@ -56,3 +56,13 @@ PACELC:
 - [[../foundations/thinking-like-an-architect]] — The mental model for making these trade-offs
 - [[../reliability/resilience]] — Implementing reliable APIs in practice
 - [[../protocols/README]] — Network protocols underlying API communication
+
+## Further reading
+
+- [cors (video)](https://www.youtube.com/watch?v=cGg7aRcIm8o)
+- [API design (video)](https://youtu.be/pH7ZT9cOL0k)
+
+## Across the wiki
+
+- [[AWS/serverless/api-gateway/README|Amazon API Gateway]] — API design and gateways (AWS)
+- [[AWS/application-integration/appsync/README|AWS AppSync]] — API design and gateways (AWS)

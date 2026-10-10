@@ -7,6 +7,7 @@ tags:
   - cosmos-db
   - nosql
   - distributed-systems
+date: 2026-09-06
 ---
 
 # Azure Cosmos DB 🪐⚡
@@ -153,3 +154,10 @@ az cosmosdb sql container create \
 3. **Multi-Region Writes Double Throughput Billing:** Enabling multi-region writes duplicates your provisioned RU/s across every region in the account. If you provision 10,000 RU/s on an account with 3 regions, you are billed for **30,000 RU/s**.
 4. **The 20 GB Logical Partition Limit Is Immutable:** A single logical partition key value cannot exceed 20 GB of storage. If an enterprise customer's partition exceeds 20 GB, inserts for that customer key will be rejected with an error. For massive entities, construct **synthetic partition keys** (e.g. `customerId_YYYY-MM`).
 5. **Session Consistency Requires Forwarding Session Tokens:** To guarantee read-your-own-writes under Session consistency, client requests must pass the `x-ms-session-token` header back to Cosmos DB. If a multi-tier web application uses a stateless load balancer and does not preserve the session token cookie across requests, the client may experience out-of-order reads.
+
+## Across the wiki
+
+- [[AWS/databases/dynamodb/README|Amazon DynamoDB]] — NoSQL databases (AWS)
+- [[GCP/databases/firestore/README|Google Cloud Firestore]] — NoSQL databases (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/mongodb/README|MongoDB]] — NoSQL databases (Architecture)
+- [[AWS/databases/documentdb/README|Amazon DocumentDB]] — NoSQL databases (AWS)

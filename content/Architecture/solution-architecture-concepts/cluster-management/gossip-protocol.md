@@ -1,3 +1,10 @@
+---
+title: "Gossip Protocol"
+tags: [architecture, cluster-management, gossip-protocol]
+date: 2026-01-30
+description: "How gossip protocols spread state through a cluster, and where they are used."
+---
+
 # Gossip Protocol
 
 Here is a comprehensive overview of the gossip protocol:
@@ -50,3 +57,8 @@ Gossip protocols are widely used in various distributed systems, including:
 In summary, the gossip protocol is a fundamental communication mechanism in distributed systems, providing a scalable, fault-tolerant, and decentralized way to share information across a network of nodes.
 
 Citations: \[1] https://www.analyticssteps.com/blogs/gentle-introduction-gossip-protocol \[2] https://en.wikipedia.org/wiki/Gossip\_protocol \[3] https://www.educative.io/answers/what-is-gossip-protocol \[4] https://metatime.com/en/blog/what-is-the-gossip-protocol-what-are-its-types \[5] https://www.sciencedirect.com/topics/computer-science/gossip-protocol
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L09-advanced/10-etcd|etcd in Kubernetes]] — consensus and coordination (Kubernetes)
+- [[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]] — consensus and coordination (Kubernetes)

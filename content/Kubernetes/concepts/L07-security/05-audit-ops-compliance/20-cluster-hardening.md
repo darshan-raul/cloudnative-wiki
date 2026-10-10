@@ -549,3 +549,9 @@ kubectl get node <node> -o yaml
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what's logged
 - [[Kubernetes/concepts/L07-security/04-admission-policy/10-admission-controllers|Admission Controllers]] — the admission layer
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/22-compliance-frameworks|Compliance Frameworks]] — NIST / CIS / OWASP
+
+## Across the wiki
+
+- [[Linux/security/linux-cis-hardening|Linux CIS Hardening]] — hardening (Linux)
+- [[Security/endpoint-security/hardening/README|Linux Host Hardening]] — hardening (Security)
+- [[Linux/security/systemd-service-hardening|systemd Service Hardening]] — hardening (Linux)

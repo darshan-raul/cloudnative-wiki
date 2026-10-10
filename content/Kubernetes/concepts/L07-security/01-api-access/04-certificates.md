@@ -716,3 +716,10 @@ kubectl exec <pod> -- date
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — apiserver flags
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — kubelet config
 - [[Kubernetes/concepts/L01-architecture/06-what-happens-when|Control Plane Architecture]] — the components and request flow
+
+## Across the wiki
+
+- [[AWS/security/certificate-manager/README|AWS ACM]] — TLS and certificates (AWS)
+- [[Architecture/solution-architecture-concepts/authentication/stage0/03-http-tls-foundations|0.3 — HTTP & TLS Foundations Every Auth Engineer Must Know]] — TLS and certificates (Architecture)
+- [[Architecture/solution-architecture-concepts/cryptography/keystore|Keystore]] — TLS and certificates (Architecture)
+- [[Architecture/solution-architecture-concepts/cryptography/signing-and-verifying|Signing and Verifying]] — TLS and certificates (Architecture)

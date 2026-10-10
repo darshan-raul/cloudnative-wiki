@@ -8,6 +8,7 @@ tags:
   - rabbitmq
   - activemq
   - messaging
+date: 2026-06-06
 ---
 
 # Amazon MQ

@@ -5,7 +5,11 @@ tags:
   - Non-Functional
   - Deprecations
   - APIs
+date: 2026-06-12
+description: "K8s deprecates APIs in every release. Some deprecations are gentle (deprecated, still works for 9+ months). Some are sudden (removed in next release)."
 ---
+
+# Deprecations
 
 K8s deprecates APIs in every release. Some deprecations are gentle (deprecated, still works for 9+ months). Some are sudden (removed in next release). **Knowing what's deprecated and what's removed is the difference between an upgrade that works and one that breaks everything.**
 
@@ -848,3 +852,8 @@ kind: PodDisruptionBudget
 - [[Kubernetes/guides/non-functional/security-baseline|security-baseline]] — PSP migration
 - [k8s deprecation guide](https://kubernetes.io/docs/reference/using-api/deprecation-guide/)
 - [kubent](https://github.com/kubernetes-sigs/kube-no-trouble)
+
+## Across the wiki
+
+- [[Azure/compute/aks/upgrades-maintenance|AKS Upgrades, Maintenance Windows, and Safe Rollout Strategies]] — cluster upgrades (Azure)
+- [[GCP/compute/gke/release-channels-upgrades|GKE Release Channels, Node Upgrades, Surge vs Blue-Green, and SRE Lifecycle]] — cluster upgrades (GCP)

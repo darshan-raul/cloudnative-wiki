@@ -5,6 +5,7 @@ tags:
   - aws
   - cost-management
   - compute
+date: 2026-06-06
 ---
 
 # EC2 Cost Optimization

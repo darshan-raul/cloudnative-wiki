@@ -1,3 +1,10 @@
+---
+title: "Magic ips/ 169.254"
+tags: [aws, magic-ips-169-254]
+date: 2026-01-30
+description: "The link-local 169.254.0.0/16 addresses AWS uses inside a VPC: instance metadata, the DNS resolver, time sync and ECS/EKS credential endpoints."
+---
+
 # Magic ips/ 169.254
 
 Yes, AWS utilizes several **link-local IP addresses** within the `169.254.0.0/16` range to provide essential services to EC2 instances. These IPs are accessible only from within the instance and do not require external network connectivity.
@@ -41,3 +48,8 @@ AWS provides these services through the underlying hypervisor or Nitro system on
 ---
 
 By leveraging these link-local IP addresses, AWS enables instances to access essential services seamlessly and securely, simplifying network configurations and enhancing operational efficiency.
+
+## Across the wiki
+
+- [[GCP/networking/vpc/cloud-nat|GCP Cloud NAT Deep Dive & SNAT Port Allocation]] — NAT and egress (GCP)
+- [[Architecture/solution-architecture-concepts/networking/nat|Nat]] — NAT and egress (Architecture)

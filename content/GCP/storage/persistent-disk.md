@@ -7,6 +7,7 @@ tags:
   - persistent-disk
   - hyperdisk
   - kubernetes
+date: 2026-09-06
 ---
 
 # GCP Persistent Disk & Hyperdisk 💽⚡
@@ -171,3 +172,10 @@ spec:
 3. **Regional PD Failover Requires `ReadWriteOnce` Force-Detachment:** When a zone fails and Kubernetes attempts to reschedule a stateful pod to the surviving zone, the underlying Regional PD may still be locked by the dead node. GKE's CSI driver supports automated volume attachment detachment, but can take ~2–3 minutes to break the stale attachment lock.
 4. **Local SSDs Are Ephemeral (Loss on Stop):** Google also offers **Local SSDs** (NVMe physically connected to the host) boasting millions of IOPS and microsecond latencies. However, Local SSD data is **wiped clean if the VM is stopped**. Only use Local SSDs for ephemeral scratch space, swap disks, or distributed databases with application-level multi-node quorum (Cassandra, Elasticsearch).
 5. **Snapshot Consistency Requires Filesystem Sync:** Taking a snapshot of an active disk while a database is writing heavy uncommitted transactions can result in crash-inconsistent filesystems. Always flush the filesystem buffer (`sync` or `fsfreeze -f`) prior to initiating snapshots of bare-metal databases.
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/README|Storage on EKS]] — block storage (Kubernetes)
+- [[Azure/compute/aks/storage-csi-disks|AKS Storage CSI Architecture — Azure Managed Disks, Premium SSD v2, and Elastic SAN]] — block storage (Azure)
+- [[Linux/storage/README|Linux Storage]] — block storage (Linux)
+- [[AWS/storage/ebs/README|Amazon EBS]] — block storage (AWS)

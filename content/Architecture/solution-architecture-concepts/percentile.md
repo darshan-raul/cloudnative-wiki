@@ -1,3 +1,10 @@
+---
+title: "Percentile"
+tags: [architecture, percentile]
+date: 2026-01-30
+description: "Percentiles tell you how a value ranks compared to the rest of the data set. It essentially divides the data into 100 equal parts. Here's a breakdown to understand it better."
+---
+
 # Percentile
 
 Percentiles tell you how a value ranks compared to the rest of the data set. It essentially divides the data into 100 equal parts. Here's a breakdown to understand it better:
@@ -46,3 +53,10 @@ Here's how percentiles offer valuable insights when monitoring system performanc
 
 - Percentiles are not a magic fix to all performance problems. Use them in conjunction with other metrics and in the context of your application's expected behavior.
 - The time period you analyze is important. For example, percentiles calculated every minute will showcase different behavior than those calculated hourly or daily.
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/chaos-engineering|Chaos Engineering]] — performance and chaos testing (Kubernetes)
+- [[Linux/networking/network-performance-tuning|Network Performance Tuning]] — performance and chaos testing (Linux)
+- [[AWS/solutions-architect-professional/domain-2/2.5-performance-objectives|2.5 Performance Objectives]] — performance and chaos testing (AWS)
+- [[Kubernetes/guides/non-functional/performance-tuning|Performance Tuning]] — performance and chaos testing (Kubernetes)

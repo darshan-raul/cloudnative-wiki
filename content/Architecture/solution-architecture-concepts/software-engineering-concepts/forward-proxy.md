@@ -1,3 +1,10 @@
+---
+title: "Forward Proxy"
+tags: [architecture, software-engineering-concepts, forward-proxy]
+date: 2026-01-30
+description: "A forward proxy server is an intermediary server that sits between client applications and the internet."
+---
+
 # Forward Proxy
 
 #### What is a Forward Proxy Server?
@@ -243,3 +250,9 @@ If you want to enforce proxy usage without client-side configuration, you can se
 #### Conclusion
 
 Configuring a forward proxy server involves setting up the server (e.g., Squid) and ensuring that client machines route their traffic through it. By configuring client browsers or setting system-wide environment variables, you can route HTTP and HTTPS traffic through the proxy. For non-HTTP traffic, using tools like `proxychains` can help. Additionally, setting up a transparent proxy can enforce proxy usage without requiring client-side configuration.
+
+## Across the wiki
+
+- [[Kubernetes/guides/networking/traefik|Traefik]] — proxies (Kubernetes)
+- [[Kubernetes/guides/networking/envoy-gateway-internals|Envoy Gateway — Architecture & Operations Reference]] — proxies (Kubernetes)
+- [[Kubernetes/guides/networking/comparison|Service Mesh Comparison]] — proxies (Kubernetes)

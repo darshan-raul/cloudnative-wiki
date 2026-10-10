@@ -6,6 +6,7 @@ tags:
   - identity
   - iam
   - security
+date: 2026-09-06
 ---
 
 # GCP Identity & Access Management (IAM) 🔐
@@ -298,3 +299,10 @@ gcloud resource-manager org-policies enable-enforce \
 4. **Custom Role Permission Incompatibilities:** Not all GCP permissions can be added to custom roles. Permissions containing `*.list` or `*.get` are almost universally supported, but complex lifecycle permissions or operations marked as testing/preview often fail with `Permission [x] is not valid for custom roles`. Always check Google's custom role support table before architecting custom roles.
 5. **Metadata Server SSRF Vulnerability & Header Protection:** Workloads query `http://metadata.google.internal/computeMetadata/v1/` to fetch tokens. To prevent Server-Side Request Forgery (SSRF) exploits, GCP requires the HTTP header `Metadata-Flavor: Google`. Requests missing this header are rejected with an HTTP 403. However, if an application blindly proxies custom headers, an attacker can still steal credentials; use workload identity protections and IMDS filtering.
 6. **Project Deletion Grace Period & Service Account Zombies:** When a project or service account is deleted, its email remains in cached IAM policies for other projects as a deleted principal (displayed as `deleted:serviceAccount:...`). If you recreate a service account with the identical name later, it will receive a **new unique numeric ID** and will **not** inherit the old permissions.
+
+## Across the wiki
+
+- [[AWS/security/iam/README|AWS IAM]] — identity and access (AWS)
+- [[Azure/identity/entraid|EntraID]] — identity and access (Azure)
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]] — identity and access (Kubernetes)

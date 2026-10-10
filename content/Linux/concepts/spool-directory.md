@@ -1,3 +1,10 @@
+---
+title: "Spool directory"
+tags: [linux, spool-directory]
+date: 2026-01-30
+description: "A spool directory in Linux is a designated location where data is temporarily stored before it is processed by another service or application."
+---
+
 # Spool directory
 
 A spool directory in Linux is a designated location where data is temporarily stored before it is processed by another service or application. This concept is commonly used in various contexts, such as print spooling and task scheduling.

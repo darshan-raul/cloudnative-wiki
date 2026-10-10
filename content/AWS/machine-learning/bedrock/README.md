@@ -8,6 +8,7 @@ tags:
   - llm
   - generative-ai
   - rag
+date: 2026-06-06
 ---
 
 # Amazon Bedrock
@@ -282,3 +283,10 @@ Provisioned throughput: ~$45K/month for 1 model unit (negotiable).
 - **Bedrock Agents are stateless across sessions — you must manage conversation context yourself:** If you need multi-turn conversations, store session state (messages array) and pass it on each `invoke_agent` call. The agent doesn't remember previous turns automatically.
 - **Provisioned throughput is a MONTHLY commitment — it's expensive and not refundable:** A $45K/month commitment is a significant cost. Start with on-demand (pay per token) and only switch to provisioned when you have predictable, high-volume usage.
 - **Bedrock's Titan Embeddings has a 1,024-token limit — for long documents, chunk before embedding:** Split documents into paragraphs or sections (< 512 tokens per chunk) before embedding. Use overlap (50-100 tokens) between chunks to preserve context.
+
+## Across the wiki
+
+- [[AI/aws/bedrock|Amazon Bedrock Architecture & Implementation]] — generative AI platforms (AI)
+- [[AI/rag|Retrieval-Augmented Generation (RAG) Architecture]] — generative AI platforms (AI)
+- [[AI/aws/sagemaker/README|Sagemaker]] — generative AI platforms (AI)
+- [[AI/aws/services|Services]] — generative AI platforms (AI)

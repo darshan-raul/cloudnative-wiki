@@ -7,6 +7,7 @@ tags:
   - cdn
   - cloud-cdn
   - performance
+date: 2026-09-06
 ---
 
 # GCP Cloud CDN Architecture & Edge Caching ⚡🌍
@@ -179,3 +180,9 @@ gcloud compute url-maps invalidate-cdn-cache prod-url-map \
 3. **Query String Churn Destroys Cache Hit Ratios:** If your web application receives requests with random query parameters (e.g. cache-busting timestamps `?_=1693982400` or Google Ads `?gclid=...`), Cloud CDN treats every single request as a cache miss. Always configure a **Query String Whitelist** on the cache key to ignore irrelevant parameters.
 4. **Cloud CDN Requires the Global External Application Load Balancer:** Cloud CDN cannot be attached directly to a Cloud Storage bucket or a Compute Engine VM in isolation. It **strictly requires** a Global External Application Load Balancer (or Regional External ALB in supported configurations).
 5. **Negative Caching Prevents Deployment Blackouts:** If a newly deployed backend version crashes on startup and returns `HTTP 502 Bad Gateway`, clients repeatedly hammering the endpoint can permanently keep the backend overloaded. Enabling negative caching (`502=5s`) gives the backend breathing room to recover by caching the error at the edge for 5 seconds.
+
+## Across the wiki
+
+- [[AWS/networking/cdn/README|Amazon CloudFront]] — CDN and edge caching (AWS)
+- [[Architecture/solution-architecture-concepts/data-architecture/cdn|CDN]] — CDN and edge caching (Architecture)
+- [[Architecture/solution-architecture-concepts/caching|Caching]] — CDN and edge caching (Architecture)

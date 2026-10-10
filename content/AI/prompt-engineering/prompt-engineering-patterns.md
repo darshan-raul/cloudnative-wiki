@@ -1,3 +1,10 @@
+---
+title: "Prompt Engineering Patterns"
+tags: [ai, prompt-engineering, prompt-engineering-patterns]
+date: 2026-01-30
+description: "Prompt engineering is the practice of designing and optimizing prompts to improve the performance of large language models (LLMs)."
+---
+
 # Prompt Engineering Patterns
 
 #### **Prompt Engineering Patterns – A Comprehensive Guide**

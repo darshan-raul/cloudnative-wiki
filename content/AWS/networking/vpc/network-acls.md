@@ -5,6 +5,7 @@ tags:
   - aws
   - networking
   - network-acls
+date: 2026-06-06
 ---
 
 # Network ACLs (NACLs)
@@ -117,3 +118,10 @@ NACLs are free. The cost is in the EC2 or other resources using the subnets they
 - **NACLs apply to all instances in a subnet:** If you attach an NACL to a subnet with 50 instances, the NACL rules apply to all 50 instances. This is powerful but dangerous — a misconfigured NACL affects every instance in the subnet.
 - **The default NACL allows everything:** The moment you create a custom NACL, it denies everything by default. If you attach it to a subnet without adding allow rules, all connectivity is cut off. Always configure the NACL before attaching it.
 - **NACLs don't filter traffic between instances in the same subnet:** NACLs are evaluated at the subnet boundary, not per-instance. Traffic between two instances in the same subnet doesn't cross the subnet boundary, so NACLs don't apply. Use security groups for instance-to-instance filtering.
+
+## Across the wiki
+
+- [[Azure/networking/nsg|Azure Network Security Groups (NSGs) & ASGs]] — network firewalls (Azure)
+- [[GCP/networking/vpc/firewalls|GCP Firewalls & Hierarchical Policies]] — network firewalls (GCP)
+- [[Linux/networking/iptables|iptables]] — network firewalls (Linux)
+- [[Kubernetes/concepts/L04-services-networking/05-network-policy|Explicit is better than implicit]] — network firewalls (Kubernetes)

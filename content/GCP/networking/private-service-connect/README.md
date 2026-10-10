@@ -8,6 +8,7 @@ tags:
   - psc
   - security
   - saas
+date: 2026-09-06
 ---
 
 # GCP Private Service Connect (PSC) 🔌🔒
@@ -183,3 +184,10 @@ gcloud compute forwarding-rules create psc-google-apis \
 3. **Consumer Firewall Rules Must Target the PSC Endpoint IP:** Inside the consumer VPC, instances must have an egress firewall rule that explicitly allows traffic to the internal IP reserved for the PSC endpoint (`10.0.2.50`). If your VPC has a default-deny egress rule and you forget to allow the PSC endpoint IP, consumer connections will time out locally.
 4. **Producer Ingress Firewall Must Permit the NAT Subnet:** On the producer side, backend VMs and internal load balancers must have an ingress firewall rule permitting traffic from the **PSC NAT Subnet CIDR** (`10.100.0.0/24`). If this firewall rule is missing, health checks may pass on the load balancer, but all consumer traffic will be dropped at the backend VM virtual NIC.
 5. **PSC Replaces Private Google Access:** While legacy `Private Google Access` routes API calls to the shared default virtual IPs (`199.36.153.8/30`), it cannot be extended across VPN or Cloud Interconnect to on-prem datacenters without complex DNS hacks. **Private Service Connect for Google APIs** allocates a real RFC 1918 IP inside your subnet, making it instantly reachable from on-premise servers over VPN and Interconnect with standard DNS forwarding!
+
+## Across the wiki
+
+- [[Azure/networking/private-link/README|Azure Private Link, Private Endpoints, and Private DNS Architecture]] — private connectivity (Azure)
+- [[AWS/concepts/vpc-lattice|Amazon VPC Lattice]] — private connectivity (AWS)
+- [[Kubernetes/eks/networking/vpc-lattice/README|Amazon VPC Lattice]] — private connectivity (Kubernetes)
+- [[Azure/networking/virtual-wan/README|Azure Virtual WAN (vWAN) Architecture & Global Transit Routing]] — private connectivity (Azure)

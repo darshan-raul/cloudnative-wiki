@@ -5,7 +5,11 @@ tags:
   - Templating
   - Kustomize
   - Patching
+date: 2026-01-30
+description: "Kustomize is the declarative, template-free way to manage k8s manifests. It overlays patches on top of base manifests, no templating language needed."
 ---
+
+# Kustomize
 
 Kustomize is the **declarative, template-free** way to manage k8s manifests. It overlays patches on top of base manifests, no templating language needed. Built into `kubectl`, supported by every GitOps controller, and almost always the right choice for "I need different configs per environment."
 

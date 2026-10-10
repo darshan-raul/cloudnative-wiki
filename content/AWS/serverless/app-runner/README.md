@@ -6,6 +6,7 @@ tags:
   - serverless
   - apprunner
   - containers
+date: 2026-06-06
 ---
 
 # AWS App Runner
@@ -233,3 +234,10 @@ With auto-scaling (2 instances average, burst to 5):
 - **App Runner's VPC connector only supports egress — your app CAN reach VPC resources, but inbound traffic still goes through App Runner's public endpoint:** You can't use App Runner as a private-only service. All traffic enters via App Runner's public URL, then can be routed to VPC.
 - **App Runner builds from source code in App Runner's build infrastructure — not your local machine:** If you need custom build environments (multi-stage Docker, specific toolchains), use a container image from ECR instead of source code.
 - **App Runner's built-in observability is minimal — you get CloudWatch logs but no distributed tracing:** For production debugging, add X-Ray SDK to your app. App Runner doesn't auto-instrument like Lambda@Edge would.
+
+## Across the wiki
+
+- [[Azure/compute/container-apps/README|Azure Container Apps (ACA), KEDA, and Dapr Microservices]] — serverless containers (Azure)
+- [[GCP/compute/cloud-run|GCP Cloud Run]] — serverless containers (GCP)
+- [[Kubernetes/eks/compute/fargate/README|AWS Fargate on EKS]] — serverless containers (Kubernetes)
+- [[Azure/compute/app-service/README|Azure App Service Architecture, Deployment Slots, and VNet Integration]] — serverless containers (Azure)

@@ -4,6 +4,7 @@ description: Linux ip command — ip addr, ip link, ip route, ip neigh, ip netns
 tags:
   - linux
   - networking
+date: 2026-06-06
 ---
 
 # ip Command
@@ -183,3 +184,10 @@ ip link set veth0 up
 # 5. Enable forwarding on bridge
 iptables -A FORWARD -i br0 -o br0 -j ACCEPT
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L04-services-networking/01-networking|Networking (L04 Overview)]] — packet path (Kubernetes)
+- [[Architecture/solution-architecture-concepts/networking/tcpip|TCP/IP Architecture, Handshakes & Congestion Control]] — packet path (Architecture)
+- [[Kubernetes/concepts/L04-services-networking/07-k8s-networking-deep-dive|Kubernetes Networking — Deep Dive]] — packet path (Kubernetes)
+- [[Architecture/solution-architecture-concepts/networking/osi-model|The OSI 7-Layer Model in Modern Systems Engineering]] — packet path (Architecture)

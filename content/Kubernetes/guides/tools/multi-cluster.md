@@ -5,6 +5,8 @@ tags:
   - Tools
   - Operations
   - Multi-cluster
+date: 2026-01-30
+description: "Sources: Kubernetes Federation v2 (KubeFed), Cluster API, Rancher, Lens"
 ---
 
 # Multi-Cluster Management
@@ -295,3 +297,9 @@ Rule of thumb: **multi-cluster is expensive.** Each cluster is ~$70-300/month mi
 - [[Kubernetes/guides/tools/lens|lens]] — multi-cluster dashboard
 - [[Kubernetes/guides/delivery/gitops/argo-cd/README|argo-cd]] — multi-cluster GitOps
 - [[Kubernetes/guides/non-functional/multi-tenancy|multi-tenancy]] — alternatives to multi-cluster
+
+## Across the wiki
+
+- [[Azure/compute/aks/fleet-manager-multicluster|Azure Kubernetes Fleet Manager — Multi-Cluster Governance, Staged Upgrades, and Multi-Cluster Services (MCS)]] — multi-cluster (Azure)
+- [[GCP/compute/gke/fleets-and-anthos|GKE Fleets, Cloud Service Mesh (formerly ASM), and Policy Controller Governance]] — multi-cluster (GCP)
+- [[GCP/compute/gke/multi-cluster-services|GKE Multi-Cluster Services (MCS) and Multi-Cluster Ingress (MCI) Architecture]] — multi-cluster (GCP)

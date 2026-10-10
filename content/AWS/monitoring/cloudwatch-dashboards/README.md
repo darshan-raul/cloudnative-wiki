@@ -6,6 +6,7 @@ tags:
   - monitoring
   - dashboards
   - cloudwatch
+date: 2026-06-06
 ---
 
 # CloudWatch Dashboards

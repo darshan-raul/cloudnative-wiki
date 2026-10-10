@@ -7,6 +7,7 @@ tags:
   - service-bus
   - enterprise-integration
   - amqp
+date: 2026-09-06
 ---
 
 # Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging 🚌📨
@@ -239,3 +240,10 @@ Pricing structure:
 4. **Duplicate Detection Window Reset on Namespace Restarts:** Service Bus duplicate detection stores message IDs in an in-memory sliding window. While highly reliable, duplicate detection is bounded strictly by `duplicateDetectionHistoryTimeWindow` (maximum 7 days). If a publisher re-sends a message after the window expires, Service Bus treats it as a brand-new message. Duplicate detection is an infrastructure defense; application-level idempotency keys in your database remain essential.
 5. **Dead-Letter Queue Monitoring is Critical:** Messages sent to `$DeadLetterQueue` sit there permanently until the TTL expires (up to 14 days or infinite depending on configuration). They do not trigger automated alerts unless explicitly monitored. If unhandled exceptions route hundreds of poisoned orders into the DLQ, you will experience silent business failure. Always configure an Azure Monitor alert rule on the `DeadletteredMessages` metric (> 0 for 5 minutes).
 6. **SQL Filters vs Correlation Filters Performance:** While SQL filters (`orderValue > 500 AND region = 'US'`) offer expressive query capabilities, they are evaluated by an internal expression engine for every single published message. In high-throughput topics (10,000+ msg/sec), complex SQL filters degrade broker throughput. Whenever possible, use **Correlation Filters** (`CorrelationFilter { Properties = { "region", "US" } }`), which use direct hash-table lookups and execute up to 10x faster.
+
+## Across the wiki
+
+- [[AWS/application-integration/sqs/README|Amazon SQS]] — messaging and streaming (AWS)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
+- [[AWS/application-integration/sns/README|Amazon SNS]] — messaging and streaming (AWS)

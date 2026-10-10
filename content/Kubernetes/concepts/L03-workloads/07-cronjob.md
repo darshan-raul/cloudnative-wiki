@@ -1030,3 +1030,10 @@ This is fine if `concurrencyPolicy: Allow`. With `Forbid` or `Replace`, the cont
 | Resource requests and limits      | [[Kubernetes/concepts/L06-scheduling-scaling/01-resource-requests-limits\|L06 — Resource Requests and Limits]] |
 | Taints and tolerations            | [[Kubernetes/concepts/L06-scheduling-scaling/00-README\|L06 — Scheduling and Scaling]]                         |
 | Garbage collection (TTL, history) | [[Kubernetes/concepts/L09-advanced/06-garbage-collection\|L09 — Garbage Collection]]                           |
+
+## Across the wiki
+
+- [[Linux/boot-init/cron-anacron|Cron and Anacron]] — scheduled work (Linux)
+- [[AWS/application-integration/step-functions/README|AWS Step Functions]] — scheduled work (AWS)
+- [[Linux/boot-init/systemd-timers|systemd Timers]] — scheduled work (Linux)
+- [[AWS/monitoring/cloudwatch-events/README|CloudWatch Events]] — scheduled work (AWS)

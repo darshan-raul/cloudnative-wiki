@@ -6,6 +6,7 @@ tags:
   - networking
   - vpc
   - security
+date: 2026-09-06
 ---
 
 # GCP Virtual Private Cloud (VPC) & Networking 🌐
@@ -227,3 +228,10 @@ gcloud compute firewall-rules create allow-gcp-health-checks \
 4. **VPC Peering Is NOT Transitive:** Just like AWS, VPC Network Peering in GCP is non-transitive. If VPC A peers with VPC B, and VPC B peers with VPC C, VPC A cannot communicate with VPC C through B. To achieve hub-and-spoke or multi-VPC mesh at scale, use **Network Connectivity Center** or **Private Service Connect**.
 5. **GKE Secondary Range IP Exhaustion is Irreversible:** When creating a GKE cluster with VPC-native networking, Pod and Service secondary CIDRs are permanently bound to the cluster. If you undersize the secondary Pod CIDR (e.g., choosing a `/24` allowing only 256 Pod IPs), you **cannot** resize it in place; you will be forced to recreate the entire GKE cluster to expand Pod capacity.
 6. **Cloud NAT Port Exhaustion (SNAT Depletion):** By default, Cloud NAT allocates 64 ports per VM. If high-concurrency microservices make thousands of simultaneous outbound connections to the same destination endpoint, connections will fail with `connection reset` or timeouts due to port exhaustion. Configure dynamic port allocation or increase `--min-ports-per-vm`.
+
+## Across the wiki
+
+- [[AWS/networking/vpc/README|Amazon VPC]] — virtual networks (AWS)
+- [[Azure/networking/vnet|Azure Virtual Network (VNet) & Hybrid Routing]] — virtual networks (Azure)
+- [[Architecture/solution-architecture-concepts/networking/README|Cloud-Native Networking Architecture Guide]] — virtual networks (Architecture)
+- [[Linux/networking/README|Linux Networking]] — virtual networks (Linux)

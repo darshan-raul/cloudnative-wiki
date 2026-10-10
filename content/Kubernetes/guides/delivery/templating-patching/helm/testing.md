@@ -661,3 +661,10 @@ helm template myapp ./mychart --debug > /tmp/rendered.yaml
 - [Helm Unittest Plugin](https://github.com/helm/helm-unittest)
 - [Chart Testing Tool](https://github.com/helm/chart-testing)
 - [Artifact Hub](https://artifacthub.io/) - Find tested charts
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/testing/README|Testing]] — testing (Architecture)
+- [[AI/evals|Evaluating LLM Systems]] — testing (AI)
+- [[DevOps/ci-cd/pipeline-design|Pipeline Design]] — testing (DevOps)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/testing/unit-testing|Unit Testing Principles & Test-Driven Development (TDD)]] — testing (Architecture)

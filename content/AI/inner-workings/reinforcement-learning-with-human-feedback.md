@@ -1,3 +1,10 @@
+---
+title: "Reinforcement Learning with Human Feedback"
+tags: [ai, inner-workings, reinforcement-learning-with-human-feedback]
+date: 2026-01-30
+description: "Reinforcement Learning from Human Feedback (RLHF) is a technique used to fine-tune machine learning models, particularly large language models (LLMs), using human-generated feedback instead of…"
+---
+
 # Reinforcement Learning with Human Feedback
 
 #### **1. What is RLHF?**

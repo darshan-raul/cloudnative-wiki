@@ -5,6 +5,7 @@ tags:
   - linux
   - shell
   - processes
+date: 2026-06-06
 ---
 
 # nohup, disown, and setsid
@@ -193,3 +194,9 @@ ps -o pid,tty,cmd | grep long-job
 ps -o pid,tty,cmd | grep long-job
 # ?       # no controlling terminal
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|Pods Deep Dive & Manifest Reference]] — process lifecycle and signals (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — process lifecycle and signals (Containers)
+- [[Kubernetes/concepts/L06-scheduling-scaling/06-restart-policy|Restart Policy]] — process lifecycle and signals (Kubernetes)

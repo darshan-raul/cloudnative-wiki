@@ -5,6 +5,7 @@ tags:
   - aws
   - databases
   - aurora
+date: 2026-06-06
 ---
 
 # Amazon Aurora
@@ -238,3 +239,10 @@ Key Aurora-specific metrics:
 - **Aurora Global Database allows one secondary region to have a writable instance (promoted primary):** In a global database, only one region is writable at a time. If you need to write in multiple regions simultaneously, use Aurora Multi-Master (MySQL only) instead.
 - **Aurora's reader endpoint load-balances at the connection level, not the query level:** Each new connection goes to a different reader. For true query-level load balancing, use a connection pooler (like PgBouncer for PostgreSQL or ProxySQL for MySQL).
 - **Aurora PostgreSQL's `shared_buffers` parameter should be set to 75% of Aurora's buffer cache, not the instance's memory:** Aurora's storage layer is separate from PostgreSQL's `shared_buffers`. The default `shared_buffers` (128MB) is fine for most Aurora workloads — don't blindly set it to 75% of instance memory.
+
+## Across the wiki
+
+- [[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]] — relational databases (Azure)
+- [[GCP/databases/cloud-sql|GCP Cloud SQL]] — relational databases (GCP)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/postgres/README|PostgreSQL]] — relational databases (Architecture)
+- [[Azure/databases/postgres-flexible/README|Azure Database for PostgreSQL Flexible Server Architecture & Operations]] — relational databases (Azure)

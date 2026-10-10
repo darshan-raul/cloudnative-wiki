@@ -61,3 +61,9 @@ Traditional:                       Zero Trust:
 - [[../foundations/software-planning]] — ADRs for security decisions
 - [[../authentication/README]] — Auth patterns (OAuth2, OIDC, SAML)
 - [[../cryptography/README]] — PKI, TLS, signing
+
+## Across the wiki
+
+- [[Security/zero-trust|Zero-Trust Architecture (NIST SP 800-207)]] — zero trust (Security)
+- [[Security/assume-breach-principle|Assume Breach Principle]] — zero trust (Security)
+- [[Security/application-security/README|Application Security]] — zero trust (Security)

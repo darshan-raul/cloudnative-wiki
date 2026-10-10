@@ -1,1 +1,0 @@
-![](https://www.youtube.com/watch?v=cGg7aRcIm8o)

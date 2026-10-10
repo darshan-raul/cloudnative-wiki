@@ -6,6 +6,7 @@ tags:
   - programming
   - decorators
   - architecture
+date: 2026-01-30
 ---
 
 # Python Decorators Architecture & Metaprogramming Patterns

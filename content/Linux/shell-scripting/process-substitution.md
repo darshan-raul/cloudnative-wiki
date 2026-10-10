@@ -4,6 +4,7 @@ description: Linux process substitution — <(), >(), using command output as a 
 tags:
   - linux
   - shell
+date: 2026-06-06
 ---
 
 # Process Substitution

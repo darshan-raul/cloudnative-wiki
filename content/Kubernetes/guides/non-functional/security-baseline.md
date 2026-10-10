@@ -7,7 +7,11 @@ tags:
   - Pod Security Standards
   - NetworkPolicy
   - Policy
+date: 2026-06-12
+description: "A practical, layered security baseline for a k8s cluster. Defense in depth — assume any single layer will fail. The goal isn't perfection, it's reducing the blast radius of compromise."
 ---
+
+# Security Baseline
 
 A practical, layered security baseline for a k8s cluster. **Defense in depth** — assume any single layer will fail. The goal isn't perfection, it's reducing the blast radius of compromise.
 
@@ -791,3 +795,9 @@ After rolling this out, the next CVE gets caught at admission or in CI, not in p
 - [[Kubernetes/concepts/L07-security/00-README|L07-security]] — concept-level security notes
 - [[Kubernetes/guides/troubleshooting/crashloop-backoff|crashloop-backoff]] — when PSS is too strict
 - [[Kubernetes/guides/delivery/ci-cd-integration|ci-cd-integration]] — image scanning in CI
+
+## Across the wiki
+
+- [[Linux/security/linux-cis-hardening|Linux CIS Hardening]] — hardening (Linux)
+- [[Security/endpoint-security/hardening/README|Linux Host Hardening]] — hardening (Security)
+- [[Linux/security/systemd-service-hardening|systemd Service Hardening]] — hardening (Linux)

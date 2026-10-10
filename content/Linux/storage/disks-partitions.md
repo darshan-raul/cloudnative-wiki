@@ -4,6 +4,7 @@ description: Linux disks and partitions — /dev/sda, GPT, fdisk, parted, mkfs, 
 tags:
   - linux
   - storage
+date: 2026-06-06
 ---
 
 # Disks and Partitions

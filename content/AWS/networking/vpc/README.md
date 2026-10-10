@@ -5,6 +5,7 @@ tags:
   - aws
   - networking
   - vpc
+date: 2026-06-06
 ---
 
 # Amazon VPC
@@ -209,3 +210,10 @@ Use when:
 - **Interface Endpoints cost $0.007/endpoint-hour per AZ:** In a 3-AZ VPC with 5 interface endpoints, that's 15 endpoint-hour charges per hour ($0.105/hr = $75/month). Minimize the number of AZs for interface endpoints or use PrivateLink endpoints in a single AZ.
 - **VPC Flow Logs don't capture DNS traffic from the VPC DNS resolver (resolver VPC IP):** If an instance queries the VPC DNS (at the VPC router IP), that DNS query won't appear in Flow Logs. This makes troubleshooting DNS issues from Flow Logs impossible.
 - **S3 VPC Endpoint policy is separate from the S3 bucket policy:** The VPC Endpoint can have its own access policy restricting which buckets are accessible from it. A bucket policy denying public access won't be overridden by a permissive VPC Endpoint policy — both must allow.
+
+## Across the wiki
+
+- [[Azure/networking/vnet|Azure Virtual Network (VNet) & Hybrid Routing]] — virtual networks (Azure)
+- [[GCP/networking/vpc|GCP Virtual Private Cloud (VPC) & Networking]] — virtual networks (GCP)
+- [[Architecture/solution-architecture-concepts/networking/README|Cloud-Native Networking Architecture Guide]] — virtual networks (Architecture)
+- [[Linux/networking/README|Linux Networking]] — virtual networks (Linux)

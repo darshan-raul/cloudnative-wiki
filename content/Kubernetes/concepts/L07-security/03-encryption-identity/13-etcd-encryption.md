@@ -492,3 +492,10 @@ ls -la /var/run/kmsplugin/socket.sock
 - [[Kubernetes/concepts/L07-security/03-encryption-identity/14-secret-encryption|Secret Encryption]] — the higher-level view
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — what gets logged for encryption events
 - [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening]] — etcd access control
+
+## Across the wiki
+
+- [[AWS/security/kms/README|AWS KMS]] — key management (AWS)
+- [[Azure/security/key-vault/README|Azure Key Vault Architecture, Managed HSM, and Cryptographic Governance]] — key management (Azure)
+- [[GCP/security/kms/README|Cloud KMS, Cloud HSM, and CMEK Envelope Encryption]] — key management (GCP)
+- [[Architecture/solution-architecture-concepts/cryptography/README|Cryptography]] — key management (Architecture)

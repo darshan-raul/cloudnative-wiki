@@ -1,3 +1,10 @@
+---
+title: "Normalization"
+tags: [architecture, data-architecture, databases, normalization]
+date: 2026-01-30
+description: "Database normalization is the process of organizing data in a database to reduce redundancy and improve data integrity. The primary levels of normalization are known as Normal Forms (NFs)."
+---
+
 # Normalization
 
 Database normalization is the process of organizing data in a database to reduce redundancy and improve data integrity. The primary levels of normalization are known as Normal Forms (NFs). Here are the main Normal Forms along with their definitions and examples:
@@ -212,3 +219,7 @@ Separate into three tables: **ProjectsTasks**
 | --------- | ------ |
 | 1         | A      |
 | 1         | B      |
+
+## Further reading
+
+- [Normalization (video)](https://www.youtube.com/watch?v=GFQaEYEc8_8)

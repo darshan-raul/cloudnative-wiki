@@ -5,6 +5,7 @@ tags:
   - linux
   - boot-init
   - systemd
+date: 2026-06-06
 ---
 
 # systemd Timers
@@ -310,3 +311,9 @@ journalctl -xe
 systemctl is-enabled backup.timer
 systemctl is-active backup.timer
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L03-workloads/07-cronjob|CronJobs — Time-Scheduled Workloads]] — scheduled work (Kubernetes)
+- [[AWS/application-integration/step-functions/README|AWS Step Functions]] — scheduled work (AWS)
+- [[AWS/monitoring/cloudwatch-events/README|CloudWatch Events]] — scheduled work (AWS)

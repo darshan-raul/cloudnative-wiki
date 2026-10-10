@@ -298,3 +298,10 @@ Most of the time, you don't think about the pause container. But it matters when
 - [[Kubernetes/concepts/L03-workloads/01-pods|Pods]] — the parent concept
 - [[Kubernetes/concepts/L03-workloads/09-multi-container-pods|Multi-Container Pods]] — the pattern that depends on the pause container
 - [[Kubernetes/concepts/L04-services-networking/06-cni|CNI]] — uses the pause container's netns
+
+## Across the wiki
+
+- [[Linux/virtualization/container-runtimes|Container Runtimes]] — container internals (Linux)
+- [[Containers/runtimes|Container Runtimes]] — container internals (Containers)
+- [[Linux/virtualization/overlayfs|OverlayFS]] — container internals (Linux)
+- [[Containers/images-and-layers|Container Images and Layers]] — container internals (Containers)

@@ -7,7 +7,11 @@ tags:
   - HPA
   - VPA
   - Karpenter
+date: 2026-06-12
+description: "Four layers of scaling work in concert: HPA scales pods, VPA rightsizes pod resources, Cluster Autoscaler / Karpenter scales nodes, KEDA scales based on event sources."
 ---
+
+# Auto-Scaling
 
 Four layers of scaling work in concert: **HPA** scales pods, **VPA** rightsizes pod resources, **Cluster Autoscaler / Karpenter** scales nodes, **KEDA** scales based on event sources. Used together, they form an elastic system. Misused, they fight each other.
 
@@ -602,3 +606,9 @@ Together: at low load, 5 pods on 2 nodes. At 1000 RPS, HPA scales to ~30 pods, K
 - [[Kubernetes/guides/non-functional/high-availability|high-availability]] — PDBs, multi-AZ
 - [[Kubernetes/guides/non-functional/performance-tuning|performance-tuning]] — resource requests and limits
 - [[Kubernetes/concepts/L06-scheduling-scaling/00-README|L06 Scheduling & Scaling]] — the concept layer
+
+## Across the wiki
+
+- [[Azure/compute/aks/autoscaling-keda|AKS Autoscaling Architecture — Cluster Autoscaler, KEDA, and Virtual Nodes]] — autoscaling (Azure)
+- [[GCP/compute/gke/autoscaling|GKE Autoscaling Architecture — Cluster Autoscaler, NAP, HPA v2, and VPA]] — autoscaling (GCP)
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/scalability|Scalability]] — autoscaling (Architecture)

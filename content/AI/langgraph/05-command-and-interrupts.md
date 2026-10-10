@@ -3,7 +3,11 @@ title: "LangGraph — Command & Interrupts"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "Command from langgraph.types does two things at once."
 ---
+
+# LangGraph — Command & Interrupts
 
 > **Part 5.** `Command` (update state and route to a different node),
 > `interrupt()` (pause the graph for human-in-the-loop), and the

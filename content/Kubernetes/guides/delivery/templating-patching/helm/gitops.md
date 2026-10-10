@@ -822,3 +822,7 @@ flux logs --kind=HelmRelease --name=myapp
 - [Flux HelmRelease API](https://fluxcd.io/flux/guides/helmreleases/)
 - [Helmfile Documentation](https://helmfile.readthedocs.io/)
 - [ArgoCD ApplicationSet](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/)
+
+## Across the wiki
+
+- [[DevOps/ci-cd/git|Git Strategy, Trunk-Based Development & Configuration]] — GitOps (DevOps)

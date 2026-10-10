@@ -7,6 +7,7 @@ tags:
   - private-link
   - private-endpoint
   - security
+date: 2026-09-06
 ---
 
 # Azure Private Link, Private Endpoints, and Private DNS Architecture 🔒🔗
@@ -219,3 +220,10 @@ Azure Private Link pricing is composed of:
 4. **Network Security Group (NSG) Policies on Private Endpoints:** Historically, NSGs did not apply to Private Endpoints; traffic flowed through them unimpeded. Azure now supports NSGs on Private Endpoints, but it requires the subnet setting `PrivateEndpointNetworkPolicies = Enabled`. If you enable this setting without updating your NSG inbound rules, your NSG will block traffic to the private endpoint, causing immediate database connection timeouts.
 5. **Private Link Asymmetric Routing with Firewalls:** If a VM in Spoke A talks to a Private Endpoint in Spoke B, traffic should route directly across VNet peering. However, if Spoke A has a UDR sending `0.0.0.0/0` to Azure Firewall, and the Private Endpoint is in a separate spoke that the firewall knows about, return traffic might get dropped if routing paths asymmetric. Ensure your spoke route tables include specific `/32` or subnet routes for private endpoints to bypass firewall inspection when east-west filtering is not desired.
 6. **Hard CNAME Aliases in Application Code Break TLS:** Never hardcode `privatelink.database.windows.net` into your application connection strings. Always connect using the standard public hostname `mydbserver.database.windows.net`. The TLS certificate presented by the Azure database matches `*.database.windows.net`. If your code connects directly to the `privatelink` hostname, TLS certificate validation will fail with `SSLHandshakeException: Hostname mydbserver.privatelink.database.windows.net does not match certificate common name`.
+
+## Across the wiki
+
+- [[GCP/networking/private-service-connect/README|GCP Private Service Connect (PSC)]] — private connectivity (GCP)
+- [[AWS/concepts/vpc-lattice|Amazon VPC Lattice]] — private connectivity (AWS)
+- [[Kubernetes/eks/networking/vpc-lattice/README|Amazon VPC Lattice]] — private connectivity (Kubernetes)
+- [[GCP/networking/vpc/shared-vpc|GCP Shared VPC Architecture & Cross-Project Networking]] — private connectivity (GCP)

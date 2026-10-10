@@ -201,3 +201,10 @@ Both:                        right answers, fast, always
 - [Netflix Chaos Engineering](https://principlesofchaos.org/)
 - [Martin Fowler — Circuit Breaker](https://martinfowler.com/bliki/CircuitBreaker.html)
 - [AWS — Fault Injection Simulator](https://aws.amazon.com/fis/)
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/high-availability|High Availability]] — high availability (Kubernetes)
+- [[DevOps/sre/slos-and-error-budgets|SLOs and Error Budgets]] — high availability (DevOps)
+- [[AWS/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures|1.3 Design Reliable and Resilient Architectures]] — high availability (AWS)
+- [[Azure/compute/aks/cluster-tiers-sla|AKS Cluster Tiers, High Availability Control Plane, and Private Cluster Architecture]] — high availability (Azure)

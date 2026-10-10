@@ -1,3 +1,10 @@
+---
+title: "Resource Group"
+tags: [azure, resource-group]
+date: 2026-01-30
+description: "Azure Resource Groups are fundamental logical containers that serve as the organizational backbone for managing Azure resources."
+---
+
 # Resource Group
 
 ### 🔍 1 Understanding Azure Resource Groups

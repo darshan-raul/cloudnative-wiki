@@ -4,6 +4,7 @@ description: Linux users and groups — /etc/passwd, /etc/shadow, /etc/group, us
 tags:
   - linux
   - concepts
+date: 2026-06-06
 ---
 
 # 04 — Users and Groups
@@ -236,3 +237,8 @@ w
 last
 lastlog
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — users and permissions (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — users and permissions (Containers)

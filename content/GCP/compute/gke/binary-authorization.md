@@ -8,6 +8,7 @@ tags:
   - binary-authorization
   - devsecops
   - sigstore
+date: 2026-09-06
 ---
 
 # GKE Binary Authorization, Container Attestations, and Supply Chain Security 🔐🛡️
@@ -281,3 +282,10 @@ Pricing structure:
 4. **Cloud KMS IAM Service Agent Permissions:** The Binary Authorization service agent (`service-<PROJECT_NUMBER>@gcp-sa-binaryauthorization.iam.gserviceaccount.com`) must possess `roles/cloudkms.viewer` and `roles/cloudkms.verifier` on the KMS key. If an infrastructure engineer rotates or restricts IAM bindings on the KMS key ring, the admission controller can no longer verify signatures, causing **every single pod deployment in the cluster to fail with HTTP 500 admission errors**.
 5. **Break-Glass Audit Alarm Automation:** The `imagepolicy.k8s.io/break-glass: "true"` annotation allows emergency deployments to bypass all security gates. Attackers with `kubectl edit` privileges can use this annotation to deploy backdoor containers undetected. Create an automated high-severity alert in Cloud Logging / Sentinel monitoring for `protoPayload.response.admissionResponse.auditAnnotations."imagepolicy.k8s.io/break-glass" = "true"` that pages the security on-call team within 60 seconds of invocation.
 6. **Cosign Rekor Transparency Log Network Outage:** If your Binary Authorization policy uses Sigstore/Cosign with keyless signatures that rely on public Rekor transparency log lookups, an external internet disruption or firewall rule blocking outbound traffic from GKE masters to `rekor.sigstore.dev` will cause admission evaluations to time out and fail. For high-availability private clusters, use Cloud KMS asymmetric key attestations stored in Google Artifact Analysis.
+
+## Across the wiki
+
+- [[Azure/governance/policy|Azure Governance — Management Groups, Policy & Locks]] — policy and governance (Azure)
+- [[Kubernetes/eks/security/policy-management|Policy Management on EKS]] — policy and governance (Kubernetes)
+- [[AWS/management-governance/organizations/README|AWS Organizations]] — policy and governance (AWS)
+- [[Azure/compute/aks/governance-azure-policy|AKS Governance — Azure Policy for Kubernetes and OPA Gatekeeper Guardrails]] — policy and governance (Azure)

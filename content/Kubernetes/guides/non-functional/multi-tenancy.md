@@ -5,7 +5,11 @@ tags:
   - Non-Functional
   - Multi-Tenancy
   - Isolation
+date: 2026-06-12
+description: "Multi-tenancy in k8s: multiple teams, customers, or environments share one cluster. The challenge: how to give each tenant isolation without giving each one their own cluster."
 ---
+
+# Multi-Tenancy
 
 Multi-tenancy in k8s: multiple teams, customers, or environments share one cluster. The challenge: how to give each tenant isolation without giving each one their own cluster. **The cost of multi-tenant mistakes is shared — that's what makes it dangerous.**
 
@@ -607,3 +611,9 @@ For very noisy tenants, isolate to dedicated nodes (taint nodes, add toleration 
 - [[Kubernetes/guides/tools/multi-cluster|multi-cluster]] — fleet patterns
 - [[Kubernetes/guides/non-functional/oidc-integration|oidc-integration]] — auth
 - [[Kubernetes/concepts/L01-architecture/03-namespaces|namespaces]] — how namespaces work
+
+## Across the wiki
+
+- [[Azure/compute/aks/multi-tenancy-isolation|AKS Multi-Tenancy, Hard Isolation, and Confidential Containers]] — multi-tenancy (Azure)
+- [[GCP/compute/gke/multi-tenancy-isolation|GKE Multi-Tenancy Architecture — Hard vs Soft Isolation, GKE Sandbox (gVisor), and PSS]] — multi-tenancy (GCP)
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/multi-tenancy|Multi-Tenant Software Architecture & Data Isolation Patterns]] — multi-tenancy (Architecture)

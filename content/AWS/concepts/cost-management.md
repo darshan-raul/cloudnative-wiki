@@ -1,3 +1,10 @@
+---
+title: "Cost Management"
+tags: [aws, cost-management]
+date: 2026-01-30
+description: "An exam-oriented breakdown of AWS cost control and cost management topics."
+---
+
 # Cost Management
 
 Below is a **tree-style, exam-oriented breakdown** of **Cost Control & Cost Management topics**&#x20;
@@ -286,3 +293,8 @@ If you want, I can next:
 - Or map **each topic → typical exam trick**
 
 Just tell me 👍
+
+## Across the wiki
+
+- [[GCP/cost-management/pricing-models/README|GCP Cost Optimization, Committed Use Discounts (CUDs), and FinOps]] — cost management (GCP)
+- [[Kubernetes/guides/non-functional/cost-optimization|Cost Optimization]] — cost management (Kubernetes)

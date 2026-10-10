@@ -7,6 +7,7 @@ tags:
   - reverse-proxy
   - nginx
   - envoy
+date: 2026-01-30
 ---
 
 # Reverse Proxy Architecture: Functions, Headers & Proxies
@@ -108,3 +109,13 @@ http {
     }
 }
 ```
+
+## Further reading
+
+- [Nginx (video)](https://www.youtube.com/watch?v=D5grhfkjjXE)
+
+## Across the wiki
+
+- [[Kubernetes/guides/networking/traefik|Traefik]] — proxies (Kubernetes)
+- [[Kubernetes/guides/networking/envoy-gateway-internals|Envoy Gateway — Architecture & Operations Reference]] — proxies (Kubernetes)
+- [[Kubernetes/guides/networking/comparison|Service Mesh Comparison]] — proxies (Kubernetes)

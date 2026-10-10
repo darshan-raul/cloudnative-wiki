@@ -9,6 +9,7 @@ tags:
   - secrets-store-csi
   - hsm
   - encryption
+date: 2026-09-06
 ---
 
 # AKS Secrets Management — Azure Key Vault Provider for Secrets Store CSI Driver 🔐📦
@@ -240,3 +241,10 @@ kubectl apply -f payments-app-deployment.yaml
 3. **In-Memory File Updates Do Not Trigger Process Restarts:** When the CSI driver auto-rotates a secret, the file inside `/mnt/secrets/vault` is dynamically updated in the container's `tmpfs`. However, **applications that read secrets into memory only once at startup will continue using the stale credential indefinitely**. Use tools like **Stakater Reloader** or configure applications to watch filesystem events via `inotify`.
 4. **Secret Versions Must Be Empty for Auto-Rotation:** In the `SecretProviderClass`, if you specify an explicit version hash in `objectVersion: "4376f9b..."`, the CSI driver will pin that exact version forever. Auto-rotation will never pull updated secrets. Always leave `objectVersion: ""` to ensure the latest active secret version is synchronized.
 5. **Private Key Certificate Parsing Traps:** When syncing TLS certificates from Azure Key Vault, mounting `objectType: cert` retrieves only the public certificate chain. If your web server requires both the public cert and the private key, you must specify `objectType: secret` (which exports the complete PKCS#12 bundle) and split it into cert and key via `secretObjects`.
+
+## Across the wiki
+
+- [[Kubernetes/eks/security/secrets-management/README|Secrets Management on EKS]] — secrets management (Kubernetes)
+- [[AWS/security/secrets-manager/README|AWS Secrets Manager]] — secrets management (AWS)
+- [[Security/kubernetes-security/secrets/README|Kubernetes Secrets Management]] — secrets management (Security)
+- [[DevOps/devsecops/stage4-runtime/16-secret-management|M16: Runtime Secret Management]] — secrets management (DevOps)

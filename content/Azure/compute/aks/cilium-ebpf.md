@@ -10,6 +10,7 @@ tags:
   - security
   - observability
   - hubble
+date: 2026-09-06
 ---
 
 # Azure CNI Powered by Cilium — eBPF Datapath, WireGuard Encryption, and Hubble Observability 🐝⚡
@@ -231,3 +232,10 @@ hubble observe --server localhost:4245 --verdict DROPPED --follow
 3. **Hubble UI Memory Exhaustion on Heavy Traffic Clusters:** The Hubble UI uses a Node.js backend to poll `hubble-relay` for real-time flow telemetry. In clusters processing 50,000+ flows/second, the Hubble UI pod can quickly exhaust its default memory limit and get killed with **`OOMKilled (Exit Code 137)`**. Adjust the `hubble.ui.backend.resources.limits.memory` in production to at least 2 GiB.
 4. **Cannot Enable Cilium on Existing Clusters:** Just like Azure CNI Overlay, **Azure CNI Powered by Cilium must be chosen at cluster creation time**. You cannot transition an existing cluster running standard Azure CNI or Kubenet to Cilium in place.
 5. **Cilium Endpoint Regeneration Bottlenecks during Rapid Scaling:** When hundreds of pods are scheduled simultaneously during a massive traffic burst, the Cilium agent on each node compiles and injects new eBPF bytecode for each new endpoint. If worker nodes have under-sized CPUs (e.g., 2 vCPUs), the `cilium-agent` can saturate the CPU, delaying pod readiness (`ContainersNotReady` state for 30–60 seconds). Ensure worker nodes running Cilium have at least 4 vCPUs (`D4ds_v5` or higher).
+
+## Across the wiki
+
+- [[Kubernetes/eks/networking/vpc-cni/README|Amazon VPC CNI]] — pod networking (Kubernetes)
+- [[GCP/compute/gke/networking|GKE Networking Deep Dive — Datapath V2, Alias IPs & Gateway API]] — pod networking (GCP)
+- [[Linux/virtualization/network-namespace|Network Namespaces]] — pod networking (Linux)
+- [[Containers/container-networking|Container Networking]] — pod networking (Containers)

@@ -7,6 +7,7 @@ tags:
   - prompt-injection
   - owasp
   - llm-security
+date: 2026-01-30
 ---
 
 # Prompt Injection Attacks & Defenses (OWASP LLM01)
@@ -120,3 +121,8 @@ Split processing across two distinct models:
 ### 4. Human-in-the-Loop (HITL) for Destructive Actions
 
 Any agentic action that mutates state, transfers funds, deletes data, or sends external communications must require explicit human confirmation via an interactive UI prompt.
+
+## Across the wiki
+
+- [[Architecture/solution-architecture-concepts/protocols/server-sent-events|Server-Sent Events (SSE) Architecture & LLM Streaming]] — LLM applications (Architecture)
+- [[Security/application-security/README|Application Security]] — LLM applications (Security)

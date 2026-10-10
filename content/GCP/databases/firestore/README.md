@@ -8,6 +8,7 @@ tags:
   - nosql
   - serverless
   - mobile
+date: 2026-09-06
 ---
 
 # Google Cloud Firestore 📄🔥
@@ -206,3 +207,10 @@ service cloud.firestore {
 3. **Sub-Collections Are NOT Deleted When Parent Document Is Deleted:** If you delete document `/users/alice`, any sub-collections underneath it (e.g. `/users/alice/orders/order_1`) **continue to exist as orphaned documents**! Deleting a parent document does not cascade delete child sub-collections; your application must recursively delete sub-collection documents.
 4. **Offline Cache Stale Overwrites:** When mobile clients operate offline, writes are queued in local IndexedDB / SQLite. If Client A goes offline for 3 days and comes online, its stale local writes will blindly overwrite newer changes made by Client B on the server unless your logic uses transactions or server timestamps (`FieldValue.serverTimestamp()`).
 5. **Collection Group Queries Require Indexing:** A Collection Group query searches across all sub-collections with the same name across all parent documents (e.g. querying all `orders` sub-collections across all `users`). Collection group queries **require an explicit Collection Group Index**; without it, the query will be rejected immediately.
+
+## Across the wiki
+
+- [[AWS/databases/dynamodb/README|Amazon DynamoDB]] — NoSQL databases (AWS)
+- [[Azure/databases/cosmos-db|Azure Cosmos DB]] — NoSQL databases (Azure)
+- [[Architecture/solution-architecture-concepts/data-architecture/databases/mongodb/README|MongoDB]] — NoSQL databases (Architecture)
+- [[AWS/databases/documentdb/README|Amazon DocumentDB]] — NoSQL databases (AWS)

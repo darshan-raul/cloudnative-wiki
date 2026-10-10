@@ -14,6 +14,7 @@ tags:
   - textract
   - lex
   - kendra
+date: 2026-06-06
 ---
 
 # AWS AI Services (Pre-trained APIs)
@@ -317,3 +318,10 @@ for result in response['ResultItems']:
 - **Comprehend Medical is a separate service with different pricing — Comprehend (general) is NOT HIPAA eligible:** If you need HIPAA-compliant NLP, use `comprehendmedical` endpoint, not `comprehend`. They're separate APIs with different compliance certifications.
 - **Transcribe supports custom vocabularies but not custom models — if your domain vocabulary is niche, build a custom vocabulary:** Custom vocabulary improves accuracy for domain-specific terms (medical, legal, technical). Without it, "Glucoma" gets transcribed as "Glaucoma" incorrectly.
 - **AI Services are eventually consistent — for the same input, you might get slightly different outputs over time:** If you need deterministic outputs (for testing or compliance), be aware that AI Service outputs can vary slightly between calls for the same input.
+
+## Across the wiki
+
+- [[AI/aws/bedrock|Amazon Bedrock Architecture & Implementation]] — generative AI platforms (AI)
+- [[AI/rag|Retrieval-Augmented Generation (RAG) Architecture]] — generative AI platforms (AI)
+- [[AI/aws/sagemaker/README|Sagemaker]] — generative AI platforms (AI)
+- [[AI/aws/services|Services]] — generative AI platforms (AI)

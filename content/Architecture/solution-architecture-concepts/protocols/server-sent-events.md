@@ -8,6 +8,7 @@ tags:
   - real-time
   - llm
   - http
+date: 2026-01-30
 ---
 
 # Server-Sent Events (SSE) Architecture & LLM Streaming
@@ -99,3 +100,12 @@ async def stream_completion():
 
 > [!IMPORTANT]
 > **The Reverse Proxy Buffering Trap:** If you place Nginx, AWS CloudFront, or an Envoy gateway in front of an SSE service, you must disable response buffering (`X-Accel-Buffering: no` or `proxy_buffering off;`). Otherwise, the proxy will buffer chunks until 4KB or 8KB is collected, destroying the real-time streaming effect!
+
+## Across the wiki
+
+- [[AWS/serverless/api-gateway/README|Amazon API Gateway]] — API design and gateways (AWS)
+- [[AWS/application-integration/appsync/README|AWS AppSync]] — API design and gateways (AWS)
+- [[AI/agents|AI Agents]] — LLM applications (AI)
+- [[Security/application-security/README|Application Security]] — LLM applications (Security)
+- [[AI/langgraph/README|LangGraph]] — LLM applications (AI)
+- [[AI/langchain/README|LangChain]] — LLM applications (AI)

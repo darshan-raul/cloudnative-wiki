@@ -1,5 +1,8 @@
 ---
 title: Scalability
+tags: [architecture, foundations, non-functional-requirements, scalability]
+date: 2026-06-06
+description: "Scalability is the ability of a system to handle increased load by adding resources."
 ---
 
 # Scalability
@@ -208,6 +211,17 @@ Metrics that signal you need to scale:
 ## Related
 
 - [[performance|Performance]] — latency and throughput fundamentals
-- [[back-of-the-envelope-calculations|Back-of-the-Envelope Calculations]] — quick capacity estimates
+- [[Architecture/solution-architecture-concepts/foundations/non-functional-requirements/capacity-planning|Back-of-the-Envelope Calculations]] — quick capacity estimates
 - [[performance-testing|Performance Testing]] — load testing methodology
 - [[caching|Caching]] — cache patterns and hit rates
+
+## Further reading
+
+- [Scaling (video)](https://www.youtube.com/watch?v=bhSWg7r23pM&t=3s)
+
+## Across the wiki
+
+- [[Kubernetes/eks/advanced/autoscaling|Advanced Autoscaling]] — autoscaling (Kubernetes)
+- [[Azure/compute/aks/autoscaling-keda|AKS Autoscaling Architecture — Cluster Autoscaler, KEDA, and Virtual Nodes]] — autoscaling (Azure)
+- [[GCP/compute/gke/autoscaling|GKE Autoscaling Architecture — Cluster Autoscaler, NAP, HPA v2, and VPA]] — autoscaling (GCP)
+- [[Kubernetes/eks/compute/karpenter/README|Karpenter on EKS]] — autoscaling (Kubernetes)

@@ -175,3 +175,10 @@ Design ──▶ IaC Scan ──▶ Container Scan ──▶ Wazuh FIM ──▶
 
 - [freeCodeCamp — What is Shift Left](https://www.freecodecamp.org/news/what-is-shift-left-in-software/)
 - [OWASP DevSecOps Guideline](https://owasp.org/www-project-devsecops-guideline/)
+
+## Across the wiki
+
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning & Hardening]] — software supply chain (DevOps)
+- [[Security/kubernetes-security/vulnerability-scanning/README|Kubernetes Vulnerability Scanning]] — software supply chain (Security)
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — software supply chain (Kubernetes)
+- [[Containers/registries|Container Registries]] — software supply chain (Containers)

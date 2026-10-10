@@ -1,5 +1,8 @@
 ---
 title: Maintainability
+tags: [architecture, foundations, non-functional-requirements, maintainability]
+date: 2026-06-06
+description: "Maintainability is the measure of how easily a system can be modified to fix bugs, add features, or improve performance."
 ---
 
 # Maintainability

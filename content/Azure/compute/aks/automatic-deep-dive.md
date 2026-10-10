@@ -9,6 +9,7 @@ tags:
   - karpenter
   - finops
   - sre
+date: 2026-09-06
 ---
 
 # AKS Automatic Deep Dive — Architecture, SRE Invariants, and Node Auto-Provisioning 🤖⚙️

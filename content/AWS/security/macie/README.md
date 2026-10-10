@@ -6,6 +6,7 @@ tags:
   - security
   - macie
   - data-privacy
+date: 2026-06-06
 ---
 
 # AWS Macie

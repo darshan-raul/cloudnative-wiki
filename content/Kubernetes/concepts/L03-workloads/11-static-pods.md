@@ -220,3 +220,8 @@ For non-control-plane workloads, **don't use static Pods**. Use a DaemonSet (for
 - [[Kubernetes/concepts/L01-architecture/01-setting-up-cluster|Setting up a Cluster]] — kubeadm uses static Pods for the control plane
 - [[Kubernetes/concepts/L01-architecture/06-what-happens-when|What Happens When…]] — how regular Pods are created, for contrast
 - [[Kubernetes/concepts/L09-advanced/09-pause-container|Pause Container]] — every Pod, including static ones, has one
+
+## Across the wiki
+
+- [[Linux/boot-init/systemd|systemd]] — service lifecycle (Linux)
+- [[Linux/concepts/06-services|06 — System Services]] — service lifecycle (Linux)

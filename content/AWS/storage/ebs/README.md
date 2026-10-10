@@ -5,6 +5,7 @@ tags:
   - aws
   - storage
   - ebs
+date: 2026-06-06
 ---
 
 # Amazon EBS (Elastic Block Store)
@@ -236,3 +237,10 @@ Use case: Oracle RAC (shared disk cluster), Windows Scale-Out File Server. Requi
 - **EBS snapshots are incremental — but deleting a snapshot doesn't free space if dependent snapshots exist:** Only the blocks not referenced by any remaining snapshot are actually deleted. You can't reduce S3 storage used by snapshots without deleting all dependent snapshots.
 - **Volume performance (IOPS/throughput) is measured at the volume level, not the instance level:** An m5.xlarge with 2 volumes can achieve up to 6,000 IOPS (3,000 per volume). If you need more IOPS, stripe multiple volumes with LVM or use io2 Block Express.
 - **The `VolumeBurstBalance` metric for gp2 tells you how much burst credit you have remaining:** If this drops to 0, your IOPS drops to 100. For production databases, monitor this and consider switching to gp3 (no burst, consistent performance) or io2 (predictable high IOPS).
+
+## Across the wiki
+
+- [[Kubernetes/eks/storage/README|Storage on EKS]] — block storage (Kubernetes)
+- [[Azure/compute/aks/storage-csi-disks|AKS Storage CSI Architecture — Azure Managed Disks, Premium SSD v2, and Elastic SAN]] — block storage (Azure)
+- [[GCP/compute/gke/storage-csi|GKE Storage Architecture — Compute Persistent Disk CSI, Hyperdisk, and Volume Snapshots]] — block storage (GCP)
+- [[Linux/storage/README|Linux Storage]] — block storage (Linux)

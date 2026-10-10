@@ -410,5 +410,5 @@ The discipline: design each secret to have the _smallest_ blast radius possible.
 - [[DevOps/devsecops/stage0-foundations/01-devsecops-mindset|M01: DevSecOps Mindset]]
 - [[DevOps/devsecops/stage1-code/05-static-analysis-sast|M05: SAST]]
 - [[DevOps/devsecops/stage3-deploy/12-pipeline-identity-oidc|M12: Pipeline Identity & OIDC]]
-- [[DevOps/devsecops/stage3-deploy/16-secret-management|M16: Secret Management]]
+- [[DevOps/devsecops/stage4-runtime/16-secret-management|M16: Secret Management]]
 - [[DevOps/devsecops/stage1-code/README|Stage 1 — Code]]

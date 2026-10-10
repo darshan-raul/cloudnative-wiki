@@ -9,6 +9,7 @@ tags:
   - networking
   - ebpf
   - cilium
+date: 2026-09-06
 ---
 
 # GKE Networking Deep Dive — Datapath V2, Alias IPs & Gateway API ☸️🌐
@@ -238,3 +239,10 @@ gcloud container clusters create prod-dataplane-cluster \
 3. **Datapath V2 Disables Legacy Calico:** Enabling Datapath V2 (`--enable-dataplane-v2`) activates Cilium in the kernel. If you attempt to install Calico or other CNI daemonsets manually via Helm, the cluster will crash with severe BPF map conflicts and broken routing.
 4. **Zonal NEG Drain Delays on Pod Shutdown:** When a Pod is terminated, Google Cloud Load Balancer must drain active connections to the Zonal NEG before the container is killed. If your Pod does not implement a `preStop` hook with a sleep (e.g. `sleep 25`), Kubernetes will terminate the container before the Google Front End finishes updating the NEG endpoint list, causing transient HTTP 502 errors for in-flight requests.
 5. **Private Clusters Block Webhook Admission Controllers by Default:** In a private GKE cluster, the master API server runs in a Google-managed VPC. When an admission webhook (e.g. cert-manager, Datadog, Istio) runs on worker nodes on port 8443 or 9443, the API server cannot reach the webhook because the default firewall rule only permits port 443 and 10250. You must add a custom firewall rule allowing traffic from the `/28` master CIDR to your webhook ports!
+
+## Across the wiki
+
+- [[Kubernetes/eks/networking/vpc-cni/README|Amazon VPC CNI]] — pod networking (Kubernetes)
+- [[Azure/compute/aks/networking-cni|AKS Networking Deep Dive — Azure CNI, CNI Overlay, and Dynamic Pod IP Allocation]] — pod networking (Azure)
+- [[Linux/virtualization/network-namespace|Network Namespaces]] — pod networking (Linux)
+- [[Containers/container-networking|Container Networking]] — pod networking (Containers)

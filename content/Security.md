@@ -70,7 +70,8 @@ TLS/mTLS, zero trust, VPN, firewall.
 
 - [[Security/network-security/README|Network Security Hub]]
 - [[Security/network-security/README|TLS/mTLS]] — Certificate management, mutual TLS
-- Zero Trust — BeyondCorp model, identity-based access
+- [[Security/zero-trust|Zero Trust]] — BeyondCorp model, identity-based access
+- [[Security/assume-breach-principle|Assume Breach]] — design as if the attacker is already inside
 - VPN — WireGuard, OpenVPN, IPSec
 
 ### DevSecOps
@@ -109,9 +110,9 @@ Your existing notes that inform this section:
 - [[AWS/security/iam/README|IAM]] — Identity and access management
 - [[Kubernetes/eks/security/README|EKS Security]] — Cluster hardening, network policies
 - [[Linux/security/pam|PAM]] — Pluggable authentication modules
-- [[Resources/guides/security/ids|IDS/IPS]] — Network and host intrusion detection
-- [[Resources/guides/security/zero-trust|Zero Trust]] — Network architecture
-- [[Resources/guides/security/supply-chain-security|Supply Chain]] — SBOM, Sigstore
+- [[Security/endpoint-security/ids-ips/ids-types|IDS/IPS]] — Network and host intrusion detection
+- [[Security/zero-trust|Zero Trust]] — Network architecture
+- [[DevOps/devsecops/README|Supply Chain]] — SBOM, Sigstore
 
 ## Quick Navigation
 
@@ -132,3 +133,7 @@ This section is actively expanded. Key areas to develop:
 - [ ] Add Falco → n8n → Planio workflow
 - [ ] Add Vault deployment guide for secrets
 - [ ] Add K8s audit log analysis with Wazuh
+
+## More in this section
+
+- [[Security/assume-breach-principle|Assume Breach Principle]] — The Assume Breach principle is a cyber security mindset that operates on the premise that a system, network, or organization has…

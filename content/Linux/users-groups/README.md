@@ -4,6 +4,7 @@ description: Linux user and group management — /etc/passwd, /etc/shadow, /etc/
 tags:
   - linux
   - users
+date: 2026-06-06
 ---
 
 # Linux Users & Groups
@@ -25,3 +26,8 @@ Linux is a multi-user operating system. Every file, process, and service has an 
 ## Pluggable Authentication Modules
 
 **[[../security/pam|PAM]]** — Pluggable Authentication Modules. The four management groups: `auth` (who are you?), `account` (are you allowed?), `password` (update credentials), `session` (setup/teardown). How `/etc/pam.d/` files chain modules. Common modules: `pam_unix.so` (traditional), `pam_systemd.so` (systemd session), `pam_limits.so` (resource limits via `/etc/security/limits.conf`). Misconfigured PAM is a common cause of "I can't log in but the password is correct" problems.
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — users and permissions (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — users and permissions (Containers)

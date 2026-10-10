@@ -1,3 +1,10 @@
+---
+title: "PAM"
+tags: [linux, security, pam]
+date: 2026-01-30
+description: "Module 1: PAM Foundations"
+---
+
 # PAM
 
 **Module 1: PAM Foundations**
@@ -251,3 +258,8 @@ Then, configure the exact allowed times within the `/etc/security/time.conf` fil
 
 - **Thorough Testing:** Always test PAM changes carefully in a non-production environment before rolling them out. A misconfiguration can lock you out of your system!
 - **Documentation:** Maintain clear documentation about your PAM modifications. This will aid in future management and troubleshooting.
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/05-security-context|SecurityContext]] — users and permissions (Kubernetes)
+- [[Containers/dockerfile-best-practices|Dockerfile Best Practices]] — users and permissions (Containers)

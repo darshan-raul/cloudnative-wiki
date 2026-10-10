@@ -6,6 +6,7 @@ tags:
   - security
   - systemd
   - cis
+date: 2026-06-06
 ---
 
 # systemd Service Hardening
@@ -381,3 +382,10 @@ LimitNOFILE=65536
 LimitNPROC=512
 LimitCORE=0
 ```
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/21-node-hardening|Node Hardening]] — hardening (Kubernetes)
+- [[Security/endpoint-security/hardening/README|Linux Host Hardening]] — hardening (Security)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/20-cluster-hardening|Cluster Hardening (Control Plane, apiserver flags, etcd)]] — hardening (Kubernetes)
+- [[Kubernetes/guides/non-functional/security-baseline|Security Baseline]] — hardening (Kubernetes)

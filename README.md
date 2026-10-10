@@ -25,28 +25,32 @@ npm run format
 
 ## Commands
 
-| Command                | Description                                     |
-| ---------------------- | ----------------------------------------------- |
-| `npm run docs`         | Dev server with live reload (default port 3009) |
-| `npm run quartz build` | Full production build to `public/`              |
-| `npm run check`        | TypeScript check + Prettier formatting          |
-| `npm run format`       | Auto-format all files with Prettier             |
-| `npm run test`         | Run tsx test suite                              |
-| `npm run profile`      | Profile build performance                       |
+| Command                 | Description                                      |
+| ----------------------- | ------------------------------------------------ |
+| `npm run docs`          | Dev server with live reload (port 3009)          |
+| `npm run quartz build`  | Full production build to `public/`               |
+| `npm run check`         | TypeScript, content validation, Prettier         |
+| `npm run format`        | Auto-format all files with Prettier              |
+| `npm run check:content` | Validate every note: links, frontmatter, orphans |
+| `npm run test`          | Run tsx test suite, then content validation      |
+| `npm run profile`       | Profile build performance                        |
 
 ## Content Structure
 
 ```
 content/
-├── AWS.md           ☁️  Amazon Web Services
-├── Kubernetes.md    ☸️  Container orchestration
-├── Linux.md         🐧  System administration
-├── AI.md            🤖  ML, GenAI, LLMs
-├── DevOps.md        🚀  CI/CD, DevSecOps
-├── Architecture.md  🏛️  System design
-├── Azure.md         Microsoft Azure
-├── GCP.md           Google Cloud
-└── index.md         Main hub
+├── AWS.md            ☁️  Amazon Web Services
+├── Azure.md          🔷  Microsoft Azure
+├── GCP.md            🟠  Google Cloud
+├── Kubernetes.md     ☸️  Container orchestration, EKS track
+├── Containers.md     📦  Images, registries, runtimes
+├── Linux.md          🐧  System administration
+├── DevOps.md         🚀  CI/CD, IaC, SRE, DevSecOps, platform engineering
+├── Observability.md  📊  Metrics, logs, traces, OpenTelemetry
+├── Architecture.md   🏛️  System design, databases, authentication
+├── Security.md       🔐  SIEM, zero trust, incident response
+├── AI.md             🤖  LLMs, agents, RAG, evals
+└── index.md          Main hub
 ```
 
 ## Notes
@@ -55,3 +59,4 @@ content/
 - Content lives in `content/` (Obsidian vault)
 - Build output in `public/`
 - Framework code in `quartz/` (don't edit unless maintaining Quartz)
+- Working documents (plans, trackers, audits) live in `planning/` and are not published

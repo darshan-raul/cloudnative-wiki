@@ -3,6 +3,7 @@ title: Linux Troubleshooting
 description: Linux troubleshooting methodology and common issues — network, disk, services, processes, OOM, systematic debugging framework
 tags:
   - linux
+date: 2026-06-06
 ---
 
 # Linux Troubleshooting
@@ -43,3 +44,10 @@ curl -I http://...    # test HTTP when ping works but browser doesn't
 strace -p PID         # what is this process actually doing
 dmesg -T             # kernel ring buffer with human-readable timestamps
 ```
+
+## Across the wiki
+
+- [[Kubernetes/eks/troubleshooting/README|EKS Troubleshooting]] — troubleshooting (Kubernetes)
+- [[Azure/compute/aks/troubleshooting-runbook|AKS SRE Troubleshooting & Incident Runbook — CrashLoopBackOff, Node NotReady, and CNI Leaks]] — troubleshooting (Azure)
+- [[GCP/compute/gke/troubleshooting-runbook|GKE SRE Incident Response & Production Troubleshooting Runbook]] — troubleshooting (GCP)
+- [[DevOps/sre/incident-management|Incident Management and Postmortems]] — troubleshooting (DevOps)

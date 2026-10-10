@@ -1,3 +1,10 @@
+---
+title: "Kraft vs Zookeeper"
+tags: [architecture, event-driven-architecture, kafka, kraft-vs-zookeeper]
+date: 2026-01-30
+description: "Apache Kafka has recently shifted from using Apache ZooKeeper to a new quorum-based controller that uses a consensus protocol called Kafka Raft (KRaft)."
+---
+
 # Kraft vs Zookeeper
 
 Apache Kafka has recently shifted from using Apache ZooKeeper to a new quorum-based controller that uses a consensus protocol called Kafka Raft (KRaft). This change greatly simplifies Kafka's architecture by consolidating responsibility for metadata into Kafka itself, rather than splitting it between ZooKeeper and Kafka\[1]\[3].
@@ -30,3 +37,8 @@ The key differences between ZooKeeper mode and KRaft mode in Kafka are:
 In summary, KRaft mode greatly simplifies Kafka's architecture, improves scalability, and eliminates the need to deploy and manage ZooKeeper alongside Kafka clusters. However, migrating existing clusters from ZooKeeper to KRaft requires careful planning and execution.
 
 Citations: \[1] https://developer.confluent.io/learn/kraft/ \[2] https://www.baeldung.com/kafka-shift-from-zookeeper-to-kraft \[3] https://redpanda.com/guides/kafka-alternatives/kafka-raft \[4] https://www.linkedin.com/pulse/apache-kafka-study-notes-3-zookeeper-vs-kraft-youssef-ali \[5] https://strimzi.io/blog/2024/03/21/kraft-migration/
+
+## Across the wiki
+
+- [[Kubernetes/concepts/L09-advanced/10-etcd|etcd in Kubernetes]] — consensus and coordination (Kubernetes)
+- [[Kubernetes/concepts/L01-architecture/00-README|L01 — Architecture]] — consensus and coordination (Kubernetes)

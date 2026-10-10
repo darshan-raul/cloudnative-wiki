@@ -1,3 +1,10 @@
+---
+title: "High Cohesion Loose Coupling"
+tags: [architecture, foundations, high-cohesion-loose-coupling]
+date: 2026-01-30
+description: "High cohesion and loose coupling: what they mean, why they matter and how to recognise them in a design."
+---
+
 # High Cohesion Loose Coupling
 
 Absolutely! High cohesion and loose coupling are fundamental principles in object-oriented design (OOD) and software engineering in general. Let's delve into what they mean, their importance, and how to achieve them:

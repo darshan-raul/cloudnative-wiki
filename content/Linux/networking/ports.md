@@ -1,3 +1,10 @@
+---
+title: "ports"
+tags: [linux, networking, ports]
+date: 2026-01-30
+description: "In Linux and other Unix-like systems, network ports are categorized into three main ranges based on their intended use and the privileges required to bind to them."
+---
+
 # ports
 
 In Linux and other Unix-like systems, network ports are categorized into three main ranges based on their intended use and the privileges required to bind to them.

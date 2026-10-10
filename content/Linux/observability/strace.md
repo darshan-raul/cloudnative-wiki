@@ -5,6 +5,7 @@ tags:
   - linux
   - observability
   - debugging
+date: 2026-06-06
 ---
 
 # strace

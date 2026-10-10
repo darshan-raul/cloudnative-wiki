@@ -106,3 +106,14 @@ In production CI/CD repositories:
 - Prefer **Squash and Merge** for small bug fixes or PRs (keeps history linear and single-commit bisectable).
 - Prefer **Rebase and Fast-Forward** for multi-step feature PRs with logical atomic commits.
 - Avoid loose 3-way merge commits on feature branches to ensure clean `git bisect` automated debugging.
+
+## Further reading
+
+- [MonoRepos (video)](https://www.youtube.com/watch?v=rcmdyQL2DUM)
+
+## Across the wiki
+
+- [[Kubernetes/guides/delivery/gitops/basics|GitOps Basics]] — GitOps (Kubernetes)
+- [[Kubernetes/guides/delivery/gitops/argo-cd/README|Argo CD]] — GitOps (Kubernetes)
+- [[Kubernetes/eks/automation/gitops/argocd|Argo CD on EKS]] — GitOps (Kubernetes)
+- [[Kubernetes/eks/automation/gitops/flux|Flux on EKS]] — GitOps (Kubernetes)

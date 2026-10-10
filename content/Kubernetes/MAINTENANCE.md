@@ -16,7 +16,7 @@ flowchart LR
     Release["1. Upstream K8s Release\n(3x / year: Apr, Aug, Dec)"] --> Deprecations["2. Deprecation & API Audit\n(Changelog, KEP review)"]
     Deprecations --> NotesUpdate["3. Core Notes & Matrix Sync\n(v1.x Features, Removal flags)"]
     NotesUpdate --> LabVerify["4. Lab Execution Run\n(kind multi-node, podinfo)"]
-    LabVerify --> CIGate["5. Automated Content Gate\n(npm run check:k8s)"]
+    LabVerify --> CIGate["5. Automated Content Gate\n(npm run check:content)"]
     CIGate --> Published["6. Published & Pushed"]
 ```
 
@@ -97,20 +97,24 @@ kind delete cluster --name kind-k8s-labs
 
 To prevent drift, broken links, and malformed frontmatter, the repository includes an automated validation suite.
 
-### Content Checker: `scripts/check-k8s-content.mjs`
+### Content Checker: `scripts/check-content.mjs`
 
 Run the content checker via:
 
 ```bash
-npm run check:k8s
+npm run check:content   # the whole vault
+npm run check:k8s       # report on content/Kubernetes/ only
 ```
 
-The script executes three critical validations across every Markdown file in `content/Kubernetes/`:
+The script validates every Markdown file in `content/` and fails on:
 
-1. **Broken Wikilink Verification:** Parses all internal wikilinks and validates that the target file exists or is registered in an `aliases` array. Prevents 404 dead ends in the Quartz site.
-2. **Broken Markdown Tables:** Flags tables with unescaped pipes or double-pipe artifacts (`||`) that break GFM rendering.
-3. **Ghost Files:** Flags 0-byte or corrupted empty Markdown files.
-4. **Frontmatter Audit:** Tracks presence of YAML frontmatter (`title`, `tags`, `date`, `description`).
+1. **Broken, ambiguous or directory wikilinks:** Each wikilink must resolve to exactly one note, by full path, relative path, alias or a basename that is unique in the vault. Prevents 404 dead ends in the Quartz site.
+2. **Broken Markdown tables:** Rows starting with `||`, and wikilink aliases inside tables that do not escape the pipe.
+3. **Frontmatter and structure:** Missing frontmatter, a missing `title`, `tags`, `date` or `description`, a missing H1, or an unclosed code fence.
+4. **Ghost files:** 0-byte or empty Markdown files.
+5. **Orphans:** Notes that no other note links to.
+
+Notes with very little prose are reported as warnings (`--verbose` lists them).
 
 ### Full Pre-Commit / Pre-Push Validation
 

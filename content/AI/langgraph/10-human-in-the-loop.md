@@ -3,7 +3,11 @@ title: "LangGraph — Human-in-the-Loop"
 tags:
   - AI
   - LangGraph
+date: 2026-06-12
+description: "Some tool calls are destructive or irreversible: deletecluster, scaledown, terminateinstance, droptable. For these, you need a human to approve before execution."
 ---
+
+# LangGraph — Human-in-the-Loop
 
 > **Part 10.** The full human-in-the-loop (HITL) pattern —
 > `interrupt()` to pause, inspection UI, approval/rejection,

@@ -9,8 +9,6 @@ description: "Microsoft Azure cloud platform — compute, storage, networking, E
 
 Microsoft Azure cloud platform — comprehensive architectural deep dives covering enterprise identity, software-defined regional networking, managed Kubernetes, distributed NoSQL, and cloud governance. Built to match the depth of the AWS and GCP knowledge bases with **Architecture & Mental Models + Production `az` CLI + Quotas & Limits + References + 2 Realistic Pricing Scenarios + 5+ Battle-Tested Nuggets & Gotchas**.
 
-Track overall progress in [[Azure/PROGRESS|Azure Vault Progress]].
-
 ---
 
 ## Service Catalog
@@ -94,6 +92,10 @@ Track overall progress in [[Azure/PROGRESS|Azure Vault Progress]].
 | **Governance Engine**     | AWS Organizations SCPs    | Organization Policies          | **Azure Policy & Blueprints** | Azure Policy provides granular real-time resource attribute evaluation and auto-remediation (DINE). |
 
 ---
+
+## More in this section
+
+- [[Azure/security-groups|Security Groups]] — An Azure Network Security Group (NSG) is a fundamental security component that acts as a virtual firewall for filtering network…
 
 ## Related Hubs
 

@@ -6,6 +6,7 @@ tags:
   - security
   - kms
   - encryption
+date: 2026-06-06
 ---
 
 # AWS KMS (Key Management Service)
@@ -303,3 +304,10 @@ aws cloudtrail lookup-events \
 - **Key rotation doesn't re-encrypt existing data — it creates a new key version:** Old data encrypted with the old key version is still decryptable with the old key. Only new data uses the new key. This is efficient but means old keys must remain available.
 - **KMS grants are ideal for Lambda — they allow temporary access without modifying key policy:** Lambda functions are stateless, so each invocation needs access. Grants auto-revoke when the grantee principal (Lambda) is deleted.
 - **EncryptionContext is public metadata — don't store secrets there:** The context is visible in CloudTrail logs. Use it for authentication/authorization (e.g., "this key was used for this specific customer"), not for secrets.
+
+## Across the wiki
+
+- [[Azure/security/key-vault/README|Azure Key Vault Architecture, Managed HSM, and Cryptographic Governance]] — key management (Azure)
+- [[GCP/security/kms/README|Cloud KMS, Cloud HSM, and CMEK Envelope Encryption]] — key management (GCP)
+- [[Architecture/solution-architecture-concepts/cryptography/README|Cryptography]] — key management (Architecture)
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — key management (Kubernetes)

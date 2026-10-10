@@ -1,5 +1,8 @@
 ---
 title: Availability
+tags: [architecture, foundations, non-functional-requirements, availability]
+date: 2026-06-06
+description: "Availability is the percentage of time a system is operational and accessible."
 ---
 
 # Availability
@@ -143,9 +146,26 @@ Availability problems are detected through:
 - **Hard-coded IPs or hostnames** — can't failover when IPs change
 - **No rollback plan** — failed deployment requires manual intervention (hours of downtime)
 
+## High Availability Checklist
+
+- Active-active across two or more availability zones, not active-passive
+- Database with synchronous replication, or an equivalent durability guarantee
+- Load balancer health checks with automatic removal of unhealthy targets
+- Graceful degradation through circuit breakers and fallbacks
+- Health endpoints for the orchestrator (Kubernetes readiness and liveness probes)
+- Regular chaos testing and game days
+- A runbook for every known failure scenario
+- An SLO dashboard with error-budget alerts — see [[DevOps/sre/slos-and-error-budgets|SLOs and Error Budgets]]
+
 ## Related
 
 - [[reliability-vs-availability|Reliability vs Availability]] — the distinction
 - [[resilience|Resilience]] — patterns for handling failures
-- [[load-balancing|Load Balancing]] — traffic distribution
+- [[Architecture/solution-architecture-concepts/reliability/load-balancing|Load Balancing]] — traffic distribution
 - [[disaster-recovery|Disaster Recovery]] — recovering from major outages
+
+## Across the wiki
+
+- [[Kubernetes/guides/non-functional/high-availability|High Availability]] — high availability (Kubernetes)
+- [[AWS/solutions-architect-professional/domain-1/1.3-reliable-and-resilient-architectures|1.3 Design Reliable and Resilient Architectures]] — high availability (AWS)
+- [[Azure/compute/aks/cluster-tiers-sla|AKS Cluster Tiers, High Availability Control Plane, and Private Cluster Architecture]] — high availability (Azure)
