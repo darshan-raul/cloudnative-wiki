@@ -15,16 +15,16 @@ The Data Science lifecycle is an iterative engineering process for extracting ac
 
 ```mermaid
 flowchart TD
-    P1[1. Problem Formulation] --> P2[2. Data Collection & Sourcing]
-    P2 --> P3[3. Data Cleaning & Preprocessing]
-    P3 --> P4[4. Exploratory Data Analysis - EDA]
-    P4 --> P5[5. Feature Engineering]
-    P5 --> P6[6. Model Training & Hyperparameter Tuning]
-    P6 --> P7[7. Model Evaluation & Benchmarking]
+    P1[1 · Problem Formulation] --> P2[2 · Data Collection & Sourcing]
+    P2 --> P3[3 · Data Cleaning & Preprocessing]
+    P3 --> P4[4 · Exploratory Data Analysis - EDA]
+    P4 --> P5[5 · Feature Engineering]
+    P5 --> P6[6 · Model Training & Hyperparameter Tuning]
+    P6 --> P7[7 · Model Evaluation & Benchmarking]
     P7 --> EvalCheck{Meets Quality Threshold?}
     EvalCheck -- No --> P4
-    EvalCheck -- Yes --> P8[8. Production Deployment & MLOps]
-    P8 --> P9[9. Observability & Stakeholder Reporting]
+    EvalCheck -- Yes --> P8[8 · Production Deployment & MLOps]
+    P8 --> P9[9 · Observability & Stakeholder Reporting]
     P9 -.->|Continuous Feedback Loop| P1
 ```
 

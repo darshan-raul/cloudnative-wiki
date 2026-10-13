@@ -62,14 +62,14 @@ To turn GPT-3 into ChatGPT, OpenAI developed the **Three-Stage Alignment Pipelin
 
 ```mermaid
 flowchart TD
-    Step1[1. Massive Pre-Training<br/>Predict next token on trillions of internet tokens] --> BaseLLM[Raw Base Foundation Model]
-    BaseLLM --> Step2[2. Supervised Fine-Tuning - SFT<br/>Human annotators write high-quality prompt/response pairs]
+    Step1[1 · Massive Pre-Training<br/>Predict next token on trillions of internet tokens] --> BaseLLM[Raw Base Foundation Model]
+    BaseLLM --> Step2[2 · Supervised Fine-Tuning - SFT<br/>Human annotators write high-quality prompt/response pairs]
     Step2 --> SFTModel[SFT Model]
 
-    SFTModel --> Step3[3. Train Reward Model<br/>Humans rank model outputs best-to-worst]
+    SFTModel --> Step3[3 · Train Reward Model<br/>Humans rank model outputs best-to-worst]
     Step3 --> RewardModel[Reward Model]
 
-    RewardModel --> Step4[4. Proximal Policy Optimization - PPO<br/>Reinforcement Learning from Human Feedback - RLHF]
+    RewardModel --> Step4[4 · Proximal Policy Optimization - PPO<br/>Reinforcement Learning from Human Feedback - RLHF]
     SFTModel --> Step4
     Step4 --> ChatGPT([Aligned Conversational Assistant: ChatGPT])
 ```

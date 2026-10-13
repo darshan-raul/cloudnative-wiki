@@ -70,12 +70,14 @@ ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot.db \
   --key=/etc/kubernetes/pki/etcd/peer.key
 
 # verify
-ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-snapshot.db
+etcdutl snapshot status /backup/etcd-snapshot.db
 
 # restore (DANGEROUS — replaces cluster state)
-ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot.db \
+etcdutl snapshot restore /backup/etcd-snapshot.db \
   --data-dir=/var/lib/etcd-restore
 ```
+
+Restore is done with `etcdutl` from etcd 3.6 onwards; [[Kubernetes/labs/cka/05-etcd-backup-restore|Lab CKA-05]] walks through the whole procedure.
 
 **For managed clusters, "restore" means contacting the cloud.** EKS: AWS Support can restore. GKE: gcloud `container clusters restore`. AKS: portal/Az CLI.
 

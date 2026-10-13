@@ -13,28 +13,28 @@ Kubernetes security is not a single feature or firewall setting; it is **defense
 
 ```mermaid
 flowchart TD
-    subgraph Ring1["1. API Access & Identity"]
+    subgraph Ring1["1 · API Access & Identity"]
         AuthN["Authentication (OIDC, X.509, Webhooks)"] --> AuthZ["Authorization (RBAC, Node, ABAC)"]
     end
 
-    subgraph Ring2["2. Admission & Governance"]
+    subgraph Ring2["2 · Admission & Governance"]
         AuthZ --> VAP["ValidatingAdmissionPolicy (CEL)"]
         VAP --> Webhooks["Admission Webhooks (Kyverno / Gatekeeper)"]
     end
 
-    subgraph Ring3["3. Workload Sandboxing"]
+    subgraph Ring3["3 · Workload Sandboxing"]
         Webhooks --> PSS["Pod Security Standards (Restricted)"]
         PSS --> SecCtx["SecurityContext (UID, capabilities, ro-root)"]
         SecCtx --> Seccomp["Kernel Filters (seccomp, AppArmor, gVisor)"]
     end
 
-    subgraph Ring4["4. Network & Data Protection"]
+    subgraph Ring4["4 · Network & Data Protection"]
         Seccomp --> NetPol["NetworkPolicy (Default Deny)"]
         NetPol --> mTLS["mTLS & SPIFFE/SPIRE Identity"]
         mTLS --> KMS["KMS v2 Envelope Encryption (etcd)"]
     end
 
-    subgraph Ring5["5. Detection & Supply Chain"]
+    subgraph Ring5["5 · Detection & Supply Chain"]
         KMS --> Runtime["eBPF Runtime Detection (Falco, Tetragon)"]
         Runtime --> SupplyChain["Image Signing (Cosign) & SBOMs"]
     end
@@ -102,4 +102,4 @@ Every security decision in Kubernetes answers: _Where is the control enforced, a
 
 ## Hands-On Security Hardening Lab
 
-Apply these principles in practice: walk through converting an insecure, privileged workload into a hardened production deployment in **[[Kubernetes/labs/07-security-hardening|Lab 07 — Workload Security Hardening]]**.
+Apply these principles in practice: walk through converting an insecure, privileged workload into a hardened production deployment in **[[Kubernetes/labs/cks/01-workload-security-hardening|Lab CKS-01 — Workload Security Hardening]]**.

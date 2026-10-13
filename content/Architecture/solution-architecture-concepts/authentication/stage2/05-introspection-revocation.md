@@ -196,9 +196,9 @@ flowchart TD
     Client -->|POST /revoke refresh_token| AS[Authorization Server]
 
     subgraph Authorization Server
-        AS --> RevokeRT[1. Mark Refresh Token as Revoked]
-        RevokeRT --> CascadeAT[2. Invalidate all Access Tokens in Session]
-        CascadeAT --> PublishEvent[3. Publish Revocation Event to Redis Pub/Sub]
+        AS --> RevokeRT[1 · Mark Refresh Token as Revoked]
+        RevokeRT --> CascadeAT[2 · Invalidate all Access Tokens in Session]
+        CascadeAT --> PublishEvent[3 · Publish Revocation Event to Redis Pub/Sub]
     end
 
     PublishEvent --> RS1[API Gateway / RS1 Cache]

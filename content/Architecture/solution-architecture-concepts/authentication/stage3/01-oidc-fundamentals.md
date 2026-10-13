@@ -217,19 +217,19 @@ A Relying Party MUST validate the ID Token before trusting any user claims:
 
 ```mermaid
 flowchart TD
-    Start[Receive ID Token] --> Step1{1. Is JWT valid structure?}
+    Start[Receive ID Token] --> Step1{1 · Is JWT valid structure?}
     Step1 -- No --> Reject[Reject Token / Auth Failure]
-    Step1 -- Yes --> Step2{2. Retrieve public key matching 'kid' from JWKS}
+    Step1 -- Yes --> Step2{2 · Retrieve public key matching 'kid' from JWKS}
     Step2 -- Missing/Mismatch --> Reject
-    Step2 -- Found --> Step3{3. Verify cryptographic signature}
+    Step2 -- Found --> Step3{3 · Verify cryptographic signature}
     Step3 -- Invalid --> Reject
-    Step3 -- Valid --> Step4{4. Does 'iss' match expected OP issuer?}
+    Step3 -- Valid --> Step4{4 · Does 'iss' match expected OP issuer?}
     Step4 -- No --> Reject
-    Step4 -- Yes --> Step5{5. Does 'aud' contain my client_id?}
+    Step4 -- Yes --> Step5{5 · Does 'aud' contain my client_id?}
     Step5 -- No --> Reject
-    Step5 -- Yes --> Step6{6. Is current time < 'exp'?}
+    Step5 -- Yes --> Step6{6 · Is current time < 'exp'?}
     Step6 -- No --> Reject
-    Step6 -- Yes --> Step7{7. If sent, does 'nonce' match session nonce?}
+    Step6 -- Yes --> Step7{7 · If sent, does 'nonce' match session nonce?}
     Step7 -- No --> Reject
     Step7 -- Yes --> Accept[Accept User Identity & Establish Session]
 ```

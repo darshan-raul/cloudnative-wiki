@@ -83,7 +83,7 @@ If you already know k8s and want reference material, jump to the level you need.
     [EKS]  [Guides]  [Certifications]
 ```
 
-The numbered subfolders are universal Kubernetes. AWS-specific notes (EKS, Karpenter, VPC CNI) live in [[Kubernetes/eks/README|EKS]]. Tooling and walkthroughs (Helm, Argo CD, ingress) live in [[Kubernetes/guides/README|Guides]]. Exam prep is in [[Kubernetes/certifications/README|CKA / CKAD]].
+The numbered subfolders are universal Kubernetes. AWS-specific notes (EKS, Karpenter, VPC CNI) live in [[Kubernetes/eks/README|EKS]]. Tooling and walkthroughs (Helm, Argo CD, ingress) live in [[Kubernetes/guides/README|Guides]]. Exam prep is in [[Kubernetes/certifications/index|CKA / CKAD / CKS]].
 
 ## Where to go next
 

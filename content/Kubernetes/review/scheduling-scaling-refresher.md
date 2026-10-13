@@ -13,10 +13,10 @@ A rapid architectural review of how Kubernetes places, protects, and scales comp
 
 ```mermaid
 flowchart TD
-    Pod["Unscheduled Pod (spec.nodeName is empty)"] --> Filter["1. Filtering Phase (Hard Constraints)<br/>- NodeResourcesFit (CPU/Memory)<br/>- NodeName / NodeSelector<br/>- NodePorts free?<br/>- Taints & Tolerations<br/>- Volume Zone Restrictions"]
-    Filter -->|Eligible Nodes| Score["2. Scoring Phase (Soft Preferences)<br/>- ImageLocality (Is image cached?)<br/>- NodeAffinity (preferredDuringScheduling)<br/>- PodTopologySpread (Balance skew)<br/>- LeastAllocated / MostAllocated"]
-    Score -->|Highest Scoring Node| Reserve["3. Reserve & Permit Phase<br/>Hold node capacity"]
-    Reserve --> Bind["4. Binding Phase<br/>Set spec.nodeName on Pod"]
+    Pod["Unscheduled Pod (spec.nodeName is empty)"] --> Filter["1 · Filtering Phase (Hard Constraints)<br/>• NodeResourcesFit (CPU/Memory)<br/>• NodeName / NodeSelector<br/>• NodePorts free?<br/>• Taints & Tolerations<br/>• Volume Zone Restrictions"]
+    Filter -->|Eligible Nodes| Score["2 · Scoring Phase (Soft Preferences)<br/>• ImageLocality (Is image cached?)<br/>• NodeAffinity (preferredDuringScheduling)<br/>• PodTopologySpread (Balance skew)<br/>• LeastAllocated / MostAllocated"]
+    Score -->|Highest Scoring Node| Reserve["3 · Reserve & Permit Phase<br/>Hold node capacity"]
+    Reserve --> Bind["4 · Binding Phase<br/>Set spec.nodeName on Pod"]
 ```
 
 ---

@@ -187,11 +187,11 @@ flowchart TD
     IdP -->|PATCH /scim/v2/Users/{id} active=false| SCIM[Your SCIM Service Provider]
 
     subgraph SaaS Application Actions
-        SCIM --> Step1[1. Mark user record: is_active = False]
-        Step1 --> Step2[2. Immediately Revoke all active Access & Refresh Tokens]
-        Step2 --> Step3[3. Invalidate local Redis application sessions]
-        Step3 --> Step4[4. Deactivate all Personal Access Tokens & API Keys]
-        Step4 --> Step5[5. Disconnect active WebSockets & SSO sessions]
+        SCIM --> Step1[1 · Mark user record: is_active = False]
+        Step1 --> Step2[2 · Immediately Revoke all active Access & Refresh Tokens]
+        Step2 --> Step3[3 · Invalidate local Redis application sessions]
+        Step3 --> Step4[4 · Deactivate all Personal Access Tokens & API Keys]
+        Step4 --> Step5[5 · Disconnect active WebSockets & SSO sessions]
     end
 ```
 

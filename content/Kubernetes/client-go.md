@@ -24,9 +24,9 @@ flowchart TD
         Informer -->|Dispatches Events| Handlers["ResourceEventHandlers<br/>(Add, Update, Delete)"]
         Handlers -->|Push Key: ns/name| WorkQueue["RateLimitingQueue"]
         WorkQueue -->|Pop Key| Worker["Worker Routine(s)"]
-        Worker -->|1. Fetch from Cache| Indexer
-        Worker -->|2. Reconcile Loop| Reconcile["Reconcile(key)"]
-        Reconcile -->|3. Patch/Update| API
+        Worker -->|1 · Fetch from Cache| Indexer
+        Worker -->|2 · Reconcile Loop| Reconcile["Reconcile(key)"]
+        Reconcile -->|3 · Patch/Update| API
     end
 
     API --> Reflector

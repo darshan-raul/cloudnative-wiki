@@ -69,4 +69,4 @@ Delete Kubernetes Services, Ingresses and PersistentVolumeClaims **before** dele
 - [[Kubernetes/eks/README|EKS implementation track]]
 - [[Kubernetes/concepts/00-hub|Kubernetes concepts hub]]
 - [[AWS/compute/eks/README|EKS in the AWS section]]
-- [[Kubernetes/labs/00-cluster-setup|Lab 00 — local cluster setup]]
+- [[Kubernetes/labs/ckad/01-cluster-setup|Lab CKAD-01 — local cluster setup]]

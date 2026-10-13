@@ -278,7 +278,7 @@ time kubectl delete pod podinfo-lifecycle-demo
 Notice the command takes ~8–10 seconds to finish. Kubelet executed the `preStop` hook, waited 8 seconds, and then sent `SIGTERM`, giving the process a clean shutdown window before removing the Pod from the cluster.
 
 > [!TIP]
-> For the complete multi-pod deployment workflow, proceed to **[[Kubernetes/labs/01-deploy-workload|Lab 01 — Deploying the Application]]**.
+> For the complete multi-pod deployment workflow, proceed to **[[Kubernetes/labs/ckad/02-deploy-workload|Lab CKAD-02 — Deploying the Application]]**.
 
 ---
 
@@ -322,7 +322,7 @@ When a Pod is marked for deletion, EndpointSlice removal occurs in parallel with
 - **Deep Reference:** **[[Kubernetes/concepts/L03-workloads/01-pods-deep-dive|01-pods-deep-dive]]** (Full YAML schema and Linux namespaces)
 - **Init & Sidecars:** **[[Kubernetes/concepts/L03-workloads/08-init-containers|08-init-containers]]**
 - **Health Probes:** **[[Kubernetes/concepts/L03-workloads/10-probes|10-probes]]**
-- **Hands-on Lab:** **[[Kubernetes/labs/01-deploy-workload|Lab 01 — Deploying the Application]]**
+- **Hands-on Lab:** **[[Kubernetes/labs/ckad/02-deploy-workload|Lab CKAD-02 — Deploying the Application]]**
 
 ---
 

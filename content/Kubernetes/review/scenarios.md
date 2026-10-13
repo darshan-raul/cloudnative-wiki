@@ -251,12 +251,17 @@ error when evicting pod "payment-gateway-69d8b7-4m8s9": Cannot evict pod as it w
 
 ### Root Cause:
 
-The PDB requires `minAvailable: 2`. There are only 2 replicas total, and one replica on `node-worker-1` is crashing (`0/1 Ready`). Therefore, only 1 healthy pod exists. Evicting the pod on `node-worker-3` would drop available pods to 0 (violating the PDB). The Eviction API refuses the eviction request to protect the application.
+The PDB requires `minAvailable: 2`. There are only 2 replicas, and one of them is crashing (`0/1 Ready`), so 1 healthy Pod exists and the budget is already violated. The Eviction API refuses to remove the remaining healthy Pod. Note that the budget is misconfigured even when both Pods are healthy: 2 replicas with `minAvailable: 2` never allows an eviction.
 
 ### Remediation:
 
-1. **Fix the crashing pod first:** Check `kubectl logs payment-gateway-69d8b7-v8k2p --previous` and resolve the crash so that `ALLOWED DISRUPTIONS` becomes 1.
-2. Once the second pod is healthy, `kubectl drain` immediately proceeds without downtime.
+1. **Fix the crashing pod first:** Check `kubectl logs payment-gateway-69d8b7-v8k2p --previous` and resolve the crash. That brings the healthy count back to 2, but `ALLOWED DISRUPTIONS` is healthy Pods minus `minAvailable`, which is 2 − 2 = **0**. The drain is still blocked.
+2. **Make room in the budget.** With two replicas and `minAvailable: 2`, no voluntary eviction is ever permitted. Either:
+   - scale up and wait for readiness (`kubectl scale deployment payment-gateway --replicas=3`, then `kubectl rollout status`), which gives 3 − 2 = 1 allowed disruption and keeps two Pods serving throughout; or
+   - if the service can run on one Pod for a short time, lower the budget (`kubectl patch pdb payment-gateway-pdb --type merge -p '{"spec":{"minAvailable":1}}'`).
+3. Confirm `kubectl get pdb payment-gateway-pdb` shows `ALLOWED DISRUPTIONS` of at least 1, then re-run `kubectl drain`. The replacement must be able to schedule on another node, or the allowance drops back to 0 after the first eviction.
+
+The lasting fix is a budget that leaves room, such as `maxUnavailable: 1`, on a workload with more replicas than the budget protects. [[Kubernetes/labs/cka/02-scheduling-and-autoscaling|Lab CKA-02]] reproduces a blocked drain end to end.
 
 ---
 
@@ -313,4 +318,4 @@ A third-party validating admission webhook was configured with `failurePolicy: F
 
 ## Next Steps
 
-Review the foundational curriculum in **[[Kubernetes/concepts/00-hub|Curriculum Hub]]** or practice disaster recovery procedures in **[[Kubernetes/labs/09-gitops-and-lifecycle|Lab 09 — GitOps Delivery & Lifecycle]]**.
+Review the foundational curriculum in **[[Kubernetes/concepts/00-hub|Curriculum Hub]]** or practice disaster recovery procedures in **[[Kubernetes/labs/ckad/07-kustomize-and-lifecycle|Lab CKAD-07 — GitOps Delivery & Lifecycle]]**.

@@ -124,12 +124,12 @@ If a private signing key is accidentally committed to GitHub or leaked in server
 
 ```mermaid
 flowchart TD
-    Leak[Private Key Leaked] --> Step1[1. Generate Emergency Key-C in KMS]
-    Step1 --> Step2[2. Immediately Switch AS to Sign with Key-C]
-    Step2 --> Step3[3. Purge Compromised Key from JWKS]
-    Step3 --> Step4[4. Trigger Global JWKS Cache Bust on all API Gateways]
-    Step4 --> Step5[5. Invalidate All Active User Sessions in Redis]
-    Step5 --> Step6[6. Force Global User Re-Authentication]
+    Leak[Private Key Leaked] --> Step1[1 · Generate Emergency Key-C in KMS]
+    Step1 --> Step2[2 · Immediately Switch AS to Sign with Key-C]
+    Step2 --> Step3[3 · Purge Compromised Key from JWKS]
+    Step3 --> Step4[4 · Trigger Global JWKS Cache Bust on all API Gateways]
+    Step4 --> Step5[5 · Invalidate All Active User Sessions in Redis]
+    Step5 --> Step6[6 · Force Global User Re-Authentication]
 ```
 
 1. **Containment:** Immediately purge the compromised public key from `jwks.json`. Downstream resource servers will instantly fail signature checks on any attacker-forged tokens carrying the compromised `kid`.

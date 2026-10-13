@@ -13,11 +13,11 @@ This document defines the recurring operational tasks, synchronization cadence, 
 
 ```mermaid
 flowchart LR
-    Release["1. Upstream K8s Release\n(3x / year: Apr, Aug, Dec)"] --> Deprecations["2. Deprecation & API Audit\n(Changelog, KEP review)"]
-    Deprecations --> NotesUpdate["3. Core Notes & Matrix Sync\n(v1.x Features, Removal flags)"]
-    NotesUpdate --> LabVerify["4. Lab Execution Run\n(kind multi-node, podinfo)"]
-    LabVerify --> CIGate["5. Automated Content Gate\n(npm run check:content)"]
-    CIGate --> Published["6. Published & Pushed"]
+    Release["1 · Upstream K8s Release\n(3x / year: Apr, Aug, Dec)"] --> Deprecations["2 · Deprecation & API Audit\n(Changelog, KEP review)"]
+    Deprecations --> NotesUpdate["3 · Core Notes & Matrix Sync\n(v1.x Features, Removal flags)"]
+    NotesUpdate --> LabVerify["4 · Lab Execution Run\n(kind multi-node, podinfo)"]
+    LabVerify --> CIGate["5 · Automated Content Gate\n(npm run check:content)"]
+    CIGate --> Published["6 · Published & Pushed"]
 ```
 
 ---
@@ -67,7 +67,7 @@ kind create cluster --config content/Kubernetes/labs/kind-config.yaml --name kin
 # 2. Verify all 3 nodes (1 CP, 2 Workers) are Ready with proper zones
 kubectl get nodes -L topology.kubernetes.io/zone
 
-# 3. Step through Lab 00 to Lab 09 manifests
+# 3. Step through the lab manifests under labs/ckad, labs/cka and labs/cks
 # Verify:
 # - Podinfo starts with native sidecars and resource limits
 # - In-place Pod resize works without container restarts

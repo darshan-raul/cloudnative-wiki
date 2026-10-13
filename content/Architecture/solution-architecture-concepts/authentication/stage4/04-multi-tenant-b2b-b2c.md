@@ -188,12 +188,12 @@ For complex authorization (e.g. Google Drive folder inheritance), modern multi-t
 ```mermaid
 flowchart TD
     Admin[Enterprise Customer Admin] --> Portal[SaaS Admin Portal]
-    Portal --> Step1[1. Input Company Email Domain: acme.com]
-    Step1 --> Step2[2. Verify Domain via DNS TXT Record]
-    Step2 --> Step3[3. Upload SAML Metadata / OIDC Discovery URL]
-    Step3 --> Step4[4. Configure Group-to-Role Mappings]
-    Step4 --> Step5[5. Test Connection with Test Account]
-    Step5 --> Step6[6. Enable SSO Enforcement for all @acme.com Users]
+    Portal --> Step1[1 · Input Company Email Domain: acme.com]
+    Step1 --> Step2[2 · Verify Domain via DNS TXT Record]
+    Step2 --> Step3[3 · Upload SAML Metadata / OIDC Discovery URL]
+    Step3 --> Step4[4 · Configure Group-to-Role Mappings]
+    Step4 --> Step5[5 · Test Connection with Test Account]
+    Step5 --> Step6[6 · Enable SSO Enforcement for all @acme.com Users]
 ```
 
 ---

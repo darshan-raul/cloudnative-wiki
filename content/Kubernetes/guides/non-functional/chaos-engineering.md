@@ -205,8 +205,10 @@ sudo iptables -A INPUT -s <other-nodes> -j DROP
 The hardest one. Disrupts all cluster operations.
 
 ```bash
-# on a master node
-sudo systemctl stop kube-apiserver
+# on a control plane node of a kubeadm cluster, where the API server is a static Pod:
+sudo mv /etc/kubernetes/manifests/kube-apiserver.yaml /root/
+# restore with: sudo mv /root/kube-apiserver.yaml /etc/kubernetes/manifests/
+# (only where the API server runs as a systemd unit: sudo systemctl stop kube-apiserver)
 ```
 
 **What it tests:** Existing pods keep running. New pods can't be scheduled.

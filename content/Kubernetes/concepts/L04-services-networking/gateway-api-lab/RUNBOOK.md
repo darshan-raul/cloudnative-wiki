@@ -26,7 +26,8 @@ This lab was authored in a cloud sandbox without `docker`/`kind`/`kubectl`/`helm
 ## 1. Bring up the lab
 
 ```bash
-cd lab
+# from the repository root
+cd content/Kubernetes/concepts/L04-services-networking/gateway-api-lab
 ./install.sh
 ```
 

@@ -81,4 +81,4 @@ Kubernetes separates telemetry into **metrics**, **logs**, **events**, and **tra
 
 ## Hands-On Incident Simulation
 
-Practice your triage reflexes in a controlled environment: inject application crashes, stream container traces, inspect events, and use ephemeral debug containers in **[[Kubernetes/labs/08-observability-and-troubleshooting|Lab 08 — Observability & Troubleshooting]]**.
+Practice your triage reflexes in a controlled environment: inject application crashes, stream container traces, inspect events, and use ephemeral debug containers in **[[Kubernetes/labs/ckad/06-observability-and-troubleshooting|Lab CKAD-06 — Observability & Troubleshooting]]**.

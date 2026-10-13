@@ -7,7 +7,7 @@ description: A first end-to-end deployment on EKS — connect kubectl, deploy a 
 
 # Deploying Your First Application on EKS
 
-This walkthrough deploys `podinfo`, the same sample workload used in the [[Kubernetes/labs/01-deploy-workload|Kubernetes labs]], and follows each step into AWS so you can see what EKS adds to plain Kubernetes. It assumes a cluster from [[Kubernetes/eks/getting-started/cluster-creation|cluster creation]].
+This walkthrough deploys `podinfo`, the same sample workload used in the [[Kubernetes/labs/ckad/02-deploy-workload|Kubernetes labs]], and follows each step into AWS so you can see what EKS adds to plain Kubernetes. It assumes a cluster from [[Kubernetes/eks/getting-started/cluster-creation|cluster creation]].
 
 ## 1. Connect
 

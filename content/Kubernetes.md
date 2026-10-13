@@ -86,16 +86,16 @@ Sequential, provider-neutral fundamentals building a single mental model:
 A 10-part progressive lab track in a reproducible multi-node `kind` cluster with `podinfo`:
 
 - [[Kubernetes/labs/index|Labs Hub]]: Environment setup, architecture, and step-by-step progress.
-- [[Kubernetes/labs/00-cluster-setup|Lab 00 — Cluster Setup]]: Multi-node `kind` with topology zones.
-- [[Kubernetes/labs/01-deploy-workload|Lab 01 — Workload Deployment]]: Declarative `podinfo` deployment, probes, and resource limits.
-- [[Kubernetes/labs/02-updates-and-rollbacks|Lab 02 — Updates & Rollbacks]]: Zero-downtime rollouts, rollback strategies, and maxSurge/maxUnavailable.
-- [[Kubernetes/labs/03-configuration|Lab 03 — Config & Secrets]]: ConfigMaps, Secret injection, and immutable configuration.
-- [[Kubernetes/labs/04-networking-and-services|Lab 04 — Networking & Services]]: ClusterIP, NodePort, LoadBalancer, and Gateway API routing.
-- [[Kubernetes/labs/05-storage-and-persistence|Lab 05 — Storage & Persistence]]: Dynamic PV provisioning and stateful storage.
-- [[Kubernetes/labs/06-scheduling-and-autoscaling|Lab 06 — Scheduling & Autoscaling]]: Affinity, taints, tolerations, and HPA metrics-driven autoscaling.
-- [[Kubernetes/labs/07-security-hardening|Lab 07 — Workload Hardening]]: PSS `restricted`, non-root securityContext, and NetworkPolicies.
-- [[Kubernetes/labs/08-observability-and-troubleshooting|Lab 08 — Observability & Triage]]: `kubectl debug`, Prometheus metrics, and crashloop analysis.
-- [[Kubernetes/labs/09-gitops-and-lifecycle|Lab 09 — GitOps & Lifecycle]]: Kustomize overlays, drift correction, and disaster recovery drill.
+- [[Kubernetes/labs/ckad/01-cluster-setup|Lab CKAD-01 — Cluster Setup]]: Multi-node `kind` with topology zones.
+- [[Kubernetes/labs/ckad/02-deploy-workload|Lab CKAD-02 — Workload Deployment]]: Declarative `podinfo` deployment, probes, and resource limits.
+- [[Kubernetes/labs/ckad/03-updates-and-rollbacks|Lab CKAD-03 — Updates & Rollbacks]]: Zero-downtime rollouts, rollback strategies, and maxSurge/maxUnavailable.
+- [[Kubernetes/labs/ckad/04-configuration|Lab CKAD-04 — Config & Secrets]]: ConfigMaps, Secret injection, and immutable configuration.
+- [[Kubernetes/labs/ckad/05-services-and-dns|Lab CKAD-05 — Networking & Services]]: ClusterIP, NodePort, LoadBalancer, and Gateway API routing.
+- [[Kubernetes/labs/cka/01-storage-and-persistence|Lab CKA-01 — Storage & Persistence]]: Dynamic PV provisioning and stateful storage.
+- [[Kubernetes/labs/cka/02-scheduling-and-autoscaling|Lab CKA-02 — Scheduling & Autoscaling]]: Affinity, taints, tolerations, and HPA metrics-driven autoscaling.
+- [[Kubernetes/labs/cks/01-workload-security-hardening|Lab CKS-01 — Workload Hardening]]: PSS `restricted`, non-root securityContext, and NetworkPolicies.
+- [[Kubernetes/labs/ckad/06-observability-and-troubleshooting|Lab CKAD-06 — Observability & Triage]]: `kubectl debug`, Prometheus metrics, and crashloop analysis.
+- [[Kubernetes/labs/ckad/07-kustomize-and-lifecycle|Lab CKAD-07 — GitOps & Lifecycle]]: Kustomize overlays, drift correction, and disaster recovery drill.
 
 ### 3. Revision & Master Decision Tables (`review/`)
 
@@ -118,7 +118,7 @@ High-density references for experienced practitioners, technical interviews, and
 
 - [[Kubernetes/eks/README|AWS EKS Implementation Track]]: Universal Concept to EKS Translation Matrix, Karpenter, VPC CNI, IAM Access Entries, and EKS Pod Identity.
 - [[Kubernetes/client-go|client-go & Controller Architecture]]: Informers, DeltaFIFO, RateLimitingQueue, and reconciliation loops.
-- [[Kubernetes/certifications/index|Certification Alignment Guide]]: CKA, CKAD, and CKS curriculum mapping.
+- [[Kubernetes/certifications/index|Certification Tracks]]: objective-by-objective study tracks for [[Kubernetes/certifications/ckad|CKAD]], [[Kubernetes/certifications/cka|CKA]] and [[Kubernetes/certifications/cks|CKS]].
 - [[Kubernetes/MAINTENANCE|Curriculum Maintenance Playbook]]: Upstream release cadence, lab verification, and quality gates.
 
 ---

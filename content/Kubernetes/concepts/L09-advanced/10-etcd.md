@@ -244,6 +244,9 @@ kubectl logs -n kube-system etcd-<node-name>
 
 ### 8. Backups: snapshot save and restore
 
+> [!note] etcdctl saves, etcdutl restores
+> From etcd 3.6, which current Kubernetes releases ship, `snapshot restore` and `snapshot status` exist only in `etcdutl`. `etcdctl` keeps `snapshot save`. The full procedure, including stopping the control plane so the API server does not serve stale data afterwards, is practised in [[Kubernetes/labs/cka/05-etcd-backup-restore|Lab CKA-05]].
+
 ```bash
 # Take a snapshot (online, all members can do it)
 ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snap-$(date +%Y%m%d).db \
@@ -253,11 +256,11 @@ ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snap-$(date +%Y%m%d).db \
   --key=/etc/kubernetes/pki/etcd/server.key
 
 # Check snapshot status
-ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-snap-20240611.db -w table
+etcdutl snapshot status /backup/etcd-snap-20240611.db -w table
 
 # Restore from snapshot (stops etcd first, creates a new data-dir)
 # Used for disaster recovery or cluster migration
-ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snap-20240611.db \
+etcdutl snapshot restore /backup/etcd-snap-20240611.db \
   --name etcd-1 \
   --initial-cluster etcd-1=https://10.0.0.1:2380,etcd-2=https://10.0.0.2:2380,etcd-3=https://10.0.0.3:2380 \
   --initial-advertise-peer-urls https://10.0.0.1:2380 \
@@ -560,7 +563,7 @@ This is why backups matter — and why quorum is critical.
 | High `etcd_server_leader_changes_total` | Network issues between nodes        | Check network, reduce load              |
 | Member shows `unstarted`                | Peer TLS misconfigured              | Verify certs, restart etcd              |
 | `mvcc: database space exceeded`         | DB quota hit (default 2GB)          | Defrag, increase quota                  |
-| Snapshot restore fails                  | Snapshot corrupted or wrong version | Use `etcdctl snapshot status` to verify |
+| Snapshot restore fails                  | Snapshot corrupted or wrong version | Use `etcdutl snapshot status` to verify |
 | `etcd: invalid credentials`             | Cert expired or misconfigured       | Renew certs (12 months typical)         |
 
 ```bash

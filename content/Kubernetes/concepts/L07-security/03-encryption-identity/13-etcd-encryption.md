@@ -345,7 +345,7 @@ But:
 
 - Back up the **EncryptionConfiguration** alongside the etcd backup.
 - Back up the **KMS credentials** (or store them in a separate KMS).
-- Test the **decryption** periodically — `etcdctl snapshot restore` + `etcdctl get` to verify the data is readable.
+- Test the **decryption** periodically — `etcdutl snapshot restore` + `etcdctl get` to verify the data is readable.
 
 ## 11. Performance and Storage Overhead
 

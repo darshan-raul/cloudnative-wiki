@@ -20,9 +20,9 @@ When the kubelet schedules a Pod onto a worker node, the Container Runtime Inter
 ```mermaid
 flowchart TD
     Kubelet["kubelet (Node Agent)"] -->|RunPodSandbox| CRI["Container Runtime (containerd)"]
-    CRI -->|1. Create Sandbox| Pause["Pause Container<br/>(Holds net, ipc, uts namespaces)"]
-    CRI -->|2. Join Namespaces| App["Main Container: podinfo"]
-    CRI -->|3. Mount Volumes| VFS["Shared Volumes & Projected Config"]
+    CRI -->|1 · Create Sandbox| Pause["Pause Container<br/>(Holds net, ipc, uts namespaces)"]
+    CRI -->|2 · Join Namespaces| App["Main Container: podinfo"]
+    CRI -->|3 · Mount Volumes| VFS["Shared Volumes & Projected Config"]
 
     Pause -.->|Shared IP & localhost| App
     VFS -.->|Shared Filesystem Mounts| App

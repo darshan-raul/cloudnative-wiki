@@ -135,12 +135,15 @@ spec:
 - **Cross-region etcd** (3 nodes in 3 AZs) — back up from any one of them.
 - **Backup size.** etcd snapshots are small (KBs-MBs for most clusters).
 - **Backup duration.** A snapshot is fast (seconds), even for large etcds.
-- **Backup verification.** A snapshot that can't be restored is useless. Verify with `etcdctl snapshot status`.
+- **Backup verification.** A snapshot that can't be restored is useless. Verify with `etcdutl snapshot status`.
 
 ### Verify an etcd snapshot
 
+> [!note] etcdctl saves, etcdutl restores
+> From etcd 3.6, which current Kubernetes releases ship, `snapshot restore` and `snapshot status` exist only in `etcdutl`. `etcdctl` keeps `snapshot save`. The full procedure, including stopping the control plane so the API server does not serve stale data afterwards, is practised in [[Kubernetes/labs/cka/05-etcd-backup-restore|Lab CKA-05]].
+
 ```bash
-ETCDCTL_API=3 etcdctl snapshot status /backup/etcd-snapshot.db \
+etcdutl snapshot status /backup/etcd-snapshot.db \
   --write-out=table
 ```
 
@@ -437,31 +440,42 @@ For cloud-managed:
 
 ## The etcd restore (kubeadm)
 
+On a kubeadm cluster, etcd and the API server are **static Pods**, not systemd services. There is no `kube-apiserver` unit to stop; the kubelet runs whatever manifests are in `/etc/kubernetes/manifests/`. Stop the control plane by moving the manifests out, restore into a new directory, point etcd at it, and move the manifests back.
+
 ```bash
-# 1. stop the apiserver (only on the control plane you're restoring)
-sudo systemctl stop kube-apiserver
+# 1. stop the control plane components on this node
+sudo mkdir -p /root/manifests-off
+sudo mv /etc/kubernetes/manifests/*.yaml /root/manifests-off/
+# wait until etcd and kube-apiserver are gone
+until [ -z "$(sudo crictl ps -q --name 'etcd|kube-apiserver')" ]; do sleep 2; done
 
-# 2. move the existing data dir
-sudo mv /var/lib/etcd /var/lib/etcd-old
+# 2. restore the snapshot into a NEW, empty directory
+sudo etcdutl snapshot restore /backup/etcd-snapshot.db \
+  --data-dir /var/lib/etcd-restore \
+  --bump-revision 1000000000 --mark-compacted
 
-# 3. restore the snapshot
-ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot.db \
-  --data-dir=/var/lib/etcd
+# 3. point the etcd static Pod at the restored data:
+#    change the hostPath of the etcd-data volume, not the --data-dir flag
+sudo sed -i 's#path: /var/lib/etcd$#path: /var/lib/etcd-restore#' /root/manifests-off/etcd.yaml
 
-# 4. update etcd.yaml to point to the new dir
-sudo vim /etc/kubernetes/manifests/etcd.yaml
-# update --data-dir=/var/lib/etcd
-# (or change the hostPath for the etcd-data volume)
+# 4. start the control plane again
+sudo mv /root/manifests-off/*.yaml /etc/kubernetes/manifests/
 
-# 5. the apiserver will pick up the change automatically
-# (kubelet watches /etc/kubernetes/manifests/)
-
-# 6. verify
+# 5. verify
 kubectl get nodes
-# should show all nodes
+kubectl get pods -A | grep -v Running
 ```
 
-**For multi-node etcd:** restore to one node, then have the others rejoin.
+Points that are easy to get wrong:
+
+- **Stop the API server, do not only restart etcd.** An API server that stays up while etcd's data changes underneath it can keep answering from its cache with objects that no longer exist.
+- **`--bump-revision` and `--mark-compacted`** move the restored revision ahead of anything clients have seen and force every watch to re-list. Controllers and operators that kept running during the restore otherwise hold caches from "the future". This is the etcd project's recommendation for Kubernetes restores.
+- **Components outside the control plane node are not restarted by this procedure.** After a restore without a revision bump, restart operators, admission webhooks and GitOps controllers.
+- **The old data directory is untouched.** Keep `/var/lib/etcd` until you have verified the restore.
+
+**For multi-member etcd:** restore the same snapshot once per member, each into its own data directory with that member's `--name`, `--initial-cluster`, `--initial-cluster-token` and `--initial-advertise-peer-urls`, then start all members as a new cluster. Restoring one member and having the others "rejoin" with their old data does not work.
+
+[[Kubernetes/labs/cka/05-etcd-backup-restore|Lab CKA-05]] runs this procedure on a test cluster.
 
 ## Backup verification
 
@@ -478,7 +492,7 @@ docker cp /backup/etcd-snapshot.db backup-test-control-plane:/tmp/
 
 # 3. restore in the test cluster
 docker exec backup-test-control-plane bash -c "
-  ETCDCTL_API=3 etcdctl snapshot restore /tmp/etcd-snapshot.db \
+  etcdutl snapshot restore /tmp/etcd-snapshot.db \
     --data-dir=/tmp/etcd-test
 "
 

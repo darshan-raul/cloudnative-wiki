@@ -13,11 +13,11 @@ A rapid architectural review of identity verification, permissions, admission co
 
 ```mermaid
 flowchart LR
-    Request["Incoming API Request"] --> AuthN["1. Authentication<br/>(Who are you?)<br/>OIDC, X.509, SA Tokens"]
-    AuthN --> AuthZ["2. Authorization<br/>(What can you do?)<br/>RBAC: Verbs on Resources"]
-    AuthZ --> Admission["3. Admission Control<br/>(Is it compliant?)<br/>VAP (CEL), Kyverno, PSS"]
-    Admission --> Node["4. Workload Sandbox<br/>(How does it run?)<br/>SecurityContext, Seccomp"]
-    Node --> Network["5. Network Policy<br/>(Who can it talk to?)<br/>CNI Microsegmentation"]
+    Request["Incoming API Request"] --> AuthN["1 · Authentication<br/>(Who are you?)<br/>OIDC, X.509, SA Tokens"]
+    AuthN --> AuthZ["2 · Authorization<br/>(What can you do?)<br/>RBAC: Verbs on Resources"]
+    AuthZ --> Admission["3 · Admission Control<br/>(Is it compliant?)<br/>VAP (CEL), Kyverno, PSS"]
+    Admission --> Node["4 · Workload Sandbox<br/>(How does it run?)<br/>SecurityContext, Seccomp"]
+    Node --> Network["5 · Network Policy<br/>(Who can it talk to?)<br/>CNI Microsegmentation"]
 ```
 
 ---

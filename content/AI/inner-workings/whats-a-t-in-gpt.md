@@ -48,9 +48,9 @@ flowchart TD
         norm2["Layer Norm"]
 
         sum --> attention1
-        attention1 --> |"+ Residual"| norm1
+        attention1 --> |"+Residual"| norm1
         norm1 --> ffn1
-        ffn1 --> |"+ Residual"| norm2
+        ffn1 --> |"+Residual"| norm2
     end
 
     subgraph "Decoder Stack"
@@ -63,12 +63,12 @@ flowchart TD
         norm5["Layer Norm"]
 
         dec_input["Decoder Input"] --> masked_att
-        masked_att --> |"+ Residual"| norm3
+        masked_att --> |"+Residual"| norm3
         norm3 --> cross_att
         norm2 --> cross_att
-        cross_att --> |"+ Residual"| norm4
+        cross_att --> |"+Residual"| norm4
         norm4 --> ffn2
-        ffn2 --> |"+ Residual"| norm5
+        ffn2 --> |"+Residual"| norm5
     end
 
     norm5 --> output["Output\nProbabilities"]

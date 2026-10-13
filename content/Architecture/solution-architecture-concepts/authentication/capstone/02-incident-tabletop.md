@@ -95,11 +95,11 @@ An engineer debugging a local JWT verification issue accidentally commits `priva
 
 ```mermaid
 flowchart TD
-    Step1[1. Generate Emergency Key Pair k2 in KMS/HSM] --> Step2[2. Update JWKS: Stage k2, PURGE k1 immediately!]
-    Step2 --> Step3[3. Push JWKS Cache Purge to CDN & API Gateways]
-    Step3 --> Step4[4. Configure AS to sign all new tokens with k2]
-    Step4 --> Step5[5. Flush Redis: Mass-invalidate all active user sessions]
-    Step5 --> Step6[6. Force Global User Re-Authentication]
+    Step1[1 · Generate Emergency Key Pair k2 in KMS/HSM] --> Step2[2 · Update JWKS: Stage k2, PURGE k1 immediately!]
+    Step2 --> Step3[3 · Push JWKS Cache Purge to CDN & API Gateways]
+    Step3 --> Step4[4 · Configure AS to sign all new tokens with k2]
+    Step4 --> Step5[5 · Flush Redis: Mass-invalidate all active user sessions]
+    Step5 --> Step6[6 · Force Global User Re-Authentication]
 ```
 
 1. **Purge `kid: prod-auth-2026-k1` from JWKS:** Do not wait for graceful rotation! When `k1` is removed from `jwks.json`, API gateways will immediately fail signature verification on all attacker-minted tokens.

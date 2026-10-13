@@ -16,7 +16,7 @@ A systematic decision tree and triage framework for diagnosing failures in Kuber
 - [[Kubernetes/guides/troubleshooting/pod-pending|Pod Pending Playbook]]
 - [[Kubernetes/guides/troubleshooting/pvc-stuck|PVC Stuck Playbook]]
 - [[Kubernetes/troubleshooting|Kubernetes Troubleshooting Hub]]
-- Hands-on Incident Lab: [[Kubernetes/labs/08-observability-and-troubleshooting|Lab 08 — Observability & Troubleshooting]]
+- Hands-on Incident Lab: [[Kubernetes/labs/ckad/06-observability-and-troubleshooting|Lab CKAD-06 — Observability & Troubleshooting]]
 
 ## The first question
 
