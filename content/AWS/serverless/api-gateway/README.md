@@ -1,281 +1,171 @@
 ---
-title: Amazon API Gateway
-description: Amazon API Gateway — REST, HTTP, and WebSocket APIs. Endpoints, stages, methods, authorizers (Cognito/Lambda), rate limiting, caching, OpenAPI import, and cost.
+title: "Amazon API Gateway"
+description: "Choose REST, HTTP or WebSocket APIs, configure backend permissions and authentication, and test a complete disposable HTTP endpoint."
 tags:
-  - aws
-  - serverless
-  - api-gateway
-  - rest-api
-  - http-api
-  - websocket
-date: 2026-06-06
+  - cloud/aws/serverless
+date: 2026-10-12
 ---
 
 # Amazon API Gateway
 
-API Gateway exposes Lambda, HTTP backends, and other AWS services as REST or HTTP APIs. It handles authentication, rate limiting, caching, and monitoring.
+Choose an API type from requirements, not a universal price ranking. REST, HTTP and WebSocket APIs have different authorization, integration, deployment and billing contracts.
 
-## REST vs HTTP vs WebSocket
+## Product boundaries
 
-| Feature       | REST API              | HTTP API             | WebSocket API                                    |
-| ------------- | --------------------- | -------------------- | ------------------------------------------------ |
-| Protocols     | REST, OData           | REST, gRPC           | WebSocket                                        |
-| Auth          | IAM, Cognito, Lambda  | JWT, Lambda          | Lambda                                           |
-| Rate limiting | Usage plans, API keys | Throttling per route | Connection limits                                |
-| Caching       | Yes                   | No                   | No                                               |
-| Cost          | $3.50/million         | $0.50-1.00/million   | $1.00/million + $0.25/million connection-minutes |
-| Use case      | Full-featured API     | Lightweight, modern  | Real-time, chat, dashboards                      |
+HTTP APIs support IAM/SigV4, JWT and Lambda authorizers. REST APIs provide their own authorization/features including usage plans and supported caching. [[AWS/serverless/api-gateway/usage-plan|API keys]] identify usage-plan clients; they are not authentication.
 
-## REST API
+REST Regional/private integration timeouts may be increased beyond 29 seconds with documented quota trade-offs. HTTP and WebSocket timeouts have separate contracts. Do not promise gRPC transport without an owning supported integration contract.
 
-### Create API
+REST caches are scoped to the stage and configured method/cache-key parameters; dev/staging/prod do not share one cache automatically. Cache charges are hourly by allocated size, not a universal per-hit/GB tariff. Cache personalized responses only with a safe authorization/key design.
 
-```bash
-# Create REST API
-aws apigateway create-rest-api \
-  --name my-api \
-  --description "My REST API" \
-  --endpoint-types REGIONAL
+WebSocket Lambda authorization applies at $connect; an existing connection is not reauthorized just because the authorizer changes. Define connection lifetime, identity and backend message authorization separately.
 
-# Get API ID
-API_ID=$(aws apigateway get-rest-apis --query 'items[0].id' --output text)
-```
+## Small HTTP API lab
 
-### Resources and Methods
+Prerequisites: the sandbox function from [[AWS/compute/lambda/README|the Lambda lab]], API creation/deletion and Lambda policy permissions, and an explicit allowance for a **public, unauthenticated nonsensitive greeting endpoint**. Never use this basic lab to expose sensitive data. Set API_LAB_FUNCTION_ARN, API_LAB_REGION and API_LAB_ACCOUNT to the verified sandbox values.
 
 ```bash
-# Create resource
-RESOURCE_ID=$(aws apigateway create-resource \
-  --rest-api-id $API_ID \
-  --parent-id $(aws apigateway get-resources --rest-api-id $API_ID --query 'items[0].id' --output text) \
-  --path-part orders \
-  --query 'id' --output text)
-
-# Create GET method
-aws apigateway put-method \
-  --rest-api-id $API_ID \
-  --resource-id $RESOURCE_ID \
-  --http-method GET \
-  --authorization-type NONE
-
-# Create Lambda integration
-aws apigateway put-integration \
-  --rest-api-id $API_ID \
-  --resource-id $RESOURCE_ID \
-  --http-method GET \
-  --type AWS_PROXY \
-  --integration-http-method POST \
-  --uri arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:my-function/invocations
-
-# Create POST method
-aws apigateway put-method \
-  --rest-api-id $API_ID \
-  --resource-id $RESOURCE_ID \
-  --http-method POST \
-  --authorization-type COGNITO_USER_POOLS \
-  --authorizer-id authorizer-xxxxx
-
-# Deploy API
-aws apigateway create-deployment \
-  --rest-api-id $API_ID \
-  --stage-name v1 \
-  --description "Production v1"
-
-# URL: https://{api-id}.execute-api.us-east-1.amazonaws.com/v1/orders
-```
-
-## HTTP API
-
-```bash
-# Create HTTP API
 aws apigatewayv2 create-api \
-  --name my-http-api \
-  --protocol-type HTTP
-
-# Create route
-aws apigatewayv2 create-route \
-  --api-id $API_ID \
-  --route-key "GET /orders"
-
-# Integrate with Lambda
-aws apigatewayv2 create-integration \
-  --api-id $API_ID \
-  --integration-type AWS_PROXY \
-  --integration-uri arn:aws:lambda:us-east-1:123456789012:function:my-function \
-  --payload-format-version 2.0
-
-# Create stage
-aws apigatewayv2 create-stage \
-  --api-id $API_ID \
-  --stage-name v1 \
-  --auto-deploy
+  --name wiki-http-lab --protocol-type HTTP \
+  --target "$API_LAB_FUNCTION_ARN" \
+  --region "$API_LAB_REGION"
 ```
 
-## Authorizers
+Record ApiId and ApiEndpoint. Quick create supplies the supported integration/default route/default stage; inspect get-routes, get-integrations and get-stages to verify, rather than guessing IDs.
 
-### Cognito Authorizer (REST API)
+Set API_LAB_ID to the returned ID, then authorize only that API to invoke the function:
 
 ```bash
-aws apigateway create-authorizer \
-  --rest-api-id $API_ID \
-  --name CognitoAuthorizer \
-  --type COGNITO_USER_POOLS \
-  --provider-arns arn:aws:cognito-idp:us-east-1:123456789012:userpool/us-east-1_xxxxx
+aws lambda add-permission \
+  --function-name "$API_LAB_FUNCTION_ARN" \
+  --statement-id wiki-http-lab \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:$API_LAB_REGION:$API_LAB_ACCOUNT:$API_LAB_ID/*/*" \
+  --region "$API_LAB_REGION"
 ```
 
-### Lambda Authorizer (JWT)
+Call the returned HTTPS endpoint with curl. Expected: a valid greeting. The API invokes with its event format, so inspect the backend event/response contract rather than reusing direct-invoke assumptions blindly.
 
-```python
-def lambda_authorizer(event, context):
-    token = event['headers']['Authorization']
+Failure exercise: temporarily remove the dedicated invocation permission; expect integration failure while the API endpoint still exists. Restore it and confirm recovery. Configure stage access logging to a dedicated log group before investigating request IDs/status/integration latency; avoid sensitive request bodies.
 
-    # Validate JWT
-    if validate(token):
-        return {
-            'principalId': 'user-123',
-            'policyDocument': {
-                'Version': '2012-10-17',
-                'Statement': [{
-                    'Action': 'execute-api:Invoke',
-                    'Effect': 'Allow',
-                    'Resource': event['methodArn']
-                }]
-            }
-        }
-    else:
-        return {'principalId': 'unauthorized', 'policyDocument': {'Version': '2012-10-17', 'Statement': [{'Action': 'execute-api:Invoke', 'Effect': 'Deny', 'Resource': '*'}]}}
+## Authentication extension and cleanup
+
+Find the actual default RouteId with get-routes and set authorization type AWS_IAM using update-route. Verify an unsigned request is rejected; use an approved SigV4 client with temporary credentials to test the authorized request. Grant the client only the required execute-api ARN.
+
+Delete only the lab API, remove the dedicated Lambda policy statement and delete dedicated access logs. The function belongs to the earlier lab and needs its own cleanup.
+
+## Cost exercise
+
+For an average population of 10,000 concurrent active WebSocket connections maintained over a full 30 days **through reconnects**, connection minutes are 10,000 × 43,200 = 432 million. At an illustrative \$0.25/million that is \$108, plus messages metered in 32-KB increments and other charges. Individual connections cannot last 30 days: API Gateway's maximum connection duration is two hours and its idle timeout is ten minutes. These are [non-adjustable WebSocket limits](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-execution-service-websocket-limits-table.html), not options to purchase longer lifetimes. HTTP/REST requests, data transfer, cache and optional features have their own regional tariffs; JWT use does not create an invented separate HTTP request rate.
+
+## REST, HTTP and WebSocket feature comparison
+
+| Requirement          | REST API                                | HTTP API                                                      | WebSocket API                                                |
+| -------------------- | --------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Request model        | Supported REST methods/resources        | HTTP routes/integrations                                      | $connect/$disconnect/$default/custom routes                  |
+| Client authorization | Supported IAM/Cognito/Lambda mechanisms | IAM/JWT/Lambda mechanisms                                     | Supported $connect authorization plus backend message checks |
+| Usage plans/keys     | Supported with method/stage setup       | Not the REST usage-plan model                                 | Product-specific API-key behavior is not user auth           |
+| Cache                | Configured stage/method cache           | No equivalent REST cache feature                              | Not an HTTP response-cache model                             |
+| Deployment           | Deployment snapshot/stage               | Supported auto-deploy/manual stage                            | Deployment/stage and connection lifecycle                    |
+| Private design       | Endpoint/integration options differ     | Private integration is not identical to REST private endpoint | Verify current network/integration contract                  |
+
+CORS is a browser policy, not authorization. Request schema validation, payload transformations, binary content and backend errors vary by product. OpenAPI import must include supported integration/security extensions; a generic schema file does not automatically provision backend permissions.
+
+```text
+caller → route/method authentication + optional request controls
+                       ↓
+             integration + backend permission
+                       ↓
+                  backend result
+                       ↓
+        API response/access log/request ID → client
 ```
 
-## Rate Limiting
+## Complete authenticated REST/Lambda setup
 
-### REST API (Usage Plans)
+This separate paid sandbox reuses the nonsensitive Lambda fixture. Prerequisites: verified profile/Region/account, API creation/deployment permission, Lambda policy permission and a client with narrowly scoped execute-api access. Set API_LAB_REGION/ACCOUNT/FUNCTION_ARN from verified values; record returned IDs at each step.
 
 ```bash
-# Create usage plan
-aws apigateway create-usage-plan \
-  --name production \
-  --description "Production usage plan" \
-  --quota '{ "limit": 1000000, "period": "MONTH" }' \
-  --throttle '{ "burstLimit": 5000, "rateLimit": 1000 }'
-
-# Create API key
-API_KEY=$(aws apigateway create-api-key \
-  --name "production-key" \
-  --enabled \
-  --query 'value' --output text)
-
-# Associate with usage plan
-aws apigateway create-usage-plan-key \
-  --usage-plan-id plan-xxxxx \
-  --key-id $API_KEY \
-  --key-type API_KEY
-
-# Client includes key in header: x-api-key: your-key
+aws apigateway create-rest-api --name wiki-rest-lab --region "$API_LAB_REGION"
+aws apigateway get-resources --rest-api-id "$API_LAB_REST_ID" \
+  --region "$API_LAB_REGION"
+aws apigateway create-resource --rest-api-id "$API_LAB_REST_ID" \
+  --parent-id "$API_LAB_ROOT_ID" --path-part hello --region "$API_LAB_REGION"
+aws apigateway put-method --rest-api-id "$API_LAB_REST_ID" \
+  --resource-id "$API_LAB_RESOURCE_ID" --http-method GET \
+  --authorization-type AWS_IAM --region "$API_LAB_REGION"
+aws apigateway put-integration --rest-api-id "$API_LAB_REST_ID" \
+  --resource-id "$API_LAB_RESOURCE_ID" --http-method GET \
+  --type AWS_PROXY --integration-http-method POST \
+  --uri "arn:aws:apigateway:$API_LAB_REGION:lambda:path/2015-03-31/functions/$API_LAB_FUNCTION_ARN/invocations" \
+  --region "$API_LAB_REGION"
+aws lambda add-permission --function-name "$API_LAB_FUNCTION_ARN" \
+  --statement-id wiki-rest-lab --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:$API_LAB_REGION:$API_LAB_ACCOUNT:$API_LAB_REST_ID/*/GET/hello" \
+  --region "$API_LAB_REGION"
+aws apigateway create-deployment --rest-api-id "$API_LAB_REST_ID" \
+  --stage-name lab --region "$API_LAB_REGION"
 ```
 
-### HTTP API (Per-route throttling)
+After create-rest-api set API_LAB_REST_ID; identify the resource with path / as API_LAB_ROOT_ID, then save the created hello resource ID. Lambda integration's internal HTTP method is POST even though the client method is GET.
+
+Use a supported SigV4 client against https://REST_ID.execute-api.REGION.amazonaws.com/lab/hello. Expected: greeting with valid IAM permission; unsigned/excluded identity is denied. Remove the dedicated Lambda policy statement to produce an integration failure, then restore it. This distinguishes client auth from backend auth.
+
+Delete the dedicated REST API and its Lambda statement/logs after tests; deleting the API does not delete the reused function. Other partitions require their actual ARN/DNS formats, not a blind arn:aws copy.
+
+## Authorizers and invocation contracts
+
+For REST Cognito/Lambda and HTTP JWT/Lambda, configure actual issuer/audience/scopes/token source and caching according to the product. Use [[AWS/security/cognito|the complete PKCE/scope/tenant lesson]] for customer identity. An undefined validate(token) helper is not secure JWT validation.
+
+Lambda authorizer payload version and response format differ: REST IAM policy/principal response versus supported HTTP simple/policy forms. Cached authorizer results can span routes according to identity-source/cache key; review tenant/path authorization and revocation expectations. Verify signatures/issuer/expiry/client/scopes through a maintained validator; merely decoding a JWT is not access control.
+
+## Throttling, caching and import/export operations
+
+HTTP throttling belongs to supported stage route/default settings, not a nonexistent update-route --default-route-settings flag:
 
 ```bash
-# Update route to set throttling
-aws apigatewayv2 update-route \
-  --api-id $API_ID \
-  --route-id route-xxxxx \
-  --route-key "GET /orders" \
-  --default-route-settings '{
-    "ThrottlingBurstLimit": 1000,
-    "ThrottlingRateLimit": 500
-  }'
+aws apigatewayv2 update-stage --api-id "$API_LAB_ID" --stage-name '$default' \
+  --default-route-settings '{"ThrottlingBurstLimit":10,"ThrottlingRateLimit":5}' \
+  --region "$API_LAB_REGION"
 ```
 
-## Caching (REST API)
+REST usage plans require deployed stage association, key ID and apiKeyRequired; see [[AWS/serverless/api-gateway/usage-plan|the complete plan workflow]]. All throttles/quotas are best effort, not hard cost caps.
 
-```bash
-# Enable caching on method
-aws apigateway put-method-settings \
-  --rest-api-id $API_ID \
-  --resource-id $RESOURCE_ID \
-  --http-method GET \
-  --stage-name v1 \
-  --settings '{
-    "CachingEnabled": true,
-    "CacheTtlInSeconds": 300,
-    "CacheDataEncrypted": true,
-    "RequireAuthorizationForCacheControl": true,
-    "UnauthorizedCacheControlHeaderStrategy": "REPLACE_WITH_403"
-  }'
+REST cache allocation/method settings use the documented update-stage patch paths and add hourly capacity charges. Configure cache keys and authorization isolation; never enable a shared personalized-response cache simply because the client is authenticated. Test cache hit/miss, invalidation and per-stage isolation with synthetic data.
+
+For OpenAPI import, use import-rest-api with a protected supported file and fail-on-warnings. Export from the deployed stage using get-export; review backend integration/authorizer extensions, secrets and drift. Exported descriptions are not proof all referenced roles/backends exist.
+
+## WebSocket connection and callback walkthrough
+
+```text
+$connect auth → connection ID → permitted message routes → backend
+                         ↑                             ↓
+                   $disconnect/expiry ← Management API callback
 ```
 
-## OpenAPI Import
+Create a dedicated WebSocket API with route-selection expression $request.body.action. Add an actual integration for each intended route and set its target integrations/INTEGRATION_ID; merely creating the route does not attach Lambda. Grant the backend invocation policy and deploy a stage.
 
-```bash
-# Import from OpenAPI spec
-aws apigateway import-rest-api \
-  --body file://openapi-spec.json \
-  --fail-on-warnings
+Persist connection ownership with TTL/lifecycle handling; $disconnect is not a universal guaranteed cleanup signal. An authorized backend uses the **apigatewaymanagementapi** client at the deployed callback endpoint with execute-api:ManageConnections scope to send bytes to an active connection. Handle GoneException/stale connections, retry/backpressure and per-message metering.
 
-# Export to OpenAPI
-aws apigateway get-export \
-  --rest-api-id $API_ID \
-  --stage-name v1 \
-  --export-type swagger openapi-spec.json
-```
+Plan bounded reconnects before the two-hour limit, and application activity/heartbeat within the ten-minute idle window when a continuously connected client is needed. Reconnection creates a new connection ID and repeats `$connect` authentication; replace stale ownership records rather than treating the old ID as a permanent user identifier. In the exercise, reconnect one client, confirm its new ID, and attempt a callback to the old ID: handle `GoneException` without deleting the new connection record. Reauthorize tenant/resource operations and recover missed messages through an application-level cursor or durable store when required; WebSocket reconnection alone does not replay them.
 
-## WebSocket API
+Authentication at $connect does not authorize every later message/resource. Test a second identity trying another connection/tenant's action and enforce backend ownership. Close lab clients, remove connection records/routes/integrations/API and dedicated roles/logs after acceptance.
 
-```bash
-# Create WebSocket API
-aws apigatewayv2 create-api \
-  --name my-websocket \
-  --protocol-type WEBSOCKET \
-  --route-selection-expression '$request.body.action'
+## Operational troubleshooting
 
-# Create routes
-aws apigatewayv2 create-route \
-  --api-id $API_ID \
-  --route-key '$connect' \
-  --authorization-type NONE
+| Symptom              | Distinguish                                                      | Evidence                                                |
+| -------------------- | ---------------------------------------------------------------- | ------------------------------------------------------- |
+| 401/403              | Missing/invalid identity, scope/IAM/resource policy or usage key | Product-specific access logs and authorizer outcome     |
+| 429                  | Route/stage/account/downstream pressure                          | Throttle metrics, bounded retries and quota scope       |
+| 5xx                  | Integration URI/permission/backend exception/timeout             | Request ID, integration status/latency and backend logs |
+| Browser-only failure | CORS/preflight versus actual API denial                          | OPTIONS/headers plus authorized direct client           |
+| Wrong cached data    | Cache keys/stage/auth isolation                                  | Synthetic two-client hit/miss test                      |
 
-aws apigatewayv2 create-route \
-  --api-id $API_ID \
-  --route-key '$disconnect'
+Log request/status/integration metadata, not credentials or token bodies. Preserve error correlation and deployed revision. A successful test-invoke/control-plane create does not prove every end-user authorization path.
 
-aws apigatewayv2 create-route \
-  --api-id $API_ID \
-  --route-key 'sendMessage'
-
-# Integrate with Lambda
-aws apigatewayv2 create-integration \
-  --api-id $API_ID \
-  --integration-type AWS_PROXY \
-  --integration-uri arn:aws:lambda:us-east-1:123456789012:function:websocket-handler
-```
-
-## Pricing
-
-| API Type     | Cost                                                      |
-| ------------ | --------------------------------------------------------- |
-| REST API     | $3.50/million API calls                                   |
-| HTTP API     | $1.00/million (with JWT auth), $0.50/million (without)    |
-| WebSocket    | $1.00/million messages + $0.25/million connection-minutes |
-| REST caching | $0.020/hour per GB                                        |
-
-## More in this section
-
-- [[AWS/serverless/api-gateway/usage-plan|Usage Plan]] — In Amazon API Gateway, a Usage Plan is essentially a "service contract" you offer to your API consumers.
-
-## References
-
-- **Homepage:** https://aws.amazon.com/api-gateway/
-- **Documentation:** https://docs.aws.amazon.com/apigateway/
-- **Pricing:** https://aws.amazon.com/api-gateway/pricing/
-
-## Nuggets & Gotchas
-
-- **REST API and HTTP API are different products — you CANNOT convert a REST API to HTTP API:** They have different features, pricing, and architectures. If you start with REST and later want HTTP pricing, you must recreate the API.
-- **API Gateway's 29-second timeout applies to Lambda proxy integrations — for longer operations, use async invocation:** If your Lambda takes > 29 seconds, API Gateway returns a 504. Use SQS to queue long tasks, or use HTTP APIs with Lambda async invocation.
-- **HTTP API doesn't support API keys or usage plans — if you need client identification, use REST API or Cognito:** HTTP APIs are designed for service-to-service communication. They support JWT/Cognito but not API key authentication.
-- **API Gateway caching is per stage — if you have multiple environments (dev/staging/prod) sharing the same API, caching affects all:** Cache is keyed by route+query params, not by stage. If your API returns different data per user, enable authorization for cache control.
-- **WebSocket connections stay open — each connection costs money even when idle:** $0.25/million connection-minutes means 10K always-open connections cost $180/month. Implement connection timeout/disconnect logic to avoid idle connection costs.
+References: [REST Lambda integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html), [REST deployment](https://docs.aws.amazon.com/cli/latest/reference/apigateway/create-deployment.html), [HTTP stage settings](https://docs.aws.amazon.com/cli/latest/reference/apigatewayv2/update-stage.html), [OpenAPI](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-import-api.html), [WebSocket integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-integration-requests.html), [callbacks](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
 
 ## Across the wiki
 
@@ -283,3 +173,13 @@ aws apigatewayv2 create-integration \
 - [[Architecture/solution-architecture-concepts/performance/rate-limiting|Rate Limiting Algorithms, Distributed Architecture & HTTP 429]] — API design and gateways (Architecture)
 - [[Architecture/solution-architecture-concepts/software-engineering-concepts/api-error-codes|API Error Codes, HTTP Status Standards & RFC 7807 Problem Details]] — API design and gateways (Architecture)
 - [[Architecture/solution-architecture-concepts/protocols/README|Protocols]] — API design and gateways (Architecture)
+
+## References
+
+- [HTTP quick create](https://docs.aws.amazon.com/cli/latest/reference/apigatewayv2/create-api.html).
+- [HTTP IAM authorization](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-access-control-iam.html).
+- [Lambda permissions](https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html).
+- [REST caching](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-caching.html).
+- [REST timeout increase](https://aws.amazon.com/about-aws/whats-new/2024/06/amazon-api-gateway-integration-timeout-limit-29-seconds/).
+- [WebSocket authorization](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-lambda-auth.html).
+- [Pricing](https://aws.amazon.com/api-gateway/pricing/).

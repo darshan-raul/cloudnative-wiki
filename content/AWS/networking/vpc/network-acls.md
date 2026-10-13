@@ -1,123 +1,82 @@
 ---
 title: Network ACLs
-description: Network ACLs — stateless subnet-level firewalls in AWS VPC. Rule evaluation order, comparison to security groups, and when to use NACLs vs security groups.
+description: Trace stateless subnet filtering, return ports and ordered deny rules, then test and roll back a sandbox NACL change.
 tags:
-  - aws
-  - networking
-  - network-acls
-date: 2026-06-06
+  - cloud/aws/networking
+  - cloud/aws/security
+date: 2026-10-12
 ---
 
-# Network ACLs (NACLs)
+# Network ACLs
 
-A Network ACL is a stateless subnet-level firewall. Unlike security groups (stateful, instance-level), NACLs are evaluated by rule number in order, and you must explicitly allow both directions of traffic.
+A network ACL filters traffic at a subnet boundary. It is stateless: an allowed request does not automatically permit its response. Use [[AWS/networking/vpc/security-groups|security groups]] as the primary resource firewall; add NACL restrictions when subnet-level controls are required.
 
-## Key Differences from Security Groups
+## Rule evaluation
 
-| Property        | Security Group                       | Network ACL                                |
-| --------------- | ------------------------------------ | ------------------------------------------ |
-| Scope           | Instance-level (ENI)                 | Subnet-level                               |
-| Stateful        | Yes — return traffic auto-allowed    | No — must explicitly allow return          |
-| Default rules   | Allow all outbound, deny all inbound | Allow all inbound and outbound             |
-| Rule evaluation | All rules, most permissive wins      | By rule number (lowest first, first match) |
-| Explicit deny   | Supported                            | Supported                                  |
-| Use case        | Primary firewall                     | Subnet-level explicit deny                 |
+NACLs evaluate the lowest numbered matching rule first. Numbers such as 100 and 200 are ordinary configurable numbers; the immutable `*` rule denies unmatched traffic. Use distinct rule numbers within each direction. A deny must precede an overlapping allow to take effect.
 
-## Rule Structure
+| Property         | Security group                                     | Network ACL                                                |
+| ---------------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| Attachment       | Network interface                                  | Subnet                                                     |
+| Rule type        | Allow only                                         | Allow or deny                                              |
+| Response traffic | Connection tracking                                | Explicit return rules                                      |
+| Default          | New group has outbound allow-all; no inbound allow | Default VPC ACL allows traffic; a new custom ACL denies it |
+| Association      | Multiple groups can apply to an ENI                | One ACL per subnet; one ACL can serve multiple subnets     |
 
-```
-Rule #:100           ← evaluated in order (100, 200, 300...)
-Type:    ALL Traffic   ← or specific protocol (TCP, UDP, ICMP)
-Source:  10.0.0.0/16  ← CIDR or prefix list
-Action:  ALLOW/DENY
-```
+## Trace an HTTPS exchange
 
-AWS reserves rule numbers 100 (first rule) and 32766 (last rule, catch-all). You can use even numbers (100, 200, 300) to leave room for inserts.
+Suppose an external client uses TCP source port 53000 to contact a server on port 443:
 
-## Default NACL
+1. The request arrives at destination port 443: the subnet needs an inbound allow.
+2. The response leaves with source port 443 and **destination port 53000**: the subnet needs an outbound ephemeral-port allow.
+3. Allowing outbound destination port 443 alone does not allow that response.
 
-The default NACL for a VPC allows all traffic, inbound and outbound. When you create a custom NACL, it denies all traffic by default.
+For a sandbox web server accepting only HTTPS from `192.0.2.0/24`, the conceptual rules are:
 
-## Common NACL Configuration
+| Direction | Rule | Peer CIDR    | Protocol / destination ports | Action |
+| --------- | ---- | ------------ | ---------------------------- | ------ |
+| Inbound   | 100  | 192.0.2.0/24 | TCP 443                      | Allow  |
+| Outbound  | 100  | 192.0.2.0/24 | TCP 1024–65535               | Allow  |
+| Both      | \*   | All          | All                          | Deny   |
 
-```
-Inbound:
-┌──────┬────────────┬─────────────┬────────┬────────┐
-│ Rule │ Source     │ Protocol    │ Action │ Notes  │
-├──────┼────────────┼─────────────┼────────┼────────┤
-│ 100  │ 0.0.0.0/0  │ TCP 443 │ ALLOW  │ HTTPS  │
-│ 110  │ 0.0.0.0/0  │ TCP 80      │ ALLOW  │ HTTP   │
-│ 120  │ 10.0.0.0/8 │ TCP22      │ ALLOW  │ SSH    │
-│ 200  │ 0.0.0.0/0  │ ALL │ DENY   │ Block │
-└──────┴────────────┴─────────────┴────────┴────────┘
+The client chooses its ephemeral port. Narrow the return range only when you control the clients and have verified their range. IPv4 and IPv6 need separate rules. This example does not include DNS, outbound updates, load-balancer health checks or administrative access; design those paths separately.
 
-Outbound:
-┌──────┬────────────┬─────────────┬────────┬────────┐
-│ Rule │ Dest │ Protocol    │ Action │ Notes  │
-├──────┼────────────┼─────────────┼────────┼────────┤
-│ 100  │ 0.0.0.0/0  │ TCP 443     │ ALLOW  │ HTTPS  │
-│ 100  │ 0.0.0.0/0  │ TCP 80      │ ALLOW  │ HTTP   │
-│ 100  │ 0.0.0.0/0  │ UDP 53 │ ALLOW  │ DNS    │
-│ 200  │ 0.0.0.0/0  │ ALL         │ DENY   │ Block  │
-└──────┴────────────┴─────────────┴────────┴────────┘
-```
+## Sandbox exercise and rollback
 
-## When to Use NACLs vs Security Groups
+Prerequisites: a non-production VPC/subnet, an HTTPS server with working routing and security groups, a permitted client, and EC2 permissions to read/create/associate ACLs. NACLs themselves have no extra charge; compute, addresses, telemetry and other network services can.
 
-**Use NACLs for:**
+1. Record the original subnet ACL association and rules using `aws ec2 describe-network-acls`. Keep an independent administration path.
+2. Replace the documentation-only 192.0.2.0/24 example with the actual sandbox client's verified CIDR. Create a custom ACL, add both rules with that source/return destination, and review the final rules **before** associating it.
+3. Associate it only with the sandbox subnet. A successful HTTPS response is the checkpoint.
+4. Remove the outbound return rule. Expect a connection failure despite the inbound allow; use [[AWS/networking/networking-security/README|VPC Flow Logs]] and Reachability Analyzer to investigate.
+5. Restore the rule and repeat the successful request.
+6. Reassociate the original ACL, verify connectivity, then delete the now-unassociated lab ACL. Delete only lab resources.
 
-- Explicit deny of specific IP ranges at the subnet boundary (e.g., deny known malicious IPs)
-- Subnet-level policies that apply to all instances in the subnet regardless of their security group
-- Compliance requirements for explicit deny at network layer
-- Controlling traffic between tiers at the subnet level
+NACLs do not contain their own logging destination. Flow Logs provide traffic metadata, not packet payloads; do not infer log bytes or cost from total network bytes.
 
-**Use Security Groups for:**
+## Capacity and design
 
-- Primary firewall for most workloads
-- Instance-level access control
-- Stateful connection tracking (automatic return traffic)
+Consult current regional [VPC quotas](https://docs.aws.amazon.com/vpc/latest/userguide/amazon-vpc-limits.html) before adding rules. Increasing rule count can affect performance; do not treat copied defaults as every account's effective allocation. NACLs do not filter traffic between resources in the same subnet.
 
-**Best practice:** Use both. Security groups as the primary firewall, NACLs as the explicit deny layer for specific threats.
+## Design patterns and investigation
 
-## Common Pattern: Public Subnet NACL
+Keep a short table for every subnet class rather than copying a universal public-subnet ACL. A public ALB subnet, private application subnet and database subnet need different peer CIDRs and return ports. If an application client chooses an ephemeral source port, the **server subnet's outbound** ACL must allow that destination port; the **client subnet's inbound** ACL must allow the return response as well. Apply the same trace to health checks and database sessions.
 
-```
-Public Subnet (ALB-facing):
-Inbound:  Allow 0.0.0.0/0 → TCP 443 (HTTPS)
-          Allow 0.0.0.0/0 → TCP 80  (HTTP, redirect to HTTPS)
-Outbound: Allow 0.0.0.0/0 → TCP 443 (HTTPS outbound to internet)
-          Allow 0.0.0.0/0 → TCP 80  (HTTP outbound)
-```
+| Symptom                                | First check                                          |
+| -------------------------------------- | ---------------------------------------------------- |
+| SYN arrives, no response               | Outbound response rule and return route              |
+| Only some clients fail                 | Source CIDR and client ephemeral-port range          |
+| New custom ACL cuts off administration | Default deny and missing explicit admin/return rules |
+| IPv4 works, IPv6 fails                 | Separate IPv6 entries and routes                     |
 
-## Limits
+When investigating, compare the associated ACL ID for both endpoint subnets, then evaluate rules in number order for **each direction**. A broad low-numbered allow can make a later deny ineffective. Record the old association ID before changing anything so rollback does not depend on the new path.
 
-| Resource         | Limit                                            |
-| ---------------- | ------------------------------------------------ |
-| NACLs per VPC    | 200                                              |
-| Rules per NACL   | 20 inbound + 20 outbound                         |
-| Subnets per NACL | 1 (but one NACL can be attached to many subnets) |
+## References and next steps
 
-## References
-
-- **Homepage:** https://docs.aws.amazon.com/vpc/latest/userguide/network-acls.html
-- **Documentation:** https://docs.aws.amazon.com/vpc/latest/userguide/vpc-network-acls.html
-- **Pricing:** https://aws.amazon.com/vpc/pricing/ (NACLs are free)
-
-## Pricing Examples
-
-NACLs are free. The cost is in the EC2 or other resources using the subnets they protect.
-
-**Scenario 1:** An NACL blocking a known malicious IP range (e.g., a botnet C2 server) at the subnet level before it reaches any instance. This saves compute resources (CPU cycles on each instance) that would otherwise process blocked traffic. At10,000 blocked connections/day × 10 instances, that's significant CPU savings.
-
-**Scenario 2:** A compliance requirement to log all network traffic at the subnet boundary. NACLs with a rule to DENY and log all traffic not explicitly allowed provides a subnet-level audit trail. CloudWatch Logs ingestion for NACL deny events: ~$0.50/GB. For a busy subnet processing 100GB/day of traffic, logging only the denies costs ~$0.01/day = $0.30/month.
-
-## Nuggets & Gotchas
-
-- **NACLs are stateless — you must explicitly allow return traffic:** If you allow inbound TCP 80 from 0.0.0.0/0, you also need an outbound rule allowing TCP 80 response traffic. Without it, the established connection reply is blocked, and your instance can't respond to HTTP requests.
-- **NACL rule numbers are evaluated in order — first match wins:** Rule 100 is evaluated before rule 200. If you have an ALLOW rule at 100 and a DENY rule at 200 for the same traffic, the ALLOW wins. Use low numbers for allow rules and high numbers for deny rules.
-- **NACLs apply to all instances in a subnet:** If you attach an NACL to a subnet with 50 instances, the NACL rules apply to all 50 instances. This is powerful but dangerous — a misconfigured NACL affects every instance in the subnet.
-- **The default NACL allows everything:** The moment you create a custom NACL, it denies everything by default. If you attach it to a subnet without adding allow rules, all connectivity is cut off. Always configure the NACL before attaching it.
-- **NACLs don't filter traffic between instances in the same subnet:** NACLs are evaluated at the subnet boundary, not per-instance. Traffic between two instances in the same subnet doesn't cross the subnet boundary, so NACLs don't apply. Use security groups for instance-to-instance filtering.
+- [Custom NACLs, return traffic and client port ranges](https://docs.aws.amazon.com/vpc/latest/userguide/custom-network-acl.html).
+- [Rule evaluation](https://docs.aws.amazon.com/vpc/latest/userguide/nacl-rules.html).
+- [Security group rules](https://docs.aws.amazon.com/vpc/latest/userguide/security-group-rules.html).
+- Next: [[AWS/networking/vpc/README|VPC routing]], [[AWS/networking/load-balancing/README|load-balancer paths]] and [[AWS/networking/networking-security/README|network inspection]].
 
 ## Across the wiki
 

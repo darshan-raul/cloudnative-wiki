@@ -1,239 +1,142 @@
 ---
-title: AWS App Runner
-description: AWS App Runner — managed container web apps and APIs. No ECS/EKS knowledge required. Connect to source code or container image, auto-scaling, SSL, and built-in observability.
+title: "AWS App Runner"
+description: "Deploy a small source/image web service with distinct build/application roles, private-access choices and active/provisioned cost accounting."
 tags:
-  - aws
-  - serverless
-  - apprunner
-  - containers
-date: 2026-06-06
+  - cloud/aws/serverless
+date: 2026-10-12
 ---
 
 # AWS App Runner
 
-App Runner runs web apps and APIs as containers without requiring ECS/EKS clusters. Provide a container image or source code repository, and App Runner handles deployment, scaling, SSL termination, and load balancing.
+App Runner **closed to new customers on March 31, 2026**. Existing customers can continue using it under the owning availability notice. New learners should use the supported ECS workflow and evaluate ECS Express Mode. Existing-customer App Runner deployments support source repositories or container images. A user-supplied Dockerfile is not universally required. Compare [[AWS/compute/ecs/README|ECS/Fargate]] when you need more deployment/network/runtime control.
 
-## When to Use App Runner
+## Deployment and identity
 
+Source builds require supported runtime/build/start configuration and an approved repository connection. Image deployments use a compatible image/port and access configuration. The ECR image access role trusts build.apprunner.amazonaws.com; the application instance role authorizes application AWS calls. Do not combine these into a blanket administrator role.
+
+Reference supported Secrets Manager/Parameter Store values through the documented environment-secret configuration; do not embed API keys in source or plain environment examples. Review access role, instance role and KMS/resource permissions.
+
+## Inbound versus outbound access
+
+A VPC connector provides outbound access to private dependencies. Private incoming access uses a VPC ingress connection and endpoint separately. A public default endpoint is not an unavoidable product constraint.
+
+HTTP requests have a 120-second timeout. Offload longer work to a queue/worker and return an explicit job identifier/status. Health probes need a reachable supported path/protocol; a healthy instance does not prove a successful database transaction.
+
+## Sandbox deployment exercise
+
+Prerequisites: an account already eligible for App Runner (new-customer access is closed), a sandbox repository/image serving a nonsensitive greeting and /health, scoped roles/connection, a budget and a selected public or private access design.
+
+1. Test the application locally and record the source revision/image digest.
+2. Create a service using the owning source or image console workflow. Set build/start command or image port, CPU/memory and dedicated IAM roles.
+3. Wait for the operation to succeed; inspect deployment logs and the actual endpoint.
+4. Invoke the greeting and health paths from the intended client. For private ingress, test from both allowed and excluded network paths.
+5. Deploy a sandbox revision with a failing health path; inspect the failure and restore the known-good revision.
+6. Enable supported X-Ray/ADOT tracing and correlate one request; no universal auto-instrumentation claim is implied.
+
+Check CloudWatch logs for the correct revision/error, and verify the application role cannot access an unrelated AWS resource.
+
+## Cost and cleanup
+
+Provisioned idle instances bill memory; active instances bill the applicable CPU/memory model without double-counting provisioned memory. Source build time and automated deployment can add charges. Price actual active/provisioned instance-hours and instance count; two average instances cannot keep a one-instance subtotal.
+
+Remove dedicated VPC ingress connections before deleting the service: DeleteService cannot proceed while those connections remain active. Pause/delete the eligible lab service according to the intended lifecycle, then remove dedicated outbound connectors, logs and temporary image/build artifacts only when no shared service uses them; verify remaining charges/resources. Pausing does not prove all surrounding resources were removed.
+
+## Existing-customer service selection and architecture
+
+| Requirement              | App Runner (eligible existing customers)    | Supported alternative                                                       |
+| ------------------------ | ------------------------------------------- | --------------------------------------------------------------------------- |
+| Source build/start       | Supported connected source/runtime workflow | Build image then ECS/Express Mode or another supported platform             |
+| Container web endpoint   | Supported image/port/health/scaling         | ECS/Fargate with selected ingress/deployment controls                       |
+| Long worker job          | HTTP request timeout still applies          | Queue/Batch/ECS worker with durable results                                 |
+| Hardware/OS control      | Not a generic VM/device interface           | Supported EC2/container capacity; Fargate does not universally provide GPUs |
+| Advanced routing/network | Product-specific ingress/egress boundaries  | Requirements-driven ECS/EKS/VPC design                                      |
+| Event handler            | Not Lambda's invocation/event mapping model | Lambda or explicit worker integration                                       |
+
+```text
+source connection → supported build → service deployment
+private ECR image → access role ─────→ service deployment
+                                        ↓
+client → public/private ingress → healthy instance → private dependency
+                                        │              ↑
+                              application role     VPC egress connector
 ```
-Need to run a web app/container?
-  │
-  ├── Simple web app (no K8s knowledge needed)
-  │   └── App Runner ✓ (simplest option)
-  │
-  ├── Microservices with service mesh
-  │   └── ECS Fargate or EKS
-  │
-  ├── Long-running background tasks
-  │   └── ECS Fargate (not App Runner)
-  │
-  └── GPU workloads
-      └── EC2 or ECS Fargate (not App Runner)
-```
 
-## App Runner vs Others
+ECR access role and application instance role are distinct. A VPC egress connector neither makes incoming traffic private nor gives application credentials. ECS supports service autoscaling; Lambda supports images, so the previous categorical comparison must not be reused.
 
-| Feature           | App Runner        | ECS Fargate       | Lambda                  |
-| ----------------- | ----------------- | ----------------- | ----------------------- |
-| Container support | Yes               | Yes               | No (zip/Image)          |
-| Serverless        | Yes (pay-per-use) | Yes (pay-per-use) | Yes (pay-per-request)   |
-| Autoscaling       | Built-in          | Manual            | Automatic               |
-| HTTPS             | Automatic         | Manual (ALB)      | API Gateway             |
-| Long-running      | Yes               | Yes               | Max 15 min              |
-| Custom networking | VPC               | VPC               | VPC                     |
-| Cost (small app)  | ~$15/month        | ~$25/month        | ~$0/month (low traffic) |
+## Complete image-service request
 
-## Creating from Container Image
+Only for an already eligible sandbox account. Prerequisites: an immutable reviewed x86-compatible image/tag as currently supported, port 8080 with a nonsensitive /health/greeting, scoped creator and private-ECR access role trusting build.apprunner.amazonaws.com. Replace placeholders in app-runner.json:
 
-```bash
-# Create App Runner service
-aws apprunner create-service \
-  --service-name my-app \
-  --source-configuration '{
+```json
+{
+  "ServiceName": "wiki-app-runner-lab",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": { "AccessRoleArn": "ECR_ACCESS_ROLE_ARN" },
     "ImageRepository": {
-      "ImageIdentifier": "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-image:latest",
+      "ImageIdentifier": "ACCOUNT.dkr.ecr.REGION.amazonaws.com/wiki-app:lab-v1",
       "ImageRepositoryType": "ECR",
       "ImageConfiguration": {
         "Port": "8080",
-        "RuntimeEnvironmentVars": [
-          {"Key": "ENV", "Value": "production"}
-        ]
+        "RuntimeEnvironmentVariables": { "ENV": "lab" }
       }
     },
-    "AutoDeploymentsEnabled": true
-  }' \
-  --instance-configuration '{
-    "Cpu": "1 vCPU",
-    "Memory": "2 GB"
-  }' \
-  --health-check-configuration '{
-    "Protocol": "TCP",
+    "AutoDeploymentsEnabled": false
+  },
+  "InstanceConfiguration": { "Cpu": "1024", "Memory": "2048" },
+  "HealthCheckConfiguration": {
+    "Protocol": "HTTP",
     "Path": "/health",
     "Interval": 10,
     "Timeout": 5,
-    "HealthyThreshold": 3,
+    "HealthyThreshold": 2,
     "UnhealthyThreshold": 3
-  }'
+  }
+}
 ```
 
-### ECR Image Requirements
-
 ```bash
-# Build and push image
-aws ecr create-repository --repository-name my-app
-
-docker build -t my-app .
-docker tag my-app 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest
-aws ecr get-login-password | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
-docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app:latest
+aws apprunner create-service --cli-input-json file://app-runner.json
+aws apprunner list-operations --service-arn SERVICE_ARN
+aws apprunner describe-service --service-arn SERVICE_ARN
 ```
 
-## Creating from Source Code
+Record the service/operation ARNs and poll with timeout through success/failure. Test actual endpoint/health/deployed marker. A TCP check ignores an HTTP path; choose the intended protocol. Environment variables are maps, not the old Key/Value array, and role authentication is required for the private image.
+
+## Source-code and secret configuration
+
+Existing source deployments need approved ConnectionArn, RepositoryUrl/SourceCodeVersion and supported CodeConfiguration runtime/build/start/port. Verify connection availability and current runtime versions; select the actual supported runtime rather than an obsolete enum.
+
+RuntimeEnvironmentSecrets is a supported key→secret/parameter ARN map in the appropriate source code/image configuration. The instance role needs scoped secret/parameter/KMS access. Setting EncryptionConfiguration alone does not inject a runtime secret, and service encryption settings cannot universally be modified after creation.
+
+Do not place DATABASE_URL passwords/API keys in examples or build logs. Validate rotation/update behavior and application caching; changing a secret value does not automatically prove the running application consumed the new version.
+
+## Scaling, domain and network operations
+
+Create a named supported scaling configuration with min/max size and concurrency, not desired-size:
 
 ```bash
-# Create service from source (GitHub)
-aws apprunner create-service \
-  --service-name my-app \
-  --source-configuration '{
-    "AutoDeploymentsEnabled": true,
-    "AuthenticationConfiguration": {
-      "ConnectionArn": "arn:aws:apprunner:us-east-1:123456789012:connection/my-github/xxxxx"
-    },
-    "CodeRepository": {
-      "CodeConfiguration": {
-        "ConfigurationSource": "API",
-        "CodeConfigurationValues": {
-          "Runtime": "PYTHON_3",
-          "BuildCommand": "pip install -r requirements.txt",
-          "StartCommand": "python app.py",
-          "Port": "8080"
-        }
-      },
-      "RepositoryUrl": "https://github.com/my-org/my-app",
-      "SourceCodeVersion": {"Type": "BRANCH", "Value": "main"}
-    }
-  }'
-```
-
-## Autoscaling
-
-```bash
-# Configure auto-scaling
-aws apprunner update-service \
-  --service-arn arn:aws:apprunner:us-east-1:123456789012:service/my-app/xxxxx \
-  --auto-scaling-configuration-arn arn:aws:apprunner:us-east-1::auto-scaling-configuration/HighAvailability/arn
-
-# Or create custom config
 aws apprunner create-auto-scaling-configuration \
-  --max-size 10 \
-  --min-size 2 \
-  --desired-size 2
+  --auto-scaling-configuration-name wiki-lab-scale \
+  --min-size 1 --max-size 2 --max-concurrency 20
+aws apprunner associate-custom-domain --service-arn SERVICE_ARN \
+  --domain-name LAB_DOMAIN
 ```
 
-## Custom Domain
+Attach the returned scaling-configuration ARN through update-service and inspect rollout. MaxConcurrency is a service scaling signal, not a global transactional limit. Restore prior configuration after the test.
 
-```bash
-# Add custom domain
-aws apprunner associate-custom-domain \
-  --service-arn arn:aws:apprunner:us-east-1:123456789012:service/my-app/xxxxx \
-  --domain-name myapp.example.com
+Follow every returned domain-validation/target DNS record and verify TLS/hostname/renewal. A custom-domain association is not a finished DNS deployment.
 
-# DNS: CNAME to the App Runner domain
-# App Runner handles SSL automatically
-```
+VPC network configuration nests EgressType/VpcConnectorArn under EgressConfiguration. Private ingress requires its separate endpoint/ingress association and IsPubliclyAccessible setting. Confirm DNS/routes/SGs, non-VPC service dependencies and NAT/endpoints where needed; egress through a private subnet has its own reachability and cost.
 
-## Environment Variables
+## Monitoring, billing and migration handoff
 
-```bash
-# Add environment variables
-aws apprunner update-service \
-  --service-arn arn:aws:apprunner:us-east-1:123456789012:service/my-app/xxxxx \
-  --source-configuration '{
-    "EnvironmentVariables": {
-      "DATABASE_URL": "postgres://...",
-      "API_KEY": "secret"
-    }
-  }'
+Inspect application versus service/deployment log groups and their actual service ID/paths; /aws/apprunner/my-app alone is not a universal group name. Correlate ListOperations/DescribeService state, deployed revision, health and request/error/latency/active capacity. ADOT/X-Ray instrumentation is configured and tested, not a blanket automatic trace promise.
 
-# Secrets (from Parameter Store or Secrets Manager)
-aws apprunner update-service \
-  --service-arn arn:aws:apprunner:us-east-1:123456789012:service/my-app/xxxxx \
-  --encryption-configuration '{
-    "KmsKey": "arn:aws:kms:us-east-1:123456789012:key/xxxxx"
-  }'
-```
+Price memory-hours for retained provisioned/active capacity and the actual active CPU model without double-counting shared dimensions. If two instances each retain M GB for H hours, memory quantity is 2×M×H; active CPU adds its own instance-hours. Source builds/deployments, networking/logs and dependencies add cost. There is no universal fifteen-dollar app.
 
-## VPC Support
+For new customers follow ECS/Express Mode; for existing migration inventory secrets/roles/domains/network/health/scaling and build images if source-based. DNS traffic shifting has cached-client/rollback effects. Remove dedicated ingress connections before deleting App Runner, then unused connectors/scaling config/domain/log/image/role artifacts according to dependencies. Preserve the new target and rollback during acceptance.
 
-```bash
-# Run in VPC (access RDS, ElastiCache)
-aws apprunner update-service \
-  --service-arn arn:aws:apprunner:us-east-1:123456789012:service/my-app/xxxxx \
-  --network-configuration '{
-    "EgressType": "VPC",
-    "VpcConnectorArn": "arn:aws:apprunner:us-east-1:123456789012:vpc-connector/my-connector/xxxxx"
-  }'
-
-# Create VPC connector
-aws apprunner create-vpc-connector \
-  --vpc-connector-name my-connector \
-  --subnets subnet-xxxxx subnet-yyyyy subnet-zzzzz \
-  --security-groups sg-xxxxx
-```
-
-## Observability
-
-```bash
-# View logs (CloudWatch)
-aws logs tail /aws/apprunner/my-app --follow
-
-# Get service events
-aws apprunner describe-service --service-arn arn:aws:apprunner:...
-```
-
-## Pricing
-
-| Resource           | Cost               |
-| ------------------ | ------------------ |
-| vCPU (per hour)    | $0.05/vCPU-hour    |
-| Memory (per hour)  | $0.006/GB-hour     |
-| Build (optional)   | $0.005/vCPU-minute |
-| Active connections | Free               |
-
-**Example:** 2 vCPU, 4GB instance, 1 instance running 24/7:
-
-- vCPU: 2 × $0.05 × 24 × 30 = $72/month
-- Memory: 4 × $0.006 × 24 × 30 = $17.28/month
-- Total: ~$89/month
-
-With auto-scaling (2 instances average, burst to 5):
-
-- Average: ~$89/month
-- With burst: $89 × 2.5 = ~$220/month
-
-## Limits
-
-| Resource             | Limit      |
-| -------------------- | ---------- |
-| Concurrent instances | 25         |
-| vCPU per instance    | 1-4        |
-| Memory per instance  | 2-8 GB     |
-| Request timeout      | 15 seconds |
-| Deployment timeout   | 30 minutes |
-
-## References
-
-- **Homepage:** https://aws.amazon.com/apprunner/
-- **Documentation:** https://docs.aws.amazon.com/apprunner/
-- **Pricing:** https://aws.amazon.com/apprunner/pricing/
-
-## Nuggets & Gotchas
-
-- **App Runner has a 15-second request timeout — long-running requests will fail:** If your requests take > 15 seconds, App Runner returns a 503. Use async patterns (queue with SQS) or ECS Fargate for long-running tasks.
-- **App Runner auto-scales based on concurrent requests — if your app is single-threaded, set min instances to 1:** App Runner scales based on concurrency. A single-threaded Node.js app with 50 concurrent requests will queue them, not scale out. Set `min-size` to match your expected concurrency.
-- **App Runner's VPC connector only supports egress — your app CAN reach VPC resources, but inbound traffic still goes through App Runner's public endpoint:** You can't use App Runner as a private-only service. All traffic enters via App Runner's public URL, then can be routed to VPC.
-- **App Runner builds from source code in App Runner's build infrastructure — not your local machine:** If you need custom build environments (multi-stage Docker, specific toolchains), use a container image from ECR instead of source code.
-- **App Runner's built-in observability is minimal — you get CloudWatch logs but no distributed tracing:** For production debugging, add X-Ray SDK to your app. App Runner doesn't auto-instrument like Lambda@Edge would.
+References: [CreateService contract](https://docs.aws.amazon.com/cli/latest/reference/apprunner/create-service.html), [source configuration](https://docs.aws.amazon.com/apprunner/latest/dg/manage-configure.html), [scaling](https://docs.aws.amazon.com/apprunner/latest/dg/manage-autoscaling.html), [custom domains](https://docs.aws.amazon.com/apprunner/latest/dg/manage-custom-domains.html), [environment secrets](https://docs.aws.amazon.com/apprunner/latest/dg/env-variable.html), [networking](https://docs.aws.amazon.com/apprunner/latest/dg/network.html).
 
 ## Across the wiki
 
@@ -241,3 +144,18 @@ With auto-scaling (2 instances average, burst to 5):
 - [[GCP/compute/cloud-run|GCP Cloud Run]] — serverless containers (GCP)
 - [[Kubernetes/eks/compute/fargate/README|AWS Fargate on EKS]] — serverless containers (Kubernetes)
 - [[Azure/compute/app-service/README|Azure App Service Architecture, Deployment Slots, and VNet Integration]] — serverless containers (Azure)
+
+## References
+
+- [Source deployment](https://docs.aws.amazon.com/apprunner/latest/dg/service-source-code.html).
+- [Role distinctions](https://docs.aws.amazon.com/apprunner/latest/dg/security_iam_service-with-iam.html).
+- [Private incoming access](https://docs.aws.amazon.com/apprunner/latest/dg/network-pl.html).
+- [Request processing](https://docs.aws.amazon.com/apprunner/latest/dg/develop.html).
+- [Tracing](https://docs.aws.amazon.com/apprunner/latest/dg/monitor-xray.html).
+- [Current pricing](https://aws.amazon.com/apprunner/pricing/).
+
+## Availability and lifecycle sources
+
+- [Owning availability notice and ECS Express Mode guidance](https://docs.aws.amazon.com/apprunner/latest/dg/apprunner-availability-change.html).
+- [CreateService eligibility notice](https://docs.aws.amazon.com/apprunner/latest/api/API_CreateService.html).
+- [DeleteService and ingress prerequisites](https://docs.aws.amazon.com/apprunner/latest/api/API_DeleteService.html).

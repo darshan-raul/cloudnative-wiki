@@ -1,186 +1,75 @@
 ---
 title: Organizations Cost Strategy
-description: AWS Organizations cost strategy — consolidated billing, volume discounts, RI/SP sharing, SCPs for cost governance, and multi-payer billing
+description: Accurate billing models, decision workflows and scoped examples for organizations cost strategy.
 tags:
-  - aws
-  - cost-management
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # Organizations Cost Strategy
 
-AWS Organizations is primarily an account governance tool, but it has significant cost implications. The key features that affect billing are consolidated billing, volume discounts, and cost allocation via SCPs.
+Price exercises in this note use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, unless explicitly identified as a dated published fee. They are assumptions, not current tariffs; exclusions remain material.
 
-## Consolidated Billing
+AWS Organizations consolidated billing combines member-account charges. Accounts and OUs establish governance boundaries; they are not automatically independent payer accounts.
 
-When you enable consolidated billing in an Organization, all member accounts send their bills to the payer account. The payer account sees a single monthly bill, and member accounts see their own spend transparently.
+## Sharing and accountability
 
-**Benefits:**
+Discount benefits from member-account RI and Savings Plans purchases can be shared when the management account's billing preferences allow it. The purchasing account receives applicable benefit priority under the service rules. Zonal EC2 capacity reservation is not shared merely because the discount is.
 
-1. **Single invoice** — one bill to pay, one payment method
-2. **Volume discounts** — certain tier discounts apply across the organization based on total spend
-3. **RI/SP sharing** — Reserved Instances and Savings Plans purchased in the payer account can be shared with member accounts
-4. **Free tier sharing** — each account gets its own free tier, but unused free tier from one account doesn't transfer
+Usage aggregation and volume discounts depend on the product's actual pricing rules. Do not assume universal 3%, 7% or 10% organization spend discounts, or a separate complete Free Tier allowance for every member. Account creation date, plan and organization eligibility affect Free Tier benefits.
 
-**Important:** Being in an Organization doesn't automatically mean you share discounts. Only the payer account can purchase RIs/SPs that are shared. Member accounts can purchase their own, but those don't share.
+Separate:
 
-## Volume Discounts
+- **Consolidated billing:** the actual organization bill.
+- **Cost allocation/chargeback:** internal ownership rules using accounts, tags and Cost Categories.
+- **Billing Conductor:** configurable pro-forma billing groups and rates, not a change to AWS's actual charges.
+- **Billing transfer:** supported transfer of an organization's consolidated bill to an external account, not arbitrary per-OU payer designation.
 
-AWS has volume-based pricing tiers. With consolidated billing, the organization's total spend counts toward the tier:
+## Account design
 
-| Spend Level    | Additional Discount     |
-| -------------- | ----------------------- |
-| $0-$150K/month | 0% (baseline)           |
-| $150K-$500K    | 3% off select services  |
-| $500K-$1M      | 7% off select services  |
-| $1M+           | 10% off select services |
+Put workloads in member accounts and keep the management account focused on organization administration. Use environment or business-unit boundaries for ownership and blast-radius control. Centralize reporting while giving owners the appropriate cost views. Do not grant broad organization administration merely to view team spending.
 
-These discounts apply to select services (EC2, S3, etc.) and are applied to the payer account's bill. The discount tiers are not published for all services — talk to your AWS TAM for specific discount schedules.
+Tag policies improve standardization but do not create all missing tags. SCPs restrict permissions; they cannot stop resources at an arbitrary dollar threshold. Budgets actions are permissioned responses to delayed billing thresholds, not a guaranteed spending cap.
 
-## RI/SP Sharing Across Accounts
+## Scenario
 
-When you buy RIs or Savings Plans in the payer account with the "Share RI/SP" option enabled:
+A team wants each of ten OUs to pay a separate AWS invoice while retaining one organization. Do not invent ten OU payer accounts. First determine whether internal chargeback satisfies the requirement; use linked-account costs, Cost Categories or Billing Conductor. If legal invoice responsibility must move, assess the documented billing-transfer/account structure with finance.
 
-- RIs/SPs are shared with all member accounts in the Organization
-- Each account can use the shared RI/SP capacity
-- Usage is tracked per account via the RI/SP utilization report
+For commitment purchases, model the organization's hourly baseline after planned shutdowns and migrations. A development account's idle nighttime commitment may be utilized elsewhere only if compatible usage and sharing preferences permit it.
 
-**How it works:** You buy 100 m6i.large RIs in the payer account. A member account in the Organization spins up 50 m6i.large instances — those 50 instances are covered by the shared RI pool, even though the member account didn't buy them.
+## OU structure and cost responsibilities
 
-**Benefit:** Individual member accounts don't need to buy their own RIs for baseline capacity — the payer account's RI pool covers shared baseline usage.
+A possible structure is Security (audit/log accounts), Infrastructure (network/platform), Workloads (production/non-production) and Sandbox. This is a governance example, not a mandatory organization tree. Separate legal/ownership boundaries from discount optimization.
 
-**Limitation:** Shared RIs cover the capacity, but member accounts still pay their own compute rates (which are the discounted RI rates, not On-Demand rates).
+| Responsibility | Central finance/platform                         | Workload owner                          |
+| -------------- | ------------------------------------------------ | --------------------------------------- |
+| Billing        | Reconcile consolidated invoice and payment model | Explain team usage                      |
+| Allocation     | Publish shared-cost rules and dimensions         | Maintain account/resource ownership     |
+| Commitments    | Approve portfolio and sharing preferences        | Supply reliable post-rightsizing demand |
+| Alerts         | Organization-wide thresholds and escalation      | Team budgets and anomaly response       |
+| Optimization   | Shared network/platform efficiency               | Application SLO and change validation   |
 
-## SCPs for Cost Governance
+Do not create additional management accounts inside OUs as fictional sub-payers. A billing group/pro-forma invoice is different from a legal AWS invoice.
 
-Service Control Policies (SCPs) can enforce cost-related governance at the Organization or OU level. They restrict what member accounts can do, regardless of IAM permissions.
+## Sharing scenario
 
-**Cost-related SCP examples:**
+Assume two accounts in one organization, compatible eligible usage and sharing enabled. Account A bought \$10/hour of benefit but consumes \$6/hour at applicable discounted rates; account B has sufficient matching eligible usage to use the remaining \$4. This can improve organizational utilization. If sharing is disabled, or B's usage is ineligible, the unused part remains unused. Rate/application priority must be evaluated under the actual purchased product.
 
-```json
-// Deny creating resources in expensive regions
-{
-  "Effect": "Deny",
-  "Action": "*",
-  "Resource": "*",
-  "Condition": {
-    "StringLike": {
-      "aws:RequestedRegion": ["af-south-1", "eu-south-1"]
-    }
-  }
-}
+The scenario does not promise that every Region, family or database charge can consume every plan. Nor does it grant B A's zonal EC2 capacity.
 
-// Deny EC2 instance types larger than a certain size (prevent expensive instance creation)
-{
-  "Effect": "Deny",
-  "Action": "ec2:RunInstances",
-  "Resource": "arn:aws:ec2:*:*:instance/*",
-  "Condition": {
-    "NumericGreaterThan": {
-      "ec2:InstanceType": "m6i.4xlarge"
-    }
-  }
-}
+## Chargeback worksheet
 
-// Deny creation of resources without required cost tags
-{
-  "Effect": "Deny",
-  "Action": "*",
-  "Resource": "*",
-  "Condition": {
-    "Null": {
-      "aws:RequestTag/Environment": true
-    }
-  }
-}
+For a hypothetical us-east-1 reporting exercise dated 2026-10-12, suppose A has \$600 direct cost and B \$900, with \$300 shared networking allocated by an agreed 2:1 ratio. Showback is A=\$800, B=\$1,000. If \$60 of credits belongs to A, document whether the report presents gross or net costs rather than silently spreading it.
 
-// Deny certain services (e.g., no Redshift, no ElastiCache in dev accounts)
-{
-  "Effect": "Deny",
-  "Action": "redshift:*",
-  "Resource": "*"
-}
-```
+An OU is not automatically a billing dimension in every export. Maintain a dated account-to-business-unit mapping so an account move does not silently rewrite historical reports. Price tiers depend on the underlying service and qualifying aggregated usage, not one blanket organizational discount.
 
-## Tag Policies for Cost Allocation
+## Governance drill
 
-AWS Organizations Tag Policies let you enforce consistent tagging across all accounts. A tag policy applied to an OU requires all resources in that OU to have specific tags with specific allowed values.
-
-**Example tag policy:**
-
-```json
-{
-  "tags": {
-    "Environment": {
-      "tag_key": {
-        "是否符合": "enforce",
-        "values": ["prod", "staging", "dev"]
-      }
-    },
-    "Team": {
-      "tag_key": {
-        "是否符合": "enforce"
-      }
-    }
-  }
-}
-```
-
-This ensures all resources in the Organization have `Environment` set to one of the allowed values and `Team` is always present. Cost allocation by tag then works across the entire Organization without gaps.
-
-## Multi-Payer Billing
-
-For large enterprises, Organizations supports multiple payer accounts — each paying for different parts of the organization. This is useful when:
-
-- Different business units have separate budgets
-- Regulatory requirements mandate separate billing
-- Different entities within a conglomerate have independent finance relationships
-
-**Implementation:** A management account can designate member accounts as "payer accounts" for specific services or OUs. This is an advanced feature — work with AWS to implement correctly.
-
-## OU Structure for Cost Management
-
-A common Organization structure for cost management:
-
-```
-Root
-├── Core (payer account, shared services)
-├── Platform (dev, staging, prod)
-│   ├── Dev (low cost controls, SCPs to limit expensive resources)
-│   ├── Staging (medium cost controls)
-│   └── Prod (fewer restrictions, more budget visibility)
-├── Data (large data workloads, separate budget tracking)
-├── Security (security tooling, separate budget)
-└── Sandboxes (sandbox accounts for experimentation, tight cost controls)
-```
-
-Each OU can have its own SCPs limiting what can be created and how. Sandbox accounts might be denied from creating anything beyond $100/month of resources. Production accounts might have fewer restrictions but mandatory budget alerts at lower thresholds.
-
-## Cost Allocation with Organizations
-
-1. **Enable cost allocation tags** in the payer account
-2. **Apply tags to all resources** via SCPs and CI/CD pipelines
-3. **Create member-specific budgets** in each linked account
-4. **Use Cost Explorer** with Organization view for cross-account visibility
-
-The payer account has full visibility into all member account spend. Member accounts see only their own spend unless granted read access to the management account.
+Trace one shared discount and one shared network charge from purchase/usage account to internal owner. Compare actual invoice totals with Billing Conductor pro-forma totals and explain differences. Review budget access separately from organization administration. Record Free Tier cohort/organization restrictions before claiming member benefits.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/organizations/
-- **Documentation:** https://docs.aws.amazon.com/organizations/latest/userguide/
-- **Pricing:** https://aws.amazon.com/organizations/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A 25-account AWS Organization with consolidated billing. The management account buys 3-year All Upfront Compute SPs covering $200/hour of spend. Each linked account automatically gets the SP discount applied — no manual sharing needed. Monthly org spend on compute is $220K, SPs cover $146K (73%), On-Demand covers the rest. Total annual compute bill: ~$2.1M vs $3.2M without SPs.
-
-**Scenario 2:** An enterprise with separate business units (BU) for finance, engineering, and marketing. They structure OUs by BU and set SCPs restricting sandbox accounts to $500/month max via budget SCPs. Each BU has its own payer relationship for chargeback. Linked accounts exceeding their OU budget are blocked from creating resources via SCP evaluation.
-
-## Nuggets & Gotchas
-
-- **Consolidated billing doesn't automatically share RIs/SPs across accounts:** You must enable the "RI/SP sharing" setting in the Organizations console. Without it, each account's RIs only cover that account's usage.
-- **SCP evaluation happens before resource creation:** An SCP blocking certain instance types or regions is enforced at the API level — the resource never gets created. This is more effective than auditing after the fact.
-- **Organizations pricing discounts are tiered:** AWS provides volume discounts based on total monthly spend across the org. The more you spend, the higher the tier — but these tiers are not always visible in Cost Explorer.
-- **Linked accounts inherit the payer account's tax settings:** If your payer account is set up for a specific tax regime, linked accounts inherit that. This can cause issues with VAT reporting for EU-based orgs with US payers.
-- **Organizational units can be nested up to 5 levels deep:** This seems like a lot but large enterprises can hit this limit with fine-grained OU structures. Plan your OU hierarchy with growth in mind.
+- [Sharing preferences](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ri-turn-off.html)
+- [Billing and Cost Management capabilities](https://docs.aws.amazon.com/cost-management/latest/userguide/what-is-costmanagement.html)
+- [Billing Conductor overview](https://docs.aws.amazon.com/billingconductor/latest/userguide/what-is-billingconductor.html)
+- [Free Tier eligibility](https://aws.amazon.com/free/free-tier-faqs/)

@@ -2,143 +2,93 @@
 title: AWS Detective
 description: AWS Detective — graph-based security investigation. Visualizes GuardDuty, CloudTrail, and VPC Flow data to help you investigate security findings across accounts.
 tags:
-  - aws
-  - security
-  - detective
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS Detective
 
-Detective automatically ingests and analyzes data from GuardDuty, CloudTrail, and VPC Flow Logs, then builds a graph database to help you investigate security findings. Instead of manually searching logs, you can visually explore relationships between resources, IP addresses, and actors.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## How It Works
+Detective supports security investigation with a behavior graph derived from documented source packages. It provides context, not universal operating-system process or CPU telemetry.
 
+## Evidence and boundaries
+
+Supported source packages determine which activity and findings are visible. Foundation inputs are ingested directly by the service, not from your configured CloudTrail S3 trail or flow-log destination. Do not invent synthetic finding names or infer process execution from an API/network record.
+
+A behavior graph has an administrator and enrolled member accounts, with Organizations enrollment rules. The current member-account limit is 1,200; verify the owning quota for your deployment. Source data is retained up to one year; export/report preservation requirements need their own workflow.
+
+## Investigation lab
+
+Use a sandbox graph or an existing graph you are authorized to read. Enabling ingestion is billable; a trial has Region/source-package scope.
+
+1. Start with a [[AWS/security/guardduty/README|GuardDuty]] sample/existing finding and record its principal/resource and time window.
+2. In Detective, pivot to the corresponding entity, narrow the window and inspect documented API/network relationships. Separate observed evidence from hypotheses.
+3. Compare normal and suspicious activity, record related identities/resources and verify an alternative explanation. Absence of a source package/data does not prove inactivity.
+4. Correlate a supported event with [[AWS/security/cloudtrail/README|CloudTrail]] evidence and retain an investigation timeline without copying secrets or personal data unnecessarily.
+5. Exercise containment as an approved runbook decision—not a Detective permission implied by viewing the graph.
+
+If the sandbox lacks matching data, use the owning tutorial/examples rather than generating live attacks. Do not promise CPU/process views unless an explicit integrated data source supplies them.
+
+## Cleanup and pricing
+
+Remove only the disposable graph/enrollments or restore previous package settings after preserving required evidence. Do not unenroll production members as a cost experiment.
+
+The current N. Virginia owning example uses ingestion tiers: first 1,000 GB at \$2/GB, next 4,000 at \$1, next 5,000 at \$0.50 and excess at \$0.25. Trials are thirty days per eligible Region/source package. Verify date/Region/package before applying these figures.
+
+Dimensional arithmetic matters: at a hypothetical \$0.10/GB, 10 GB/day for thirty days is \$30—not \$900. That hypothetical tariff is not the actual first-tier rate above; do not mix the two in a budget.
+
+## Behavior-graph and source-package model
+
+```text
+supported direct service source packages → behavior graph
+                      ↓                       ├─ entities/relationships
+              coverage/ingestion state        ├─ time-window context
+                                              └─ finding-led investigation
 ```
-Data Sources:
-  ├── GuardDuty Findings
-  ├── CloudTrail Management Events
-  ├── CloudTrail S3 Data Events
-  └── VPC Flow Logs
-       │
-       ▼
-  Detective Analysis Engine
-       │
-       ├── Builds behavior graph
-       ├── Links related entities
-       └── Calculates statistical profiles
-       │
-       ▼
-  Visual Investigation Interface
-  (Who talked to what, from where, when)
-```
 
-## Enabling Detective
+| Entity/question      | Evidence to seek                                  | Boundaries                                    |
+| -------------------- | ------------------------------------------------- | --------------------------------------------- |
+| Principal/session    | Supported API activity and related resources      | Not full guest process/CPU telemetry          |
+| EC2/network identity | Supported network/API relationships               | Flow records are not packet payload           |
+| Finding              | Related entities/timing/anomalies                 | Severity is not proof of compromise           |
+| Account/package      | Enrollment, active ingestion and covered interval | Missing source data does not prove inactivity |
+
+Source packages, Region and data period determine what can be investigated. Existing S3 trail/VPC flow destinations are not the direct ingestion inputs; their enablement cannot be used as the only readiness test.
+
+## Graph/member API walkthrough
+
+With an approved read/create sandbox role and current graph ownership:
 
 ```bash
-# Enable in master account
-aws detective enable --account-id 123456789012
-
-# Accept membership invitation from member account
-aws detective create-members \
-  --account-ids 123456789012 \
-  --email-addresses alice@example.com
-
-# Enable for organization (auto-enrolls all accounts)
-aws detective enable-organization-configuration \
-  --auto-enable
+aws detective list-graphs
+aws detective list-members --graph-arn GRAPH_ARN
+aws detective get-members --graph-arn GRAPH_ARN --account-ids MEMBER_ACCOUNT_ID
 ```
 
-## Investigation Workflow
+Graph creation, member invitations/acceptance and Organizations enablement are mutations with administrator/member roles and quotas. Use the documented console/contract and confirm package/member status; do not invent an enable-organization API that auto-enrolls every account without settings/eligibility.
 
-### Step 1: Start from a Finding
+## Worked investigation narrative
 
-When GuardDuty generates a HIGH severity finding (e.g., `UnauthorizedAccess:IAMUser/ConsoleLogin`), open it in Detective.
+A GuardDuty sample points to a role session at time T. Start from the finding and preserve ID/account/Region/time; inspect the entity's normal-versus-observed API/network context around T. Identify affected resources and related accounts, then correlate CloudTrail-supported events and configuration changes.
 
-### Step 2: Explore the Graph
+Form two hypotheses (credential misuse versus approved deployment activity). Obtain the deployment/session owner, request IDs and resource-change evidence to distinguish them. Label observation, inference and missing data separately; a graph edge alone does not prove the principal read confidential bytes.
 
-Detective shows:
+If evidence supports containment, route to an authorized incident runbook with narrow role/resource changes and recovery validation. Detective read permission itself does not authorize terminating instances or disabling identities.
 
-- **Who** — IAM user, role, or service that performed the action
-- **What** — Which API was called, with what parameters
-- **Where** — Source IP, geographic location
-- **When** — Timeline of events
+## Console, retention and cost operations
 
-### Step 3: See Related Activity
+Choose a narrow time window and verify its covered interval. Export/report only approved metadata; protect personal/network data and preserve required evidence beyond the service's retention.
 
-```
-Graph visualization:
-  Alice (IAM User)
-    │
-    ├──► 203.0.113.10 (Source IP)
-    │         │
-    │         ├──► ConsoleLogin (SUCCESS)
-    │         ├──► GetSecretValue (Secrets Manager)
-    │         └──► DescribeInstances (EC2)
-    │
-    └──► my-ec2-instance (EC2)
-              │
-              ├──► 10.0.1.100 (Internal IP)
-              └──► Port 22 (SSH from external)
-```
+Ingestion GB tiers are source-package/Region scoped; do not confuse a 30-day trial with permanent free behavior graphs. Add up each tier's marginal volume before calculating the bill. At the cited first-tier \$2/GB example, 300 GB costs \$600 before trial/other eligible treatment—not 300 × an invented \$0.10 universal rate.
 
-## Finding Types Analyzed
+After a disposable drill remove owned invitations/members/graph only under the documented lifecycle and preserve investigation evidence. Do not delete the administrator's shared graph to stop one test client.
 
-| Finding                 | What Detective Shows                                           |
-| ----------------------- | -------------------------------------------------------------- |
-| IAMUser/ConsoleLogin    | Timeline, source IP, geo-location, subsequent API calls        |
-| EC2/compromisedInstance | Network activity, processes, DNS queries, outgoing connections |
-| S3/data-exfiltration    | Access patterns, data transfers, bucket policies               |
-| Crypto-mining           | Network activity, unusual processes, CPU spike correlation     |
-
-## Using the Console
-
-```
-Detective Console:
-  │
-  ├── Investigation Profile
-  │     ├── Entity (IP, User, Resource)
-  │     ├── Activity Profile (what did it do?)
-  │     └── Risk Score (is this suspicious?)
-  │
-  ├── Timeline View
-  │     └── All events in chronological order
-  │
-  ├── Graph View
-  │     ├── Visual relationship map
-  │     └── Click to expand entities
-  │
-  └── Related Findings
-        └── Other GuardDuty findings involving the same entity
-```
-
-## Pricing
-
-| Component                   | Cost     |
-| --------------------------- | -------- |
-| Per GB of data ingested     | $0.10/GB |
-| Data retained (30-90 days)  | Included |
-| Data retained (91-365 days) | $0.05/GB |
-
-First 10GB/month free per account.
-
-## Limits
-
-| Resource                   | Limit     |
-| -------------------------- | --------- |
-| Member accounts per master | 50        |
-| Data retention             | 365 days  |
-| Max investigation time     | Unlimited |
+References: [graph/membership](https://docs.aws.amazon.com/detective/latest/userguide/detective-managing-accounts.html), [source data](https://docs.aws.amazon.com/detective/latest/userguide/detective-source-data-about.html), [investigation](https://docs.aws.amazon.com/detective/latest/userguide/detective-investigation-about.html), [ListGraphs](https://docs.aws.amazon.com/cli/latest/reference/detective/list-graphs.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/detective/
-- **Documentation:** https://docs.aws.amazon.com/detective/
-- **Pricing:** https://aws.amazon.com/detective/pricing/
-
-## Nuggets & Gotchas
-
-- **Detective only shows data AFTER it's enabled — it can't look into the past:** Unlike CloudTrail (90-day history) or Security Hub (90-day findings), Detective only has data from when it was enabled. Enable it early in your security journey.
-- **Detective ingests a LOT of data — expect significant costs at scale:** CloudTrail + VPC Flow + GuardDuty findings for a busy account can be 10GB+/day. At $0.10/GB, that's $900/month for data ingestion alone.
-- **Detective is for investigation, not prevention — it doesn't block or remediate:** Use GuardDuty + EventBridge for automated response. Detective is the "what happened?" tool after GuardDuty flags something.
-- **Detective membership must be accepted in the member account — the master can't auto-enroll without consent:** Each member account gets an invitation email. For organization-wide setup, use `enable-organization-configuration` for auto-enrollment.
+- [Source packages and retention](https://docs.aws.amazon.com/detective/latest/userguide/detective-source-data-about.html)
+- [Region/quotas](https://docs.aws.amazon.com/detective/latest/userguide/regions-limitations.html)
+- [Investigation guide](https://docs.aws.amazon.com/detective/latest/userguide/detective-investigation-about.html)
+- [Pricing](https://aws.amazon.com/detective/pricing/)

@@ -2,244 +2,116 @@
 title: AWS CloudTrail
 description: AWS CloudTrail — API audit logging. Trails, event history, S3 log delivery, CloudWatch integration, encryption, and compliance.
 tags:
-  - aws
-  - security
-  - audit
-  - cloudtrail
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS CloudTrail
 
-CloudTrail records AWS API calls made in your account. Every AWS action (Console, CLI, SDK) generates a CloudTrail event. It's the primary tool for security auditing, compliance, and incident investigation.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## Core Concepts
+CloudTrail records supported AWS activity for audit. It does not promise a record of every possible application action; management, data, network-activity and Insights coverage require deliberate selection.
 
-### Event Types
+## Coverage and delivery
 
-| Event Type        | Description               | Examples                                       |
-| ----------------- | ------------------------- | ---------------------------------------------- |
-| Management Events | Control plane operations  | CreateInstance, DeleteBucket, AttachRolePolicy |
-| Data Events       | Data plane operations     | GetObject, PutObject, PutItem, Query           |
-| Insight Events    | Unusual API call patterns | Spike in Delete*, abnormal Create* activity    |
+Event History is the regional ninety-day management-event view, not an all-data-event archive. Trails provide selected delivery to S3 and optionally CloudWatch Logs; CloudTrail Lake has its own event stores, retention and query pricing.
 
-### CloudTrail vs CloudWatch Logs vs VPC Flow Logs
+Default trail management-event coverage includes supported control-plane reads such as Describe operations. Data-event logging is selected separately for supported resources. Do not claim two events for every S3 operation or classify Lambda as a global service.
 
-```
-CloudTrail     → AWS API calls (who did what, when, from where)
-CloudWatch Logs → Application logs, custom logs (not AWS API)
-VPC Flow Logs  → Network traffic (who talked to whom, not API calls)
-```
+Trail delivery to S3 typically averages about five minutes, not a guaranteed real-time SLA. Logging delays matter when using audit signals for response; design detection with bounded expectations rather than instantaneous delivery promises.
 
-### Event Structure
+## Sandbox integrity exercise
 
-```json
-{
-  "eventVersion": "1.08",
-  "userIdentity": {
-    "type": "IAMUser",
-    "arn": "arn:aws:iam::123456789012:user/alice",
-    "principalId": "AIDAXXXXXXXXXXXXX",
-    "accountId": "123456789012"
-  },
-  "eventTime": "2024-01-15T10:30:00Z",
-  "eventSource": "ec2.amazonaws.com",
-  "eventName": "RunInstances",
-  "awsRegion": "us-east-1",
-  "sourceIPAddress": "203.0.113.10",
-  "userAgent": "aws-cli/2.0",
-  "requestParameters": {
-    "instanceType": "t3.micro",
-    "imageId": "ami-xxxxx"
-  },
-  "responseElements": {
-    "reservationId": "r-xxxxx",
-    "instancesSet": [{ "instanceId": "i-xxxxx" }]
-  },
-  "requestID": "xxxxx-xxxxx",
-  "eventID": "xxxxx-xxxxx",
-  "readOnly": false,
-  "eventType": "AwsApiCall",
-  "managementEvent": true,
-  "recipientAccountId": "123456789012"
-}
-```
+Prerequisites: an isolated logging bucket with the documented CloudTrail bucket policy, a disposable trail and scoped read/trail configuration permissions. Use the official setup workflow to create a trail, choose management read/write events, enable log-file validation and start logging.
 
-## Creating a Trail
+Perform a harmless management read (for example DescribeTrails), then inspect its event in Event History and the delivered S3 log. Record actor, eventTime, eventSource, eventName and request identity.
+
+Digest delivery is not verification. Run:
 
 ```bash
-# Create trail (logs to S3)
-aws cloudtrail create-trail \
-  --name my-trail \
-  --s3-bucket-name my-cloudtrail-logs \
-  --s3-key-prefix cloudtrail/ \
-  --is-multi-region \
-  --include-global-service-events
-
-# Start logging
-aws cloudtrail start-logging --name my-trail
-
-# Enable log file validation
-aws cloudtrail update-trail \
-  --name my-trail \
-  --enable-log-file-validation
+aws cloudtrail validate-logs --trail-arn TRAIL_ARN \
+  --start-time 2026-10-12T00:00:00Z --end-time 2026-10-13T00:00:00Z
 ```
 
-### S3 Bucket Policy for CloudTrail
+Replace the interval with one containing delivered digest files and ensure S3 read permissions. Expected: integrity-validation output for covered logs. Validation detects modifications as well as deletions. Test tampering only on copies in an isolated exercise; never alter real audit evidence.
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "Service": "cloudtrail.amazonaws.com" },
-      "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::my-cloudtrail-logs/*",
-      "Condition": {
-        "StringEquals": {
-          "s3:x-amz-acl": "bucket-owner-full-control",
-          "aws:SourceAccount": "123456789012"
-        }
-      }
-    }
-  ]
-}
-```
+## Cleanup and safeguards
 
-## CloudWatch Integration
+Only stop/delete the disposable trail after collecting evidence; keep production/organization trails enabled. Preserve records according to retention/legal requirements. Remove lab-only bucket objects/resources only when authorized; deleting the trail does not automatically delete archived logs.
 
-```bash
-# Create CloudWatch Logs group
-aws logs create-log-group --log-group-name cloudtrail-logs
-
-# Configure trail to send to CloudWatch
-aws cloudtrail update-trail \
-  --name my-trail \
-  --cloud-watch-logs-log-group-arn arn:aws:logs:us-east-1:123456789012:log-group/cloudtrail-logs:* \
-  --cloud-watch-logs-role-arn arn:aws:iam::123456789012:role/CloudTrail-CloudWatchLogs
-
-# Set log retention
-aws logs put-retention-policy \
-  --log-group-name cloudtrail-logs \
-  --retention-in-days 90
-```
-
-CloudWatch integration enables real-time alerting on API calls:
-
-```json
-{
-  "filterPattern": "{$.eventName = \"DeleteBucket\"}",
-  "logGroupName": "/aws/cloudtrail/my-trail"
-}
-```
-
-## Querying CloudTrail Logs
-
-### Via Athena
-
-```sql
-CREATE TABLE cloudtrail_logs (
-  eventTime STRING,
-  eventName STRING,
-  userIdentity_arn STRING,
-  sourceIPAddress STRING,
-  userAgent STRING,
-  eventSource STRING,
-  awsRegion STRING
-)
-PARTITIONED BY (region string, year string, month string)
-LOCATION 's3://my-cloudtrail-logs/AWSLogs/123456789012/CloudTrail/';
-
--- Query for suspicious activity
-SELECT * FROM cloudtrail_logs
-WHERE eventName = 'ConsoleLogin'
-  AND sourceIPAddress NOT IN ('203.0.113.0/24')
-  AND eventTime > '2024-01-01'
-```
-
-### Via CloudWatch Insights
-
-```bash
-# CloudWatch Insights query
-aws cloudwatch-insights run-query \
-  --log-group-name cloudtrail-logs \
-  --query-string 'fields @timestamp, userIdentity.arn, eventName, sourceIPAddress | filter eventName like /Delete|Remove/ | sort @timestamp desc | limit 20'
-```
-
-## Event History
-
-CloudTrail retains 90 days of events in Event History (free, no trail required):
-
-```bash
-# Look up specific events
-aws cloudtrail lookup-events \
-  --lookup-attributes AttributeKey=EventName,AttributeValue=RunInstances \
-  --start-time 2024-01-01T00:00:00Z
-
-# Look up by user
-aws cloudtrail lookup-events \
-  --lookup-attributes AttributeKey=Username,AttributeValue=alice
-```
-
-## Log File Encryption
-
-```bash
-# Enable SSE-KMS encryption for CloudTrail logs
-aws cloudtrail update-trail \
-  --name my-trail \
-  --kms-key-id xxxxx-xxxxx-xxxxx \
-  --enable-kms-log-encryption
-```
-
-CloudTrail encrypts log files with the specified CMK. You pay for KMS API calls (~$0.03/10K calls).
-
-## Security Recommendations
-
-| Recommendation               | Why                                    |
-| ---------------------------- | -------------------------------------- |
-| Enable multi-region trail    | Capture events from all regions        |
-| Enable global service events | Capture IAM, STS, Lambda events        |
-| Enable log file validation   | Detect tampering with log files        |
-| Send to CloudWatch           | Real-time alerting (not just post-hoc) |
-| Use S3 Object Lock           | Prevent log deletion (compliance)      |
-| Enable Insights events       | Detect abnormal activity               |
+Separate logging administration from investigation access. Encrypt and restrict buckets, consider immutable retention and alarm on logging changes. Cost optimization must preserve required security coverage.
 
 ## Pricing
 
-| Component         | Cost                                                       |
-| ----------------- | ---------------------------------------------------------- |
-| Management events | Free (90-day event history)                                |
-| Data events       | $0.10/100,000 events (S3), $0.05/100,000 events (DynamoDB) |
-| Insight events    | $0.10/100,000 events                                       |
-| S3 storage        | $0.023/GB                                                  |
-| CloudWatch Logs   | $0.50/GB ingested                                          |
+Distinguish first management-event trail copy, additional management copies, selected data/network events, Insights and Lake ingestion/query/retention. S3/KMS/CloudWatch charges are additional. An event copy model cannot be replaced by a universal log-GB tariff; use current regional tables and actual selector volume.
+
+## Event classes and telemetry comparison
+
+| Evidence                     | Scope                                             | Not a substitute for                |
+| ---------------------------- | ------------------------------------------------- | ----------------------------------- |
+| CloudTrail management event  | Supported control-plane actions, identity/context | Every data or application operation |
+| Selected data/network events | Supported selectors/resource/service coverage     | Implicit universal coverage         |
+| CloudTrail Insights          | Supported unusual activity analysis               | Application performance traces      |
+| CloudWatch application logs  | Workload-produced events                          | Independent control-plane audit     |
+| VPC Flow Logs                | Supported network metadata                        | Full packets or API caller identity |
+
+```text
+supported AWS action → event selector → trail → S3 logs + digest
+                                              └─ optional Logs integration
+event store → CloudTrail Lake retention/query (separate lifecycle/cost)
+```
+
+## Trail creation and bucket-policy boundaries
+
+Before creation provision the dedicated bucket and the documented CloudTrail permissions: bucket GetBucketAcl plus object PutObject to the intended account/trail prefix, with applicable ACL/source-ARN conditions. Scope to the correct partition/account/trail and KMS key if selected. A generic S3 write policy is not an audited logging setup.
+
+With that setup complete:
+
+```bash
+aws cloudtrail create-trail --name wiki-audit-lab --s3-bucket-name LAB_LOG_BUCKET \
+  --is-multi-region-trail --enable-log-file-validation
+aws cloudtrail start-logging --name wiki-audit-lab
+aws cloudtrail get-trail-status --name wiki-audit-lab
+aws cloudtrail get-event-selectors --trail-name wiki-audit-lab
+```
+
+Inspect IsLogging and delivery errors/timestamps; successful CreateTrail alone does not prove logging. Change selectors only with an approved coverage plan. Multiple copies across trails, organization trails and data selectors affect cost/ownership.
+
+## Event History and log investigation
+
+```bash
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=DescribeTrails \
+  --start-time 2026-10-12T00:00:00Z --end-time 2026-10-13T00:00:00Z
+```
+
+Replace the interval; Event History supports its own lookup constraints/pagination and management-event scope. Decode CloudTrailEvent JSON before analyzing request/user identity. Correlate userIdentity/sessionIssuer, eventTime, eventSource/eventName, sourceIPAddress and requestID; redact sensitive fields.
+
+For S3 archive queries, create an Athena table using the owning CloudTrail schema/location/partition guide rather than an invented generic log schema. Restrict scan scope and protect the result bucket. For CloudWatch Logs integration, configure the actual group ARN and CloudTrail delivery role; a created group does not attach itself to the trail.
+
+## Integrity, encryption and incident operations
+
+SSE-KMS requires both log-delivery encryption and investigator decrypt access with the correct context/policy. The trail/digest chain helps detect changed/deleted files, but enabling it does not run validation or prove retention is immutable. Run validation over the required interval and preserve output/evidence.
+
+Investigate stopped logging, deleted trails, selector changes and bucket/key denial with an independent administrative/audit path. Alert on these changes; don't disable logging to suppress the alarm. Cleanup stops/deletes only the dedicated trail and follows approved log retention; do not delete required evidence or an organization trail.
+
+References: [bucket policy](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html), [Logs integration](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/send-cloudtrail-events-to-cloudwatch-logs.html), [Athena](https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html), [event structure](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-event-reference-record-contents.html).
+
+## Cross-wiki comparisons
+
+- [[Linux/security/auditd|auditd]] — audit trails (Linux)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cloudtrail/
-- **Documentation:** https://docs.aws.amazon.com/cloudtrail/
-- **Pricing:** https://aws.amazon.com/cloudtrail/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A medium account (100 users, moderate activity). Management events: free. Data events disabled. 1GB CloudTrail logs/month × $0.023 = $0.023/month. Plus CloudWatch ($0.50/GB = $0.50/month). Total: ~$0.50/month.
-
-**Scenario 2:** An active account with S3 data events enabled. 10M PUT requests/day × 30 = 300M S3 PUT events/month. Data events: 300M × $0.10/100K = $300/month. That's expensive. Recommendation: disable S3 data events for all buckets, enable only for critical buckets.
-
-**Scenario 3:** A compliance account requiring 7-year log retention. 10GB/month × 12 months × 7 years = 840GB S3 storage. With S3 Glacier Instant Retrieval: 840GB × $0.004/GB = $3.36/month. Plus S3 storage cost for hot data (30 days): 10GB × $0.023 = $0.23/month. Total: ~$3.60/month.
-
-## Nuggets & Gotchas
-
-- **CloudTrail doesn't log read operations by default (GetObject, Describe\*) — enable data events:** Management events are free and cover control plane (who created/deleted resources). For data plane operations (who accessed what data), you need data events at $0.10/100K (S3) or disable them.
-- **CloudTrail log files are delivered every 5 minutes — not real-time:** If you need immediate alerting (e.g., someone deleting a bucket), use CloudWatch integration with a 1-minute filter. CloudTrail delivers to S3 every 5 minutes.
-- **S3 data events generate 2 events per object operation (List and Get/Put):** A single `aws s3 cp file.txt s3://bucket/` generates 2 CloudTrail events. For heavy S3 use, this multiplies costs fast.
-- **CloudTrail log validation (hash chain) detects deletion but not modification:** File validation uses a hash chain to prove integrity. If someone deletes a log file, validation fails. If someone modifies a log file, the hash won't match. But the hash is stored in a separate file.
-- **CloudTrail Insights costs extra ($0.10/100K) — it auto-detects unusual API patterns:** If you don't need automated anomaly detection, skip Insights. It's useful for security but adds cost. Monitor your CloudTrail costs and enable selectively.
+- [Management events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-management-events-with-cloudtrail.html)
+- [Trail setup](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-create-and-update-a-trail.html)
+- [Delivery behavior](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/get-and-view-cloudtrail-log-files.html)
+- [Integrity validation](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-validation-intro.html)
+- [CLI validation](https://docs.aws.amazon.com/cli/latest/reference/cloudtrail/validate-logs.html)
+- [Pricing](https://aws.amazon.com/cloudtrail/pricing/)
 
 ## Across the wiki
 
-- [[Linux/security/auditd|auditd]] — audit trails (Linux)
-- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]] — audit trails (Kubernetes)
-- [[Security/siem/wazuh/README|Wazuh]] — audit trails (Security)
-- [[Kubernetes/eks/observability/logging/control-plane-logs|EKS Control Plane Logs]] — audit trails (Kubernetes)
+- [[Kubernetes/concepts/L07-security/05-audit-ops-compliance/15-audit-logging|Audit Logging]]
+- [[Security/siem/wazuh/README|Wazuh]]
+- [[Kubernetes/eks/observability/logging/control-plane-logs|EKS Control Plane Logs]]

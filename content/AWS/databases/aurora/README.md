@@ -1,244 +1,151 @@
 ---
-title: Amazon Aurora
-description: Amazon Aurora — MySQL and PostgreSQL compatible relational database with distributed storage. 6-way replication, auto-scaling, serverless, global database, backtrack, and ml integration.
+title: "Amazon Aurora"
+description: "Aurora is MySQL/PostgreSQL-compatible relational database infrastructure with storage separated from compute instances."
 tags:
-  - aws
-  - databases
-  - aurora
-date: 2026-06-06
+  - aws/databases
+date: 2026-10-12
 ---
 
 # Amazon Aurora
 
-Aurora is MySQL and PostgreSQL compatible with a distributed, self-healing storage layer that replicates data across 6 storage nodes in 3 AZs. It delivers up to 5x throughput of standard MySQL and 3x throughput of standard PostgreSQL at 1/10th the cost of commercial databases.
+Aurora is MySQL/PostgreSQL-compatible relational database infrastructure with storage separated from compute instances. Prerequisites: [[AWS/databases/rds/README|RDS]], [[AWS/networking/README|networking]] and [[AWS/reliability/backup-and-recovery|recovery planning]].
 
-## How Aurora Works
+## Cluster, instances and endpoints
 
-### Architecture
+Traditional Aurora storage maintains six copies across three AZs, with three-copy read quorum and four-copy write quorum. The cluster has a writer plus optional readers; the first instance created becomes writer even if its identifier contains reader. Cluster creation and instance creation are separate operations.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Aurora Cluster                                              │
-│                                                              │
-│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │
-│  │   Writer    │◄──│  Reader 1   │   │  Reader 2   │       │
-│  │  (primary)  │   │ (async rep) │   │ (async rep) │       │
-│  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘       │
-│         │                 │                 │               │
-│         ▼                 ▼                 ▼               │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │           Aurora Distributed Storage Layer             │  │
-│  │                                                        │  │
-│  │   AZ-1          AZ-2          AZ-3                     │  │
-│  │  ┌──────┐    ┌──────┐    ┌──────┐                    │  │
-│  │  │ Node 1│    │ Node 2│    │ Node 3│                   │  │
-│  │  └──────┘    └──────┘    └──────┘                    │  │
-│  │  ┌──────┐    ┌──────┐    ┌──────┐                    │  │
-│  │  │ Node 4│    │ Node 5│    │ Node 6│                   │  │
-│  │  └──────┘    └──────┘    └──────┘                    │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
+Use the writer/cluster endpoint for writes, reader endpoint for supported load-distributed reads and instance endpoints when deliberately targeting a node. Promotion tiers, connections and DNS influence failover. Replication lag is not a failover-time guarantee. Use supported single-writer/read-replica architecture rather than an invented Multi-Master creation flag.
 
-Data is written to 6 of 6 nodes (quorum: 4 of 6). Data is read from 4 of 6 nodes.
+## Serverless v2 and global databases
 
-## Aurora MySQL vs Aurora PostgreSQL
+Serverless v2 scales supported compute capacity within configured bounds. Zero-ACU auto-pause/resume is supported for selected engine versions; 0.5 ACU is not a universal cost floor. Auto-pause introduces resume latency and depends on supported configuration/connections. Provisioned instances and Serverless v2 may coexist where documented.
 
-|                       | Aurora MySQL | Aurora PostgreSQL |
-| --------------------- | ------------ | ----------------- |
-| MySQL compatible      | 5.7, 8.0     | N/A               |
-| PostgreSQL compatible | N/A          | 13, 14, 15, 16    |
-| Parallel query        | Yes          | No                |
-| Backtrack             | Yes          | No                |
-| Serverless v2         | Yes          | Yes               |
-| Global Database       | Yes          | Yes               |
-| ML integrations       | Yes          | Yes               |
+Global Database provides cross-Region replication with explicit switchover/failover workflows. Current constraints allow up to ten secondary Regions, with the combined count of primary readers plus secondary clusters not exceeding fifteen; check engine/version/Region support. Treat lag, write routing and regional failure recovery explicitly.
 
-## Endpoints
+## Backtrack and tuning
 
-Aurora has multiple endpoints for different use cases:
+Aurora MySQL Backtrack moves a cluster backward within a configured window up to 72 hours, subject to version/Region and feature restrictions. It must be enabled at creation/restoration. It is not a replacement for backups or cross-Region recovery, and there is no documented tiny-tablespace/undo-setting shortcut that fixes every backtrack failure.
 
-| Endpoint          | Use                  | Points To                            |
-| ----------------- | -------------------- | ------------------------------------ |
-| Cluster endpoint  | Primary writes       | Writer DB instance                   |
-| Reader endpoint   | Read-only queries    | All reader instances (load-balanced) |
-| Custom endpoint   | Specific instance(s) | Named instances                      |
-| Instance endpoint | Specific instance    | Single instance                      |
+Aurora PostgreSQL still uses an instance buffer cache; shared_buffers defaults are memory-derived, typically around 75% of available memory, not a universal 128 MB. Tune using measured workload behavior rather than assuming distributed storage eliminates caching.
+
+## Recovery exercise and costs
+
+Create a budgeted sandbox cluster with one writer and one reader, using secure credentials/private networking. Verify writer roles through DBClusterMembers.IsClusterWriter in DescribeDBClusters rather than instance names. Insert a labelled row, read through appropriate endpoints and perform a controlled failover; record reconnect behavior. Restore to a separate cluster and verify checksums/data, then remove sandbox readers, writer, cluster and retained snapshots according to policy.
 
 ```bash
-# Get all endpoints
-aws rds describe-db-clusters \
-  --db-cluster-identifier my-aurora-cluster \
-  --query 'DBClusters[0].{ClusterEndpoint:Endpoint,ReaderEndpoint:ReaderEndpoint}'
+aws rds describe-db-clusters --db-cluster-identifier example-aurora
+aws rds describe-db-instances \
+  --filters Name=db-cluster-id,Values=example-aurora
 ```
 
-## Creating an Aurora Cluster
+These are read-only CLI v2 examples requiring real identifiers. Cost includes instance/ACU-hours, storage, applicable I/O, backups and global transfer/replication. There is no standalone Reserved ACU product; Database Savings Plans are a distinct eligible-usage hourly commitment, not a fabricated reserved-ACU tariff.
+
+## Distributed architecture and engine comparison
+
+```text
+Writer instance       Reader instance(s)
+        └───────┬───────────────┘
+                ▼
+        Shared cluster storage
+      AZ A       AZ B       AZ C
+      copy 1     copy 3     copy 5
+      copy 2     copy 4     copy 6
+```
+
+Compute instances access the cluster storage; readers are not three unrelated storage primaries. The write quorum is four copies, read quorum three. Storage redundancy, reader availability, client reconnect and regional disaster recovery are different parts of resilience.
+
+| Choice                 | What carries over                                  | What still needs validation                                                          |
+| ---------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Aurora MySQL           | Supported MySQL-compatible protocols/features      | Exact engine version, extensions/features, backtrack constraints and query behavior. |
+| Aurora PostgreSQL      | Supported PostgreSQL-compatible protocols/features | Extension support, parameter groups, logical replication and application tests.      |
+| Provisioned instance   | Selected fixed instance class                      | Instance sizing, maintenance and cost.                                               |
+| Serverless v2 instance | Supported workload with scaling bounds             | Engine/version eligibility, scaling latency and pause/resume behavior.               |
+
+Compatibility is not an assurance that every feature from an arbitrary upstream version exists. Pin a supported engine family/version and test representative migrations, extensions and SQL before cutover.
+
+## Endpoints and connection behavior
+
+| Endpoint       | Routing purpose                      | Caveat                                                                               |
+| -------------- | ------------------------------------ | ------------------------------------------------------------------------------------ |
+| Writer/cluster | Current writer                       | Failover changes routing; clients must reconnect and honor DNS.                      |
+| Reader         | Connections across available readers | Connection balancing is not per-query balancing; absent readers can change behavior. |
+| Instance       | One specified instance               | Does not track a different promoted writer automatically.                            |
+| Custom         | Selected supported instances         | Membership/configuration is an explicit operating responsibility.                    |
+
+A connection pool can keep reading one node long after other readers are added. Test read-only enforcement and transaction routing at the client; the endpoint name is not an application authorization policy.
+
+## Correct cluster → writer → reader walkthrough
+
+Prerequisites: an eligible supported Aurora PostgreSQL configuration, isolated DB subnet group/security group, authorized deployment role, KMS/Secrets permissions and budget. The example uses managed master credentials instead of a plaintext password in shell history. Check available engine versions first; do not pin an obsolete version from an old note.
 
 ```bash
-# Create Aurora cluster (serverless v2)
+aws rds describe-db-engine-versions --engine aurora-postgresql \
+  --query 'DBEngineVersions[].EngineVersion'
+
+# Select a version only after verifying Serverless v2 support in this Region.
+read -r -p "Verified supported Aurora PostgreSQL version: " AURORA_LAB_ENGINE_VERSION
+: "${AURORA_LAB_ENGINE_VERSION:?Select a verified supported version first}"
+
 aws rds create-db-cluster \
-  --db-cluster-identifier my-aurora-cluster \
+  --db-cluster-identifier sandbox-aurora \
   --engine aurora-postgresql \
-  --engine-version 15.3 \
-  --serverless-v2-scaling-configuration '{
-    "MinCapacity": 1,
-    "MaxCapacity": 16
-  }' \
-  --master-username postgres \
-  --master-user-password SecretPassword \
-  --vpc-security-group-ids sg-xxxxx \
-  --db-subnet-group my-subnet-group \
+  --engine-version "$AURORA_LAB_ENGINE_VERSION" \
+  --engine-mode provisioned \
+  --master-username sandboxadmin \
+  --manage-master-user-password \
+  --db-subnet-group-name sandbox-db-subnets \
+  --vpc-security-group-ids sg-0123456789abcdef0 \
+  --serverless-v2-scaling-configuration MinCapacity=1,MaxCapacity=8 \
   --backup-retention-period 1
 
-# Add reader
 aws rds create-db-instance \
-  --db-instance-identifier my-aurora-reader \
-  --db-cluster-identifier my-aurora-cluster \
+  --db-instance-identifier sandbox-aurora-writer \
+  --db-cluster-identifier sandbox-aurora \
   --db-instance-class db.serverless \
   --engine aurora-postgresql
+
+aws rds wait db-instance-available \
+  --db-instance-identifier sandbox-aurora-writer
+
+aws rds create-db-instance \
+  --db-instance-identifier sandbox-aurora-reader \
+  --db-cluster-identifier sandbox-aurora \
+  --db-instance-class db.serverless \
+  --engine aurora-postgresql
+
+aws rds wait db-instance-available \
+  --db-instance-identifier sandbox-aurora-reader
+aws rds describe-db-clusters --db-cluster-identifier sandbox-aurora \
+  --query 'DBClusters[0].DBClusterMembers[].{Instance:DBInstanceIdentifier,Writer:IsClusterWriter}'
 ```
 
-## Aurora Serverless v2
+These are creation examples, not actions run during this review. The first created instance is the writer; labels do not assign roles. Wait for actual available state and inspect IsClusterWriter before connecting. Use managed secret retrieval through an authorized path, a verified TLS client and the actual endpoint.
 
-Aurora Serverless v2 scales ACU (Aurora Capacity Units) automatically:
+Insert a synthetic table, read from the appropriate endpoint and initiate a controlled failover only in the sandbox. Measure reconnect time/errors, promoted role and committed data. Clean up instances before deleting the cluster; deliberately decide whether to retain a final snapshot, and inspect managed secret/backups afterward.
 
-```bash
-# Create serverless v2 cluster
-aws rds create-db-cluster \
-  --db-cluster-identifier my-aurora-serverless \
-  --engine aurora-postgresql \
-  --serverless-v2-scaling-configuration '{
-    "MinCapacity": 0.5,
-    "MaxCapacity": 32
-  }' \
-  --master-username postgres \
-  --master-user-password SecretPassword
+## Global Database and backtrack operating sequence
 
-# Scale manually
-aws rds modify-db-cluster \
-  --db-cluster-identifier my-aurora-serverless \
-  --serverless-v2-scaling-configuration '{
-    "MinCapacity": 1,
-    "MaxCapacity": 64
-  }'
-```
+For Global Database, check engine/version/Region support, create the global topology and attach eligible secondary clusters through the documented workflow. Route reads/writes explicitly. During planned switchover, verify replication readiness; during disaster failover, assess lag and data-loss risk. Re-establish topology and application endpoints after the event. A secondary cluster is not an automatic second writer.
 
-### ACU Pricing
+Backtrack is a cluster-wide Aurora MySQL feature enabled at creation/restoration with a configured window. It rewinds supported cluster state, so coordinate application writes and downstream systems before using it. It does not undo external messages/cache changes or replace off-cluster backups. Check current restrictions rather than recommending a fictional Multi-Master or tiny undo-tablespace remedy.
 
-|              | Aurora Serverless v2       |
-| ------------ | -------------------------- |
-| Per ACU-hour | $0.12/hr                   |
-| Storage      | $0.10/GB/month             |
-| I/O          | $0.20 per million requests |
+## Monitoring and worked capacity-cost scenario
 
-## Global Database (Cross-Region)
+Inspect CPU, DatabaseConnections, freeable memory, BufferCacheHitRatio, AuroraReplicaLag, storage/I/O and failover events appropriate to the instance/cluster. Compare slow-query/database-load evidence with latency before changing shared_buffers or adding replicas. Database Insights and enhanced telemetry have their own mode/cost choices.
 
-Aurora Global Database replicates to secondary regions with < 1 second lag:
+For an illustrative Serverless v2 scenario, two instances averaging 2 ACUs for 100 hours each consume 2 × 2 × 100 = 400 ACU-hours. Multiply by the chosen Region/engine rate once; then add storage, applicable I/O, backups, transfer and monitoring. If the reader runs fewer hours or capacity varies, integrate each instance's actual usage rather than applying the writer's average to every instance. Database Savings Plans can affect eligible usage at their commitment rates, but are not “Reserved ACUs.”
 
-```bash
-# Create global database
-aws rds create-global-cluster \
-  --global-cluster-identifier my-global-cluster \
-  --engine aurora-postgresql \
-  --engine-version 15.3
-
-# Add secondary region cluster
-aws rds create-db-cluster \
-  --db-cluster-identifier my-aurora-secondary \
-  --global-cluster-identifier my-global-cluster \
-  --engine aurora-postgresql \
-  --db-subnet-group-name my-subnet-group
-```
-
-Use case: Primary in us-east-1, secondary in eu-west-1. Failover: promote secondary to primary in < 1 second.
-
-## Backtrack (Aurora MySQL only)
-
-Rewind the database to a specific point in time (up to 72 hours):
-
-```bash
-# Backtrack to 1 hour ago
-aws rds backtrack-db-cluster \
-  --db-cluster-identifier my-aurora-mysql \
-  --backtrack-to 2024-01-15T09:00:00Z
-```
-
-This is instant (unlike restore from backup). Useful for "oops, I deleted the wrong table."
-
-## High Availability
-
-### Multi-Master
-
-All instances can write (MySQL only):
-
-```bash
-aws rds create-db-cluster \
-  --db-cluster-identifier my-aurora-multimaster \
-  --engine aurora-mysql \
-  --engine-version 8.0 \
-  --serverless-v2-scaling-configuration '...'
-```
-
-### Fault Tolerance
-
-- 6 storage nodes across 3 AZs
-- Quorum: 4 of 6 writes must succeed
-- Automatic failover to reader: < 30 seconds
-- No data loss on single-AZ failure
-
-## Performance
-
-| Metric          | Aurora MySQL | Aurora PostgreSQL | Standard MySQL |
-| --------------- | ------------ | ----------------- | -------------- |
-| Throughput      | 5x MySQL     | 3x PostgreSQL     | Baseline       |
-| Max connections | 160,000      | 65,535            | 151 (default)  |
-| Max storage     | 128 TB       | 128 TB            | 64 TB          |
-
-## Monitoring
-
-```bash
-# Aurora metrics
-aws cloudwatch list-metrics \
-  --namespace AWS/RDS \
-  --metric-name ServerlessDatabaseCapacity
-```
-
-Key Aurora-specific metrics:
-
-- `ServerlessDatabaseCapacity` — current ACU usage
-- `AuroraVolumeBytesChanged` — data written to storage
-- `RollbackSegmentInflation` — undo header inflation
-- `FreeLocalStorage` — temp storage available
-
-## Limits
-
-| Resource                  | Limit                                      |
-| ------------------------- | ------------------------------------------ |
-| Max storage               | 128 TB                                     |
-| Max instances per cluster | 1 writer + 15 readers                      |
-| Max connections           | 160,000 (Aurora MySQL), 65,535 (Aurora PG) |
-| Backtrack window          | 72 hours (MySQL only)                      |
-| Global database regions   | 5 secondary regions                        |
+Zero-ACU pause can improve an eligible idle workload's cost, with resume latency and restrictions. A production latency target may justify a nonzero minimum; measure rather than assume both cost and response-time benefits.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/rds/aurora/
-- **Documentation:** https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/
-- **Pricing:** https://aws.amazon.com/rds/aurora/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** An Aurora PostgreSQL serverless v2 cluster (1-16 ACU) running an API with variable load. Average: 2 ACU, 16hr/day. 2 ACU × $0.12 × 16hr × 30 days = $115.20/month. Storage 500GB × $0.10 = $50/month. Total: ~$165/month. Compare to RDS db.r6g.large Multi-AZ (2 × $0.252 = $0.504/hr × 24 × 30 = $362/month). Aurora is 54% cheaper for variable workloads.
-
-**Scenario 2:** A high-traffic e-commerce site needing consistent 8 ACU. 8 ACU × $0.12/hr × 24 × 30 = $691.20/month. Reserved ACU (1 year): 8 ACU × $0.075/hr = $0.60/hr × 24 × 30 = $432/month. Storage 2TB × $0.10 = $200/month. Total: ~$632/month. Compare to RDS db.r6g.2xlarge × 2 Multi-AZ: 2 × $0.504/hr × 24 × 30 = $725/month.
-
-## Nuggets & Gotchas
-
-- **Aurora Serverless v2 has a cold start delay (~30 seconds) when scaling from 0 ACU:** If you scale to 0 during quiet periods, the first request after idle has a 30-second delay. Use `MinCapacity: 0.5` to keep some capacity warm.
-- **Aurora MySQL backtrack requires the InnoDB tablespace to be at least 128MB:** If your tables are small, you may get a "tablespace too small" error. You can increase it with `innodb_undo_tablespaces`.
-- **Aurora Global Database allows one secondary region to have a writable instance (promoted primary):** In a global database, only one region is writable at a time. If you need to write in multiple regions simultaneously, use Aurora Multi-Master (MySQL only) instead.
-- **Aurora's reader endpoint load-balances at the connection level, not the query level:** Each new connection goes to a different reader. For true query-level load balancing, use a connection pooler (like PgBouncer for PostgreSQL or ProxySQL for MySQL).
-- **Aurora PostgreSQL's `shared_buffers` parameter should be set to 75% of Aurora's buffer cache, not the instance's memory:** Aurora's storage layer is separate from PostgreSQL's `shared_buffers`. The default `shared_buffers` (128MB) is fine for most Aurora workloads — don't blindly set it to 75% of instance memory.
+- [Aurora storage and reliability](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Concepts.Aurora.html)
+- [Serverless v2 auto-pause](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2-auto-pause.html)
+- [Global Database limits](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html)
+- [Backtrack requirements](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Managing.Backtrack.html)
+- [Aurora pricing](https://aws.amazon.com/rds/aurora/pricing/)
+- [CreateDBCluster contract](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html)
+- [CreateDBInstance contract](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html)
 
 ## Across the wiki
 

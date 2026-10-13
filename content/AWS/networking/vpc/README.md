@@ -1,215 +1,78 @@
 ---
-title: Amazon VPC
-description: Amazon VPC — isolated virtual network with subnets, route tables, internet gateways, NAT gateways, VPC endpoints, and VPC Flow Logs
+title: "Amazon VPC"
+description: "Build the routing and security mental model for public/private subnets, endpoints, egress and reachability tests."
 tags:
-  - aws
-  - networking
-  - vpc
-date: 2026-06-06
+  - cloud/aws/networking
+date: 2026-10-12
 ---
 
 # Amazon VPC
 
-A VPC is an isolated virtual network in AWS. You define the IP address range (CIDR block), subdivide it into subnets, and control how traffic flows between subnets, the internet, and your on-premises network.
+A VPC is a regional virtual network; each subnet belongs to one AZ. A “public subnet” has an Internet Gateway route, but that alone does not make an instance internet-reachable: addressing, SG/NACL and workload configuration still matter.
 
-## Core Concepts
+## Trace the path
 
-### CIDR Blocks
+Route tables use destination-prefix matching. The local route connects supported VPC ranges; additional routes can target gateways, peering, endpoints or TGW. Associate the intended table with each subnet rather than assuming every subnet uses the main table.
 
-Every VPC has one or more IPv4 CIDR blocks. AWS reserves5 IPs per subnet:
+IPv4 private egress can use NAT where appropriate; supported IPv6 egress uses different controls. A zonal NAT design creates an AZ dependency; evaluate current supported gateway modes and routing rather than generalizing one topology. NAT instances add operating, scaling and availability responsibilities.
 
-- Network address (first IP)
-- VPC router (second IP — used for the subnet's default gateway)
-- DNS (third IP)
-- Future use (fourth IP)
-- Broadcast (last IP — not used in AWS but reserved)
+Use [[AWS/networking/vpc/security-groups|SGs]] for stateful ENI access and [[AWS/networking/vpc/network-acls|NACLs]] for subnet rules. Both forward and return paths must work.
 
-| CIDR Size | Usable IPs per Subnet |
-| --------- | --------------------- |
-| /28       | 11                    |
-| /27       | 27                    |
-| /26       | 59                    |
-| /25       | 123                   |
-| /24       | 251                   |
+## Private access and visibility
 
-A /24 subnet in us-east-1 gives you 251 usable instances — enough for most application tiers.
+[[AWS/networking/private-access-and-hybrid-dns|Gateway/interface endpoints]] provide different private paths. Gateway endpoints are real resources with IDs/policies/routes. Interface endpoints add per-AZ network interfaces and applicable hourly/processing fees.
 
-### Subnet Types
+Flow Logs provide traffic metadata with documented exclusions. REJECT can reflect SG/NACL denial, including implicit denial; no log record does not prove a successful packet. Reachability Analyzer analyzes supported configurations, not live packet capture or application behavior.
 
-```
-Public Subnet — Has a route to the Internet Gateway via the main route table
-Private Subnet   — No direct route to IGW. Outbound via NAT Gateway or egress-only IGW
-VPN-only Subnet  — Route to Virtual Private Gateway (site-to-site VPN)
-```
+VPC sharing/RAM changes ownership and allowed operations. It does not mean every participant can mutate every subnet route/resource; review shared-VPC responsibilities.
 
-### Route Tables
+## Three-tier exercise
 
-Each subnet has exactly one route table. Routes determine where traffic is directed:
+Prerequisites: approved sandbox CIDRs, two AZs, temporary credentials, budget and an independent administration path.
 
-```
-Destination: 10.0.0.0/16        → Target: local (all subnets in VPC)
-Destination: 0.0.0.0/0          → Target: igw-xxxx           (public subnet)
-Destination: 0.0.0.0/0          → Target: nat-xxxx           (private subnet via NAT GW)
-Destination: 10.1.0.0/16 → Target: tgw-xxxx           (via Transit Gateway)
-Destination: 10.1.0.0/16         → Target: pcx-xxxx           (VPC Peering)
-```
+1. Design public ingress subnets, private application subnets and database subnets.
+2. Draw each route table and the forward/return path for HTTPS, health checks, database access and required AWS API calls.
+3. Deploy a disposable client/server through approved tooling; create only the necessary routes and rules.
+4. Verify the intended application connection and denial from an excluded source.
+5. Introduce one missing return route/rule in the sandbox. Use configuration analysis and logs to locate it, then restore access.
+6. Inventory/delete dedicated gateways/endpoints, interfaces, workloads and logs before deleting subnets/VPC. Preserve shared resources.
 
-### Internet Gateway
+A production pattern needs availability, capacity, DNS, deployment and recovery requirements; it is not a mandatory prescription to deploy a NAT/LB/database for every workload.
 
-An IGW is a horizontally scaled, redundant component attached to your VPC. It performs NAT between private IPs and your VPC's public IP.
+## Cost and quotas
 
-Traffic flow: Instance (private IP) → IGW (attaches Elastic IP) → Internet
+Price NAT hours/processed GB, interface-endpoint AZ-hours/GB, transfer direction/AZ boundaries, public addresses and telemetry separately. Gateway endpoints do not have the same tariff as interface endpoints. Logs bill their own ingested/retained bytes, not network bytes multiplied by an invented log rate.
 
-The IGW is free and handles unlimited bandwidth. Your instance's bandwidth is limited by the ENI's instance type limits.
+For a hypothetical us-east-1 study dated 2026-10-12, two zonal NAT gateways at an assumed \$0.045/hour over 730 hours cost 2 × 730 × \$0.045 = \$65.70 before processed data/other charges. Current Region/mode tariff and availability requirements determine the real comparison.
 
-### NAT Gateway
+Inspect actual service quotas for CIDRs, subnets, routes, endpoints and security rules; classify adjustable/account/Region/resource scope.
 
-A NAT Gateway enables instances in private subnets to initiate outbound traffic to the internet (for OS updates, API calls, etc.) while preventing inbound connections from the internet.
+## Addressing, route tables and shared VPCs
 
-Key properties:
+A subnet's IPv4 usable count is its CIDR size minus five reserved addresses. For example, a /24 has 256 total addresses and 251 usable; a /28 has 16 total and 11 usable. Plan capacity for ENIs, pods, load balancers and future growth, not just present EC2 instances. Every subnet is in one AZ and associated with one route table; a main route table applies when there is no explicit association.
 
-- Deployed in a **public subnet** (one per AZ for HA)
-- Managed by AWS — no patching, no maintenance
-- One Elastic IP attached
-- Supports TCP, UDP, and ICMP
-- **Stateful in the outbound direction only** — inbound-initiated connections are blocked
+| Example destination               | Route target     | Typical purpose                           |
+| --------------------------------- | ---------------- | ----------------------------------------- |
+| VPC CIDR                          | local            | Intra-VPC path                            |
+| `0.0.0.0/0` in a public subnet    | Internet Gateway | Public IPv4 egress for eligible addresses |
+| `0.0.0.0/0` in a private subnet   | NAT gateway      | Outbound IPv4 when required               |
+| Remote VPC CIDR                   | Peering or TGW   | Approved cross-VPC route                  |
+| Supported S3/DynamoDB prefix list | Gateway endpoint | Private service access                    |
 
-NAT Gateway hourly cost + per-GB processing cost. In high-traffic private subnets, a NAT Gateway can be expensive. Consider a NAT Instance (EC2 with `SourceDestCheck` disabled) for lower cost at scale, or use a proxy service (VPC Endpoints for AWS API calls).
+The longest matching destination prefix wins among applicable routes. An IGW route does not itself make an instance public; public IPv4/EIP, SG/NACL permissions and a listening service still matter. A gateway endpoint has an endpoint ID, policy and route entries. An interface endpoint has ENIs and SGs; inspect private DNS and its supported service/Region contract.
 
-### VPC Endpoints
+For IPv6, an egress-only internet gateway supports outbound-initiated traffic without accepting new internet-initiated connections; it is not an IPv4 NAT gateway. Design IPv6 SG/NACL rules, address assignment and DNS deliberately. A VPC Flow Log can help explain accepted/rejected flows but has exclusions and delivery delay; a missing record does not prove the packet never arrived.
 
-VPC Endpoints allow private connectivity to AWS services without going through the internet. Two types:
+For shared VPCs, distinguish the VPC owner from participant accounts. Participants may launch supported resources in shared subnets but do not receive blanket authority over owner routes and gateways. Reachability Analyzer can identify supported configuration blocks; it cannot prove an application listener or credentials work. Use Flow Logs and an application probe alongside it.
 
-**Interface Endpoints** — An ENI with a private IP in your subnet (powered by AWS PrivateLink)
+## Lessons and references
 
-- S3, DynamoDB, SQS, SNS, Lambda, KMS, CloudWatch, Secrets Manager, and 100+ services
-- Hourly cost per endpoint per AZ
-- Security group controls access
-
-**Gateway Endpoints** — A target in your route table for S3 and DynamoDB
-
-- Free to use
-- Only supports S3 and DynamoDB
-- Uses prefix lists in route tables
-- Most cost-effective for high-volume S3/DynamoDB access from private subnets
-
-### VPC Flow Logs
-
-Flow Logs capture traffic information for your VPC, subnet, or ENI. Not real-time — typically 10-15 minute delay before logs appear in CloudWatch Logs or S3.
-
-Log format: `version account-id interface-id srcaddr dstaddr srcport dstport protocol packets bytes action log-status`
-
-Actions:
-
-- `ACCEPT` — Traffic allowed by security group/NACL
-- `REJECT` — Traffic blocked by security group/NACL
-- `REJECT` — Traffic blocked by implicit VPC deny (no matching rule)
-
-Use cases:
-
-- Security monitoring (identify unauthorized access attempts)
-- Troubleshooting connectivity (which security group rule is blocking?)
-- Forensic analysis (what IPs were involved in an incident)
-- Compliance (log all traffic for audit)
-
-### Egress-Only Internet Gateway
-
-IPv6 only. Allows outbound traffic from instances (via their IPv6 address) while preventing inbound IPv6 connections. Unlike an IGW, it doesn't support IPv4.
-
-## Architecture: Three-Tier Web Application
-
-```
-Internet
-  ↓
-Internet Gateway
-  ↓
-Public Subnet (ALB)
-  ↓
-Private Subnet (EC2 App Tier) 10.0.11.0/24
-  ↓
-Private Subnet (RDS)10.0.21.0/24
-
-Route Tables:
-Public: 0.0.0.0/0 → IGW
-Private: 0.0.0.0/0 → NAT Gateway (in public subnet)
-RDS:10.0.0.0/16 → local
-```
-
-## VPC Sharing (AWS Organizations)
-
-VPC sharing allows an account to share subnets with other accounts in the same AWS Organization. The sharing account owns the VPC; member accounts launch resources into shared subnets.
-
-Benefits:
-
-- Members don't need VPC CIDR planning
-- Single VPC, multi-account usage
-- Shared infrastructure (NAT GW, Transit Gateway) managed centrally
-
-Limitations:
-
-- Cannot share subnets with accounts outside the Organization
-- All participants must be in the same Region
-
-## VPC Reachability Analyzer
-
-AReachability Analyzer helps you understand and debug network connectivity. You specify a source and destination, and AWS simulates the traffic path to identify where it's blocked.
-
-Use when:
-
-- A security group rule should allow traffic but connections still fail
-- You want to audit connectivity before a production deployment
-- Troubleshooting cross-account VPC Peering or Transit Gateway issues
-
-## Limits
-
-| Resource                        | Default Limit             |
-| ------------------------------- | ------------------------- |
-| VPCs per region                 | 5                         |
-| Subnets per VPC                 | 200                       |
-| IPv4 CIDR blocks per VPC        | 5 (max 16)                |
-| IPv6 CIDR blocks per VPC        | 1 (/56 default)           |
-| Route tables per VPC            | 200                       |
-| Elastic IPs                     | 5 per account             |
-| Security groups per VPC         | 500                       |
-| Rules per security group        | 60 inbound + 60 outbound  |
-| NACL rules per subnet           | 20 inbound + 20 outbound  |
-| VPC Peering connections per VPC | 50 (can request increase) |
-| NAT Gateways per AZ             | 5                         |
-
-## Operational Best Practices
-
-```
-□ Use /16 VPC with /24 subnets per AZ — simplifies IP management
-□ Always use at least 2 AZs — single-AZ is a single point of failure
-□ Place NAT Gateways in the same AZ as the instances they serve — avoids cross-AZ NAT costs
-□ Tag NAT Gateways with their AZ — helps identify which one to replace if an AZ fails
-□ Use Gateway Endpoints for S3/DynamoDB from private subnets — free vs $0.007/endpoint-hour for Interface Endpoints
-□ Enable VPC Flow Logs for all subnets — security monitoring and forensics
-□ Use Security Groups as the primary firewall — NACLs as explicit deny for specific IPs/subnets only
-□ Place ALB in public subnets, EC2/ECS in private subnets — never expose compute directly to the internet
-□ Use VPC endpoints for AWS API calls from private subnets — avoids NAT Gateway costs and internet exposure
-□ Set up a dedicated inspection VPC for perimeter security — Transit Gateway routes all traffic through it
-```
-
-## References
-
-- **Homepage:** https://aws.amazon.com/vpc/
-- **Documentation:** https://docs.aws.amazon.com/vpc/
-- **Pricing:** https://aws.amazon.com/vpc/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A three-tier web application in us-east-1 with 6 subnets (2 AZs × 3 tiers). NAT Gateway in each AZ ($0.045/hr × 2 = $0.09/hr = $64.80/month) + VPC Flow Logs (100GB/month × $0.01/GB = $1/month) + 2 Interface Endpoints for Secrets Manager and KMS ($0.007/endpoint-hour × 2 × 720hr = $10.08/month). Total: ~$76/month for networking infrastructure.
-
-**Scenario 2:** A startup with 50 EC2 instances in a private subnet making AWS API calls via a NAT Gateway.500GB/month outbound through NAT Gateway ($0.045/hr + $0.045/GB = $22.50 + $22.50 = $45/month for NAT data transfer). Using a Gateway Endpoint for S3 (free) instead of NAT Gateway for S3 calls saves $0.045/GB ×200GB = $9/month. VPC endpoints for AWS services: ~$10/month total. Total: ~$55/month.
-
-## Nuggets & Gotchas
-
-- **NAT Gateway has no Multi-AZ automatic failover:** If the AZ hosting your NAT Gateway goes down, instances in private subnets in other AZs that use that NAT Gateway lose internet access. Deploy one NAT Gateway per AZ, and route each AZ's private subnet traffic to its own NAT Gateway.
-- **Gateway Endpoints are route table entries, not resources:** There's no "Gateway Endpoint" resource to manage in the console — it's just a prefix list route in your route table. This makes them invisible in most tooling but free.
-- **Interface Endpoints cost $0.007/endpoint-hour per AZ:** In a 3-AZ VPC with 5 interface endpoints, that's 15 endpoint-hour charges per hour ($0.105/hr = $75/month). Minimize the number of AZs for interface endpoints or use PrivateLink endpoints in a single AZ.
-- **VPC Flow Logs don't capture DNS traffic from the VPC DNS resolver (resolver VPC IP):** If an instance queries the VPC DNS (at the VPC router IP), that DNS query won't appear in Flow Logs. This makes troubleshooting DNS issues from Flow Logs impossible.
-- **S3 VPC Endpoint policy is separate from the S3 bucket policy:** The VPC Endpoint can have its own access policy restricting which buckets are accessible from it. A bucket policy denying public access won't be overridden by a permissive VPC Endpoint policy — both must allow.
+- [[AWS/networking/vpc/vpc-peering|Peering]], [[AWS/networking/vpc/transit-gateway|TGW]], [[AWS/networking/vpc/vpn|VPN]].
+- [VPC concepts](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html).
+- [Subnet routing](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-route-tables.html).
+- [VPC quotas](https://docs.aws.amazon.com/vpc/latest/userguide/amazon-vpc-limits.html).
+- [Flow Logs](https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html).
+- [Pricing](https://aws.amazon.com/vpc/pricing/).
 
 ## Across the wiki
 

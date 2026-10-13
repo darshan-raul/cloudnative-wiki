@@ -1,176 +1,112 @@
 ---
-title: Elastic Load Balancing
-description: AWS Elastic Load Balancing — ALB (HTTP/S layer 7), NLB (TCP/UDP layer 4), and CLB (legacy). Target groups, health checks, sticky sessions, and cross-zone load balancing.
+title: AWS Elastic Load Balancing
+description: Choose ALB, NLB or GWLB by protocol and traffic path, then test target health, scoped access and reversible deployment.
 tags:
-  - aws
-  - networking
-  - load-balancing
-  - alb
-  - nlb
-date: 2026-06-06
+  - cloud/aws/networking
+date: 2026-10-12
 ---
 
-# Elastic Load Balancing (ELB)
+# AWS Elastic Load Balancing
 
-AWS provides three load balancer types. ALB and NLB are the current-generation types; CLB is the legacy type and should not be used for new deployments.
+ELB provides ALB, NLB, GWLB and legacy CLB offerings. Start with [[AWS/networking/vpc/README|routing]] and [[AWS/networking/vpc/security-groups|SGs]]. Protocol, health checking and inspection requirements determine the choice.
 
-## Load Balancer Types
+## Product boundaries
 
-|                    | ALB                        | NLB                                  | CLB             |
-| ------------------ | -------------------------- | ------------------------------------ | --------------- |
-| OSI Layer          | Layer 7 (HTTP/S)           | Layer 4 (TCP/UDP)                    | Layer 4 and 7   |
-| Routing            | Path-based, host-based     | IP-based                             | Port-based      |
-| TLS Termination    | Yes                        | Pass-through                         | Yes             |
-| WebSocket          | Yes                        | Yes                                  | Yes             |
-| HTTP/2             | Yes                        | No                                   | Yes             |
-| AWS WAF            | Yes (integrated)           | No                                   | No              |
-| Static IP          | No (changes on AZ changes) | Yes (one per AZ)                     | Yes             |
-| Preserve Client IP | X-Forwarded-For header     | Via proxy protocol                   | X-Forwarded-For |
-| Use when           | HTTP/S web services        | High-throughput, low-latency TCP/UDP | Legacy only     |
+| Type | Primary role                                                      | TLS and addressing                                             |
+| ---- | ----------------------------------------------------------------- | -------------------------------------------------------------- |
+| ALB  | HTTP/HTTPS request routing, supported gRPC/WebSocket integrations | TLS termination; no fixed-IP contract                          |
+| NLB  | Supported transport-level TCP/UDP/TLS routing                     | TCP pass-through or TLS listener termination; per-AZ addresses |
+| GWLB | Distribute traffic to supported virtual appliances using GENEVE   | Inspection topology, not an HTTP application router            |
+| CLB  | Legacy load balancing                                             | No HTTP/2 or static-IP promise; plan a supported migration     |
 
-## ALB: Application Load Balancer
+NLB can allocate supported addresses or use configured EIPs where applicable; an EIP is not required for every NLB deployment. Select public/internal scheme and enabled AZs explicitly.
 
-ALB operates at layer 7 and routes traffic based on URL path, host header, or query parameters. It's the right choice for microservices and HTTP APIs.
+## Health and security
 
-### Components
+ALB listeners use HTTP/HTTPS, not generic TCP listeners. ALB health checks use HTTP/HTTPS GET with configured path/matcher; /health is an example, not mandatory. Use NLB when a supported TCP health check meets the requirement.
 
-**Listener:** Listens on a port (e.g., TCP 443) with a TLS certificate and a default action.
+Allow only intended clients on the listener port. Public 0.0.0.0/0 is optional, not a requirement for internal or restricted-client ALBs. Permit LB-to-target application/health traffic with supported SG references, and check NACL forward/return paths.
 
-**Target Group:** A group of targets (EC2 instances, Lambda functions, IP addresses) that receive traffic. Each target group has its own health check.
+A target's health does not prove every application dependency works. Configure deregistration delay, application draining and deployment health checks according to actual request/connection lifetimes rather than a fixed “stateless means sixty seconds” rule.
 
-**Rule:** Routes conditions (path `/api/*`, host `api.example.com`) to target groups.
+## Two-target sandbox exercise
 
-### Rule Example
+Prerequisites: two sandbox subnets/AZs, two disposable HTTP targets with a known marker/health endpoint, scoped ELB/EC2 permissions and a budget.
 
-```
-Rule1: IF host is api.example.com AND path is /v1/*
- → Forward to: tg-api-v1
+1. Create a dedicated ALB with the intended scheme and client SG.
+2. Create a compatible target group/port/protocol and register both actual targets.
+3. Create an HTTP/HTTPS listener with a default forward action; if HTTPS, use a compatible regional certificate.
+4. Inspect target health, invoke the returned DNS name and verify both target markers over repeated requests.
+5. Break only one sandbox health endpoint. Observe the unhealthy reason and traffic distribution; restore it.
+6. Deny the test client on the LB SG, start a new connection and confirm failure; restore the intended rule.
+7. Deregister/drain targets, delete listener/LB and the dedicated target group, then remove disposable targets/groups/logs after dependencies clear.
 
-Rule 2: IF host is api.example.com AND path is /v2/*
-  → Forward to: tg-api-v2
+Expected evidence: listener/action configuration, target-health reason, allowed/denied client test and recovery. A created LB ARN is not a deployment checkpoint.
 
-Rule 3: IF host is app.example.com
-  → Forward to: tg-web
+For GWLB, follow [[AWS/networking/protection-and-inspection|the inspection path drill]] and a supported appliance's setup; routing both directions through the endpoint is part of the design.
 
-Default: IF no rule matches
-  → Redirect to: https://www.example.com
-```
+## Cost and capacity
 
-### Health Checks
+### Cross-zone routing and uneven capacity
 
-ALB sends HTTP GET requests to each target's health check path. A target is healthy when it returns2xx within the timeout window.
+ALB has cross-zone routing enabled at the load-balancer level; supported target groups can override it to off. NLB defaults to off at the load-balancer level; target groups can inherit or override the setting. Inspect both levels rather than guessing from the product name. [ALB configuration](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/edit-target-group-attributes.html), [NLB configuration](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/edit-target-group-attributes.html).
 
-```
-Health check: GET /health
-Timeout: 5 seconds
-Healthy threshold: 2 consecutive successes
-Unhealthy threshold: 2 consecutive failures
-Interval: 10 seconds
+```text
+Cross-zone off: AZ-A node → AZ-A targets; AZ-B node → AZ-B targets
+Cross-zone on:  either node → eligible targets across enabled AZs
 ```
 
-### Sticky Sessions
+If half the incoming traffic reaches each AZ but A has two targets and B has eight, off leaves each A target handling roughly four times the load of each B target, under an equal-target-work assumption. On can reduce this skew but cannot create missing capacity or guarantee equal work for unequal requests. Retain enough local capacity when disabling it, and measure transfer/capacity charges for the selected product rather than copying a universal surcharge.
 
-ALB can route requests from the same client to the same target using a cookie (`AWSALB` cookie). Useful for sessions stored in-memory on the target.
+### Target affinity versus deployment weights
 
-```
-Target group stickiness: Enabled (1 hour cookie duration)
-→ First request: routed to any target, cookie set
-→ Subsequent requests: routed to same target
-```
+ALB duration-based stickiness uses load-balancer cookies; application-based stickiness uses an application cookie plus load-balancer handling. Affinity is unavailable with cross-zone disabled. Weighted forwarding has a separate target-group-stickiness setting: choosing a group is different from choosing a target inside it. [Forward-action contract](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/rule-action-types.html).
 
-## NLB: Network Load Balancer
+For the two-target ALB lab, retain the original target-group attributes, then enable duration-based affinity for 60 seconds:
 
-NLB operates at layer 4 and handles TCP, UDP, and TLS traffic. It can handle millions of requests per second with ultra-low latency.
-
-### Key Features
-
-- **Static IP addresses** — One per AZ (using one Elastic IP per AZ)
-- **Preserve client IP** — Client IP is visible to targets via proxy protocol or, for TCP, directly
-- **Cross-zone load balancing** — Off by default (targets in AZ-A only receive traffic from AZ-A's NLB node)
-
-### Target Types
-
-NLB can route to:
-
-- EC2 instances (via ENI)
-- IP addresses (for on-premises targets via Direct Connect)
-- Application Load Balancers (NLB → ALB pattern for WAF integration)
-
-### TLS Termination on NLB
-
-Unlike ALB, NLB passes TLS through to targets without terminating. To terminate TLS at the NLB, use a TLS listener with a certificate.
-
-## Cross-Zone Load Balancing
-
-**ALB:** Cross-zone load balancing is enabled by default. Each AZ's ALB node distributes traffic to targets in all AZs.
-
-**NLB:** Cross-zone load balancing is disabled by default. Traffic from an AZ's NLB node only goes to targets in the same AZ. Enable it to distribute evenly across all targets regardless of AZ.
-
-```
-NLB with cross-zone disabled:
- AZ-A NLB node → only targets in AZ-A
-  AZ-B NLB node → only targets in AZ-B
-
-NLB with cross-zone enabled:
-  AZ-A NLB node → targets in AZ-A AND AZ-B
+```bash
+aws elbv2 describe-target-group-attributes --target-group-arn "$ELB_LAB_TG_ARN"
+aws elbv2 modify-target-group-attributes \
+  --target-group-arn "$ELB_LAB_TG_ARN" \
+  --attributes Key=stickiness.enabled,Value=true \
+    Key=stickiness.type,Value=lb_cookie \
+    Key=stickiness.lb_cookie.duration_seconds,Value=60
+curl -fsS -c elb-lab-cookies.txt "http://$ELB_LAB_DNS/"
+curl -fsS -b elb-lab-cookies.txt "http://$ELB_LAB_DNS/"
 ```
 
-## Connection Draining
+Set these variables to the dedicated group's ARN and reachable HTTP listener DNS name. The second request should retain the marker while its selected target stays eligible. Repeat without cookies; then fail that target and verify rerouting. Affinity does not preserve in-memory session data when the target disappears: use a durable/shared session store where required. Restore the recorded attributes and remove the local cookie file. Do not enable this test on a shared target group.
 
-Connection draining allows in-flight requests to complete before a target is deregistered. Prevents request failures during deployments and ASG scale-in events.
+ALB capacity units use the maximum applicable dimension across connections, processed bytes and rule evaluations. Monthly request count alone cannot determine LCUs. NLB uses its protocol-specific connection/byte dimensions; 10 Gbps is not universally ten NLCUs.
 
+Price LB-hours, measured capacity units, public addresses, logs and applicable transfer. Do not compare two products using guessed capacity units or different workloads. Check current account/Region quotas and required address capacity before launch.
+
+## Request path and ALB versus NLB choices
+
+```text
+DNS → load balancer listener → ordered rule → target group → healthy target
+               │                              │
+        client SG / certificate       target SG / health path
 ```
-Connection draining timeout: 300 seconds (default, configurable 1-3600)
-→ Target marked deregistering
-→ ALB/NLB stops sending new requests
-→ Existing connections allowed to complete
-→ Target fully deregistered after draining
-```
 
-## ALB vs NLB Decision Matrix
+| Need                               | Start with | Verify                                              |
+| ---------------------------------- | ---------- | --------------------------------------------------- |
+| Route by HTTP host/path/header     | ALB        | Rule priority, target group and health matcher      |
+| Pass supported TCP/UDP traffic     | NLB        | Listener/target protocol and client IP requirements |
+| Inspect traffic through appliances | GWLB       | Symmetric routes and appliance health               |
 
-| Use Case                                          | Recommended LB      |
-| ------------------------------------------------- | ------------------- |
-| HTTP/S microservice with URL routing              | ALB                 |
-| HTTP/S API with WAF integration                   | ALB                 |
-| gRPC service                                      | ALB (HTTP/2)        |
-| High-throughput TCP/UDP (video streaming, gaming) | NLB                 |
-| IoT MQTT over TCP                                 | NLB                 |
-| DNS-over-TCP                                      | NLB                 |
-| Legacy TCP application                            | NLB                 |
-| TLS termination at load balancer                  | ALB (easier) or NLB |
-| Static IP for whitelisting                        | NLB                 |
+For an ALB, a listener has a default action and can evaluate additional rules in priority order. A healthy target must be registered, attached through a rule, in an enabled AZ and able to answer its health request. `unused` can mean the group is not referenced or the target's AZ is disabled; `unhealthy` carries reason codes such as timeout or response-code mismatch. If every registered target is unhealthy, ALB can fail open to those targets, so an all-red health dashboard is a serious incident rather than a guarantee of zero traffic. See the [target-health contract](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html).
 
-## Limits
-
-| Resource                  | Limit                    |
-| ------------------------- | ------------------------ |
-| Load balancers per region | 50                       |
-| Target groups per LB      | 100                      |
-| Targets per target group  | 1000                     |
-| Listeners per LB          | 50                       |
-| Rules per LB              | 100 (minus default rule) |
-| Certificates per LB       | 25                       |
+During deployment, set draining long enough for actual requests/streams and check application readiness separately from process liveness. For an internal service, keep the scheme and SG scoped to intended callers; DNS visibility by itself does not grant a network path. For a cost worksheet, measure the actual hourly LB charge and each applicable capacity dimension before comparing ALB and NLB.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/elasticloadbalancing/
-- **Documentation:** https://docs.aws.amazon.com/elasticloadbalancing/
-- **Pricing:** https://aws.amazon.com/elasticloadbalancing/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A production web application with ALB,3 targets (t3.medium EC2 instances), 1M requests/month. ALB hourly: $0.0225 ×720hr = $16.20/month. LCU: 1M requests/month ÷ 30 days = 33K requests/day = ~0.5 LCU/hour. At $0.008/LCU-hour = $0.004/hr × 720hr = $2.88/month. Total: ~$19/month. Plus NLB for a separate TCP service: $0.0225 × 720hr = $16.20/month.
-
-**Scenario 2:** A high-throughput video streaming service using NLB with 10 targets across 3 AZs. 10Gbps throughput. NLB hourly: $0.0225 × 720hr = $16.20/month. NLB Capacity Units (NCU): 10 NCUs × $0.006/NCU-hour × 720hr = $43.20/month. Total: ~$59/month. Plus cross-zone load balancing enabled: traffic now distributes evenly, reducing per-target CPU variance.
-
-## Nuggets & Gotchas
-
-- **ALB security groups must allow traffic from anywhere (0.0.0.0/0):** The ALB is the internet-facing entry point. If its security group restricts inbound traffic, clients can't reach it. The ALB security group should allow 0.0.0.0/0 on the listener port.
-- **NLB cross-zone load balancing is disabled by default:** Without it, if AZ-A has 2 targets and AZ-B has 10 targets, AZ-A's NLB node only sends traffic to its 2 targets. Enable cross-zone load balancing for even distribution.
-- **ALB health checks are HTTP — targets must respond to GET /health:** If your service doesn't expose an HTTP endpoint, use TCP health checks (ALB supports TCP health checks too). A service that only accepts POST requests will always fail HTTP health checks.
-- **Connection draining has a 5-minute default timeout:** During deployments, targets are deregistered and new ones added. With connection draining, old targets complete in-flight requests before terminating. Set it appropriately — 300 seconds is conservative for most web apps, 60 seconds is fine for stateless services.
-- **ALB deregistration delay vs connection draining:** Deregistration delay is the new name for connection draining. Same concept, new name. Use deregistration delay in ALB configuration, connection draining in NLB configuration.
+- [ELB protocols and behavior](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/how-elastic-load-balancing-works.html).
+- [ALB health checks](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/target-group-health-checks.html).
+- [ALB security groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-update-security-groups.html).
+- [NLB TLS listeners](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-tls-listener.html).
+- [Gateway Load Balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/introduction.html).
+- [Pricing and capacity-unit dimensions](https://aws.amazon.com/elasticloadbalancing/pricing/).
 
 ## Across the wiki
 

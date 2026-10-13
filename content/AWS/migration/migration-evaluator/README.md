@@ -2,195 +2,93 @@
 title: Migration Evaluator
 description: AWS Migration Evaluator — generates TCO reports and right-sizing recommendations for AWS migration, assessment creation, and data collection methods
 tags:
-  - aws
-  - migration
-date: 2026-06-06
+  - aws/migration
+date: 2026-10-12
 ---
 
 # Migration Evaluator
 
-Migration Evaluator (formerly TSO Logic) is an assessment tool that analyzes your on-premises environment and generates a Total Cost of Ownership (TCO) comparison with AWS. It helps build the business case for migration by showing cost savings over time.
+Prerequisites: [[AWS/security/iam/README|temporary-credential IAM roles]], [[AWS/networking/vpc/README|VPC routing]] and the [[AWS/migration/README|migration acceptance/rollback plan]].
 
-## What It Provides
+Migration Evaluator builds a data-informed migration business case. Its agentless assessment covers supported physical/virtual Windows and Linux profiles, including SQL Server discovery; it is not a VMware-only agent installation service.
 
-- **Current state inventory:** Servers, utilization, workloads
-- **AWS recommendation per server:** Instance type, storage, estimated monthly cost
-- **3-year TCO comparison:** On-premises cost vs AWS cost over 3 years
-- **Migration strategy per server:** Rehost (MGN), replatform (RDS), refactor (Lambda)
-- **Right-sizing recommendations:** Based on actual utilization, not over-provisioned specs
+## Scope and distinctions
 
-## Core Concepts
+Do not conflate the Migration Evaluator Collector with Application Discovery's Agentless Collector, Discovery Agent or historical Connector. Evaluator assessment/sizing outputs support a business case; they do not automatically choose a workload's migration strategy or replace application-owner dependency analysis.
 
-### Assessment
+Inventory licensing, peak utilization, memory pressure, storage throughput/IOPS, support deadlines, network connectivity and migration effort. A low average CPU value alone is not a safe downsizing decision.
 
-An assessment is a collection of on-premises data analyzed to generate migration recommendations. Assessments can be created from:
+## Assessment exercise
 
-- **Agentless collector:** A lightweight VM deployed in your environment that scans VMware
-- **AWS Agentless Discovery Connector:** The same collector, installed via OVA/VMWare template
-- **Import data:** CSV/JSON import from existing CMDB or discovery tools
+1. Define the business question, source scope, data classification and representative observation period. Identify data owners and obtain collection authorization.
+2. Follow the owning request/collector workflow; validate hypervisor/physical source support, read-only credentials, connectivity and collection permissions. Alternatively use the supported data-import process for an eligible dataset.
+3. Compare collected server counts and observation periods with authoritative inventory. Investigate missing hosts and collection failures before calculating savings.
+4. Review current-state and proposed-state assumptions with finance and application owners: licensing model, Region, target instance family, storage, operational overlap and commitments.
+5. Create two scenarios (conservative baseline and optimized), record assumptions and uncertainty, and compare peak-capacity requirements. Do not use an invented CLI namespace/assessment command or fictional CSV schema.
+6. Stop/remove the disposable collector and revoke its collection credentials when finished. Preserve approved business-case artifacts under the organization's retention rules.
 
-### Data Collection
+## Output quality
 
-```bash
-# Create an assessment (via console or CLI)
-aws migrationevaluator create-assessment \
-  --name "prod-environment-assessment" \
-  --s3-bucket-config '{
-    "Bucket": "my-assessments-bucket",
-    "KeyPrefix": "assessments/prod/",
-    "ServiceRoleArn": "arn:aws:iam::123456789012:role/MigrationEvaluatorRole"
-  }'
+A defensible TCO includes infrastructure, licenses, labor/operations, network, disaster recovery and migration overlap. Separate observed usage from projected savings and commitment risk; a modeled discount is not a guaranteed invoice.
 
-# Download the collector OVA from Migration Evaluator console
-# Deploy in VMware, configure with your AWS credentials
-# Collector scans VMware and uploads data to S3
+Translate findings into [[AWS/migration/README|seven-R decisions]] and migration waves. Pair this work with source-specific dependency discovery rather than claiming the evaluator supplies detailed process/network telemetry.
 
-# Import data from existing CMDB
-aws migrationevaluator import-data \
-  --data-source "CMDB" \
-  --s3-bucket "my-assessments-bucket" \
-  --s3-key "import/server-inventory.csv"
+## Cost and lifecycle
+
+Review current service eligibility and assessment terms before starting. The business-case tool's terms do not make collection hosts, migration staging or target resources free. Reference current AWS pricing inputs rather than retaining stale universal instance rates.
+
+## Assessment architecture and evidence model
+
+```text
+authorized physical/virtual inventory + representative utilization
+                 ↓
+agentless collector / supported imported assessment data
+                 ↓
+quality checks → licensing/capacity assumptions → AWS scenarios
+                 ↓
+business-case report → owner/finance review → migration strategy
 ```
 
-### Collector Deployment
+| Evidence            | Question                                          | Incorrect shortcut                                 |
+| ------------------- | ------------------------------------------------- | -------------------------------------------------- |
+| Inventory/support   | Which systems/versions/owners are in scope?       | Assume VMware-only or every OS is supported        |
+| CPU/memory profiles | What peaks/headroom must the target absorb?       | Size from CPU average alone                        |
+| Storage/network     | What capacity/IOPS/throughput/latency are needed? | Compare only RAM and vCPU                          |
+| Licensing           | What contracts/mobility/SQL options apply?        | Apply one blanket OS discount                      |
+| Dependencies        | What must move together or remain reachable?      | Infer complete topology from a sizing report       |
+| Observation quality | Which windows/hosts are missing?                  | Treat an incomplete collector run as the portfolio |
 
-The agentless collector is a VMware VM that:
+## Server-level recommendation walkthrough
 
-1. Connects to your vCenter
-2. Discovers all VMs and their resource utilization
-3. Collects performance metrics over a period (typically 2-4 weeks)
-4. Uploads anonymized data to your S3 bucket
-5. Migration Evaluator processes the data and generates the TCO report
+For one synthetic server record, keep observed and projected values separate. Suppose average CPU is 10% but p95 is 70%, memory peak is 14 GB and a batch window is latency-sensitive. A candidate target must satisfy CPU architecture/performance, memory headroom, disk/network and support/license requirements. “10% CPU therefore one tenth the vCPU” is not a defensible sizing rule.
 
-**Deployment steps:**
+Compare an initial compatible configuration, a right-sized configuration and a managed-platform alternative at equal availability. State confidence and missing measurement. Test the candidate using representative application/batch data before accepting the report's estimate.
 
-1. Download OVA from Migration Evaluator console
-2. Deploy in VMware (2 vCPU, 4GB RAM)
-3. Configure vCenter credentials
-4. Configure S3 bucket for data upload
-5. Configure AWS credentials (for uploading data)
-6. Let it run for 2-4 weeks to capture realistic utilization patterns
+## Business-case worksheet and dimensional example
 
-## TCO Report Contents
+| Cost row   | Current state                                   | AWS scenario                            | Evidence                               |
+| ---------- | ----------------------------------------------- | --------------------------------------- | -------------------------------------- |
+| Compute    | Owned/leased capacity and remaining commitments | Running hours/purchase model/Region/OS  | Utilization plus current scoped tariff |
+| Storage    | Capacity, performance, backup and support       | Volumes, I/O, snapshots/copies/restore  | Retention and measured demand          |
+| Software   | Existing licenses/support                       | BYOL/managed/licensed options           | Contract and support eligibility       |
+| Network    | Circuits/firewalls/egress                       | Transfer, gateways/endpoints/circuits   | Direction, GB and hours                |
+| Operations | Current people/tooling                          | Migration/steady-state responsibilities | Explicit ownership                     |
+| Overlap    | Existing environment                            | Staging/test/parallel-running period    | Cutover/decommission timeline          |
 
-### Server-Level Recommendations
+At hypothetical \$0.20/hour, twenty instances for 730 hours are \$2,920 before dependencies—not twenty × \$0.20 as a monthly estimate. A claimed 30% savings applies only to the cost rows actually reduced; it does not discount license/support/network automatically. Calculate baseline/scenario totals and show the assumption change.
 
-For each discovered server, the report provides:
+## Assessment variants and migration handoff
 
-```
-Server: web-prod-01
-  Current specs: 4 vCPU, 16GB RAM, 500GB SSD
-  Avg utilization: 35% CPU, 8GB RAM used
-  →
-  AWS recommendation: t3.medium ($0.041/hr = ~$30/month)
-  Storage: gp3 500GB ($50/month)
-  Total AWS: ~$80/month vs on-prem: ~$200/month (amortized hardware)
-```
+A preliminary business case can use approved imported inventory; a measured assessment improves evidence but still needs quality checks. These are engagement/data-quality stages, not an invented agent-based versus VMware-only product catalog.
 
-### Right-Sizing Logic
+Validate licensing, criticality, effort and dependency requirements with owners before seven-R classification. Record assessment revision, data period, assumptions, recommended tests and unresolved systems. Feed the approved evidence into a supported tracking workflow; do not invent export-to-Migration-Hub API calls.
 
-Migration Evaluator right-sizes based on **actual utilization**, not raw specs:
+Stop/revoke disposable collection after completion, retain approved reports and remove sensitive raw exports according to policy. Target/staging and any collector hosting resources remain separate cost dimensions.
 
-- A server with 4 vCPU specs but 10% average utilization → recommended t3.small
-- A server with 16GB RAM specs but 8GB used → recommended instance type with 16GB
+References: [Evaluator capabilities](https://docs.aws.amazon.com/prescriptive-guidance/latest/migration-tools/discovery-migration-evaluator.html), [Evaluator resources](https://aws.amazon.com/migration-evaluator/resources/), [migration business case](https://docs.aws.amazon.com/prescriptive-guidance/latest/strategy-migration/business-case.html).
 
-This avoids the common mistake of migrating a 4-socket monster to a 4xlarge EC2 when it's actually using resources of a medium instance.
+## References
 
-### Migration Strategy Classification
-
-Each server gets classified into one of the 6 Rs:
-
-- **Rehost:** Lift-and-shift via MGN. For servers where refactoring cost > migration cost.
-- **Replatform:** Minor changes (e.g., migrate to RDS, move to EFS). For database servers.
-- **Refactor:** Re-architect to managed services. For apps where cloud-native fits better.
-- **Retire:** Decommission instead of migrate. For underutilized or redundant servers.
-- **Retain:** Keep on-premises for now. For regulatory or strategic reasons.
-- **Repurchase:** Move to SaaS. For standard software with SaaS equivalents.
-
-## Assessment Types
-
-### Initial Assessment (no agent)
-
-Quick assessment based on VMware inventory data without deep performance metrics:
-
-- Lower cost, faster to complete
-- Less accurate utilization data (uses spec vs actual)
-- Good for initial business case and rough estimates
-
-### Agent-Based Assessment
-
-Deploy collector agents on servers for accurate performance data:
-
-- More accurate utilization metrics (CPU, memory, disk over time)
-- Process-level visibility (which processes are running)
-- Network dependency mapping
-- Recommended for production migration planning
-
-### Import Assessment
-
-Import data from existing tools:
-
-- CMDB exports (ServiceNow, BMC, etc.)
-- Cloudhealth or other cloud management platforms
-- Azure Migrate assessments
-- Google Cloud assessments
-
-## Business Case Report
-
-The TCO report generates a 3-year cost comparison:
-
-```
-3-Year TCO Comparison:
-  On-premises: $1.2M (hardware, power, cooling, staff, maintenance)
-  AWS: $680K (EC2, storage, networking, data transfer, staff savings)
-  Net savings: $520K over 3 years (~43% reduction)
-
-Annual breakdown:
-  Year 1: -$180K (migration costs offset initial savings)
-  Year 2: +$220K savings
-  Year 3: +$280K savings
-```
-
-## Integration with Migration Hub
-
-Migration Evaluator exports recommendations to Migration Hub:
-
-```bash
-# Export assessment to Migration Hub
-aws migrationevaluator export-assessment \
-  --assessment-id assess-1234567890abcdef0 \
-  --export-format MIGRATION_HUB
-
-# In Migration Hub, the exported servers appear as applications
-# You can then use MGN to migrate them
-```
-
-This lets you go from assessment → planning → execution using AWS native tools.
-
-## Cost
-
-- **Migration Evaluator itself:** Free for data collection and assessment generation
-- **Agentless collector:** Runs as a small VM (no AWS charge for the collector itself)
-- **S3 costs:** For storing assessment data (minimal, < 1GB per assessment)
-
-## Limitations
-
-- **VMware only** for agentless collection (no Hyper-V, physical, or other hypervisors)
-- **Utilization data:** Best accuracy requires 2-4 weeks of collection
-- **Not real-time:** Assessment is a point-in-time analysis, not ongoing monitoring
-- **Estimates, not contracts:** AWS pricing in the report is indicative, not guaranteed pricing
-
-## When to Use
-
-### Use Migration Evaluator when:
-
-- Building a business case for migration to present to leadership
-- Trying to understand how much you could save
-- Right-sizing before migration (avoid over-provisioning AWS resources)
-- Planning a large-scale migration and need to prioritize
-
-### Don't use for:
-
-- Day-to-day cost optimization of existing AWS environment (use Cost Explorer)
-- Real-time monitoring (CloudWatch is better)
-- Detailed migration execution (use MGN, DMS, DataSync for that)
+- [AWS tool capability matrix](https://docs.aws.amazon.com/prescriptive-guidance/latest/migration-tools/discovery-migration-evaluator.html)
+- [Migration Evaluator](https://aws.amazon.com/migration-evaluator/)
+- [Migration assessment guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/migration-tools/discovery-migration-evaluator.html)

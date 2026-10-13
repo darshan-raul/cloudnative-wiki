@@ -1,13 +1,24 @@
 ---
 title: AWS
-tags: [aws, cloud, amazon-web-services]
-date: 2025-05-24
+tags: [cloud/aws]
+date: 2026-10-12
 description: Amazon Web Services - compute, storage, databases, networking, security, analytics, machine learning, serverless, and application integration
 ---
 
 # AWS ☁️
 
-Amazon Web Services — built from scratch with deep notes on every major service. Each section has References (homepage/docs/pricing), 2 pricing scenarios, and 5+ nuggets/gotchas.
+A learning guide to AWS architecture and operations—not an exhaustive product catalog. Start with requirements and safe access, then build and test one bounded workload.
+
+## Start here
+
+1. [[AWS/foundations/README|Foundations and account boundaries]] → [[AWS/foundations/getting-started|first safe session]].
+2. [[AWS/security/iam/policy-evaluation|Policy evaluation]], [[AWS/security/iam/identity-center|workforce access]] and [[AWS/security/iam/sts-and-federation|temporary credentials]].
+3. [[AWS/networking/README|Network paths]] and [[AWS/compute/README|compute selection]].
+4. [[AWS/architecture/data-store-selection|Data-store selection]] and [[AWS/reliability/backup-and-recovery|tested recovery]].
+5. [[AWS/developer-tools/README|Delivery]], [[AWS/monitoring/tracing-and-observability|observability]] and [[AWS/operations/README|operations]].
+6. [[AWS/architecture/well-architected|Six-pillar workload review]] and [[AWS/cost-management/README|cost decisions]].
+
+Examples state prerequisites, checkpoints, failure handling and cleanup. Numeric cost scenarios are scoped assumptions, not timeless quotes; no lab is implicitly free or live-deployment certified.
 
 ## Compute
 
@@ -28,22 +39,22 @@ Amazon Web Services — built from scratch with deep notes on every major servic
 | [[AWS/storage/ebs/README\|EBS]]                         | Block storage — gp2/gp3/io2, snapshots, encryption, volumes             |
 | [[AWS/storage/efs/README\|EFS]]                         | Network file system — throughput modes, access patterns, Mount Targets  |
 | [[AWS/storage/fsx/README\|FSx]]                         | Managed file systems — FSx for Windows, Lustre, OpenZFS, NetApp         |
-| [[AWS/storage/glacier/README\|Glacier]]                 | Archive storage — vaults, retrieval options, data retrieval policies    |
+| [[AWS/storage/glacier/README\|Glacier]]                 | S3 archival classes and restores; standalone vault history              |
 | [[AWS/storage/storage-gateway/README\|Storage Gateway]] | Hybrid storage — File Gateway, Volume Gateway, Tape Gateway             |
 
 ## Databases
 
-| Service                                           | Description                                                             |
-| ------------------------------------------------- | ----------------------------------------------------------------------- |
-| [[AWS/databases/rds/README\|RDS]]                 | Managed relational — Multi-AZ, read replicas, parameter groups, backups |
-| [[AWS/databases/aurora/README\|Aurora]]           | MySQL/PG compatible — 6-way replication, serverless v2, global database |
-| [[AWS/databases/dynamodb/README\|DynamoDB]]       | NoSQL key-value — partitions, GSI/LSI, on-demand, DAX, streams          |
-| [[AWS/databases/elasticache/README\|ElastiCache]] | In-memory cache — Redis vs Memcached, clusters, strategies              |
-| [[AWS/databases/redshift/README\|Redshift]]       | Data warehouse — RA3, distribution styles, spectrum, data sharing       |
-| [[AWS/databases/documentdb/README\|DocumentDB]]   | MongoDB compatible — aggregation, change streams, transactions          |
-| [[AWS/databases/neptune/README\|Neptune]]         | Graph database — Gremlin, SPARQL, fraud detection                       |
-| [[AWS/databases/qldb/README\|QLDB]]               | Immutable ledger — cryptographically verifiable, PartiQL                |
-| [[AWS/databases/timestream/README\|Timestream]]   | Time-series DB — hot/warm/cold tiers, scheduled queries                 |
+| Service                                           | Description                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| [[AWS/databases/rds/README\|RDS]]                 | Managed relational — Multi-AZ, read replicas, parameter groups, backups  |
+| [[AWS/databases/aurora/README\|Aurora]]           | MySQL/PG compatible — 6-way replication, serverless v2, global database  |
+| [[AWS/databases/dynamodb/README\|DynamoDB]]       | NoSQL key-value — partitions, GSI/LSI, on-demand, DAX, streams           |
+| [[AWS/databases/elasticache/README\|ElastiCache]] | Valkey, Redis OSS and Memcached; node/serverless operating models        |
+| [[AWS/databases/redshift/README\|Redshift]]       | Data warehouse — RA3, distribution styles, spectrum, data sharing        |
+| [[AWS/databases/documentdb/README\|DocumentDB]]   | MongoDB compatible — aggregation, change streams, transactions           |
+| [[AWS/databases/neptune/README\|Neptune]]         | Graph database — Gremlin, SPARQL, openCypher and analytics               |
+| [[AWS/databases/qldb/README\|QLDB (retired)]]     | Historical ledger semantics; no new deployment                           |
+| [[AWS/databases/timestream/README\|Timestream]]   | LiveAnalytics eligibility, memory/magnetic storage; InfluxDB distinction |
 
 ## Networking
 
@@ -53,8 +64,8 @@ Amazon Web Services — built from scratch with deep notes on every major servic
 | [[AWS/networking/vpc/security-groups\|Security Groups]]  | Stateful firewall — rules, referencing, default deny            |
 | [[AWS/networking/vpc/network-acls\|Network ACLs]]        | Stateless subnet firewall — rules evaluated in order            |
 | [[AWS/networking/vpc/vpc-peering\|VPC Peering]]          | Direct VPC-to-VPC — no transitive routing                       |
-| [[AWS/networking/vpc/transit-gateway\|Transit Gateway]]  | Hub-and-spoke — regional or global, route tables                |
-| [[AWS/networking/load-balancing/README\|Load Balancing]] | ALB, NLB, CLB — target groups, health checks, listeners         |
+| [[AWS/networking/vpc/transit-gateway\|Transit Gateway]]  | Regional hub-and-spoke routing and inter-Region peering         |
+| [[AWS/networking/load-balancing/README\|Load Balancing]] | ALB, NLB, GWLB and legacy CLB; target health and access         |
 | [[AWS/networking/dns/README\|DNS]]                       | Route 53 — hosted zones, records, routing policies, DNSSEC      |
 | [[AWS/networking/cdn/README\|CDN]]                       | CloudFront — distributions, origins, behaviors, functions       |
 | [[AWS/networking/hybrid/README\|Hybrid]]                 | Direct Connect, VPN, PrivateLink, Outposts                      |
@@ -110,17 +121,17 @@ Amazon Web Services — built from scratch with deep notes on every major servic
 
 ## Analytics
 
-| Service                                                          | Description                                                     |
-| ---------------------------------------------------------------- | --------------------------------------------------------------- |
-| [[AWS/analytics/kinesis/README\|Kinesis Data Streams]]           | Streaming — shards, KPL/KCL, enhanced fan-out                   |
-| [[AWS/analytics/kinesis/data-firehose\|Kinesis Data Firehose]]   | Streaming delivery — destinations, buffering, transforms        |
-| [[AWS/analytics/kinesis/data-analytics\|Kinesis Data Analytics]] | Streaming SQL — windows, reference data, Flink                  |
-| [[AWS/analytics/athena/README\|Athena]]                          | Serverless SQL — schema-on-read, partitions, compressed formats |
-| [[AWS/analytics/redshift/README\|Redshift]]                      | Data warehouse — RA3, distribution, spectrum, data sharing      |
-| [[AWS/analytics/glue/README\|Glue]]                              | ETL — crawlers, Data Catalog, Spark jobs, job bookmarks         |
-| [[AWS/analytics/opensearch/README\|OpenSearch]]                  | Search/analytics — index architecture, UltraWarm, dashboards    |
-| [[AWS/analytics/emr/README\|EMR]]                                | Big data — Spark, Hadoop, serverless, instance fleets           |
-| [[AWS/analytics/lake-formation/README\|Lake Formation]]          | Data lake — LF-tags, column/row security, cross-account         |
+| Service                                                       | Description                                                     |
+| ------------------------------------------------------------- | --------------------------------------------------------------- |
+| [[AWS/analytics/kinesis/README\|Kinesis Data Streams]]        | Streaming — shards, KPL/KCL, enhanced fan-out                   |
+| [[AWS/analytics/kinesis/data-firehose\|Amazon Data Firehose]] | Streaming delivery — destinations, buffering, transforms        |
+| [[AWS/analytics/managed-flink\|Managed Flink]]                | Stateful streaming, checkpoints, replay and sink guarantees     |
+| [[AWS/analytics/athena/README\|Athena]]                       | Serverless SQL — schema-on-read, partitions, compressed formats |
+| [[AWS/analytics/redshift/README\|Redshift]]                   | Data warehouse — RA3, distribution, spectrum, data sharing      |
+| [[AWS/analytics/glue/README\|Glue]]                           | ETL — crawlers, Data Catalog, Spark jobs, job bookmarks         |
+| [[AWS/analytics/opensearch/README\|OpenSearch]]               | Search/analytics — index architecture, UltraWarm, dashboards    |
+| [[AWS/analytics/emr/README\|EMR]]                             | Big data — Spark, Hadoop, serverless, instance fleets           |
+| [[AWS/analytics/lake-formation/README\|Lake Formation]]       | Data lake — LF-tags, column/row security, cross-account         |
 
 ## Machine Learning
 
@@ -135,11 +146,11 @@ Amazon Web Services — built from scratch with deep notes on every major servic
 
 ## Serverless
 
-| Service                                            | Description                                              |
-| -------------------------------------------------- | -------------------------------------------------------- |
-| [[AWS/serverless/lambda/README\|Lambda]]           | Functions — runtimes, layers, versions, VPC, cold starts |
-| [[AWS/serverless/api-gateway/README\|API Gateway]] | APIs — REST, HTTP, WebSocket, authorizers, rate limiting |
-| [[AWS/serverless/app-runner/README\|App Runner]]   | Container web apps — from image or code, auto-scaling    |
+| Service                                                               | Description                                                            |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [[AWS/serverless/lambda/README\|Lambda]]                              | Functions — runtimes, layers, versions, VPC, cold starts               |
+| [[AWS/serverless/api-gateway/README\|API Gateway]]                    | APIs — REST, HTTP, WebSocket, authorizers, rate limiting               |
+| [[AWS/serverless/app-runner/README\|App Runner (existing customers)]] | Closed to new customers; source/image deployment and migration choices |
 
 ## Cost Management
 
@@ -154,12 +165,12 @@ Amazon Web Services — built from scratch with deep notes on every major servic
 
 ## Migration
 
-| Service                                                           | Description                                                        |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------ |
-| [[AWS/migration/dms/README\|DMS]]                                 | Database migration — full load, CDC, heterogeneous, SCT            |
-| [[AWS/migration/datasync/README\|DataSync]]                       | Data transfer — NFS, SMB, S3, EFS, FSx, agent, scheduling          |
-| [[AWS/migration/application-migration-service/README\|MGN]]       | Lift-and-shift — agentless, waves, cutover, continuous replication |
-| [[AWS/migration/migration-evaluator/README\|Migration Evaluator]] | TCO analysis — right-sizing, assessment, collector                 |
+| Service                                                           | Description                                                       |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [[AWS/migration/dms/README\|DMS]]                                 | Database migration — full load, CDC, heterogeneous, SCT           |
+| [[AWS/migration/datasync/README\|DataSync]]                       | Data transfer — NFS, SMB, S3, EFS, FSx, agent, scheduling         |
+| [[AWS/migration/application-migration-service/README\|MGN]]       | Server replication, isolated tests, validated cutover and cleanup |
+| [[AWS/migration/migration-evaluator/README\|Migration Evaluator]] | TCO analysis — right-sizing, assessment, collector                |
 
 ## AWS Certification
 
@@ -188,4 +199,23 @@ Amazon Web Services — built from scratch with deep notes on every major servic
 
 - [[Kubernetes]] — EKS runs on AWS; see also [[AWS/networking/vpc/README|VPC networking]] for cluster networking
 - [[AI/aws/README|Bedrock and SageMaker]] for ML workloads
-- [[Linux]] — EC2 Linux instances, SSM Session Manager
+- [[Linux/README]] — EC2 Linux instances, SSM Session Manager
+
+## Additional learning modules
+
+- [[AWS/compute/auto-scaling|Auto Scaling and capacity lifecycle]] and [[AWS/compute/ecr|ECR image lifecycle]].
+- [[AWS/networking/private-access-and-hybrid-dns|Private access and hybrid DNS]], [[AWS/networking/global-network-services|global network services]], [[AWS/networking/protection-and-inspection|protection/inspection]].
+- [[AWS/storage/s3/protection-and-recovery|S3 protection and recovery]], [[AWS/storage/ebs/amazon-data-lifecycle-manager|DLM]].
+- [[AWS/analytics/msk|MSK streaming guarantees]] and [[AWS/analytics/kinesis/data-analytics|retired SQL migration context]].
+- [[AWS/architecture/README|Architecture]], [[AWS/reliability/README|reliability]] and [[AWS/operations/quotas-health-and-support|quota/Health/support operations]].
+
+## Primary frameworks
+
+- [AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html).
+- [AWS shared responsibility](https://aws.amazon.com/compliance/shared-responsibility-model/).
+
+## Identity, sharing and BI extensions
+
+- [[AWS/security/cognito|Cognito application identity]].
+- [[AWS/management-governance/guardrails-and-resource-sharing|Organizations guardrails and RAM]].
+- [[AWS/analytics/lakehouse-and-bi|Governed lakehouse and BI]].

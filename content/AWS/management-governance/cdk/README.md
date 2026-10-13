@@ -1,228 +1,195 @@
 ---
-title: AWS CDK
-description: AWS CDK (Cloud Development Kit) — programmatic infrastructure as code using TypeScript, Python, Java, and .NET. Constructs, stacks, apps, and synthesis.
+title: "AWS Cloud Development Kit"
+description: "CDK constructs generate CloudFormation templates from code."
 tags:
-  - aws
-  - management
-  - cdk
-date: 2026-06-06
+  - aws/management-governance
+date: 2026-10-12
 ---
 
-# AWS CDK (Cloud Development Kit)
+# AWS Cloud Development Kit
 
-CDK lets you define AWS infrastructure in code (TypeScript, Python, Java, .NET) and synthesize it into CloudFormation templates. You write application code that generates CloudFormation — combining the productivity of programming languages with the safety of CloudFormation.
+CDK constructs generate [[AWS/management-governance/cloudformation/README|CloudFormation]] templates from code. It is an infrastructure programming model, not a way around template lifecycle, IAM permissions or deployment review.
 
-## Core Concepts
+Prerequisites: CloudFormation, [[AWS/management-governance/cli/README|CLI profiles]] and the selected language/runtime.
 
-### Constructs
+## Constructs, context and synthesis
 
-A construct is the basic building block of CDK. It's a CloudFormation resource (or group of resources) defined in code.
+Apps contain stacks; constructs model resources and higher-level patterns. Distinguish L1 resource definitions from L2/L3 abstractions, and inspect generated defaults rather than assuming they match production security. Pin dependencies and runtime/toolchain versions.
+
+Commit relevant cdk.context.json to source control for reproducible synthesis; it caches lookup values, not credentials. Review context when environments change. Never commit secret values. An isolated synth run can still need valid lookup context/credentials unless the app is designed to avoid lookups.
+
+Bootstrap resources support deployment/assets and need scoped trust/permissions. Cross-account/Region deployment should declare its environment and role path explicitly. Custom resources can call APIs beyond standard CloudFormation resources, but introduce permissions, retry/idempotency and deletion responsibilities.
+
+## Assertions and deployment lifecycle
+
+Use the current CDK assertions library for the pinned language/version. In TypeScript, resourceCountIs(type, count) counts resources; hasResource(type, 1) is not the correct count assertion. Test security-sensitive generated properties, not only successful synthesis.
+
+```bash
+npx cdk synth
+npx cdk diff
+```
+
+These CLI examples require an existing CDK project and pinned local dependencies. They are not a complete application and may perform context lookups. Review logical-ID changes, replacements, permissions and retained resources before deployment.
+
+## Review/rollback exercise
+
+Create a minimal sandbox app following the official language-specific starter, with a budget and a nonproduction deployment role. Add one resource and assert its count plus security property. Synthesize and inspect the CloudFormation output; deliberately weaken a property and confirm the test fails.
+
+Diff a harmless change, review it and deploy only into the authorized sandbox. Inspect stack events/outputs and compare desired versus actual state. Destroy the sandbox stack only after checking retention/deletion policies; inspect retained assets and bootstrap resources separately. Do not remove shared bootstrapping used by other stacks as generic cleanup.
+
+## Constructs and a concrete minimal app
+
+CDK L1 constructs expose CloudFormation resources; higher-level constructs add defaults/abstractions. Inspect synthesized output and assertions rather than assuming a high-level construct creates every application security dependency.
+
+This TypeScript app is for an initialized project with a pinned CDK v2/toolchain. It creates a versioned, public-access-blocked bucket retained on stack deletion. Retention is deliberate: cleanup requires reviewing/removing disposable object versions separately.
 
 ```typescript
+import { App, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import { BlockPublicAccess, Bucket } from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
-import { Stack, StackProps } from "aws-cdk-lib";
-import { Vpc } from "aws-cdk-lib/aws-ec2";
 
-class MyStack extends Stack {
+export class SandboxStorageStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-    new Vpc(this, "MyVpc", {
-      cidr: "10.0.0.0/16",
-      maxAzs: 2,
+    new Bucket(this, "SandboxBucket", {
+      versioned: true,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.RETAIN,
     });
   }
 }
+
+const app = new App();
+new SandboxStorageStack(app, "SandboxStorageStack");
 ```
 
-### Construct Levels
+This is an app source example, not a complete package/CI configuration or a deployed stack. Pin package versions, declare the target environment when needed and verify synthesis context/bootstrap requirements.
 
-| Level | Example                                 | Use                                                  |
-| ----- | --------------------------------------- | ---------------------------------------------------- |
-| L1    | `CfnVPC`, `CfnSubnet`                   | Raw CloudFormation resources (100% feature coverage) |
-| L2    | `Vpc`, `Instance`, `Bucket`             | Opinionated, higher-level (recommended)              |
-| L3    | `eks.Cluster`, `aurora.DatabaseCluster` | Full application patterns                            |
+## Correct assertions and test workflow
 
-### Stacks and Apps
-
-- **Stack:** A unit of deployment. Maps to one CloudFormation stack.
-- **App:** A container that holds multiple stacks.
+In the matching initialized test project:
 
 ```typescript
 import { App } from "aws-cdk-lib";
-
-const app = new App();
-new MyStack(app, "dev-stack", { env: { region: "us-east-1" } });
-new MyStack(app, "prod-stack", { env: { region: "us-east-1" } });
-```
-
-### CDK App Structure
-
-```
-my-cdk-app/
-  ├── bin/
-  │   └── app.ts              ← Entry point, creates stacks
-  ├── lib/
-  │   ├── vpc-stack.ts         ← VPC stack
-  │   ├── compute-stack.ts     ← EC2/ECS cluster
-  │   └── database-stack.ts    ← RDS cluster
-  ├── cdk.json                 ← CDK CLI configuration
-  └── package.json
-```
-
-## CDK Workflow
-
-```
-1. Write code (TypeScript/Python/etc.)
-         ↓
-2. cdk synth                   ← Synthesize to CloudFormation template
-         ↓ (produces cdk.out/*.template.json)
-3. cdk diff                    ← Compare with deployed stack
-         ↓
-4. cdk deploy                  ← Deploy via CloudFormation
-```
-
-```bash
-cdk synth                      # Generate CloudFormation template
-cdk diff                       # Show differences from deployed stack
-cdk deploy                     # Deploy changes
-cdk destroy                    # Tear down stack
-cdk doctor                     # Check CDK environment
-```
-
-## Cross-Stack References
-
-CDK makes referencing resources across stacks easy:
-
-```typescript
-// vpc-stack.ts
-const vpc = new Vpc(this, 'Vpc', { ... });
-new CfnOutput(this, 'VpcId', { value: vpc.vpcId });
-
-// compute-stack.ts
-const vpc = Vpc.fromLookup(this, 'Vpc', {
-  vpcId: 'vpc-xxxxx',  // or use export/import pattern
-});
-```
-
-### Cross-Stack Import/Export
-
-```typescript
-// Stack A exports a value
-new CfnOutput(this, "VpcId", {
-  value: vpc.vpcId,
-  exportName: "my-vpc-id",
-});
-
-// Stack B imports it
-const vpcId = Fn.importValue("my-vpc-id");
-```
-
-## CDK Testing
-
-CDK provides a testing framework (`@aws-cdk/assert`) for validating synthesized stacks:
-
-```typescript
 import { Template } from "aws-cdk-lib/assertions";
+import { SandboxStorageStack } from "../lib/sandbox-storage-stack";
 
-const template = Template.fromStack(myStack);
-
-template.hasResourceProperties("AWS::EC2::VPC", {
-  CidrBlock: "10.0.0.0/16",
-});
-
-template.hasResource("AWS::EC2::Instance", 1);
-```
-
-### Integ Tests and Snapshot Testing
-
-```typescript
-import { IntegTest } from "@aws-cdk/integ-tests";
-
-const integ = new IntegTest(app, "Integ", {
-  testCases: [myStack],
+test("bucket is versioned and blocks public access", () => {
+  const stack = new SandboxStorageStack(new App(), "TestStack");
+  const template = Template.fromStack(stack);
+  template.resourceCountIs("AWS::S3::Bucket", 1);
+  template.hasResourceProperties("AWS::S3::Bucket", {
+    VersioningConfiguration: { Status: "Enabled" },
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: true,
+      BlockPublicPolicy: true,
+      IgnorePublicAcls: true,
+      RestrictPublicBuckets: true,
+    },
+  });
 });
 ```
 
-## CDK Pipelines
+The import path/test runner must match your project. Counting uses resourceCountIs, while properties use hasResourceProperties. Unit assertions cannot prove live permissions, network reachability or recovery.
 
-CDK Pipelines is a construct for CI/CD with CodePipeline:
+## Context, assets and custom resources
 
-```typescript
-new Pipeline(this, "MyPipeline", {
-  synth: new CodePipelineStep("Synth", {
-    input: CodePipelineSource.gitHub("myorg/myrepo", "main"),
-    commands: ["npm ci", "npx cdk synth"],
-  }),
-  stages: [
-    new Stage(this, "Dev", {
-      env: { account: "111122223333", region: "us-east-1" },
-    }),
-    new Stage(this, "Prod", {
-      env: { account: "444455556666", region: "us-east-1" },
-    }),
-  ],
-});
-```
+Context caches lookup values for repeatable synthesis; commit appropriate cdk.context.json without secrets. Refresh lookups deliberately when environments change and review resulting diffs. Bootstrapping creates shared deployment/asset infrastructure with trust roles; don't destroy it as generic application cleanup.
 
-## Aspects
+Custom resources can call supported APIs not directly covered by ordinary resource types, but must implement safe create/update/delete, stable physical IDs, retries/idempotency and scoped roles. Code compilation is not proof the custom resource can recover from partial failure.
 
-Aspects apply operations to all constructs in a tree. Used for governance:
+Use synth → assertions → diff/change review → sandbox deploy → live observation. Record logical-ID/resource replacement effects and retained assets. A code rename can trigger infrastructure replacement; treat it as a deployment decision.
+
+## Worked two-stack reference and deployment order
+
+Use an initialized TypeScript CDK v2 app in an isolated project, with a pinned `aws-cdk-lib`/`constructs` dependency lockfile and an approved sandbox deployment profile. For a new project, follow [the TypeScript starter](https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-typescript.html). The code below is a **complete alternative app entry point**, not an extra invocation to append to the earlier single-stack example. Replace the generated app entry point with it and ensure `cdk.json` invokes that file. Do not rename an existing production app's stacks to run a lab.
 
 ```typescript
-// Apply a tag to all resources
-const tagAspect = new Tag("Environment", "production");
-Aspects.of(app).add(tagAspect);
+import { App, CfnOutput, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import { BlockPublicAccess, Bucket, IBucket } from "aws-cdk-lib/aws-s3";
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import { Construct } from "constructs";
 
-// Check all S3 buckets are encrypted
-class S3EncryptionChecker implements IAspect {
-  visit(node: IConstruct) {
-    if (node instanceof CfnBucket) {
-      // enforce encryption
-    }
+class LabStorageStack extends Stack {
+  readonly bucket: Bucket;
+  constructor(scope: Construct, id: string, props: StackProps) {
+    super(scope, id, props);
+    this.bucket = new Bucket(this, "Data", {
+      versioned: true,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: RemovalPolicy.RETAIN,
+    });
+    new CfnOutput(this, "BucketName", { value: this.bucket.bucketName });
   }
 }
+
+interface LabConfigProps extends StackProps {
+  readonly sourceBucket: IBucket;
+}
+class LabConfigStack extends Stack {
+  constructor(scope: Construct, id: string, props: LabConfigProps) {
+    super(scope, id, props);
+    new StringParameter(this, "BucketConfiguration", {
+      parameterName: "/cloudnative-wiki/cdk/lab-bucket-name",
+      stringValue: props.sourceBucket.bucketName,
+    });
+  }
+}
+
+const app = new App();
+const env = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: process.env.CDK_DEFAULT_REGION,
+};
+const storage = new LabStorageStack(app, "WikiLabStorage", { env });
+new LabConfigStack(app, "WikiLabConfig", { env, sourceBucket: storage.bucket });
 ```
 
-## CDK Context and Caching
-
-CDK uses context values for dynamic inputs (like available AZs). These are cached in `cdk.context.json`:
+The consumer stores the producer's generated bucket name, not a hard-coded guess. CDK creates the same-account/Region CloudFormation export/import and dependency. A configuration reference is not permission to read bucket objects. Keep both stacks in the same explicit environment for this demonstration; cross-account/Region sharing needs a different supported design.
 
 ```bash
-cdk context --reset            # Clear context cache
-cdk list                       # List stacks
-cdk metadata                  # Show metadata
+aws sts get-caller-identity --profile sandbox
+npx cdk synth --profile sandbox
+npx cdk diff --profile sandbox WikiLabStorage WikiLabConfig
+npx cdk deploy --profile sandbox WikiLabStorage WikiLabConfig
+aws ssm get-parameter --profile sandbox \
+  --name /cloudnative-wiki/cdk/lab-bucket-name \
+  --query Parameter.Value --output text
+aws cloudformation describe-stacks --profile sandbox --stack-name WikiLabStorage \
+  --query 'Stacks[0].Outputs' --output json
 ```
 
-## Comparison: CDK vs CloudFormation vs Terraform
+Set the Region consistently on the profile. Bootstrap only if this approved environment needs it, using reviewed deployment trust and an exact account/Region target. Before deploy, inspect the synthesized S3 Versioning/PublicAccessBlockConfiguration, the export, consumer Fn::ImportValue and dependency; check the diff for replacements. Expected: the parameter equals the BucketName output. Try reading the parameter with a second identity lacking `ssm:GetParameter`; expect AccessDenied, not a missing bucket.
 
-|                  | CDK                              | CloudFormation               | Terraform                  |
-| ---------------- | -------------------------------- | ---------------------------- | -------------------------- |
-| Language         | TypeScript, Python, Java, .NET   | YAML/JSON                    | HCL                        |
-| State management | CloudFormation (stateless)       | CloudFormation               | State file                 |
-| Drift detection  | Yes (via CloudFormation)         | Yes                          | Yes                        |
-| Drift correction | Limited                          | Yes                          | Yes                        |
-| Community        | Growing                          | Large (AWS-native)           | Largest                    |
-| Use when         | Developers comfortable with code | Simple templates, AWS-native | Multi-cloud, complex state |
+As a local failure experiment, remove `versioned: true` in the isolated app and use the earlier `hasResourceProperties` assertion for VersioningConfiguration; the assertion should fail. Restore the property before deployment. A passed synth/test is not evidence that the live profile can deploy or recover data.
+
+Deleting or changing an exported value while the consumer still imports it is constrained by CloudFormation. Destroy the dedicated **consumer first**, then the producer after reviewing the diff/retention:
+
+```bash
+npx cdk destroy --profile sandbox WikiLabConfig
+npx cdk destroy --profile sandbox WikiLabStorage
+```
+
+Inspect the retained private versioned bucket and remove only its reviewed disposable versions/bucket if retention is no longer required. Parameter deletion is owned by the consumer stack; shared bootstrap resources are not lab cleanup targets. Do not apply these names to existing unrelated stacks. [CDK references and cross-stack constraints](https://docs.aws.amazon.com/cdk/v2/guide/resources.html).
+
+## IaC ownership comparison
+
+| Concern                 | CDK                                                                            | CloudFormation                                                           | Terraform                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Desired state authoring | Language constructs synthesize templates                                       | YAML/JSON templates                                                      | Provider-backed configuration                                                                   |
+| Deployment/state owner  | CloudFormation stacks plus CDK assets/context                                  | CloudFormation stack state                                               | Terraform state/backend and providers                                                           |
+| Change evidence         | Generated template, assertions and diff/change review                          | Template/change set/events                                               | Plan plus provider/state interpretation                                                         |
+| Drift/recovery          | Uses supported CloudFormation mechanisms; not automatic repair of every change | Detection has resource/property limits; repair is a deliberate operation | Refresh/plan/apply behavior depends on provider/configuration; not universal automatic recovery |
+| Cross-unit dependency   | Stack references can synthesize exports/imports                                | Exports/imports have lifecycle constraints                               | Explicit configuration/state/data-source dependencies                                           |
+
+No row promises a fixed engineering-time saving or automatic drift correction. Choose from team/tooling/provider and lifecycle requirements, and test retained-resource ownership separately.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cdk/
-- **Documentation:** https://docs.aws.amazon.com/cdk/
-- **Pricing:** https://aws.amazon.com/cdk/pricing/ (free — you pay for resources created)
-
-## Pricing Examples
-
-**Scenario 1:** A team of 5 developers using CDK to manage 20 CloudFormation stacks. CDK itself is free. Developer productivity: writing TypeScript vs YAML. A complex VPC with 10 subnets, route tables, NAT Gateways, and endpoints takes 2 days to write in YAML CloudFormation, 1 day in CDK TypeScript (with better IDE support, type checking, and reusable constructs). Saved: 1 day × 5 developers = 5 days of engineering time per major infrastructure change.
-
-**Scenario 2:** A platform team building a "VPC construct" library for internal use. The library is published as an npm package. 50 product teams import the library and deploy VPCs with 3 lines of code. Without CDK: each team writes their own VPC CloudFormation (duplicated effort, inconsistencies). With CDK library: consistent VPCs across 50 teams, single source of truth for network standards. Engineering time saved per team: ~2 days × 50 = 100 days of duplicated work avoided.
-
-## Nuggets & Gotchas
-
-- **CDK generates CloudFormation — so all CloudFormation limitations apply:** CDK cannot create resources that CloudFormation doesn't support. If a service's API isn't in CloudFormation, CDK can't manage it directly. Use the escape hatch (`node.defaultChild`) to access L1 constructs.
-- **CDK context values are per-environment — not in source control:** CDK caches available AZs, account IDs, etc. in `cdk.context.json`. If you commit this file, CI/CD works consistently. If you don't, CI/CD may use different AZs than local (causing stack drift).
-- **`cdk destroy` doesn't clean up everything:** CDK will delete the CloudFormation stack, but resources outside the stack (like S3 buckets created with `bucketName` or DynamoDB tables) may fail to delete due to Retain DeletionPolicy or protection settings. Always verify deletion.
-- **Constructs without scope need an explicit `scope` in constructor:** When creating L2 constructs, always pass `this` as the first argument (scope). Forgetting it causes the resource to be created in the wrong stack or without proper hierarchy.
-- **CDK synth uses the default AWS profile's region — stacks may deploy to the wrong region:** If you have multiple AWS profiles configured, CDK uses the `default` profile's region. Always specify `env` in stack props or set `AWS_DEFAULT_REGION` in your environment.
+- [CDK context and reproducibility](https://docs.aws.amazon.com/cdk/v2/guide/context.html)
+- [CDK testing](https://docs.aws.amazon.com/cdk/v2/guide/testing.html)
+- [Custom resources](https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.custom_resources-readme.html)
+- [Bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html)
 
 ## Across the wiki
 

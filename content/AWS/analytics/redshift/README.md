@@ -1,308 +1,168 @@
 ---
-title: Amazon Redshift
-description: Amazon Redshift — data warehouse architecture, cluster configuration, RA3 nodes, spectrum, distribution keys, sort keys, WLM, and performance tuning
+title: "Amazon Redshift"
+description: "Redshift is a columnar analytical warehouse for large joins, aggregates and BI."
 tags:
-  - aws
-  - analytics
-  - redshift
-date: 2026-06-06
+  - aws/analytics
+date: 2026-10-12
 ---
 
 # Amazon Redshift
 
-Redshift is AWS's petabyte-scale data warehouse. It uses columnar storage and massively parallel processing (MPP) to run complex analytical queries against structured data. It's designed for BI, reporting, and analytics workloads that scan billions of rows.
+Redshift is a columnar analytical warehouse for large joins, aggregates and BI. This is the canonical implementation lesson; [[AWS/databases/redshift/README|the database architecture view]] explains where it fits beside operational stores. Prerequisites: [[AWS/storage/s3/README|S3]], [[AWS/security/iam/README|IAM]] and [[AWS/analytics/README|analytics]].
 
-## Architecture
+## Compute, storage and table design
 
-### Cluster
+Choose provisioned clusters or Redshift Serverless based on workload/runtime features and operational goals. Serverless uses workgroups/namespaces and RPU usage/capacity controls; provisioned node families and capabilities evolve. Discover supported node/Region options rather than recommending legacy hardware by a fixed table.
 
-A Redshift cluster is a set of compute nodes. All nodes communicate over a high-speed internal network. The leader node receives queries, distributes work to compute nodes, and aggregates results.
+Distribution style defaults to AUTO. KEY can colocate join keys, ALL replicates suitable smaller tables and EVEN distributes rows; measure skew and query plans. Sort design and compression influence scans. Redshift can automatically vacuum/analyze applicable tables; manual work is an informed supplement, not proof that autovacuum must be enabled through a fictional PostgreSQL setting.
 
-```
-Client (JDBC/ODBC)
-    ↓
-Leader Node (query planning, result aggregation)
-    ↓
-Compute Nodes (data storage, query execution)
-  ├── Node 1 (2 slices on DC2, or multiple slices on RA3)
-  ├── Node 2
-  └── Node 3
-```
+## Loading, exports and views
 
-### Node Types
-
-**RA3 (latest):**
-
-- Separate compute from storage
-- Managed storage in S3 (Redshift-managed storage)
-- Scale compute independently of storage
-- Recommended for all new workloads
-- 16 vCPU per node, 128GB RAM per node
-
-**Dense Compute (DC2):**
-
-- Fixed local NVMe SSD storage
-- High compute density for performance-critical workloads
-- Not recommended for new workloads (RA3 is better)
-
-**Dense Storage (DS2):**
-
-- Large HDD storage for data-heavy workloads
-- Older, replaced by RA3
-
-### Spectrum
-
-Redshift Spectrum extends queries to data in S3 without loading it into Redshift. You create external tables in Redshift that point to S3, and Spectrum queries them using separate Spectrum nodes.
-
-```
-Redshift Cluster
-  ├── Internal tables (local SSD)
-  └── External tables (S3 via Spectrum)
-        ↓
-    Spectrum Nodes (separate, managed by AWS)
-```
-
-**When to use Spectrum:**
-
-- Data too large to fit in Redshift cluster
-- Infrequently accessed cold data that stays in S3
-- Data that needs to be accessible from both Redshift and other tools (Athena, EMR)
-
-**When to avoid Spectrum:**
-
-- Frequently accessed data — Spectrum has per-byte scanning cost and higher latency than local tables
-- Complex joins across many large external tables — network shuffle is expensive
-
-## Table Design
-
-### Distribution Keys (DISTKEY)
-
-Every table has a distribution style that determines how data is distributed across compute nodes.
+COPY loads supported sources such as S3 with an authorized role. UNLOAD writes query results; nested SQL quotes require escaping. The following SQL requires your own table, approved role and private disposable output prefix:
 
 ```sql
-CREATE TABLE sales (
+UNLOAD ('SELECT * FROM sandbox_events WHERE category = ''test''')
+TO 's3://example-unique-bucket/disposable/unload/'
+IAM_ROLE 'arn:aws:iam::123456789012:role/ApprovedWarehouseRole'
+FORMAT AS PARQUET;
+
+VACUUM DELETE ONLY sandbox_events;
+VACUUM SORT ONLY sandbox_events;
+
+CREATE VIEW sandbox_view AS
+SELECT * FROM public.sandbox_events
+WITH NO SCHEMA BINDING;
+```
+
+Late-binding syntax is CREATE VIEW … WITH NO SCHEMA BINDING, not CREATE LATE BINDING VIEW. External schema/catalog permissions and relation qualification must match the actual dataset.
+
+## Workload management and data lakes
+
+Provisioned WLM uses the parameter group's wlm_json_configuration; concurrency_scaling is a queue property set to auto where supported. Neither is configured with invented ALTER DATABASE/ALTER CLUSTER SQL. Use supported queue fields, concurrency controls and current service mode guidance.
+
+Spectrum uses dedicated Redshift scan infrastructure for applicable node types; catalog integration does not mean Athena is the underlying engine. Newer integrated compute modes differ. Supported Iceberg/data-lake access requires explicit catalog, engine and permissions. BI consumers need least privilege, workload isolation and refresh/cost limits.
+
+Resize mode is explicit: CLI default is elastic; --classic requests classic. Supported sizes/modes determine restrictions/downtime. The current CREATE SCHEMA limit is 9,900 schemas per database, not 100; other quotas must be discovered by deployment mode.
+
+## Warehouse exercise and cost
+
+Load a tiny synthetic dataset from private S3; reconcile counts plus totals and inspect distribution/skew. Compare a filtered aggregate query to a baseline, then UNLOAD into an isolated prefix and verify files. Demonstrate denied access for an unauthorized BI identity.
+
+Test snapshot/restore or supported recovery separately from analytics correctness. Remove sandbox warehouse/workgroup/namespace resources, retained snapshots and S3 outputs as appropriate. Bill compute/RPU usage, storage, scans, concurrency scaling, transfer and backups using current regional dimensions—not mixed node/Serverless arithmetic.
+
+## Distribution, sorting and compression examples
+
+These are independent illustrative table designs; choose unique names or drop only disposable tables between experiments. AUTO is a valid starting point; a manually selected key should be justified with actual joins/skew.
+
+```sql
+CREATE TABLE sandbox_sales_auto (
   sale_id BIGINT,
-  product_id INT,
-  customer_id INT,
+  customer_id BIGINT,
   sale_date DATE,
   amount DECIMAL(10,2)
 )
-DISTKEY(customer_id);  -- All records with same customer_id go to same node
-```
+DISTSTYLE AUTO
+SORTKEY (sale_date);
 
-**Distribution styles:**
-
-- **KEY:** Rows with the same key value go to the same node. Use for join-heavy tables where you frequently join on the same column.
-- **ALL:** Full copy of the table on every node. Use for small dimension tables (< 10MB) that are joined frequently.
-- **EVEN:** Round-robin distribution. Default, use when you don't know the access pattern.
-
-**Choosing a DISTKEY:**
-
-- For large fact tables, use the column most frequently used in JOINs
-- For date-partitioned data, date columns often make good DISTKEYs
-- Avoid high-cardinality keys (unique IDs) as DISTKEY — causes data skew
-
-### Sort Keys
-
-Sort keys determine the physical order of data within each node. Similar to an index but built into the storage layer.
-
-```sql
-CREATE TABLE sales (
+CREATE TABLE sandbox_sales_key (
   sale_id BIGINT,
-  product_id INT,
-  customer_id INT,
+  customer_id BIGINT,
   sale_date DATE,
   amount DECIMAL(10,2)
 )
-SORTKEY(sale_date, customer_id);  -- Data sorted by date first, then customer
+DISTSTYLE KEY
+DISTKEY (customer_id)
+SORTKEY (sale_date, customer_id);
 ```
 
-**When to use:**
+| Design               | Useful when                                      | Risk to test                                             |
+| -------------------- | ------------------------------------------------ | -------------------------------------------------------- |
+| AUTO distribution    | Let supported automatic optimization choose      | Observe decisions and workload evolution.                |
+| KEY                  | Large joins benefit from colocated rows          | Hot/skewed values or incompatible join keys.             |
+| ALL                  | A suitably sized dimension justifies replication | Storage/load overhead; not a universal ten-MB threshold. |
+| EVEN                 | Balanced distribution without key colocations    | Redistribution during joins.                             |
+| Compound sort key    | Leading predicates narrow scans                  | Queries omitting leading columns may benefit less.       |
+| Interleaved sort key | Supported multi-column access patterns fit       | Maintenance and deployment-mode constraints.             |
 
-- Columns frequently used in range filters (`WHERE sale_date > '2024-01-01'`)
-- Columns used in ORDER BY clauses
-- Columns used in GROUP BY with range queries
+High cardinality alone does not cause skew; value-frequency distribution matters. A date key can skew loading/queries if most active records share a small set of values. Compression should use supported automatic encodings or measured alternatives, not one “best for every type” list.
 
-**Compound vs Interleaved Sort Keys:**
+## Workload, sharing and security walkthrough
 
-- **Compound (default):** Sort key columns are used in order. First column is most important. Fast for queries filtering on the leading column.
-- **Interleaved:** All sort key columns weighted equally. Good when queries filter on various combinations of sort columns. Higher maintenance overhead (VACUUM REINDEX needed).
+Separate ingestion/ETL and BI workloads through supported WLM/Serverless controls. Inspect queue time, execution time and scan/redistribution separately. Concurrency scaling is a supported queue/capacity configuration, not a SQL statement invented from the console label.
 
-### Compression Encodings
+Data sharing exposes supported live data to authorized consumers without copying the dataset into an independently owned snapshot. Define producer namespace/account/Region, consumer authorization, shared objects and catalog ownership using the documented workflow; a consumer CREATE DATABASE example missing producer namespace is not a complete cross-account procedure.
 
-Redshift stores data column-by-column with compression encodings. Proper encoding dramatically reduces storage and improves query speed.
+Use database privileges and supported row-level security policies/column grants alongside IAM/network/TLS controls. A view filtered by current_user is not a universal substitute for robust row authorization. A cluster can be configured publicly accessible; choose private access deliberately rather than claiming public mode is impossible.
+
+## Performance investigation checklist
+
+- Compare EXPLAIN/runtime evidence for scans, joins and redistribution.
+- Inspect table skew and stats before changing distribution/sort design.
+- Analyze after significant changes when automatic behavior is insufficient.
+- Evaluate deleted-row/sort maintenance and automatic vacuum before manual work.
+- Separate queue delay from slow execution and cap runaway BI queries.
+- Reconcile source-to-warehouse row counts and totals after loading.
+- Test restore/share/authorization workflows independently of query speed.
+
+## Loading and export walkthrough
+
+Prepare a private synthetic CSV without ambiguous quoting/schema, an approved warehouse IAM role and a disposable target table. The following COPY shape uses that role and S3 prefix; engine/account/Region, object format and permissions must match the actual dataset.
 
 ```sql
-CREATE TABLE sales (
-  sale_id BIGINT ENCODE ZSTD,
-  product_id INT ENCODE DELTA,
-  customer_id INT ENCODE DELTA32K,
-  sale_date DATE ENCODE DELTA,
-  amount DECIMAL(10,2) ENCODE ZSTD
-);
+CREATE TABLE sandbox_load_sales (
+  sale_id BIGINT,
+  customer_id BIGINT,
+  sale_date DATE,
+  amount DECIMAL(10,2)
+)
+DISTSTYLE AUTO
+SORTKEY (sale_date);
+
+COPY sandbox_load_sales
+FROM 's3://example-unique-bucket/sandbox/sales/'
+IAM_ROLE 'arn:aws:iam::123456789012:role/ApprovedWarehouseRole'
+CSV
+IGNOREHEADER 1
+DATEFORMAT 'auto';
+
+SELECT count(*) AS rows_loaded,
+       sum(amount) AS revenue
+FROM sandbox_load_sales;
 ```
 
-**Common encodings:**
+COPY reads the chosen source, not every file in an account; ensure the prefix contains only compatible data. Inspect supported load-error/system evidence if parsing or permission fails. A retry may duplicate data unless loading/reconciliation is designed to be idempotent. For manifest or columnar input, use the appropriate supported COPY options rather than leave CSV settings in place.
 
-- **ZSTD:** Best overall compression for most data types
-- **DELTA:** Good for sequential data (timestamps, IDs)
-- **LZO:** Good for text data with many distinct values
-- **RUNLENGTH:** Good for low-cardinality columns (status codes, categories)
+UNLOAD writes a query's output into separate S3 objects. Compare the exported row/amount totals and protect its IAM/KMS/destination policy. Dropping a warehouse table does not remove external staging/export objects; delete only reviewed disposable prefixes.
 
-**ANALYZE COMPRESSION** automatically determines optimal encodings for existing tables.
+## Provisioned versus Serverless operating comparison
 
-## Workload Management (WLM)
+| Decision              | Provisioned warehouse                           | Serverless                                      |
+| --------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| Resource unit         | Supported cluster/node configuration            | Namespace/workgroup and applicable RPU capacity |
+| Scaling               | Supported resize/concurrency settings           | Supported capacity/usage limits                 |
+| Maintenance           | Managed service plus cluster-specific lifecycle | Different managed lifecycle/feature constraints |
+| Data lake integration | Supported Spectrum/integrated mode              | Supported integrated configuration              |
+| Cost evidence         | Node-hours + storage/other dimensions           | Actual RPU usage + storage/other dimensions     |
 
-WLM controls how queries are prioritized and how many slots (concurrency) each queue has.
+Current node families/capabilities and supported resize targets are discovery inputs, not a fixed historical DS2/DC2 recommendation. Elastic resize is the CLI default where supported; --classic selects classic with its restrictions. Observe operation status and client downtime rather than claiming an exact guaranteed resize time.
 
-```sql
--- Configure WLM via parameter group
-wlm_json_configuration = [
-  {
-    "queue_name": "etl_queue",
-    "priority": "HIGH",
-    "slots": 4,
-    "percent_of_group_to_use": 40,
-    "memory_percent_to_use": 80
-  },
-  {
-    "queue_name": "reporting_queue",
-    "priority": "NORMAL",
-    "slots": 4,
-    "percent_of_group_to_use": 60,
-    "memory_percent_to_use": 80
-  }
-]
-```
+## Monitoring and reconciliation scenario
 
-**Concurrency scaling:** When a queue is saturated, Redshift automatically spins up additional query processing capacity. Concurrency scaling adds capacity within seconds and is charged per second.
+Separate waiting/queue time from execution time. Inspect supported query/system views for the engine/mode, distribution/skew, I/O, load errors and concurrency. An invented QUEUE_METRICS name is not a CloudWatch metric contract. Examine plans/runtime evidence before tuning.
 
-**Short Query Acceleration (SQA):** Short-running queries (under 10 seconds) are automatically moved to a dedicated high-priority queue ahead of longer queries.
+For a batch of ten thousand orders, reconcile loaded count, duplicate keys, total amount, min/max event dates and a sample of source rows. Then compare the same BI query before/after a justified sort/distribution change, holding data and filters constant. Record scan/redistribution and runtime; faster output is not valuable if a predicate silently excluded required orders.
 
-## Vacuum and Analyze
-
-Redshift doesn't auto-vacuum. Tables need periodic maintenance.
-
-```sql
--- Vacuum to re-sort data and reclaim space after deletes/updates
-VACUUM DELETE ONLY sales;
-
--- Vacuum sort only (faster, only re-sorts without reclaiming space)
-VACUUM SORT ONLY sales;
-
--- Reclaim space after major delete
-VACUUM;
-
--- Analyze to update statistics for query planner
-ANALYZE;
-
--- Analyze with compression encoding
-ANALYZE COMPRESSION sales;
-```
-
-**When to vacuum:**
-
-- After a large DELETE or UPDATE that leaves many dead rows
-- When sort key columns have changed significantly
-- When query performance degrades over time
-
-**Automatic table maintenance:** Enable `autovacuum` via parameter group, but it still requires periodic manual vacuum for large maintenance operations.
-
-## Views for Common Patterns
-
-### Late-Binding Views
-
-```sql
-CREATE LATE BINDING VIEW sales_summary AS
-SELECT
-  DATE_TRUNC('month', sale_date) AS month,
-  product_id,
-  COUNT(*) AS transaction_count,
-  SUM(amount) AS total_revenue
-FROM sales
-GROUP BY DATE_TRUNC('month', sale_date), product_id;
-```
-
-Late-binding views don't check the underlying table schema at creation time. Useful for querying raw tables through transformation layers that might change.
-
-### Materialized Views
-
-```sql
-CREATE MATERIALIZED VIEW monthly_sales AS
-SELECT
-  DATE_TRUNC('month', sale_date) AS month,
-  customer_id,
-  SUM(amount) AS total_spend
-FROM sales
-GROUP BY DATE_TRUNC('month', sale_date), customer_id;
-
--- Refresh on schedule or on-demand
-REFRESH MATERIALIZED VIEW monthly_sales;
-```
-
-Materialized views pre-compute expensive aggregations and store results. Queries against materialized views are fast because they don't scan the base fact table. Refreshes can be incremental (where supported) or full.
-
-## Data Sharing
-
-Redshift supports data sharing between clusters without data movement:
-
-```sql
--- Producer cluster: create datashare
-CREATE DATASHARE salesshare;
-ALTER DATASHARE salesshare ADD SCHEMA sales;
-GRANT USAGE ON DATASHARE salesshare TO ACCOUNT '123456789012';
-
--- Consumer cluster: create database from datashare
-CREATE DATABASE consumer_db FROM DATASHARE salesshare OF ACCOUNT '123456789012';
-```
-
-**Use cases:**
-
-- Share data with partner accounts without copying
-- Separate clusters for different teams (dev vs prod) but share a single source of truth
-- Data mesh architectures where each domain owns its data
-
-## Security
-
-- **IAM authentication:** Connect to Redshift using IAM credentials (temporary tokens via SAML/OIDC)
-- **VPC mode:** Cluster lives in a VPC, accessible only via private IP
-- **Encryption:** AES-256 at rest (AWS-managed or KMS CMK), SSL in transit
-- **Column-level security:** Redshift supports column-level access control via IAM
-- **Row-level security:** Use views with WHERE clauses filtered by current_user
-
-## Performance Tuning Checklist
-
-```
-□ Distribution key chosen for large fact tables (JOIN column)
-□ Sort key on frequently filtered columns (range filters, ORDER BY)
-□ Compression encodings applied (ZSTD for most columns)
-□ WLM configured for workload separation (ETL vs reporting)
-□ Tables analyzed after large loads (ANALYZE)
-□ Vacuum run after large deletes (VACUUM)
-□ Concurrent queries within WLM limits (concurrency scaling enabled)
-□ QUEUE_METRICS CloudWatch monitored (query wait time in queue)
-□ STL_QUERY and SVL_QUERY used for query profiling
-```
+Retain approved snapshots/replay inputs and record role/key dependencies for recovery. Warehouse data sharing is live authorized access, not an independent backup. Review dedicated data-sharing/database-security documentation before cross-account rollout.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/redshift/
-- **Documentation:** https://docs.aws.amazon.com/redshift/latest/dg/
-- **Pricing:** https://aws.amazon.com/redshift/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A data warehouse with 3 dc2.large nodes (6TB storage, 6 compute nodes). Leader node included. Monthly cost: 6 nodes × $0.25/hr × 720hr = $1,080/month. Using RA3 nodes (ra3.xlplus, 16TBeach): 3 nodes × $0.67/hr × 720hr = $1,447/month. RA3 costs more but scales storage and compute independently. For 100TB data on dc2: you'd need 17 dc2 nodes at $2,550/month vs 3 RA3 nodes at $1,447/month.
-
-**Scenario 2:** A SaaS analytics platform with 3 tenants running separate Redshift workloads. Using 3 separate Redshift clusters (dc2.large × 2 nodes each): 3 × $0.50 × 720 = $1,080/month total. vs a single cluster with separate namespaces: $0.50 × 720 = $360/month. Namespace isolation is cheaper but less secure for multi-tenant compliance requirements.
-
-## Nuggets & Gotchas
-
-- **Redshift Spectrum queries scan data in S3 and are expensive:** A Spectrum query that scans 100TB of data costs $0.50 per TB scanned ($50 per query). Always filter aggressively and use partition columns to minimize data scanned.
-- **RA3 nodes decouple storage from compute but you pay for both:** Even if you're not running queries, you pay for RA3 storage. If you have a 100TB data warehouse but only query it occasionally, RA3 might cost more than dc2 with frequent pauses.
-- **Dense compute nodes (dc2.8xlarge) have local NVMe storage for temp data:** If your queries use a lot of intermediate sort/join spill, dc2.8xlarge is faster (local SSD) than ds2.xlarge (EBS). The NVMe-based dc2 nodes are better for heavy analytics.
-- **Pause and resume has a warm-up time:** Resuming a paused cluster takes 5-10 minutes for the cluster to become available. It's not suitable for always-on workloads. Consider RA3 with minimal compute for always-on but lightly queried data.
-- **WLM concurrency limits are per-cluster, not per-database:** If you have multiple databases in one cluster sharing WLM slots, a runaway query in one database consumes slots from all databases. Use separate clusters for workloads that need strict isolation.
+- [CREATE TABLE and AUTO distribution](https://docs.aws.amazon.com/redshift/latest/dg/r_CREATE_TABLE_NEW.html)
+- [UNLOAD syntax](https://docs.aws.amazon.com/redshift/latest/dg/r_UNLOAD.html)
+- [VACUUM/automatic maintenance](https://docs.aws.amazon.com/redshift/latest/dg/r_VACUUM_command.html)
+- [CREATE VIEW](https://docs.aws.amazon.com/redshift/latest/dg/r_CREATE_VIEW.html)
+- [WLM configuration](https://docs.aws.amazon.com/redshift/latest/dg/cm-c-defining-query-queues.html)
+- [Serverless](https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-serverless.html)
+- [Redshift pricing](https://aws.amazon.com/redshift/pricing/)
 
 ## Across the wiki
 

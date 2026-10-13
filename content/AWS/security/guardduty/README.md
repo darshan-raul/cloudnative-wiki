@@ -1,282 +1,146 @@
 ---
 title: AWS GuardDuty
-description: AWS GuardDuty — intelligent threat detection. CloudTrail, DNS, VPC Flow, S3, EKS, and malware protection. Findings, severity levels, automated remediation, and GuardDuty Enterprise.
+description: AWS GuardDuty — threat detection, foundational data sources, protection plans, findings, safe response and organization-wide delegated administration.
 tags:
-  - aws
-  - security
-  - guardduty
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS GuardDuty
 
-GuardDuty is an intelligent threat detection service that continuously analyzes AWS logs (CloudTrail, DNS, VPC Flow Logs, S3, EKS) using machine learning to identify suspicious activity.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## Data Sources
+GuardDuty detects suspicious behavior from supported AWS telemetry and protection plans. Findings are signals to investigate, not automatic evidence that a resource must be deleted.
 
-```
-GuardDuty analyzes:
-  │
-  ├── CloudTrail Management Events — API calls (who did what)
-  ├── CloudTrail S3 Data Events — S3 object operations
-  ├── VPC Flow Logs — network traffic (who talked to whom)
-  ├── DNS Logs — DNS queries from within VPC
-  ├── EKS Audit Logs — Kubernetes API activity
-  └── RDS Login Activity — database login attempts (Aurora, RDS)
-```
+## Coverage and plans
 
-## Findings
+Foundational detection analyzes supported CloudTrail management, VPC network and DNS activity through its service data sources; your own delivered trail/flow-log files are not required inputs. Additional plans include product-specific coverage for S3, EKS, runtime, RDS, Lambda and malware protection. There is no invented Enterprise tier or permanent free management-log tier.
 
-### Severity Levels
+Current APIs use named Features and supported AdditionalConfiguration fields. EKS_RUNTIME_MONITORING and RUNTIME_MONITORING cannot both be enabled. S3 Malware Protection is a separate plan with an IAM role and protectedResource.s3Bucket settings; its prefix selection does not mean foundational S3 detection can universally select arbitrary bucket log inputs.
 
-| Severity | Score   | Example                                  |
-| -------- | ------- | ---------------------------------------- |
-| HIGH     | 7.0-8.9 | Cryptocurrency mining, data exfiltration |
-| MEDIUM   | 4.0-6.9 | Compromised IAM user, unusual API call   |
-| LOW      | 1.0-3.9 | Policy change, root login                |
+## Safe detection lab
 
-### Finding Types
+Use a sandbox Region with no existing production detector; record prior state first. The role needs GuardDuty detector/list/sample-finding permissions and any required service-linked-role creation authority.
 
-```
-Discovery:
-  - ReconnaissanceDiscovery — unusual enumeration activity
-
-Compromise:
-  - IAMUser/CompromisedCredentials — leaked access keys
-  - EC2/ compromisedInstance — EC2 instance compromised
-  - Container/compromisedWorkload — Kubernetes compromise
-
-Exfiltration:
-  - Data exfiltration via S3 or DNS
-  - Large S3 data transfer
-
-Cryptocurrency:
-  - EC2/CryptocurrencyExecution — crypto mining
-  - Container/CryptocurrencyExecution — crypto in containers
+```bash
+aws guardduty create-detector --enable
 ```
 
-### Finding Example
+Save DetectorId, then create sample findings through the console or:
+
+```bash
+aws guardduty create-sample-findings --detector-id DETECTOR_ID
+aws guardduty list-findings --detector-id DETECTOR_ID
+```
+
+Inspect a sample with get-findings, correlate account/Region/resource identity and route it to a sandbox notification through EventBridge. Expected: synthetic findings clearly labeled as samples; no attack traffic is required.
+
+Check the response runbook's triage, evidence preservation, containment approval and recovery verification. Suppression hides matching findings; it does not disable telemetry collection or remediate the resource.
+
+## Quotas, costs and cleanup
+
+Current quota examples include one trusted IP set and six threat-intelligence sets per account/Region; verify the quota page before deployment. Finding retention is ninety days, so export required evidence. Severity includes Critical (9–10), High (7–8.9) and lower bands.
+
+Eligible foundational/protection-plan trials are generally thirty days per account/Region, with product-specific exceptions such as on-demand scans. Estimate by each plan's actual events/bytes/resources; do not multiply a per-event rate by GB without converting units.
+
+Delete only the disposable detector or restore the earlier plan settings. Never disable a production detector merely to complete the exercise; record the trial/cost consequences first.
+
+## Detection pipeline and plan comparison
+
+```text
+supported foundational telemetry + enabled protection plans
+                         ↓
+                    GuardDuty detector
+                         ↓
+finding + resource/principal/time/severity → EventBridge/Hub/export
+                         ↓
+                 triage → approved response → recovery
+```
+
+| Capability                   | Evidence/coverage                          | Do not infer                                       |
+| ---------------------------- | ------------------------------------------ | -------------------------------------------------- |
+| Foundation                   | Supported management/network/DNS activity  | Your S3 trail is its required ingestion source     |
+| S3 protection                | Documented S3 threat-detection activity    | Generic per-bucket collection controls             |
+| Runtime/EKS/Lambda/RDS plans | Plan-specific supported resource/telemetry | Every OS/process/workload is covered               |
+| Malware protection           | Scan/plan-specific objects/resources       | A detector flag scans arbitrary objects everywhere |
+| Findings                     | Type, severity, resource and context       | Confirmed business compromise or automatic repair  |
+
+Low/Medium/High/Critical severity guides urgency but is not the final incident classification. Finding suppression/archive is a workflow choice, not turning off collection or fixing the source.
+
+## Real detector and finding contracts
+
+With the disposable DetectorId created in the existing lab:
+
+```bash
+aws guardduty get-detector --detector-id DETECTOR_ID
+aws guardduty get-findings --detector-id DETECTOR_ID --finding-ids FINDING_ID
+aws guardduty archive-findings --detector-id DETECTOR_ID --finding-ids SAMPLE_FINDING_ID
+```
+
+Only archive a reviewed sample/false positive; preserving investigation evidence matters. Detector feature updates use supported names and additional settings, not the deprecated/fabricated Enterprise configuration:
+
+```bash
+aws guardduty update-detector --detector-id DETECTOR_ID \
+  --features '[{"Name":"S3_DATA_EVENTS","Status":"ENABLED"}]'
+```
+
+This can change paid coverage. Read previous settings first and restore only the lab change. Runtime plan combinations and organization settings have their own contracts; do not enable incompatible EKS_RUNTIME_MONITORING and RUNTIME_MONITORING together.
+
+## EventBridge triage fixture
+
+A rule matching GuardDuty findings can use this valid pattern:
 
 ```json
 {
-  "AccountId": "123456789012",
-  "Partition": "aws",
-  "Region": "us-east-1",
-  "Type": "UnauthorizedAccess:IAMUser/ConsoleLogin",
-  "Severity": {
-    "Score": 7.5,
-    "Label": "HIGH"
-  },
-  "Title": "Root user sign-in from a new IP address.",
-  "Description": "A root user console login from a new IP address was detected.",
-  "Resources": [
-    {
-      "AccountId": "123456789012",
-      "Type": "AwsIamUser",
-      "IamUserArn": "arn:aws:iam::123456789012:root"
-    }
-  ],
-  "Service": {
-    "Action": {
-      "ConsoleLoginAction": {
-        "ActionType": "REMOTE_LOGIN"
-      }
-    },
-    "Actor": {
-      "RemoteIpDetails": {
-        "IpAddressV4": "203.0.113.10",
-        "Country": { "Name": "Russia" },
-        "City": { "Name": "Moscow" }
-      }
-    },
-    "LastSeen": "2024-01-15T10:30:00Z"
-  }
+  "source": ["aws.guardduty"],
+  "detail-type": ["GuardDuty Finding"],
+  "detail": { "severity": [{ "numeric": [">=", 7] }] }
 }
 ```
 
-## Enabling GuardDuty
-
-```bash
-# Enable GuardDuty
-aws guardduty enable-detector \
-  --region us-east-1 \
-  --finding-publishing-frequency ONE_HOUR  # or FIFTEEN_MINUTES, ONE_HOUR, SIX_HOURS
-
-# Enable S3 protection (logs S3 data events)
-aws guardduty update-detector \
-  --detector-id xxxxx \
-  --enable \
-  --finding-publishing-frequency ONE_HOUR \
-  --data-sources '{
-    "S3Logs": {"Enable": true}
-  }'
-
-# Enable EKS protection
-aws guardduty update-detector \
-  --detector-id xxxxx \
-  --data-sources '{
-    "EKSAuditLogs": {"Enable": true}
-  }'
-```
-
-## Managing Findings
-
-```bash
-# List findings
-aws guardduty list-findings \
-  --detector-id xxxxx \
-  --finding-criteria '{
-    "Criterion": {
-      "severity": {"Eq": ["HIGH"]},
-      "service.archived": {"Eq": ["false"]}
-    }
-  }'
-
-# Get finding details
-aws guardduty get-findings \
-  --detector-id xxxxx \
-  --finding-ids xxxxx-xxxxx-xxxxx
-
-# Archive finding (when false positive)
-aws guardduty archive-findings \
-  --detector-id xxxxx \
-  --finding-ids xxxxx-xxxxx-xxxxx
-```
-
-## Automated Response with EventBridge
-
-```bash
-# Create EventBridge rule
-aws events put-rule \
-  --name guardduty-high-severity \
-  --event-pattern '{
-    "source": ["aws.guardduty"],
-    "detail": {
-      "severity": [{"numeric": [">=", 7]}]
-    }
-  }'
-
-# Add Lambda target
-aws events put-targets \
-  --rule guardduty-high-severity \
-  --targets '[{
-    "Id": "my-lambda",
-    "Arn": "arn:aws:lambda:us-east-1:123456789012:function:guardduty-response"
-  }]'
-```
-
-### Example Response Lambda
+Test against a real sample envelope, authorize the target and use the actual service-generated fields. This router only extracts investigation metadata; it deliberately does not modify IAM/resources:
 
 ```python
-import boto3
-
-def lambda_handler(event, context):
-    finding = event['detail']
-    finding_type = finding['type']
-    actor_ip = finding['service']['actor']['remoteIpDetails']['ipAddressV4']
-
-    # Block IP in security group
-    ec2 = boto3.client('ec2')
-
-    # Create SG rule to block
-    ec2.authorize_security_group_ingress(
-        GroupId='sg-xxxxx',
-        IpProtocol='tcp',
-        FromPort=443,
-        ToPort=443,
-        CidrIp=f"{actor_ip}/32"
-    )
-
-    # Notify security team
-    sns = boto3.client('sns')
-    sns.publish(
-        TopicArn='arn:aws:sns:us-east-1:123456789012:security-alerts',
-        Message=f"GuardDuty HIGH: {finding_type} from {actor_ip}"
-    )
-```
-
-## GuardDuty Enterprise
-
-Add centralized threat detection across all accounts:
-
-```bash
-# Enable GuardDuty in master account
-aws guardduty enable-organization-configuration \
-  --detector-id xxxxx \
-  --autoEnable
-
-# Member accounts automatically enrolled
-```
-
-## Malware Protection
-
-```bash
-# Enable malware protection
-aws guardduty update-detector \
-  --detector-id xxxxx \
-  --data-sources '{
-    "MalwareProtection": {
-      "ScanEc2InstanceWithFindings": {"Ec2InstanceYam": {"Enable": true}},
-      "ServiceRoleArn": "arn:aws:iam::123456789012:role/GuardDuty MalwareProtection"
+def handler(event, context):
+    detail = event.get("detail", {})
+    return {
+        "findingId": detail.get("id"),
+        "account": event.get("account"),
+        "region": event.get("region"),
+        "type": detail.get("type"),
+        "severity": detail.get("severity"),
+        "resource": detail.get("resource", {}),
+        "requiresReview": True,
     }
-  }'
 ```
 
-When GuardDuty detects a compromised EC2 instance, it can initiate a malware scan.
+Forward only approved/redacted fields to an authorized case workflow. Design idempotency because repeated/new finding updates can arrive; a trigger must not repeatedly quarantine the same workload.
 
-## Monitoring
+## Malware, organization rollout and operations
 
-```bash
-# CloudWatch metrics
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/GuardDuty \
-  --metric-name FindingCount \
-  --dimensions Name=ThreatPurpose,Value=UnauthorizedAccess
-```
+S3 malware plans require protectedResource.s3Bucket bucket/prefix configuration plus the supported role/notification/KMS dependencies. They are not created by a generic update-detector malware flag. Check eligible object/encryption/size/Region constraints and result interpretation.
 
-## Pricing
+Organization administration/member enrollment and protection-plan rollout need delegated administration/trusted service configuration. Stage one eligible sandbox account/Region, validate coverage/sample routing, then expand with an approved rollback. Detector visibility alone does not prove every member plan is enabled.
 
-| Component                  | Cost                              |
-| -------------------------- | --------------------------------- |
-| CloudTrail events analyzed | Free (10M events/month free tier) |
-| DNS Logs                   | $0.60/million DNS queries         |
-| VPC Flow Logs              | $0.75/million flow log entries    |
-| S3 Data Events             | $1.00/million S3 events           |
-| EKS Audit Logs             | $1.00/million EKS audit events    |
-| Malware Protection (EC2)   | $1.00/GB scanned                  |
+Diagnose missing findings through account/Region, plan eligibility, event/source coverage and actual state before assuming no activity. Preserve/export required evidence beyond finding retention. After tests remove lab routing/sample workflow, restore feature settings or delete only a detector created exclusively for the lab.
 
-## Limits
+References: [finding details](https://docs.aws.amazon.com/cli/latest/reference/guardduty/get-findings.html), [features](https://docs.aws.amazon.com/guardduty/latest/APIReference/API_UpdateDetector.html), [EventBridge monitoring](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html), [organization management](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_organizations.html).
 
-| Resource     | Limit                                    |
-| ------------ | ---------------------------------------- |
-| Detectors    | 1 per region                             |
-| Findings     | 1000 per page (list), 50 per batch (get) |
-| IP sets      | 100 per detector                         |
-| Threat lists | 30 (for threat purposes)                 |
+## Cross-wiki comparisons
+
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/guardduty/
-- **Documentation:** https://docs.aws.amazon.com/guardduty/
-- **Pricing:** https://aws.amazon.com/guardduty/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A small account (50 users, moderate activity). CloudTrail events: 5M/month. DNS queries: 10M/month × $0.60/M = $6/month. VPC Flow: 100GB/month × $0.75/M = $0.075/month. S3 events: disabled. Total: ~$6/month.
-
-**Scenario 2:** A large enterprise (500 users, heavy activity). CloudTrail events: 100M/month (free). DNS queries: 1B/month × $0.60/M = $600/month. VPC Flow: 10TB/month × $0.75/M = $7.50/month. S3 events: 1B × $1.00/M = $1,000/month. That's $1,607/month — S3 data events are expensive at scale. Disable for non-critical buckets.
-
-## Nuggets & Gotchas
-
-- **GuardDuty is a detection service, not prevention — it doesn't block anything:** GuardDuty identifies threats and generates findings. You must build automated responses (EventBridge + Lambda) or manually respond. Enable GuardDuty + response automation together.
-- **S3 data events in GuardDuty ($1/million) can get expensive fast:** Each S3 PUT/GET generates 2 CloudTrail events (control + data). For a busy S3 bucket (1M GETs/day), that's 60M events/month × $1/M = $60/month. Start with just management events + DNS + VPC Flow.
-- **GuardDuty findings auto-expire after 90 days — export important findings to S3 or Security Hub:** If you need long-term retention, create an EventBridge rule to capture HIGH severity findings to S3 or SIEM.
-- **GuardDuty RDS protection only covers Aurora and RDS (not DocumentDB, Neptune, etc.):** If you use DocumentDB or Neptune, GuardDuty won't log database login attempts for those engines. Use database-native audit logging for those.
-- **GuardDuty malware protection requires GuardDuty to have an IAM role that can access EC2 instances — enable via `ServiceRoleArn`:** Without this role, the malware scan won't run even if enabled.
+- [Protection-plan pricing/trials](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-pricing.html)
+- [Sample findings](https://docs.aws.amazon.com/cli/latest/reference/guardduty/create-sample-findings.html)
+- [Feature API](https://docs.aws.amazon.com/guardduty/latest/APIReference/API_UpdateDetector.html)
+- [S3 malware-plan contract](https://docs.aws.amazon.com/guardduty/latest/APIReference/API_CreateMalwareProtectionPlan.html)
+- [Quotas](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_limits.html)
+- [Severity](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings-severity.html)
 
 ## Across the wiki
 
-- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
-- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]] — threat detection (GCP)
-- [[Security/siem/README|SIEM]] — threat detection (Security)
-- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)
+- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]]
+- [[Security/siem/README|SIEM]]
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]]

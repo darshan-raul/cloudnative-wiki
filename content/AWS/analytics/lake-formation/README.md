@@ -1,269 +1,223 @@
 ---
-title: AWS Lake Formation
-description: AWS Lake Formation — data lake governance, fine-grained permissions, row-level security, table-level access, cross-account sharing, and data catalog security
+title: "AWS Lake Formation"
+description: "Lake Formation governs supported catalogued data access."
 tags:
-  - aws
-  - analytics
-  - lake-formation
-date: 2026-06-06
+  - aws/analytics
+date: 2026-10-12
 ---
 
 # AWS Lake Formation
 
-Lake Formation is AWS's data lake governance service. It sits on top of the Glue Data Catalog and provides centralized permission management — who can access what data at what granularity (database, table, column, row).
+Lake Formation governs supported catalogued data access. It works with [[AWS/storage/s3/README|S3]], [[AWS/analytics/glue/README|Glue Catalog]] and engines such as [[AWS/analytics/athena/README|Athena]]. IAM permissions, network access, registration and LF permissions are related but distinct.
 
-## Core Concepts
+## Permissions and filters
 
-### Data Lake Architecture
+Database permissions describe/create catalog objects; SELECT applies to a table, selected columns or a data filter—not a database. GrantPermissions uses PermissionsWithGrantOption as a list, not a boolean. Table resources identify Name; excluded columns belong to TableWithColumns/ExcludedColumnNames.
 
+LF-Tags label catalog resources and provide tag-based grants. They do not label individual rows or automatically inherit arbitrary IAM principal tags. Row/cell filtering uses DataCellsFilter with TableData and RowFilter/filter expression plus SELECT on that filter. Current documentation does not apply data filters through LF-Tag grants. An LF-Tag named department=finance alone does not isolate finance rows.
+
+## Full enforcement versus hybrid access
+
+Choose one migration/enforcement strategy explicitly. Full LF enforcement needs deliberate default permissions, IAMAllowedPrincipals and S3 registration configuration. Hybrid mode lets opted-in principals require LF plus IAM, while non-opted-in principals retain IAM-only paths. Leaving a bypass path invalidates claims that every reader sees filtered rows.
+
+Cross-account sharing requires supported LF grants/resource links and, where applicable, AWS RAM workflows. Registry/catalog/data ownership and KMS permissions remain separate. Do not confuse Lake Formation sharing with CloudFormation StackSets.
+
+RegisterResource has no Description field. CreateDataCellsFilter requires the owning nested schema, not fictional top-level Principals/RowExpression. Use official examples rather than a nonexistent create_permissions SDK operation. LF Governed Tables retired December 31, 2024; teach supported transactional table formats instead of that retired feature.
+
+## Two-principal authorization exercise
+
+Prerequisites: an isolated catalog/table with a few labelled department rows, private S3, two distinct test principals, an administrator role and supported query engine. Budget query/storage charges.
+
+Register/configure the data location using the selected enforcement mode. Grant principal A only finance rows through a real data filter and principal B a deliberately different view. Query as each principal and verify exact permitted/forbidden rows and columns. Try a non-opted-in IAM principal in hybrid mode: if IAM-only access remains, document it rather than claiming universal enforcement.
+
+Inspect source/result-bucket and KMS permissions. A successful admin query is not evidence of reader isolation. Revoke sandbox grants/opt-ins, remove filters/resource links/catalog objects and registration only after reviewing dependencies; delete disposable source/result objects separately.
+
+## Lake architecture and permission objects
+
+```text
+S3 registered location
+  └─ Glue database → table → columns
+       ├─ named-resource / LF-Tag grants
+       └─ DataCellsFilter → supported row/cell SELECT
+            └─ opted-in or full-enforcement query principal
 ```
-Raw S3 (immutable) → Trusted S3 (processed) → Consumer S3 (curated)
-     ↓                    ↓                      ↓
-  Glue Crawler       Glue ETL              Analytics
-  (raw tables)       (trusted tables)      (Athena, Redshift)
-         ↓                 ↓                      ↓
-      Lake Formation Permissions Layer
+
+| Resource         | Example responsibility                                                             |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| Data location    | Permission to create catalog resources pointing at registered data where required. |
+| Database         | Catalog creation/description/alteration, not a database-wide SELECT shortcut.      |
+| Table            | Supported SELECT/INSERT/ALTER and other table permissions.                         |
+| TableWithColumns | Explicit column subset/exclusion where supported.                                  |
+| DataCellsFilter  | Row expression plus column/cell selection for supported engines.                   |
+| LF-Tag policy    | Grants matching labelled catalog resources; not implicit row tagging.              |
+
+The catalog and storage have different ownership. A data-lake administrator's metadata visibility is not a representative end-user test. Cross-account shares can require resource links/acceptance and consumer-side grants; KMS/source-bucket permissions remain part of the full path.
+
+## Governance migration walkthrough
+
+1. Inventory existing S3/IAM/catalog grants and every query-engine identity.
+2. Decide full enforcement versus hybrid access per resource/principal.
+3. Register the intended data locations with supported roles/default permissions.
+4. Review IAMAllowedPrincipals and existing defaults; do not accidentally leave an IAM-only bypass.
+5. Grant explicit reader permissions and configure row/column filters where supported.
+6. Query using separate real principals, including a non-opted-in principal if hybrid mode is in use.
+7. Compare exact results and verify direct source access cannot bypass the intended boundary.
+8. Roll out gradually and retain a scoped rollback plan.
+
+A tag named environment=production can simplify grants across tables, but it does not automatically classify sensitive cells or map an IAM user's department to a row predicate. Use explicit expressions and identity-specific tests. Audit grant option carefully: delegating permission to grant is different from granting read access.
+
+## References
+
+- [Lake Formation permissions](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html)
+- [Data filters and limitations](https://docs.aws.amazon.com/lake-formation/latest/dg/data-filtering.html)
+- [Hybrid access pathways](https://docs.aws.amazon.com/lake-formation/latest/dg/hybrid-access-mode.html)
+- [CreateDataCellsFilter contract](https://docs.aws.amazon.com/cli/latest/reference/lakeformation/create-data-cells-filter.html)
+- [Retired feature lifecycle](https://docs.aws.amazon.com/general/latest/gr/full_shutdown_services.html)
+
+## Concrete full-enforcement row-filter lab
+
+This lab uses **full Lake Formation enforcement**, not hybrid opt-in, on one new table. Use a private dedicated bucket/prefix, Athena engine v3 workgroup, an authorized Lake Formation administrator, and two **ordinary** IAM roles. Set LF_LAB_BUCKET, LF_LAB_ADMIN_ROLE, LF_LAB_FINANCE_ROLE and LF_LAB_HR_ROLE to actual approved values. Do not use an administrator/owner as the reader.
+
+The administrator needs catalog/S3 fixture setup and LF register/filter/grant/revoke operations. Reader roles need Athena query/status/result operations on the sandbox workgroup, Glue GetDatabase/GetTable/GetPartitions for this catalog, lakeformation:GetDataAccess, and their protected Athena result-prefix access. Do **not** grant readers direct GetObject on the source prefix or broad LF table SELECT; either defeats the isolation test. Configure role-assumption trust and any KMS access separately. No global DataLakeSettings are changed.
+
+The three source records are:
+
+```jsonl
+{"id":"f1","department":"finance","amount":10}
+{"id":"h1","department":"hr","amount":99}
+{"id":"f2","department":"finance","amount":20}
 ```
 
-Lake Formation manages access to all these layers from a single interface.
-
-### Data Lake Formation Workflow
-
-1. **Register S3 locations** — tell Lake Formation which S3 buckets contain your data
-2. **Create databases and tables** — either via Glue crawlers or manual creation
-3. **Define permissions** — who can access which databases, tables, columns
-4. **Enforce LF tags** — tag-based permission policies across many tables
-
-## Registering S3 Locations
+Save the following setup as lf_setup.py. Run only as the authorized administrator; all names/locations are dedicated. Service-linked registration requires the corresponding approved IAM/service-linked-role setup.
 
 ```python
+import json
+import os
 import boto3
 
-lf = boto3.client('lakeformation')
-
-# Register an S3 location as a data lake location
-lf.register_resource(
-    ResourceArn='arn:aws:s3:::my-data-lake-bucket',
-    RoleArn='arn:aws:iam::123456789:role/LakeFormationS3Role',
-    Description='Main data lake bucket'
+session = boto3.Session()
+account = session.client("sts").get_caller_identity()["Account"]
+bucket = os.environ["LF_LAB_BUCKET"]
+admin = os.environ["LF_LAB_ADMIN_ROLE"]
+finance = os.environ["LF_LAB_FINANCE_ROLE"]
+hr = os.environ["LF_LAB_HR_ROLE"]
+glue = session.client("glue")
+lf = session.client("lakeformation")
+s3 = session.client("s3")
+database, table = "dg05_lab", "ledger"
+location = f"arn:aws:s3:::{bucket}/dg05/source"
+records = [
+    {"id": "f1", "department": "finance", "amount": 10},
+    {"id": "h1", "department": "hr", "amount": 99},
+    {"id": "f2", "department": "finance", "amount": 20},
+]
+s3.put_object(
+    Bucket=bucket, Key="dg05/source/rows.json",
+    Body=("\n".join(json.dumps(r) for r in records) + "\n").encode(),
 )
-```
-
-**Requirement:** The Lake Formation service role must have `s3:GetBucketLocation` and `s3:ListBucket` on the bucket.
-
-## Permission Model
-
-Lake Formation permissions work on top of IAM and Lake Formation tag (LF-Tag) based access control.
-
-### Database-Level Permissions
-
-```python
+lf.register_resource(ResourceArn=location, UseServiceLinkedRole=True)
 lf.grant_permissions(
-    Principal={'DataLakePrincipalIdentifier': 'arn:aws:iam::123456789:user/analyst'},
-    Resource={
-        'Database': {
-            'CatalogId': '123456789012',
-            'Name': 'sales_db'
-        }
+    Principal={"DataLakePrincipalIdentifier": admin},
+    Resource={"DataLocation": {"CatalogId": account, "ResourceArn": location}},
+    Permissions=["DATA_LOCATION_ACCESS"],
+)
+glue.create_database(DatabaseInput={
+    "Name": database, "CreateTableDefaultPermissions": [],
+})
+glue.create_table(
+    DatabaseName=database,
+    TableInput={
+        "Name": table, "TableType": "EXTERNAL_TABLE",
+        "StorageDescriptor": {
+            "Columns": [
+                {"Name": "id", "Type": "string"},
+                {"Name": "department", "Type": "string"},
+                {"Name": "amount", "Type": "int"},
+            ],
+            "Location": f"s3://{bucket}/dg05/source/",
+            "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+            "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+            "SerdeInfo": {
+                "SerializationLibrary": "org.openx.data.jsonserde.JsonSerDe"
+            },
+        },
     },
-    Permissions=['SELECT'],
-    PermissionsWithGrantOption=False
 )
+# Remove any legacy IAM-only grants on these new resources, never globally.
+resources = [
+    {"Database": {"CatalogId": account, "Name": database}},
+    {"Table": {"CatalogId": account, "DatabaseName": database, "Name": table}},
+]
+for resource in resources:
+    for page in lf.get_paginator("list_permissions").paginate(Resource=resource):
+        for grant in page["PrincipalResourcePermissions"]:
+            if grant["Principal"]["DataLakePrincipalIdentifier"] == "IAM_ALLOWED_PRINCIPALS":
+                lf.revoke_permissions(
+                    Principal=grant["Principal"], Resource=grant["Resource"],
+                    Permissions=grant["Permissions"],
+                    PermissionsWithGrantOption=grant.get("PermissionsWithGrantOption", []),
+                )
+for name, department, role in [
+    ("finance_rows", "finance", finance),
+    ("hr_rows", "hr", hr),
+]:
+    lf.create_data_cells_filter(TableData={
+        "TableCatalogId": account, "DatabaseName": database,
+        "TableName": table, "Name": name,
+        "RowFilter": {"FilterExpression": f"department = '{department}'"},
+        "ColumnNames": ["id", "department", "amount"],
+    })
+    lf.grant_permissions(
+        Principal={"DataLakePrincipalIdentifier": role},
+        Resource={"Database": {"CatalogId": account, "Name": database}},
+        Permissions=["DESCRIBE"],
+    )
+    lf.grant_permissions(
+        Principal={"DataLakePrincipalIdentifier": role},
+        Resource={"DataCellsFilter": {
+            "TableCatalogId": account, "DatabaseName": database,
+            "TableName": table, "Name": name,
+        }},
+        Permissions=["SELECT"],
+    )
+print("Registered", location, "catalog", account, database, table)
 ```
 
-### Table-Level Permissions
+Before reading, inspect each reader's effective IAM/LF grants: any extra table SELECT, all-rows filter, source-bucket read or administrator membership invalidates the lab. Configure two CLI/Boto3 profiles that assume the real finance/hr roles. Do not merely set a string variable while leaving administrator credentials active.
+
+Save/run this bounded Athena reader with LF_LAB_READER_PROFILE, LF_LAB_WORKGROUP and LF_LAB_RESULT_URI. The workgroup must permit/enforce the matching protected result location.
 
 ```python
-lf.grant_permissions(
-    Principal={'DataLakePrincipalIdentifier': 'arn:aws:iam::123456789:user/analyst'},
-    Resource={
-        'Table': {
-            'CatalogId': '123456789012',
-            'DatabaseName': 'sales_db',
-            'TableName': 'monthly_sales'
-        }
-    },
-    Permissions=['SELECT']
-)
+import os
+import time
+import boto3
+
+session = boto3.Session(profile_name=os.environ["LF_LAB_READER_PROFILE"])
+print("Reader:", session.client("sts").get_caller_identity()["Arn"])
+athena = session.client("athena")
+query = athena.start_query_execution(
+    QueryString="SELECT id, department, amount FROM dg05_lab.ledger ORDER BY id",
+    WorkGroup=os.environ["LF_LAB_WORKGROUP"],
+    ResultConfiguration={"OutputLocation": os.environ["LF_LAB_RESULT_URI"]},
+)["QueryExecutionId"]
+deadline = time.monotonic() + 120
+while time.monotonic() < deadline:
+    status = athena.get_query_execution(QueryExecutionId=query)["QueryExecution"]["Status"]
+    if status["State"] == "SUCCEEDED":
+        break
+    if status["State"] in {"FAILED", "CANCELLED"}:
+        raise RuntimeError(status.get("StateChangeReason", status["State"]))
+    time.sleep(2)
+else:
+    athena.stop_query_execution(QueryExecutionId=query)
+    raise TimeoutError("Reader query exceeded deadline")
+for page in athena.get_paginator("get_query_results").paginate(QueryExecutionId=query):
+    for row in page["ResultSet"]["Rows"]:
+        print([x.get("VarCharValue") for x in row["Data"]])
 ```
 
-### Column-Level Permissions
+Expected data rows (exclude the result header): finance sees f1/finance/10 and f2/finance/20, never h1; HR sees h1/hr/99, never f1/f2. Finance SUM(amount) is 30 and HR is 99. Direct S3 GetObject on dg05/source/rows.json by either reader must be denied. A third role with no LF grant must fail the query; failure due only to missing network/result permission is not a successful row-filter test.
 
-```python
-lf.grant_permissions(
-    Principal={'DataLakePrincipalIdentifier': 'arn:aws:iam::123456789:user/analyst'},
-    Resource={
-        'Table': {
-            'CatalogId': '123456789012',
-            'DatabaseName': 'sales_db',
-            'TableName': 'customer_pii',
-            'ColumnWildcard': {
-                'ExcludedColumns': ['ssn', 'credit_card_number', 'email']
-            }
-        }
-    },
-    Permissions=['SELECT']
-)
-```
+Cleanup as administrator: revoke each reader's SELECT on its exact DataCellsFilter and DESCRIBE on dg05_lab; delete those filters with delete_data_cells_filter(TableCatalogId=account, DatabaseName="dg05_lab", TableName="ledger", Name=...), then delete the dedicated Glue table/database. Revoke the lab DATA_LOCATION_ACCESS grant, deregister only the recorded location ARN, and review/remove exact source/result objects. Do not disable global LF settings or delete shared service-linked roles.
 
-**ExcludedColumns** makes those columns invisible to the user — they can't be selected, filtered, or seen in results. This is column-level security without row-level complexity.
-
-### Row-Level Security (Lake Formation)
-
-Row-level security uses LF-Tags to filter data at query time. You tag data with a `department` attribute, and users only see rows matching their department.
-
-```python
-# Tag a table with row-level access tag
-lf.add_lf_tags(
-    LfTags=[
-        {'TagKey': 'department', 'TagValues': ['finance', 'analytics']},
-        {'TagKey': 'data_classification', 'TagValues': ['internal']}
-    ],
-    Resource={
-        'Table': {
-            'CatalogId': '123456789012',
-            'DatabaseName': 'sales_db',
-            'TableName': 'transactions'
-        }
-    }
-)
-
-# User gets LF-Tag from their IAM principal
-# Lake Formation enforces row filter based on tag values at query time
-```
-
-## LF-Tags (Tag-Based Access Control)
-
-LF-Tags enable attribute-based access control (ABAC) across your data lake.
-
-### Define LF-Tags
-
-```python
-lf.create_lf_tag(
-    CatalogId='123456789012',
-    TagKey='department',
-    TagValues=['finance', 'marketing', 'engineering', 'analytics', 'hr']
-)
-
-lf.create_lf_tag(
-    CatalogId='123456789012',
-    TagKey='data_classification',
-    TagValues=['public', 'internal', 'confidential', 'pii']
-)
-```
-
-### Tag-Based Policies
-
-```python
-# Allow users with 'department=finance' tag to access tables tagged with 'department=finance'
-lf.create_permissions(
-    Principal={'DataLakePrincipalIdentifier': 'arn:aws:iam::123456789:user/finance-user'},
-    Resource={
-        'LFTagPolicy': {
-            'CatalogId': '123456789012',
-            'ResourceType': 'TABLE',
-            'Expression': [
-                {'TagKey': 'department', 'TagValues': ['finance']},
-                {'TagKey': 'data_classification', 'TagValues': ['internal', 'confidential']}
-            ]
-        }
-    },
-    Permissions=['SELECT', 'ALTER']
-)
-```
-
-**Use case:** Instead of granting permissions to each table individually, tag all finance-related tables with `department=finance`, then grant access to the tag. New tables with the same tag automatically get access.
-
-## Cross-Account Data Sharing
-
-Lake Formation supports sharing data with other AWS accounts without copying data.
-
-### Share a Table with Another Account
-
-```python
-# Create a data cell filter (row-level share)
-lf.create_data_cells_filter(
-    TableName='sales',
-    DatabaseName='sales_db',
-    Name='finance-rows',
-    RowExpression='department = "finance"',
-    Principals=[{'DataLakePrincipalIdentifier': 'arn:aws:iam::123456789012:user/finance-user'}]
-)
-
-# Grant access to another account
-lf.grant_permissions(
-    Principal={'DataLakePrincipalIdentifier': 'arn:aws:iam::123456789012:user/analyst'},
-    Resource={
-        'Table': {
-            'CatalogId': '123456789012',
-            'DatabaseName': 'sales_db',
-            'TableName': 'sales'
-        }
-    },
-    Permissions=['SELECT']
-)
-```
-
-### Data Lake Readers (read-only access)
-
-```python
-lf.grant_permissions(
-    Principal={'DataLakePrincipalIdentifier': 'arn:aws:iam::123456789012:role/DataReaderRole'},
-    Resource={
-        'Database': {'Name': 'sales_db'}
-    },
-    Permissions=['DESCRIBE']
-)
-```
-
-## Integration with Athena and Redshift
-
-Athena and Redshift Spectrum respect Lake Formation permissions. When a user queries a table through Athena, Lake Formation checks their permissions and applies column-level and row-level filters automatically.
-
-**Athena with Lake Formation:**
-
-```sql
--- User can only see columns and rows they're permitted to access
-SELECT user_id, department, SUM(amount)
-FROM sales_db.transactions
-WHERE date >= '2024-01-01'
-GROUP BY user_id, department;
--- Returns only rows matching the user's LF-Tag permissions
-```
-
-**Redshift Spectrum with Lake Formation:**
-
-```sql
--- Same enforcement — Spectrum queries go through Lake Formation permissions
-SELECT * FROM spectrum.transactions WHERE amount > 1000;
-```
-
-## Security Best Practices
-
-1. **Register only specific S3 buckets**, not entire accounts
-2. **Use LF-Tags for scalable permission management** instead of per-table grants
-3. **Enable column-level security** for PII columns (exclude from analyst access)
-4. **Use row-level filters** for department isolation
-5. **Audit with CloudTrail** — Lake Formation API calls are logged
-6. **Separate data lake access roles** — ETL role vs analyst role vs data engineer role
-
-## Blueprint Templates
-
-Lake Formation provides blueprint templates for common data lake architectures:
-
-- **Incremental data:** CDC (change data capture) from RDS MySQL/PostgreSQL
-- **Transformed data:** ETL pipeline from raw S3 to curated tables
-- **Full load:** Full table replication from JDBC sources
-
-Blueprints create CloudFormation stacks with Step Functions, Glue crawlers, and Glue jobs that implement the pattern.
-
-## Migration from IAM-Only to Lake Formation Permissions
-
-If you previously managed access via IAM policies on S3/Glue, Lake Formation provides a migration path:
-
-1. **Enable Lake Formation permissions mode** in the Data Catalog settings
-2. **Grant temporary elevated permissions** to administrators during transition
-3. **Gradually migrate** IAM-based access to Lake Formation permission grants
-4. **Revoke IAM-only access** once all access is managed through Lake Formation
-
-**Important:** After enabling Lake Formation, IAM policies alone no longer grant access to data lake resources. You must use Lake Formation permission grants.
+Sources: [data filters](https://docs.aws.amazon.com/lake-formation/latest/dg/data-filtering.html), [CreateDataCellsFilter](https://docs.aws.amazon.com/boto3/latest/reference/services/lakeformation/client/create_data_cells_filter.html), [GrantPermissions](https://docs.aws.amazon.com/boto3/latest/reference/services/lakeformation/client/grant_permissions.html), [IAM-to-LF migration](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).

@@ -1,285 +1,218 @@
 ---
-title: Amazon RDS
-description: Amazon RDS — managed relational database. Multi-AZ, read replicas, automated backups, parameter groups, option groups, engine comparison (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server).
+title: "Amazon RDS"
+description: "RDS manages infrastructure for relational databases, but you still own schema design, indexes, query tuning, database users and recovery verification."
 tags:
-  - aws
-  - databases
-  - rds
-date: 2026-06-06
+  - aws/databases
+date: 2026-10-12
 ---
 
-# Amazon RDS (Relational Database Service)
+# Amazon RDS
 
-RDS provides managed relational databases: MySQL, PostgreSQL, MariaDB, Oracle, and SQL Server. AWS handles provisioning, patching, backups, Multi-AZ, and monitoring. You manage application-level optimization, query performance, and instance sizing.
+RDS manages infrastructure for relational databases, but you still own schema design, indexes, query tuning, database users and recovery verification. Supported engine families include Db2, MariaDB, MySQL, Oracle, PostgreSQL and SQL Server, with engine/version-specific licensing and features.
 
-## Engines
+Prerequisites: [[AWS/databases/README|database selection]], [[AWS/networking/README|networking]] and [[AWS/security/iam/README|IAM]]. Compare [[AWS/databases/aurora/README|Aurora]] where its engine compatibility and clustered design fit.
 
-| Engine     | Version                             | Use Case                          | License                    |
-| ---------- | ----------------------------------- | --------------------------------- | -------------------------- |
-| MySQL      | 5.7, 8.0                            | Web apps, SaaS                    | Open source                |
-| PostgreSQL | 13, 14, 15, 16                      | Enterprise, geospatial            | Open source                |
-| MariaDB    | 10.2, 10.3, 10.4, 10.5, 10.6, 10.11 | MySQL drop-in replacement         | Open source                |
-| Oracle     | 19c, 21c                            | Enterprise (existing Oracle apps) | BYOL or Oracle License     |
-| SQL Server | 2014, 2016, 2017, 2019, 2022        | Windows/.NET apps                 | BYOL or SQL Server License |
+## Availability and scaling
 
-## Instance Classes
+Classic Multi-AZ DB instances use a synchronous standby that is not a read target. Their failover typically takes 60–120 seconds, depending on activity and conditions; application reconnect/DNS behavior matters. Multi-AZ DB clusters are a separate mode with readable standby instances. Do not apply either topology's rules to every RDS deployment.
 
-```
-db.t3.micro      → Burstable (2 vCPU, 1 GB)
-db.m5.large      → General (2 vCPU, 8 GB)
-db.m5.xlarge     → General (4 vCPU, 16 GB)
-db.r6g.large     → Memory optimized (2 vCPU, 16 GB)
-db.r6g.xlarge    → Memory optimized (4 vCPU, 32 GB)
-db.r6g.2xlarge   → Memory optimized (8 vCPU, 64 GB)
-db.m5.24xlarge   → High CPU (96 vCPU, 384 GB)
-```
+Read replicas support engine-specific replication and promotion. MySQL/MariaDB/PostgreSQL support up to fifteen replicas per source in the current API; Db2 supports up to three, while other engines differ. Replica lag is not a guaranteed failover duration. Vertical scaling, storage scaling and replica addition have distinct restart/downtime implications.
 
-**Current gen (use these):** T3, M5, M6I, R5, R6I, R6G
-**Previous gen (avoid for new):** T2, M4, R4
+## Networking, credentials and recovery
 
-## Creating a DB Instance
+A publicly accessible RDS instance is possible with appropriate subnet routing and security groups, but private access is generally the safer application baseline. Security groups, TLS, database authentication and supported IAM authentication are separate layers. Never paste master passwords into shell history.
 
-### Via Console
+A DB subnet group should match the intended HA topology. Parameter groups tune engine configuration; option groups apply only to applicable engines/features. Backups and maintenance have separate windows. Automated backups/PITR and manual snapshots have different retention/lifecycle properties. Restores create new instances; rehearse credential, endpoint, KMS and application cutover.
 
-RDS → Create database → Choose engine → Select use case (Production/Dev) → Configure settings
+## Observability and cost
 
-### Via CLI
+CloudWatch Database Insights is the current console experience after Performance Insights' July 31, 2026 end-of-life. Standard and Advanced modes have different capabilities/retention/billing. Do not infer that every underlying API parameter was removed. Enhanced Monitoring provides OS-level telemetry and requires its role/configuration.
 
-```bash
-aws rds create-db-instance \
-  --db-instance-identifier my-db \
-  --db-instance-class db.t3.micro \
-  --engine postgres \
-  --engine-version 15.3 \
-  --master-username postgres \
-  --master-user-password SecretPassword \
-  --allocated-storage 20 \
-  --storage-type gp3 \
-  --vpc-security-group-ids sg-xxxxx \
-  --db-subnet-group my-subnet-group \
-  --backup-retention-period 7 \
-  --multi-az \
-  --preferred-backup-window 03:00-04:00 \
-  --preferred-maintenance-window sun:04:00-sun:05:00
-```
+RDS gp3 baseline depends on engine and allocated size: SQL Server starts at 3,000 IOPS/125 MiB/s; other qualifying engines cross capacity thresholds into 12,000 IOPS/500 MiB/s. Do not apply EBS gp3 economics blindly. Bill instance hours, storage, excess IOPS/throughput, backups, replication/transfer, licenses and monitoring.
 
-## High Availability (Multi-AZ)
+## Sandbox failover and restore exercise
 
-### How It Works
+Use a small disposable database with budget approval, private networking, a permitted client and a labelled test table. Observe connections, latency and replica lag. If testing Multi-AZ, record topology and actual failover time; the expected behavior is a reconnect requirement, not uninterrupted client sessions.
 
-```
-Primary (AZ-1) ◄─────── Sync replication ────────► Standby (AZ-2)
-     │
-     │  Async replication
-     ▼
-Read Replica (AZ-3)
-```
+Restore a snapshot/PITR into an isolated instance and verify data plus application authentication. An unauthorized client must be denied without opening the database to the internet. Delete disposable instances/replicas and reviewed snapshots afterward; stopping an instance is not permanent removal or a promise of zero storage charges.
 
-When Multi-AZ is enabled:
+## Engine, compute and storage choices
 
-- Synchronous replication to standby in different AZ
-- Automatic failover (< 60 seconds, typically 20-30 seconds)
-- No application code changes needed (endpoint stays the same)
-- Standby cannot be used for reads (it's a hot standby)
+| Engine family            | Typical compatibility decision                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| PostgreSQL/MySQL/MariaDB | Validate upstream version/features/extensions and driver behavior.                 |
+| Oracle/SQL Server        | Validate licensing, edition, option groups and engine-specific HA/replica support. |
+| Db2                      | Validate supported edition/license/deployment and migration capabilities.          |
 
-### Failover Trigger Conditions
+General-purpose, memory-optimized and burstable instance classes are workload choices, not a permanent “small/medium/large” table. Burstable credits can add capacity/cost constraints. Measure peak connections, working-set memory, CPU and storage latency together.
 
-- AZ outage (primary AZ goes down)
-- Instance failure (EC2 host hardware/software failure)
-- Manual failover (`aws rds reboot-db-instance --force-failover`)
-- Maintenance events requiring reboot
+Storage is allocated separately from compute. gp3 performance depends on engine/size threshold; provisioned IOPS and storage autoscaling have their own supported limits. A storage increase does not solve every query/index problem and may not be reversibly shrinkable.
 
-## Read Replicas
+## Instance provisioning sequence
 
-Asynchronous replication for read scaling:
+1. Select supported engine/version and compute/storage size.
+2. Create the correct subnet group and restrict security groups to the application path.
+3. Choose encryption/key, credential-management and supported authentication.
+4. Configure backup retention/window separately from maintenance.
+5. Create/wait for the instance; inspect actual endpoint and availability.
+6. Connect with a verified TLS client and only the necessary database privileges.
+7. Test backup/restore and failover for the selected topology.
+
+A Describe call retrieves the real endpoint without exposing a password:
 
 ```bash
-# Create read replica
-aws rds create-db-instance-read-replica \
-  --db-instance-identifier my-db-replica \
-  --source-db-instance-identifier my-db \
-  --db-instance-class db.t3.micro \
-  --no-multi-az
+aws rds describe-db-instances --db-instance-identifier sandbox-db \
+  --query 'DBInstances[0].{Endpoint:Endpoint,Status:DBInstanceStatus,Engine:Engine}'
+aws rds describe-db-parameters \
+  --db-parameter-group-name sandbox-params \
+  --query 'Parameters[].{Name:ParameterName,Value:ParameterValue,ApplyType:ApplyType}'
 ```
 
-### Use Cases
+These are read-only examples needing real identifiers and permissions. For client TLS, use the current regional/global RDS CA bundle and hostname verification; sslmode=require encrypts but does not provide the same server-identity verification as verify-full with an appropriate trust root.
 
-- Scale read-heavy workloads
-- Analytics/reporting queries
-- Cross-region DR
-- Major version upgrades (by promoting replica)
+## Parameter and option groups
 
-### Limitations
+Parameter groups resemble engine configuration files. Dynamic parameters may apply immediately; static ones require reboot. Choose the parameter-group family matching the engine/version and examine allowed values/apply type before changes. max_connections, shared_buffers, work_mem or innodb_buffer_pool_size are engine-specific; a fixed numeric example is not a universal tuning recommendation.
 
-- Asynchronous (some lag, typically < 1 second)
-- Not automatically promoted on primary failure
-- Replica lag is visible in CloudWatch (`ReplicaLag` metric)
-- Binary log (MySQL) or WAL (PostgreSQL) must be enabled
+Option groups enable supported engine features where applicable; they are not available/identical for every engine. Attach changes deliberately and inspect reboot/maintenance requirements. Protect the database from a deployment that lowers connections/memory without testing the client workload.
 
-## Automated Backups
+## HA, replicas and backups compared
+
+```text
+Classic Multi-AZ: application → primary ↔ synchronous standby (not read target)
+Read scaling: application → primary + supported async read replicas
+Multi-AZ DB cluster: distinct cluster topology with readable standbys
+```
+
+A promoted read replica and a managed HA failover have different procedures/data-loss behavior. Restore creates a new database identity/endpoint; applications, secrets, KMS/network access and DNS require a cutover plan. Snapshot retention and automated PITR windows differ. Test counts, representative rows and application semantics, not only available status.
+
+Enhanced Monitoring needs an authorized monitoring role and selected interval; CloudWatch metrics, OS telemetry and Database Insights database-load evidence serve different diagnostics. Distinguish queue/I/O latency, connection exhaustion and bad SQL before resizing. Include retained storage/backups and stopped-instance behavior in costs.
+
+## Worked private PostgreSQL failover and snapshot restore
+
+This lab deliberately uses a **classic Multi-AZ DB instance**, not a Multi-AZ DB cluster, and incurs two-instance HA plus restore/storage/secret costs. Obtain approval before creation. Have an existing DB subnet group spanning two private AZs, a dedicated DB security group allowing TCP 5432 only from the lab client's security group, a reachable Linux client with `psql`, and Python/Boto3 with temporary operator credentials in the chosen Region. Set RDS_LAB_SUBNET_GROUP and RDS_LAB_SECURITY_GROUP_ID to those verified resources. A second client must have no allowed DB path. The operator needs the create/describe/reboot/snapshot/restore/delete actions and required Secrets Manager/KMS/service-role permissions; the data client is a separate database identity.
+
+Use these cells in one Python session. Discover the regional default PostgreSQL version and ensure the selected burstable class supports this configuration before spending money; abort rather than silently choosing a larger class.
+
+```python
+import os
+import time
+import uuid
+import boto3
+
+rds = boto3.client("rds")
+versions = rds.describe_db_engine_versions(Engine="postgres", DefaultOnly=True)["DBEngineVersions"]
+assert len(versions) == 1, "Select one supported regional PostgreSQL version explicitly"
+engine_version = versions[0]["EngineVersion"]
+instance_class = "db.t4g.micro"
+options = rds.describe_orderable_db_instance_options(
+    Engine="postgres", EngineVersion=engine_version,
+    DBInstanceClass=instance_class,
+)["OrderableDBInstanceOptions"]
+assert any(o["StorageType"] == "gp3" and o["MultiAZCapable"]
+           and o["SupportsStorageEncryption"] for o in options), "Configuration unavailable; review alternatives"
+source_id = "wiki-rds-lab-" + uuid.uuid4().hex[:8]
+subnet_group = os.environ["RDS_LAB_SUBNET_GROUP"]
+database_sg = os.environ["RDS_LAB_SECURITY_GROUP_ID"]
+rds.create_db_instance(
+    DBInstanceIdentifier=source_id, Engine="postgres", EngineVersion=engine_version,
+    DBInstanceClass=instance_class, AllocatedStorage=20, StorageType="gp3",
+    DBName="wikilab", MasterUsername="labadmin", ManageMasterUserPassword=True,
+    DBSubnetGroupName=subnet_group, VpcSecurityGroupIds=[database_sg],
+    PubliclyAccessible=False, StorageEncrypted=True, MultiAZ=True,
+    BackupRetentionPeriod=1, DeletionProtection=False,
+    Tags=[{"Key": "Purpose", "Value": "cloudnative-wiki-rds-lab"}],
+)
+rds.get_waiter("db_instance_available").wait(
+    DBInstanceIdentifier=source_id, WaiterConfig={"Delay": 30, "MaxAttempts": 60},
+)
+source = rds.describe_db_instances(DBInstanceIdentifier=source_id)["DBInstances"][0]
+print(source_id, source["Endpoint"]["Address"], source["MasterUserSecret"]["SecretArn"])
+```
+
+If a waiter times out/fails, inspect that exact identifier and events; it may still be billable. No password is passed to CreateDBInstance or printed. Retrieve the managed secret only through an authorized private operator workflow, then enter the password at `psql`'s prompt; never paste it into the command, shared output or history.
+
+Download the current RDS CA bundle from its [official certificate guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL.html). Set RDS_LAB_HOST to the returned source hostname and RDS_LAB_CA_FILE to the downloaded bundle path:
 
 ```bash
-# Backup settings (set at creation)
---backup-retention-period 7      # days (0 to disable)
---backup-window 03:00-04:00      # start time
---preferred-backup-window 03:00-04:00
+psql "host=${RDS_LAB_HOST:?} port=5432 dbname=wikilab user=labadmin sslmode=verify-full sslrootcert=${RDS_LAB_CA_FILE:?} connect_timeout=5" -W
 ```
 
-### Restoring
+Paste this SQL in that session. The schema is reserved solely for the disposable lab:
 
-```bash
-# Restore to point in time
-aws rds restore-db-instance-to-point-in-time \
-  --source-db-instance-identifier my-db \
-  --target-db-instance-identifier my-db-restored \
-  --restore-time 2024-01-15T10:00:00Z
-
-# Restore from snapshot
-aws rds restore-db-instance-from-db-snapshot \
-  --db-instance-identifier my-db-restored \
-  --db-snapshot-identifier my-snapshot
+```sql
+CREATE SCHEMA wiki_rds_lab;
+CREATE TABLE wiki_rds_lab.orders (
+  order_id text PRIMARY KEY,
+  total numeric(10,2) NOT NULL CHECK (total >= 0)
+);
+INSERT INTO wiki_rds_lab.orders VALUES ('lab-001',25), ('lab-002',40);
+SELECT count(*) AS rows, sum(total) AS total FROM wiki_rds_lab.orders;
 ```
 
-**Important:** Restoring creates a NEW instance with a new endpoint. You must update your application to point to the new endpoint.
+Expect rows=2 and total=65.00. Attempt the same connection from the excluded client's network with the same short connection timeout: connection should fail before authentication. On the permitted client, an incorrect password should fail authentication instead; do not open public access to make either test pass.
 
-## Parameter Groups
+Close the writer, then capture a named manual snapshot and wait for it:
 
-Database configuration (like `my.cnf` or `postgresql.conf`):
-
-```bash
-# Create parameter group
-aws rds create-db-parameter-group \
-  --db-parameter-group-name my-custom-params \
-  --db-parameter-group-family postgres15 \
-  --description "Custom parameters"
-
-# Modify parameters
-aws rds modify-db-parameter-group \
-  --db-parameter-group-name my-custom-params \
-  --parameters '[
-    {"ParameterName": "max_connections", "ParameterValue": "200", "ApplyMethod": "pending-reboot"},
-    {"ParameterName": "work_mem", "ParameterValue": "4096", "ApplyMethod": "immediate"}
-  ]'
+```python
+snapshot_id = source_id + "-fixture"
+rds.create_db_snapshot(DBInstanceIdentifier=source_id, DBSnapshotIdentifier=snapshot_id)
+rds.get_waiter("db_snapshot_available").wait(
+    DBSnapshotIdentifier=snapshot_id, WaiterConfig={"Delay": 30, "MaxAttempts": 60},
+)
 ```
 
-Common parameters:
+After the snapshot is AVAILABLE, insert `('lab-003',30)` into the source. Its total is now 95.00; that row must not appear in the earlier snapshot restore.
 
-- `max_connections` — max concurrent connections
-- `shared_buffers` — PostgreSQL buffer cache
-- `innodb_buffer_pool_size` — MySQL buffer pool
-- `log_min_duration_statement` — slow query threshold
+Run a controlled failover only on this Multi-AZ lab instance. Observe a fresh connection/query alongside the API state; existing connections can be interrupted. Do not treat the initial successful reboot response or an immediately available status as completed failover:
 
-## Option Groups
-
-Add features (Oracle ASM, SQL Server Transparent Data Encryption, etc.):
-
-```bash
-# Add option to option group
-aws rds modify-option-group \
-  --option-group-name my-option-group \
-  --options '[{"OptionName": "MEMCACHED", "VpcSecurityGroupMemberships": ["sg-xxxxx"]}]'
+```python
+old_az = rds.describe_db_instances(DBInstanceIdentifier=source_id)["DBInstances"][0]["AvailabilityZone"]
+started = time.monotonic()
+rds.reboot_db_instance(DBInstanceIdentifier=source_id, ForceFailover=True)
+deadline = started + 900
+while time.monotonic() < deadline:
+    current = rds.describe_db_instances(DBInstanceIdentifier=source_id)["DBInstances"][0]
+    if current["DBInstanceStatus"] == "available" and current["AvailabilityZone"] != old_az:
+        print("Observed AZ change", old_az, current["AvailabilityZone"],
+              "seconds", round(time.monotonic() - started))
+        break
+    time.sleep(10)
+else:
+    raise TimeoutError("Inspect lab failover events and connection recovery")
 ```
 
-## Enhanced Monitoring
+Reconnect through the source endpoint using fresh DNS resolution and verify three rows/95.00. The polling time is a coarse control-plane observation, not a promised failover SLA or exact application outage time.
 
-```bash
-# Enable enhanced monitoring
-aws rds modify-db-instance \
-  --db-instance-identifier my-db \
-  --monitoring-interval 60 \
-  --monitoring-role-arn arn:aws:iam::123456789012:role/rds-monitoring-role
+Restore the snapshot to a **new** private instance; explicitly select its subnet group/security group rather than inheriting a default network policy. The restore is Single-AZ here to reduce additional lab cost; it is not the source's HA topology.
+
+```python
+restored_id = source_id + "-restore"
+rds.restore_db_instance_from_db_snapshot(
+    DBInstanceIdentifier=restored_id, DBSnapshotIdentifier=snapshot_id,
+    DBInstanceClass=instance_class, DBSubnetGroupName=subnet_group,
+    VpcSecurityGroupIds=[database_sg], PubliclyAccessible=False, MultiAZ=False,
+    ManageMasterUserPassword=True,
+    Tags=[{"Key": "Purpose", "Value": "cloudnative-wiki-rds-lab-restore"}],
+)
+rds.get_waiter("db_instance_available").wait(
+    DBInstanceIdentifier=restored_id, WaiterConfig={"Delay": 30, "MaxAttempts": 60},
+)
+restored = rds.describe_db_instances(DBInstanceIdentifier=restored_id)["DBInstances"][0]
+print(restored_id, restored["Endpoint"]["Address"], restored["MasterUserSecret"]["SecretArn"])
 ```
 
-Key metrics (CloudWatch vs Enhanced Monitoring):
+Connect to the new hostname with its newly managed secret and the same TLS settings. `SELECT * FROM wiki_rds_lab.orders ORDER BY order_id;` must return only lab-001/25 and lab-002/40; the aggregate is 2/65.00. A restore's available status alone does not establish recovered application permissions/data. Encrypted snapshot restoration preserves encryption, but required key access must still exist.
 
-- CloudWatch: CPU, Connections, Disk queue depth, Swap usage
-- Enhanced: OS-level (processes, memory, I/O per process)
-
-## Connecting
-
-```bash
-# Get endpoint
-aws rds describe-db-instances \
-  --db-instance-identifier my-db \
-  --query 'DBInstances[0].Endpoint'
-
-# PostgreSQL
-psql -h my-db.xxxxx.us-east-1.rds.amazonaws.com -U postgres -d mydb
-
-# MySQL
-mysql -h my-db.xxxxx.us-east-1.rds.amazonaws.com -u postgres -p mydb
-
-# SSL
-psql "host=my-db.xxxxx.rds.amazonaws.com port=5432 dbname=mydb sslmode=require"
-```
-
-## Performance Insights
-
-DBA (Database Inspector) for real-time SQL analysis:
-
-```bash
-# Enable Performance Insights
-aws rds modify-db-instance \
-  --db-instance-identifier my-db \
-  --enable-performance-insights \
-  --performance-insights-kms-key-id arn:aws:kms:us-east-1:123456789012:key/xxxxx
-```
-
-View in Console: RDS → Instances → my-db → Performance Insights
-
-## Pricing
-
-| Component      | Cost                    |
-| -------------- | ----------------------- |
-| db.t3.micro    | $0.017/hr (~$12/month)  |
-| db.m5.large    | $0.136/hr (~$98/month)  |
-| db.r6g.xlarge  | $0.252/hr (~$181/month) |
-| Multi-AZ       | 2x instance cost        |
-| Read Replica   | Same as single instance |
-| Storage (gp3)  | $0.08/GB/month          |
-| Backup storage | $0.095/GB/month         |
-| Data transfer  | $0.02-0.09/GB           |
-
-## Storage Types
-
-| Type              | Description                             | Use                 |
-| ----------------- | --------------------------------------- | ------------------- |
-| gp3               | General purpose SSD, 3000 IOPS baseline | General workloads   |
-| gp2               | General purpose SSD, burst to 3000 IOPS | Legacy              |
-| io1               | Provisioned IOPS (up to 64,000)         | High IOPS (64K+)    |
-| io2               | Provisioned IOPS (up to 256,000)        | Highest IOPS        |
-| io2 Block Express | Up to 256,000 IOPS, 64 TB               | Maximum performance |
-
-## Limits
-
-| Resource                    | Limit                                   |
-| --------------------------- | --------------------------------------- |
-| DB instances per region     | 40 (soft)                               |
-| Storage per instance        | 64 TB                                   |
-| Max databases per instance  | MySQL: unlimited, PostgreSQL: unlimited |
-| Max connections             | db.t3.micro: 100, db.m5.xlarge: 1000+   |
-| Parameter groups per region | 50                                      |
-| Read replicas per primary   | 5 (MySQL/MariaDB), 5 (PostgreSQL)       |
+After closing clients and recording evidence, review source_id/restored_id and delete **only these disposable instances** with `rds.delete_db_instance(DBInstanceIdentifier=..., SkipFinalSnapshot=True, DeleteAutomatedBackups=True)` for each. Skipping final backups is appropriate only for this synthetic lab. Wait with `db_instance_deleted` using bounded WaiterConfig, inspect retained backups/secrets, then delete snapshot_id with `delete_db_snapshot`. Managed-secret lifecycle and manually retained secrets/backups differ; do not delete unrelated secrets or shared subnet groups/security groups. [Create instance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html), [snapshot restore](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html), [managed credentials](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/rds/
-- **Documentation:** https://docs.aws.amazon.com/AmazonRDS/
-- **Pricing:** https://aws.amazon.com/rds/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A small production PostgreSQL database (db.m5.large, Multi-AZ). On-Demand: $0.136/hr × 2 (Multi-AZ) × 24 × 30 = $195.84/month + storage 100GB × $0.08 = $8/month. Total: ~$204/month. With RDS Reserved Instance (1 year, no upfront): $0.083/hr effective = $119.52/month + storage = $127.52/month. Savings: 38%.
-
-**Scenario 2:** A dev PostgreSQL database (db.t3.micro, single-AZ). On-Demand: $0.017/hr × 24 × 30 = $12.24/month. Storage 20GB × $0.08 = $1.60/month. Total: ~$14/month. Dev instances can use `db.t3.micro` (covered by free tier for new accounts) or stop/start to avoid charges.
-
-## Nuggets & Gotchas
-
-- **RDS storage auto-scales but only UP — you cannot shrink storage once increased:** If you provision 100GB and only use 20GB, you still pay for 100GB. Start with minimal storage and let RDS auto-scale as needed.
-- **RDS parameter groups require reboot to apply many parameters — not all changes are immediate:** If you change `max_connections` or `shared_buffers`, you typically need to reboot the instance. Check `pending-reboot` status in parameter group.
-- **MySQL/RDS read replicas use binary log replication — this adds load to the primary:** For heavily write-intensive workloads, binary log replication can cause replication lag. Use PostgreSQL's WAL-based replication if you need less overhead.
-- **RDS automated backups run in the maintenance window — don't schedule backups during peak hours:** The default 30-minute window runs during your configured time. Set it to off-peak (e.g., 3 AM).
-- **You cannot connect to RDS from the internet — it must be in a VPC with proper security groups:** If you try to `telnet rds-endpoint 5432` from outside AWS and it fails, check your VPC (should be private subnet), security group (allow your IP on port 5432), and subnet routing (should not have IGW, should use NAT for outbound).
+- [Multi-AZ DB instance failover](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.Failover.html)
+- [Read-replica creation and quotas](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
+- [RDS storage performance](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html)
+- [Database Insights migration](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Database-Insights.html)
+- [RDS pricing](https://aws.amazon.com/rds/pricing/)
 
 ## Across the wiki
 

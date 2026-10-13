@@ -2,58 +2,65 @@
 title: AWS Application Integration
 description: AWS messaging and integration services — SQS (queues), SNS (pub/sub), EventBridge (event bus), Step Functions (workflows), Amazon MQ (ActiveMQ/RabbitMQ), AppSync (GraphQL).
 tags:
-  - aws
-  - application-integration
-date: 2026-06-06
+  - aws/application-integration
+date: 2026-10-12
 ---
 
 # AWS Application Integration
 
-These services connect applications and microservices through asynchronous messaging, event-driven architectures, and workflow orchestration.
+Integration services separate producers from consumers and coordinate work. Choose by delivery semantics, protocol compatibility and failure recovery—not by a single feature checklist.
 
-## Service Map
+## Service selection
 
-| Service                                   | Pattern   | Use Case                                           |
-| ----------------------------------------- | --------- | -------------------------------------------------- |
-| [[sqs/README\|SQS]]                       | Queue     | Decouple producers/consumers, task queue           |
-| [[sns/README\|SNS]]                       | Pub/Sub   | Fan-out to many subscribers                        |
-| [[eventbridge/README\|EventBridge]]       | Event Bus | Schema registry, rules, SaaS ingestion             |
-| [[step-functions/README\|Step Functions]] | Workflow  | Multi-step orchestration, long-running processes   |
-| [[amazon-mq/README\|Amazon MQ]]           | Broker    | ActiveMQ/RabbitMQ migration, JMS, protocol support |
-| [[appsync/README\|AppSync]]               | GraphQL   | Managed GraphQL API, real-time subscriptions       |
+| Requirement                 | Lesson                                                                | Design question                                              |
+| --------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Buffered work queue         | [[AWS/application-integration/sqs/README\|SQS]]                       | Who owns retry, visibility and poison-message recovery?      |
+| Publish/subscribe fan-out   | [[AWS/application-integration/sns/README\|SNS]]                       | Which subscribers need independent durable queues?           |
+| Content-based event routing | [[AWS/application-integration/eventbridge/README\|EventBridge]]       | What schema, idempotency and replay guarantees are required? |
+| Stateful orchestration      | [[AWS/application-integration/step-functions/README\|Step Functions]] | Which steps can safely retry and compensate?                 |
+| GraphQL/realtime API        | [[AWS/application-integration/appsync/README\|AppSync]]               | Who may read each field and subscribe to each tenant?        |
+| Existing broker protocol    | [[AWS/application-integration/amazon-mq/README\|Amazon MQ]]           | Which engine/version/client capabilities must be retained?   |
 
-## Choosing a Messaging Service
+The default EventBridge bus accepts AWS service events and custom events. A custom bus is often a better ownership boundary. SNS retries transient delivery failures according to the destination protocol; durable queues and subscription DLQs address different failure stages.
 
+FIFO ordering/deduplication does not make arbitrary downstream side effects exactly-once. Queue visibility expiry, consumer retries, redrive and event replay all require an application idempotency key. Standard Step Functions can run up to one year; Express is capped at five minutes, not a solution for longer executions.
+
+## Learning exercise
+
+Complete the SQS send/receive/delete lab, then wire SNS to that queue using a topic-scoped resource policy. Publish a message, stop consumption and inspect queue age. Resume consumption with an idempotent handler; fail one message deliberately and verify dead-letter handling. Record the retry owner at every hop.
+
+For a multi-step workflow, implement a bounded timeout and compensation rather than an infinite retry. Use [[AWS/monitoring/README|monitoring]] to observe message age, failed delivery, workflow failures and consumer error rate. Create only sandbox resources and remove queues/topics/workflows after inspecting evidence.
+
+## Production checklist
+
+Define a versioned event envelope with event ID, type, source, occurred-at timestamp and schema version. Classify payload sensitivity, choose encryption and least-privilege policies, and design backpressure. Check payload/throughput quotas in the target Region, estimate send/receive/delete and empty-poll costs, and establish replay authorization and retention ownership.
+
+## Choosing an integration pattern
+
+```text
+Producer
+├─ Work must wait for a worker → SQS queue
+├─ Each subscriber needs a copy → SNS → independent SQS queues
+├─ Route by event content/owner → EventBridge bus → matching rules
+├─ Coordinate steps/compensation → Step Functions
+├─ Preserve broker/client protocols → MQ (verify engine compatibility)
+└─ Client requests/subscriptions → AppSync (authorize fields and tenants)
 ```
-Need to send messages between services?
-  │
-  ├── One-to-one (point to point)
-  │   └── SQS Queue — decouple, buffer, retry
-  │
-  ├── One-to-many (fan-out)
-  │   ├── SNS Topic — push to many subscribers (SQS, HTTP, Lambda, etc.)
-  │   └── EventBridge — rules-based routing, schema registry
-  │
-  ├── Event-driven (react to changes)
-  │   └── EventBridge — rules, schedules, SaaS events
-  │
-  ├── Multi-step workflow
-  │   └── Step Functions — state machines, human approval
-  │
-  └── Existing broker (migrating from ActiveMQ/RabbitMQ)
-      └── Amazon MQ — managed ActiveMQ/RabbitMQ
-```
+
+| Property            | Queue                                    | Topic/bus                                        | Workflow                                        |
+| ------------------- | ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| Backpressure        | Buffer plus consumer capacity            | Target-dependent; often add queues               | Concurrency/step limits and downstream capacity |
+| Failure unit        | Message/batch                            | Each target delivery                             | Task/state/execution                            |
+| Recovery            | Visibility retry, DLQ and redrive        | Retry/DLQ and optionally archive replay          | Retry/Catch, compensation, human action         |
+| Ordering            | Queue-mode/group scoped                  | Product/target scoped, not global                | Explicit state dependencies                     |
+| Completion evidence | Durable side effect plus acknowledgement | Subscriber evidence, not publish acknowledgement | Business outcome, not only execution status     |
+
+For an order, publish a versioned event ID only after the database transaction commits (consider an outbox). Fan out to invoicing and fulfillment queues so one slow consumer does not block the other. A charge operation stores its idempotency key with the effect, not just an in-memory processed list. Define who owns failed-event replay, how schemas evolve and how missing events are reconciled.
+
+Troubleshoot in order: producer outcome → accepted envelope → matching subscription/rule → target policy/KMS → queue backlog/visibility → consumer effect. Use this request-path model instead of assuming exactly-once effects or unlimited throughput.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/products/application-integration/
-- **Documentation:** https://docs.aws.amazon.com/eventbridge/, https://docs.aws.amazon.com/sns/, etc.
-- **Pricing:** https://aws.amazon.com/pricing/
-
-## Nuggets & Gotchas
-
-- **SQS doesn't guarantee FIFO within a queue across multiple readers — use SQS FIFO queues if you need strict ordering:** Standard SQS queues provide at-least-once delivery with no ordering guarantee. FIFO queues guarantee ordering but have a 300msg/s limit (vs unlimited for standard).
-- **SNS doesn't persist messages — subscribers must be online when published:** If a subscriber is offline (Lambda error, SQS queue temporarily empty), the message is NOT retried by SNS. Use SQS with SNS subscription (SQS queues persist messages) or EventBridge for retry logic.
-- **EventBridge's default event bus only receives AWS events — for custom events, you create a custom event bus:** The `default` event bus receives AWS service events. Custom applications publish to a custom event bus you create.
-- **Step Functions standard workflows have a 1-year execution limit — for longer workflows, use express workflows or redesign:** Standard workflow executions can run up to 1 year. Express workflows have a 5-minute limit but handle 100K+ executions/second.
-- **Amazon MQ is NOT serverless — you pay for the broker instance 24/7:** If you want managed messaging without fixed costs, use SQS/SNS (serverless, pay-per-request) instead of Amazon MQ.
+- [AWS integration services](https://aws.amazon.com/products/application-integration/)
+- [Workflow types](https://docs.aws.amazon.com/step-functions/latest/dg/choosing-workflow-type.html)
+- [SNS retry behavior](https://docs.aws.amazon.com/sns/latest/dg/sns-message-delivery-retries.html)

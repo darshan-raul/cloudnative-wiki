@@ -2,145 +2,51 @@
 title: AWS IAM
 description: AWS IAM — identity and access management. Users, groups, roles, policies (JSON), identity federation, SCPs, permission boundaries, service control policies, and AWS SSO.
 tags:
-  - aws
-  - security
-  - iam
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS IAM (Identity and Access Management)
 
-IAM is the foundation of AWS security — it controls WHO can access WHAT resources. Every AWS action is authorized by IAM (unless the resource policy allows anonymous access).
+IAM authenticates and authorizes AWS principals. Prefer federated workforce sessions and workload roles over long-lived IAM user access keys; trust policies and permissions policies answer different questions.
 
-## Core Concepts
+## Principals and policies
 
-### Users, Groups, Roles
+Users are long-lived identities; groups collect user permissions; roles issue temporary sessions to trusted callers. A role's trust policy controls who can assume it; its identity policies control what the resulting session may do. A permissions boundary, session policy or Organizations guardrail limits permissions rather than granting them.
 
-| Entity       | Purpose                                     | Credential Type                        |
-| ------------ | ------------------------------------------- | -------------------------------------- |
-| IAM User     | Long-term credentials for humans            | Access keys, passwords, MFA            |
-| IAM Group    | Collection of users with shared permissions | N/A (groups don't have credentials)    |
-| IAM Role     | Temporary credentials for services/users    | No long-term credentials — assume role |
-| Service Role | Role used by an AWS service                 | EC2, Lambda, etc.                      |
+Study [[AWS/security/iam/policy-evaluation|policy evaluation]] for resource-policy/session-principal exceptions and SCP/RCP scope. Use [[AWS/security/iam/sts-and-federation|STS and federation]] for chaining and session attribution; use [[AWS/security/iam/identity-center|Identity Center]] for workforce permission sets/assignments. [[AWS/security/iam/various-types-of-roles|Role types]] explains service/task/instance distinctions.
 
-### Access Types
+## Valid policy fixture
 
-```
-Programmatic access (API/CLI)
-  → Access Key ID + Secret Access Key (long-term, rotatable)
-
-Console access
-  → Username + Password + MFA (long-term)
-
-Role-based access (temporary)
-  → STS AssumeRole → Temporary credentials (1-12 hours)
-```
-
-## JSON Policy Structure
+This complete policy document permits only listing one illustrative bucket; substitute a real sandbox ARN before attaching it:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Effect": "Allow", // Allow or Deny
-      "Action": [
-        // Which actions
-        "s3:GetObject",
-        "s3:PutObject"
-      ],
-      "Resource": [
-        // Which resources
-        "arn:aws:s3:::my-bucket/*"
-      ],
-      "Condition": {
-        // Optional conditions
-        "IpAddress": {
-          "aws:SourceIp": "203.0.113.0/24"
-        }
-      }
+      "Sid": "ListSandboxOnly",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::wiki-lab-example"
     }
   ]
 }
 ```
 
-### Wildcards in Actions
+No JSON comments are allowed in a document sent to IAM. Bucket listing and object GetObject use different resource ARNs/actions; neither automatically authorizes KMS decryption.
 
-```json
-"Action": [
-  "s3:*"                    // All S3 actions
-  "s3:Get*"                 // All S3 GET actions
-  "iam:PassRole"            // Specific action
-  "logs:DescribeLogGroups"   // Describe (not list)
-  "logs:*LogGroup*"          // Any action with LogGroup in name
-]
-```
+## Read-only authorization lab
 
-## Creating Users and Groups
+Prerequisites: a federation session and a sandbox bucket you may inspect. Record `aws sts get-caller-identity`, verify your account/Region, and validate the policy document using Access Analyzer ValidatePolicy before an administrator attaches it to a disposable role.
 
-```bash
-# Create user
-aws iam create-user --user-name alice
+In that role, list the named bucket (expected success); read an object and list a different bucket (expected denial unless another applicable policy grants access). Inspect identity, resource, session, boundary and organization policies when results differ. The simulator and validation are diagnostic tools, not proof of a complete real-request decision.
 
-# Create group
-aws iam create-group --group-name developers
+The lab administrator must scope iam:PassRole/role-management permission to the disposable role and its intended service. Remove the attachment/role after the session ends; never modify a production trust policy as a learning experiment.
 
-# Add user to group
-aws iam add-user-to-group --user-name alice --group-name developers
+### Build and verify the role
 
-# Create login profile (console access)
-aws iam create-login-profile \
-  --user-name alice \
-  --password 'MySecurePassword123!' \
-  --password-reset-required
-
-# Enable MFA
-aws iam create-virtual-mfa-device \
-  --virtual-mfa-device-name alice-mfa \
-  --outfile ./qr.png
-```
-
-## Creating Policies
-
-### Inline Policy
-
-```bash
-aws iam put-user-policy \
-  --user-name alice \
-  --policy-name allow-s3-read \
-  --policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::my-bucket/*"
-    }]
-  }'
-```
-
-### Managed Policy
-
-```bash
-aws iam create-policy \
-  --policy-name allow-s3-read \
-  --policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::my-bucket/*"
-    }]
-  }'
-
-# Attach to group
-aws iam attach-group-policy \
-  --group-name developers \
-  --policy-arn arn:aws:iam::123456789012:policy/allow-s3-read
-```
-
-## IAM Roles
-
-### Trust Policy (who can assume the role)
+For an administrator working in the approved sandbox, first save a trust document for the **exact** source role that will run the test. The source and target are examples; replace both account IDs and names. A role ARN trusted as a principal must exist when the policy is applied.
 
 ```json
 {
@@ -148,218 +54,95 @@ aws iam attach-group-policy \
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
+      "Principal": { "AWS": "arn:aws:iam::111122223333:role/LabCaller" },
       "Action": "sts:AssumeRole"
     }
   ]
 }
 ```
 
-### Creating a Role
+Save as `trust-policy.json`; save the bucket-list policy above as `permissions.json`. Validate both documents, using `RESOURCE_POLICY` for trust and `IDENTITY_POLICY` for the permissions. Review findings before attaching anything:
 
 ```bash
-# Create role for EC2
-aws iam create-role \
-  --role-name ec2-s3-read \
-  --assume-role-policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Principal": {"Service": "ec2.amazonaws.com"},
-      "Action": "sts:AssumeRole"
-    }]
-  }'
-
-# Attach managed policy
-aws iam attach-role-policy \
-  --role-name ec2-s3-read \
-  --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+aws accessanalyzer validate-policy \
+  --policy-document file://trust-policy.json --policy-type RESOURCE_POLICY \
+  --validate-policy-resource-type AWS::IAM::AssumeRolePolicyDocument
+aws accessanalyzer validate-policy \
+  --policy-document file://permissions.json --policy-type IDENTITY_POLICY
 ```
 
-### Instance Profile (EC2)
+With the verified sandbox account, create the role and apply the narrow inline policy through the [documented CLI contracts](https://docs.aws.amazon.com/cli/latest/reference/iam/create-role.html). Inline policy attachment is a separate operation from role creation:
 
 ```bash
-# Create instance profile
-aws iam create-instance-profile --instance-profile-name my-ec2-role
-
-# Add role to instance profile
-aws iam add-role-to-instance-profile \
-  --instance-profile-name my-ec2-role \
-  --role-name ec2-s3-read
-
-# Attach to EC2 instance
-aws ec2 run-instances \
-  --iam-instance-profile '{"Name": "my-ec2-role"}'
+aws iam create-role --role-name WikiLabReadBucket \
+  --assume-role-policy-document file://trust-policy.json
+aws iam put-role-policy --role-name WikiLabReadBucket \
+  --policy-name WikiLabBucketList --policy-document file://permissions.json
+aws iam get-role --role-name WikiLabReadBucket
+aws iam get-role-policy --role-name WikiLabReadBucket --policy-name WikiLabBucketList
 ```
 
-## Cross-Account Access
+The source `LabCaller` also needs a policy allowing `sts:AssumeRole` on this target role, plus any applicable boundary and organization permissions. After an authorized source assumes it, test the permitted bucket and a denied bucket. Then remove `WikiLabBucketList` and the role using `delete-role-policy` and `delete-role` after dependencies are cleared. Inspect CloudTrail for the assumption and test calls. Do not interpret an Access Analyzer finding-free policy as proof that a real request will be allowed.
 
-### Trusting Account (Account B grants Account A access)
+## Analysis, service-linked roles and cost
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "AWS": "arn:aws:iam::111122223333:root" },
-      "Action": "sts:AssumeRole",
-      "Condition": {
-        "StringEquals": { "aws:RequestedRegion": ["us-east-1", "us-west-2"] }
-      }
-    }
-  ]
-}
+Access Analyzer includes external-access analysis and policy validation; validation accepts policy documents including inline policies. Do not confuse it with a managed-policy-only tool.
+
+Service-linked roles can be deleted after dependent service resources are removed and the deletion checks succeed. Use delete-service-linked-role and check its deletion task status; they are neither universally undeletable nor automatically removed by every service.
+
+IAM, Identity Center and STS are offered without additional service charges. Some Access Analyzer features have their own pricing; there is no fabricated per-call STS tariff after a free quota. Avoid creating user access keys for this lab.
+
+## Policy types, roles and authorization trace
+
+| Policy/control        | Where it applies                                      | Does it grant access by itself?                   |
+| --------------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| Identity policy       | User, group or role session                           | Can allow actions, subject to other controls      |
+| Resource policy       | Supported resource                                    | Can allow principals under service-specific rules |
+| Role trust policy     | AssumeRole entry to a role                            | Allows assumption, not arbitrary resource actions |
+| Permission boundary   | IAM identity upper bound                              | No                                                |
+| Session policy        | Temporary session upper bound                         | No                                                |
+| Organizations SCP/RCP | Supported member-account principal/resource guardrail | No                                                |
+
+For a cross-account request, inspect the source caller's policy, target role trust, requested session conditions, destination role permissions and applicable organization/resource controls. A successful `AssumeRole` response gives temporary credentials; it does not prove `s3:GetObject` will succeed. Conversely, an S3 resource policy may have service-specific cross-account behavior that a role-only mental model misses. Use [[AWS/security/iam/policy-evaluation|the policy evaluation lesson]] for exact rules.
+
+An IAM group is a way to attach identity permissions to IAM users; it cannot be assumed like a role. An inline policy belongs to one identity, while a managed policy can be attached where supported and versioned as its own policy resource. A permissions boundary limits a user's or role's effective identity permissions, but does not replace careful review of resource policies, SCPs, session conditions and service behavior. Avoid wildcard actions/resources unless the use case and compensating boundaries are explicit.
+
+```text
+workforce federation / workload identity → STS session
+                                      │
+                     trust + identity policy + guardrails
+                                      │
+                         resource policy and service check
+                                      │
+                               allow or deny + audit event
 ```
+
+Keep IAM users only for cases that truly require them; for staff, configure Identity Center assignments/permission sets and an external identity source as appropriate. For EC2, an instance profile carries the role. For Lambda, a function execution role is separate from the permission to invoke it. For ECS, task and execution roles serve different operations. Do not use root credentials or shared user keys as an easier lab route.
+
+## Last-accessed permission review
+
+Use Access Advisor/last-accessed reports to investigate a role's permissions. With read authorization, set `IAM_REVIEW_ROLE_ARN` to the role under review and generate a report, then inspect its job status:
 
 ```bash
-# In Account A (assume the role)
-aws sts assume-role \
-  --role-arn arn:aws:iam::111122223333:role/cross-account-access \
-  --role-session-name alice-prod-access
-
-# Returns: AccessKeyId, SecretAccessKey, SessionToken
-# Use these to access Account B resources
+IAM_ACCESS_JOB_ID=$(aws iam generate-service-last-accessed-details \
+  --arn "$IAM_REVIEW_ROLE_ARN" --query JobId --output text)
+aws iam get-service-last-accessed-details --job-id "$IAM_ACCESS_JOB_ID"
 ```
 
-## Service Control Policies (SCPs)
-
-SCPs are applied at the Organization or OU level:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Deny",
-      "Action": [
-        "s3:PutBucketPublicAccessBlock",
-        "iam:CreateUser",
-        "iam:DeleteUser"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-SCP blocks all accounts in the OU from:
-
-- Disabling public access blocks
-- Creating IAM users
-
-## Permission Boundaries
-
-Limit what a role/user can do, even if other policies grant more:
-
-```bash
-# Create a permissions boundary
-aws iam create-policy \
-  --policy-name developer-boundary \
-  --policy-document '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Action": ["s3:*", "ec2:Describe*"],
-      "Resource": "*"
-    }]
-  }'
-
-# Attach boundary to user
-aws iam put-user-permissions-boundary \
-  --user-name alice \
-  --permissions-boundary arn:aws:iam::123456789012:policy/developer-boundary
-```
-
-Even if Alice has a policy allowing `*`, the boundary limits her to S3 + EC2 Describe only.
-
-## Access Advisor
-
-```bash
-# See what permissions a user has used
-aws iam generate-credential-report
-aws iam get-credential-report
-
-# See service last accessed
-aws iam list-policies-granting-service-access \
-  --arn arn:aws:iam::123456789012:user/alice \
-  --service-namespaces s3
-```
-
-## AWS SSO
-
-```bash
-# Configure SSO (AWS IAM Identity Center)
-aws sso-admin list-permission-sets \
-  --instance-arn arn:aws:sso:::instance/ssoins-xxxxx
-
-# Assign access
-aws sso-admin create-permission-set \
-  --name DeveloperAccess \
-  --instance-arn arn:aws:sso:::instance/ssoins-xxxxx \
-  --permission-set '{
-    "SessionDuration": "PT8H",
-    "Policies": {"AWSManaged": "arn:aws:iam::aws:policy/ReadOnlyAccess"}
-  }'
-```
-
-## Security Best Practices
-
-| Practice           | Description                                     |
-| ------------------ | ----------------------------------------------- |
-| Enable MFA         | On root account and all users                   |
-| Use roles          | Don't share access keys                         |
-| Least privilege    | Grant minimum permissions needed                |
-| Rotate credentials | Access keys every 90 days                       |
-| Use groups         | Assign permissions to groups, not users         |
-| Regular audits     | Use Access Advisor to remove unused permissions |
-| No root            | Use root only for initial setup                 |
-| SCPs               | Apply at Organization level for guardrails      |
-
-## Limits
-
-| Resource                     | Limit                                        |
-| ---------------------------- | -------------------------------------------- |
-| Users per account            | 5000                                         |
-| Groups per user              | 10                                           |
-| Roles per account            | 1000                                         |
-| Policies per role            | 10                                           |
-| Policy size                  | 6,144 characters (IAM), 5,120 (service role) |
-| Attached policies per entity | 10 (managed)                                 |
-
-## More in this section
-
-- [[AWS/security/iam/external-id-and-confused-deputy-problem|External ID and Confused deputy problem]] — Adding an External ID to an IAM role’s trust policy is like adding a "unique passcode" to a door that only certain people are…
+If the report is still `IN_PROGRESS`, poll with bounded backoff in the same credential session until completed or failed. Review paginated service/action results with the application owner before removing permission. [The tracking contract](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html) has Region/service history limits and reports attempted access, including denials. Action detail covers supported management actions, excludes data-plane events and `iam:PassRole`, and omits some policy-derived access. Missing history therefore cannot prove a permission is unnecessary. Correlate CloudTrail, release schedules and recovery tasks, then test a scoped change with rollback.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/iam/
-- **Documentation:** https://docs.aws.amazon.com/IAM/
-- **Pricing:** https://aws.amazon.com/iam/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** An organization with 100 developers, each needing S3 + EC2 read access. Without groups: 100 inline policies. With groups: 1 group with 1 managed policy = $0 + $0. Groups save management overhead and are free.
-
-**Scenario 2:** A cross-account access pattern where Account A (dev) needs read access to Account B (prod) S3. Option 1: IAM user in B with access key. Option 2: Role in B, STS assume from A. Role + STS is more secure (no long-term credentials), recommended. STS assume role cost: $0.00 (first 1000/day), $0.0000012/after.
-
-## Nuggets & Gotchas
-
-- **IAM roles don't have passwords — you can't "log in" to a role:** Users log in with IAM users or SSO. Roles are assumed via STS (programmatic or via web login). If you see "login to role" — that's STS federation, not a traditional login.
-- **An explicit DENY always wins — Deny > Allow regardless of other policies:** If you have `Allow *` in one policy and `Deny s3:*` in another, the Deny wins. Deny is final.
-- **IAM policy wildcards in Resource are evaluated strictly — `Resource: "arn:aws:s3:::bucket/*"` doesn't include bucket-level actions:** You need `Resource: "arn:aws:s3:::bucket"` for `s3:ListBucket`, and `Resource: "arn:aws:s3:::bucket/*"` for `s3:GetObject`.
-- **Service-linked roles are pre-created by AWS — you can't delete them:** Roles like `AWSServiceRoleForAutoScaling` are managed by AWS. If you delete the service, the role is deleted automatically.
-- **IAM Access Analyzer doesn't analyze inline policies — only managed policies attached to resources:** If you use inline policies extensively, Access Analyzer won't flag overly permissive rules. Consider converting inline policies to managed policies for better visibility.
+- [IAM introduction and cost](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html)
+- [Policy validation](https://docs.aws.amazon.com/IAM/latest/UserGuide/access-analyzer-policy-validation.html)
+- [ValidatePolicy CLI](https://docs.aws.amazon.com/cli/latest/reference/accessanalyzer/validate-policy.html)
+- [Service-linked-role deletion](https://docs.aws.amazon.com/cli/latest/reference/iam/delete-service-linked-role.html)
 
 ## Across the wiki
 
-- [[Kubernetes/eks/security/pod-identity|EKS Pod Identity]] — workload identity (Kubernetes)
-- [[Azure/compute/aks/security-workload-identity|AKS Security & Microsoft Entra Workload Identity Architecture]] — workload identity (Azure)
-- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]] — workload identity (GCP)
-- [[Kubernetes/eks/security/iam-roles-for-sa|IAM Roles for Service Accounts (IRSA)]] — workload identity (Kubernetes)
-- [[Azure/identity/entraid|EntraID]] — identity and access (Azure)
-- [[GCP/identity/README|GCP Identity & Access Management (IAM)]] — identity and access (GCP)
-- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]] — identity and access (Architecture)
-- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]] — identity and access (Kubernetes)
+- [[Kubernetes/eks/security/pod-identity|EKS Pod Identity]]
+- [[GCP/identity/workload-identity|GCP Workload Identity & Federation]]
+- [[Kubernetes/eks/security/iam-roles-for-sa|IAM Roles for Service Accounts (IRSA)]]
+- [[GCP/identity/README|GCP Identity & Access Management (IAM)]]
+- [[Architecture/solution-architecture-concepts/authentication/README|Identity & Authentication — OIDC, JWT, OAuth, SAML]]
+- [[Kubernetes/concepts/L07-security/01-api-access/03-rbac|RBAC (Role-Based Access Control)]]

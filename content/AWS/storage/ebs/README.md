@@ -1,242 +1,94 @@
 ---
-title: Amazon EBS
-description: Amazon EBS — block storage volumes for EC2 instances. Volume types (gp3/gp2/io2/io2BlockExpress), snapshots, encryption, and performance optimization.
+title: "Amazon EBS"
+description: "EBS provides persistent AZ-scoped block storage for EC2."
 tags:
-  - aws
-  - storage
-  - ebs
-date: 2026-06-06
+  - aws/storage
+date: 2026-10-12
 ---
 
-# Amazon EBS (Elastic Block Store)
+# Amazon EBS
 
-EBS provides persistent block storage volumes for EC2 instances. Each volume is automatically replicated within its Availability Zone for durability. EBS volumes are physically attached to EC2 instances via the network (not a shared bus like SAN).
+EBS provides persistent AZ-scoped block storage for [[AWS/compute/ec2/README|EC2]]. The application/operating system owns partitioning, filesystem correctness and database consistency. EBS is not a shared NFS service; eligible io1/io2 Multi-Attach requires a cluster-aware filesystem/application and does not coordinate writers for you.
 
-## Core Concepts
+## Volume and performance decisions
 
-### How EBS Works
+gp3 separates capacity from provisioned IOPS and throughput. Its included baseline is 3,000 IOPS and 125 MiB/s; additional performance is billed separately. Current regional gp3 reaches 64 TiB, 80,000 IOPS and 2,000 MiB/s subject to capacity/performance ratios. Outposts has different limits, so do not reuse a regional maximum there.
 
-```
-EC2 Instance (in AZ us-east-1a)
-  └── Network attachment (not local disk)
-       └── EBS Volume (in us-east-1a)
-            └── File System (ext4, xfs, ntfs)
-                 └── Data
-```
+gp2 baseline is max(100, 3 × GiB) IOPS up to 16,000; small volumes can burst using credits. Exhausted credits fall to that volume's baseline, not universally 100 IOPS. Monitor BurstBalance for applicable volumes. Provisioned-IOPS SSD targets latency-sensitive workloads; throughput HDD choices suit sequential I/O and are not boot volumes. Match EC2 EBS bandwidth limits as well as volume capability.
 
-EBS is network-attached — not like a local SSD. Latency is ~0.5-2ms vs local NVMe at ~0.1ms. For most applications, this difference is negligible.
+## Encryption and snapshots
 
-### Volume Types
+Encryption by default is an account/Region setting, not automatic because an AWS-managed key exists. Enabling it does not rewrite existing volumes/snapshots. Explicitly verify the volume's encryption/key and allow the necessary KMS grants for restore/sharing.
 
-| Type              | Performance                 | Use Case                                      | Cost (per GB/mo) |
-| ----------------- | --------------------------- | --------------------------------------------- | ---------------- |
-| gp3               | 3,000 IOPS, 125 MB/s (base) | General purpose, lower cost                   | ~$0.08           |
-| gp2               | 3,000 IOPS burst            | Legacy general purpose                        | ~$0.10           |
-| io2               | 256,000 IOPS, 1,000 MB/s    | High-performance databases                    | ~$0.125          |
-| io2 Block Express | 256,000 IOPS, 4,000 MB/s    | Ultra-performance                             | ~$0.125          |
-| st1               | 500 IOPS, 250 MB/s          | Throughput-intensive (Hadoop, log processing) | ~$0.045          |
-| sc1               | 250 IOPS, 250 MB/s          | Infrequent access                             | ~$0.025          |
+Snapshots are incremental recovery artifacts priced as EBS snapshots, not customer S3 Standard objects. Deleting one releases blocks no longer referenced by remaining snapshots; you need not delete every snapshot first. Quiesce the application or use application-aware backup for consistent recovery. [[AWS/storage/ebs/amazon-data-lifecycle-manager|DLM]] automates retention but does not prove a usable restore.
 
-### gp3 vs gp2
+## Sandbox recovery exercise
 
-gp3 is the newer, cheaper option with configurable throughput independent of IOPS:
-
-```
-gp3: 3,000 IOPS + 125 MB/s (base) → configurable up to 16,000 IOPS / 1,000 MB/s
-gp2: 3,000 IOPS burst, throughput tied to IOPS
-```
-
-gp3 is ~20% cheaper than gp2 for equivalent performance.
-
-## Creating a Volume
+Prerequisites: a disposable EC2 instance, a volume in its AZ, permissions and a budget for volume/snapshot charges. Confirm the exact device using lsblk; never format a disk containing data. Write a test file, flush/quiesce writes, snapshot the volume and restore to a second volume in the same AZ.
 
 ```bash
-# Create a 100GB gp3 volume
-aws ec2 create-volume \
-  --volume-type gp3 \
-  --size 100 \
-  --availability-zone us-east-1a \
-  --tag-specifications 'ResourceType=volume,Tags=[{Key=Name,Value=my-data-volume}]'
+aws ec2 get-ebs-encryption-by-default
+aws ec2 describe-volumes --volume-ids vol-0123456789abcdef0
+aws ec2 create-snapshot --volume-id vol-0123456789abcdef0 \
+  --description "Disposable recovery exercise"
 ```
 
-### Attaching to EC2
+Wait for snapshot completion and attach/mount the restored volume without formatting it. Verify the test file's checksum. A direct cross-AZ attachment should fail; restoration into a new volume in the target AZ is the recovery path. Detach/delete only sandbox volumes and snapshots after verification. Do not publish snapshots or modify production mounts for this exercise.
+
+## Cost and observability
+
+Bill provisioned capacity × elapsed month fraction plus excess provisioned IOPS/throughput, snapshots/archive and any fast snapshot restore. Compare equal capacity: 2 TB cannot be costed as 200 GB. Watch volume latency/queue/throughput and instance limits; VolumeConsumedReadWriteOps is a documented metric, not VolumeConsumedReadWriteHours.
+
+## Volume/device lifecycle
+
+```text
+EBS volume (one AZ)
+  → attachment to a compatible EC2 instance in that AZ
+  → OS device / optional partition
+  → filesystem
+  → mounted application data
+```
+
+| Family         | Workload direction                                        | What to measure                                         |
+| -------------- | --------------------------------------------------------- | ------------------------------------------------------- |
+| gp3            | General-purpose SSD with independent performance settings | Volume and instance throughput/IOPS ceilings.           |
+| gp2            | General-purpose SSD with size-linked baseline/credits     | Actual baseline and BurstBalance.                       |
+| io1/io2        | Supported high-IOPS/latency-sensitive workloads           | Required instance support, consistency and cost.        |
+| st1/sc1        | Applicable sequential HDD workloads                       | Throughput, workload suitability; not boot volumes.     |
+| Instance store | Local ephemeral capacity                                  | Host/stop/termination loss and application replication. |
+
+## Attach, mount and grow safely
+
+1. Describe the volume/instance and verify the exact AZ and identifiers.
+2. Attach only the sandbox volume; inspect lsblk and filesystem signatures.
+3. Format only a confirmed empty new device. NVMe naming can differ from requested device names.
+4. Mount by filesystem UUID where appropriate and validate a temporary fstab change before reboot.
+5. Write/checksum a labelled file and verify ownership/application access.
+6. For growth, modify the supported volume settings, wait for modification state, then expand the partition/filesystem with OS-specific tools.
+7. Verify usable filesystem capacity; EBS allocation alone does not expand a filesystem automatically.
+
+Run mkfs only on a verified empty new device: formatting an existing filesystem destroys data. Changing a volume's performance settings may be independent of capacity, but filesystem operations and supported constraints still apply.
+
+## Snapshot, sharing and restore
 
 ```bash
-aws ec2 attach-volume \
-  --volume-id vol-xxxxx \
-  --instance-id i-xxxxx \
-  --device /dev/sdf
+aws ec2 describe-snapshots --owner-ids self
+aws ec2 describe-volumes-modifications --volume-ids vol-0123456789abcdef0
 ```
 
-### On the EC2 Instance
+These read-only calls require permissions and can reveal asset metadata. Snapshot creation/restoration need a consistent application state and appropriate KMS permissions. Share with explicit approved account IDs and keys; public snapshot sharing is not a safe default learning recipe.
 
-```bash
-# Check available devices
-lsblk
+A restore creates a new volume in the selected AZ. Initialization/lazy loading or supported fast-restore settings can affect first-read latency. After mounting the restored filesystem without formatting, compare checksums/application state and record observed RTO.
 
-# Format (first time only)
-sudo mkfs.ext4 /dev/sdf
-
-# Mount
-sudo mount /dev/sdf /mnt/data
-
-# Add to /etc/fstab for auto-mount
-echo "/dev/sdf /mnt/data ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab
-```
-
-## EBS Snapshots
-
-Snapshots are incremental backups stored in S3. First snapshot copies all data; subsequent snapshots only copy changed blocks.
-
-### Creating a Snapshot
-
-```bash
-aws ec2 create-snapshot \
-  --volume-id vol-xxxxx \
-  --description "pre-migration-backup" \
-  --tag-specifications 'ResourceType=snapshot,Tags=[{Key=Name,Value=my-volume-snapshot}]'
-```
-
-### Sharing Snapshots
-
-```bash
-# Make snapshot public (all AWS accounts)
-aws ec2 modify-snapshot-attribute \
-  --snapshot-id snap-xxxxx \
-  --attribute-type createVolumePermission \
-  --operation-type add \
-  --group-names all
-
-# Share with specific account
-aws ec2 modify-snapshot-attribute \
-  --snapshot-id snap-xxxxx \
-  --attribute-type createVolumePermission \
-  --operation-type add \
-  --user-ids 111122223333
-```
-
-### Restoring from Snapshot
-
-```bash
-# Create volume from snapshot
-aws ec2 create-volume \
-  --snapshot-id snap-xxxxx \
-  --availability-zone us-east-1a
-
-# Attach to instance
-aws ec2 attach-volume --volume-id vol-yyyyy --instance-id i-xxxxx --device /dev/sdg
-```
-
-## Encryption
-
-EBS volumes are encrypted by default (AWS-managed keys). You can also use customer-managed keys (CMK):
-
-```bash
-# Encrypted volume (default)
-aws ec2 create-volume \
-  --volume-type gp3 \
-  --size 50 \
-  --encrypted \
-  --kms-key-id arn:aws:kms:us-east-1:123456789012:key/xxxxx
-```
-
-Encryption is transparent — no performance impact. Snapshots of encrypted volumes are also encrypted.
-
-## Volume Performance
-
-### IOPS and Throughput
-
-```
-gp3: 3,000 IOPS base (configurable to 16,000)
-gp2: 3,000 IOPS burst (scales with volume size, 3,000 max)
-io2: 256,000 IOPS (Block Express: 256,000)
-```
-
-### Volume Size and Performance (gp2/gp3)
-
-gp2 and gp3 IOPS scale with volume size:
-
-- < 1TB → 3,000 IOPS
-- 1-2TB → 6,000 IOPS
-- 2-3TB → 9,000 IOPS
-- 3-4TB → 12,000 IOPS
-
-For gp3, you can configure IOPS and throughput independently. For gp2, IOPS and throughput are coupled.
-
-### Monitoring EBS Performance
-
-```bash
-# Volume metrics (CloudWatch)
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/EBS \
-  --metric-name VolumeReadOps \
-  --start-time 2024-01-15T00:00:00Z \
-  --end-time 2024-01-15T12:00:00Z \
-  --period 300 \
-  --statistics Sum \
-  --dimensions Name=VolumeId,Value=vol-xxxxx
-```
-
-Key metrics:
-
-- `VolumeReadOps` / `VolumeWriteOps` — I/O operations
-- `VolumeQueueLength` — wait time (should be < 10 for good performance)
-- `VolumeBurstBalance` (gp2 only) — burst IOPS remaining
-- `VolumeConsumedReadWriteHours` — io2 only
-
-## Multi-Attach
-
-io2 volumes can be attached to multiple EC2 instances in the same AZ:
-
-```bash
-aws ec2 modify-volume \
-  --volume-id vol-xxxxx \
-  --multi-attach-enabled
-```
-
-Use case: Oracle RAC (shared disk cluster), Windows Scale-Out File Server. Requires a cluster-aware file system (OCFS2, GFS2, AWS FSx).
-
-## Instance Store vs EBS
-
-|             | Instance Store               | EBS                        |
-| ----------- | ---------------------------- | -------------------------- |
-| Location    | Local to host (NVMe)         | Network attached           |
-| Durability  | 0 (ephemeral)                | 99.999% (replicated in AZ) |
-| Size        | Limited by instance type     | Up to 16TB                 |
-| Performance | Very high (0.1ms)            | High (0.5-2ms)             |
-| Cost        | Included in instance price   | Additional cost            |
-| Use         | Temporary, non-critical data | Persistent data            |
-
-## Limits
-
-| Resource                     | Limit                        |
-| ---------------------------- | ---------------------------- |
-| Volumes per account          | 5,000 (soft limit)           |
-| Max volume size              | 16TB                         |
-| Max IOPS (gp3)               | 16,000 (independent of size) |
-| Max IOPS (io2 Block Express) | 256,000                      |
-| Max throughput (gp3)         | 1,000 MB/s                   |
-| Snapshots per volume         | Unlimited                    |
+Monitor queue length, latency, throughput and IOPS along with EC2 limits; a busy filesystem can be bottlenecked at the instance rather than the volume. Snapshots, archive, fast snapshot restore and provisioned performance are separate cost controls.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/ebs/
-- **Documentation:** https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AmazonEBS.html
-- **Pricing:** https://aws.amazon.com/ebs/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A production database with 500GB gp3 volume + 3,000 IOPS. 500GB × $0.08 = $40/month. Volume usage: $0.08/GB/mo × 500 = $40/month. Plus snapshots: 500GB first snapshot (full) = $23/month (S3 storage). Monthly snapshots (incremental, ~10GB changed) = $0.23/month. Total: ~$64/month.
-
-**Scenario 2:** A dev environment with 100GB gp3. 100GB × $0.08 = $8/month. Snapshots (30-day retention, 5GB changed each): 5GB × $0.05/GB = $0.25/month. Total: ~$8.25/month. Compare to gp2: 100GB × $0.10 = $10/month + worse performance.
-
-## Nuggets & Gotchas
-
-- **EBS volumes are AZ-locked — you can't attach a volume from us-east-1a to an instance in us-east-1b:** To move a volume between AZs, create a snapshot and restore in the target AZ. To move between regions, copy the snapshot to the target region first.
-- **gp2 has a burst bucket — if you exhaust it, IOPS drops to 100:** gp2 bursts at 3,000 IOPS for volumes up to 1TB. After burst exhaustion, you get 100 IOPS until the bucket refills (at ~1 IOPS per GB of volume size per minute). Use gp3 for consistent performance or io2 for high IOPS.
-- **EBS snapshots are incremental — but deleting a snapshot doesn't free space if dependent snapshots exist:** Only the blocks not referenced by any remaining snapshot are actually deleted. You can't reduce S3 storage used by snapshots without deleting all dependent snapshots.
-- **Volume performance (IOPS/throughput) is measured at the volume level, not the instance level:** An m5.xlarge with 2 volumes can achieve up to 6,000 IOPS (3,000 per volume). If you need more IOPS, stripe multiple volumes with LVM or use io2 Block Express.
-- **The `VolumeBurstBalance` metric for gp2 tells you how much burst credit you have remaining:** If this drops to 0, your IOPS drops to 100. For production databases, monitor this and consider switching to gp3 (no burst, consistent performance) or io2 (predictable high IOPS).
+- [gp3 performance and constraints](https://docs.aws.amazon.com/ebs/latest/userguide/general-purpose.html)
+- [Encryption by default](https://docs.aws.amazon.com/ebs/latest/userguide/encryption-by-default.html)
+- [Snapshot deletion](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-deleting-snapshot.html)
+- [EBS metrics](https://docs.aws.amazon.com/ebs/latest/userguide/using_cloudwatch_ebs.html)
+- [EBS pricing](https://aws.amazon.com/ebs/pricing/)
 
 ## Across the wiki
 

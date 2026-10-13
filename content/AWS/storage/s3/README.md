@@ -1,350 +1,131 @@
 ---
-title: Amazon S3
-description: Amazon S3 — object storage with 11 9s of durability. Buckets, objects, prefixes, storage classes, lifecycle rules, replication, versioning, and access control.
+title: "Amazon S3"
+description: "S3 stores objects in regional buckets."
 tags:
-  - aws
-  - storage
-  - s3
-date: 2026-06-06
+  - aws/storage
+date: 2026-10-12
 ---
 
-# Amazon S3 (Simple Storage Service)
+# Amazon S3
 
-S3 is the primary object storage service in AWS. Objects (files) are stored in buckets (containers) with a flat namespace identified by a globally unique key. Durability is 99.999999999% (11 9s) across multiple AZs.
+S3 stores objects in regional buckets. An object key is unique within a bucket, not globally; slashes are prefix characters, not directories. Versioning adds version IDs, while metadata and tags serve different application and policy purposes.
 
-## Core Concepts
+Prerequisites: [[AWS/security/iam/README|IAM]], [[AWS/storage/README|storage selection]] and [[AWS/networking/README|networking]]. Learn identity permissions, bucket policies, KMS permissions and network access separately.
 
-### Buckets and Objects
+## Consistency and capacity
 
-```
-Bucket: my-app-assets (globally unique name)
-  └── Object
-       ├── Key: "images/logo.png"
-       ├── Value: [binary data]
-       ├── VersionId: "abc123"
-       ├── Metadata: {Content-Type: "image/png"}
-       └── Tags: {Environment: "Production"}
-```
+PUTs, overwrites, DELETEs, reads and listings are strongly consistent automatically, in every Region, without an extra consistency charge. This does not make a sequence of updates to multiple objects a transaction.
 
-### S3 URI
+A single PUT supports up to 5 GB. Larger objects use multipart upload: the current limit is 48.8 TiB, with up to 10,000 parts; parts are 5 MiB–5 GiB except that the last has no minimum. Abandoned multipart uploads retain billable parts, so configure their lifecycle cleanup. Parallel requests, sensible prefix distribution and retry/backoff help throughput; do not confuse request-rate guidance with a maximum bucket size.
 
-```
-s3://my-app-assets/images/logo.png
-        ↑bucket         ↑key
-```
+## Storage-class decisions
 
-### Object Key Structure
+| Class                      | Access and retention trade-off                                                                                                               |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Standard                   | Frequent access, multiple AZs.                                                                                                               |
+| Standard-IA / One Zone-IA  | Infrequent access; retrieval and minimum-size/duration charges. One Zone-IA is for data whose AZ loss is acceptable.                         |
+| Intelligent-Tiering        | Automatic access-tier movement; eligible objects incur monitoring/automation charges. Archive Access and Deep Archive Access require opt-in. |
+| Glacier Instant Retrieval  | Millisecond access, 90-day minimum storage duration.                                                                                         |
+| Glacier Flexible Retrieval | Restore before ordinary access; 90-day minimum, expedited/standard/bulk options.                                                             |
+| Glacier Deep Archive       | Longer restore delay and 180-day minimum.                                                                                                    |
 
-S3 keys can simulate folder structure with prefixes:
+Minimum duration is a billing condition, not mandatory retention protection. Learn [[AWS/storage/glacier/README|archive restores and Object Lock]] before committing compliance data.
 
-```
-logs/
-  2024/
-    01/
-      15/
-        app.log
-        error.log
-    02/
-      app.log
-```
+## Security and lifecycle
 
-The `/` in keys is just a character — S3 has no real directory hierarchy. Prefix `logs/` groups all log objects.
+Prefer Block Public Access and Bucket owner enforced Object Ownership (ACLs disabled). A public-read policy is not a baseline security recipe. Use least-privilege bucket/access-point policies; default SSE-S3 encryption does not imply a customer-managed KMS key. SSE-KMS adds key permissions and request costs.
 
-## Storage Classes
+Versioning makes overwrites recoverable but does not prevent deletion of versions. Lifecycle rules can transition/expire current and noncurrent versions and remove incomplete multipart uploads. Replication uses configured rules/roles and versioned source/destination buckets; it is not automatically a backup of every existing object. [[AWS/storage/s3/protection-and-recovery|S3 protection and recovery]] develops the combined retention, authorization and restore design.
 
-| Class                   | Durability | Availability | Use Case                  | Cost (per GB/mo)     |
-| ----------------------- | ---------- | ------------ | ------------------------- | -------------------- |
-| S3 Standard             | 11 9s      | 99.99%       | Hot data, frequent access | ~$0.023              |
-| S3 Intelligent-Tiering  | 11 9s      | 99.9%        | Unknown access patterns   | ~$0.023 (monitoring) |
-| S3 Standard-IA          | 11 9s      | 99.9%        | Infrequent (30+ days)     | ~$0.0125             |
-| S3 Glacier IA           | 11 9s      | 99.99%       | Rare (90+ days)           | ~$0.004              |
-| S3 Glacier              | 11 9s      | 99.99%       | Archive (180+ days)       | ~$0.00099            |
-| S3 Glacier Deep Archive | 11 9s      | 99.99%       | Very rare (365+ days)     | ~$0.00099            |
-| S3 One Zone-IA          | 11 9s      | 99.5%        | Re-creatable infrequent   | ~$0.01               |
+Use a private S3 origin with CloudFront Origin Access Control for website delivery where applicable. The S3 website endpoint has different HTTPS/access characteristics. Transfer Acceleration is optional and should be measured against its surcharge.
 
-### Intelligent-Tiering
+Inventory reports are periodic datasets, not a real-time listing. Its configuration uses IsEnabled and a required configuration ID. Event notification configurations use TopicConfigurations/TopicArn, QueueConfigurations/QueueArn or LambdaFunctionConfigurations/LambdaFunctionArn, with matching destination permissions. Expect duplicate/out-of-order notifications and implement idempotency. S3 Select is closed to new customers; use [[AWS/analytics/athena/README|Athena]] or another supported query path.
 
-Automatically moves objects between tiers based on access patterns:
+## Sandbox version-recovery exercise
 
-- Frequent → Infrequent → Archive → Deep Archive
-- 0 monitoring/automation charge per object
-- Best for unpredictable access patterns
-
-## Creating a Bucket
+Create a private bucket in a chosen Region with a globally unique name, enable versioning and keep public access blocked. These are CLI v2 examples requiring your own bucket; request/storage charges can apply.
 
 ```bash
-aws s3 mb s3://my-unique-bucket-name
-```
-
-### Enabling Versioning
-
-```bash
-aws s3api put-bucket-versioning \
-  --bucket my-bucket \
+aws s3api put-bucket-versioning --bucket example-unique-bucket \
   --versioning-configuration Status=Enabled
+aws s3api get-bucket-versioning --bucket example-unique-bucket
+aws s3api list-object-versions --bucket example-unique-bucket
 ```
 
-### Enabling Encryption
+Upload two different versions of a small file, verify the current content immediately and retrieve an earlier version using its version ID. An identity without GetObject permission should receive AccessDenied, even with the correct object URL. Observe actual policy/KMS errors rather than opening the bucket publicly.
+
+Cleanup includes all versions and delete markers, not merely current keys; empty the disposable bucket before deleting it. Do not run bulk deletion on a production bucket. Separately test one lifecycle rule on an isolated prefix and examine the rule schema before applying it.
+
+## Bucket, key and version anatomy
+
+```text
+Bucket: example-unique-bucket
+  └─ key: logs/2026/10/12/app.json
+       ├─ object bytes and Content-Type metadata
+       ├─ object tags (separate from key prefix)
+       └─ version ID when versioning is enabled
+```
+
+Prefixes group keys for listing/lifecycle/policies; they are not real directories. General-purpose bucket names follow the documented uniqueness/naming scope, while other bucket types have distinct rules. Use s3://bucket/key for CLI object references and the correct access-point ARN/alias when using an access point—not a fabricated access-point hostname.
+
+## Object-operation walkthrough
+
+These CLI v2 commands operate on a disposable private bucket and an existing local file. Replace the exact bucket/key and budget storage/requests.
 
 ```bash
-aws s3api put-bucket-encryption \
-  --bucket my-bucket \
-  --server-side-encryption-configuration '{
-    "Rules": [{
-      "ApplyServerSideEncryptionByDefault": {
-        "SSEAlgorithm": "AES256"
-      }
-    }]
-  }'
+aws s3 cp ./sample.json s3://example-unique-bucket/sandbox/sample.json
+aws s3api head-object --bucket example-unique-bucket --key sandbox/sample.json
+aws s3 cp s3://example-unique-bucket/sandbox/sample.json ./downloaded-sample.json
+aws s3api list-objects-v2 --bucket example-unique-bucket --prefix sandbox/
 ```
 
-## Working with Objects
+Verify checksum/content, not only exit status. A recursive sync/rm can affect many objects and versioning changes deletion semantics; do not copy production bulk deletion commands into a lab. HeadObject authorization errors can differ from nonexistent-object results depending on permissions.
 
-```bash
-# Upload
-aws s3 cp myfile.txt s3://my-bucket/
-aws s3 cp ./local-dir s3://my-bucket/ --recursive
+## Lifecycle configuration with a restricted prefix
 
-# Download
-aws s3 cp s3://my-bucket/myfile.txt ./
-aws s3 sync s3://my-bucket/ ./local-dir
-
-# Delete
-aws s3 rm s3://my-bucket/myfile.txt
-
-# List
-aws s3 ls s3://my-bucket/
-aws s3 ls s3://my-bucket/logs/
-aws s3api list-objects-v2 --bucket my-bucket
-```
-
-## Access Control
-
-### Bucket Policies
+Applying PutBucketLifecycleConfiguration replaces the configuration, so first inspect/preserve existing rules. The example uses one sandbox prefix; its future expiration is an intentional deletion policy, not retention protection.
 
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
+  "Rules": [
     {
-      "Sid": "PublicRead",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": ["s3:GetObject"],
-      "Resource": "arn:aws:s3:::my-public-bucket/*"
+      "ID": "sandbox-archive",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "sandbox/archive/" },
+      "Transitions": [
+        { "Days": 30, "StorageClass": "STANDARD_IA" },
+        { "Days": 90, "StorageClass": "GLACIER" },
+        { "Days": 365, "StorageClass": "DEEP_ARCHIVE" }
+      ],
+      "Expiration": { "Days": 730 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
     }
   ]
 }
 ```
 
-### ACLs (less common now)
+Save as a reviewed JSON file and pass it through --lifecycle-configuration file://... with the actual bucket. Small-object transition defaults/minimum billing and class constraints affect applicability. Noncurrent versions need their own actions; expiring current objects does not necessarily remove all stored versions.
 
-```
-Private          → Owner only (default)
-PublicRead       → Read object
-PublicReadWrite  → Read and write
-AuthenticatedRead → Any AWS authenticated user
-```
+## Replication, inventory and notifications
 
-### Access Points
+For replication, enable required versioning, authorize the replication role for source/destination/KMS operations and define prefix/tag/deletion/version rules. Existing objects may need a supported batch workflow rather than automatic retroactive replication. Same-Region and cross-Region replication solve different locality/account requirements.
 
-Simplify access for multiple applications:
+An Inventory report can include all versions and supported optional fields; configure IsEnabled, required ID, destination policy and schedule from the owning schema. It is periodic evidence, not immediate object-change detection. For notifications, give the target permission to accept S3 delivery, choose actual TopicConfigurations/QueueConfigurations/LambdaFunctionConfigurations fields and account for duplicates/out-of-order events. EventBridge is a distinct supported route.
 
-```bash
-aws s3control create-access-point \
-  --account-id 123456789012 \
-  --bucket my-bucket \
-  --name mobile-app-access
-# Access: s3://ap，移动应用-access.my-bucket.s3.amazonaws.com/
-```
+Static website endpoints and REST/CloudFront origins have different HTTPS/access behavior. Prefer a private origin with OAC where supported; a public-read policy is a deliberate exception, not a default setup step. Transfer Acceleration is opt-in and should be tested against geographical/client behavior and added fees.
 
-## Lifecycle Rules
+## Cost and references
 
-Automate storage class transitions:
+Model storage GB-months + request counts + retrieval/transition fees + replication/network + eligible monitoring/KMS fees. Rates depend on Region, class and operation; do not multiply a monthly subtotal by retention months twice.
 
-```bash
-aws s3api put-bucket-lifecycle-configuration \
-  --bucket my-bucket \
-  --lifecycle-configuration '{
-    "Rules": [{
-      "ID": "log-retention",
-      "Prefix": "logs/",
-      "Status": "Enabled",
-      "Transitions": [
-        {"Days": 30, "StorageClass": "STANDARD_IA"},
-        {"Days": 90, "StorageClass": "GLACIER"},
-        {"Days": 365, "StorageClass": "DEEP_ARCHIVE"}
-      ],
-      "Expiration": {"Days": 730}
-    }]
-  }'
-```
-
-## Replication
-
-### Cross-Region Replication (CRR)
-
-```bash
-aws s3api put-bucket-replication \
-  --bucket my-source-bucket \
-  --replication-configuration '{
-    "Role": "arn:aws:iam::123456789012:role/s3-replication-role",
-    "Rules": [{
-      "ID": "replicate-to-us-west-2",
-      "Status": "Enabled",
-      "Destination": {
-        "Bucket": "arn:aws:s3:::my-dest-bucket-us-west-2"
-      }
-    }]
-  }'
-```
-
-### Same-Region Replication (SRR)
-
-For compliance, multi-account, or analytics.
-
-## Static Website Hosting
-
-```bash
-aws s3 website s3://my-bucket \
-  --index-document index.html \
-  --error-document error.html
-
-# Make objects publicly readable
-aws s3api put-bucket-policy \
-  --bucket my-bucket \
-  --policy '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::my-bucket/*"
-    }]
-  }'
-```
-
-Website endpoint: `http://my-bucket.s3-website-us-east-1.amazonaws.com`
-
-## S3 Transfer Acceleration
-
-Speed up uploads via edge locations:
-
-```bash
-aws s3api put-bucket-accelerate-configuration \
-  --bucket my-bucket \
-  --accelerate-configuration Status=Enabled
-```
-
-Upload to: `my-bucket.s3-accelerate.amazonaws.com`
-
-## Performance Optimization
-
-### Prefix Partitioning
-
-S3 auto-scales, but partitioning keys helps:
-
-- Good: `logs/2024/01/15/app.log` (year/month/day/hour)
-- Bad: `logs/app.log` (single hot prefix)
-
-### Multipart Upload
-
-For files > 100MB:
-
-```bash
-aws s3 cp large-file.zip s3://my-bucket/  # SDK handles multipart automatically
-```
-
-### S3 Select
-
-Query CSV/JSON/Parquet without fetching the whole object:
-
-```bash
-aws s3 select-object-content \
-  --bucket my-bucket \
-  --key data.csv \
-  --expression "SELECT * FROM s3object WHERE price > 100" \
-  --input-serialization CSV \
-  --output-serialization JSON
-```
-
-## S3 Inventory
-
-Audit all objects in a bucket:
-
-```bash
-aws s3api put-bucket-inventory-configuration \
-  --bucket my-bucket \
-  --inventory-configuration '{
-    "Id": "full-inventory",
-    "Enabled": true,
-    "Destination": {
-      "S3BucketDestination": {
-        "Format": "Parquet",
-        "Bucket": "arn:aws:s3:::my-inventory-bucket"
-      }
-    },
-    "Schedule": {"Frequency": "Daily"},
-    "IncludedObjectVersions": "All"
-  }'
-```
-
-## Event Notifications
-
-Trigger Lambda or SNS on S3 events:
-
-```bash
-aws s3api put-bucket-notification-configuration \
-  --bucket my-bucket \
-  --notification-configuration '{
-    "TopicConfiguration": [{
-      "Topic": "arn:aws:sns:us-east-1:123456789012:my-topic",
-      "Events": ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-    }]
-  }'
-```
-
-## S3 Access Analyzer
-
-Analyze access to prevent accidental exposure:
-
-```bash
-aws s3control get-access-point-policy \
-  --account 123456789012 \
-  --name mobile-app-access
-```
-
-## Limits
-
-| Resource            | Limit                                  |
-| ------------------- | -------------------------------------- |
-| Bucket name         | 3-63 chars, globally unique, lowercase |
-| Object size         | 5TB (single PUT), 5GB (multipart)      |
-| Objects per bucket  | Unlimited                              |
-| Buckets per account | 100 (soft limit)                       |
-| PUT request         | 5GB                                    |
-| Multipart upload    | 10000 parts, 5MB-5GB per part          |
-
-## References
-
-- **Homepage:** https://aws.amazon.com/s3/
-- **Documentation:** https://docs.aws.amazon.com/AmazonS3/latest/userguide/
-- **Pricing:** https://aws.amazon.com/s3/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A media application storing 100GB of images. 100GB = ~$2.30/month (S3 Standard). PUT requests: 100K/month × $0.005/1K = $0.50. GET requests: 500K/month × $0.0004/1K = $0.20. Data transfer: 50GB egress/month × $0.09/GB = $4.50. Total: ~$7.50/month for storage and requests.
-
-**Scenario 2:** A data lake storing 10TB of analytics data. With S3 Intelligent-Tiering (monitoring $0.0025/1K objects × 1M objects = $2.50/month, storage $0.023/GB = $230/month). Total: ~$232/month. Compare to S3 Standard: $230 + negligible = ~$230/month. Intelligent-Tiering wins for unknown access patterns. After 6 months, 30% of data auto-tiers to Infrequent: savings ~$69/month.
-
-## Nuggets & Gotchas
-
-- **S3 bucket names are globally unique — you can't create a bucket with a name someone else already uses:** Even if the bucket is in a different account. This is why `terraform-state-bucket-prod` style names with account IDs or random suffixes are common.
-- **S3 DELETE is permanent — there is no recycle bin:** Unless you have versioning enabled (then you can delete a version marker to recover). For production buckets, use lifecycle rules with `NoncurrentVersionExpiration` to clean up old versions instead of manually deleting.
-- **S3's eventual consistency applies to DELETE and PUT in certain regions — reads may return stale data briefly:** For critical reads, use strong consistency (available since 2020). But note: strong consistency costs more and has higher latency.
-- **S3 costs come from storage + requests + data transfer — storage is usually the smallest line item:** A bucket with 10M small objects ($0.023/GB = $0.23/month for 10GB) may cost $50/month in GET requests (10M × $0.0004/1K). Monitor request costs separately.
-- **S3 Transfer Acceleration can double data transfer costs — use it only for global uploads:** Transfer Acceleration adds $0.04-$0.08/GB on top of normal egress. For uploads from a single region, use standard S3. For global CDN origin pull, it's worth it.
+- [Strong consistency](https://aws.amazon.com/s3/consistency/)
+- [Multipart limits](https://docs.aws.amazon.com/AmazonS3/latest/userguide/qfacts.html)
+- [Storage classes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html)
+- [Intelligent-Tiering](https://docs.aws.amazon.com/AmazonS3/latest/userguide/intelligent-tiering-overview.html)
+- [Inventory CLI contract](https://docs.aws.amazon.com/cli/latest/reference/s3api/put-bucket-inventory-configuration.html)
+- [Notification CLI contract](https://docs.aws.amazon.com/cli/latest/reference/s3api/put-bucket-notification-configuration.html)
+- [S3 Select availability](https://docs.aws.amazon.com/AmazonS3/latest/userguide/selecting-content-from-objects.html)
+- [S3 pricing](https://aws.amazon.com/s3/pricing/)
 
 ## Across the wiki
 

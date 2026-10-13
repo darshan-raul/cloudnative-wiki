@@ -1,99 +1,91 @@
 ---
 title: AWS Cost Management
-description: AWS cost management — pricing models, Cost Explorer, budgets, tags, billing, cost optimization strategies across compute, storage, database, networking
+description: Billing models, trade-offs, safe workflows and scoped examples for README.
 tags:
-  - aws
-  - cost-management
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # AWS Cost Management
 
-Cost on AWS is a first-class architectural concern. Every service has a pricing model, and understanding how usage translates to spend — across on-demand, reserved, and savings plan models — is fundamental to operating at scale.
+Price exercises use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, not current tariffs, unless explicitly identified as a dated published fee.
 
-This section covers the full cost management stack: pricing models, visibility tools, allocation strategies, and optimization techniques for every major service.
+Cost management is an architectural practice: define ownership, measure usage, remove waste, choose suitable pricing and verify the result. This hub is the canonical cost-learning path; [[AWS/concepts/cost-management|the concept view]] provides concise exam revision.
 
-## Pricing Fundamentals
+## Learning path
 
-**[[pricing-models|Pricing Models]]** — On-Demand, Reserved Instances, Savings Plans, Spot Instances. The three ways AWS charges for compute, storage, and data transfer. Understanding when each applies and how they interact.
+1. [[AWS/cost-management/pricing-models|Pricing models]] — purchasing choices, account-cohort Free Tier rules and unit-aware comparisons.
+2. [[AWS/cost-management/cost-allocation-tags|Allocation tags]] and [[AWS/cost-management/organizations-cost-strategy|Organizations strategy]] — ownership, sharing and chargeback.
+3. [[AWS/cost-management/cost-explorer|Cost Explorer]] and [[AWS/cost-management/cost-usage-report|Billing exports]] — delayed billing analysis, metrics and schemas.
+4. [[AWS/cost-management/cost-budgets|Budgets]] and [[AWS/cost-management/cost-anomaly-detection|Anomaly Detection]] — fixed objectives versus unexpected changes.
+5. [[AWS/cost-management/ec2-cost-optimization|EC2 optimization]] — rightsizing and evidence before commitments.
+6. [[AWS/cost-management/reserved-instances|Reserved Instances]], [[AWS/cost-management/savings-plans|Savings Plans]] and [[AWS/cost-management/ri-management|Commitment management]] — eligibility, utilization and coverage.
+7. [[AWS/cost-management/cost-automation|Safe automation]] — inventory, owner approval, bounded changes and measured savings.
 
-**[[savings-plans|Savings Plans]]** — Compute Savings Plans vs EC2 Instance Savings Plans vs SageMaker Savings Plans. How SP commitment works, instance size flexibility, and when SP beats RI.
+## Service investigations
 
-**[[reserved-instances|Reserved Instances]]** — Standard vs Convertible RIs. Regional vs zonal. Payment options (All/Partial/No Upfront). Instance size flexibility within families. Coverage vs utilization reporting.
+- [[AWS/cost-management/s3-cost-optimization|S3]] — lifecycle, retrieval, replication and access patterns.
+- [[AWS/cost-management/ebs-cost-optimization|EBS]] — provisioned storage/performance and safe retention.
+- [[AWS/cost-management/efs-cost-optimization|EFS]] — availability, lifecycle and throughput modes.
+- [[AWS/cost-management/rds-cost-optimization|RDS and Aurora]] — database performance, topology and serverless/commitment choices.
+- [[AWS/cost-management/dynamodb-cost-optimization|DynamoDB]] — item/consistency units, indexes and cache economics.
+- [[AWS/cost-management/network-cost-optimization|Networking]] — traffic-path modeling and service-specific exemptions.
+- [[AWS/cost-management/lambda-cost-optimization|Lambda]] — GB-seconds, requests, provisioned concurrency and surrounding services.
 
-## Visibility and Reporting
+## Common billing traps
 
-**[[cost-explorer|Cost Explorer]]** — Built-in AWS cost analysis. Visualizing spend by service, account, tag. RI and Savings Plan coverage reports. Forecasting. Limitations of the forecasting model.
+Stopping EC2 leaves EBS charges running; detaching EBS does not remove its bill. Lambda VPC ENIs do not have the invented NAT hourly fee. Private VPC-local database traffic does not inherently traverse NAT. Budget/anomaly alerts and CloudWatch billing data are delayed, not real-time hard caps.
 
-**[[cost-usage-report|Cost and Usage Report (CUR)]]** — The most detailed billing data. Hourly vs daily granularity. S3 Athena + Glue analysis. Multi-account aggregation. Setting up chargeback and showback models.
+Free Tier rules depend on account creation cohort and plan. Not all S3 egress is charged, and not all endpoints are free. Sharing a reservation discount is different from sharing capacity. Savings Plans commit discounted-rate dollars per hour, not a fraction of a monthly invoice.
 
-**[[cost-budgets|Cost Budgets]]** — Creating cost, usage, and RI/SP budgets. Alert thresholds and notification destinations (SNS, ChatOps). Budget actions for automated responses. Reserving RI/SP capacity.
+## How to use worked examples
 
-## Cost Allocation
+All illustrative rates are assumptions, not current quotes. Keep quantity, unit, Region, term, duration, price and exclusions visible. Include storage, transfer, logs, commitments and related services. Proposed drills are not reports of completed deployments.
 
-**[[cost-allocation-tags|Cost Allocation Tags]]** — User-defined tags vs AWS-generated tags. Tag activation requirements. Tag inheritance pitfalls (accounts, resources). Enforcement via SCPs and AWS Config rules.
+## Service-by-service cost review
 
-**[[cost-anomaly-detection|Cost Anomaly Detection]]** — Machine learning-based detection of unexpected cost spikes. Alert subscriptions. Root cause investigation workflow.
+| Layer              | First evidence to collect                   | Common residual cost                         |
+| ------------------ | ------------------------------------------- | -------------------------------------------- |
+| Compute            | Running hours, peak utilization and scaling | Idle commitments, EBS and IPv4               |
+| Serverless         | Memory/duration/request mix and concurrency | NAT, logs, API, queues and proxies           |
+| Object storage     | Class, age, size, versions and retrieval    | Early deletion, replication and requests     |
+| Block/file storage | Provisioned size/performance and access     | Snapshots, throughput and colder-tier access |
+| Databases          | Queries, capacity, topology and consistency | Replicas, backup, I/O and licenses           |
+| Networking         | Directed traffic paths and bytes            | NAT/TGW/endpoint hours and processing        |
+| Governance         | Owner/account/tag completeness              | Shared/unallocated subscriptions and support |
 
-**[[cost-automation|Instance Scheduler & Automation]]** — AWS Solutions construct for stopping/starting EC2 and RDS instances on a schedule. CloudWatch Events + Lambda implementation. Cost impact of running 24/7 vs scheduled.
+The detailed notes retain practical comparisons and proposed labs; use the table to select an investigation, not as a universal savings checklist.
 
-## Compute Cost Optimization
+## Reconciled platform estimate
 
-**[[ec2-cost-optimization|EC2 Cost Optimization]]** — Right-sizing via Compute Optimizer and CloudWatch metrics. Spot + On-Demand + RI mixed policies. Zombie resource detection. Graviton ARM cost trade-offs. Auto Scaling lifecycle.
+For a hypothetical us-east-1 planning exercise reviewed on 2026-10-12, assume ten workers run 720 hours at \$0.10/hour, 2,000 GB object storage at \$0.02/GB-month, and the following separately estimated components:
 
-## Storage Cost Optimization
+| Component              | Calculation or assumption              | Monthly amount |
+| ---------------------- | -------------------------------------- | -------------- |
+| Workers                | 10 × 720 × \$0.10                      | \$720          |
+| Object storage         | 2,000 × \$0.02                         | \$40           |
+| Database               | Hypothetical configuration subtotal    | \$180          |
+| Network/load balancing | Hypothetical measured-path estimate    | \$90           |
+| Block storage/backups  | Hypothetical provisioned/retained data | \$70           |
+| Monitoring/logging     | Hypothetical ingestion/retention       | \$30           |
+| Total                  | Sum of the components                  | \$1,130        |
 
-**[[s3-cost-optimization|S3 Cost Optimization]]** — Storage class selection (Standard, IA, One Zone-IA, Glacier, Intelligent-Tiering, Deep Archive). Lifecycle policy design. Data retrieval costs. Cross-region replication costs. S3 Analytics for transition planning.
+These are assumed inputs, not current product tariffs. License, support, taxes, credits and commitments are excluded. A useful production estimate must replace every assumption with a selected service configuration/rate and include omitted components.
 
-**[[ebs-cost-optimization|EBS Cost Optimization]]** — gp2 vs gp3 trade-offs. io1/io2 vs gp3 sizing. Unattached volume detection. Snapshot lifecycle management. Amazon Data Lifecycle Manager.
+If rightsizing halves worker cost, gross reduction is \$360, or 31.86% of the whole estimate, not “50% off the AWS bill.” If an unused commitment still costs \$250, realized savings can be only \$110 before other changes.
 
-**[[efs-cost-optimization|EFS Cost Optimization]]** — EFS Standard vs EFS One Zone. Throughput vs bursting mode. Lifecycle management for IA access tiers. EFS Access Points for POSIX permissions.
+## Practical FinOps cycle
 
-## Database Cost Optimization
+Allocate → baseline → inspect → design → approve → change → verify. The owner validates SLO/recovery requirements; finance validates the accounting view; platform/security validate access and operational safeguards. Record the estimate, measurement window and counterfactual baseline before claiming realized savings.
 
-**[[rds-cost-optimization|RDS Cost Optimization]]** — Instance sizing and right-sizing. Multi-AZ cost impact. Read replicas vs scaling up. Storage auto-scaling costs. Reserved instance coverage. Aurora Serverless v1 vs v2.
-
-**[[dynamodb-cost-optimization|DynamoDB Cost Optimization]]** — On-Demand vs Provisioned capacity. Auto scaling configuration. Reserved capacity. DAX cost justification. GSI vs LSI cost implications.
-
-## Network Cost Optimization
-
-**[[network-cost-optimization|Network Cost Optimization]]** — AZ-to-AZ data transfer costs. Inter-region egress. Internet egress pricing. NAT Gateway per-hour + per-GB costs. VPC Endpoints for private S3/DynamoDB access. PrivateLink vs Direct Connect trade-offs. ALB vs NLB LCU pricing model. CloudFront caching for origin cost reduction.
-
-## Serverless Cost Optimization
-
-**[[lambda-cost-optimization|Lambda Cost Optimization]]** — Memory vs duration relationship. Provisioned concurrency cost. Cold start cost implications. VPC Lambda ENI attachment costs. API Gateway REST vs HTTP API pricing differences.
-
-## Automation
-
-**[[cost-automation|Cost Automation]]** — Lambda functions for automated cleanup: stopping idle EC2, deleting unattached EBS volumes, expiring old snapshots. CloudWatch Rules + EventBridge schedules. SSM Automation documents for cost remediation.
-
-## Reserved Instance Management
-
-**[[ri-management|Reserved Instance Management]]** — Buying RIs vs Savings Plans. Coverage reports (which instances are covered by RI/SP). Utilization reports (are you fully utilizing what you bought). Instance size flexibility. RI marketplace for selling unused.
-
-## Multi-Account Cost Strategy
-
-**[[organizations-cost-strategy|Organizations Cost Strategy]]** — Consolidated billing advantages. Volume discounts. RI/SP sharing across accounts. SCPs for cost governance. Multi-payer billing for enterprise. Cost allocation by OU.
+Use the task lessons [[AWS/solutions-architect-professional/domain-1/1.5-cost-optimization-and-visibility|organizational visibility]], [[AWS/solutions-architect-professional/domain-2/2.6-cost-optimization-strategy|new-solution economics]] and [[AWS/solutions-architect-professional/domain-3/3.5-cost-optimization-opportunities|existing-system improvement]] to practice different decision contexts.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cost-management/
-- **Documentation:** https://docs.aws.amazon.com/cost-management/
-- **Pricing:** https://aws.amazon.com/cost-management/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A mid-size company running 50 EC2 instances (mixed m5.large and c5.xlarge), 20TB S3, RDS Multi-AZ (db.r6g.large), and Elasticache (cache.r6g.large). Monthly bill: ~$4,200/month. Breakdown: EC2 instances (50 × m5.large = $1,380 + 10 × c5.xlarge = $700) = $2,080, RDS Multi-AZ = $450, ElastiCache = $280, S3 = $400, NAT Gateway + Data Transfer = $400, EBS = $300, ALB = $200.
-
-**Scenario 2:** A startup with 8 EC2 instances (t3.medium), 2TB S3, DynamoDB (10 RCU/100 WCU), Lambda (500K req/day), no RDS. Monthly bill: ~$380/month. Breakdown: EC2 (8 × t3.medium On-Demand = $120), S3 (2TB = $46), DynamoDB (On-Demand = $40), Lambda (500K × 30 = 15M req × $0.20/million = $3), Data Transfer = $50, CloudWatch = $20, ALB = $20.
-
-## Nuggets & Gotchas
-
-- **Free tier expires after 12 months:** The EC2 t2.micro free tier ends after 12 months — set a calendar reminder to right-size or switch to a smaller instance before you're charged.
-- **S3 data transfer IN is free, OUT is not:** Ingress to S3 is free; every GB that leaves S3 (to internet, to other AZs, cross-region) is charged. Design for this.
-- **NAT Gateway has two cost components:** You pay per hour ($0.045/hr in us-east-1) PLUS per GB processed ($0.045/GB). A busy Lambda workload in a VPC can generate surprising NAT Gateway bills.
-- **EBS volumes charge even when stopped:** An EC2 instance that is stopped still has its EBS volumes attached and accruing storage charges. Detach volumes or delete the instance to stop the charges.
-- **Cost Explorer has a data delay:** Cost Explorer shows data with a 24-48 hour delay. Real-time spend monitoring requires CloudWatch billing alerts or third-party tools.
+- [AWS Cost Management overview](https://docs.aws.amazon.com/cost-management/latest/userguide/what-is-costmanagement.html)
+- [Pricing Calculator](https://calculator.aws/)
+- [AWS pricing](https://aws.amazon.com/pricing/)
+- [Well-Architected cost optimization](https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html)
 
 ## Across the wiki
 

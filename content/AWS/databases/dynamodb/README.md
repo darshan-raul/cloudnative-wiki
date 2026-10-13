@@ -1,17 +1,38 @@
 ---
-title: Amazon DynamoDB
-description: Amazon DynamoDB — fully managed NoSQL key-value and document database. Tables, partitions, sort keys, GSI, LSI, operations, DynamoDB Streams, TTL, DAX, and pricing.
+title: "Amazon DynamoDB"
+description: "DynamoDB provides key/value and document storage."
 tags:
-  - aws
-  - databases
-  - dynamodb
-  - nosql
-date: 2026-06-06
+  - aws/databases
+date: 2026-10-12
 ---
 
 # Amazon DynamoDB
 
-DynamoDB is a fully managed NoSQL database with single-digit millisecond latency at any scale. It supports key-value and document data models. No servers to manage, automatic partitioning, and on-demand capacity or provisioned capacity with auto-scaling.
+DynamoDB provides key/value and document storage. Design the partition key, optional sort key and indexes around known access patterns; adding a table does not turn arbitrary joins/scans into efficient queries. Prerequisites: [[AWS/databases/README|database selection]], [[AWS/security/iam/README|IAM]] and [[AWS/architecture/data-store-selection|data-store selection]].
+
+## Access patterns and consistency
+
+GetItem addresses a primary key; Query selects a partition-key value and optionally sort-key conditions; Scan visits the dataset and can consume substantial capacity. Filter expressions do not make read capacity free. Avoid hot keys and use conditional writes for optimistic concurrency/idempotency. Pagination and retry/backoff are application responsibilities.
+
+LSIs share the partition key and are defined at table creation; the 10-GB item-collection limit applies to tables with LSIs, not GSIs. GSIs use independent key schemas and have their own consistency/capacity behavior. Check consistency rules for table, index and chosen global-table configuration instead of applying one blanket guarantee.
+
+Transactions support up to 100 distinct items and 4 MB, with documented same-account/Region restrictions. A thirty-item atomic change does not inherently require a Saga. Streams enable change-driven processing; consumers must tolerate retry/duplicate events and avoid equating a stream with indefinite archival retention.
+
+## Capacity and cache
+
+On-demand bills request units; provisioned capacity bills configured read/write units and can use autoscaling. Item size and consistency affect units: a 5-KB standard write consumes five write units, and a strongly consistent 5-KB read consumes two read units. Transactions have different multipliers.
+
+DAX is a read-through cache for supported DynamoDB access; it is not an independent database. A single node can be used for development, while production availability calls for a multi-node design. TTL expiry is asynchronous deletion, not a precise alarm clock. Do not invent a thirty-day DAX reservation product.
+
+## Backup and sandbox exercise
+
+PITR supports a configurable one-to-thirty-five-day window. On-demand backups and longer retention are separate. Use [[AWS/reliability/backup-and-recovery|recovery planning]] to include KMS, IAM and application cutover.
+
+Create a small sandbox table with an orders-by-customer key design. Insert/query labelled orders, deliberately attempt a duplicate conditional write and verify the expected ConditionalCheckFailedException. Query an index using its documented consistency, then restore a backup to a new table and verify records. Observe consumed capacity and throttling metrics. Delete sandbox tables/index-related infrastructure/DAX and reviewed backups after testing.
+
+## Cost arithmetic
+
+Compare workloads at identical item size, consistency and Region. 1,000 writes/day × 30 days is 30,000 writes, not a million. 1,000/second × 86,400 × 30 is 2.592 billion operations. Round each request's units before multiplying rates; include storage, indexes, streams/backup, global replication and optional DAX. Provisioned daily usage is not interchangeable with purchased per-second capacity.
 
 ## Core Concepts
 
@@ -30,18 +51,18 @@ Table
 **Partition Key (PK) only:**
 
 ```
-UserID (PK) → Hash function → Partition
+UserID (PK) → hash-based initial physical placement → item
 ```
 
-All items with the same PK are stored together.
+A partition-key-only table permits only one item per PK. With a composite key, same-PK items form a **logical item collection**; this is not a promise of permanent placement on one physical partition.
 
 **Partition Key + Sort Key (SK):**
 
 ```
-UserID (PK) + OrderID (SK) → Partition
+UserID (PK) → logical item collection, ordered by OrderID (SK)
 ```
 
-Items are sorted within a partition. Allows efficient range queries within a partition.
+Query selects one PK and can constrain/order its SK values efficiently. Physical partitions are service-managed: without an LSI, split-for-heat can divide an item collection by SK across partitions; with an LSI, that within-collection split is unavailable. Do not assume adaptive capacity immediately repairs a hot-key design. [AWS partition splitting and LSI boundaries](https://aws.amazon.com/blogs/database/part-2-scaling-dynamodb-how-partitions-hot-keys-and-split-for-heat-impact-performance/).
 
 ### Example Table: Orders
 
@@ -75,19 +96,6 @@ aws dynamodb create-table \
   ]' \
   --billing-mode PAY_PER_REQUEST \
   --table-class STANDARD
-```
-
-### With Provisioned Capacity
-
-```bash
-aws dynamodb create-table \
-  --table-name Orders \
-  --attribute-definitions '[...]' \
-  --key-schema '[...]' \
-  --provisioned-throughput '{
-    "ReadCapacityUnits": 10,
-    "WriteCapacityUnits": 5
-  }'
 ```
 
 ## Reading and Writing
@@ -132,11 +140,12 @@ aws dynamodb query \
 ```bash
 aws dynamodb scan \
   --table-name Orders \
-  --filter-expression "Status = :status" \
+  --filter-expression "#status = :status" \
+  --expression-attribute-names '{"#status":"Status"}' \
   --expression-attribute-values '{":status": {"S": "shipped"}}'
 ```
 
-**Warning:** Scan reads every item in the table. Use `FilterExpression` to reduce response size, but you still pay for all the reads. Never scan large tables in production.
+**Warning:** Scan reads every item in the table. Use `FilterExpression` to reduce response size, but you still pay for all the reads. Use scans only when deliberately budgeted/controlled; filtering does not remove the read cost.
 
 ### Batch Operations
 
@@ -161,190 +170,37 @@ aws dynamodb batch-write-item \
   }'
 ```
 
-## Secondary Indexes
+## Index comparison, streams and TTL
 
-### Global Secondary Index (GSI)
+| Dimension             | GSI                                            | LSI                                      |
+| --------------------- | ---------------------------------------------- | ---------------------------------------- |
+| Partition key         | Can differ from table                          | Same as table                            |
+| Sort key              | Independent optional key                       | Different sort key for same partition    |
+| Capacity              | Separate provisioned capacity where applicable | Shares table capacity                    |
+| Creation              | Supported after table creation                 | At table creation                        |
+| Consistency           | Eventually consistent reads                    | Supported eventual/strong reads          |
+| Item-collection limit | Not the LSI ten-GB constraint                  | Ten GB per partition-key item collection |
 
-A GSI has a different PK and optional SK from the base table. It has its own provisioned throughput.
+Use attribute-name aliases for reserved names such as Status. Index projections trade storage/write cost against read needs. A low-cardinality GSI partition such as one common status can be hot; model required distribution before creating it. Provisioned index capacity examples do not directly apply to an on-demand table.
 
-```bash
-aws dynamodb update-table \
-  --table-name Orders \
-  --attribute-definitions '[{"AttributeName": "Status", "AttributeType": "S"}]' \
-  --global-secondary-index-updates '[{
-    "Create": {
-      "IndexName": "StatusIndex",
-      "KeySchema": [{"AttributeName": "Status", "KeyType": "HASH"}],
-      "Projection": {"ProjectionType": "ALL"},
-      "ProvisionedThroughput": {"ReadCapacityUnits": 5, "WriteCapacityUnits": 5}
-    }
-  }]'
-```
+Streams expose configured item-change records, not indefinite business history. Choose keys-only/new/old/both image configuration from consumer needs; checkpoint, retry and deduplicate downstream effects. TTL identifies an epoch-time attribute and asynchronously expires eligible items; reads must account for expired-but-not-yet-deleted data where the application requires exact validity.
 
-Query GSI:
+## Partition and cache investigation
 
-```bash
-aws dynamodb query \
-  --table-name Orders \
-  --index-name StatusIndex \
-  --key-condition-expression "#st = :status" \
-  --expression-attribute-names '{"#st": "Status"}' \
-  --expression-attribute-values '{":status": {"S": "shipped"}}'
-```
+Write down each access pattern as a key condition, expected item count/size and consistency requirement. Observe consumed capacity and throttling for the base table and indexes separately. A filter only reduces returned results after reading; projection and transaction behavior have their own billing rules.
 
-### Local Secondary Index (LSI)
+DAX read-through caching can help supported repeated eventually consistent reads, but does not make every access faster or replace DynamoDB durability. Check cache miss/staleness behavior and bypass requirements for strongly consistent reads. Handle UnprocessedKeys/UnprocessedItems with bounded backoff; one successful batch API response need not mean every requested item was processed.
 
-LSI has the same PK as the base table but a different SK. Shares the base table's partition throughput.
-
-```bash
-aws dynamodb create-table \
-  --table-name Orders \
-  --attribute-definitions '[
-    {"AttributeName": "UserID", "AttributeType": "S"},
-    {"AttributeName": "OrderID", "AttributeType": "S"},
-    {"AttributeName": "Date", "AttributeType": "S"}
-  ]' \
-  --key-schema '[
-    {"AttributeName": "UserID", "KeyType": "HASH"},
-    {"AttributeName": "OrderID", "KeyType": "RANGE"}
-  ]' \
-  --local-secondary-indexes '[{
-    "IndexName": "DateIndex",
-    "KeySchema": [
-      {"AttributeName": "UserID", "KeyType": "HASH"},
-      {"AttributeName": "Date", "KeyType": "RANGE"}
-    ],
-    "Projection": {"ProjectionType": "ALL"}
-  }]'
-```
-
-### GSI vs LSI
-
-|             | GSI                               | LSI                            |
-| ----------- | --------------------------------- | ------------------------------ |
-| PK          | Different from base table         | Same as base table             |
-| SK          | Different (optional)              | Different                      |
-| Throughput  | Own provisioned capacity          | Shares base table capacity     |
-| Size limit  | 10GB per partition key value      | No limit                       |
-| Projections | ALL, KEYS_ONLY, INCLUDE           | ALL, KEYS_ONLY, INCLUDE        |
-| Use when    | Need different PK access patterns | Need different SK with same PK |
-
-## DynamoDB Streams
-
-Capture item-level changes (insert, modify, remove):
-
-```bash
-aws dynamodb update-table \
-  --table-name Orders \
-  --stream-specification '{
-    "StreamEnabled": true,
-    "StreamViewType": "NEW_AND_OLD_IMAGES"
-  }'
-```
-
-`StreamViewType` options:
-
-- `KEYS_ONLY` — only PK/SK
-- `NEW_IMAGE` — entire new item
-- `OLD_IMAGE` — entire old item
-- `NEW_AND_OLD_IMAGES` — both
-
-## Time To Live (TTL)
-
-Automatically delete items after expiration:
-
-```bash
-aws dynamodb update-time-to-live \
-  --table-name Orders \
-  --time-to-live-specification '{
-    "Enabled": true,
-    "AttributeName": "ExpiresAt"
-  }'
-```
-
-Set `ExpiresAt` to Unix timestamp. Items expire and are deleted within 48 hours.
-
-## DAX (DynamoDB Accelerator)
-
-In-memory cache (write-through) for microsecond latency:
-
-```bash
-# Create DAX cluster
-aws dax create-cluster \
-  --cluster-name my-dax \
-  --node-type dax.r4.large \
-  --replication-factor 2 \
-  --iam-role-arn arn:aws:iam::123456789012:role/dax-role
-
-# Update table to enable DAX
-# DAX is accessed via a separate endpoint (not the DynamoDB endpoint)
-```
-
-**Note:** DAX is not a read-through cache — only write-through. For read-heavy workloads, use DAX or ElastiCache (DynamoDB doesn't natively support read-through caching).
-
-## Partition Behavior
-
-DynamoDB distributes data across partitions by hashing the PK:
-
-```
-PK Hash (MD5) → 0 to 2^128 → Partition
-```
-
-Each partition supports:
-
-- Up to 1,000 WCUs
-- Up to 3,000 RCUs
-- 10GB of data
-
-### Hot Partitions
-
-If one PK gets more traffic than others (celebrity problem):
-
-- Use write sharding: `userID + "#" + random(1-10)` to spread writes
-- Use random suffixes in sort key
-- Consider provisioned capacity with higher RCU/WCU for hot items
-
-## Pricing
-
-### On-Demand Mode
-
-|              | Cost                                                                    |
-| ------------ | ----------------------------------------------------------------------- |
-| WCU (write)  | $1.25 per million                                                       |
-| RCU (read)   | $0.25 per million (strongly consistent), $0.125 (eventually consistent) |
-| Data storage | $0.25/GB/month                                                          |
-
-### Provisioned Mode
-
-|              | Cost              |
-| ------------ | ----------------- |
-| WCU          | $0.00065 per hour |
-| RCU          | $0.00013 per hour |
-| Data storage | $0.25/GB/month    |
-
-### Reserved Capacity
-
-1 or 3 year commitment: 50-70% savings.
+Before cleanup, verify backup retention and downstream stream dependencies. Delete only the sandbox table/cache and reviewed recovery artifacts, not every table sharing a naming prefix.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/dynamodb/
-- **Documentation:** https://docs.aws.amazon.com/dynamodb/
-- **Pricing:** https://aws.amazon.com/dynamodb/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A table with 10M items, 5KB average item size. 1000 writes/day, 10,000 reads/day. On-Demand: 1000 × 1 WCU = 1,000,000 WCUs/month. 10,000 × 1 RCU = 10,000,000 RCUs/month. WCU cost: 1M × $1.25/M = $1.25/month. RCU cost: 10M × $0.25/M = $2.50/month. Storage: 10M × 5KB = 50GB × $0.25 = $12.50/month. Total: ~$16/month.
-
-**Scenario 2:** Same table with heavy write load (1000 writes/second, 24/7). Provisioned: 1000 WCU = $0.65/hr × 24 × 30 = $468/month. On-Demand: 1000 writes/sec × 3600 sec/hr × 24hr × 30 days = 2.16 billion writes/month. 2.16B × $1.25/M = $2,700/month. Provisioned is 5.7x cheaper for consistent high throughput.
-
-## Nuggets & Gotchas
-
-- **DynamoDB has no schema — items in the same table can have completely different attributes:** One item can have `{"email": "x"}` and another `{"count": 42}`. Enforce schema at the application layer or use a separate attribute to indicate type.
-- **DynamoDB transactions (TransactWriteItems) have a 25-item limit — you can't update 30 items atomically:** If you need atomic updates across more than 25 items, use a Saga pattern (orchestrated compensation) instead of a single transaction.
-- **GSIs have their own provisioned throughput and cannot be updated without recreating the index:** If you need to change the GSI key schema, you must create a new GSI, backfill data, and switch. Plan your GSI design carefully.
-- **On-demand DynamoDB is more expensive than provisioned for consistent high-throughput workloads:** If you know your traffic pattern, use provisioned with auto-scaling. On-demand is for unpredictable, spiky, or low-traffic tables.
-- **DynamoDB doesn't support joins — you must denormalize or use multiple queries:** If you need related data (orders + customer info), embed it in the item or make separate queries. For complex queries, consider using Elasticsearch or Athena.
+- [DynamoDB key and index concepts](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html)
+- [LSI item-collection limit](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/LSI.html)
+- [Transactions](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/transaction-apis.html)
+- [DAX behavior](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.html)
+- [Backup/PITR](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Backup-and-Restore.html)
+- [DynamoDB pricing](https://aws.amazon.com/dynamodb/pricing/)
 
 ## Across the wiki
 

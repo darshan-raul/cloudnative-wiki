@@ -2,342 +2,142 @@
 title: DataSync
 description: AWS DataSync — managed file transfer between on-premises storage and AWS (S3, EFS, FSx), agent deployment, task scheduling, and bandwidth throttling
 tags:
-  - aws
-  - migration
-  - storage
-date: 2026-06-06
+  - aws/migration
+date: 2026-10-12
 ---
 
 # DataSync
 
-DataSync is a managed file transfer service for migrating large datasets between on-premises storage (NFS, SMB) and AWS storage services (S3, EFS, FSx). It handles the heavy lifting of bulk transfer — bandwidth throttling, scheduling, encryption, and validation.
+Prerequisites: [[AWS/security/iam/README|temporary-credential IAM roles]], [[AWS/networking/vpc/README|VPC routing]] and the [[AWS/migration/README|migration acceptance/rollback plan]].
 
-## When to Use DataSync
+DataSync transfers supported file/object data with configurable metadata and integrity verification. It is not an ETL service and does not convert arbitrary file formats.
 
-| Scenario                         | Use DataSync? | Alternative                      |
-| -------------------------------- | ------------- | -------------------------------- |
-| Migrate 100TB+ to S3             | Yes           | Snowball if bandwidth is limited |
-| Sync ongoing file changes to S3  | Yes           | S3 File Gateway or DataSync      |
-| Transfer from NAS to EFS         | Yes           | Direct connect + manual          |
-| Quick one-time transfer (< 10TB) | Maybe         | AWS Transfer (SFTP → S3)         |
-| Database migration               | No            | DMS                              |
+## Modes and agents
 
-## How It Works
+Basic and Enhanced mode have different location support, scaling, verification and pricing. Some transfers need an agent; supported AWS-to-AWS paths can differ. DataSync Discovery was retired May 20, 2025; that does not retire DataSync transfer.
 
-```
-On-Prem Storage (NFS/SMB) ──→ DataSync Agent ──→ DataSync Service ──→ AWS Storage
-      [DataSync]                                    (managed, AWS)
-      deployed on-prem                              orchestrates transfer
-```
+For non-EC2 Basic-mode VM agents current guidance is four vCPU, 80 GB disk and 32 GB RAM up to twenty million entries (64 GB above). Enhanced VM guidance is eight vCPU, 80 GB disk and 32 GB RAM. EC2 requirements are separately documented; four CPU/eight GB is not a universal minimum.
 
-The DataSync agent is a small VM (VMware, Hyper-V, or as an EC2 instance) that runs on-premises and connects to your storage. It transfers data to the DataSync service (AWS-managed), which then writes to your target AWS storage.
+## Options and contracts
 
-**No agent needed for S3 → S3 transfers** — DataSync can transfer directly between S3 buckets.
+Uid/Gid use INT_VALUE where supported. VerifyMode is ONLY_FILES_TRANSFERRED, POINT_IN_TIME_CONSISTENT or NONE; OverwriteMode is a separate option. NONE skips additional end-of-transfer verification; integrity checks during transfer still occur. It does not fix same-size or timestamp change detection. TransferMode ALL explicitly bypasses change comparison.
 
-## Core Concepts
+For Basic mode, Atime NONE requires Mtime NONE; preserving Mtime requires Atime BEST_EFFORT. Enhanced mode has different option support. Set BytesPerSecond in task options, not a fabricated hourly --bandwidth array. External scheduling can update a supported bandwidth limit.
 
-### Agent
+SMB locations use agent-arns and user/domain/password fields, not NFS on-prem-config. EFS locations need filesystem ARN plus subnet/security-group ARNs. FSx Windows needs its filesystem/security groups and documented credentials—not security-connector-arn.
 
-The agent is a VM you deploy on-premises. It reads data from your NFS or SMB share and uploads it to DataSync.
+## End-to-end sandbox
 
-```bash
-# Create an agent
-aws datasync create-agent \
-  --agent-arn 'arn:aws:datasync:us-east-1:123456789012:agent/agent-abcdef01234567890' \
-  --activation-key 'XXXX-YYYY-ZZZZ-AAAA-BBBB'  # From DataSync console
-
-# Download agent OVA (VMware/Hyper-V) from DataSync console
-# Deploy on-premises, run activation key to register with your account
-```
-
-**Agent deployment:**
-
-- VMware ESXi, Hyper-V, or KVM
-- EC2 (for AWS-native transfers or testing)
-- 4 vCPU, 8GB RAM minimum
-- Agent must have outbound HTTPS access to DataSync endpoints
-
-### Location
-
-A location is a storage endpoint — either source or destination.
-
-```bash
-# NFS location (on-premises)
-aws datasync create-location-nfs \
-  --server-hostname 192.168.1.100 \
-  --subdirectory /shared/data \
-  --on-prem-config '{
-    "AgentArns": ["arn:aws:datasync:us-east-1:123456789012:agent/agent-abcdef01234567890"]
-  }'
-
-# SMB location (on-premises)
-aws datasync create-location-smb \
-  --server-hostname 192.168.1.100 \
-  --subdirectory /shared/data \
-  --on-prem-config '{
-    "AgentArns": ["arn:aws:datasync:us-east-1:123456789012:agent/agent-abcdef01234567890"],
-    "User": "datasync-user",
-    "Password": "secret",
-    "Domain": "EXAMPLE.COM"
-  }'
-
-# S3 location (as source or destination)
-aws datasync create-location-s3 \
-  --s3-bucket-arn arn:aws:s3:::migration-source-bucket \
-  --s3-prefix "data/" \
-  --s3-config '{
-    "ServiceAccessRoleArn": "arn:aws:iam::123456789012:role/DataSyncS3Role"
-  }'
-
-# EFS location
-aws datasync create-location-efs \
-  --ec2-file-system-arn arn:aws:elasticfilesystem:us-east-1:123456789012:file-system/fs-01234567
-
-# FSx for Windows File Server location
-aws datasync create-location-fsx-windows \
-  --fsx-filesystem-arn arn:aws:fsx:us-east-1:123456789012:file-system/fs-01234567 \
-  --security-connector-arn arn:aws:fsx:us-east-1:123456789012:security-connector/...
-```
-
-### Task
-
-A task defines what to transfer (source → destination) and how.
-
-```bash
-# Create task
-aws datasync create-task \
-  --source-location-arn arn:aws:datasync:us-east-1:123456789012:location/loc-source-nfs \
-  --destination-location-arn arn:aws:datasync:us-east-1:123456789012:location/loc-target-s3 \
-  --cloud-watch-log-group-arn arn:aws:logs:us-east-1:123456789012:log-group:/aws/datasync/migration \
-  --options '{
-    "VerifyMode": "POINT_IN_TIME_CONSISTENT",
-    "Atime": "NONE",
-    "Mtime": "PRESERVE",
-    "Uid": "INT preserved",
-    "Gid": "INT preserved",
-    "PreserveDeletedFiles": "PRESERVE",
-    "TaskQueueing": "ENABLED"
-  }'
-
-# Start task
-aws datasync start-task-execution \
-  --task-arn arn:aws:datasync:us-east-1:123456789012:task/task-abcdef01234567890
-
-# Schedule recurring task (every day at midnight)
-aws datasync create-task \
-  ...
-  --schedule '{
-    "ScheduleExpression": "cron(0 0 * * ? *)"
-  }'
-```
-
-## Transfer Options
-
-| Option                 | Default                    | Description                              |
-| ---------------------- | -------------------------- | ---------------------------------------- |
-| `VerifyMode`           | `POINT_IN_TIME_CONSISTENT` | Verify transferred files match source    |
-| `Mtime`                | `PRESERVE`                 | Preserve file modification time          |
-| `Atime`                | `NONE`                     | Don't update access time (performance)   |
-| `Uid`                  | `INT preserved`            | Preserve Unix user ID                    |
-| `Gid`                  | `INT preserved`            | Preserve Unix group ID                   |
-| `PreserveDeletedFiles` | `PRESERVE`                 | Keep deleted files in target (or remove) |
-| `OverwriteMode`        | `ALWAYS`                   | Overwrite if file changed                |
-| `TaskQueueing`         | `ENABLED`                  | Queue multiple executions                |
-
-**Important options:**
-
-- `Mtime = PRESERVE`: Required for incremental sync. If you don't preserve mtime, subsequent incremental syncs will re-transfer everything.
-- `Atime = NONE`: Don't update access time — skipping this improves performance significantly.
-
-## Incremental Sync
-
-DataSync tracks file changes by comparing mtime and file size. For incremental sync:
-
-1. First transfer: Full copy
-2. Subsequent transfers: Only files with newer mtime or different size
-
-```bash
-# Incremental transfer (same task, run again)
-aws datasync start-task-execution \
-  --task-arn arn:aws:datasync:us-east-1:123456789012:task/task-abcdef01234567890
-# DataSync automatically skips files where mtime hasn't changed
-```
-
-**For NFS specifically:** If mtime isn't reliable (some NFS mounts don't update mtime on writes), use `VerifyMode = NONE` and rely on file size comparison only.
-
-## Filtering Files
-
-```bash
-# Include only specific file types
-aws datasync create-task \
-  --source-location-arn $NFS_ARN \
-  --destination-location-arn $S3_ARN \
-  --includes '[{"FilterType": "INCLUDE", "Value": "*.pdf"}, {"FilterType": "INCLUDE", "Value": "*.docx"}]'
-
-# Exclude certain paths
-aws datasync create-task \
-  ...
-  --excludes '[{"FilterType": "EXCLUDE", "Value": "**/.tmp"}, {"FilterType": "EXCLUDE", "Value": "**/node_modules/**"}]'
-```
-
-## Bandwidth Throttling
-
-Limit DataSync's network usage to avoid impacting production workloads:
-
-```bash
-# Throttle to 50 Mbps during business hours
-aws datasync create-task \
-  --source-location-arn $NFS_ARN \
-  --destination-location-arn $S3_ARN \
-  --bandwidth '[{"StartTime": "17:00", "EndTime": "09:00", "Capacity": 50}]'
-```
-
-**Throttling tips:**
-
-- Set lower bandwidth during business hours, full speed off-hours
-- Monitor with CloudWatch metrics to tune
-- Bandwidth is per-agent — if you need 500 Mbps total, deploy multiple agents
-
-## Monitoring
-
-```bash
-# Describe task execution (check status)
-aws datasync describe-task-execution \
-  --task-execution-arn arn:aws:datasync:us-east-1:123456789012:task-execution/exec-abcdef01234567890
-
-# CloudWatch metrics for DataSync
-# - BytesTransferred (total bytes transferred)
-# - FilesTransferred (total file count)
-# - BytesWritten (bytes written to destination)
-# - FilesSkipped (files skipped because unchanged)
-# - FilesDeleted (files deleted per policy)
-```
-
-**Status flow:** `QUEUED` → `LAUNCHING` → `PREPARING` → `TRANSFERRING` → `VERIFYING` → `SUCCESS` (or `ERROR`)
-
-## Agent High Availability
-
-For large migrations, deploy multiple agents:
-
-```bash
-# Create location with multiple agents (for HA/throughput)
-aws datasync create-location-nfs \
-  --server-hostname 192.168.1.100 \
-  --subdirectory /shared/data \
-  --on-prem-config '{
-    "AgentArns": [
-      "arn:aws:datasync:us-east-1:123456789012:agent/agent-1",
-      "arn:aws:datasync:us-east-1:123456789012:agent/agent-2"
-    ]
-  }'
-# DataSync distributes files across agents automatically
-# If one agent fails, its transfers are retried by remaining agents
-```
-
-## S3 Destination and Data Format
-
-```bash
-# S3 destination with Parquet output
-aws datasync create-location-s3 \
-  --s3-bucket-arn arn:aws:s3:::data-lake-raw \
-  --s3-prefix "files/" \
-  --s3-config '{
-    "ServiceAccessRoleArn": "arn:aws:iam::123456789012:role/DataSyncS3Role",
-    "FileExtension": "parquet"
-  }'
-```
-
-DataSync can write to S3 as-is (preserve original format) or convert to different formats.
-
-## IAM Permissions
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "datasync:ListAgents",
-        "datasync:CreateAgent",
-        "datasync:CreateTask",
-        "datasync:StartTaskExecution"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-For S3 destination, the DataSync service role needs:
-
-```json
-{
-  "Effect": "Allow",
-  "Action": ["s3:GetBucketLocation", "s3:ListBucket", "s3:PutObject"],
-  "Resource": ["arn:aws:s3:::my-bucket", "arn:aws:s3:::my-bucket/*"]
-}
-```
+1. Prepare a disposable supported source directory and a private destination bucket/filesystem. Create a fixture with known bytes, sizes and checksums, plus one nested file. Grant only source read/destination write and required KMS access.
+2. Follow the current console agent/location workflow for your mode. Store SMB credentials securely rather than in shell history. Validate task connectivity before copying.
+3. Create a task with explicit metadata/overwrite/verification settings. Start it and wait for its terminal status; inspect counts, skipped files, verification errors and CloudWatch task evidence.
+4. Verify fixture bytes/checksums at the destination. Change a file while preserving its size; test actual comparison behavior. Use TransferMode ALL where the intended workflow must copy independently of metadata comparison, not VerifyMode NONE.
+5. Test an inaccessible fixture and confirm failure reporting. Decide whether to retry, correct permission or exclude it—never call partial transfer complete.
+6. Delete the disposable task/locations/agent and target data only after validation. Do not delete source data as implicit cleanup.
 
 ## Cost
 
-- **Per GB transferred:** ~$0.04/GB (varies by region)
-- **Per task execution:** Minimum 1 task execution charge even for small transfers
-- **Agent:** Runs as EC2 (if deployed in AWS) or as on-prem VM (no AWS cost for on-prem agent)
+Estimate mode-specific transferred bytes, task-execution dimensions where applicable, S3 requests/storage, network and agent resources. Check current target Region, location support and quotas before deployment.
 
-**Cost tips:**
+## Agent, location, task and execution architecture
 
-- For very large migrations (100TB+), consider Snowball Edge instead — DataSync becomes expensive at that scale
-- Schedule transfers for off-hours to avoid production impact, but DataSync doesn't have off-peak pricing
-
-## Common Patterns
-
-### Migration: On-Prem NFS → S3
-
-```bash
-# 1. Create agent (deployed on-prem)
-# 2. Create source NFS location
-# 3. Create target S3 location
-# 4. Create task and start
-aws datasync create-task \
-  --source-location-arn $NFS_LOC \
-  --destination-location-arn $S3_LOC \
-  --options '{"Mtime": "PRESERVE", "VerifyMode": "POINT_IN_TIME_CONSISTENT"}'
-
-aws datasync start-task-execution --task-arn $TASK_ARN
+```text
+supported source → agent (where required) → transfer/verify → destination
+                       │                         ↑
+                network/activation        task options/filters/schedule
+                                                 ↓
+                                      execution status/report/logs
 ```
 
-### Ongoing Sync: S3 → EFS (for hybrid cloud)
+| Object    | Responsibility                                    | Not automatic                                    |
+| --------- | ------------------------------------------------- | ------------------------------------------------ |
+| Agent     | Supported source connectivity/transfer processing | Universal HA or every AWS-to-AWS path            |
+| Location  | Endpoint/path/protocol/access configuration       | File-format conversion or unlimited permissions  |
+| Task      | Source/destination/options/filter/schedule        | Correctness for every metadata/consistency model |
+| Execution | One task run and evidence                         | Application cutover or deletion of source data   |
+
+Multiple-agent support and behavior are mode/location-specific. Do not assume transfers automatically redistribute across arbitrary agents on failure.
+
+## NFS-to-S3 location and task walkthrough
+
+Prerequisites: a supported Basic-mode agent activated in the sandbox, authorized NFS export, dedicated private bucket/role and routing/firewall/KMS access. Obtain actual ARNs from the console.
 
 ```bash
-# Keep EFS in sync with S3 as a data lake cache
-aws datasync create-task \
-  --source-location-arn $S3_LOC \
-  --destination-location-arn $EFS_LOC \
-  --schedule '{"ScheduleExpression": "cron(0 */4 * * ? *)"}'  # Every 4 hours
+aws datasync create-location-nfs --server-hostname NFS_HOST \
+  --subdirectory /wiki-lab \
+  --on-prem-config '{"AgentArns":["AGENT_ARN"]}'
+aws datasync create-location-s3 --s3-bucket-arn BUCKET_ARN \
+  --subdirectory /wiki-lab \
+  --s3-config '{"BucketAccessRoleArn":"DATASYNC_BUCKET_ROLE_ARN"}'
+aws datasync create-task --name wiki-lab-transfer \
+  --source-location-arn NFS_LOCATION_ARN --destination-location-arn S3_LOCATION_ARN \
+  --options '{"VerifyMode":"ONLY_FILES_TRANSFERRED","TransferMode":"CHANGED","OverwriteMode":"ALWAYS","PreserveDeletedFiles":"PRESERVE","Atime":"BEST_EFFORT","Mtime":"PRESERVE","Uid":"INT_VALUE","Gid":"INT_VALUE"}'
 ```
 
-### Disaster Recovery: Replicate to Secondary Region
+Substitute placeholders and validate option applicability for the selected location pair. S3 has object metadata, not every POSIX ownership/ACL behavior; a successful transfer does not promise identical filesystem semantics.
 
 ```bash
-# Cross-region S3 → S3 replication
-aws datasync create-task \
-  --source-location-arn $S3_US_EAST \
-  --destination-location-arn $S3_US_WEST \
-  --schedule '{"ScheduleExpression": "cron(0 0 * * ? *)"}'  # Daily
+aws datasync start-task-execution --task-arn TASK_ARN
+aws datasync describe-task-execution --task-execution-arn EXECUTION_ARN
 ```
 
-## Limitations
+Record the returned execution ARN, inspect terminal result/error and statistics, then verify known fixture bytes at the destination. Poll with timeout/backoff; do not treat a started execution as completed.
 
-- Maximum file size: 5TB (same as S3 limit)
-- Maximum file count per task: Unlimited (but large counts slow down listing)
-- Supported protocols: NFS v3, SMB v2+, S3 (as source or destination), EFS, FSx for Windows, FSx for OpenZFS
-- Agent must be able to reach DataSync service endpoints (port 443)
-- For SMB, the agent must be able to resolve the SMB server's hostname
+## Location and option comparison
+
+| Destination/source | Required concepts                                     | Important difference                              |
+| ------------------ | ----------------------------------------------------- | ------------------------------------------------- |
+| SMB                | Agent, share/path and supported protected credentials | Top-level SMB fields, not NFS OnPremConfig        |
+| EFS                | File-system ARN, mount subnet and SG ARNs             | Network/IAM/access-point and metadata constraints |
+| FSx Windows        | Filesystem/SG and supported credentials               | Authentication/share contract differs from EFS    |
+| S3                 | Bucket/access role, object namespace                  | Not a POSIX file tree or arbitrary output format  |
+
+| Option                   | What it controls                                     | What it does not establish                 |
+| ------------------------ | ---------------------------------------------------- | ------------------------------------------ |
+| TransferMode CHANGED/ALL | Metadata comparison versus copying all selected data | Integrity validation by itself             |
+| VerifyMode               | Supported integrity verification scope               | A new change-detection algorithm           |
+| OverwriteMode            | Replacement behavior                                 | Authorization to destroy source data       |
+| PreserveDeletedFiles     | Destination deletion policy                          | Backup versioning/immutable recovery       |
+| Atime/Mtime/Uid/Gid      | Supported metadata preservation                      | Identical semantics for every storage type |
+| BytesPerSecond           | Supported per-task/execution rate limit              | An invented hourly bandwidth array         |
+
+ALL can overcome reliance on change comparison where that is the intended workflow; NONE verification is not a fix for same-size modified files.
+
+## Filters, schedules and bandwidth
+
+Use supported include/exclude SIMPLE_PATTERN filters against the actual paths; test nested names, escaping and excluded data before a large run. Filter syntax is not a generic regex engine.
+
+```bash
+aws datasync update-task --task-arn TASK_ARN \
+  --excludes '[{"FilterType":"SIMPLE_PATTERN","Value":"/tmp|/cache"}]' \
+  --schedule '{"ScheduleExpression":"cron(0 0 * * ? *)"}'
+```
+
+The schedule is a documented service expression, not an OS crontab. Apply only supported task/mode options. For a Basic task with rate limiting, 50 megabits/sec is about 6,250,000 bytes/sec before protocol overhead; BytesPerSecond uses bytes. Enhanced-mode options differ. External automation can change supported settings but must have scoped authorization.
+
+## Monitoring, incremental correctness and common patterns
+
+Inspect describe-task-execution status/ErrorCode/ErrorDetail and reported estimated/transferred/verified/skipped data in the actual API version/mode. Task reports/logs add detail; inspect access to their destination. Do not substitute invented file counters for documented fields.
+
+Repeat a fixture transfer after changing one file; inspect overwrite, metadata and verification outcomes. Test same-size content changes and destination deletion behavior deliberately. A continuous mirror can replicate a mistake; use separate versioned/locked backup where recovery is required.
+
+On-prem NFS→S3 migration, S3→EFS staging and supported cross-Region transfers each need their own authorization/metadata/cost model. DataSync does not output Parquet merely because the destination is S3. Delete dedicated schedules/tasks/locations/agents after acceptance and preserve source data; account for destination storage/reports and compute/network resources separately.
+
+References: [NFS contract](https://docs.aws.amazon.com/cli/latest/reference/datasync/create-location-nfs.html), [task options](https://docs.aws.amazon.com/datasync/latest/apireference/API_Options.html), [filters](https://docs.aws.amazon.com/datasync/latest/userguide/filtering.html), [task schedules](https://docs.aws.amazon.com/datasync/latest/userguide/task-scheduling.html), [task monitoring](https://docs.aws.amazon.com/datasync/latest/userguide/monitor-task-execution.html).
+
+## References
+
+- [Agent requirements](https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html)
+- [Options contract](https://docs.aws.amazon.com/datasync/latest/apireference/API_Options.html)
+- [SMB location contract](https://docs.aws.amazon.com/cli/latest/reference/datasync/create-location-smb.html)
+- [EFS location contract](https://docs.aws.amazon.com/cli/latest/reference/datasync/create-location-efs.html)
+- [FSx Windows contract](https://docs.aws.amazon.com/cli/latest/reference/datasync/create-location-fsx-windows.html)
+- [Feature retirements](https://docs.aws.amazon.com/general/latest/gr/full_shutdown_services.html)
+- [Pricing](https://aws.amazon.com/datasync/pricing/)
 
 ## Across the wiki
 
-- [[Architecture/solution-architecture-concepts/migration-patterns/README|Migration Patterns]] — migration (Architecture)
-- [[Architecture/solution-architecture-concepts/migration-patterns/data-migration|Data Migration Patterns]] — migration (Architecture)
-- [[Architecture/solution-architecture-concepts/migration-patterns/change-data-capture|Change Data Capture (CDC)]] — migration (Architecture)
-- [[Architecture/solution-architecture-concepts/migration-patterns/strangler-fig|Strangler Fig Pattern]] — migration (Architecture)
+- [[Architecture/solution-architecture-concepts/migration-patterns/README|Migration Patterns]]
+- [[Architecture/solution-architecture-concepts/migration-patterns/data-migration|Data Migration Patterns]]
+- [[Architecture/solution-architecture-concepts/migration-patterns/change-data-capture|Change Data Capture (CDC)]]
+- [[Architecture/solution-architecture-concepts/migration-patterns/strangler-fig|Strangler Fig Pattern]]

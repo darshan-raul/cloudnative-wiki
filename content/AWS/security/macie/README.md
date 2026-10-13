@@ -2,249 +2,117 @@
 title: AWS Macie
 description: AWS Macie — data privacy and S3 data classification. PII/PHI/credentials detection, sensitivity scoring, policy findings, and automated remediation. Macie Classic vs Macie v2.
 tags:
-  - aws
-  - security
-  - macie
-  - data-privacy
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS Macie
 
-Macie uses machine learning to automatically discover, classify, and protect sensitive data in S3. It identifies PII (personally identifiable information), PHI (health records), credentials, and intellectual property.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## What Macie Does
+Macie inventories S3 security posture and discovers sensitive data in supported objects. Automated discovery samples eligible data; a finding is not evidence that every object was scanned.
 
-```
-Macie scans S3:
-  │
-  ├── Classification
-  │   ├── Sensitive data types (PII, PHI, credentials)
-  │   ├── Custom data identifiers (regex, keywords)
-  │   └── Pre-built data types (credit cards, SSNs, etc.)
-  │
-  └── Monitoring
-      ├── S3 policy changes (bucket made public)
-      ├── Access patterns (unusual data access)
-      └── Data egress alerts
-```
+## Discovery and scoring
 
-## Macie Classic vs Macie v2
+Distinguish automated sensitive-data discovery from one-time/scheduled classification jobs. Choose managed/custom identifiers, allow lists, sampling and bucket/object scope deliberately. Supported file formats, object size, encryption access and archive eligibility constrain what can be inspected.
 
-| Feature            | Macie Classic             | Macie v2 (Current)        |
-| ------------------ | ------------------------- | ------------------------- |
-| Scope              | All S3 buckets in account | Specific buckets or all   |
-| Classification     | One-time or scheduled     | Continuous (jobs)         |
-| Pricing            | Per object scanned        | Per GB classified         |
-| Custom identifiers | No                        | Yes                       |
-| Integrations       | CloudWatch                | Security Hub, EventBridge |
+A sensitivity score belongs to a bucket, not each object. Score 50 means not yet classified; documented sensitive/not-sensitive ranges and special values must not be replaced by invented low/medium/high/critical object bands. Finding severity is a different model.
 
-## Enabling Macie
+## Controlled classification lab
 
-```bash
-# Enable Macie v2
-aws macie2 enable
+Prerequisites: a private disposable S3 bucket, Block Public Access enabled, a non-sensitive synthetic fixture and an authorized Macie role/service-linked-role setup. Classification, S3 requests and storage can incur charges.
 
-# Accept the service linked role
-aws macie2 enable --no-ignore-previous-warnings
-```
+1. Enable Macie in the sandbox Region, inspect inventory and note automated-discovery settings.
+2. Upload a tiny supported text/CSV fixture containing obviously synthetic test values. Never copy real personal data just to get a finding.
+3. Create a one-time targeted discovery job for the exact bucket with explicit sampling/identifiers; wait for a terminal result, inspect job statistics and findings.
+4. Compare inspected versus skipped objects. Test an unsupported format or deliberately inaccessible fixture and explain the coverage gap instead of claiming an all-clean bucket.
+5. Review finding metadata without exposing sensitive samples. Sample retrieval requires separate authorization and careful handling.
+6. Cancel any remaining running lab job through its supported lifecycle; do not promise to delete the retained cloud job record. Remove local request/configuration files and synthetic S3 fixtures, then remove the disposable bucket only after preserving required findings/results and clearing its lab-owned objects/versions. Restore prior discovery settings. Do not disable organization-wide Macie protection in a shared account.
 
-## Creating a Classification Job
+## Permissions and response
 
-```bash
-# One-time job (all S3, all objects)
-aws macie2 create-classification-job \
-  --name "full-scan" \
-  --job-type ONE_TIME \
-  --s3-job-definition '{
-    "bucketDefinitions": [{"accountId": "123456789012", "buckets": ["my-bucket"]}]
-  }'
+Use narrow S3/KMS permissions and protect classification-result locations. A finding does not grant permission to delete/quarantine objects. Escalate to the data owner, preserve evidence and choose approved remediation (access restriction, encryption or lifecycle change).
 
-# Scheduled job (weekly)
-aws macie2 create-classification-job \
-  --name "weekly-scan" \
-  --job-type SCHEDULED \
-  --schedule-frequency '{
-    "daily": {}
-  }' \
-  --s3-job-definition '{
-    "bucketDefinitions": [{"accountId": "123456789012", "buckets": ["my-bucket"]}]
-  }'
+## Cost and limits
+
+Separate bucket inventory/monitoring, objects monitored for automated discovery and bytes inspected. Monitoring is paid after its thirty-day trial; targeted jobs can add S3 GET/LIST charges. Do not promise a permanent ten-GB allowance across operations/Regions.
+
+Current targeted-discovery monthly default is five TB and adjustable under the owning quota page. Job sampling and automated sampling differ; verify account/Region limits and exclusions before sizing.
+
+## Inventory, jobs and finding architecture
+
+```text
+S3 inventory/security posture → bucket monitoring
+eligible objects → automated sample / targeted job → sensitive-data findings
+                       ↓                               ↓
+               coverage/skipped/error evidence   owner review/response
 ```
 
-## Sensitivity Scoring
+| Object/model        | Meaning                                             | Incorrect equivalence                            |
+| ------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| Bucket sensitivity  | Documented bucket-level score/ranges/special states | Per-object low/medium/high/critical bands        |
+| Finding severity    | Finding-specific impact context                     | Direct translation of every bucket score         |
+| Automated discovery | Supported sampling/selection                        | Every object continuously scanned                |
+| Targeted job        | Scope/schedule/sampling configuration               | Scan guarantee for unsupported/encrypted objects |
+| Policy finding      | Supported bucket-access/configuration concern       | Permission to delete the data                    |
 
-Macie assigns a sensitivity score (0-100) to each S3 object:
+## Targeted job API walkthrough
 
-| Score  | Classification                             |
-| ------ | ------------------------------------------ |
-| 0-49   | Low — no sensitive data                    |
-| 50-69  | Medium — some sensitive data               |
-| 70-89  | High — significant sensitive data          |
-| 90-100 | Critical — large amounts of sensitive data |
-
-## Finding Types
+With Macie already enabled in the authorized sandbox, save a valid one-time request as job.json and substitute account/bucket/token:
 
 ```json
 {
-  "type": "SensitiveData:S3Object/PII",
-  "severity": {
-    "score": 85
+  "jobType": "ONE_TIME",
+  "name": "wiki-lab-sensitive-fixture",
+  "clientToken": "wiki-lab-job-unique-1",
+  "description": "Synthetic data only",
+  "s3JobDefinition": {
+    "bucketDefinitions": [
+      { "accountId": "111122223333", "buckets": ["LAB_BUCKET_NAME"] }
+    ]
   },
-  "title": "PII detected in S3 object",
-  "description": "Amazon Macie detected 5 occurrences of Social Security Numbers (US) in my-bucket/finance/employees.csv",
-  "resourcesAffected": {
-    "s3Bucket": { "name": "my-bucket", "arn": "arn:aws:s3:::my-bucket" },
-    "s3Object": {
-      "key": "finance/employees.csv",
-      "size": 1024,
-      "versionId": "xxx"
-    }
-  },
-  "classificationDetails": {
-    "detectedAt": "2024-01-15T10:00:00Z",
-    "jobId": "xxxxx",
-    "result": {
-      "sensitiveData": [{ "category": "PII", "occurrences": 5 }],
-      "customDataIdentifiers": null
-    }
-  }
+  "samplingPercentage": 100
 }
 ```
 
-## Custom Data Identifiers
+```bash
+aws macie2 create-classification-job --cli-input-json file://job.json
+aws macie2 describe-classification-job --job-id JOB_ID
+aws macie2 list-findings
+aws macie2 get-findings --finding-ids FINDING_ID
+```
+
+100% sampling selection does not make unsupported/inaccessible objects inspectable. Record counts/skipped/error reasons and inspect actual finding evidence. Scheduled jobs need their own schedule/initial-run settings; avoid assuming one-time and scheduled input shapes are identical.
+
+## Custom identifiers and practical fixture
+
+A custom identifier uses a supported regex, optional keywords/proximity and validation fixtures; it does not create a new managed identifier.
 
 ```bash
-# Create custom regex identifier
-aws macie2 create-custom-data-identifier \
-  --name "employee-id" \
-  --regex "EMP-[0-9]{6}" \
-  --description "Employee ID pattern" \
-  --keywords '["employee", "id"]'
-
-# Create custom managed data identifier (keywords)
-aws macie2 create-custom-data-identifier \
-  --name "project-code" \
-  --regex "[A-Z]{3}-[0-9]{4}" \
-  --keywords '["project", "code"]'
+aws macie2 create-custom-data-identifier --name WikiSyntheticAccount \
+  --regex 'WIKI-[0-9]{8}' --keywords WIKI
 ```
 
-## S3 Policy Monitoring
+Use test-custom-data-identifier with synthetic text before adding its returned ID to a job. Test matching, near-match and irrelevant text to quantify false positives; never publish real identifiers in fixtures. Supported regex behavior and discovery thresholds differ from generic language libraries.
 
-```bash
-# Get policy findings
-aws macie2 list-findings \
-  --finding-criteria '{
-    "type": [{"eq": ["EXTERNAL_BUCKET"]}]
-  }'
-```
+## Security Hub/EventBridge and remediation safety
 
-Macie alerts on:
+Findings can flow through supported integrations and event routing; account/Region/integration permissions still matter. Correlate bucket/object identifiers, classification scope and skipped coverage before assigning a privacy incident.
 
-- S3 bucket made public
-- S3 bucket policy changed to allow external access
-- S3 bucket shared with another AWS account
-- S3 bucket ACL changed
+Review the finding with its data owner before mutation. Sensitive data may be lawful/required, and deletion can destroy evidence. An approved workflow can restrict access, encrypt, quarantine or delete according to owner/legal authorization, with idempotency, validation and rollback where feasible.
 
-## Integration with Security Hub
+## Coverage/cost/troubleshooting
 
-```bash
-# Macie sends findings to Security Hub automatically (when enabled)
-aws securityhub enable-import-findings-for-product \
-  --product-arn "arn:aws:securityhub:us-east-1::product/aws/macie"
-```
+Inspect Macie eligibility, job scope, identifier configuration, object format/size/class, KMS/S3 access and per-job errors. Bucket inventory existence does not prove bytes were inspected. Price monitored buckets/objects and analyzed bytes using the actual operation/Region; source S3 requests and result storage are separate.
 
-## Automated Response
+Cancel remaining lab work through the [documented pause/resume/cancel lifecycle](https://docs.aws.amazon.com/macie/latest/user/discovery-jobs-status-change.html); the [classification-job resource](https://docs.aws.amazon.com/macie/latest/APIReference/jobs-jobid.html) supports describe and status updates, not a job-delete operation. Retained job metadata is not a failed cleanup. Remove custom identifiers only when no jobs depend on them, delete synthetic fixtures and restore discovery settings. Preserve required findings/results and production Macie enrollment.
 
-```bash
-# EventBridge rule for sensitive data findings
-aws events put-rule \
-  --name macie-sensitive-data \
-  --event-pattern '{
-    "source": ["aws.macie"],
-    "detail": {
-      "type": ["SensitiveData:S3Object/PII"]
-    }
-  }'
-
-# Target: Lambda to remediate
-aws events put-targets \
-  --rule macie-sensitive-data \
-  --targets '[{
-    "Id": "remediate",
-    "Arn": "arn:aws:lambda:us-east-1:123456789012:function:macie-remediate",
-    "Input": "{\"detail\": <see full event>}"
-  }]'
-```
-
-### Example Remediation Lambda
-
-```python
-def lambda_handler(event, context):
-    bucket = event['detail']['resourcesAffected']['s3Bucket']['name']
-    key = event['detail']['resourcesAffected']['s3Object']['key']
-
-    # Block public access
-    s3 = boto3.client('s3')
-    s3.put_public_access_block(
-        Bucket=bucket,
-        PublicAccessBlockConfiguration={
-            'BlockPublicAcls': True,
-            'IgnorePublicAcls': True,
-            'BlockPublicPolicy': True,
-            'RestrictPublicBuckets': True
-        }
-    )
-
-    # Move to quarantine prefix
-    s3.copy_object(
-        Bucket=bucket,
-        Key=f"quarantine/{key}",
-        CopySource={'Bucket': bucket, 'Key': key}
-    )
-    s3.delete_object(Bucket=bucket, Key=key)
-
-    # Notify
-    sns.publish(
-        TopicArn='arn:aws:sns:us-east-1:123456789012:sensitive-data-alerts',
-        Message=f"Sensitive data detected in {bucket}/{key}. Moved to quarantine."
-    )
-```
-
-## Pricing
-
-| Component                         | Cost     |
-| --------------------------------- | -------- |
-| Classification (first 10GB/month) | Free     |
-| Classification (after 10GB)       | $0.10/GB |
-| Custom data identifiers           | Free     |
-| S3 policy monitoring              | Free     |
-
-## Limits
-
-| Resource                | Limit          |
-| ----------------------- | -------------- |
-| Classification jobs     | 20 per account |
-| Custom data identifiers | 50 per account |
-| S3 buckets              | Unlimited      |
-| Objects per job         | Unlimited      |
+References: [job contract](https://docs.aws.amazon.com/cli/latest/reference/macie2/create-classification-job.html), [custom identifiers](https://docs.aws.amazon.com/macie/latest/user/custom-data-identifiers.html), [test identifier](https://docs.aws.amazon.com/cli/latest/reference/macie2/test-custom-data-identifier.html), [finding events](https://docs.aws.amazon.com/macie/latest/user/findings-monitor-events.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/macie/
-- **Documentation:** https://docs.aws.amazon.com/macie/
-- **Pricing:** https://aws.amazon.com/macie/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A company with 100GB of S3 data. First 10GB free. 90GB × $0.10 = $9/month. Macie is extremely cheap for typical workloads.
-
-**Scenario 2:** A data analytics company with 5TB of S3 data. 5TB - 10GB free = 5TB × $0.10/GB = $512/month. For 5TB of data, consider whether continuous classification is necessary or if one-time classification jobs are sufficient.
-
-## Nuggets & Gotchas
-
-- **Macie only scans S3 — it doesn't scan RDS, DynamoDB, or EBS:** Macie is specifically for object storage. For database-level sensitive data classification, use different tools (e.g., AWS CloudWatch Data Protection for logs).
-- **Macie v2's continuous classification runs on NEW and MODIFIED objects only — not all existing objects:** If you need full initial classification, run a one-time job first, then continuous jobs will maintain it. Don't assume continuous = all historical data classified.
-- **Macie's PII detection for custom formats (internal employee IDs, etc.) requires custom data identifiers ($0.10/GB still applies):** Pre-built identifiers (SSN, credit card) are free. Custom regex/keyword identifiers cost the same as standard classification.
-- **Macie findings auto-sent to Security Hub if both are enabled — no additional cost:** If you already use Security Hub, enabling Macie is "free" in terms of integration effort. Just make sure to filter Macie findings in Security Hub.
-- **Macie can trigger on EVERY new object in a busy S3 bucket — set up job frequency carefully:** If you upload 100K objects/day, Macie will scan each one. For high-volume buckets, consider daily or weekly scheduled jobs instead of continuous.
+- [Bucket sensitivity scores](https://docs.aws.amazon.com/macie/latest/user/discovery-scoring-s3.html)
+- [Discovery jobs](https://docs.aws.amazon.com/macie/latest/user/discovery-jobs.html)
+- [Supported objects](https://docs.aws.amazon.com/macie/latest/user/discovery-supported-storage.html)
+- [Quotas](https://docs.aws.amazon.com/macie/latest/user/macie-quotas.html)
+- [Pricing](https://aws.amazon.com/macie/pricing/)

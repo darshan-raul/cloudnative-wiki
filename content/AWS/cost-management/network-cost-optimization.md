@@ -1,169 +1,96 @@
 ---
 title: Network Cost Optimization
-description: AWS network cost optimization — AZ-to-AZ transfer, NAT Gateway pricing, VPC Endpoints, PrivateLink, Direct Connect, CloudFront caching
+description: Billing models, trade-offs, safe workflows and scoped examples for network cost optimization.
 tags:
-  - aws
-  - cost-management
-  - networking
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # Network Cost Optimization
 
-Network costs are the most commonly underestimated line item in AWS billing. Data transfer charges appear across multiple services and are easy to overlook until they show up as a surprise on the monthly bill.
+Price exercises use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, not current tariffs, unless explicitly identified as a dated published fee.
 
-## Data Transfer Pricing Hierarchy
+Model network cost per traffic path: source, destination, Region/AZ, direction, GB, intermediaries and applicable service exemptions. There is no universal per-GB rate for all AWS traffic.
 
-Understanding where data flows determines the cost:
+## Path choices
 
-| Source                 | Destination               | Cost (approximate)      |
-| ---------------------- | ------------------------- | ----------------------- |
-| Same AZ (same VPC)     | Same AZ                   | Free                    |
-| AZ-to-AZ (same region) | Same region, different AZ | ~$0.01/GB               |
-| Inter-region           | Different AWS region      | ~$0.02-0.09/GB          |
-| Internet egress        | Public internet           | ~$0.09/GB               |
-| CloudFront             | Internet                  | ~$0.085/GB (first 10TB) |
+| Component                     | Cost model and caution                                                   |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| NAT Gateway                   | Gateway hours plus processed GB; transfer/public IPv4 can add charges    |
+| S3/DynamoDB gateway endpoints | No endpoint hourly or processing fee; underlying service charges remain  |
+| Interface endpoints           | Endpoint hours per AZ and processed data under PrivateLink pricing       |
+| VPC peering                   | No peering connection fee; cross-AZ/inter-Region transfer may be charged |
+| Transit Gateway               | Attachment hours and applicable processed GB                             |
+| Direct Connect                | Port-hours, transfer and possible provider/cross-connect charges         |
+| ALB                           | Load-balancer hours plus LCUs based on the highest applicable dimension  |
+| NLB                           | Load-balancer hours plus NLCUs, with protocol-specific dimensions        |
 
-**The AZ trap:** A common architecture mistake: placing a web server in AZ-a and a database in AZ-b, then running high-throughput application code that queries the database on every request. At scale, AZ-to-AZ transfer adds significant cost.
+ALB LCU dimensions include connections, active connections, processed bytes and rule evaluations; they are not simply requests or a flat 100-rules entitlement. NLB uses NLCUs, not invented NCUs, and is not always cheaper.
 
-**Mitigation:** Place application components in the same AZ when possible. Use cross-AZ load balancing for availability (ALB spans AZs automatically) but keep application-to-database traffic within a single AZ.
+Load balancers cannot be stopped like EC2. Instance Scheduler targets supported EC2/RDS resources, not an ALB stop API. Removing a dev load balancer requires dependency review and reprovisioning plans.
 
-## NAT Gateway Costs
+## Worked NAT example
 
-NAT Gateway has two billing components:
+Assume a NAT gateway rate of \$0.045/hour and \$0.045/GB, 720 hours and 500 GB processed:
 
-- **Per hour:** ~$0.045/hour in us-east-1
-- **Per GB of data processed:** ~$0.045/GB
-
-For a server that processes 100GB/month of outbound traffic:
-
-```
-NAT Gateway: $0.045 × 24 × 30 = $32.40
-Data transfer: 100GB × $0.045 = $4.50
-Total: ~$37/month per NAT Gateway
+```text
+gateway = 720 × $0.045 = $32.40
+processing = 500 × $0.045 = $22.50
+subtotal = $54.90
 ```
 
-**Multi-AZ NAT Gateway:** Running NAT Gateway in multiple AZs for HA doubles/triples the hourly cost.
+This excludes public IPv4 and transfer. Moving eligible S3/DynamoDB traffic to gateway endpoints removes those NAT processing charges, not substitutes an invented \$0.01/GB gateway-endpoint charge. Remaining internet traffic still needs its egress path.
 
-**NAT Gateway alternatives:**
+## Reliability and delivery
 
-- **NAT Instance:** EC2 instance acting as NAT. Much cheaper hourly cost but requires manual management, no HA by default. Use for cost-sensitive non-production environments.
-- **Egress-only internet gateway:** For IPv6, replaces NAT Gateway for outbound traffic only. No inbound inbound. Free.
-- **VPC Endpoints:** For S3 and DynamoDB access from private VPCs — eliminates NAT Gateway entirely for those services. Free.
+Keep redundant egress/connectivity according to SLOs. Same-AZ traffic affinity can reduce some charges, but consolidating all production components into one AZ is not a safe universal optimization. ALB cross-zone and data-transfer charging have service-specific exceptions; do not price every hop identically.
 
-## VPC Endpoints
+S3-to-CloudFront origin transfer is waived under the applicable AWS pricing rules; cache misses can still incur origin request/retrieval and CloudFront charges. Compare the actual CloudFront pricing plan and geography. Direct Connect is billed in port-hours, not port-minutes; there is no universal 10-TB economic break-even.
 
-VPC Endpoints let private VPC resources access AWS services without going through the internet or NAT Gateway.
+## Trace the billable path
 
-**Gateway Endpoints (S3, DynamoDB):** Free. Route traffic to S3/DynamoDB via the endpoint. Requires a route table entry with a target to the endpoint. Eliminates NAT Gateway costs for S3/DynamoDB access.
+| Traffic                          | Questions before pricing                                        |
+| -------------------------------- | --------------------------------------------------------------- |
+| EC2 → same-AZ private service    | Which service and address path? Are exceptions applicable?      |
+| EC2 → cross-AZ peered VPC        | Which endpoints/directions incur regional transfer?             |
+| VPC Lambda → private RDS         | Local routing or cross-AZ path? NAT is not inherently involved  |
+| Private worker → public internet | NAT hours/processing, transfer and public IPv4?                 |
+| On-premises → AWS                | DX port/provider plus transfer, or VPN connection/transfer?     |
+| Viewer → CloudFront → S3         | Cache hit, request/retrieval and current delivery-plan charges? |
 
-**Interface Endpoints (PrivateLink):** ~$0.01/hour + per GB processing. Used for services like EC2, SNS, SQS, CloudWatch, Secrets Manager, Systems Manager, etc. Establishes an ENI in your subnet with a private IP.
+Avoid a universal “same Region peering is free” rule. Trace central egress: a NAT in another AZ can add transfer and a failure dependency. Choose resilient routing first; compare cost of distributed versus centralized egress including TGW/endpoint paths.
 
-**When to use PrivateLink:**
+## Endpoint break-even worksheet
 
-- Private resources in a VPC that need to access AWS services without internet
-- Connecting to services in another VPC without VPC peering
-- Third-party SaaS services that support PrivateLink
+Assume an interface endpoint in two AZs at a hypothetical \$0.01/AZ-hour and \$0.01/GB, versus a dedicated NAT at \$0.045/hour plus \$0.045/GB. For this us-east-1 study exercise on 2026-10-12, use 720 hours and 1,000 GB:
 
-## PrivateLink vs VPC Peering vs Transit Gateway
-
-| Approach        | Use When                                    | Cost                 |
-| --------------- | ------------------------------------------- | -------------------- |
-| VPC Peering     | Two VPCs, same region, permanent connection | Free within region   |
-| Transit Gateway | Hub-and-spoke for 3+ VPCs, cross-account    | ~$0.02/GB + hourly   |
-| PrivateLink     | Access a service endpoint privately         | ~$0.01/hour + per GB |
-| Direct Connect  | On-premises to AWS, large data volumes      | $0.03-0.05/GB        |
-
-**Cost optimization insight:** Transit Gateway data processing charges add up fast in hub-and-spoke topologies. For 10 VPCs all routing through a central transit gateway, every byte of traffic between VPCs incurs transit gateway charges. VPC Peering between two VPCs is free within the same region — use it for permanent two-VPC connections.
-
-## Load Balancer Costs
-
-**ALB (Application Load Balancer):**
-
-- Per hour: ~$0.0225 (varies by region)
-- Per LCU (Load Balancer Capacity Unit): ~$0.008
-  - 1 LCU covers: 800 connections/minute, 100 rules, 1GB/hour data processing
-  - Multiple LCUs can run in parallel
-
-**NLB (Network Load Balancer):**
-
-- Per hour: ~$0.0225
-- Per NCU (NCUs scale with throughput, not connections)
-- Much cheaper at high throughput than ALB
-
-**CLB (Classic Load Balancer):** Legacy, billed per hour + per GB. Avoid for new architectures.
-
-**Idle LBs:** A common cost issue — ALB/NLB running 24/7 serving very low traffic. For always-on production, this is expected. For dev/test environments, consider stopping the ALB during non-business hours or using AWS Instance Scheduler to automate.
-
-## CloudFront
-
-CloudFront costs have three components:
-
-- **Requests:** ~$0.0075-0.0090 per 10,000 requests (varies by region)
-- **Data transfer:** ~$0.085/GB first 10TB/month, decreasing at higher volumes
-- **Invalidations:** $0.005 per invalidation path
-
-**Caching strategy for cost:**
-
-- Long TTL on static assets (images, CSS, JS) — reduces origin fetches
-- Cache API responses where appropriate — reduces ALB and origin EC2/Lambda costs
-- Use Lambda@Edge for edge logic without hitting origin
-
-**CloudFront → S3 vs S3 direct:**
-
-- Direct S3 egress: ~$0.09/GB
-- CloudFront → Internet: ~$0.085/GB + cheaper tier for first 10TB
-- For a site serving 1TB/month, CloudFront saves ~$5/month + improves performance
-- For very low traffic sites, the request charges may outweigh the per-GB savings
-
-## Direct Connect Costs
-
-Direct Connect pricing has three components:
-
-- **Port hours:** ~$0.03-0.05/minute depending on speed (1Gbps, 10Gbps, etc.)
-- **Data transfer:** ~$0.02-0.05/GB (varies by region pair)
-- **Virtual interfaces:** Usually included in port cost
-
-Direct Connect is almost always more expensive than S2S VPN for moderate data volumes. It makes economic sense when:
-
-- You're moving large amounts of data (> 10TB/month) at consistently high throughput
-- You need predictable, low-latency connectivity for on-premises systems
-- You have compliance requirements that prohibit internet-based connectivity
-
-## Cost Audit Checklist
-
+```text
+interface endpoint = 2 × 720 × $0.01 + 1,000 × $0.01 = $24.40
+dedicated NAT      = 720 × $0.045 + 1,000 × $0.045 = $77.40
 ```
-□ Check if resources in different AZs are communicating unnecessarily
-□ Check NAT Gateway hours — do you need one in every AZ?
-□ Check if S3/DynamoDB access goes through NAT Gateway (use Gateway endpoints)
-□ Check for idle load balancers in dev/test environments
-□ Check VPC peering vs Transit Gateway — is Transit Gateway adding unnecessary cost?
-□ Check CloudFront cache hit ratio — low ratio means you're paying for origin fetches + CloudFront
-□ Check PrivateLink vs internet access for AWS services
-□ Check data transfer between services in the same AZ (should be free)
-```
+
+If NAT must remain for other internet traffic, its fixed hours are not avoidable; the incremental comparison changes. These assume supported service/path and exclude transfer/IPv4. Gateway S3/DynamoDB endpoints have no endpoint fee and should not be priced using the interface formula.
+
+## Load-balancer and delivery cost
+
+For an ALB calculation, compute usage for new connections, active connections, processed bytes and rule evaluations under the actual configuration/certificate/target rules. Billing uses the highest applicable LCU dimension, not their sum. NLB dimensions vary by protocol and use NLCUs; CLB follows a distinct legacy model.
+
+Do not disable cross-zone or reduce AZs solely from a guessed transfer rate. Some ELB transfer paths have exemptions, and unhealthy-AZ capacity changes can break reliability. An idle load balancer can be removed only through a reviewed delete/recreate workflow; it cannot be “stopped.”
+
+CloudFront cache hits reduce origin request/retrieval work. A miss does not universally incur S3 egress to CloudFront, but origin GET/class retrieval can remain. Compare the actual pricing plan and geography, cache key/TTL, invalidations and viewer transfer. For DX, add provider and cross-connect costs; no 10-TB threshold guarantees economic superiority.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/blogs/networking-and-content-delivery/
-- **Documentation:** https://docs.aws.amazon.com/vpc/latest/userguide/
-- **Pricing:** https://aws.amazon.com/vpc/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A 3-tier web application: ALB (in3 AZs) → 6 EC2 instances (2 per AZ) → RDS Multi-AZ in1 AZ. Inter-AZ traffic: ALB to EC2 (2 AZs used, 1 AZ idle) = $0.01/GB per direction. EC2 to RDS = $0.01/GB. Monthly500TB data transfer: ~$5,000/month. Optimizing to place EC2 instances in the same 2 AZs as RDS and using cross-zone ELB disabled: reduces inter-AZ transfer by60%, saving ~$3,000/month.
-
-**Scenario 2:** A microservices architecture with 20 Lambda functions in a VPC, all calling DynamoDB and S3 via NAT Gateway. Monthly NAT Gateway cost: 720 hours × $0.045 = $32 +500GB processed × $0.045 = $22.50 = $54.50/month just for NAT Gateway. Replacing with Gateway VPC Endpoints for S3 and DynamoDB: $0.01/GB for the endpoint data (same data, same amount, but cheaper):500GB × $0.01 = $5/month. Savings: ~$50/month.
-
-## Nuggets & Gotchas
-
-- **AZ-to-AZ data transfer costs stack:** If service A in AZ1 calls service B in AZ2, and B calls service C in AZ3, you pay AZ1→AZ2 AND AZ2→AZ3. A microservices chain of 5 services in 5 different AZs accumulates transfer charges at every hop. Keep synchronous chains within the same AZ.
-- **NAT Gateway is charged per hour AND per GB:** $0.045/hr in us-east-1 is charged even if you transfer 0 bytes. A NAT Gateway that sits idle still costs $32/month. Delete idle NAT Gateways.
-- **S3 Gateway Endpoint is free, S3 Interface Endpoint is not:** A Gateway VPC Endpoint for S3 routes traffic through AWS's internal network and costs nothing. An Interface Endpoint (for PrivateLink access to S3 from on-prem) costs $0.01/GB + $0.005 per availability zone/hour. Use Gateway endpoints where possible.
-- **CloudFront cache miss costs more than direct S3:** When CloudFront misses cache, it fetches from origin (S3) and then serves to the user. You pay S3 egress (for the origin fetch) AND CloudFront data transfer out. For rarely-accessed objects, direct S3 access is cheaper than CloudFront.
-- **PrivateLink charges for each AZ it's deployed in:** If you deploy an Interface Endpoint for an AWS service in 3 AZs, you pay 3 × hourly rate. If your Lambda only runs in 1 AZ, deploy the Interface Endpoint only in that AZ. Most services only need to be reachable from 1-2 AZs.
+- [VPC and NAT pricing](https://aws.amazon.com/vpc/pricing/)
+- [PrivateLink pricing](https://aws.amazon.com/privatelink/pricing/)
+- [ELB capacity-unit pricing](https://aws.amazon.com/elasticloadbalancing/pricing/)
+- [Direct Connect pricing](https://aws.amazon.com/directconnect/pricing/)
+- [CloudFront pricing](https://aws.amazon.com/cloudfront/pricing/)
 
 ## Across the wiki
 
 - [[GCP/networking/vpc/cloud-nat|GCP Cloud NAT Deep Dive & SNAT Port Allocation]] — NAT and egress (GCP)
 - [[Architecture/solution-architecture-concepts/networking/nat|Nat]] — NAT and egress (Architecture)
+
+- [VPC endpoint architecture](https://docs.aws.amazon.com/vpc/latest/privatelink/concepts.html).
+- [Cross-AZ EC2 transfer](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-network-bandwidth.html).

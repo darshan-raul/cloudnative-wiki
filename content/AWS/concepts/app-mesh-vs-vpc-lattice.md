@@ -1,48 +1,40 @@
 ---
-title: AWS App Mesh vs Amazon VPC Lattice
-tags: [aws, networking, app-mesh, vpc-lattice, service-mesh]
-date: 2026-09-06
-description: "Comparison between AWS App Mesh (deprecated) and Amazon VPC Lattice: sidecar vs sidecarless architecture, multi-account routing, and migration paths."
+title: "App Mesh retirement and service-networking choices"
+description: "Retain historical App Mesh context and select supported networking alternatives by workload requirements."
+tags:
+  - cloud/aws/networking
+date: 2026-10-12
 ---
 
-# App Mesh vs VPC Lattice
+# App Mesh retirement and service-networking choices
 
-> [!WARNING] Deprecation Notice
-> AWS App Mesh was officially deprecated and entered end-of-life (EOL) retirement in **September 2026**. AWS recommends migrating workloads to **Amazon VPC Lattice** for managed service-to-service networking or deploying self-managed **Envoy / Istio** on Amazon EKS.
+AWS App Mesh reached end of support on **September 30, 2026**; its console/resources are no longer available. Do not recommend a new App Mesh deployment.
 
-AWS App Mesh and Amazon VPC Lattice are both services designed to simplify service-to-service communication in modern applications, but they differ significantly in their scope, functionality, and lifecycle status. Below is a detailed comparison:
+## Historical model versus supported choices
 
----
+App Mesh configured Envoy-based service proxies. [[AWS/concepts/vpc-lattice|VPC Lattice]] provides supported managed service-networking capabilities without requiring an App Mesh-style sidecar for every service, but it is not a promise of feature-for-feature migration.
 
-### **Key Differences Between AWS App Mesh and Amazon VPC Lattice**
+For ECS, evaluate supported Service Connect. For Kubernetes, evaluate the [[Kubernetes/eks/networking/vpc-lattice/README|Gateway API/Lattice track]] or an intentionally operated mesh if its required features justify that ownership.
 
-| **Feature**                    | **AWS App Mesh**                                                                                   | **Amazon VPC Lattice**                                                                                                   |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Purpose**                    | Provides application-level networking for microservices within a service mesh.                     | Simplifies service-to-service communication across VPCs and accounts at both the network and application layers.         |
-| **Scope**                      | Focuses on managing communication within microservices architectures (e.g., HTTP/TCP services).    | Designed for broader service networking across VPCs, accounts, and compute types (instances, containers, serverless).    |
-| **Traffic Management**         | Enables fine-grained traffic routing using virtual routers and routes within a service mesh.       | Offers advanced traffic management, including request-level routing and weighted targets for deployments.                |
-| **Connectivity**               | Connects services via Envoy proxies within a mesh; requires sidecar proxies for each service.      | Automatically manages connectivity between VPCs and accounts without requiring sidecar proxies.                          |
-| **Authentication & Security**  | Relies on Envoy proxy for secure communication; integrates with IAM for access control.            | Provides multi-layer security: IAM-based policies, security groups, and network ACLs at both service and network levels. |
-| **Monitoring & Observability** | Provides end-to-end visibility of application traffic using Envoy proxies.                         | Includes centralized monitoring of service networks and connectivity across VPCs/accounts.                               |
-| **Deployment Flexibility**     | Works with Amazon EC2, ECS, EKS, Fargate, Kubernetes, and on-premises apps via AWS Outposts.       | Supports instances, containers, serverless applications, and TCP resources like databases across VPCs/accounts.          |
-| **Use Case Examples**          | Ideal for microservices architectures needing detailed traffic control (e.g., canary deployments). | Suitable for organizations managing multi-VPC/multi-account environments with overlapping IP addresses.                  |
+Compare protocols, caller authentication, routing/traffic shifting, retries/timeouts, telemetry, network reachability and resource-access needs. Do not equate service networking with general transitive IP routing.
 
----
+## Migration exercise
 
-### **When to Use Each Service**
+Inventory every old proxy-dependent capability and map it to a supported replacement or explicit application change. Run a small parallel test path, verify identity/authorization and failure behavior, then shift traffic with rollback. Sidecar removal alone does not prove preserved policy or telemetry.
 
-#### **AWS App Mesh**
+## Capability comparison for migration
 
-- Best suited for applications built using microservices that require detailed traffic routing and observability.
-- Ideal for managing HTTP/TCP communication between services deployed on platforms like Kubernetes or AWS ECS/EKS.
-- Requires sidecar proxies (Envoy) to handle traffic routing and monitoring.
+| Requirement                                     | Historical App Mesh design                             | Supported choice to evaluate                                           |
+| ----------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Per-workload proxy telemetry and traffic policy | Envoy sidecar/proxy managed with mesh resources        | Operated Envoy/Istio where that exact proxy behavior is required       |
+| Cross-VPC service access                        | Additional network connectivity and mesh configuration | VPC Lattice service network, service/resource access and authorization |
+| ECS service-to-service discovery/traffic        | Mesh sidecar integration                               | ECS Service Connect for supported workloads                            |
+| Kubernetes route resources                      | App Mesh controller/proxies                            | Gateway API/Lattice or an operated mesh, according to needed features  |
 
-#### **Amazon VPC Lattice**
+For each migrated service, inventory protocol, retry/timeout behavior, weighted traffic, authentication identity, TLS boundary, logs/metrics/traces and service discovery. Build a test matrix for success, denied caller, unhealthy target and rollback. Lattice can simplify cross-VPC exposure, but a service-network association still needs targets, listeners and policies; an Envoy policy does not automatically translate to a Lattice policy.
 
-- Designed for organizations with complex multi-VPC or multi-account setups needing simplified connectivity.
-- Useful when connecting services across different compute types (instances, containers, serverless) without the need for sidecar proxies.
-- Provides broader capabilities like automatic connectivity management between VPCs/accounts and centralized service discovery.
+## References
 
----
-
-In summary, AWS App Mesh is specialized for microservices communication within a service mesh using application-level networking controls, while Amazon VPC Lattice provides a broader solution for connecting services across multiple VPCs/accounts with simplified network management and security features.
+- [Owning App Mesh retirement notice](https://docs.aws.amazon.com/app-mesh/latest/userguide/what-is-app-mesh.html).
+- [ECS Service Connect](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-connect.html).
+- [Lattice overview](https://docs.aws.amazon.com/vpc-lattice/latest/ug/what-is-vpc-lattice.html).

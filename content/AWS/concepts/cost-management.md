@@ -1,298 +1,84 @@
 ---
-title: "Cost Management"
-tags: [aws, cost-management]
-date: 2026-01-30
-description: "An exam-oriented breakdown of AWS cost control and cost management topics."
+title: AWS Cost Management Concepts
+description: Concise exam decision view of billing visibility, allocation and workload cost optimization.
+tags:
+  - aws/concepts/cost-management
+date: 2026-10-12
 ---
 
-# Cost Management
+# AWS Cost Management Concepts
 
-Below is a **tree-style, exam-oriented breakdown** of **Cost Control & Cost Management topics**&#x20;
+Use [[AWS/cost-management/README|AWS Cost Management]] for the canonical lessons, workflows and examples. This note is a short exam decision view, not a separate pricing catalog.
 
----
+## Match the requirement
 
-### 1. Cost Management Foundations
+| Requirement                   | Starting point                                                                                         | Important limit                                                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Investigate recorded spend    | [[AWS/cost-management/cost-explorer\|Cost Explorer]]                                                   | Billing data is delayed; select the correct cost metric          |
+| Analyze detailed billing data | [[AWS/cost-management/cost-usage-report\|Data Exports / CUR]]                                          | Schema, resource detail and delivery vary                        |
+| Allocate ownership            | [[AWS/cost-management/cost-allocation-tags\|Tags and allocation]]                                      | Activate supported billing tags; not every charge has a resource |
+| Notify at a target            | [[AWS/cost-management/cost-budgets\|Budgets]]                                                          | Not a guaranteed hard spending cap                               |
+| Detect unusual changes        | [[AWS/cost-management/cost-anomaly-detection\|Anomaly Detection]]                                      | Learns from delayed billing history                              |
+| Discount a steady baseline    | [[AWS/cost-management/savings-plans\|Savings Plans]] / [[AWS/cost-management/reserved-instances\|RIs]] | Eligibility and unused commitments matter                        |
+| Reduce waste safely           | [[AWS/cost-management/cost-automation\|Approved automation]]                                           | Owner/dependency/recovery checks before changes                  |
 
-```
-AWS Pricing Models
-├─ On-Demand pricing
-├─ Reserved Instances (RI)
-│  ├─ Standard vs Convertible
-│  ├─ Regional vs Zonal
-│  ├─ Partial / All / No upfront
-│  ├─ Instance size flexibility
-│  └─ Scope: EC2, RDS, ElastiCache, Redshift
-├─ Savings Plans
-│  ├─ Compute Savings Plans
-│  ├─ EC2 Instance Savings Plans
-|  |- Database Savings plan
-│  └─ Interaction with Spot & On-Demand
-├─ Spot Instances
-│  ├─ Spot pricing model
-│  ├─ Interruption behavior
-│  ├─ Spot Fleets & Capacity Pools
-│  └─ When NOT to use Spot
-└─ Free tier & hidden cost traps
-```
+## Exam reasoning
 
----
+Right-size before buying commitments. Compare utilization with coverage; neither alone proves efficient spending. Preserve availability and recovery requirements when reducing AZs, replicas or retention. Treat data transfer as a path-specific calculation, not one global rate. Stopping compute can leave storage and commitment charges intact.
 
-### 2. AWS Cost Visibility & Reporting
+A three-year commitment may be cheaper for a stable workload but inappropriate for an imminent migration. An anomaly monitor is not the best answer to a fixed monthly threshold; a budget alert is not the best answer to unexpected daily behavior. Neither guarantees immediate shutdown.
 
-```
-Billing & Cost Tools
-├─ AWS Cost Explorer
-│  ├─ Cost & Usage reports (CUR)
-│  ├─ Dimension filters (service, account, tag)
-│  ├─ RI & Savings Plan utilization
-│  └─ Forecasting limitations
-├─ Cost and Usage Report (CUR)
-│  ├─ Hourly vs daily granularity
-│  ├─ Athena + Glue analysis
-│  ├─ Multi-account aggregation
-│  └─ Chargeback / Showback models
-├─ AWS Budgets
-│  ├─ Cost budgets
-│  ├─ Usage budgets
-│  ├─ RI & Savings Plan budgets
-│  └─ Alerts (SNS, ChatOps)
-└─ Billing Console
-   ├─ Linked accounts view
-   └─ Consolidated billing
-```
+## Concept map: foundations through operations
 
----
+### Foundations and visibility
 
-### 3. Cost Allocation & Governance (VERY IMPORTANT)
+Separate spend reduction from cost avoidance and business efficiency. A workload that doubles useful transactions while spending 20% more can improve cost per transaction without reducing the invoice. Choose a consistent cost metric and measurement period.
 
-```
-Cost Allocation
-├─ Cost Allocation Tags
-│  ├─ User-defined vs AWS-generated
-│  ├─ Activation requirement
-│  ├─ Tag inheritance pitfalls
-│  └─ Enforcement using SCPs
-├─ Account-based cost isolation
-│  ├─ Prod / Non-Prod separation
-│  ├─ Workload-based accounts
-│  └─ Regulatory separation
-├─ Chargeback / Showback
-│  ├─ Business unit mapping
-│  ├─ Product-based allocation
-│  └─ Shared service cost distribution
-└─ Tag enforcement strategies
-   ├─ SCP deny without tags
-   ├─ AWS Config rules
-   └─ CI/CD tag injection
-```
+Use [[AWS/cost-management/pricing-models|pricing models]] for payment/commitment choices, [[AWS/cost-management/cost-explorer|Cost Explorer]] for recorded trends and [[AWS/cost-management/cost-usage-report|detailed exports]] for reproducible analytics. Invoice cash timing, amortized commitment cost, credits and net costs answer different questions. A forecast is uncertain, not a guaranteed ceiling.
 
----
+### Allocation and Organizations
 
-### 4. AWS Organizations & Consolidated Billing
+Distinguish account ownership, resource tags, activated billing tags, Cost Categories and shared-cost rules. A tag on a resource is not automatic historical allocation. Track missing/unallocated spend rather than hide it.
 
-```
-Organizations & Billing
-├─ Consolidated Billing
-│  ├─ RI & Savings Plan sharing
-│  ├─ Volume tier discount sharing
-│  └─ Free tier sharing behavior
-├─ Organizational Units (OU)
-│  ├─ Billing isolation by OU
-│  └─ Guardrails for cost control
-├─ Service Control Policies (SCP)
-│  ├─ Restrict expensive regions
-│  ├─ Deny unsupported instance types
-│  └─ Prevent unapproved services
-└─ Multi-payer billing strategies
-```
+[[AWS/cost-management/organizations-cost-strategy|Consolidated billing]] can share eligible discounts under preferences; it does not grant another account zonal capacity or create per-OU payer accounts. SCPs restrict supported operations, not dollar totals. Showback informs; chargeback follows an agreed internal accounting rule.
 
----
+### Compute and commitments
 
-### 5. Compute Cost Optimization
+Rightsize using CPU, memory, I/O, network and latency evidence, then evaluate the hourly floor. [[AWS/cost-management/ec2-cost-optimization|Scheduling and Spot]] require availability, restart and interruption design. Stopped resources can retain storage/IPv4 charges.
 
-```
-EC2 Cost Optimization
-├─ Right-sizing
-│  ├─ CloudWatch metrics
-│  ├─ Compute Optimizer
-│  └─ Idle resource detection
-├─ Auto Scaling
-│  ├─ Predictive scaling
-│  ├─ Scheduled scaling
-│  └─ Mixed instance policies
-├─ Spot + On-Demand + RI mix
-│  ├─ Baseline vs burst capacity
-│  ├─ Fault-tolerant workloads
-│  └─ Spot interruption handling
-├─ AMI & instance lifecycle
-│  ├─ Zombie instances
-│  └─ Orphaned resources
-└─ Graviton (ARM) cost trade-offs
-```
+[[AWS/cost-management/reserved-instances|RI utilization]] measures purchased benefit use, not guest CPU. [[AWS/cost-management/savings-plans|Savings Plans]] commit discounted-rate dollars/hour with no rollover. High coverage can coexist with idle commitments. Capacity Reservations address availability separately from discount choice.
 
----
+### Storage and databases
 
-### 6. Storage Cost Optimization
+[[AWS/cost-management/s3-cost-optimization|Object-storage economics]] depends on object size, class, retrieval, minimum duration, versions and replication. [[AWS/cost-management/ebs-cost-optimization|Block storage]] bills provisioned size/performance, not files used. [[AWS/cost-management/efs-cost-optimization|File storage]] adds throughput/access and availability choices.
 
-```
-Storage Costs
-├─ S3 Cost Management
-│  ├─ Storage classes
-│  │  ├─ Standard
-│  │  ├─ Intelligent-Tiering
-│  │  ├─ IA / One Zone-IA
-│  │  ├─ Glacier / Deep Archive
-│  ├─ Lifecycle policies
-│  ├─ Data retrieval costs
-│  └─ Cross-region replication costs
-├─ EBS Optimization
-│  ├─ gp2 vs gp3
-│  ├─ io1/io2 trade-offs
-│  ├─ Unattached volumes
-│  └─ Snapshot storage & retention
-├─ EFS
-│  ├─ Standard vs IA
-│  └─ Lifecycle transitions
-└─ Backup cost management
-   ├─ AWS Backup plans
-   ├─ Retention policies
-   └─ Cross-account backups
-```
+[[AWS/cost-management/rds-cost-optimization|Relational databases]] need query, engine/license, replica and storage evidence. [[AWS/cost-management/dynamodb-cost-optimization|DynamoDB]] needs item-size, consistency, index and request-unit modeling; fewer returned fields do not automatically mean fewer billed reads. A cheaper managed target can fail compatibility or increase migration effort.
 
----
+### Network, serverless and monitoring
 
-### 7. Database Cost Optimization
+[[AWS/cost-management/network-cost-optimization|Network cost]] is a directed path calculation with service-specific exemptions. NAT, TGW, PrivateLink and internet transfer are distinct charges. Multi-AZ resilience is not disposable simply because same-AZ communication is cheaper.
 
-```
-Database Costs
-├─ RDS
-│  ├─ Instance sizing
-│  ├─ Multi-AZ cost impact
-│  ├─ Read replicas vs scaling up
-│  ├─ Storage auto-scaling costs
-│  └─ RI coverage
-├─ Aurora
-│  ├─ Serverless v1 vs v2
-│  ├─ Storage auto-growth model
-│  └─ Replica vs Multi-AZ trade-offs
-├─ DynamoDB
-│  ├─ On-Demand vs Provisioned
-│  ├─ Auto scaling
-│  ├─ Reserved capacity
-│  └─ DAX cost justification
-└─ ElastiCache
-   ├─ Node sizing
-   └─ RI usage
-```
+[[AWS/cost-management/lambda-cost-optimization|Lambda]] charges memory-duration and requests, with feature-specific allocation/execution costs. VPC ENIs do not have a separate Lambda hourly fee; local private RDS access is not inherently NAT traffic. Benchmark memory rather than always minimizing it.
 
----
+Budgets address objectives, CAD unexpected patterns, operational alarms workload behavior. All billing-based tools have latency. [[AWS/cost-management/cost-automation|Automation]] needs owner approval, dependencies, protection, bounded scope and a recovery plan.
 
-### 8. Network & Data Transfer Costs (EXAM FAVORITE)
+## Scenario reasoning and calculations
 
-```
-Networking Costs
-├─ Data Transfer
-│  ├─ AZ-to-AZ costs
-│  ├─ Inter-region costs
-│  ├─ Internet egress
-│  └─ VPC peering vs Transit Gateway
-├─ NAT Gateway
-│  ├─ Per-hour cost
-│  ├─ Per-GB processing cost
-│  └─ NAT vs Gateway Load Balancer
-├─ Load Balancers
-│  ├─ ALB LCU pricing
-│  ├─ NLB vs ALB cost model
-│  └─ Idle LBs
-├─ CloudFront
-│  ├─ Caching strategies
-│  ├─ Origin fetch reduction
-│  └─ Regional edge caches
-└─ Private connectivity
-   ├─ VPC Endpoints
-   ├─ PrivateLink
-   └─ Direct Connect trade-offs
-```
+A development team proposes a commitment for resources running only 220 of 720 monthly hours. For hypothetical us-east-1 study inputs on 2026-10-12, assume \$1/hour On-Demand and \$0.70/hour committed: \$220 usage versus \$504 commitment. The nominal discount loses unless other eligible hourly usage can consume the commitment. Scheduling does not cancel the fixed obligation.
 
----
+A migration proposes cheaper database storage but requires a new engine, dual-running capacity and conversion of stored procedures. Compare one-time conversion/parallel cost with recurring savings over a realistic horizon. For an illustrative \$6,000 change and \$500/month avoidable net savings, simple payback is 12 months, before financing and risk. Reject the change if the application will retire in six months or compatibility is unproven.
 
-### 9. Serverless Cost Optimization
+A large bill increase requires attribution before cleanup: determine account/service/usage type, selected metric, purchase timing and owner. Preserve backups and data, choose a reversible optimization and measure subsequent billing against an equivalent baseline.
 
-```
-Serverless Costs
-├─ Lambda
-│  ├─ Memory vs duration trade-off
-│  ├─ Provisioned concurrency
-│  ├─ Cold start cost implications
-│  └─ VPC Lambda cost traps
-├─ API Gateway
-│  ├─ REST vs HTTP API pricing
-│  └─ Caching costs
-├─ Step Functions
-│  ├─ Standard vs Express
-│  └─ State transition pricing
-└─ Event-driven architecture cost analysis
-```
+## Practice
 
----
+For a supplied bill, identify one ownership gap, one avoidable usage item and one commitment risk. Explain the evidence, rejected alternative and safe validation step. Use the service cost notes for item-size, GB-second and traffic-path calculations.
 
-### 10. Monitoring, Alerts & Automation
+## References
 
-```
-Cost Controls & Automation
-├─ Cost Anomaly Detection
-├─ Budget alerts → SNS → Slack / Email
-├─ Lambda auto-cleanup
-│  ├─ Stop idle EC2
-│  ├─ Delete unattached EBS
-│  └─ Expire old snapshots
-├─ Scheduled shutdowns
-└─ CI/CD guardrails for cost
-```
-
----
-
-### 11. Migration & Architecture Trade-offs
-
-```
-Cost-Aware Architecture Decisions
-├─ Lift-and-shift vs re-architecture
-├─ Multi-region vs single-region
-├─ Active-active vs active-passive DR
-├─ Managed services vs self-managed
-└─ Build vs buy cost evaluation
-```
-
----
-
-### 12. Exam-Style Scenario Thinking
-
-```
-How AWS Tests Cost Knowledge
-├─ “Cheapest long-term option” vs flexibility
-├─ “Minimize operational overhead” vs raw cost
-├─ Enterprise-scale RI/SP planning
-├─ Cost + compliance + performance trade-offs
-└─ Multi-account governance scenarios
-```
-
----
-
-#### How I’d recommend you study this (based on your background)
-
-- You already have **deep AWS experience**, so:
-  - Focus on **RI vs Savings Plan edge cases**
-  - **Network & data transfer costs**
-  - **Governance via SCPs and tagging**
-- Practice **architecture questions**, not definitions.
-
-If you want, I can next:
-
-- Convert this into a **1-week SAP cost-optimization study plan**
-- Or give **10 brutal SAP-C02 cost-optimization scenario questions**
-- Or map **each topic → typical exam trick**
-
-Just tell me 👍
+- [Cost Management capabilities](https://docs.aws.amazon.com/cost-management/latest/userguide/what-is-costmanagement.html)
+- [Cost optimization framework](https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html)
+- [Current Free Tier cohorts](https://aws.amazon.com/free/free-tier-faqs/)
 
 ## Across the wiki
 

@@ -1,172 +1,90 @@
 ---
 title: EC2 Cost Optimization
-description: EC2 cost optimization — right-sizing, Spot instances, mixed policies, Auto Scaling, Graviton, zombie resources, and Compute Optimizer
+description: Billing models, trade-offs, safe workflows and scoped examples for ec2 cost optimization.
 tags:
-  - aws
-  - cost-management
-  - compute
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # EC2 Cost Optimization
 
-EC2 is the largest single cost line for most AWS workloads. Optimizing EC2 spend means understanding the relationship between instance types, purchasing models, scaling behavior, and actual resource utilization.
+Price exercises use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, not current tariffs, unless explicitly identified as a dated published fee.
 
-## Right-Sizing
+Right-size first, then choose [[AWS/cost-management/pricing-models|purchasing options]]. A discounted oversized instance is still wasteful.
 
-The most common source of EC2 waste is over-provisioned instances — buying t3.xlarge when t3.large would handle the load. Right-sizing means matching instance capacity to actual workload requirements.
+## Evidence for rightsizing
 
-**How to identify over-sized instances:**
+Measure peak and percentile CPU, memory, network, storage IOPS/throughput, latency and burst behavior across representative business cycles. CPU averages alone can hide saturation. EC2 detailed monitoring improves metric frequency; it does **not** collect guest memory. Use the CloudWatch agent or a supported integration for memory and include metric charges.
 
-- CloudWatch metrics: `CPUUtilization`, `NetworkIn`, `NetworkOut`, `VolumeReadOps`
-- Compute Optimizer: AWS's ML-based recommendation engine. It analyzes CloudWatch data and tells you "you're using 40% of your t3.xlarge, a t3.large would handle it"
-- CloudWatch Contributor Insights: Top contributors to CPU across your fleet
+Compute Optimizer requires at least 30 hours of EC2 metric data in the preceding 14 days, rather than a universal 14-day waiting period. Enhanced settings and resource types have additional requirements. Savings estimation mode can incorporate account-specific discounts; do not assume recommendations always ignore commitments.
 
-**Typical over-size patterns:**
+Evaluate architecture/AMI support before adopting Graviton. Benchmark licensing, dependencies and performance rather than promising a universal savings percentage. Burstable instances can accrue surplus-credit charges.
 
-- Database servers with 32 vCPU because "we might need it" but running at 15% average
-- Application servers with 64GB RAM because the team always spec'd it that way, actual usage is 20GB
-- CI/CD agents that run 30 minutes of work then sit idle for 23.5 hours
+## Capacity strategy
 
-**Right-sizing formula:**
+Keep reliable baseline capacity across the required AZs. Use diversified Spot pools for interruptible workers, with checkpoints and interruption handling; a low Spot price is not a capacity guarantee. Auto Scaling must use workload-appropriate metrics and account for warm-up, quotas and downstream bottlenecks.
 
-```
-Current: t3.xlarge (4 vCPU, 16GB) @ $0.192/hour
-Target: t3.large (2 vCPU, 8GB) @ $0.096/hour
-Savings: $0.096/hour × 24 × 30 = $69/month per instance
-```
+Apply commitments to the post-rightsizing hourly floor. ASG replacement instances can receive matching RI benefits; replacement is not consumption of an RI token. Capacity Reservations and billing discounts solve different problems.
 
-## Auto Scaling
+## Scheduling example
 
-Auto Scaling is the primary mechanism for matching EC2 capacity to demand. Three types:
+Assume 50 development instances, a 30-day month and 22 workdays, running 10 hours each workday:
 
-**Target tracking:** Maintain a metric at a target value. Example: keep CPU at 50%. ASG automatically adds/removes instances to keep CPU at target.
+- Always on: 50 × 720 = 36,000 instance-hours.
+- Scheduled: 50 × 220 = 11,000 instance-hours.
+- Avoided running hours: 25,000; at an assumed \$0.192/hour, \$4,800.
 
-**Step scaling:** Add/remove instances in steps based on alarm thresholds. More control than target tracking, less complexity than scheduled.
+This is gross compute avoidance, not guaranteed net savings. EBS, networking, scheduler overhead and unused commitments remain. Stopping a fleet covered by fixed hourly commitments might not lower the invoice.
 
-**Scheduled scaling:** Predictable patterns (Monday morning traffic spike, end-of-month batch job). Schedule scaling actions in advance.
+## Review checklist
 
-**Predictive scaling (Compute Optimizer):** ML-based. Analyzes historical traffic patterns and schedules capacity before demand arrives. Good for consistent diurnal patterns.
+Record owner, SLO, measured bottleneck, candidate size and rollback criteria. Check stopped instances' attached storage, public IPv4 and load-balancer costs separately. Never terminate resources based only on a low CPU threshold.
 
-**Mixed instance policies:** Combine On-Demand with Spot in a single ASG:
+## Scaling policy comparison
 
-```json
-{
-  "InstanceDistribution": {
-    "OnDemandPercentageAboveBaseThreshold": 20,
-    "SpotAllocationStrategy": "capacity-optimized"
-  }
-}
-```
+| Policy          | Suitable signal                                      | Caution                                                  |
+| --------------- | ---------------------------------------------------- | -------------------------------------------------------- |
+| Target tracking | Proportional load such as CPU or requests per target | Metric must track capacity demand                        |
+| Step scaling    | Explicit alarm bands                                 | Tune steps, warm-up and oscillation                      |
+| Scheduled       | Known business/batch schedule                        | Timezone and exceptions matter                           |
+| Predictive      | Recurring patterns with sufficient history           | Validate forecast; not a Compute Optimizer resizing mode |
 
-- 20% of instances are On-Demand (covers baseline)
-- 80% are Spot (covers bursty traffic)
-- ASG launches Spot from the most available capacity pools
+An ASG mixed-instance policy specifies `InstancesDistribution` (plural), an On-Demand base capacity and a percentage **above** that base. A value of 20% above the base does not mean exactly 20% of the whole fleet is On-Demand. Check allocation strategy, compatible instance overrides, launch template architecture and weighted capacity.
 
-## Spot Instances
+## Right-sizing worked example
 
-Spot can reduce EC2 cost by 60-90% vs On-Demand. The key is designing for interruption.
+Assume twelve compatible workers run all 8,760 hours/year. Hypothetical us-east-1 prices for this 2026-10-12 study exercise are \$0.384/hour currently and \$0.192/hour after resizing:
 
-**Interruption handling options:**
-
-- `terminate` — shut down, lose state
-- `stop` — stop, resume later (persistent capacity in capacity-optimized pools)
-- `hibernate` — write memory to EBS root volume, stop, resume with state intact
-
-**Spot Fleet vs ASG:** ASG with Spot mixed instances is the modern approach. Spot Fleet is older — useful for batch workloads that don't need ASG features.
-
-**Capacity-optimized allocation:** ASG uses `capacity-optimized` to automatically pick the pools with most capacity available, reducing interruption frequency.
-
-**Use cases for Spot:**
-
-- Batch processing (Hadoop, Spark, ML training)
-- CI/CD build agents
-- Web servers behind a load balancer that can tolerate 2-minute interruption
-- Stateless microservices
-
-**Avoid for:**
-
-- Databases
-- Anything with state that can't be restored quickly
-- Workloads requiring guaranteed availability
-
-## Graviton (ARM)
-
-AWS Graviton3 processors deliver better price-performance than Intel/AMD for many workloads:
-
-- ~20% better performance per dollar for web servers
-- ~40% better performance per dollar for distributed databases
-- Lower power consumption, better perf/watt
-
-**Requirements:**
-
-- Application must support ARM64 (most modern compiled languages do: Go, Rust, Node.js, Python, Java)
-- AMI must be ARM64 (not all vendor AMIs have ARM variants)
-- Some instance types only available as Graviton (M7g, C7g, R7g)
-
-**Migration path:** Start with new workloads on Graviton. For existing workloads, re-platform gradually. Many teams run dual-architecture AMIs and route traffic based on performance results.
-
-## Reserved Instance Strategy for EC2
-
-**Baseline + Burst pattern:**
-
-```
-Baseline: 40 x m6i.large covered by 3-year All-Upfront RI @ $0.096/hour = $3.84/hour
-Burst: Up to 100 instances covered by On-Demand/Spot @ $0.144/hour = $8.64/hour
-Total capacity: 40 baseline + 60 burst = 100 instances
+```text
+gross yearly avoidance = 12 × ($0.384 − $0.192) × 8,760
+                       = $20,183.04
 ```
 
-This covers always-on baseline at maximum discount, handles bursts with On-Demand/Spot, and avoids over-buying RIs for variable load.
+Do not invent incorrect vCPU/RAM attributes to justify the resize. Measure peak memory, CPU, EBS/network bandwidth and user latency, and test an actual candidate type. Gross avoidance may not become invoice savings if reservations remain unused; discount-aware estimates and normalized-unit eligibility matter.
 
-## Zombie Resources
+Lowering an ASG maximum from 20 to 10 does not itself save money when only eight instances run. It changes the allowed ceiling and can cap recovery/peak capacity. Validate this as a reliability/control decision, not a guaranteed \$3,500 monthly reduction.
 
-Resources that exist but are no longer used, still costing money:
+## Graviton migration and idle-fleet lab
 
-**EC2 instances:**
+Build/test an ARM64 artifact and AMI, check native libraries and vendor agents, and compare equivalent workload throughput and tail latency with the x86 candidate. Keep rollback artifacts. Avoid a universal 20%/40% savings promise.
 
-- Development instances left running on weekends
-- Old test environments after project completion
-- `stopped` instances retain EBS volumes — still charged
-- Failed ASG instances that didn't terminate cleanly
+Inventory running instances read-only:
 
-**EBS volumes:**
+```bash
+aws ec2 describe-instances --region us-east-1 \
+  --filters Name=instance-state-name,Values=running \
+  --query 'Reservations[].Instances[].{Id:InstanceId,Type:InstanceType,Launched:LaunchTime,Tags:Tags}' \
+  --output json
+```
 
-- Unattached volumes (orphaned after instance termination)
-- Old snapshots from deleted instances
-- AMIs not cleaned up after instance type changes
+Requires AWS CLI and authorized DescribeInstances access. Old launch time is not evidence of waste; obtain owner, usage and dependency evidence. Include stopped-instance EBS, snapshots, IPv4 and load balancers in the review.
 
-**Detection:** `aws ec2 describe-instances --filter "Name=instance-state-name,Values=running"` and look for instances with old launch times that should have been terminated.
-
-AWS Instance Scheduler solution (AWS Solutions) automates stopping/starting instances on schedules using CloudWatch Events + Lambda.
-
-## Compute Optimizer
-
-AWS Compute Optimizer analyzes CloudWatch metrics and recommends:
-
-- Right-sizing (instance type downgrades/upgrades)
-- Memory utilization (for instances with CloudWatch detailed monitoring)
-- Auto Scaling group recommendations
-
-Recommendations come with confidence scores. High confidence = good data. Low confidence = not enough history.
-
-**Limitation:** Compute Optimizer doesn't account for your RI/SP commitments — it just recommends based on current utilization. You still need to decide whether to act on recommendations given your existing commitments.
+- [Mixed instance policies](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-mixed-instances-groups.html)
+- [DescribeInstances contract](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/ec2/cost-optimization/
-- **Documentation:** https://docs.aws.amazon.com/compute-optimizer/latest/ug/what-is-compute-optimizer.html
-- **Pricing:** https://aws.amazon.com/ec2/cost-optimization/
-
-## Pricing Examples
-
-**Scenario 1:** A production workload running 12 m5.2xlarge instances (32 vCPU, 128GB RAM each). Compute Optimizer analysis shows actual average CPU is 18% and memory is 45%. Recommendation: downsize to m5.xlarge (16 vCPU, 64GB). Annual savings: 12 × ($0.384 - $0.192) × 24 × 365 = $20,000/year. After RI purchase for the right-sized instances: ~$15,000/year net savings.
-
-**Scenario 2:** An auto scaling group for a web application has a minimum of 4 instances and maximum of 20. Compute Optimizer recommends the current m5.large instances are appropriately sized but the ASG's max count is 3x higher than needed (actual peak is 8 instances). Reducing max from 20 to 10 prevents runaway scaling during load tests. Estimated savings from preventing over-scaling: ~$3,500/month during peak testing periods.
-
-## Nuggets & Gotchas
-
-- **Compute Optimizer recommendations are not automatic:** You can enable auto-scaling recommendations but the actual instance changes still need to be initiated by you. There's no auto-apply without explicit opt-in.
-- **Right-sizing doesn't account for RI/SP commitment overlap:** If you downsize from m5.2xlarge to m5.xlarge and you have existing RIs for m5.2xlarge, you may be paying for capacity you're no longer using while also paying for the new smaller instances. Plan the transition carefully.
-- **Memory metrics require CloudWatch detailed monitoring (paid):** By default, EC2 sends basic metrics (CPU, network) every 5 minutes. Memory and disk metrics require the CloudWatch Agent installed and detailed monitoring enabled ($0.015/instance/hour).
-- **Compute Optimizer has a 14-day lookback minimum:** Recommendations are based on at least 14 days of utilization data. During the first two weeks of a new deployment, you won't get recommendations.
-- **ASG recommendations assume the current launch template is fixed:** It recommends instance types that are compatible with your current launch template. If you want to switch to Graviton, you need to update the launch template first.
+- [Compute Optimizer requirements](https://docs.aws.amazon.com/compute-optimizer/latest/ug/requirements.html)
+- [Account-discount savings estimation](https://docs.aws.amazon.com/compute-optimizer/latest/ug/activate-savings-estimation-mode.html)
+- [EC2 monitoring metrics](https://docs.aws.amazon.com/autoscaling/ec2/userguide/enable-as-instance-metrics.html)
+- [EC2 pricing](https://aws.amazon.com/ec2/pricing/)

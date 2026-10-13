@@ -2,273 +2,166 @@
 title: AWS AppSync
 description: AWS AppSync — managed GraphQL API with real-time subscriptions. Schema, resolvers (VTL/Lambda), DynamoDB integration, Cognito auth, and subscription filtering.
 tags:
-  - aws
-  - application-integration
-  - appsync
-  - graphql
-date: 2026-06-06
+  - aws/application-integration
+date: 2026-10-12
 ---
 
 # AWS AppSync
 
-AppSync is a managed GraphQL service. You define a schema, attach resolvers (to DynamoDB, Lambda, etc.), and AppSync handles the API, real-time subscriptions, and authentication. Clients can query, mutate, and subscribe to data changes.
+Prerequisites: [[AWS/security/iam/README|scoped IAM roles]] and [[AWS/monitoring/README|delivery/processing observability]].
 
-## Core Concepts
+AppSync provides managed GraphQL APIs and separate Event APIs for realtime messaging. A schema is not an authorization model: enforce identity and tenant boundaries at resolvers and data access.
 
-```
-Client (Web/Mobile)
-  │
-  ├──► GraphQL Query ──────────────► AppSync API
-  │                                    │
-  ├──► GraphQL Mutation ───────────► │ Resolvers
-  │                                    │   │
-  └──► GraphQL Subscription ◄─────────│   ▼
-                                      │ DynamoDB / Lambda / HTTP
-                                      ▼
-                                  Real-time (WebSocket)
-```
+## GraphQL model
 
-## Creating an API
+Resolvers connect schema fields to data sources (or NONE for local transformations). AppSync JavaScript and VTL are separate runtimes; choose one deliberately. Authentication can use IAM, Cognito user pools, OIDC, Lambda authorizers or API keys under their documented compatibility rules. API keys suit controlled demos, not user authorization.
 
-```bash
-# Create AppSync API
-aws appsync create-graphql-api \
-  --name my-api \
-  --authentication-type API_KEY
+Subscriptions are coupled to mutations and selection sets: fields absent from the mutation result cannot magically appear at subscribers. Enhanced subscription filters execute server-side and can use identity/context; when enhanced filtering is defined it takes precedence over basic filtering as documented. A WebSocket can carry multiple subscriptions; do not assume one connection per field.
 
-# Get API ID and endpoint
-aws appsync get-graphql-api --api-id xxxxxxxx
+## Complete console sandbox
 
-# Create API key (if using API_KEY auth)
-aws appsync create-api-key --api-id xxxxxxxx
+Prerequisites: a sandbox role able to create/delete AppSync APIs, schemas, data sources and resolvers. No database, Lambda or data-source service role is required for a NONE data source.
+
+1. Create a GraphQL API named wiki-lab with API-key authentication, explicitly set a short expiry and retain its endpoint/key securely.
+2. Install this schema:
+
+```graphql
+type Query {
+  echo(message: String!): String!
+}
+schema {
+  query: Query
+}
 ```
 
-## Schema Definition
+3. Create a data source named Local of type NONE. Attach a UNIT resolver to Query.echo using runtime APPSYNC_JS version 1.0.0 and this complete code:
+
+```javascript
+export function request(ctx) {
+  return { payload: ctx.args.message };
+}
+export function response(ctx) {
+  return ctx.result;
+}
+```
+
+4. In the console query editor, run `query { echo(message: "hello") }` with the configured API key. Expected data.echo is hello. Invoke without a key in an unauthenticated test client and expect authorization failure; the console's logged-in context is not sufficient to test anonymous access.
+5. Delete the API and verify its key/endpoint no longer authorize requests. No external data source was provisioned, so there is no hidden database cleanup.
+
+Before production replace the demo authentication with identity-aware authorization, test unauthorized tenant/field access, and add backend-role policies, structured errors/logging, resolver limits and tracing. API-key lifetimes and request timeouts are quota/contract-specific, not universal adjustable promises.
+
+## Cost model
+
+GraphQL query/data-modification operations currently start at \$4 per million under the owning rate table, not \$0.004 or separate invented mutation tariffs. At that illustrative rate, one million queries plus one million mutations cost \$8 before discounts/allowances. Realtime updates, connection-minutes, caching, data transfer and Event API operations have different dimensions. Confirm Region, date and operation type before projecting costs.
+
+## Schema, resolver and authorization architecture
+
+```text
+client query/mutation → authentication → field resolver
+                                         ├─ NONE transformation
+                                         ├─ DynamoDB + narrow data-source role
+                                         ├─ Lambda + invoke permission
+                                         └─ supported HTTP/other data source
+mutation result → selected subscription fields → authorized subscribers
+```
+
+| Layer               | Defines                              | Does not automatically provide               |
+| ------------------- | ------------------------------------ | -------------------------------------------- |
+| Schema              | Types, operations and relationships  | Tenant authorization or database indexes     |
+| Resolver            | Request/response and business checks | Infinite pagination or implicit transactions |
+| Data source role    | Supported backend AWS access         | Permission for every end-user object         |
+| Authentication      | Caller identity/token validity       | Field/resource ownership                     |
+| Subscription filter | Which matching results are delivered | Permission to mutate the source data         |
+
+## Order schema and subscription coupling
+
+This complete teaching schema extends the NONE demo concept; it requires real resolvers before it works as a persistence API. All values are synthetic.
 
 ```graphql
 type Order {
   orderId: ID!
   customerId: ID!
-  total: Float!
-  status: OrderStatus!
-  createdAt: AWSDateTime!
+  status: String!
+  updatedAt: AWSDateTime!
 }
-
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-}
-
-type Query {
-  getOrder(orderId: ID!): Order
-  listOrders(customerId: ID!, limit: Int, nextToken: String): OrderConnection
-}
-
-type Mutation {
-  createOrder(customerId: ID!, total: Float!): Order
-  updateOrderStatus(orderId: ID!, status: OrderStatus!): Order
-}
-
-type Subscription {
-  onOrderStatusChanged(orderId: ID): Order
-}
-
 type OrderConnection {
   orders: [Order!]!
   nextToken: String
 }
-```
-
-## DynamoDB Resolvers
-
-### Create Data Source
-
-```bash
-# Create DynamoDB table data source
-aws appsync create-data-source \
-  --api-id xxxxxxxx \
-  --name orders-table \
-  --type AMAZON_DYNAMODB \
-  --dynamodb-config '{
-    "tableName": "Orders",
-    "region": "us-east-1"
-  }' \
-  --service-role-arn arn:aws:iam::123456789012:role/appsync-role
-```
-
-### Resolver (VTL Template)
-
-**Query - getOrder:**
-
-```vtl
-## request
-{
-  "version": "2017-02-28",
-  "operation": "GetItem",
-  "key": {
-    "orderId": {"S": "$context.arguments.orderId"}
-  }
+type Query {
+  getOrder(orderId: ID!): Order
+  listOrders(customerId: ID!, limit: Int, nextToken: String): OrderConnection
 }
-
-## response
-#if($ctx.result)
-  $util.toJson($ctx.result)
-#else
-  $util.error("Order not found", "NotFound")
-#end
-```
-
-**Query - listOrders (Paginated):**
-
-```vtl
-## request
-{
-  "version": "2017-02-28",
-  "operation": "Query",
-  "query": {
-    "expression": "customerId = :customerId",
-    "expressionValues": {
-      ":customerId": {"S": "$context.arguments.customerId"}
-    }
-  },
-  "limit": #if($context.arguments.limit) $context.arguments.limit #else 20 #end,
-  "nextToken": #if($context.arguments.nextToken) "$context.arguments.nextToken" #else null #end
-}
-
-## response
-{
-  "orders": $util.toJson($ctx.result.items),
-  "nextToken": #if($ctx.result.nextToken) "$ctx.result.nextToken" #else null #end
-}
-```
-
-**Mutation - createOrder (with auto-ID and timestamp):**
-
-```vtl
-## request
-#set($orderId = $util.autoId())
-#set($createdAt = $util.time.nowISO8601())
-{
-  "version": "2017-02-28",
-  "operation": "PutItem",
-  "key": {"orderId": {"S": "$orderId"}},
-  "attributeValues": {
-    "orderId": {"S": "$orderId"},
-    "customerId": {"S": "$context.arguments.customerId"},
-    "total": {"N": "$context.arguments.total"},
-    "status": {"S": "PENDING"},
-    "createdAt": {"S": "$createdAt"}
-  }
-}
-
-## response
-$util.toJson($ctx.result)
-```
-
-## Lambda Resolvers
-
-```python
-def handler(event, context):
-    # event['arguments'] = query/mutation arguments
-    # event['identity'] = caller info (Cognito, API key, etc.)
-
-    if event['info']['fieldName'] == 'recommendProducts':
-        customer_id = event['arguments']['customerId']
-        return get_recommendations(customer_id)
-
-    return None
-```
-
-## Authentication
-
-### Cognito User Pools
-
-```bash
-aws appsync create-graphql-api \
-  --name my-api \
-  --authentication-type AMAZON_COGNITO_USER_POOLS \
-  --user-pool-config '{
-    "userPoolId": "us-east-1_xxxxx",
-    "defaultAction": "ALLOW",
-    "awsRegion": "us-east-1"
-  }'
-```
-
-### API Key (dev/test)
-
-```bash
-aws appsync create-api-key --api-id xxxxxxxx
-```
-
-## Real-time Subscriptions
-
-```graphql
-# Client subscribes to order status changes
-subscription OnOrderStatusChanged($orderId: ID) {
-  onOrderStatusChanged(orderId: $orderId) {
-    orderId
-    status
-    updatedAt
-  }
-}
-```
-
-### Subscription Filtering
-
-```vtl
-## In the mutation resolver (publish to subscriptions)
-{
-  "version": "2017-02-28",
-  "payload": $util.toJson($ctx.result)
-}
-```
-
-Subscriptions filter by the resolved payload. Use `@aws_subscribe` directive:
-
-```graphql
 type Mutation {
-  updateOrderStatus(orderId: ID!, status: OrderStatus!): Order
+  updateOrderStatus(orderId: ID!, status: String!): Order
+}
+type Subscription {
+  onOrderStatusChanged(orderId: ID!): Order
     @aws_subscribe(mutations: ["updateOrderStatus"])
 }
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
 ```
 
-## Pricing
+The directive belongs to the **subscription** field, not the mutation field. The mutation's selection set must supply fields needed by subscribers; request orderId/customerId/status/updatedAt and test missing/null behavior. Basic argument filtering and enhanced subscription-resolver filtering have different precedence. Authorize subscription registration and mutation separately.
 
-| Component               | Cost                   |
-| ----------------------- | ---------------------- |
-| Queries                 | $0.004/million reads   |
-| Mutations               | $0.008/million writes  |
-| Real-time subscriptions | $0.008/million minutes |
-| Data transfer           | Standard EC2 rates     |
+## DynamoDB data source and GetItem resolver
 
-## Limits
+Prerequisites: a disposable table keyed by orderId, scoped AppSync role trusting appsync.amazonaws.com and only required table actions, API ID and current JS runtime. A data-source name uses supported identifier characters; use Orders rather than orders-table.
 
-| Resource               | Limit      |
-| ---------------------- | ---------- |
-| API per region         | 25         |
-| Schema size            | 600KB      |
-| Resolver timeout       | 30 seconds |
-| Lambda resolver memory | 10240MB    |
+```bash
+aws appsync create-data-source --api-id API_ID --name Orders \
+  --type AMAZON_DYNAMODB --service-role-arn APPSYNC_ROLE_ARN \
+  --dynamodb-config '{"tableName":"WikiOrders","awsRegion":"us-east-1"}'
+```
+
+Attach this APPSYNC_JS resolver to Query.getOrder (replace account/Region/table setup first):
+
+```javascript
+import { util } from "@aws-appsync/utils";
+
+export function request(ctx) {
+  return {
+    operation: "GetItem",
+    key: util.dynamodb.toMapValues({ orderId: ctx.args.orderId }),
+  };
+}
+export function response(ctx) {
+  if (ctx.error) {
+    util.error(ctx.error.message, ctx.error.type);
+  }
+  return ctx.result;
+}
+```
+
+This retrieves synthetic data only; add authoritative identity/ownership checks before serving customer records. A GetItem role on the table does not give all API callers ownership.
+
+listOrders by customerId needs a suitable table key or GSI and explicit IndexName/query expression. Pagination passes AppSync's returned nextToken as an opaque continuation token; it is not a user-controlled DynamoDB key. A customerId query cannot target an orderId-only table without the required access path.
+
+## Lambda/VTL and realtime diagnostics
+
+For Lambda, define the resolver payload explicitly: an event's arguments/identity/info shape is the result of the integration configuration, not a universal Lambda trigger contract. A complete handler needs its referenced helpers and an IAM permission to invoke the exact function. Keep backend failures distinct from GraphQL nullability errors.
+
+VTL request and response templates are separate artifacts; do not paste both into one request file. AppSync JavaScript is not a Node runtime with arbitrary packages/filesystem/network calls.
+
+Test API authentication, field auth, own/other-tenant data, mutation result selection and subscriber filters. Inspect resolver logs with sensitive field redaction, latency/error metrics, data-source throttles and active connection behavior. Remove subscriptions before deleting the disposable API/data source/table, and delete only the dedicated backend role/functions. Realtime bills update fan-out and connection-minutes separately from GraphQL operations.
+
+References: [DynamoDB JS resolvers](https://docs.aws.amazon.com/appsync/latest/devguide/js-resolver-reference-dynamodb.html), [data-source contract](https://docs.aws.amazon.com/cli/latest/reference/appsync/create-data-source.html), [subscription coupling](https://docs.aws.amazon.com/appsync/latest/devguide/aws-appsync-real-time-data.html), [Lambda JS integration](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-reference-lambda-js.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/appsync/
-- **Documentation:** https://docs.aws.amazon.com/appsync/
-- **Pricing:** https://aws.amazon.com/appsync/pricing/
-
-## Nuggets & Gotchas
-
-- **AppSync resolvers timeout after 30 seconds — if your Lambda resolver takes longer, it fails:** For long-running operations (batch processing, ML inference), either use async patterns (start job, poll for result) or increase Lambda timeout and AppSync resolver timeout together.
-- **AppSync VTL templates are DIFFERENT from Velocity templates — don't assume syntax compatibility:** AppSync uses VTL (Velocity Template Language) for resolvers. The syntax `$util.toJson()` and `$context.arguments` are AppSync-specific. VTL debugging is painful — test resolvers in the console first.
-- **AppSync subscriptions use WebSockets — they stay open permanently, consuming connection slots:** Each subscription = 1 persistent WebSocket connection. On mobile, if users have poor connectivity, connections can pile up. Set CloudWatch alarms for connection count.
-- **AppSync API Keys expire after 365 days by default — if they expire, API calls fail silently:** If you're using API_KEY auth and your app breaks, check if the key expired. Use Cognito User Pools or IAM auth for production.
-- **AppSync doesn't support real-time filtering on the server — clients receive all subscription events and filter client-side:** If you need server-side filtering (only notify relevant users), you must implement filtering in your Lambda resolver before returning the payload.
+- [AppSync JavaScript NONE data source](https://docs.aws.amazon.com/appsync/latest/devguide/resolver-reference-none-js.html)
+- [Authorization modes](https://docs.aws.amazon.com/appsync/latest/devguide/security-authz.html)
+- [Enhanced filtering](https://docs.aws.amazon.com/appsync/latest/devguide/aws-appsync-real-time-enhanced-filtering.html)
+- [GraphQL subscription behavior](https://docs.aws.amazon.com/appsync/latest/devguide/aws-appsync-real-time-data.html)
+- [Pricing](https://aws.amazon.com/appsync/pricing/)
 
 ## Across the wiki
 
-- [[Architecture/solution-architecture-concepts/api-design/README|API Design]] — API design and gateways (Architecture)
-- [[Architecture/solution-architecture-concepts/performance/rate-limiting|Rate Limiting Algorithms, Distributed Architecture & HTTP 429]] — API design and gateways (Architecture)
-- [[Architecture/solution-architecture-concepts/software-engineering-concepts/api-error-codes|API Error Codes, HTTP Status Standards & RFC 7807 Problem Details]] — API design and gateways (Architecture)
-- [[Architecture/solution-architecture-concepts/protocols/README|Protocols]] — API design and gateways (Architecture)
+- [[Architecture/solution-architecture-concepts/api-design/README|API Design]]
+- [[Architecture/solution-architecture-concepts/performance/rate-limiting|Rate Limiting Algorithms, Distributed Architecture & HTTP 429]]
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/api-error-codes|API Error Codes, HTTP Status Standards & RFC 7807 Problem Details]]
+- [[Architecture/solution-architecture-concepts/protocols/README|Protocols]]

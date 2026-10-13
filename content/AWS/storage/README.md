@@ -1,129 +1,69 @@
 ---
-title: AWS Storage
-description: AWS storage services — S3 for object storage, EBS for block storage, EFS for network file system, FSx for Windows/Lustre file systems, Glacier for archival, and Storage Gateway for hybrid storage.
+title: "AWS Storage"
+description: "Choose storage by the interface your application requires, then by recovery objectives, access frequency and failure domain."
 tags:
-  - aws
-  - storage
-date: 2026-06-06
+  - aws/storage
+date: 2026-10-12
 ---
 
 # AWS Storage
 
-AWS offers a comprehensive suite of storage services across three categories: **object storage** (S3, Glacier), **block storage** (EBS), and **file storage** (EFS, FSx). Each serves different access patterns and performance requirements.
+Choose storage by the interface your application requires, then by recovery objectives, access frequency and failure domain. A block volume, shared filesystem and object bucket are not interchangeable.
 
-## Service Map
+## Learning path and service selection
 
-| Service                                     | Type   | Access Pattern                 | Common Use                       |
-| ------------------------------------------- | ------ | ------------------------------ | -------------------------------- |
-| [[s3/README\|S3]]                           | Object | HTTP REST API (PUT/GET/DELETE) | Static assets, data lake, backup |
-| [[ebs/README\|EBS]]                         | Block  | EC2 attachment (iSCSI)         | OS disks, databases, app data    |
-| [[efs/README\|EFS]]                         | File   | NFSv4 (mounted as drive)       | Shared file system, CI runners   |
-| [[fsx/README\|FSx]]                         | File   | SMB/NFS (Windows/Lustre)       | Enterprise apps, HPC             |
-| [[glacier/README\|Glacier]]                 | Object | HTTP (via S3 or direct)        | Long-term archive, compliance    |
-| [[storage-gateway/README\|Storage Gateway]] | Hybrid | SMB/NFS/iSCSI                  | On-prem to cloud backup          |
+Start with [[AWS/foundations/README|AWS foundations]], [[AWS/security/iam/README|IAM]] and [[AWS/networking/README|networking]]. Then work through the service matching your workload:
 
-## Storage Hierarchy
+| Lesson                                                                    | Interface and decision                                                                        |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [[AWS/storage/s3/README\|S3]]                                             | Regional buckets, object keys and HTTP APIs; data lakes, assets and durable backups.          |
+| [[AWS/storage/ebs/README\|EBS]]                                           | AZ-scoped block devices for EC2; filesystem/database management remains yours.                |
+| [[AWS/storage/efs/README\|EFS]]                                           | Managed shared NFS; Regional or One Zone durability/failure-domain choices.                   |
+| [[AWS/storage/fsx/README\|FSx]]                                           | Windows SMB, Lustre, OpenZFS or ONTAP, selected for protocol and application compatibility.   |
+| [[AWS/storage/glacier/README\|S3 archival classes]]                       | Object archival chosen by retrieval delay and retention, not a separate filesystem.           |
+| [[AWS/storage/storage-gateway/README\|Storage Gateway]]                   | Local appliance bridges NFS/SMB, iSCSI volumes or virtual tapes to cloud storage.             |
+| [[AWS/storage/ebs/amazon-data-lifecycle-manager\|Data Lifecycle Manager]] | Scheduled EBS snapshots/AMI lifecycle; verify restores rather than only successful schedules. |
 
-```
-Object Storage (S3, Glacier)
-  └── Bucket
-       ├── Object (key-value, no hierarchy)
-       ├── Prefix (logical folder: "logs/2024/")
-       └── Lifecycle rules
+## Architecture decisions
 
-File Storage (EFS, FSx)
-  └── File System
-       ├── Directory
-       └── File
+An EC2 database normally needs EBS or a supported managed database, not S3 mounted as a transparent POSIX disk. Applications sharing Linux files can use EFS; Windows domain integrations suggest FSx for Windows. HPC applications needing parallel file access should evaluate Lustre. Object APIs favor S3.
 
-Block Storage (EBS)
-  └── Volume
-       └── Partition
-            └── File System (ext4, xfs, ntfs)
-```
+S3 Standard buckets are regional; there is no bucket “same AZ” placement knob. One Zone services intentionally have a narrower failure domain. EBS volumes attach in their AZ; cross-AZ recovery uses snapshots/new volumes, not ordinary direct attachment. Stored Volume Gateway keeps primary data on premises and backs it up as cloud snapshots; Cached Volume Gateway uses local cache with primary cloud data.
 
-## Storage Decision Tree
+## Design exercise
 
-```
-Is it attached to a single EC2 instance?
-  YES → EBS (block, high-performance, single attachment)
-  NO ↓
+Given 2 TiB of application data, document the protocol, concurrent writers, acceptable data loss (RPO), recovery time (RTO), encryption ownership and restore path before comparing prices. Compare equal capacity and elapsed time. Include requests, performance provisioning, backup, retrieval and network charges. A cheaper storage rate does not imply a cheaper complete application.
 
-Is it shared across multiple instances?
-  YES → Is it Windows-based?
-      YES → FSx for Windows (SMB, AD integration)
-      NO → Is it high-performance computing (HPC)?
-          YES → FSx for Lustre (parallel, petabyte scale)
-          NO → EFS (NFS, scalable, multi-AZ)
-  NO ↓
+Create a small disposable dataset in your chosen service, deny an unauthorized identity, recover a deleted/test-corrupted copy, and measure restoration time. [[AWS/reliability/backup-and-recovery|Recovery planning]] owns shared RPO/RTO and restore verification. Retention and encryption are not substitutes for a tested backup. Remove sandbox data and chargeable infrastructure afterward; do not weaken production retention to simplify cleanup.
 
-Is it accessed over HTTP?
-  YES → S3 (REST API, global, infinitely scalable)
-  NO ↓
+## Storage hierarchy and application interfaces
 
-Is it long-term archive (months to years)?
-  YES → S3 Glacier (or S3 Glacier Instant Retrieval)
-  NO ↓
-
-Is it a hybrid cloud backup from on-premises?
-  YES → Storage Gateway (File/Snapshot/Tape)
-  NO → Re-evaluate access pattern
+```text
+Object: bucket → key → version / metadata / tags
+File: filesystem → directory → path / POSIX or Windows permissions
+Block: volume → partition → filesystem → application files
+Hybrid: local protocol endpoint → cache/primary data → cloud artifact
 ```
 
-## Architecture Patterns
+These models determine application changes. A backup tool expecting a virtual tape library does not become an S3-native application merely because its tapes ultimately archive in AWS. A relational database expecting a supported block filesystem cannot safely substitute an object-store mount without evaluating semantics.
 
-### Tiered Storage (Hot → Warm → Cold)
+| Question                                     | Direction                       | Follow-up                                                  |
+| -------------------------------------------- | ------------------------------- | ---------------------------------------------------------- |
+| Application speaks HTTP/object APIs?         | S3                              | Key design, IAM, versioning and restore.                   |
+| Single EC2 needs a block device?             | EBS                             | AZ attachment, filesystem, snapshot consistency.           |
+| Linux clients share files?                   | EFS or suitable FSx             | NFS/POSIX, throughput and ownership.                       |
+| Windows/AD filesystem required?              | FSx Windows or applicable ONTAP | SMB and identity/network prerequisites.                    |
+| Parallel HPC I/O?                            | Lustre                          | Client compatibility, deployment and repository semantics. |
+| Local iSCSI/tape/file interface must remain? | Appropriate gateway             | Where primary data lives and outage behavior.              |
 
-```
-S3 Standard         → Frequently accessed (CDN origin, app assets)
-         ↓ lifecycle (30 days)
-S3 IA               → Less frequently accessed (backups, analytics)
-         ↓ lifecycle (90 days)
-S3 Glacier          → Rarely accessed (compliance, legal hold)
-```
+## Tiering versus backup comparison
 
-### Hybrid Cloud Storage
+Moving cold files/objects to a cheaper class is lifecycle optimization, not a second independent copy. Replication can propagate logical changes and requires its own deletion/retention design. A backup should meet a documented restore objective and be protected from the same accidental/malicious change path where required.
 
-```
-On-Premises Data Center
-  └── Storage Gateway (VM)
-        ├── File Mode → S3 (NFS/SMB)
-        ├── Tape Mode → S3 → Glacier (virtual tape library)
-        └── Volume Mode → EBS Snapshots → S3
-              ↓
-        AWS Cloud (S3/Glacier)
-```
-
-## AWS Services Organized by Category
-
-**Object Storage**
-
-- [[s3/README|S3]] — The primary object storage service
-- [[glacier/README|Glacier]] — Long-term archival storage
-
-**Block Storage**
-
-- [[ebs/README|EBS]] — EC2 instance block storage
-
-**File Storage**
-
-- [[efs/README|EFS]] — NFS file system for Linux workloads
-- [[fsx/README|FSx]] — Managed Windows (SMB) and Lustre file systems
-
-**Hybrid Storage**
-
-- [[storage-gateway/README|Storage Gateway]] — Connect on-premises to cloud storage
+Compare both steady-state operation and disaster recovery: protocol correctness, latency, throughput, read/write concurrency, encryption key recovery, copy locality and restore dependency. For a 2-TiB dataset, specify the same units/capacity and timeframe across candidates; add retrieval, requests and bandwidth rather than comparing only advertised storage rates.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/products/storage/
-- **Documentation:** https://docs.aws.amazon.com/storage/
-- **Pricing:** https://aws.amazon.com/pricing/storage/
-
-## Nuggets & Gotchas
-
-- **S3 is object storage, not a file system — you can't mount it as a drive:** Applications expecting POSIX semantics (directory rename, file locking) may not work with S3. Use EFS or FSx for those use cases.
-- **EBS volumes are AZ-specific — they cannot span multiple AZs:** If you need cross-AZ storage, use EFS (NFS) or S3. EBS is a single-AZ resource with 99.999% uptime SLA (not multi-AZ like RDS).
-- **EFS and FSx are network file systems — latency is higher than EBS:** EFS uses NFS over the network, so expect 0.5–2ms additional latency vs local EBS. For latency-sensitive databases, use EBS.
-- **S3 storage class selection is a trade-off between cost and retrieval time:** S3 Standard retrieval: milliseconds. S3 IA retrieval: 1-5ms. S3 Glacier retrieval: 1-12 hours (or 1-5 minutes with expedited). Choose based on access frequency.
-- **Storage Gateway has ongoing bandwidth costs for data transfer:** While the gateway VM is free, data transfer from on-premises to S3 via Storage Gateway costs $0.02–$0.09/GB depending on region. Model bandwidth costs before committing.
+- [AWS storage services and selection overview](https://aws.amazon.com/products/storage/)
+- [S3 storage classes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html)
+- [Storage Gateway volume architecture](https://docs.aws.amazon.com/storagegateway/latest/vgw/StorageGatewayConcepts.html)

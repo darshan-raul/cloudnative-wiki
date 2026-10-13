@@ -1,298 +1,132 @@
 ---
-title: Amazon Timestream
-description: Amazon Timestream — managed time-series database. High write throughput, hot/warm/cold storage tiering, scheduled queries, interpolation, and ML-powered anomaly detection.
+title: "Amazon Timestream"
+description: "Distinguish Timestream for LiveAnalytics from Timestream for InfluxDB."
 tags:
-  - aws
-  - databases
-  - timestream
-  - time-series
-  - iot
-date: 2026-06-06
+  - aws/databases
+date: 2026-10-12
 ---
 
 # Amazon Timestream
 
-Timestream is a managed time-series database optimized for IoT sensor data, application metrics, and operational events. It handles millions of events per second, auto-partitions by time, and offers tiered storage (hot → warm → cold) with automatic data lifecycle management.
+Distinguish Timestream for LiveAnalytics from Timestream for InfluxDB. LiveAnalytics closed to new customers June 20, 2025; existing customers remain supported. InfluxDB is a separate deployment/query/client model, not a replacement CLI namespace for LiveAnalytics. New customers must check eligibility before attempting this lesson's LiveAnalytics workflow.
 
-## Core Concepts
+Prerequisites: [[AWS/architecture/data-store-selection|data-store selection]], [[AWS/security/iam/README|IAM]] and [[AWS/analytics/README|analytics]].
 
-### Time-Series Data
+## LiveAnalytics data and retention
 
-```
-Timestamp          device_id    temperature    humidity    status
-2024-01-15T10:00:00Z  sensor-001    22.5          45         OK
-2024-01-15T10:00:05Z  sensor-001    22.7          45         OK
-2024-01-15T10:00:10Z  sensor-001    23.1          44         OK
-2024-01-15T10:00:00Z  sensor-002    18.2          62         OK
-```
+Records have dimensions, measure values/names and timestamps; multi-measure records can reduce repeated dimensions. Storage has memory and magnetic tiers, not invented warm/cold tiers. Minimum retention is one hour in memory and one day in magnetic storage. Expiry removes data under retention rules; it does not automatically export every expired record to S3.
 
-Each row has a timestamp, measure names (temperature, humidity), and dimensions (device_id).
+Maximum record size is 2 KB and WriteRecords accepts up to 100 records per call. LiveAnalytics lacks SQL UPDATE/DELETE, but WriteRecords supports upserts of the same record identity with a higher Version; “append-only and never modifiable” is inaccurate.
 
-### Table Structure
+## Real API namespaces and query model
 
-| Component   | Description                             |
-| ----------- | --------------------------------------- |
-| Time column | Timestamp (required, indexed)           |
-| Dimensions  | Metadata attributes (device_id, region) |
-| Measures    | Time-series values (temperature, CPU)   |
-| Attributes  | Table-level metadata                    |
-
-### Multi-Measure Records
-
-```sql
-CREATE TABLE device_metrics (
-  device_id VARCHAR,
-  region VARCHAR,
-  temperature DOUBLE,
-  humidity DOUBLE,
-  status VARCHAR
-) WITH (
-  TIME_SERIES = TRUE,
-  PARTITION_KEY = (device_id)
-)
-```
-
-## Storage Tiers
-
-Timestream automatically moves data between tiers:
-
-```
-Hot Store ──────► Warm Store ──────► Cold Store ──────► S3 (optional)
-(< 24 hours)     (24h - 7 days)    (7 - 365 days)    (> 365 days)
-  In-memory        Magnetic          Magnetic
-  $0.018/GB-hr    $0.008/GB-hr      $0.004/GB-hr
-```
-
-You define retention policies per tier. Data automatically moves to the next tier.
-
-## Creating a Database and Table
+Use timestream-write for database/table/write operations and timestream-query for SQL. Table/database names are strings; schema comes from writes rather than invented table-name JSON.
 
 ```bash
-# Create database
-aws timestream create-database \
-  --database-name '{
-    "DatabaseName": "iot-sensors"
-  }' \
-  --tags '[{"Key": "Environment", "Value": "production"}]'
-
-# Create table
-aws timestream create-table \
-  --database-name iot-sensors \
-  --table-name '{
-    "TableName": "device_metrics",
-    "TimeColumnName": "timestamp",
-    "DimensionName": "device_id",
-    "MeasureNameColumnName": "measure_value",
-    "MeasureValueType": "DOUBLE"
-  }' \
-  --retention-properties '{
-    "MemoryStoreRetentionPeriodInHours": "24",
-    "WarmStoreRetentionPeriodInDays": "7",
-    "MagneticStoreRetentionPeriodInDays": "365"
-  }' \
-  --tags '[{"Key": "Environment", "Value": "production"}]'
+aws timestream-write create-database --database-name sandbox_timeseries
+aws timestream-write create-table --database-name sandbox_timeseries \
+  --table-name readings \
+  --retention-properties MemoryStoreRetentionPeriodInHours=1,MagneticStoreRetentionPeriodInDays=1
 ```
 
-## Writing Data
+These CLI v2 commands are for eligible existing LiveAnalytics customers with permissions and a budget. They create chargeable resources; they were not deployed during documentation validation.
 
-### Via Write API
+SQL can aggregate time bins, create supported time-series values, interpolate and use window functions. Scheduled queries materialize supported derived data with configured permissions; do not label them an automatic CSV-to-S3 export. No documented built-in ANOMALY_DETECTION/Random Cut Forest function is assumed here: perform anomaly analysis through explicitly supported SQL or an external ML pipeline.
+
+## Eligible-account exercise
+
+Write a few timestamped readings through WriteRecords, then query one sensor over a bounded time interval. Re-write the same identity with a higher Version and verify the update; a stale/lower version should be rejected according to the contract. Include an unauthorized-identity denial and bounded query/polling limits.
+
+Inspect memory/magnetic retention and expected expiry; do not promise archival preservation. Remove disposable tables/database and any query outputs/roles created for the exercise. New customers should instead follow the owning InfluxDB guide and adapt the exercise to its API, not force LiveAnalytics access.
+
+## Cost and recovery
+
+For 1M records/day × 500 bytes, raw volume is 0.5 decimal GB/day and approximately 15 GB across thirty days, before actual record overhead/retention. Price writes, memory GB-hours, magnetic GB-months and the selected query-capacity model separately; counts of queries alone are not a complete bill. Use [[AWS/reliability/backup-and-recovery|recovery planning]] for durable exports/retention rather than treating expiry as a backup.
+
+## Single-measure data and a valid write
+
+```text
+record identity: dimensions + measure name + timestamp
+record value: typed measure value
+Version: increasing revision for supported upsert
+```
+
+For an eligible LiveAnalytics account, this SDK example writes to the sandbox_timeseries/readings table created earlier. It avoids repeating the same dimension in both record and CommonAttributes.
 
 ```python
-import boto3
 import time
+import boto3
 
-client = boto3.client('timestream-write')
-
-# Single record
-records = [{
-    'Dimensions': [
-        {'Name': 'device_id', 'Value': 'sensor-001'},
-        {'Name': 'region', 'Value': 'us-east-1'}
-    ],
-    'MeasureName': 'temperature',
-    'MeasureValue': '22.5',
-    'MeasureValueType': 'DOUBLE',
-    'Time': str(int(time.time() * 1000)),  # milliseconds
-    'TimeUnit': 'MILLISECONDS'
-}]
-
-client.write_records(
-    DatabaseName='iot-sensors',
-    TableName='device_metrics',
-    Records=records,
-    CommonAttributes={
-        'Dimensions': [
-            {'Name': 'device_id', 'Value': 'sensor-001'}
-        ]
-    }
-)
-```
-
-### Via MQTT (IoT Core)
-
-```
-IoT Sensors → IoT Core (MQTT) → IoT Analytics → Timestream
-```
-
-Use IoT Rules to route MQTT messages to Timestream:
-
-```json
-{
-  "rule": {
-    "sql": "SELECT * FROM 'sensors/+'",
-    "actions": [
-      {
-        "timestream": {
-          "database": "iot-sensors",
-          "table": "device_metrics",
-          "dimensions": [{ "name": "device_id", "value": "${topic()}" }],
-          "measureName": "temperature"
-        }
-      }
-    ]
-  }
+writer = boto3.client("timestream-write")
+record_time = str(time.time_ns() // 1_000_000)  # Capture ONCE for this identity.
+record = {
+    "Dimensions": [{"Name": "device_id", "Value": "sandbox-sensor"}],
+    "MeasureName": "temperature",
+    "MeasureValue": "22.5",
+    "MeasureValueType": "DOUBLE",
+    "Time": record_time,
+    "TimeUnit": "MILLISECONDS",
+    "Version": 1,
 }
+
+def write(reading):
+    return writer.write_records(
+        DatabaseName="sandbox_timeseries", TableName="readings", Records=[reading]
+    )
+
+write(record)
+write({**record, "MeasureValue": "23.0", "Version": 2})
+try:
+    write({**record, "MeasureValue": "99.0", "Version": 1})
+except writer.exceptions.RejectedRecordsException as error:
+    rejected = error.response["RejectedRecords"]
+    assert rejected[0]["RecordIndex"] == 0
+    assert rejected[0]["ExistingVersion"] == 2
+    print("Expected stale revision rejection; Version 2 remains current")
+else:
+    raise AssertionError("Expected stale same-identity revision to be rejected")
+
+sql = f"""SELECT time, measure_value::double AS temperature
+FROM sandbox_timeseries.readings
+WHERE device_id = 'sandbox-sensor' AND measure_name = 'temperature'
+  AND time = from_milliseconds({record_time})"""
+print(sql)  # Run through timestream-query with bounded retries below.
 ```
 
-## Querying
+Keep dimensions, measure name and `record_time` unchanged across all three requests. Re-running the entire block captures a different timestamp and normally creates another record; it does not demonstrate updating the prior record. Query the printed exact-identity SQL and expect temperature 23.0, not 99.0. LiveAnalytics reads are eventually consistent: allow bounded retry/backoff (for example at most five queries over thirty seconds), then report unresolved visibility rather than looping indefinitely. Confirm exactly one identity row, not an average across both versions or all historical readings. The [write/upsert contract](https://docs.aws.amazon.com/timestream/latest/APIReference/API_WriteRecords.html) and [timestamp conversion functions](https://docs.aws.amazon.com/timestream/latest/developerguide/date-time-functions.html) own these behaviors. This SDK sequence is an eligible-account proposal, not an executed AWS lab.
 
-### SELECT
+Writes can return rejected-record information; inspect reasons/indices and do not retry permanently invalid data indefinitely. Multi-measure records have a different shape and query columns, so do not copy single-measure SQL unchanged.
+
+## Query, time-binning and interpolation workflow
+
+Use the time column and measure_value type appropriate to the write model, rather than invented timestamp/temperature columns:
 
 ```sql
-SELECT
-  device_id,
-  CREATE_TIME_SERIES(timestamp, temperature) AS temp_series
-FROM iot-sensors.device_metrics
-WHERE device_id = 'sensor-001'
-  AND timestamp BETWEEN '2024-01-15 10:00:00' AND '2024-01-15 11:00:00'
-GROUP BY device_id
-ORDER BY device_id
+SELECT device_id,
+       bin(time, 5m) AS interval_start,
+       avg(measure_value::double) AS average_temperature
+FROM sandbox_timeseries.readings
+WHERE measure_name = 'temperature'
+  AND time > ago(1h)
+GROUP BY device_id, bin(time, 5m)
+ORDER BY device_id, interval_start;
 ```
 
-### INTERPOLATE (fill gaps)
+For interpolation, first construct a supported time-series value from time plus the measure value, then interpolate over a valid timestamp sequence within bounds. Inspect gaps and sampling frequency before fabricating values; an interpolated sensor series is an analytical estimate, not a raw reading.
 
-Sensors may have missing data points:
+Memory retention provides hot data access and magnetic retention longer-lived data. Scheduled queries can materialize derived tables through configured roles/notifications; their output schema/recovery is a separate design, not automatic S3 archiving. For MQTT, use the current IoT rule-action contract directly if supported; the old IoT Analytics bridge is not a generic current prerequisite.
 
-```sql
-SELECT
-  device_id,
-  INTERPOLATE_LINEAR(
-    CREATE_TIME_SERIES(timestamp, temperature),
-    SEQUENCE('2024-01-15 10:00:00', '2024-01-15 11:00:00', 5m)
-  ) AS filled_series
-FROM iot-sensors.device_metrics
-WHERE device_id = 'sensor-001'
-GROUP BY device_id
-```
+## Monitoring and comparison with InfluxDB
 
-### Window Functions
+Track write/query failures, latency, rejection reasons and capacity/retention behavior through supported telemetry. Watch late/out-of-retention records and the query model actually selected. A metric name invented in an old table is not evidence of availability.
 
-```sql
-SELECT
-  device_id,
-  BIN(timestamp, 5m) AS t,
-  AVG(temperature) AS avg_temp,
-  MAX(temperature) AS max_temp,
-  MIN(temperature) AS min_temp
-FROM iot-sensors.device_metrics
-WHERE timestamp > NOW() - INTERVAL '1' HOUR
-GROUP BY device_id, BIN(timestamp, 5m)
-ORDER BY device_id, t
-```
-
-## Scheduled Queries
-
-Run queries on a schedule, output to S3 or another table:
-
-```bash
-aws timestream create-scheduled-query \
-  --name 'hourly-aggregates' \
-  --database-name iot-sensors \
-  --target-destination '{
-    "TimestreamConfiguration": {
-      "DatabaseName": "iot-sensors",
-      "TableName": "hourly_metrics"
-    }
-  }' \
-  --schedule-configuration '{
-    "ScheduleExpression": "cron(0 * * * ? *)"
-  }' \
-  --query 'SELECT device_id, AVG(temperature) AS avg_temp ...'
-```
-
-## Anomaly Detection (ML)
-
-Timestream ML-powered anomaly detection:
-
-```sql
-SELECT
-  device_id,
-  ANOMALY_DETECTION(temperature) AS anomaly_score
-FROM iot-sensors.device_metrics
-WHERE timestamp > NOW() - INTERVAL '1' DAY
-  AND device_id = 'sensor-001'
-```
-
-This uses Random Cut Forest (RCF) to score each data point. Scores > 2 standard deviations are anomalies.
-
-## Connecting from BI Tools
-
-Timestream integrates with:
-
-- Amazon QuickSight (visualization)
-- Grafana (via Timestream plugin)
-- Tableau (via JDBC driver)
-
-## Monitoring
-
-```bash
-# Key metrics
-# IncomingRecords, IncomingBytes, QueryLatency, StorageUtilization
-
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/Timestream \
-  --metric-name IncomingRecords \
-  --dimensions Name=DatabaseName,Value=iot-sensors
-```
-
-## Pricing
-
-| Component       | Cost                 |
-| --------------- | -------------------- |
-| Write (records) | $0.50 per million    |
-| Hot storage     | $0.018/GB-hour       |
-| Warm storage    | $0.008/GB-hour       |
-| Cold storage    | $0.004/GB-hour       |
-| Query (Compute) | $0.01 per GB scanned |
-| Scheduled query | $0.008 per query     |
-
-## Limits
-
-| Resource                  | Limit        |
-| ------------------------- | ------------ |
-| Max record size           | 1 MB         |
-| Max dimensions per table  | 128          |
-| Max attributes per record | 1,024        |
-| Max query timeout         | 60 seconds   |
-| Max results               | 100,000 rows |
-| Max concurrent queries    | 10           |
+InfluxDB has different engine/provisioning/client/backup responsibilities. Evaluate API/language compatibility, network/auth, retention and cost separately rather than presenting two products as storage tiers of one database. New customers should use the supported eligible product workflow, while the LiveAnalytics example remains explicitly existing-customer scoped.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/timestream/
-- **Documentation:** https://docs.aws.amazon.com/timestream/
-- **Pricing:** https://aws.amazon.com/timestream/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** An IoT deployment with 10,000 sensors, 1 reading/second each. 10,000 sensors × 1 reading/sec × 3600 sec/hr = 36M records/hour. Write cost: 36M/hr × $0.50/M = $18/hr × 24hr = $432/day × 30 = $12,960/month. That's expensive! Use batch writes (aggregate every 10 seconds): 3.6M records/hr × $0.50/M = $1.80/hr × 24 × 30 = $1,296/month. 90% savings.
-
-**Scenario 2:** A metrics dashboard (1M records/day, 30-day retention). Storage: 1M × 30 days = 30M records. Average record 500 bytes = 15GB hot (1 day) + 105GB warm (7 days) + 300GB cold (22 days). Storage: 15GB × $0.018 × 24hr × 30 + 105GB × $0.008 × 24hr × 7 + 300GB × $0.004 × 24hr × 22 = $259/month. Query: 1000 queries/day × 1MB scanned × $0.01/GB = $0.01/month. Total: ~$260/month.
-
-## Nuggets & Gotchas
-
-- **Timestream's write API has a batch limit — you can't write unlimited records per call:** Max 100 records per batch, 1MB per record. For 10,000 sensors, you'll need to batch writes or use IoT Core + Rules for ingestion.
-- **Timestream has no UPDATE or DELETE — time-series data is append-only:** Like QLDB, you can't modify historical data. If you need to correct bad data, insert a new record with the corrected value and use the latest value in queries.
-- **Timestream query pricing is per GB scanned — full table scans are expensive:** Always filter by time range. A query without a time filter on 1TB of data costs $10. Use `WHERE timestamp BETWEEN ...` to limit scanned data.
-- **Timestream's INTERPOLATE function requires at least 2 known data points:** If your sensor has a gap of 1 hour and you try to interpolate, it will only fill if there are data points before and after the gap. Use `FILL` for forward-fill of missing values.
-- **Timestream's Memory Store (hot tier) has a 24-hour minimum retention — you can't set it to 0:** If you want everything in warm immediately, set Memory Store to 1 hour (minimum) and warm store to 0. Or use S3 Direct Query for cold data without warm tier.
+- [Availability changes](https://aws.amazon.com/about-aws/whats-new/2025/05/aws-service-changes/)
+- [Timestream variants](https://aws.amazon.com/timestream/faqs/)
+- [LiveAnalytics quotas](https://docs.aws.amazon.com/timestream/latest/developerguide/ts-limits.html)
+- [WriteRecords/upsert contract](https://docs.aws.amazon.com/timestream/latest/developerguide/API_WriteRecords.html)
+- [SQL reference](https://docs.aws.amazon.com/timestream/latest/developerguide/reference.html)
+- [Timestream pricing](https://aws.amazon.com/timestream/pricing/)

@@ -1,140 +1,76 @@
 ---
-title: Transit Gateway
-description: AWS Transit Gateway — hub-and-spoke router for multi-VPC and hybrid connectivity. Centralized routing, cross-account sharing, and site-to-site VPN integration.
+title: AWS Transit Gateway
+description: Design association, propagation, return paths and cross-account sharing for a regional routing hub.
 tags:
-  - aws
-  - networking
-  - transit-gateway
-date: 2026-06-06
+  - cloud/aws/networking
+date: 2026-10-12
 ---
 
 # AWS Transit Gateway
 
-A Transit Gateway (TGW) is a regional hub that connects VPCs and on-premises networks in a hub-and-spoke topology. Instead of managing peering connections between every pair of VPCs (mesh), all VPCs connect to the TGW, and the TGW routes traffic between them.
+TGW is a regional routing hub for supported VPC, VPN, Direct Connect/Connect and peering paths. It reduces mesh administration but does not automatically make every attachment mutually reachable.
 
-## Why Transit Gateway instead of VPC Peering
+## Association versus propagation
 
-```
-VPC Peering (mesh): 10 VPCs → 45 peering connections (n(n-1)/2)
-Transit Gateway: 10 VPCs → 10 attachments to one TGW
-```
+An attachment's associated TGW route table determines its ingress route lookup. Propagation adds supported learned routes to selected tables. These are separate operations; association alone does not enable propagation.
 
-As VPC count grows, peering becomes unmanageable. TGW provides transitive routing without individual peering connections.
+Routing uses longest-prefix matching with documented route priorities. Static aggregate routes are supported where appropriate; “TGW cannot summarize routes” is false. Overlapping attached VPC CIDRs have restrictions and must not be used as an illustration of guaranteed propagation.
 
-## Core Concepts
+Configure VPC subnet routes to TGW and the destination return path. A VPC attachment enables selected AZs through attachment subnets; traffic originating in an AZ without an enabled attachment subnet has documented reachability constraints. Sharing a route table does not override missing routes or SG/NACL restrictions.
 
-### Attachments
+## Hybrid and sharing
 
-A TGW connects to:
+TGW VPN supports static or dynamic BGP routing. Device capabilities and failover requirements determine the choice; lack of BGP does not force a VPN per VPC.
 
-- **VPC** — One attachment per VPC (you attach a VPC, not individual subnets — the TGW can route to any subnet with a route table entry)
-- **Site-to-Site VPN** — Your on-premises network via IPsec VPN
-- **Direct Connect** — Your on-premises via AWS Direct Connect
-- **Transit Gateway Connect** — GRE tunnels for BGP routing (for SD-WAN appliances)
+Share supported TGW resources with RAM. With Organizations sharing enabled, eligible organization recipients can access shares without invitations; external sharing has different invitation/acceptance behavior. Resource sharing, attachment acceptance, association and route propagation are independent controls.
 
-### Route Tables
+TGW is regional; inter-Region TGW peering is a separate attachment design. Do not attach a remote Region's VPC as though the hub were global.
 
-Each TGW has one or more route tables. Route tables control which attachments can reach which other attachments:
+## Segmentation exercise
 
-```
-TGW Route Table (default):
-─────────────────────────────
-Destination → Target
-10.0.0.0/16       → Attachment: VPC-A
-10.1.0.0/16       → Attachment: VPC-B
-10.2.0.0/16       → Attachment: VPC-C
-172.16.0.0/12     → Attachment: VPN (on-prem)
-```
+Prerequisites: a disposable TGW/test attachments, non-overlapping VPCs, management access and an attachment/data budget.
 
-**Propagation:** Routes from VPC attachments are automatically propagated to the TGW route table if associated with the VPC. VPN routes propagate via BGP.
+1. Create two TGW route tables for approved isolation boundaries.
+2. Associate each source attachment deliberately and propagate only the intended destination routes.
+3. Add VPC-side and return routes, then allow the specific test traffic.
+4. Verify permitted source→destination access and denied cross-segment access.
+5. Remove one sandbox propagation/return route and explain the failure from effective route tables.
+6. Restore configuration, then remove lab routes/associations/attachments before deleting the dedicated hub. Preserve shared attachments.
 
-### Associations
+Use actual returned identifiers and check both source AZs; one successful test does not prove all zonal paths work.
 
-Each attachment is associated with exactly one TGW route table. An attachment can only use routes in its associated route table.
+## Capacity and cost
 
-### Cross-Account Sharing (AWS Organizations)
+The documented attachment quota is 5,000, and the 10,000-route quota is combined across TGW route tables—not ten thousand per table. Check current scope/adjustability and your account allocation before deployment.
 
-Transit Gateway can be shared with other AWS accounts via AWS Resource Access Manager (RAM). The owner account creates the TGW, shares it with the Organization, and member accounts can attach their VPCs.
+For a hypothetical us-east-1 study dated 2026-10-12, assume VPC-attachment inputs of \$0.05/hour and \$0.02 per eligible processed GB. Ten attachments over 730 hours plus 500 GB cost 10 × 730 × \$0.05 + 500 × \$0.02 = \$375. Add applicable transfer, VPN, DX and inspection charges; attachment types are not interchangeable tariff units.
 
-## Architecture: Multi-Account with TGW
+## Route-table example
 
-```
-Account: Network (Owner)
-└── Transit Gateway (tgw-xxxxx)
-    ├── Route Table: Prod
-    │   ├── VPC-Prod (Account B) ← attachment
-    │   └── VPN (on-prem)
-    └── Route Table: Dev
-        ├── VPC-Dev (Account C) ← attachment
-        └── (no VPN for dev)
+```text
+VPC A attachment ─ associate → TGW table A
+                  └ propagate → TGW table B (if allowed)
+VPC B attachment ─ associate → TGW table B
+                  └ propagate → TGW table A (if allowed)
 
-Account B (Prod):
-└── VPC-Prod (10.0.0.0/16)
-    └── Route Table: TGW route → tgw-xxxxx (for 10.1.0.0/16, 172.16.0.0/12)
+VPC A subnet route: B CIDR → TGW
+TGW table A:       B CIDR → B attachment
+VPC B return route:A CIDR → TGW
+TGW table B:       A CIDR → A attachment
 ```
 
-## Site-to-Site VPN via Transit Gateway
+This two-VPC path requires four route decisions and workload security controls. Route-table association chooses the table used by traffic _entering_ TGW from an attachment; propagation makes routes available in selected tables. To isolate production from test, maintain separate associated tables and deliberately omit the prohibited attachment routes. Test both directions from the AZs containing attachment subnets; a green TGW attachment state does not prove the VPC-side path.
 
-When you attach a VPN to a TGW, you create a Transit Gateway VPN attachment. The on-premises router establishes BGP with the TGW, and routes propagate automatically.
-
-Benefits over direct VPN to VPC:
-
-- One VPN connection from on-prem connects to all VPCs attached to the TGW
-- Centralized egress for all VPC traffic (for inspection)
-- VPN failover without changing on-prem router config
-
-## Shared VPC with Transit Gateway
-
-```
-Central Network Account
-└── Transit Gateway
-    ├── VPC-Prod (shared)
-    ├── VPC-Dev (shared)
-    └── On-prem (VPN)
-
-All attachments use the same TGW route table
-→ All VPCs can reach each other and on-prem
-→ Network team manages TGW, app teams manage their VPCs
-```
-
-## Limits
-
-| Resource                               | Limit                           |
-| -------------------------------------- | ------------------------------- |
-| Transit Gateways per region            | 5                               |
-| Attachments per Transit Gateway        | 50                              |
-| VPCs per Transit Gateway               | 50                              |
-| Routes per Transit Gateway route table | 10,000                          |
-| Cross-region attachments               | Not supported (TGW is regional) |
-
-## Cost
-
-Transit Gateway is charged per hour per attachment + per GB of data processed:
-
-- $0.02/Transit Gateway attachment-hour
-- $0.007/GB data transfer
-
-At scale: 10 VPCs, 500GB/month cross-VPC traffic = $0.20/hr × 720hr + $3.50 = ~$147/month.
+Peering can be simpler for a few stable pairwise links, whereas TGW centralizes a changing multi-VPC/hybrid topology and adds attachment/processing costs. Neither is the right substitute for a private service API when consumers should not receive broad IP-level routes; compare [[AWS/concepts/vpc-lattice|VPC Lattice]] or [[AWS/networking/private-access-and-hybrid-dns|PrivateLink]] where applicable.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/transit-gateway/
-- **Documentation:** https://docs.aws.amazon.com/vpc/latest/tgw/
-- **Pricing:** https://aws.amazon.com/transit-gateway/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A multi-account setup with 5 VPCs (production, staging, dev, shared-services, logging) connected via Transit Gateway.5 attachments × $0.02/hr × 720hr = $72/month. Cross-account data transfer: 200GB/month × $0.007 = $1.40/month. Total: ~$73/month. Compare to individual VPC peering connections (same-region, free) but 10 peering connections for 5 VPCs is a mesh — hard to manage.
-
-**Scenario 2:** A hybrid cloud setup:3 VPCs (prod, dev, shared-services) + on-premises via Direct Connect + VPN backup. Transit Gateway with 4 attachments (3 VPCs + 1 VPN). Monthly: 4 × $0.02 × 720hr = $57.60 +1TB cross-VPC/data transfer (300GB between VPCs + 700GB from on-prem) =1TB × $0.007 = $7. Total: ~$65/month. Without TGW, you'd need 3 separate VPN connections to each VPC.
-
-## Nuggets & Gotchas
-
-- **Transit Gateway is regional — cross-region requires inter-region TGW peering:** You can't attach a VPC in us-east-1 to a TGW in eu-west-1. For multi-region architectures, you need inter-region TGW peering (which has its own latency and cost implications).
-- **TGW route tables don't support summarization:** If VPC-A uses 10.0.0.0/8 and VPC-B uses 10.1.0.0/16, you can't add one route 10.0.0.0/8 → VPC-A and expect VPC-B's 10.1.0.0/16 to be reachable from on-prem via VPN. TGW doesn't summarize routes — you need explicit routes for each VPC CIDR.
-- **VPN attachment to TGW uses BGP for route propagation:** Unlike VPC attachments (static routes), VPN attachments learn routes via BGP. If your on-premises router doesn't support BGP, you can't use TGW VPN attachment — you'd need direct VPN to each VPC.
-- **TGW attachments inherit routing behavior based on their associated route table:** A VPC attachment can only send traffic to destinations listed in its associated TGW route table. If the route table doesn't have a route to on-prem, the VPC can't reach on-prem even if the VPN attachment can.
-- **Shared TGW from AWS Organizations requires RAM:** If you share a TGW with member accounts via AWS Organizations, those accounts need RAM invitations accepted. If RAM sharing is disabled in the Organization, cross-account TGW sharing doesn't work.
+- [TGW operation, AZs and route selection](https://docs.aws.amazon.com/vpc/latest/tgw/how-transit-gateways-work.html).
+- [VPN attachments](https://docs.aws.amazon.com/vpc/latest/tgw/tgw-vpn-attachments.html).
+- [Quotas](https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-quotas.html).
+- [RAM invitations and organization sharing](https://docs.aws.amazon.com/ram/latest/userguide/working-with-shared-invitations.html).
+- [Pricing](https://aws.amazon.com/transit-gateway/pricing/).
+- Compare [[AWS/networking/vpc/vpc-peering|peering]] and [[AWS/networking/private-access-and-hybrid-dns|private service access]].
 
 ## Across the wiki
 

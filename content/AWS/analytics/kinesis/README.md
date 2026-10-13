@@ -1,126 +1,69 @@
 ---
-title: Amazon Kinesis
-description: "Amazon Kinesis - real-time data streaming services: Data Streams for real-time ingestion, Data Firehose for managed delivery to S3/Redshift, and Data Analytics for SQL/Flink stream processing"
+title: "Amazon Kinesis and streaming choices"
+description: "A stream is a replayable event log, not a work queue whose messages vanish after one consumer receives them."
 tags:
-  - aws
-  - analytics
-  - kinesis
-date: 2026-06-06
+  - aws/analytics
+date: 2026-10-12
 ---
 
-# Amazon Kinesis
+# Amazon Kinesis and streaming choices
 
-Kinesis is AWS's real-time data streaming platform. Three services cover different parts of the streaming pipeline:
+A stream is a replayable event log, not a work queue whose messages vanish after one consumer receives them. Start with [[AWS/analytics/README|analytics]], [[AWS/security/iam/README|IAM]] and [[AWS/storage/s3/README|S3]].
 
-```
-Data Sources (IoT, Logs, Events, Clicks)
-    ↓
-Kinesis Data Streams     ← Ingest and process real-time
-    ↓
-Kinesis Data Firehose   ← Deliver to S3/Redshift/OpenSearch (managed, no custom code)
-    ↓
-Kinesis Data Analytics  ← SQL/Flink queries on streams
-```
+## Service boundaries
 
-## Services at a Glance
+| Lesson                                                        | Purpose                                                                             |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [[AWS/analytics/kinesis/data-streams\|Kinesis Data Streams]]  | Event retention/replay with independently progressing consumers.                    |
+| [[AWS/analytics/kinesis/data-firehose\|Amazon Data Firehose]] | Managed buffered delivery to supported destinations; firehose API name unchanged.   |
+| [[AWS/analytics/managed-flink\|Managed Apache Flink]]         | Stateful continuous processing/windows with connector-specific delivery semantics.  |
+| [[AWS/analytics/msk\|MSK]]                                    | Managed Kafka for supported Kafka ecosystems.                                       |
+| [[AWS/analytics/kinesis/data-analytics\|Retired Kinesis SQL]] | Historical migration context only; SQL application deletion began January 27, 2026. |
 
-| Service            | Use When                                                | Key Benefit                                 |
-| ------------------ | ------------------------------------------------------- | ------------------------------------------- |
-| **Data Streams**   | You need real-time consumers, replay, custom processing | Full control, exactly-once, consumer groups |
-| **Data Firehose**  | You just need data delivered to S3/Redshift             | Fully managed, no consumer apps needed      |
-| **Data Analytics** | You want to query streams with SQL                      | Managed SQL/Flink, no cluster to manage     |
+## Partitioning, checkpoints and duplicates
 
-## Data Streams vs Firehose
+A partition key directs records to shards; ordering is scoped to the supported shard/key behavior, not automatically global. Avoid hot keys and size sustained throughput by bytes and records. Consumers checkpoint progress independently; replay requires retention long enough for outages/backfills.
 
-```
-Kinesis Data Streams:
-  Producer → Stream (shards) → Consumer (KCL/KPL) → Processing
-  You manage: shard count, consumer apps, scaling
+Kinesis and historical Kinesis SQL external delivery can produce duplicates. Flink state/checkpoints do not alone certify exactly-once effects in every external sink. Include event IDs, idempotent writes and connector-specific transaction/retry semantics in the design.
 
-Kinesis Data Firehose:
-  Producer → Firehose → Buffer → Transform (optional) → S3/Redshift/OpenSearch
-  You manage: nothing — AWS handles buffering, delivery, retries
-```
+## Buffered delivery versus processing
 
-**Common pattern:** Data Streams for real-time processing + Firehose for durable S3 archival. Use Data Streams when you need to consume and process data in real-time. Use Firehose when you just need to land data in storage with minimal latency.
+Firehose can transform through Lambda and perform supported JSON-to-Parquet/ORC conversion before delivery. Destination-specific buffering can include zero seconds where supported; S3 backup and dynamic partitioning have different restrictions. It is not a general arbitrary-language processing engine or a durable consumer checkpoint service.
 
-## Kinesis Data Streams
+Choose a direct stream consumer for custom replay/control, Firehose for managed delivery and Flink for stateful/event-time processing. Event sourcing requires durable retention/snapshots and domain semantics beyond simply selecting Kinesis.
 
-- **Shards:** Throughput unit. 1MB/s ingress, 2MB/s egress, 1,000 records/s per shard.
-- **Producers:** KPL (Producer Library) for high-throughput, batching, aggregation.
-- **Consumers:** KCL (Consumer Library) for automatic shard distribution, checkpointing, lease management.
-- **Enhanced fan-out:** Dedicated 2MB/s per consumer (vs shared 2MB/s in standard).
-- **Scaling:** Split or merge shards, or use on-demand mode for auto-scaling.
-- **Retention:** 24 hours default, up to 365 days with extended retention.
-- **Max record size:** 1MB.
+## Streaming exercise
 
-## Kinesis Data Firehose
+Produce a small synthetic sequence with event IDs and event timestamps. Compare direct stream consumption with a delivery path into S3. Inject a repeated event and delayed event; verify ordering scope, observed duplicates and application idempotency.
 
-- **Buffer:** Configurable size (1-128MB) and interval (60-900s). Delivery triggers when either is reached.
-- **Destinations:** S3, Redshift (via S3 staging), Elasticsearch, Splunk, HTTP endpoint.
-- **Transformation:** Lambda invoked on each batch for transformation before delivery.
-- **Formats:** JSON, CSV, Parquet, ORC. Parquet recommended for analytical queries.
-- **No replay:** Firehose is append-only, no way to replay from a timestamp.
+Stop/restart a consumer in a sandbox and measure replay/lag from its checkpoint. Test unauthorized reading, monitor throttling/delivery failures and establish an explicit budget. Remove streams, consumers, delivery resources, output files and Flink/MSK compute created for the exercise.
 
-## Kinesis Data Analytics
+## Partition-key strategy and architecture comparisons
 
-- **SQL applications:** Write standard SQL against input streams. Tumbling, sliding, session windows.
-- **Apache Flink:** Full Flink API for complex event processing, custom state management.
-- **Reference data:** Enrich stream data with S3-hosted lookup tables (user profiles, product catalog).
-- **Windows:** `STEP()` for tumbling, `FLOOR(timestamp TO HOUR)` for sliding, `SESSION(gap => INTERVAL)` for session.
-- **Output:** Kinesis Streams, Firehose, Lambda.
-- **Checkpointing:** Automatic checkpoint to S3 for fault tolerance and exactly-once semantics.
-- **Exactly-once:** Guaranteed with Kinesis Streams destination. At-least-once with Firehose/Lambda.
-
-## Partition Key Strategy
-
-Partition key determines which shard a record goes to:
-
-```
-Low cardinality (e.g., "all-events") → one shard → bottleneck
-High cardinality (e.g., user_id, device_id) → even distribution → scales
+```text
+same customer key → stable partition mapping at a point in time
+different consumers → independent checkpoints and processing lag
+resharding/retries → ordering and duplicate handling remain explicit
 ```
 
-For time-series data, include a time component in the partition key if you need ordering within a time window, or use a UUID if ordering doesn't matter.
+Choose a key with enough distribution for sustained traffic while preserving the ordering the application actually needs. A single tenant key can become hot; randomizing every key can destroy useful per-entity order. Shard changes and producer retry strategies mean “globally ordered exactly once” is not a default stream property.
 
-## Cost Optimization
+| Requirement                          | Data Streams              | Firehose                                   | Managed Flink                                     |
+| ------------------------------------ | ------------------------- | ------------------------------------------ | ------------------------------------------------- |
+| Read from a chosen retained position | Consumer-controlled       | No general consumer replay interface       | Depends on source/checkpoint/state configuration. |
+| Custom consumer logic                | Your application/KCL      | Supported transform/delivery configuration | Stateful application with supported connectors.   |
+| Buffered storage delivery            | Build/configure a sink    | Managed destination delivery               | Connector/application responsibility.             |
+| Windowed event-time aggregation      | Build a processor         | Not the central abstraction                | Natural supported use case.                       |
+| Scaling responsibility               | Mode/shards and consumers | Service configuration/quotas               | Application parallelism and state behavior.       |
 
-- **Aggregation (KPL):** Combine multiple application records into one Kinesis record → more records per second per shard.
-- **On-demand mode:** Pay per stream-hour and per MB, auto-scales. Good for variable workloads.
-- **Enhanced fan-out:** Additional cost per shard-hour and per GB delivered. Only use when multiple consumers need dedicated throughput.
-- **Firehose buffer tuning:** Larger buffers (128MB, 900s) reduce S3 write frequency and cost.
+For event sourcing, define the durable system of record and reconstruction process. Kinesis retention alone is not perpetual business history. For log aggregation, replayable input plus Firehose/S3 delivery gives different recovery options from direct Firehose-only ingress. Cost includes idle capacity/mode charges, retention, fan-out, dependent tables/metrics and downstream compute, not just event payload size.
 
-## Common Architecture Patterns
+## References
 
-### Lambda Architecture (classic)
-
-```
-Kinesis Streams → Kinesis Analytics (real-time) → DynamoDB/Kinesis Firehose
-S3 → Glue → Redshift (batch layer)
-Merge at query time (Athena, Redshift)
-```
-
-### Kappa Architecture (simplified)
-
-```
-Kinesis Streams → Kinesis Analytics → Kinesis Firehose → S3
-S3 as immutable log — no separate batch layer
-Re-process by seeking to beginning of stream
-```
-
-### Event Sourcing
-
-```
-User actions → Kinesis Streams → multiple consumers
-  ├── Fraud detection (Lambda)
-  ├── Personalization engine (Lambda)
-  ├── Audit log archival (Firehose → S3)
-  └── Real-time dashboards (Kinesis Analytics)
-```
-
-## More in this section
-
-- [[AWS/analytics/kinesis/data-streams|Kinesis Data Streams]] — Kinesis Data Streams — shards, producers, consumers, enhanced fan-out, scaling, capacity planning, and use cases
+- [Stream duplicate handling](https://docs.aws.amazon.com/streams/latest/dev/kinesis-record-processor-duplicates.html)
+- [Firehose buffering](https://docs.aws.amazon.com/firehose/latest/dev/create-configure-backup.html)
+- [Kinesis SQL discontinuation](https://docs.aws.amazon.com/kinesisanalytics/latest/dev/discontinuation.html)
+- [Kinesis pricing](https://aws.amazon.com/kinesis/data-streams/pricing/)
 
 ## Across the wiki
 

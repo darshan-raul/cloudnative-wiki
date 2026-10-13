@@ -2,306 +2,133 @@
 title: Application Migration Service (MGN)
 description: AWS MGN — lift-and-shift service for Windows and Linux servers, continuous replication, wave management, cutover workflow, and post-launch validation
 tags:
-  - aws
-  - migration
-date: 2026-06-06
+  - aws/migration
+date: 2026-10-12
 ---
 
 # Application Migration Service (MGN)
 
-MGN is AWS's modern lift-and-shift (rehost) service. It continuously replicates your on-premises servers to AWS, allowing you to cut over with minimal downtime. It replaces the older Server Migration Service (SMS).
+Prerequisites: [[AWS/security/iam/README|temporary-credential IAM roles]], [[AWS/networking/vpc/README|VPC routing]] and the [[AWS/migration/README|migration acceptance/rollback plan]].
 
-## How It Works
+AWS Transform MGN (formerly Application Migration Service) replicates supported source servers for rehosting. The API/CLI namespace remains mgn. Replication is not automatic application validation or source decommissioning.
 
-```
-Source Server                    MGN Service                   Target AWS
-(Windows/Linux)                  (managed)                    (EC2)
-    │                                │                            │
-    ├─ Install MGN Agent ──────────→ │                            │
-    │                                │                            │
-    ├─ Continuous Replication ──────→ │ (S3 staging + EBS snapshots)
-    │                                │                            │
-    │                                │─── Test Launch ────────────→│ (validation)
-    │                                │                            │
-    │                                │─── Final Cutover ─────────→│ (production)
-```
+## Architecture and networking
 
-**Replication process:**
+A source-installed replication agent sends block replication to replication servers and storage in a target staging subnet. This is not a primary S3-bucket staging architecture. Source-initiated TCP 1500 carries replication; TCP 443 is used for documented control-plane/service connectivity. Do not open speculative inbound-to-source or UDP heartbeat paths.
 
-1. Install MGN agent on source server
-2. Agent continuously replicates block-level changes to a staging area in your AWS account (S3 bucket + EBS snapshots)
-3. When ready, initiate test launch or final cutover
-4. MGN converts the replicated disk to an EC2 instance and boots it
+Plan routes, DNS, endpoints/proxy requirements and staging security groups from the owning network guide. Validate supported OS/boot/storage configuration and target launch settings. Sources may be in another AWS Region; initialize/control MGN in the target Region rather than claiming cross-Region migration is prohibited.
 
-## Key Concepts
+## Rehearsed server lab
 
-### Source Server
+This lab requires a disposable source VM and paid staging/target infrastructure. Use the current console-generated installer for the supported OS, not copied fictional installer flags. Scope the operator role and agent credentials using the official prerequisites.
 
-A source server is a server (physical or virtual) that you've registered with MGN. Each source server has:
-
-- **Replication configuration:** VPC, subnet, security group for the replicated instance
-- **Agent status:** Online/Offline, last sync time
-- **Lifecycle:** `PENDING`, `TESTING`, `MIGRATING`, `CUTOVER`, `CUTOVER_COMPLETE`
-
-### Wave
-
-A wave is a group of source servers that you migrate together as a unit. Waves let you coordinate cutover for multi-server applications.
+1. Initialize the target Region and replication/launch settings. Install the agent following the current workflow, then inspect source-server replication health and lag.
+2. Create an isolated test network so cloned schedulers/webhooks/email cannot affect production. Choose target IAM instance profile, security groups and storage.
+3. Start a test using the real batch contract:
 
 ```bash
-# Create a wave
-aws mgn create-wave \
-  --account-id 123456789012 \
-  --name "web-tier-wave-1" \
-  --description "Web tier servers, cutover planned for Friday night"
-
-# Add servers to wave
-aws mgn add-source-servers-to-wave \
-  --wave-id w-1234567890abcdef0 \
-  --source-server-ids s-1234567890abcdef0 s-0987654321fedcba0
-
-# Track wave status
-aws mgn describe-waves --wave-id w-1234567890abcdef0
+aws mgn start-test --source-server-ids SOURCE_SERVER_ID
+aws mgn describe-source-servers
 ```
 
-### Cutover Modes
+4. Inspect the returned job and documented lifecycle/replication states. Test boot, identity, connectivity, services, data and performance; terminate test instances through the owning test-cleanup workflow.
+5. Freeze source writes after business approval, wait for the agreed lag threshold, then start-cutover with source-server-ids. Validate transactions before finalizing.
+6. If acceptance fails, execute the agreed rollback before irreversible changes; reconcile writes made after target activation.
+7. Finalize only after approval. Finalization stops replication; it does not prove the source OS was shut down or all billable resources were removed. Decommission source and staging/test leftovers explicitly.
 
-- **Test launch:** Non-destructive launch of the replicated server. You can boot it, validate it works, then terminate. Original server keeps replicating.
-- **Final cutover:** Actual production cutover. After cutover, the original server is shut down and replication stops.
+Do not invent start-test-launch, terminate_target_instance, singular launch IDs or automatic source-shutdown flags. Lifecycle enums come from the API contract, not operational prose.
 
-## Installing the Agent
+## Cost and cleanup
 
-### Linux
+The MGN service free period is 2,160 hours (ninety continuous days) per migrated server; staging/test/cutover EC2/EBS and network charges still apply. Plan overlap and cleanup evidence. Remove lab agent/credentials and unused infrastructure only after backup/rollback acceptance; do not terminate the only valid source copy.
+
+## Server lifecycle and replication architecture
+
+```text
+source disks → installed replication agent → source-initiated TCP 1500
+                                              ↓
+                                      target staging subnet
+                                       replication EC2/EBS
+                                              ↓
+                                  test/cutover target instances
+                                              ↓
+                                validate → finalize → decommission
+```
+
+| Object/phase         | Evidence                                            | Customer responsibility                          |
+| -------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| Source server        | Inventory, OS/storage support and replication state | Source access/agent/identity and write ownership |
+| Replication settings | Target subnet, disk/server/network choices          | Correct paths/capacity/encryption and budget     |
+| Launch configuration | Target template/storage/profile/SGs                 | Boot/application/network correctness             |
+| Test                 | Isolated launched target and validation record      | Prevent duplicate external effects               |
+| Cutover              | Accepted target plus lag/write-freeze evidence      | Traffic switching and rollback boundary          |
+| Finalize/archive     | Actual supported lifecycle action/state             | Source/staging cleanup, retention and approvals  |
+
+Human labels such as Live/Testing are not a substitute for the API's actual DataReplicationInfo/LifeCycle enums. Inspect the exact response/state and owning lifecycle contract.
+
+## Installation and configuration runbook
+
+Use the console-generated/current supported installer for the actual OS with reviewed agent credentials. Verify source-admin authority, supported disks/boot/OS, outbound DNS/control-plane TCP 443 and staging replication TCP 1500. Never download an arbitrary script or assume the old fictional source-server-id installer flag is required.
+
+Source-side firewall/NAT/proxy, target subnet routes/SGs and endpoint access must be independently verified. Throttling uses supported replication settings and documented units, not an invented generic bandwidth flag. A replication pause/resume or source state change requires the real API and an approved maintenance plan.
+
+Read and update the actual server settings with the returned ID:
 
 ```bash
-# Download the agent installer
-# Get the installer URL from: MGN Console → Source Servers → Install Agent
-wget https://aws-mgn-agent-bucket.s3.amazonaws.com/latest/linux/aws-replication-installer.ini
-
-# Edit the installer config
-# Add your AWS region and source server ID from the MGN console
-cat > aws-replication-installer.ini << 'EOF'
-[DEFAULT]
-aws_region = us-east-1
-source_server_id = s-1234567890abcdef0
-bandwidth_throttle = 0
-use_public_ip = false
-EOF
-
-# Run the installer
-sudo ./aws-replication-installer.py
+aws mgn describe-source-servers --filters '{"sourceServerIDs":["SOURCE_SERVER_ID"]}'
+aws mgn get-replication-configuration --source-server-id SOURCE_SERVER_ID
+aws mgn get-launch-configuration --source-server-id SOURCE_SERVER_ID
 ```
 
-### Windows
+Match supported response settings to the launch template and target application requirements; get-launch-configuration does not return every EC2 template detail. Do not confuse setting configuration with starting a job.
 
-1. Download the agent installer (.msi) from MGN console
-2. Run the installer on the Windows server
-3. Enter the Source Server ID and AWS region when prompted
-4. The agent runs as a Windows service (`AWSReplicationService`)
-
-### Agent Configuration
+## Concrete test and cutover API walkthrough
 
 ```bash
-# Check agent status on Linux
-sudo systemctl status aws-replication-agent
-
-# Check agent logs
-sudo tail -f /var/log/aws-replication-agent.log
-
-# Pause/resume replication (for maintenance windows)
-sudo /aws-replication-agen pause
-sudo /aws-replication-agen resume
-
-# Uninstall agent (after cutover complete)
-sudo /aws-replication-agen uninstall
+aws mgn start-test --source-server-ids SOURCE_SERVER_ID
+aws mgn describe-jobs
+aws mgn describe-source-servers --filters '{"sourceServerIDs":["SOURCE_SERVER_ID"]}'
 ```
 
-## Replication Settings
+Record JobId/target instance IDs, inspect job/server results and actual lifecycle state. Verify instance boot/status, volumes, application service, dependencies, licensing and business transaction. Poll with a timeout; a failed job/boot does not become success merely because replication was healthy.
+
+After recorded validation, use the documented terminate-target-instances/mark-ready-for-cutover workflow for the intended server/targets. These are mutations; do not copy the old terminate_target_instance Python name or arbitrary target-instance flag.
 
 ```bash
-# Configure replication (e.g., throttle bandwidth to 50 Mbps)
-aws mgn update-source-server-replication-configuration \
-  --source-server-id s-1234567890abcdef0 \
-  --replication-configuration '{
-    "bandwidthThrottling": 50,
-    "dataReplicationRootHash": null,
-    "enableReBoot": true,
-    "replicatedServerDisks": [{
-      "diskTag": "C:",
-      "diskPadding": 0
-    }],
-    "replicationServerSecurityGroupIds": ["sg-0123456789abcdef0"],
-    "replicationServerSubnetId": "subnet-0123456789abcdef0",
-    "replicationServerSecurityGroupIds": ["sg-0123456789abcdef0"],
-    "serverId": "s-1234567890abcdef0",
-    "targetInstanceTypeRightSizingMethod": "AUTO"
-  }'
+aws mgn start-cutover --source-server-ids SOURCE_SERVER_ID
+aws mgn describe-source-servers --filters '{"sourceServerIDs":["SOURCE_SERVER_ID"]}'
 ```
 
-**Key settings:**
+Only run after the approved write freeze/lag boundary and rollback plan. Finalize-cutover is a separate lifecycle action after business acceptance; it stops replication but does not promise source shutdown.
 
-- `bandwidthThrottling`: Limit replication bandwidth (0 = unlimited)
-- `enableReBoot`: MGN can reboot the source if needed for replication (Windows only)
-- `targetInstanceTypeRightSizingMethod`: `AUTO` = right-size based on utilization, `MANUAL` = specify type
+## Wave, post-launch and monitoring depth
 
-## Cutover Workflow
+Group dependency-related sources into approved waves and record test/cutover owners, sequence and rollback. Use the currently supported MGN/Transform wave APIs/console for your account, not fabricated migration-hub wave commands. A wave can include failed and successful servers; validate each one and cross-server consistency.
 
-```bash
-# 1. Check replication status (should be "Live" before cutover)
-aws mgn describe-source-servers \
-  --filters "Name=source-server-id,Values=s-1234567890abcdef0"
-# Look for: lastSyncedTime, estimatedSyncDuration, volumeStatus
+Post-launch actions use supported SSM/service integrations and roles. A custom validation function/document must actually exist with required network/permissions, bounded execution and result reporting; do not infer a Lambda trigger from a prose comment.
 
-# 2. Initiate test launch
-aws mgn start-test-launch \
-  --source-server-id s-1234567890abcdef0 \
-  --target-instance '{
-    "instanceType": "t3.medium",
-    "vpcSecurityGroupIds": ["sg-0123456789abcdef0"],
-    "subnetId": "subnet-0123456789abcdef0"
-  }'
+Inspect per-source replication progress/backlog, errors, lag, last snapshot/sync data and launched-job outcomes in the real response/console. Guest disk/CPU/network telemetry needs its own supported collection; inspect documented metric/field names rather than inferring them from generic progress labels.
 
-# 3. Wait for instance to boot (check status)
-aws mgn describe-source-servers --source-server-id s-1234567890abcdef0
-# Lifecycle should show: TESTING
+## Troubleshooting and cleanup matrix
 
-# 4. Validate the test instance (application works, connectivity OK)
-# 5. Terminate test instance when validation done
-aws mgn terminate_target_instance \
-  --source-server-id s-1234567890abcdef0
+| Symptom             | Investigate                                             | Do not do                                               |
+| ------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
+| Agent missing       | Installer/OS support, credentials, service connectivity | Invent an inbound source heartbeat/UDP exception        |
+| Replication stalled | TCP 1500 path, staging server/disk and throttling       | Treat a staging S3 bucket as the disk path              |
+| Target fails boot   | Supported OS/boot/disk/launch template                  | Finalize an unvalidated target                          |
+| Application fails   | Identity/DNS/ports/dependencies/license/test isolation  | Conclude replication success proves application success |
+| Rollback needed     | Source authority and target writes accepted             | Flip DNS without reconciliation                         |
 
-# 6. When ready for final cutover
-aws mgn start-cutover \
-  --source-server-id s-1234567890abcdef0 \
-  --target-instance '{
-    "instanceType": "t3.medium",
-    "vpcSecurityGroupIds": ["sg-0123456789abcdef0"],
-    "subnetId": "subnet-0123456789abcdef0"
-  }'
+Terminate test targets and decommission only approved source/staging leftovers after acceptance. Remove the source agent/temporary credentials by the owning uninstall workflow. Archive records only when required evidence is preserved; the free service period does not remove infrastructure charges.
 
-# 7. Verify cutover complete
-aws mgn describe-source-servers --source-server-id s-1234567890abcdef0
-# Lifecycle should show: CUTOVER_COMPLETE
-```
+References: [replication contract](https://docs.aws.amazon.com/cli/latest/reference/mgn/get-replication-configuration.html), [launch contract](https://docs.aws.amazon.com/cli/latest/reference/mgn/get-launch-configuration.html), [source-server contract](https://docs.aws.amazon.com/cli/latest/reference/mgn/describe-source-servers.html), [migration workflow](https://docs.aws.amazon.com/mgn/latest/ug/migration-workflow-gs.html), [post-launch settings](https://docs.aws.amazon.com/mgn/latest/ug/post-launch-settings.html).
 
-## Wave Cutover
+## References
 
-For multi-server applications, cut over the entire wave at once:
-
-```bash
-# Start wave cutover
-aws mgn start-wave-cutover \
-  --wave-id w-1234567890abcdef0 \
-  --target-instance '{
-    "targetInstanceTypeRightSizingMethod": "AUTO"
-  }'
-
-# Monitor wave cutover progress
-aws mgn describe-wave-cutovers --wave-id w-1234567890abcdef0
-
-# Check individual server status
-aws mgn describe-source-servers --filters "Name=wave-id,Values=w-1234567890abcdef0"
-```
-
-## Post-Launch Validation
-
-MGN can run validation scripts after launch to verify the server is working:
-
-```bash
-# Create a post-launch validation template
-aws mgn create-launch-configuration-template \
-  --post-launch-configuration '{
-    "targetInstance": {
-      "instanceType": "t3.medium",
-      "vpcSecurityGroupIds": ["sg-0123456789abcdef0"],
-      "subnetId": "subnet-0123456789abcdef0"
-    },
-    "validation": {
-      "commands": ["powershell -File C:\\validate.ps1"]
-    }
-  }'
-
-# Or run validation via Lambda after cutover
-# MGN can trigger a Lambda on cutover completion for custom validation
-```
-
-## Monitoring
-
-```bash
-# CloudWatch metrics for MGN
-# - Progress (percentage of replication complete)
-# - DataTransferred (bytes replicated)
-# - Lag (time behind source in seconds)
-# - DiskUtilization (source disk usage)
-# - NetworkBandwidthThrottle (actual bandwidth used)
-
-# Check replication lag
-aws mgn describe-source-server-replication-configuration \
-  --source-server-id s-1234567890abcdef0
-# Look at: lastSyncedTime, lagDuration
-```
-
-**If lag is growing (not shrinking):**
-
-- Network bandwidth is too low for the rate of data change
-- Increase `bandwidthThrottling` limit
-- Consider compressing replication traffic (enable `compression` in config)
-
-## Network Requirements
-
-For MGN agent to work:
-
-- Outbound HTTPS (443) to MGN service endpoints
-- Outbound HTTPS to S3 endpoints (for staging data)
-- Inbound from replication server (for initial data transfer)
-
-**Ports required:**
-
-- TCP 443 (HTTPS) — to AWS services
-- TCP 1500 — replication data transfer from source to replication server
-- UDP 1500 — heartbeat (optional, for faster failover)
-
-## Staging Area
-
-MGN uses an S3 bucket and EBS snapshots as a staging area:
-
-- Replication data goes to S3 (encrypted with KMS)
-- EBS snapshots are created from S3 data
-- Staging area is cleaned up automatically after cutover
-
-You can customize the staging area location (dedicated S3 bucket per account for cost tracking).
-
-## Cost
-
-- **Per-source server per hour:** ~$0.026/hr (varies by region)
-- **S3 and EBS costs:** For the staging area (temporary, deleted after cutover)
-- **EBS snapshot costs:** Until snapshots are deleted post-cutover
-
-**Cost tip:** After cutover is complete, immediately clean up:
-
-```bash
-# Delete source server from MGN (stops billing)
-aws mgn delete-source-server --source-server-id s-1234567890abcdef0
-
-# Delete staging S3 bucket contents (stops S3 charges)
-aws s3 rm s3://mgn-staging-bucket --recursive
-```
-
-## Limitations
-
-- **Supported sources:** Physical servers, VMware ESXi, Hyper-V, AWS (EC2-to-EC2 migration), Azure VMs, Google Cloud VMs
-- **Windows versions:** 2008 R2, 2012, 2012 R2, 2016, 2019, 2022
-- **Linux versions:** RHEL, CentOS, Ubuntu, Debian, SUSE, Oracle Linux
-- **Maximum source disks:** 20 per server
-- **Maximum source disk size:** 16TB per disk
-- **Replication to different VPC/Region:** Not directly supported — replicate to same region first, then use VM Import/Export or create AMI and copy
-
-## Comparison: MGN vs SMS
-
-| Feature                | MGN                | SMS (deprecated)                    |
-| ---------------------- | ------------------ | ----------------------------------- |
-| Continuous replication | Yes                | Yes                                 |
-| Wave management        | Yes                | No                                  |
-| Test launch            | Yes                | No                                  |
-| Agent-based            | Yes                | Agent-based                         |
-| Status                 | Active development | No new features, eventually retired |
-| Cutover modes          | Test + Final       | Direct cutover only                 |
+- [Current workflow](https://docs.aws.amazon.com/mgn/latest/ug/migration-workflow-gs.html)
+- [Network preparation](https://docs.aws.amazon.com/mgn/latest/ug/preparing-environments.html)
+- [Replication settings](https://docs.aws.amazon.com/mgn/latest/ug/replication-server-settings.html)
+- [StartTest CLI](https://docs.aws.amazon.com/cli/latest/reference/mgn/start-test.html)
+- [Lifecycle contract](https://docs.aws.amazon.com/mgn/latest/APIReference/API_LifeCycle.html)
+- [Finalization](https://docs.aws.amazon.com/mgn/latest/ug/finalizing-cutover-2.html)
+- [Pricing](https://aws.amazon.com/application-migration-service/pricing/)

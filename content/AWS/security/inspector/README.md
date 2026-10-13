@@ -2,243 +2,114 @@
 title: AWS Inspector
 description: AWS Inspector — automated vulnerability scanning for EC2, ECR, and Lambda. Network reachability, CVE scanning, CIS benchmarks, security assessments, and findings integration with Security Hub.
 tags:
-  - aws
-  - security
-  - inspector
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS Inspector
 
-Inspector scans EC2 instances, container images in ECR, and Lambda functions for software vulnerabilities and network exposure. It integrates with Security Hub for centralized findings.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## What Inspector Scans
+Amazon Inspector assesses vulnerabilities for supported EC2, ECR image and Lambda workloads. Findings require prioritization and remediation; a scan is not proof that a workload is secure.
 
-```
-Inspector scans:
-  │
-  ├── EC2 Instances
-  │   ├── Network Reachability (ports open to internet?)
-  │   ├── Agent-based scans (requires SSM agent)
-  │   └── CVE vulnerabilities in packages
-  │
-  ├── ECR Container Images
-  │   └── Image scanning (CVE, OS packages, dependencies)
-  │
-  └── Lambda Functions
-      └── Package vulnerabilities in Lambda layers and deployment package
-```
+## Coverage and agents
 
-## Inspector vs GuardDuty vs Macie
+Use the current Inspector2 API, not historical Inspector Classic examples. EC2 assessment has agent-based and agentless eligibility/coverage differences. Agent-based collection depends on SSM Agent/management prerequisites; installing CloudWatch Agent is not installing SSM Agent. ECR enhanced scanning is configured at the registry through the ECR registry API, not a repository's basic scan configuration.
 
-| Service   | What it Detects                                                     | How                           |
-| --------- | ------------------------------------------------------------------- | ----------------------------- |
-| GuardDuty | Threats (compromised credentials, crypto mining, data exfiltration) | ML on CloudTrail/DNS/VPC Flow |
-| Inspector | Vulnerabilities (CVEs, missing patches, network exposure)           | Agent + network probes        |
-| Macie     | Sensitive data exposure (PII, credentials in S3)                    | ML on S3 data classification  |
+Lambda standard scanning and code scanning have different coverage/pricing. Check supported operating systems, runtimes, Regions and inactive-resource behavior before assuming every resource is continuously assessed.
 
-## Enabling Inspector
+## Reversible coverage lab
+
+Prerequisites: a sandbox role with Inspector2 read/enable/disable permissions and the documented service-linked-role setup authority. Enabling a type changes account/Region scanning and may incur charges; do this only in a disposable environment.
 
 ```bash
-# Enable Inspector (requires SSM for EC2 agent scans)
-aws inspector2 enable \
-  --account-ids 123456789012
-
-# Enable ECR scanning
-aws inspector2 enable \
-  --resource-types ECR
-
-# Enable Lambda scanning
-aws inspector2 enable \
-  --resource-types LAMBDA
-
-# Enable all
-aws inspector2 enable \
-  --resource-types EC2 ECR LAMBDA
+aws inspector2 enable --resource-types EC2 ECR LAMBDA
+aws inspector2 list-coverage
+aws inspector2 list-findings --filter-criteria '{"findingStatus":[{"comparison":"EQUALS","value":"ACTIVE"}]}'
 ```
 
-## SSM Agent for EC2
+Expected: coverage records for eligible existing sandbox resources and active findings if present. An empty finding set is not proof of no vulnerabilities; inspect coverage and scan failures first. Findings are retrieved through list-findings, not nonexistent describe-findings.
 
-Inspector uses the SSM agent for deep package scanning:
+For an ECR-specific experiment, configure enhanced scanning with `aws ecr put-registry-scanning-configuration --scan-type ENHANCED` after reviewing the registry rule contract. This changes registry-wide behavior; preserve the prior configuration and scope repository filters where supported. Push a disposable test image by digest, inspect coverage/findings, patch/rebuild and compare the new digest.
 
-```bash
-# Check if SSM agent is running on EC2
-aws ssm describe-instance-information \
-  --filters "Key=InstanceIds,Values=i-xxxxx"
+## Failure, cleanup and costs
 
-# Install SSM agent (if missing)
-aws ssm send-command \
-  --instance-ids i-xxxxx \
-  --document-name AWS-ConfigureAWSPackage \
-  --parameters '{"action": ["Install"], "packageName": ["AmazonCloudWatchAgent"]}'
+Diagnose unsupported image/runtime/OS, missing SSM management and permissions before broadening access. Do not intentionally expose a vulnerable instance to the internet.
+
+Delete disposable images/resources and restore the previous ECR scan configuration. If the account was not previously enabled, disable only the types enabled for this lab; disabling a production scanner is not a cost exercise.
+
+The standard published trial is fifteen days for eligible types, not a permanent free allowance of five hundred instances. EC2 resource-hours, ECR images and rescans, Lambda standard/code scanning have different billable dimensions and trial eligibility.
+
+## Scanner comparison and resource pipeline
+
+| Service   | Primary question                                     | Evidence                                       |
+| --------- | ---------------------------------------------------- | ---------------------------------------------- |
+| Inspector | Is supported software/configuration vulnerable?      | Coverage plus version/CVE/reachability context |
+| GuardDuty | Is supported behavior suspicious?                    | Finding/source/activity context                |
+| Macie     | Does eligible S3 data contain sensitive information? | Inspection/sampling/statistics                 |
+| Config    | Does recorded configuration satisfy a rule?          | Capture/evaluation/annotation                  |
+
+```text
+eligible EC2/ECR/Lambda resource → coverage/scan → finding
+                                                ↓
+                          digest/version + exploit/context assessment
+                                                ↓
+                                patch/rebuild/redeploy → re-assess
 ```
 
-## Creating Assessment Targets
+Inspector Classic target/template examples are historical, not current Inspector2 deployment contracts. CloudWatch Agent is not SSM Agent, and historical v1 reachability findings are not universal Inspector2 behavior.
+
+## Coverage and filter walkthrough
+
+Use list-coverage before treating an empty finding list as safe. Confirm resource type, eligibility/state, scan timestamps and failure reason using current response fields.
 
 ```bash
-# Create a target (EC2 instances with tag)
-aws inspector2 create-filter \
-  --filter-action FINDINGS \
-  --filter-criteria '{
-    "resourceTags": [{"compare": "EQUALS", "key": "Environment", "value": "production"}]
-  }'
-```
-
-## Assessment Templates
-
-```bash
-# Create template (Inspector v1 - deprecated)
-aws inspector create-assessment-template \
-  --assessment-target-arn arn:aws:inspector:us-east-1:123456789012:target/0-xxxxx \
-  --template-name "weekly-ec2-scan" \
-  --duration-in-seconds 3600 \
-  --rules-package-arns "arn:aws:inspector:us-east-1:758058086616:rulespackage/0-xxxxx"
-```
-
-Inspector v2 doesn't use templates — it continuously scans all enabled resources.
-
-## Viewing Findings
-
-```bash
-# List findings
 aws inspector2 list-findings \
-  --filter-criteria '{
-    "severity": [{"comparison": "EQUALS", "value": "HIGH"}],
-    "resourceType": [{"comparison": "EQUALS", "value": "AWS_EC2_INSTANCE"}]
-  }'
-
-# Get finding details
-aws inspector2 describe-findings \
-  --finding-arns arn:aws:inspector2:us-east-1:123456789012:findings/i-xxxxx
-```
-
-### Finding Example
-
-```json
-{
-  "findingArn": "arn:aws:inspector2:us-east-1:123456789012:findings/i-xxxxx",
-  "findingType": "PACKAGE_VULNERABILITY",
-  "severity": "HIGH",
-  "title": "CVE-2023-44487 - HTTP/2 Rapid Reset Attack (Apache HTTP Server)",
-  "description": "The Apache HTTP Server project identified a vulnerability...",
-  "resource": {
-    "resourceId": "i-xxxxx",
-    "type": "AWS_EC2_INSTANCE",
-    "details": {
-      "awsEc2Instance": {
-        "amiId": "ami-xxxxx",
-        "instanceId": "i-xxxxx",
-        "tags": { "Name": "web-server-01" }
-      }
-    }
-  },
-  "vulnerability": {
-    "cvss": [{ "version": "V3", "score": 7.5, "baseScore": 7.5 }],
-    "relatedVulnerabilities": ["CVE-2023-44487"],
-    "packageVulnerabilityDetails": {
-      "packagePath": "lib/httpd",
-      "packageVersion": "2.4.6",
-      "fixedInVersion": "2.4.7"
-    }
-  }
-}
-```
-
-## Network Reachability Findings
-
-```json
-{
-  "findingType": "NETWORK_REACHABILITY",
-  "title": "Port 22 is open to the internet",
-  "severity": "MEDIUM",
-  "description": "EC2 instance i-xxxxx has port 22 (SSH) accessible from 0.0.0.0/0",
-  "networkReachability": {
-    "openPortRange": { "begin": 22, "end": 22 },
-    "protocol": "TCP",
-    "source": "0.0.0.0/0"
-  }
-}
-```
-
-## ECR Image Scanning
-
-```bash
-# Enable enhanced scanning (Inspector v2)
-aws ecr put-image-scanning-configuration \
-  --registry-id 123456789012 \
-  --image-scanning-configuration '{
-    "scanType": "ENHANCED",
-    "rules": [{"scanFrequency": "CONTINUOUS_SCAN"}]
-  }'
-
-# Trigger manual scan
-aws ecr start-image-scan \
-  --repository-name my-repo \
-  --image-digest sha256:xxxxx
-
-# Get scan results
-aws ecr describe-image-scan-findings \
-  --registry-id 123456789012 \
-  --repository-name my-repo \
-  --image-digest sha256:xxxxx
-```
-
-## Lambda Scanning
-
-```bash
-# Inspector v2 automatically scans Lambda functions
-# No manual scan needed
-
-# List Lambda findings
+  --filter-criteria '{"resourceType":[{"comparison":"EQUALS","value":"AWS_EC2_INSTANCE"}],"findingStatus":[{"comparison":"EQUALS","value":"ACTIVE"}]}'
 aws inspector2 list-findings \
-  --filter-criteria '{
-    "resourceType": [{"comparison": "EQUALS", "value": "AWS_LAMBDA_FUNCTION"}]
-  }'
+  --filter-criteria '{"resourceType":[{"comparison":"EQUALS","value":"AWS_LAMBDA_FUNCTION"}],"findingStatus":[{"comparison":"EQUALS","value":"ACTIVE"}]}'
 ```
 
-## Pricing
+Filter values/actions come from the Inspector2 contract; FINDINGS/compare and describe-findings are not correct substitutes. Handle pagination and correlate actual resource ARNs with owners.
 
-| Resource Type               | Cost               |
-| --------------------------- | ------------------ |
-| EC2 instance (per month)    | $0.06 per instance |
-| ECR image (per month)       | $0.09 per image    |
-| Lambda function (per month) | $0.06 per function |
-| Lambda layer (per month)    | $0.006 per layer   |
+## ECR enhanced scanning and image lifecycle
 
-First 500 resources/month are free.
+For an approved isolated registry, preserve the prior registry scan configuration. This valid enhanced configuration scopes a repository pattern:
 
-## Limits
+```bash
+aws ecr put-registry-scanning-configuration --scan-type ENHANCED \
+  --rules '[{"scanFrequency":"CONTINUOUS_SCAN","repositoryFilters":[{"filter":"wiki-lab*","filterType":"WILDCARD"}]}]'
+aws ecr get-registry-scanning-configuration
+```
 
-| Resource                  | Limit                             |
-| ------------------------- | --------------------------------- |
-| EC2 instances per account | Unlimited                         |
-| ECR images per registry   | 10,000                            |
-| Assessment runs (v1)      | 500 per template                  |
-| Concurrent scans          | 500 (EC2), unlimited (ECR/Lambda) |
+This changes registry configuration, not a repository's basic scan-on-push option. Use a supported image, record its digest, inspect scan coverage/findings and patch/rebuild into a new digest. Re-tagging without rebuilding does not repair vulnerable bytes. Basic/ECR versus Inspector2 retrieval contracts and rescan eligibility differ.
+
+## EC2/Lambda prerequisites and operational triage
+
+Agent-based EC2 coverage requires actual SSM Agent/managed-instance prerequisites and permissions; use the owning OS install workflow and management evidence. Agentless support has separate eligibility/exclusions. An instance profile must not receive administrator access merely to fix scanning.
+
+Lambda scanning applies to supported functions/runtime/packages and scan types; code scanning has different access/product scope. Inspect deployed version/revision and package dependencies, not only the runtime's name.
+
+Prioritize by affected deployed digest/version, exposure, exploitability and business context. A suppressed finding is not remediation. Validate deployment and rescan/finding closure; retain exceptions with expiry/owner.
+
+Restore registry/scan settings after the sandbox, remove disposable images/functions/instances/logs and revoke lab-only access. Do not disable an organization's production scanner during cleanup.
+
+References: [Inspector2 filters](https://docs.aws.amazon.com/cli/latest/reference/inspector2/list-findings.html), [EC2 scanning](https://docs.aws.amazon.com/inspector/latest/user/scanning-ec2.html), [ECR scanning](https://docs.aws.amazon.com/inspector/latest/user/scanning-ecr.html), [registry rules](https://docs.aws.amazon.com/cli/latest/reference/ecr/put-registry-scanning-configuration.html).
+
+## Cross-wiki comparisons
+
+- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning & Hardening]] — software supply chain (DevOps)
+- [[Containers/registries|Container Registries]] — software supply chain (Containers)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/inspector/
-- **Documentation:** https://docs.aws.amazon.com/inspector/
-- **Pricing:** https://aws.amazon.com/inspector/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A fleet of 100 EC2 instances, 50 ECR images, 30 Lambda functions. EC2: 100 × $0.06 = $6/month. ECR: 50 × $0.09 = $4.50/month. Lambda: 30 × $0.06 = $1.80/month. Total: $12.30/month.
-
-**Scenario 2:** A small startup with 10 EC2 instances, 5 ECR images, 5 Lambda functions. First 500 resources free. All resources within free tier = $0/month. Inspector is effectively free for small environments.
-
-## Nuggets & Gotchas
-
-- **Inspector requires SSM agent for deep EC2 package scans — without SSM agent, you only get network reachability:** If your EC2 instances don't have SSM agent running, Inspector can't scan for CVE vulnerabilities. Install SSM agent via AMI or user data.
-- **Inspector v2 scans continuously — there's no manual "run scan" button like v1:** Inspector v2 (current) doesn't use assessment templates. It automatically scans all enabled resources continuously. New vulnerabilities are detected within 24-48 hours of CVE publication.
-- **ECR enhanced scanning uses Inspector (not ECR's basic scan) and costs $0.09/image/month:** Basic ECR scanning (CVEs only, no Lambda dependencies) is free. Enhanced scanning (full dependency analysis) uses Inspector and costs money. Know which you're using.
-- **Inspector findings don't auto-remediate — you need EventBridge + SSM for that:** Inspector identifies vulnerabilities but doesn't patch them. Build a pipeline: Inspector findings → Security Hub → EventBridge → SSM Patch Manager.
-- **Lambda layer vulnerabilities are scanned separately from function code:** If your Lambda uses layers, both the function code AND each layer are scanned. A vulnerable layer = a finding on your function.
+- [Inspector coverage](https://docs.aws.amazon.com/inspector/latest/user/what-is-inspector.html)
+- [Enable CLI](https://docs.aws.amazon.com/cli/latest/reference/inspector2/enable.html)
+- [ListFindings contract](https://docs.aws.amazon.com/cli/latest/reference/inspector2/list-findings.html)
+- [ECR registry scanning](https://docs.aws.amazon.com/cli/latest/reference/ecr/put-registry-scanning-configuration.html)
+- [Pricing/trial](https://aws.amazon.com/inspector/pricing/)
 
 ## Across the wiki
 
-- [[DevOps/devsecops/stage2-build/09-container-image-scanning|M09: Container Image Scanning & Hardening]] — software supply chain (DevOps)
-- [[Security/kubernetes-security/vulnerability-scanning/README|Kubernetes Vulnerability Scanning]] — software supply chain (Security)
-- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]] — software supply chain (Kubernetes)
-- [[Containers/registries|Container Registries]] — software supply chain (Containers)
+- [[Security/kubernetes-security/vulnerability-scanning/README|Kubernetes Vulnerability Scanning]]
+- [[Kubernetes/concepts/L07-security/02-workload-sandboxing/19-image-hardening|Image Hardening]]

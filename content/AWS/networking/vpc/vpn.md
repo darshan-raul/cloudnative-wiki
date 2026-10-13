@@ -1,65 +1,63 @@
 ---
-title: AWS Site-to-Site VPN & Client VPN
-description: Connecting on-premises networks and remote users to AWS VPCs via IPsec Site-to-Site VPN and AWS Client VPN
+title: "AWS VPN"
+description: "Distinguish Site-to-Site routing and tunnel resilience from Client VPN workforce authentication and access."
 tags:
-  - aws
-  - networking
-  - vpc
-  - vpn
-  - ipsec
-date: 2026-10-04
+  - cloud/aws/networking/hybrid
+date: 2026-10-12
 ---
 
-# AWS Site-to-Site VPN & Client VPN
+# AWS VPN
 
-AWS provides managed VPN solutions to connect remote networks (on-premises data centers, branch offices) and remote users securely to your Amazon VPCs over encrypted IPsec and OpenVPN tunnels.
+Site-to-Site VPN connects supported networks through encrypted tunnels; Client VPN connects individual clients. Start with [[AWS/networking/hybrid/README|hybrid topology]], [[AWS/networking/vpc/README|routes]] and [[AWS/security/iam/identity-center|workforce identity]].
 
----
+## Site-to-Site
 
-## 1. AWS Site-to-Site VPN Architecture
+A customer gateway resource represents the supported customer endpoint; the AWS termination can use a VGW or TGW design. Configure both tunnels and verify actual failover. Static and dynamic BGP routing are supported with different operational implications.
 
-An AWS Site-to-Site VPN creates an encrypted IPsec tunnel over the public internet between your on-premises network and AWS.
+BGP/ECMP, tunnel bandwidth, acceleration and endpoint address options are mode-specific. Do not universalize one bandwidth/default ASN/IPv4 requirement to all VPN variants. A quota increase is not a throughput guarantee.
 
+## Client VPN
+
+Authentication options include Active Directory, mutual certificates and SAML federation. OIDC is not a documented direct Client VPN authentication option; Active Directory is not the same mechanism as SAML federation.
+
+Target-network associations, endpoint routes, authorization rules and SGs are separate. Authentication success alone does not authorize every destination. Split/full tunnel decisions affect routing, DNS and egress.
+
+## Sandbox access drill
+
+Prerequisites: approved test VPN endpoint and a nonsensitive private server, scoped administration and an independent management path. Tunnel/endpoint/connection charges may apply.
+
+1. Record client/source identity, authorized destination and expected route.
+2. Connect and test only the allowed service.
+3. Attempt an excluded destination; expect failure despite successful authentication.
+4. For Site-to-Site, test an approved single-tunnel failure and observe route/client recovery.
+5. Restore the original configuration; verify both tunnels/routes or intended client associations.
+6. Remove dedicated endpoints/connections/associations, customer-gateway resources and logs only after confirming no shared dependency.
+
+Collect client/server logs, route tables and connection status; distinguish credentials, certificate validity, DNS, routes and SG failures. Measure failover rather than quoting a fixed application recovery time.
+
+## Routing and access comparison
+
+| Question        | Site-to-Site VPN                                | Client VPN                                              |
+| --------------- | ----------------------------------------------- | ------------------------------------------------------- |
+| Who connects?   | Customer network gateway to AWS gateway         | Individual client to endpoint                           |
+| Routing         | Static or BGP with tunnel routes                | Endpoint route table plus target network association    |
+| Access boundary | Prefixes, SGs/NACLs and customer firewall       | Authentication, authorization rules, routes and SGs     |
+| Resilience test | Both tunnels and customer/AWS route convergence | Endpoint association, client reconnect and DNS behavior |
+
+```text
+on-prem router → tunnel A/B → VGW or TGW → VPC subnet → private service
+user device → Client VPN endpoint → target association → authorized route → service
 ```
-On-Premises Data Center                     AWS Cloud
-┌─────────────────────────┐                ┌─────────────────────────┐
-│ Customer Gateway (CGW)  │                │ Virtual Private Gateway │
-│ Physical Appliance / IP │                │ (VGW) or Transit Gateway│
-└───────────┬─────────────┘                └────────────┬────────────┘
-            │                                           │
-            │==== IPsec Tunnel 1 (Active) ==============│
-            │                                           │
-            │==== IPsec Tunnel 2 (Standby / ECMP) ======│
-            └───────────────────────────────────────────┘
-```
 
-### Core Components:
+For BGP Site-to-Site VPN, record advertised/accepted prefixes and route priority; for static routing, maintain the explicit prefixes on both ends. In both cases, confirm return routing and MTU-sensitive application behavior. For Client VPN, a successful authentication result only establishes identity; the destination also needs an authorization rule, endpoint route, associated target network and matching SG. Split-tunnel clients may retain local routes that affect which resolver or path handles a request.
 
-1. **Virtual Private Gateway (VGW):** The VPN concentrator attached to a single VPC.
-2. **Transit Gateway (TGW) Attachment:** For multi-VPC topologies, attach the VPN to an AWS Transit Gateway. Supports Equal-Cost Multi-Path (ECMP) routing across multiple tunnels to exceed the 1.25 Gbps per-tunnel bandwidth limit.
-3. **Customer Gateway (CGW):** The AWS resource representing your on-premises router/firewall appliance (requires a public static IPv4 address).
-4. **Dual Tunnels:** AWS automatically provisions **two redundant IPsec tunnels** per VPN connection terminating in different Availability Zones. Always configure both tunnels on your CGW for high availability.
+## References
 
----
-
-## 2. Routing: Dynamic (BGP) vs Static
-
-| Feature            | Dynamic Routing (BGP)                             | Static Routing                            |
-| :----------------- | :------------------------------------------------ | :---------------------------------------- |
-| **Protocol**       | Border Gateway Protocol (ASN 64512-65534)         | Static CIDR routes entered in route table |
-| **Failover**       | **Automatic sub-second failover** between tunnels | Manual route updates or health probes     |
-| **ECMP Scaling**   | Supported (up to ~5 Gbps aggregate throughput)    | Not supported                             |
-| **Recommendation** | **Best Practice for all production networks**     | Legacy firewalls without BGP support      |
-
----
-
-## 3. AWS Client VPN
-
-For individual remote workers (laptops/workstations):
-
-- Managed client-based VPN service based on **OpenVPN**.
-- Integrates with corporate identity providers via **Active Directory (SAML 2.0 / OIDC)** or mutual certificate authentication.
-- Elastic and serverless: scales connection capacity automatically.
+- [Site-to-Site routing types](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNRoutingTypes.html).
+- [Site-to-Site introduction](https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html).
+- [Client VPN authentication](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/client-authentication.html).
+- [Client authorization](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/cvpn-working-rules.html).
+- [Pricing](https://aws.amazon.com/vpn/pricing/).
 
 ## Across the wiki
 

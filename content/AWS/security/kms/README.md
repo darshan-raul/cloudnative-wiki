@@ -2,312 +2,155 @@
 title: AWS KMS
 description: AWS KMS — managed encryption keys. CMK types (symmetric/asymmetric), key policies, grants, rotation, envelope encryption, and CloudTrail integration.
 tags:
-  - aws
-  - security
-  - kms
-  - encryption
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS KMS (Key Management Service)
 
-KMS provides managed encryption keys (CMKs) used by virtually every AWS service for data at rest encryption. KMS keys are the foundation of encryption in AWS — S3, RDS, DynamoDB, EBS, Lambda, and many others use KMS for encryption.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## Key Types
+KMS manages cryptographic keys and authorized cryptographic operations. Current terminology is KMS key, not the older customer master key/CMK. Encryption does not replace access control or backups.
 
-### Symmetric CMK (Most Common)
+## Key and permission model
 
-- 256-bit AES-GCM encryption
-- Single key used for encrypt/decrypt
-- Used by almost all AWS services
-- Hardware-backed (HSM)
+Symmetric encryption keys are the usual integration choice. Asymmetric keys have algorithm-specific encryption or signing uses; not every RSA/ECC key supports every operation. HMAC keys generate/verify MACs. CloudHSM is a separate service with a different ownership/cost model.
 
-### Asymmetric CMK
+A key policy is central to authorization; the account principal statement can enable delegation to IAM policies, not merely allow the root user's interactive use. Grants authorize scoped operations, often for service integrations. Cross-account usage needs appropriate key and caller policies. See [[AWS/security/iam/policy-evaluation|policy evaluation]].
 
-- RSA or ECC key pairs
-- Public key encrypts, private key decrypts
-- Use for: API signing, TLS, encrypt outside AWS
-- Not used by most AWS services natively
+Envelope encryption uses GenerateDataKey to obtain a plaintext data key and encrypted copy. Encrypt data locally, erase the plaintext key, and retain only the encrypted data key with ciphertext. Never log plaintext keys or secrets.
 
-### CloudHSM (Dedicated Hardware)
+## Reversible cryptographic lab
 
-- You manage keys on your own hardware
-- FIPS 140-2 Level 3 validated HSM
-- Higher compliance requirements
-- Higher cost
-
-## Creating a CMK
+Use a sandbox Region and a role authorized for CreateKey, scoped Encrypt/Decrypt, DescribeKey and ScheduleKeyDeletion. Creating a customer-managed key incurs charges. The create-key policy flag is --policy, not --key-policy; the CLI default policy delegates permissions as documented.
 
 ```bash
-# Create symmetric CMK (default)
-aws kms create-key \
-  --description "My app encryption key" \
-  --key-usage ENCRYPT_DECRYPT \
-  --origin AWS_KMS \
-  --tags '[{"TagKey": "Environment", "TagValue": "production"}]'
-
-# Response
-{
-  "KeyMetadata": {
-    "KeyId": "xxxxx-xxxxx-xxxxx",
-    "Arn": "arn:aws:kms:us-east-1:123456789012:key/xxxxx",
-    "KeyState": "Enabled"
-  }
-}
+aws kms create-key --description "Disposable wiki lab" --key-usage ENCRYPT_DECRYPT
 ```
 
-### Create with Key Policy
+Record KeyMetadata.KeyId. Save non-sensitive plaintext to a local file using your editor. Use `aws kms encrypt --key-id KEY_ID --plaintext fileb://fixture.txt --encryption-context Purpose=wiki-lab`. The response CiphertextBlob is base64 text; decode it to a binary ciphertext file before passing fileb:// to decrypt.
 
-```bash
-aws kms create-key \
-  --description "My app encryption key" \
-  --key-policy '{
-    "Version": "2012-10-17",
-    "Id": "key-policy",
-    "Statement": [{
-      "Effect": "Allow",
-      "Principal": {"AWS": "arn:aws:iam::123456789012:root"},
-      "Action": "kms:*",
-      "Resource": "*"
-    }]
-  }'
+Decrypt with the same encryption context. Expected: the original plaintext after decoding the response. Try a different Purpose context and expect failure; encryption context is authenticated metadata, not confidential storage.
+
+## Rotation, deletion and cost
+
+Rotation eligibility and schedules depend on key type/origin; do not promise automatic rotation for imported/asymmetric keys. Rotation preserves decryptability of older ciphertext. Multi-Region keys are related regional resources, not a universal single global key or automatic replication of all policies.
+
+Schedule deletion only for the lab key, with the documented minimum waiting period; deletion after that window is irreversible and can make dependent ciphertext unrecoverable. Check aliases/grants/service dependencies first and cancel deletion if mistaken.
+
+Estimate key-months and operation-specific request charges. At a purely illustrative \$0.03/10,000 requests, one million encrypts plus one million decrypts per day over thirty days is sixty million requests and \$180 before allowances/key charges—not \$6. Verify current regional operation pricing before using this assumption.
+
+## Key catalogue and envelope architecture
+
+| Kind                          | Typical use                              | Compatibility/ownership                                      |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
+| Symmetric encryption          | Supported service at-rest integration    | Selected key origin/store and operation constraints          |
+| Asymmetric encryption/signing | Outside-service encryption or signatures | Algorithm/usage must match; not every integration accepts it |
+| HMAC                          | Message authentication codes             | GenerateMac/VerifyMac, not Encrypt/Decrypt                   |
+| AWS-managed key               | Service-managed use                      | Policy/lifecycle controls differ from customer-managed keys  |
+| Customer-managed key          | Explicit policy/grants/lifecycle         | Key-months and applicable request costs                      |
+| CloudHSM/custom store         | Specific control/compliance needs        | Additional service/availability/operator responsibilities    |
+
+```text
+GenerateDataKey → plaintext data key ── local authenticated encryption → ciphertext
+       └─────── encrypted data key ─────────── stored with ciphertext
+decrypt encrypted data key → authorized local decrypt → plaintext application data
 ```
 
-## Key Policies
+KMS Encrypt has input/algorithm size limits; it is not a bulk-file encryption upload API. The data key encrypts the object locally. Authentication context belongs to the cryptographic request; never put confidential values in it because audit evidence may expose it.
 
-### Default Key Policy (implicit)
+## Complete teaching key policy and grants
 
-If you don't specify a key policy, the default allows the root user full access. This is fine for most use cases.
-
-### Custom Key Policy
+Substitute the sandbox account and application role before creating a disposable symmetric key with --policy file://key-policy.json:
 
 ```json
 {
   "Version": "2012-10-17",
-  "Id": "key-policy",
   "Statement": [
     {
-      "Sid": "Enable IAM User Permissions",
+      "Sid": "EnableAccountIAMDelegation",
       "Effect": "Allow",
-      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
+      "Principal": { "AWS": "arn:aws:iam::111122223333:root" },
       "Action": "kms:*",
       "Resource": "*"
     },
     {
-      "Sid": "Allow use of key for Lambda",
+      "Sid": "ApplicationUseForLabContext",
       "Effect": "Allow",
-      "Principal": { "Service": "lambda.amazonaws.com" },
-      "Action": [
-        "kms:Encrypt",
-        "kms:Decrypt",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*"
-      ],
-      "Resource": "*"
+      "Principal": { "AWS": "arn:aws:iam::111122223333:role/WikiApplication" },
+      "Action": ["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey"],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": { "kms:EncryptionContext:Purpose": "wiki-lab" }
+      }
     }
   ]
 }
 ```
 
-## Grants (Fine-Grained Delegation)
+In a key policy, Resource \* refers to the attached key; this is not an identity policy granting every key. The account statement enables IAM delegation; caller identity policies/guardrails still matter. Production administration, separation of duties and cross-account policies require a reviewed design.
 
-Grants are an alternative to key policies for temporary, revokable access:
+A grant is delegated authorization to a grantee principal, not an implicit Lambda auto-discovery feature:
 
 ```bash
-# Create grant for Lambda
-aws kms create-grant \
-  --key-id xxxxx-xxxxx-xxxxx \
-  --grantee-principal arn:aws:lambda:us-east-1:123456789012:function:my-function \
-  --operations '[Encrypt, Decrypt, ReEncryptFrom, ReEncryptTo, GenerateDataKey, DescribeKey]' \
-  --name my-lambda-grant
-
-# Lambda retrieves the grant automatically via service role
+aws kms create-grant --key-id KMS_LAB_KEY_ID \
+  --grantee-principal APPLICATION_ROLE_ARN --operations Encrypt Decrypt \
+  --constraints '{"EncryptionContextEquals":{"Purpose":"wiki-lab"}}'
+aws kms list-grants --key-id KMS_LAB_KEY_ID
 ```
 
-Grants are useful when you can't modify the key policy (e.g., cross-account access).
+Record GrantId/GrantToken without exposing credentials. Eventual consistency can require the returned token for immediately authorized calls. Retire/revoke only the lab grant using the documented role-dependent operation; do not remove service grants blindly.
 
-## Envelope Encryption
+## SDK encryption-context walkthrough
 
-KMS encrypts data keys, not large objects directly:
-
-```
-Application Data (100 MB)
-    │
-    │  KMS.GenerateDataKey
-    ▼
-Data Key (DEK) ──► KMS.Encrypt ──► Encrypted Data Key
-    │
-    ▼
-AES-256 Encrypt (local)
-    │
-    ▼
-Encrypted Data + Encrypted Data Key
-```
+This complete small-payload example uses a pre-existing lab key and verified SDK credentials; it prints no plaintext/ciphertext:
 
 ```python
-# Python example (boto3)
+import os
 import boto3
-import base64
 
-kms = boto3.client('kms')
-
-# Generate data key
-response = kms.generate_data_key(
-    KeyId='xxxxx-xxxxx-xxxxx',
-    KeySpec='AES-256'  # 256-bit
-)
-
-# Use the plaintext key locally
-plaintext_key = response['Plaintext']  # Use this to encrypt
-encrypted_key = response['CiphertextBlob']  # Store this
-
-# Encrypt data locally (use plaintext_key with crypto library)
-# Store encrypted_key with encrypted data
+kms = boto3.client("kms")
+key_id = os.environ["KMS_LAB_KEY_ID"]
+context = {"Purpose": "wiki-lab"}
+encrypted = kms.encrypt(
+    KeyId=key_id,
+    Plaintext=b"synthetic-fixture",
+    EncryptionContext=context,
+)["CiphertextBlob"]
+decrypted = kms.decrypt(
+    KeyId=key_id,
+    CiphertextBlob=encrypted,
+    EncryptionContext=context,
+)["Plaintext"]
+assert decrypted == b"synthetic-fixture"
 ```
 
-## Key Rotation
+For bulk encryption use a maintained AWS Encryption SDK/authenticated-encryption workflow that manages framing, data keys and integrity. Python deletion of a variable is not guaranteed cryptographic memory erasure.
 
-### Automatic Rotation
+## Service integration, rotation and troubleshooting
 
-```bash
-# Enable automatic rotation (every year)
-aws kms enable-key-rotation --key-id xxxxx-xxxxx-xxxxx
+SSE-S3 and SSE-KMS are distinct choices. Select a supported customer-managed key and service resource policy/role permissions; uploading to S3 does not automatically grant another account decrypt. EBS encryption defaults are regional configuration; RDS encryption and restore/migration have engine/resource lifecycle constraints.
 
-# Check rotation status
-aws kms get-key-rotation-status --key-id xxxxx-xxxxx-xxxxx
-```
+Automatic rotation eligibility, configurable periods and on-demand/manual alternatives depend on key origin/type. Rotation preserves old-material decryptability; replacing a key/alias requires data migration/access planning and does not rewrite every ciphertext.
 
-Automatic rotation is enabled for symmetric CMKs by default (AWS-managed keys). For customer-managed keys, rotation is optional.
+Inspect key state, policy/grants, encryption context, Region/partition, algorithm and throttling before broadening permissions. Preserve CloudTrail KMS evidence; metadata/key usage is not confidential payload access. Before deletion inventory all dependent encrypted resources and test restore with the intended key identity; deletion after the waiting period is irreversible.
 
-### Manual Rotation (for asymmetric or custom key material)
+References: [grants](https://docs.aws.amazon.com/kms/latest/developerguide/grants.html), [encryption context](https://docs.aws.amazon.com/kms/latest/developerguide/encrypt_context.html), [key rotation](https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html), [Encrypt contract](https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html).
 
-You can't rotate asymmetric CMKs automatically. For CMKs with imported key material, you must re-import.
+## Cross-wiki comparisons
 
-## Using KMS with AWS Services
-
-### S3 Encryption
-
-```bash
-# SSE-KMS (KMS-managed key)
-aws s3api put-object \
-  --bucket my-bucket \
-  --key my-file.txt \
-  --body my-file.txt \
-  --ssekms-key-id xxxxx-xxxxx-xxxxx
-
-# SSE-KMS with S3-managed key (S3-SSE-KMS)
-aws s3api put-object \
-  --bucket my-bucket \
-  --key my-file.txt \
-  --body my-file.txt \
-  --server-side-encryption aws:kms \
-  --ssekms-key-id xxxxx-xxxxx-xxxxx
-```
-
-### EBS Encryption (automatic)
-
-```bash
-# Create encrypted EBS volume
-aws ec2 create-volume \
-  --size 100 \
-  --encrypted \
-  --kms-key-id xxxxx-xxxxx-xxxxx \
-  --availability-zone us-east-1a
-```
-
-### RDS Encryption
-
-```bash
-# RDS encryption is enabled at creation
-aws rds create-db-instance \
-  --db-instance-identifier my-db \
-  --db-instance-class db.t3.micro \
-  --engine postgres \
-  --allocated-storage 100 \
-  --storage-encrypted \
-  --kms-key-id xxxxx-xxxxx-xxxxx
-```
-
-## Encryption Context
-
-Additional authenticated data (AAD) that binds encryption to context:
-
-```python
-# Encrypt with context
-response = kms.encrypt(
-    KeyId='xxxxx-xxxxx-xxxxx',
-    Plaintext='my-secret-data',
-    EncryptionContext={
-        'service': 'payments',
-        'customer_id': 'CUST-123'
-    }
-)
-
-# Decrypt with SAME context (if context differs, decryption fails)
-response = kms.decrypt(
-    CiphertextBlob=response['CiphertextBlob'],
-    EncryptionContext={
-        'service': 'payments',
-        'customer_id': 'CUST-123'
-    }
-)
-```
-
-## CloudTrail Integration
-
-Every KMS operation is logged to CloudTrail:
-
-```bash
-# Look up KMS API calls
-aws cloudtrail lookup-events \
-  --lookup-attributes AttributeKey=EventName,AttributeValue=Encrypt
-```
-
-## Pricing
-
-| Component                   | Cost                          |
-| --------------------------- | ----------------------------- |
-| Customer managed keys (CMK) | $1.00/month                   |
-| AWS managed keys            | Free (used by other services) |
-| API calls (cryptographic)   | $0.03/10,000 calls            |
-| Key rotation                | Free (automatic)              |
-| Custom key store (CloudHSM) | $1.45/hour (~$1,044/month)    |
-
-## Limits
-
-| Resource                      | Limit                |
-| ----------------------------- | -------------------- |
-| CMKs per region               | 100,000              |
-| Grants per CMK                | 10,000               |
-| Key policies                  | 20 KB                |
-| Encryption context pairs      | 8                    |
-| Encryption context key length | 256 bytes            |
-| Plaintext size (Encrypt API)  | 4 KB                 |
-| Ciphertext size (Encrypt API) | 4 KB (same key type) |
+- [[Azure/security/key-vault/README|Azure Key Vault Architecture, Managed HSM, and Cryptographic Governance]] — key management (Azure)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/kms/
-- **Documentation:** https://docs.aws.amazon.com/kms/
-- **Pricing:** https://aws.amazon.com/kms/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** An application encrypting 1M records/day with KMS. 1M encrypts + 1M decrypts = 2M API calls/month. 2M × $0.03/10K = $6/month. Plus 1 CMK = $1/month. Total: ~$7/month. Compare to CloudHSM ($1,044/month). KMS is 99.3% cheaper for most use cases.
-
-**Scenario 2:** 10 S3 buckets encrypted with CMK (SSE-KMS). 10 CMKs × $1/month = $10/month. Plus API calls (S3 makes KMS calls for each object). For 1M objects/month: 1M × $0.03/10K = $3/month. Total: ~$13/month. With S3-SSE-KMS (AWS managed), no CMK cost (but less control).
-
-## Nuggets & Gotchas
-
-- **KMS has a 4KB limit on Encrypt API — for larger data, use envelope encryption:** Encrypt a data key with KMS, then use that key locally to encrypt the large object. This is how S3, EBS, and RDS handle encryption automatically.
-- **CMK deletion requires waiting 7-30 days (configurable) — you can't delete immediately:** If you delete a CMK, any data encrypted with it is unrecoverable. AWS enforces a waiting period. Use `PendingDeletionWindowInDays` to set 7-30 days.
-- **Key rotation doesn't re-encrypt existing data — it creates a new key version:** Old data encrypted with the old key version is still decryptable with the old key. Only new data uses the new key. This is efficient but means old keys must remain available.
-- **KMS grants are ideal for Lambda — they allow temporary access without modifying key policy:** Lambda functions are stateless, so each invocation needs access. Grants auto-revoke when the grantee principal (Lambda) is deleted.
-- **EncryptionContext is public metadata — don't store secrets there:** The context is visible in CloudTrail logs. Use it for authentication/authorization (e.g., "this key was used for this specific customer"), not for secrets.
+- [KMS concepts](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html)
+- [CreateKey CLI](https://docs.aws.amazon.com/cli/latest/reference/kms/create-key.html)
+- [Key policies](https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
+- [Deletion safeguards](https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html)
+- [Pricing](https://aws.amazon.com/kms/pricing/)
 
 ## Across the wiki
 
-- [[Azure/security/key-vault/README|Azure Key Vault Architecture, Managed HSM, and Cryptographic Governance]] — key management (Azure)
-- [[GCP/security/kms/README|Cloud KMS, Cloud HSM, and CMEK Envelope Encryption]] — key management (GCP)
-- [[Architecture/solution-architecture-concepts/cryptography/README|Cryptography]] — key management (Architecture)
-- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]] — key management (Kubernetes)
+- [[GCP/security/kms/README|Cloud KMS, Cloud HSM, and CMEK Envelope Encryption]]
+- [[Architecture/solution-architecture-concepts/cryptography/README|Cryptography]]
+- [[Kubernetes/concepts/L07-security/03-encryption-identity/13-etcd-encryption|etcd Encryption]]

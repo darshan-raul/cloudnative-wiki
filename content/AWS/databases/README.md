@@ -1,157 +1,81 @@
 ---
-title: AWS Databases
-description: AWS database services — RDS (relational), Aurora (MySQL/PostgreSQL compatible), DynamoDB (NoSQL), ElastiCache (in-memory), Redshift (data warehouse), DocumentDB, Neptune, QLDB, and Timestream.
+title: "AWS Databases"
+description: "Choose from access patterns, transactions, query language, latency and recovery needs, not a service-logo checklist."
 tags:
-  - aws
-  - databases
-date: 2026-06-06
+  - aws/databases
+date: 2026-10-12
 ---
 
 # AWS Databases
 
-AWS offers managed databases across all major categories: relational (RDS, Aurora), NoSQL (DynamoDB), in-memory (ElastiCache), data warehouse (Redshift), document (DocumentDB), graph (Neptune), ledger (QLDB), and time-series (Timestream).
+Choose from access patterns, transactions, query language, latency and recovery needs, not a service-logo checklist. Start with [[AWS/architecture/data-store-selection|data-store selection]], [[AWS/security/iam/README|IAM]] and [[AWS/networking/README|networking]]. Then read [[AWS/reliability/backup-and-recovery|backup and recovery]] before handling durable production data.
 
-## Service Map
+## Learning path and service map
 
-| Service                             | Type                             | Engine                                         | Use Case                        |
-| ----------------------------------- | -------------------------------- | ---------------------------------------------- | ------------------------------- |
-| [[rds/README\|RDS]]                 | Relational                       | MySQL, PostgreSQL, MariaDB, Oracle, SQL Server | General OLTP, web apps          |
-| [[aurora/README\|Aurora]]           | Relational (MySQL/PG compatible) | Aurora MySQL, Aurora PostgreSQL                | High-scale, HA, serverless      |
-| [[dynamodb/README\|DynamoDB]]       | NoSQL (key-value, document)      | DynamoDB                                       | High-scale, low-latency         |
-| [[elasticache/README\|ElastiCache]] | In-memory                        | Redis, Memcached                               | Caching, sessions, pub/sub      |
-| [[redshift/README\|Redshift]]       | Data warehouse                   | Redshift (PostgreSQL-based)                    | Analytics, BI                   |
-| [[documentdb/README\|DocumentDB]]   | Document                         | MongoDB compatible                             | Semi-structured data            |
-| [[neptune/README\|Neptune]]         | Graph                            | Gremlin, SPARQL, openCypher                    | Social, fraud, knowledge graphs |
-| [[qldb/README\|QLDB]]               | Ledger                           | Amazon Quantum Ledger Database                 | Audit trail, immutable          |
-| [[timestream/README\|Timestream]]   | Time-series                      | Timestream                                     | IoT, metrics, events            |
+| Lesson                                            | Main decision                                                                                                                    |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| [[AWS/databases/rds/README\|RDS]]                 | Managed relational engines including PostgreSQL, MySQL, MariaDB, Oracle, SQL Server and Db2; engine-specific features/licensing. |
+| [[AWS/databases/aurora/README\|Aurora]]           | MySQL/PostgreSQL-compatible clustered relational storage, replicas and Serverless v2.                                            |
+| [[AWS/databases/dynamodb/README\|DynamoDB]]       | Key/value and document access patterns designed around partition/sort keys.                                                      |
+| [[AWS/databases/elasticache/README\|ElastiCache]] | Valkey, Redis OSS or Memcached caching; do not confuse a cache with authoritative data.                                          |
+| [[AWS/databases/documentdb/README\|DocumentDB]]   | MongoDB-compatible APIs with a distinct compatibility/support matrix.                                                            |
+| [[AWS/databases/neptune/README\|Neptune]]         | Connected data, RDF/property graphs and graph-specific queries/analytics.                                                        |
+| [[AWS/analytics/redshift/README\|Redshift]]       | Columnar analytical warehouse; not a low-latency transactional replacement.                                                      |
+| [[AWS/databases/timestream/README\|Timestream]]   | Separate LiveAnalytics eligibility from InfluxDB deployment/API choices.                                                         |
+| [[AWS/databases/qldb/README\|QLDB history]]       | Ended support July 31, 2025; not a new-workload recommendation.                                                                  |
 
-## Database Selection Decision Tree
+## Architecture distinctions
 
-```
-What type of data?
-  │
-  ├── Structured relational (ACID transactions)?
-  │     │
-  │     ├── Need high availability + auto-scaling + serverless?
-  │     │     YES → Aurora (MySQL or PostgreSQL)
-  │     │     NO ↓
-  │     │
-  │     ├── Need managed Oracle/SQL Server?
-  │     │     YES → RDS (Oracle, SQL Server)
-  │     │     NO → RDS (MySQL, PostgreSQL, MariaDB)
-  │     │
-  │     └── Need petabyte-scale data warehouse?
-  │           YES → Redshift
-  │           NO ↓
-  │
-  ├── Semi-structured (JSON documents)?
-  │     YES → DocumentDB (MongoDB compatible)
-  │     NO ↓
-  │
-  ├── Graph (relationships, social, fraud)?
-  │     YES → Neptune (Gremlin or SPARQL)
-  │     NO ↓
-  │
-  ├── Key-value (high-scale, low-latency)?
-  │     YES → DynamoDB
-  │     NO ↓
-  │
-  ├── In-memory (caching, sessions)?
-  │     YES → ElastiCache (Redis or Memcached)
-  │     NO ↓
-  │
-  ├── Immutable audit log (financial, compliance)?
-  │     YES → QLDB
-  │     NO ↓
-  │
-  └── Time-series (IoT, metrics)?
-        YES → Timestream
-        NO → Consider what you're actually storing
+A read replica scales supported read workloads but is not necessarily a synchronous HA standby. Classic RDS Multi-AZ DB instances and Multi-AZ DB clusters expose different standby/read behavior. Aurora separates clustered storage, writer and readers. Multi-Region replication requires explicit topology and does not automatically eliminate data-loss/failover concerns.
+
+Caching introduces TTL/invalidation and stale-read behavior. Before adding DAX or ElastiCache, identify the source of truth and define what the application does during a cache outage. Query-heavy relationship traversal suggests Neptune; large aggregates/BI favor Redshift rather than an operational database.
+
+## Recovery and security
+
+Encryption at rest, TLS in transit, network isolation, IAM/database credentials and authorization are different controls. Parameter/option groups and maintenance windows must match the engine and supported configuration. The automated backup window is separate from a maintenance window.
+
+DynamoDB PITR provides a configurable one-to-thirty-five-day recovery window, not infinite retention. On-demand backups/long-term retention are separate. Across services, copy/restore limitations, KMS permissions and recovery time matter more than a successful backup status.
+
+## Selection exercise
+
+Given an order-processing system and BI dashboard, document transactional requirements, access patterns, consistency, item/query sizes and RPO/RTO. Compare two eligible databases and identify one reason the rejected option fails. In a sandbox, verify least-privilege reads/writes, demonstrate an unauthorized denial and restore a small test dataset into an isolated target. Remove disposable databases, replicas, caches and retained backup artifacts according to policy.
+
+Estimate compute/capacity, storage, I/O, backup, transfer, licenses and replication from one Region's current rates. Quotas and engine versions should be discovered from owning documentation, not an unsourced universal table.
+
+## Selection decision tree and shared operating concepts
+
+```text
+Need transactional relational queries?
+  → RDS/Aurora, validating engine compatibility
+Known key/item access patterns at scale?
+  → DynamoDB, modelling keys/indexes first
+Document API compatibility required?
+  → DocumentDB, checking exact operator/driver support
+Relationship traversal is central?
+  → Neptune and explicit graph model
+Large aggregates/BI?
+  → Redshift/Athena rather than OLTP-by-default
+Cache acceleration?
+  → ElastiCache/DAX with a defined authoritative store
+Time-series workload?
+  → eligible Timestream product or another justified store
 ```
 
-## Architecture Patterns
+This is a starting point, not a one-question algorithm. An application can use a relational source of truth, cache and warehouse simultaneously, each with distinct consistency/recovery guarantees.
 
-### Read Replicas
+| Concept            | What it does                             | What it does not establish                        |
+| ------------------ | ---------------------------------------- | ------------------------------------------------- |
+| Read replica       | Supported read scaling/replication       | Guaranteed synchronous HA or zero-loss promotion  |
+| HA standby         | Supported availability/failover topology | An independently retained backup                  |
+| Cache              | Faster eligible accesses                 | Authoritative durability or universal consistency |
+| PITR/snapshot      | Supported recovery points                | Complete application/network/identity restoration |
+| Encryption at rest | Protects storage under key policy        | Network authorization, TLS or backup availability |
+| Maintenance window | Governs supported maintenance timing     | Same schedule as automated backups                |
 
-```
-Writer (Primary)
-  │
-  └──► Read Replica 1 (async, read-only)
-  └──► Read Replica 2 (async, read-only)
-  └──► Read Replica 3 (async, read-only)
-```
-
-### Multi-AZ (HA)
-
-```
-AZ-1: Primary DB
-  │
-  └──► AZ-2: Standby (sync replication)
-  └──► AZ-3: Read Replica 1
-```
-
-### Cache Layer
-
-```
-Application
-  │
-  ▼
-ElastiCache (Redis/Memcached)
-  │ Cache miss
-  ▼
-RDS / DynamoDB
-```
-
-### Aurora Serverless
-
-```
-Application
-  │
-  ▼
-Aurora Serverless (auto-scales ACU)
-  │
-  └── Data API (HTTPS, no persistent connections)
-```
-
-## Shared Concepts
-
-### Encryption at Rest
-
-All AWS managed databases support encryption at rest using KMS:
-
-- AWS managed keys (free)
-- Customer managed keys (CMK) — you pay for KMS
-
-### Automated Backups
-
-| Database          | Default Retention   | Max Retention   |
-| ----------------- | ------------------- | --------------- |
-| RDS MySQL/PG      | 1 day               | 35 days         |
-| Aurora            | 1 day (continuous)  | 35 days         |
-| DynamoDB          | Incremental forever | Infinite (PITR) |
-| ElastiCache Redis | 1 day (RDB)         | 35 days         |
-| Redshift          | 1 day               | 35 days         |
-
-### Maintenance Windows
-
-All databases have a weekly maintenance window (30 minutes):
-
-- Engine version upgrades
-- OS patches
-- Instance class changes
-
-Set `maintenance-window` to off-peak hours.
+Benchmark the actual query/item model and failure paths. A database's supported API name is not proof that every upstream feature/version behaves identically. Record engine versions, restore/key dependencies and application reconnect behavior with the architecture decision.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/products/databases/
-- **Documentation:** https://docs.aws.amazon.com/databases/
-- **Pricing:** https://aws.amazon.com/products/databases/pricing/
-
-## Nuggets & Gotchas
-
-- **RDS and Aurora are NOT multi-region by default — you must create read replicas in another region for DR:** A Multi-AZ deployment keeps a standby in the same region only. For true DR across regions, use cross-region read replicas or Aurora Global Database.
-- **DynamoDB has no schema — you can store anything, but you should enforce a schema at the application layer:** DynamoDB will happily store `{"name": "x"}` in one item and `{"count": 42}` in another. Your application must handle schema variations.
-- **ElastiCache Redis has two modes — Cluster Mode Disabled (single shard, up to 5 replicas) and Cluster Mode Enabled (up to 90 shards):** Cluster Mode Enabled allows horizontal scaling but requires Redis cluster clients. Most use cases work fine with Cluster Mode Disabled.
-- **Redshift is not meant for OLTP — it's a columnar MPP database for analytics, not transactions:** If you need sub-second queries on millions of rows with high write throughput, use RDS or DynamoDB. Redshift is for complex analytical queries on large datasets (BI, reporting).
-- **QLDB is immutable but not encrypted at rest by default with customer managed keys — it's always encrypted with AWS managed keys:** For financial compliance, verify your encryption requirements match QLDB's default behavior. Use customer managed keys if you need extra control.
+- [AWS database selection guide](https://docs.aws.amazon.com/decision-guides/latest/databases-on-aws-how-to-choose/databases-on-aws-how-to-choose.html)
+- [DynamoDB backup and recovery](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Backup-and-Restore.html)
+- [AWS service availability changes](https://aws.amazon.com/about-aws/whats-new/2025/05/aws-service-changes/)

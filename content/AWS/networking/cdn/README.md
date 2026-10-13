@@ -1,244 +1,101 @@
 ---
-title: Amazon CloudFront
-description: Amazon CloudFront — global CDN with edge caching, SSL/TLS termination, OAI, Lambda@Edge and CloudFront Functions, and DDoS protection via Shield Standard.
+title: "Amazon CloudFront"
+description: "Design cache keys and private origins, test personalized/range behavior and model geography-aware delivery costs."
 tags:
-  - aws
-  - networking
-  - cdn
-  - cloudfront
-date: 2026-06-06
+  - cloud/aws/networking/cdn
+date: 2026-10-12
 ---
 
 # Amazon CloudFront
 
-CloudFront is AWS's global content delivery network (CDN). It caches content at edge locations worldwide, reducing latency for end users and offloading origin traffic. CloudFront integrates with AWS Shield for DDoS protection (included at no extra cost).
+CloudFront caches and delivers supported content through edge infrastructure. Correct cache isolation and origin authorization matter more than a generic “CDN is cheaper” claim. Start with [[AWS/storage/s3/README|S3]] and [[AWS/networking/dns/README|DNS]].
 
-## Core Concepts
+## Cache key versus origin request
 
-### How CloudFront Works
+The default cache key includes distribution domain and URL path. A cache policy can add selected headers, query strings and cookies. An origin request policy can forward extra values **without** adding them to the key; forwarding a user identity without safe cache isolation can expose another user's response.
 
-```
-User → Edge Location (cache hit) → Response (fast)
-User → Edge Location (cache miss) → Origin (S3/ALB/EC2) → Response cached at edge
-```
+A response Set-Cookie does not automatically add the cookie to the request key. Review whether headers/cookies can be replayed from cache and disable caching or design isolation for personalized responses.
 
-1. User requests content from a CloudFront URL (e.g., `d123.cloudfront.net/assets/logo.png`)
-2. CloudFront checks the nearest edge location's cache
-3. **Cache hit:** Returns cached content immediately
-4. **Cache miss:** CloudFront fetches from the origin, caches it, and returns to the user
+TTL comes from the cache policy and applicable origin headers/behavior; do not promise every object always lives exactly twenty-four hours. CloudFront supports range GETs/206 with documented origin/range conditions.
 
-### Distributions
+## Private origin
 
-A distribution is a CloudFront configuration. Two types:
+For supported S3 origins, use OAC and a scoped bucket policy; legacy OAI is a separate mechanism. S3 website endpoints have different integration/access constraints. A CloudFront distribution alone does not stop direct bucket access.
 
-**Web Distributions** — HTTP/HTTPS, single or multiple origins, caching behavior, functions
-**RTMP Distributions** — Adobe Media Server streaming (deprecated, avoid)
+Functions and Lambda@Edge have different supported events, runtime/network/body capabilities and billing. Select from current contracts, not a generic interchangeability table.
 
-### Origins
+## Cache correctness exercise
 
-An origin is the source of the content CloudFront caches:
+Prerequisites: a sandbox distribution/origin, two test variants and a budget. Use nonsensitive fixtures, not real user data.
 
-| Origin Type          | Use Case                                              |
-| -------------------- | ----------------------------------------------------- |
-| S3 bucket            | Static assets (images, videos, documents)             |
-| ALB                  | Dynamic content, API responses, authenticated content |
-| EC2                  | Direct to web server (not recommended — use ALB)      |
-| Custom HTTP origin   | Non-AWS HTTP servers                                  |
-| MediaPackage channel | Live streaming                                        |
-| SageMaker endpoint   | ML inference at the edge                              |
+1. Publish a static marker and inspect Cache-Control plus cache-hit/miss headers over repeated requests.
+2. Add a query parameter that changes the origin response. Compare behavior before and after adding that parameter to the cache key.
+3. Test a cookie-dependent fixture; prove two clients cannot receive each other's personalized result.
+4. Request a valid byte range and verify the response and origin behavior.
+5. Update a versioned filename or perform a bounded invalidation, then measure propagation instead of assuming a guaranteed number of minutes.
 
-### Caching Behaviors
+For private S3 access, verify CloudFront success and unauthorized direct-S3 denial. Record distribution identity, policies and expected cache responses.
 
-Caching behaviors control how CloudFront caches content:
+## Cost and cleanup
 
-```
-Path pattern: /static/*
-  → Origin: S3 bucket (static-assets)
-  → Viewer protocol policy: HTTPS only
-  → TTL: 86400 seconds (1 day)
-  → Compress: Yes
+Price viewer geography/transfer tier, HTTP/HTTPS request counts, optional Origin Shield requests, functions, invalidations and other selected features. Origin Shield is not a universal per-GB surcharge, and ALB/S3/CloudFront do not share one transfer tariff.
 
-Path pattern: /api/*
-  → Origin: ALB (app-tier)
-  → Viewer protocol policy: HTTPS only
-  → TTL: 0 (no caching)
-  → Allowed HTTP methods: GET, POST
+Disable and delete only the dedicated distribution through its supported lifecycle, then remove dedicated origin/policy/artifacts/logs after checking dependencies. Disabling a distribution alone does not clean up its origin.
 
-Path pattern: /media/*
-  → Origin: S3 bucket (media)
-  → Viewer protocol policy: HTTPS only
-  → TTL: 31536000 seconds (1 year)
-  → Compress: No (video already compressed)
+## Distribution path and feature choices
+
+```text
+viewer → DNS → CloudFront distribution → ordered cache behavior
+                               ├─ cache key/TTL → edge response
+                               ├─ origin request policy → origin fetch
+                               └─ S3 with OAC or approved HTTP origin
 ```
 
-### Cache Key
+Each behavior selects an origin and cache policy. The cache key determines which requests may share a cached response; the origin request policy determines which additional values reach the origin. Design both for authentication and localization. For a single-page app, HTML usually needs a short or controlled TTL while fingerprinted assets can be cached longer. A versioned asset name is often easier to roll back than repeatedly invalidating a broad path.
 
-The cache key determines what is cached. By default: `protocol + host + path + query string`
+CloudFront Functions suit lightweight viewer-side request/response changes within their supported runtime; Lambda@Edge supports a broader event model and different deployment/runtime limits. Neither is a substitute for authorizing private origin access. Signed URLs/cookies control viewer access when appropriate; OAC controls CloudFront-to-S3 access. WAF/Shield address different threat classes from cache policy or origin identity.
 
-```
-Cache key: https://d123.cloudfront.net/api/users?id=5
-Cached separately from: https://d123.cloudfront.net/api/users?id=10
-```
+| Capability                     | CloudFront Functions                                     | Lambda@Edge                                                        |
+| ------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------ |
+| Languages                      | Supported JavaScript runtimes                            | Supported Node.js/Python runtimes                                  |
+| Events                         | Viewer request/response                                  | Viewer and origin request/response                                 |
+| Network or request-body access | No                                                       | Supported with event-specific limits                               |
+| CloudFront KeyValueStore       | Supported with JavaScript runtime 2.0                    | No                                                                 |
+| Common use                     | URL/cache-key/header changes, supported token validation | Origin logic or processing requiring libraries/network/body access |
 
-To cache regardless of query string: whitelist query params or use `CachePolicyId` that ignores query strings.
+Check [the current edge-function comparison](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/edge-functions-choosing.html) for event quotas and runtime support before packaging code.
 
-## Origin Access Identity (OAI)
+### Viewer and origin TLS
 
-OAI restricts S3 bucket access to CloudFront only. Without OAI, anyone can access S3 directly via the bucket URL. With OAI, only CloudFront can fetch from the bucket.
+For a custom viewer hostname, request/import the ACM certificate in **us-east-1**, validate the domain, attach it to the distribution and add the alternate domain name. Its certificate SAN must cover that name exactly or through a valid wildcard. Set the intended viewer HTTPS policy and test the custom hostname after DNS/configuration propagation.
 
-```
-Without OAI:
- CloudFront → S3 bucket (public access enabled) → users can bypass CloudFront
+CloudFront-to-origin HTTPS is a separate connection with its own origin protocol policy and valid certificate/name requirements. An ALB origin uses a certificate in the ALB's Region. A successful viewer handshake does not establish that the origin handshake works; mismatched origin names or chains can produce backend errors. Follow [CloudFront certificate requirements](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-and-https-requirements.html) and test both legs.
 
-With OAI:
- CloudFront → S3 bucket (public access disabled) → only CloudFront can access
-```
+### Static site plus API example
 
-## SSL/TLS
+| Ordered path behavior | Origin                        | Cache design                                                  |
+| --------------------- | ----------------------------- | ------------------------------------------------------------- |
+| `/assets/*`           | Private S3 bucket through OAC | Long TTL for fingerprinted filenames; omit user cookies       |
+| `/api/*`              | HTTPS application origin      | Disable shared caching unless each variant is safely isolated |
+| Default `/*`          | Private S3 origin             | Deliberate HTML TTL and SPA fallback behavior                 |
 
-CloudFront terminates SSL/TLS at edge locations. Options:
+Test a personalized API request from two separate clients. If the origin varies on a cookie or Authorization header, either avoid shared caching for that behavior or include a safe variation key. Forwarding the header without including it in a cache key can expose one client's response to another. For origin access, confirm a CloudFront request succeeds while direct S3 access is denied under the bucket policy.
 
-**Default certificate:** A CloudFront-provided `*.cloudfront.net` certificate (free, auto-managed)
+For planned asset changes, publish a new fingerprinted filename. For a bounded emergency invalidation, record the distribution ID and requested paths, then run `aws cloudfront create-invalidation --distribution-id "$CF_LAB_DISTRIBUTION_ID" --paths '/index.html'`. Inspect status before assuming propagation is complete; avoid a global `/*` invalidation by default. Geo restrictions and price class constrain delivery geography, but neither is a substitute for application authorization or a complete global cost estimate.
 
-**Custom certificate (ACM):** Your own certificate via AWS Certificate Manager (free, AWS-provisioned)
+### Worked delivery estimate
 
-**Origins:** Can use HTTP (CloudFront to origin) or HTTPS (encrypted end-to-end)
+For a hypothetical North American viewer-delivery study dated 2026-10-12, suppose ten million requests each return a 50 KiB asset from an origin in us-east-1. That is about 476.8 GiB of viewer transfer before cache effectiveness is considered. At assumed inputs of \$0.08/GiB delivery and \$0.01 per 10,000 requests, the arithmetic is about \$38.15 for delivery plus \$10 for requests. Replace these study inputs with the selected geography/plan and include origin fetches, invalidations beyond allowances, functions, logs and any application origin costs. A higher cache-hit rate primarily reduces origin work; it does not make viewer delivery bytes disappear.
 
-```
-Viewer → CloudFront: Always encrypted (HTTPS required)
-CloudFront → Origin: HTTP or HTTPS (configurable)
-```
-
-## CloudFront Functions and Lambda@Edge
-
-Two ways to run code at CloudFront edge locations:
-
-| Feature            | CloudFront Functions                  | Lambda@Edge                     |
-| ------------------ | ------------------------------------- | ------------------------------- |
-| Runtime            | JavaScript only                       | Node.js, Python                 |
-| Max execution time | < 3ms                                 | 5-30 seconds                    |
-| Pricing            | Free tier + $0.10/million invocations | Paid per invocation + duration  |
-| Use case           | Request/response manipulation         | Complex logic, third-party auth |
-| Can modify         | Request headers, URL, query string    | All headers, body, cookies      |
-| Access to          | Request data only                     | Full AWS SDK                    |
-
-### CloudFront Functions Use Cases
-
-- **URL rewrites:** Redirect `/legacy/path` to `/new/path`
-- **Header manipulation:** Add `X-Custom-Header` based on request
-- **Query string manipulation:** Remove sensitive query params before caching
-- **A/B testing:** Route to different origins based on cookie
-- **Auth token validation:** Validate JWT before forwarding request
-
-### Lambda@Edge Use Cases
-
-- **Dynamic origin selection:** Route to different origins based on request characteristics
-- **Custom error responses:** Return branded error pages from edge
-- **Request authentication:** Validate OAuth tokens, API keys
-- **Image resizing at edge:** Transform images on-the-fly (via Sharp, ImageMagick)
-
-## Lambda@Edge Limitations
-
-- **Cold starts:** Lambda@Edge has higher cold start latency than CloudFront Functions
-- **Regional restriction:** Lambda@Edge runs in `us-east-1` region, then replicates to edge locations
-- **Propagation delay:** Updating a Lambda@Edge function takes 5-10 minutes to propagate to all edge locations
-- **Payload size:** 128KB request/response (vs 1MB for regular Lambda)
-- **No persistent state:** Lambda@Edge cannot write to disk or databases directly
-
-## AWS Shield (Included with CloudFront)
-
-CloudFront automatically includes AWS Shield Standard:
-
-- **DDoS protection** forLayer 3/4/7 attacks
-- **Automatic mitigation** of common DDoS attacks
-- **No extra cost**
-
-**AWS Shield Advanced** ($3,000/month): Enhanced protection, 24/7 AWS DDoS response team, cost protection against DDoS-related scaling costs.
-
-## Geo-Restriction
-
-CloudFront can restrict content based on the viewer's country:
-
-- **Whitelist:** Only serve content to specified countries
-- **Blacklist:** Block specific countries
-
-```
-Geo-restriction: Enabled
-Countries: [US, CA] (whitelist)
-→ Requests from other countries get 403 Forbidden
-```
-
-## Invalidations
-
-When origin content changes before the TTL expires, you can force CloudFront to re-fetch:
-
-```bash
-# Invalidate a single file
-aws cloudfront create-invalidation --distribution-id EDFDVBD6EXAMPLE --paths "/logo.png"
-
-# Invalidate all files
-aws cloudfront create-invalidation --distribution-id EDFDVBD6EXAMPLE --paths "/*"
-```
-
-Invalidations are processed within 5-10 minutes globally. For emergency content removal (security incident), use invalidation. For planned origin updates, use versioned filenames or short TTLs.
-
-## Price Classes
-
-CloudFront pricing varies by geographic region. Reduce costs by excluding expensive regions:
-
-- **All edge locations (default):** Full global coverage
-- **Class 100:** Only NA + Europe (most expensive)
-- **Class 200:** Class 100 + limited regions (India, Israel, South Africa)
-- **Class All:** Everything, including Africa and Oceania (most expensive)
-
-## Architecture: Static Site with CloudFront
-
-```
-Users → CloudFront (HTTPS)
-           ↓ (cache miss)
-      S3 bucket (static website hosting)
-           ↓
-      CloudFront caches at edge
-```
-
-## Architecture: SPA with API Backend
-
-```
-Browser → CloudFront → /static/* → S3 (static assets)
-                    → /api/* → ALB (API, no cache)
-                    → /* → index.html (S3, cached 1 hour)
-```
-
-## Limits
-
-| Resource                         | Limit                        |
-| -------------------------------- | ---------------------------- |
-| Distributions per account        | 200                          |
-| Cache behaviors per distribution | 25                           |
-| Origins per distribution         | 25                           |
-| Files per invalidation           | 1,000 (CLI), 3,000 (console) |
-| Invalidation paths               | 3,000 max per distribution   |
-| Alternate domain names           | 100 per distribution         |
+When diagnosing a wrong response, record behavior match, cache key values, response Cache-Control, `Age`, cache status and whether the origin received the request. A 403 can come from viewer policy, WAF, origin authorization or missing object; a cache hit does not prove the origin is healthy. Range requests and compressed variants deserve separate tests because their origin and caching behavior can differ from a full object GET.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cloudfront/
-- **Documentation:** https://docs.aws.amazon.com/cloudfront/
-- **Pricing:** https://aws.amazon.com/cloudfront/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A SaaS application serving 10M requests/month for static assets (JS, CSS, images) averaging 50KB each. 10M × 50KB = 500GB data transfer. CloudFront: 500GB × $0.0085/GB (first 10TB) = $4.25/month. Without CloudFront (direct from ALB): 500GB × $0.0085/GB (ALB data transfer) + ALB LCU cost ~$25/month. CloudFront saves ~$20/month and reduces latency.
-
-**Scenario 2:** A global news site serving 500GB/day of video content. 500GB × 30 = 15TB/month. CloudFront (all regions): 15TB × $0.0085/GB = $127.50/month. Origin Shield enabled (us-east-1, $0.0075/GB): saves 80% on origin transfer = $127.50 + $102 = $229.50/month for 15TB but much lower origin load. vs no CloudFront (direct S3 + ALB): 15TB × $0.0085 + ALB = ~$400/month.
-
-## Nuggets & Gotchas
-
-- **CloudFront caches responses with Set-Cookie headers by default:** If your origin sets a cookie, CloudFront includes it in the cache key. This can cause cache fragmentation (every user gets a different cached response). Use `CachePolicy` to ignore cookies for static content.
-- **CloudFront Functions cannot modify POST body or read full request bodies:** For JWT validation on POST requests, you need Lambda@Edge, not CloudFront Functions. CloudFront Functions have a 3ms time limit anyway, making complex auth impractical.
-- **OAI doesn't work with S3 Transfer Acceleration:** If you enable S3 Transfer Acceleration on the bucket, OAI access breaks. Use CloudFront exclusively for S3 access, not Transfer Acceleration.
-- **CloudFront default TTL is 24 hours:** A file cached at edge stays there for 24 hours even if you update it in S3. Use Cache-Control headers from origin or create invalidations. The `stale-while-revalidate` directive tells CloudFront to serve stale content while revalidating in background.
-- **CloudFront does not cache HTTP 206 partial content by default:** For video streaming with byte-range requests, you need to configure CloudFront to cache 206 responses. Without it, every video segment request goes to the origin.
+- [Default/custom cache keys](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/understanding-the-cache-key.html).
+- [Cookie behavior](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Cookies.html).
+- [Range GETs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RangeGETs.html).
+- [OAC](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html).
+- [Pricing](https://aws.amazon.com/cloudfront/pricing/).
 
 ## Across the wiki
 

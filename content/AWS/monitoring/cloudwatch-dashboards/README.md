@@ -2,31 +2,25 @@
 title: CloudWatch Dashboards
 description: CloudWatch Dashboards — custom metric visualization with widgets, live data, cross-service views, and cross-account sharing.
 tags:
-  - aws
-  - monitoring
-  - dashboards
-  - cloudwatch
-date: 2026-06-06
+  - aws/monitoring
+date: 2026-10-12
 ---
 
 # CloudWatch Dashboards
 
-CloudWatch Dashboards create customizable views of your metrics and logs. You can build operational dashboards for SREs, business dashboards for stakeholders, and share them across accounts.
+Prerequisites: [[AWS/security/iam/README|scoped IAM access]] and [[AWS/monitoring/README|telemetry, SLI and retention design]].
 
-## Dashboard Concepts
+CloudWatch dashboards are views of operational evidence, not alerting or access-control boundaries. Design them around user outcomes and diagnostic questions rather than every available graph.
 
-### Widget Types
+## Design
 
-| Widget       | Use                                                     |
-| ------------ | ------------------------------------------------------- |
-| Line         | Time-series metrics (CPU, latency)                      |
-| Stacked Area | Multiple metrics stacked (request count by status code) |
-| Bar          | Comparative metrics (error rate by service)             |
-| Number       | Single metric value (current p99 latency)               |
-| Text         | Static text, markdown (annotations, team info)          |
-| Pie/Donut    | Percentage breakdown (error types)                      |
+Use [[AWS/monitoring/cloudwatch-metrics/README|metric]] widgets for traffic/errors/latency/saturation, [[AWS/monitoring/cloudwatch-insights/README|log queries]] for investigation, and text widgets for owners/runbooks. State the time range, Region, account and unit so screenshots do not obscure scope. Dashboard variables can parameterize supported properties and patterns.
 
-### Dashboard Structure
+A dashboard does not grant cross-account metric access. Prefer documented CloudWatch cross-account observability (OAM) links/sinks or the separate legacy cross-account dashboard role workflow. Do not invent cloudwatch:CrossAccountLink permissions. Read authorization and account/Region settings still apply.
+
+## Minimal reproducible dashboard
+
+Create a local file dashboard.json with this valid body:
 
 ```json
 {
@@ -38,249 +32,113 @@ CloudWatch Dashboards create customizable views of your metrics and logs. You ca
       "width": 12,
       "height": 6,
       "properties": {
-        "title": "API Latency",
-        "metrics": [
-          [
-            "AWS/ApplicationELB",
-            "TargetResponseTime",
-            "LoadBalancer",
-            "app/my-alb"
-          ],
-          [".", "HealthyHostCount", ".", "."]
-        ],
-        "period": 60,
+        "region": "us-east-1",
+        "title": "Sandbox latency",
+        "metrics": [["WikiLab", "Latency", "Service", "demo"]],
         "stat": "Average",
-        "view": "timeSeries"
-      }
-    },
-    {
-      "type": "text",
-      "x": 12,
-      "y": 0,
-      "width": 12,
-      "height": 3,
-      "properties": {
-        "markdown": "# Production Dashboard\nLast updated: 2024-01-15"
+        "period": 60
       }
     }
   ]
 }
 ```
 
-## Creating Dashboards
-
-### Via Console
-
-Console: CloudWatch → Dashboards → Create dashboard
-
-### Via AWS CLI
+Use the Region of [[AWS/monitoring/cloudwatch-metrics/README|your metric fixture]], then with dashboard write/read permissions:
 
 ```bash
-aws cloudwatch put-dashboard \
-  --dashboard-name production-overview \
-  --dashboard-body '{
-    "widgets": [
-      {
-        "type": "metric",
-        "properties": {
-          "title": "CPU Utilization",
-          "metrics": [["AWS/EC2","CPUUtilization"]],
-          "period": 300,
-          "stat": "Average"
-        }
-      }
-    ]
-  }'
+aws cloudwatch put-dashboard --dashboard-name wiki-lab --dashboard-body file://dashboard.json
+aws cloudwatch get-dashboard --dashboard-name wiki-lab
 ```
 
-### Via CloudFormation
+Inspect DashboardValidationMessages; successful HTTP/API transport is not proof every widget is valid. Open the dashboard and verify the fixture value. Test the wrong Region deliberately: an empty graph is expected, not a missing global metric.
 
-```yaml
-Resources:
-  Dashboard:
-    Type: AWS::CloudWatch::Dashboard
-    Properties:
-      DashboardName: production-overview
-      DashboardBody: !Sub |
-        {
-          "widgets": [
-            {
-              "type": "metric",
-              "properties": {
-                "title": "CPU Utilization",
-                "metrics": [["AWS/EC2","CPUUtilization",{"value": "*"}]],
-                "period": 300,
-                "stat": "Average"
-              }
-            }
-          ]
-        }
+## Cost and cleanup
+
+Dashboards are not universally free. The published allowance is limited to three custom dashboards of up to fifty metrics each; additional dashboards incur charges under the current pricing model. Metrics, queries and other features can add charges independently.
+
+Remove your disposable view with `aws cloudwatch delete-dashboards --dashboard-names wiki-lab`. This deletes the dashboard configuration, not the underlying metrics/logs. Restrict production dashboard changes through version-controlled definitions and review.
+
+## Widget catalogue and operational layout
+
+| Widget             | Intended use                         | Review requirement                        |
+| ------------------ | ------------------------------------ | ----------------------------------------- |
+| Metric/time series | Traffic, errors, latency, saturation | Region/account, unit, statistic, period   |
+| Number/gauge       | Current summary                      | Baseline/window and missing-data meaning  |
+| Log query          | Drill into events                    | Time/groups/language and scan costs       |
+| Alarm status       | Triage/owner attention               | Not a replacement for notifications       |
+| Text               | Runbook/owner/assumptions            | Maintain links with the deployed workload |
+
+```text
+customer outcome: error ratio + latency + synthetic availability
+request path: ALB → service → database/queue
+diagnosis: deployment revision + trace/log links + dependency signal
+response: alarms + owner/runbook + rollback/recovery links
 ```
 
-## Dashboard Features
+Automatic service dashboards provide a starting view, not a reviewed application dashboard or a guarantee of no charges. Browser/live-data choices affect display; they do not increase a metric's publication frequency.
 
-### Live Data
+## Cross-service and metric-math configuration
 
-Enable "Live Data" to show real-time metrics (refreshes every 10 seconds). Useful for monitoring active incidents.
-
-### Annotations
-
-Add vertical lines for significant events (deployments, incidents):
+A widget can include several explicitly defined series and an expression. This valid widget fragment can be inserted into the existing dashboard's widgets array after replacing identifiers:
 
 ```json
 {
   "type": "metric",
+  "x": 0,
+  "y": 6,
+  "width": 12,
+  "height": 6,
   "properties": {
-    "annotations": {
-      "horizontal": [
+    "region": "us-east-1",
+    "title": "ALB target error percent",
+    "period": 60,
+    "stat": "Sum",
+    "metrics": [
+      [
+        "AWS/ApplicationELB",
+        "HTTPCode_Target_5XX_Count",
+        "LoadBalancer",
+        "app/REPLACE/REPLACE",
+        { "id": "e", "visible": false }
+      ],
+      [
+        "AWS/ApplicationELB",
+        "RequestCount",
+        "LoadBalancer",
+        "app/REPLACE/REPLACE",
+        { "id": "r", "visible": false }
+      ],
+      [
         {
-          "label": "Deployment",
-          "value": 1642233600
+          "expression": "IF(r>0,100*e/r,0)",
+          "id": "errorrate",
+          "label": "Target error percent"
         }
       ]
-    }
-  }
-}
-```
-
-### Metric Math on Dashboards
-
-Use metric math expressions directly in dashboard widgets:
-
-```json
-{
-  "type": "metric",
-  "properties": {
-    "title": "Error Rate %",
-    "metrics": [{ "expression": "100 * (m1/m2)", "label": "Error Rate" }]
-  }
-}
-```
-
-## Cross-Service Dashboards
-
-### ALB + EC2 + RDS Dashboard
-
-```json
-{
-  "widgets": [
-    {
-      "type": "metric",
-      "x": 0,
-      "y": 0,
-      "width": 12,
-      "height": 6,
-      "properties": {
-        "title": "ALB Metrics",
-        "metrics": [
-          ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/my-alb"],
-          [".", "TargetResponseTime", ".", "."],
-          [".", "UnHealthyHostCount", ".", "."]
-        ]
-      }
-    },
-    {
-      "type": "metric",
-      "x": 12,
-      "y": 0,
-      "width": 12,
-      "height": 6,
-      "properties": {
-        "title": "EC2 Metrics",
-        "metrics": [
-          ["AWS/EC2", "CPUUtilization", { "value": "*" }],
-          ["AWS/EC2", "NetworkOut", { "value": "*" }]
-        ]
-      }
-    },
-    {
-      "type": "metric",
-      "x": 0,
-      "y": 6,
-      "width": 12,
-      "height": 6,
-      "properties": {
-        "title": "RDS Metrics",
-        "metrics": [
-          ["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "my-db"],
-          [".", "CPUUtilization", ".", "."],
-          [".", "FreeStorageSpace", ".", "."]
-        ]
-      }
-    }
-  ]
-}
-```
-
-## Cross-Account Dashboards
-
-CloudWatch cross-account dashboards aggregate metrics from multiple AWS accounts:
-
-```
-Management Account (Observability account)
-  └── CloudWatch Dashboard (cross-account view)
-        ← /aws/lambda/app (Account A)
-        ← /aws/lambda/api (Account B)
-        ← /aws/ec2/fleet (Account C)
-```
-
-### Configuration
-
-```bash
-# In the monitoring account
-aws cloudwatch put-dashboard \
-  --dashboard-name cross-account-prod \
-  --dashboard-body '...'
-
-# Widget with cross-account dimension
-{
-  "type": "metric",
-  "properties": {
-    "metrics": [
-      ["AWS/Lambda", "Invocations", "FunctionName", "my-function", "Account", "111122223333"]
     ]
   }
 }
 ```
 
-## Automatic Dashboards
+Add EC2/RDS widgets with their own actual dimension identities; do not imply an ALB label identifies its database. Annotations mark known thresholds/deployments but do not create alarms. Dashboard variables must target supported properties/patterns and preserve account/Region context.
 
-CloudWatch can auto-generate service-level dashboards:
+## Console, CLI, IaC and cross-account ownership
 
-- **EC2:** CPU, network, disk for all instances
-- **RDS:** Connections, CPU, storage, replication lag
-- **Lambda:** Invocations, duration, errors, throttles
-- **ALB:** Request count, latency, unhealthy hosts
+The existing CLI lab's body can be stored in an AWS::CloudWatch::Dashboard DashboardBody string through CloudFormation. Export or version the body, validate messages and review intended diffs; an IaC success event is not proof every graph has data.
 
-## Widget Syncing
+For cross-account widgets, first establish supported OAM source/sink or the legacy role workflow. Widget accountId/region settings select data, not permission. Avoid nonexistent cloudwatch:CrossAccountLink actions or placing AccountId as a made-up metric dimension.
 
-Dashboard widgets can sync to a specific time range — when you zoom in on one widget, all other widgets update to the same time range. Enable "Synced" in the widget settings.
+## Investigation and cleanup
 
-## Limits
+Compare dashboard selected interval with alarm evaluation time; auto-refresh, live display and graph aggregation can show different evidence. An empty widget warrants checking Region/account, exact metric dimensions, credentials and absence versus zero—not immediate alarm deletion.
 
-| Resource               | Limit |
-| ---------------------- | ----- |
-| Dashboards per account | 100   |
-| Widgets per dashboard  | 100   |
-| Metrics per widget     | 100   |
-| Dashboard body size    | 512KB |
+A dashboard is a configuration object. Deleting it does not stop agents, logs, metrics, alarms, queries or paid underlying resources. Delete only the disposable dashboard/variables and associated owned query definitions; preserve operational views used by other teams.
+
+References: [widget schema](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Dashboard-Body-Structure.html), [dashboard variables](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_dashboard_variables.html), [CloudFormation dashboard](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-cloudwatch-dashboard.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cloudwatch/
-- **Documentation:** https://docs.aws.amazon.com/cloudwatch/
-- **Pricing:** https://aws.amazon.com/cloudwatch/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A startup's SRE team building a production dashboard with 20 widgets (CPU, memory, latency, errors per service, 10 services × 2 widgets each). Dashboards are free (you only pay for the underlying metrics). Total: $0/month for the dashboard itself.
-
-**Scenario 2:** A multi-account enterprise with 5 member accounts sharing dashboards from a central monitoring account. Each account has 50 custom metrics. CloudWatch charges $0.30/metric/month for detailed monitoring. 5 × 50 × $0.30 = $75/month. Without a central dashboard, each team manages their own — chaos.
-
-## Nuggets & Gotchas
-
-- **Dashboard widgets without a time range show the last 3 hours by default — not 24 hours:** When you create a widget, it inherits the dashboard's time range. If the dashboard has no default, widgets default to 3 hours. Always set an explicit default time range for operational dashboards.
-- **Metric math expressions in widgets are evaluated at display time — not stored:** If you use `SEARCH()` in a dashboard metric math expression, it re-evaluates every time the dashboard loads. This can be slow for complex searches and may hit API rate limits on high-frequency refresh.
-- **Cross-account dashboards require the `cloudwatch:CrossAccountLink` permission in the monitoring account:** If you create a cross-account dashboard and see no data, check that the member accounts have granted the monitoring account `cloudwatch:CrossAccountLink` via the CloudWatch cross-account settings.
-- **Auto-refresh on dashboards has a minimum of 10 seconds:** You cannot set auto-refresh faster than 10 seconds. For real-time monitoring (faster than 10 seconds), use a third-party tool or direct CloudWatch API polling.
-- **Dashboard JSON has a 512KB limit — complex dashboards may exceed this:** If you hit this limit, split into multiple dashboards (one per service) and use a "dashboard of dashboards" text widget to link them.
+- [Dashboard body schema](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/CloudWatch-Dashboard-Body-Structure.html)
+- [Cross-account observability](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Unified-Cross-Account.html)
+- [Dashboard API](https://docs.aws.amazon.com/cli/latest/reference/cloudwatch/put-dashboard.html)
+- [Pricing](https://aws.amazon.com/cloudwatch/pricing/)

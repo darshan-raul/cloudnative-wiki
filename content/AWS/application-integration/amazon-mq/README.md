@@ -2,218 +2,135 @@
 title: Amazon MQ
 description: Amazon MQ — managed ActiveMQ and RabbitMQ brokers. Protocol support (JMS, AMQP, MQTT, OpenWire), deployment modes, encryption, and migration from self-managed brokers.
 tags:
-  - aws
-  - application-integration
-  - amazon-mq
-  - rabbitmq
-  - activemq
-  - messaging
-date: 2026-06-06
+  - aws/application-integration
+date: 2026-10-12
 ---
 
 # Amazon MQ
 
-Amazon MQ is a managed broker service for ActiveMQ (Java, JMS) and RabbitMQ (Erlang, AMQP). If you're migrating from self-hosted RabbitMQ or ActiveMQ, MQ provides drop-in replacement hosting without re-engineering your application.
+Prerequisites: [[AWS/security/iam/README|scoped IAM roles]] and [[AWS/monitoring/README|delivery/processing observability]].
 
-## ActiveMQ vs RabbitMQ
+Amazon MQ manages ActiveMQ or RabbitMQ brokers for applications that need existing broker protocols and compatibility. It is not a drop-in replacement for every self-managed plugin or a reason to use a broker for all new workloads.
 
-| Feature        | ActiveMQ                         | RabbitMQ                               |
-| -------------- | -------------------------------- | -------------------------------------- |
-| Language       | Java                             | Erlang                                 |
-| Protocols      | JMS, AMQP, MQTT, OpenWire, STOMP | AMQP, MQTT, STOMP, HTTP                |
-| Management     | Web console, JMX                 | Management UI, CLI                     |
-| Queue features | Message groups, virtual topics   | Dead-letter exchanges, per-message TTL |
-| Clustering     | Master/slave                     | Quorum queues                          |
-| Use case       | Java/JMS apps                    | Flexible routing, microservices        |
+## Engine and availability choices
 
-## Creating a Broker
+Choose the engine before choosing protocols, deployment topology and client recovery. ActiveMQ supports its documented wire protocols and JMS clients. RabbitMQ has its own AMQP and plugin/version matrix; do not infer compatibility from the upstream engine alone.
+
+RabbitMQ supports dynamic Shovel, with destination-network restrictions, not static Shovel configuration. Current RabbitMQ 4-and-later support includes the JMS Topic Exchange plugin; older universal no-JMS claims are misleading. Pin a supported engine version and verify the owning matrix before migration.
+
+A single broker is appropriate for a cheap disposable experiment, not an HA promise. Active/standby and RabbitMQ cluster topologies have different failover behavior. Use private VPC endpoints, scoped security groups, TLS and secret-managed credentials. Managed maintenance does not eliminate application reconnect/retry responsibility.
+
+## Reversible broker lab
+
+This is a console/client lab, not a mixed Python-and-shell deployment fragment. Broker resources incur charges while provisioned.
+
+1. In a sandbox, select RabbitMQ, a currently supported version and a single-instance deployment. Keep public accessibility disabled. Choose the VPC/subnet/security group and create a dedicated test user; store the password securely, not in shell history or the note.
+2. From a client in that VPC, allow only the broker's documented TLS port and use the owning connection tutorial/client example. Create a durable test queue, publish a persistent message with a unique business ID and consume with explicit acknowledgement.
+3. Disconnect the consumer before acknowledgement. Reconnect and observe redelivery; verify an idempotent handler does not repeat the side effect.
+4. In a separately budgeted HA experiment, use the appropriate HA topology and perform a controlled reboot/maintenance test. Record connection recovery, message continuity and latency rather than claiming instantaneous failover.
+5. Delete the broker, disposable client/network rules and any lab-only secrets after collecting evidence. Confirm deletion reaches its terminal state; stopping consumption does not stop broker charges.
+
+## Troubleshooting and pricing
+
+Check DNS/routing/security groups/TLS before changing authentication. Inspect broker health, queue depth, unacknowledged messages and client reconnect metrics. Poison messages need bounded retry/dead-letter design appropriate to the engine.
+
+Budget broker instance-hours, storage, transfer and topology-dependent replica resources. SQS/SNS/EventBridge can reduce broker operations for cloud-native workloads, but protocol conversion and semantics need deliberate design.
+
+## Engine and deployment comparison
+
+| Choice               | ActiveMQ                                              | RabbitMQ                                                             |
+| -------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- |
+| Compatibility focus  | Existing JMS/OpenWire and documented protocol clients | AMQP/routing model and version-scoped plugins                        |
+| HA design            | Supported active/standby broker topology              | Supported multi-AZ cluster/queue replication                         |
+| Client recovery      | Use documented failover endpoints and client options  | Connection/channel recovery, acknowledgements and publisher confirms |
+| Configuration        | Supported broker XML/configuration revisions          | Supported configuration/plugin parameters; not arbitrary node files  |
+| Operational evidence | Engine-specific broker/queue metrics                  | Engine-specific broker/node/queue metrics                            |
+
+JMS is an API abstraction, not a wire protocol by itself. A managed broker is not a guaranteed drop-in migration: compare destinations, plugins, authentication, transactions, expiry, queue types and client reconnect semantics.
+
+```text
+application → TLS endpoint → broker/queue → consumer
+                  ↓                         ↓
+           publisher confirmation    acknowledge after safe effect
+                  └──── failure/reconnect/redelivery ────┘
+```
+
+## Broker creation and configuration walkthrough
+
+Discover supported engine versions and instance options before selecting a broker. These are read-only:
 
 ```bash
-# ActiveMQ broker
-aws mq create-broker \
-  --broker-name my-activemq \
-  --broker-instance-class mq.t3.micro \
-  --engine-type ActiveMQ \
-  --engine-version 5.18.0 \
-  --security-groups sg-xxxxx \
-  --subnet-ids subnet-xxxxx \
-  --user '{"Username": "admin", "Password": "MySecretPassword123!"}'
-
-# RabbitMQ broker
-aws mq create-broker \
-  --broker-name my-rabbitmq \
-  --broker-instance-class mq.t3.micro \
-  --engine-type RabbitMQ \
-  --engine-version 3.12.0 \
-  --host-instance-type mq.t3.micro \
-  --security-groups sg-xxxxx \
-  --subnet-ids subnet-xxxxx subnet-yyyyy \
-  --user '{"Username": "admin", "Password": "MySecretPassword123!"}'
+aws mq describe-broker-engine-types
+aws mq describe-broker-instance-options
+aws mq list-brokers
+aws mq describe-broker --broker-id BROKER_ID
 ```
 
-## Deployment Modes
+CreateBroker uses HostInstanceType, DeploymentMode, EngineType/EngineVersion, SubnetIds, SecurityGroups, Users and its documented encryption/options structure. The CLI flag is --users, not --user, and describe/reboot require broker-id, not broker-name. Generate the request shape offline with `aws mq create-broker --generate-cli-skeleton input`, select the supported topology in the console and keep credentials in a protected input/workflow rather than command history.
 
-```
-Single-Instance (no replication)
-  └── One broker in one AZ
-      └── For dev/test only
+Configuration revisions are explicitly associated with the broker; upload only supported engine settings. Do not upload arbitrary host vm_args or assume node certificate file paths are configurable on the managed host.
 
-Active/Standby (multi-AZ)
-  └── Master in AZ-1, Standby in AZ-2
-      └── Automatic failover
-      └── For production
+## RabbitMQ TLS publisher and manual acknowledgement
 
-Cluster (RabbitMQ only)
-  └── Multiple broker nodes across AZs
-      └── Quorum queues for HA
-      └── For high throughput
-```
-
-## Connecting to Amazon MQ
-
-### ActiveMQ (JMS)
-
-```java
-import org.apache.activemq.ActiveMQConnectionFactory;
-
-ConnectionFactory factory = new ActiveMQConnectionFactory("ssl://b-xxxxx-1.activemq.us-east-1.amazonaws.com:61617");
-Connection connection = factory.createConnection("admin", "password");
-Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-Queue queue = session.createQueue("my-queue");
-MessageProducer producer = session.createProducer(queue);
-producer.send(session.createTextMessage("Hello MQ!"));
-```
-
-### RabbitMQ (AMQP)
+This complete Python example needs a current compatible pika installation, an authorized client network and private credential injection. It publishes only a synthetic fixture and acknowledges after validating the received bytes; it is not a production idempotency implementation.
 
 ```python
+import os
+import ssl
 import pika
 
-credentials = pika.PlainCredentials('admin', 'password')
+host = os.environ["MQ_LAB_HOST"]
+context = ssl.create_default_context()
+credentials = pika.PlainCredentials(
+    os.environ["MQ_LAB_USER"], os.environ["MQ_LAB_PASSWORD"]
+)
 parameters = pika.ConnectionParameters(
-    host='b-xxxxx.rmq.us-east-1.amazonaws.com',
+    host=host,
     port=5671,
-    virtual_host='/',
+    virtual_host="/",
     credentials=credentials,
-    ssl=True,
-    ssl_options={'ca_certs': '/path/to/ca-bundle.pem'}
+    ssl_options=pika.SSLOptions(context, host),
+    heartbeat=60,
+    blocked_connection_timeout=30,
 )
-
 connection = pika.BlockingConnection(parameters)
-channel = connection.channel()
-channel.queue_declare(queue='my-queue', durable=True)
-channel.basic_publish(
-    exchange='',
-    routing_key='my-queue',
-    body='Hello MQ!'
-)
-connection.close()
+try:
+    channel = connection.channel()
+    channel.queue_declare(queue="wiki-lab", durable=True)
+    channel.confirm_delivery()
+    channel.basic_publish(
+        exchange="",
+        routing_key="wiki-lab",
+        body=b"synthetic-fixture-1",
+        properties=pika.BasicProperties(delivery_mode=2),
+        mandatory=True,
+    )
+    method, properties, body = channel.basic_get(queue="wiki-lab", auto_ack=False)
+    if method is None:
+        raise RuntimeError("fixture not available; inspect delivery")
+    if body != b"synthetic-fixture-1":
+        channel.basic_nack(delivery_tag=method.delivery_tag, requeue=True)
+        raise RuntimeError("unexpected fixture; not acknowledged")
+    channel.basic_ack(delivery_tag=method.delivery_tag)
+finally:
+    connection.close()
 ```
 
-### TLS Connection
+Do not disable TLS verification to fix a hostname/chain failure. Use the returned broker endpoint and current trusted CA store. Persistent messages/durable queues, publisher confirmation and acknowledgement address different failure points; none alone proves business exactly-once processing.
 
-```bash
-# Download Amazon MQ CA bundle for TLS
-curl -o /tmp/AmazonRootCA1.pem https://www.amazontrust.com/repository/AmazonRootCA1.pem
+For an ActiveMQ JMS example, use the owning maintained client tutorial with required imports, secure credential retrieval and try/finally resource closure. Select transacted/manual acknowledgement behavior deliberately; AUTO_ACKNOWLEDGE is not a universal transactional-processing guarantee.
 
-# For RabbitMQ with TLS
-channel = connection.channel()
-channel.queue_declare(queue='my-queue', durable=True)
-```
+## Monitoring and fault isolation
 
-## RabbitMQ Clustering
+First verify broker state and maintenance events, then DNS/routes/SGs/TLS, user/vhost permissions and queue bindings. Inspect published-versus-acknowledged rate, queue backlog, unacknowledged messages, memory/disk pressure and reconnect/error rate. Metric names differ by engine/version; do not copy one mixed metric table across both.
 
-```bash
-# Create RabbitMQ cluster (3 nodes across AZs)
-aws mq create-broker \
-  --broker-name my-rabbitmq-cluster \
-  --engine-type RabbitMQ \
-  --engine-version 3.12.0 \
-  --host-instance-type mq.m5.large \
-  --security-groups sg-xxxxx \
-  --subnet-ids subnet-az1 subnet-az2 subnet-az3 \
-  --configuration '{
-    "Revision": 1,
-    "ConfigurationId": "config-xxxxx"
-  }' \
-  --deployment-mode CLUSTER_MULTI_AZ
-```
+Reboot only a disposable broker using `aws mq reboot-broker --broker-id BROKER_ID` and record client recovery/redelivery. Reboot is not a read-only diagnostic. Preserve messages/failure evidence, delete lab queue/user, then delete the dedicated broker and verify terminal deletion. Remove client secrets and dedicated network rules separately.
 
-## Configuration (RabbitMQ)
-
-```ini
-# RabbitMQ config (uploaded as config file)
-listeners.ssl.default = 5671
-ssl_options.cacertfile = /opt/amqp/ssl/amqp-ca_bundle.pem
-ssl_options.certfile   = /opt/amqp/ssl/certificate.pem
-ssl_options.keyfile     = /opt/amqp/ssl/key.pem
-ssl_options.verify      = verify_peer
-vm_args = +WBW招生 1024
-```
-
-## Monitoring
-
-```bash
-# Get broker info
-aws mq describe-broker --broker-name my-activemq
-
-# List brokers
-aws mq list-brokers
-
-# Reboot broker
-aws mq reboot-broker --broker-name my-activemq
-```
-
-### CloudWatch Metrics
-
-| Metric              | Description       |
-| ------------------- | ----------------- |
-| ActiveConsumerCount | Active consumers  |
-| ConnectionCount     | Open connections  |
-| EnqueueCount        | Messages enqueued |
-| DequeueCount        | Messages dequeued |
-| MessageCount        | Messages in queue |
-
-## Encryption
-
-```bash
-# Create with customer-managed KMS key
-aws mq create-broker \
-  --broker-name my-encrypted-mq \
-  --kms-key-id arn:aws:kms:us-east-1:123456789012:key/xxxxx \
-  ...
-```
-
-## Pricing
-
-| Instance      | Cost      |
-| ------------- | --------- |
-| mq.t3.micro   | $0.065/hr |
-| mq.m5.large   | $0.50/hr  |
-| mq.m5.xlarge  | $1.00/hr  |
-| mq.m5.2xlarge | $2.00/hr  |
-
-Plus storage at $0.25/GB/month.
-
-## Limits
-
-| Resource               | Limit                             |
-| ---------------------- | --------------------------------- |
-| Brokers per region     | 25                                |
-| Connections per broker | 1000 (ActiveMQ), 5000 (RabbitMQ)  |
-| Queues per broker      | 1000                              |
-| Message size           | 64KB (ActiveMQ), 128KB (RabbitMQ) |
+References: [CreateBroker](https://docs.aws.amazon.com/cli/latest/reference/mq/create-broker.html), [RabbitMQ connection](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-rabbitmq-getting-started.html), [broker monitoring](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/security-logging-monitoring.html), [Pika TLS examples](https://pika.readthedocs.io/en/stable/examples/tls_server_authentication.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/amazon-mq/
-- **Documentation:** https://docs.aws.amazon.com/amazon-mq/
-- **Pricing:** https://aws.amazon.com/amazon-mq/pricing/
-
-## Nuggets & Gotchas
-
-- **Amazon MQ is NOT serverless — you pay for the broker instance 24/7 regardless of usage:** At mq.t3.micro ($0.065/hr = $47/month), you're paying even if the broker is idle. For serverless pay-per-use messaging, use SQS or SNS.
-- **Amazon MQ requires security groups that allow inbound traffic on the broker ports (61617 for ActiveMQ, 5671 for RabbitMQ SSL):** If you can't connect, check your security group inbound rules allow the correct port from your application's subnet.
-- **RabbitMQ on Amazon MQ does NOT support all plugins — only pre-approved plugins are available:** If you need the shovel plugin or custom Erlang modules, they're not available. Check the supported plugins list before migrating.
-- **Amazon MQ's ActiveMQ supports JMS 1.1 — if you need JMS 2.0 features (shared subscriptions), use RabbitMQ instead:** JMS 2.0 features like shared subscriptions are only available on RabbitMQ in Amazon MQ.
-- **Amazon MQ broker logs go to CloudWatch Logs — you need to enable logging explicitly:** Without enabling logging, you won't see broker logs. Enable both general and audit logs when creating the broker.
+- [Amazon MQ concepts](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html)
+- [RabbitMQ plugins and restrictions](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/rabbitmq-basic-elements-plugins.html)
+- [RabbitMQ connection tutorial](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-rabbitmq-getting-started.html)
+- [Pricing](https://aws.amazon.com/amazon-mq/pricing/)

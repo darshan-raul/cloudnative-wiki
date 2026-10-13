@@ -2,275 +2,102 @@
 title: Application Discovery Service
 description: AWS Application Discovery Service — discovers on-premises infrastructure (servers, dependencies, utilization) via agentless and agent-based collectors, exports data for migration planning
 tags:
-  - aws
-  - migration
-date: 2026-06-06
+  - aws/migration
+date: 2026-10-12
 ---
 
 # Application Discovery Service
 
-Application Discovery Service (ADS) helps you discover and understand your on-premises environment before migration. It collects infrastructure data (servers, utilization, network dependencies) that feeds into Migration Hub for planning and tracking.
+Prerequisites: [[AWS/security/iam/README|temporary-credential IAM roles]], [[AWS/networking/vpc/README|VPC routing]] and the [[AWS/migration/README|migration acceptance/rollback plan]].
 
-## Discovery Methods
+Application Discovery Service collects supported infrastructure information for migration planning. It closed to new customers on November 7, 2025; existing customers may continue, while new customers should evaluate AWS Transform.
 
-### Agentless Discovery (VMware)
+## Distinct collectors and lifecycle
 
-No software installed on source servers — a collector VM interrogates vCenter:
+The Agentless Collector is not the retired Discovery Connector. The old Connector reached full shutdown November 17, 2025. A Discovery Agent can collect supported process/network dependency information; do not promise that the Agentless Collector supplies the same dataset. [[AWS/migration/migration-evaluator/README|Migration Evaluator's collector]] is another distinct tool.
+
+Select the discovery home Region and verify supported platform/Region/permission prerequisites before installation. Do not paste copied installer commands or promise an unsupported fixed ninety-day retention period.
+
+## Availability-scoped discovery exercise
+
+This workflow is for eligible existing customers; it is not a new-customer signup lab.
+
+1. Establish owner approval and data classification for infrastructure inventory. Review collector IAM, network egress and supported source platform.
+2. In the console follow the current Agentless Collector or Discovery Agent installation guide for the actual source. Select the home Region before starting collection.
+3. Collect a representative period including peaks, batch jobs and maintenance, then inspect source completeness.
+4. Export supported datasets and analyze them through the documented analytics workflow. An exported dataset can be queried; the service does not have a fictional arbitrary SQL-query API.
+5. Validate dependency hypotheses with application owners: absence of observed traffic is not proof of no dependency.
+6. Stop collection and remove only the disposable collector/agent and credentials according to the owning uninstall workflow. Preserve/delete collected data according to its retention policy.
+
+## Real API inventory
+
+Supported operations include describe-agents, list-configurations, describe-configurations, start-data-collection-by-agent-ids and start-export-task. There are no start-agentless-collector-scan, list-agents or list-servers commands in this service. Agent controls apply to agents, not interchangeably to all collector products.
+
+Use the owning CLI schemas and console-export workflow instead of fabricated deployment flags. Check collection/export status and errors rather than assuming a successful API invocation means all servers were discovered.
+
+## Assessment quality
+
+Include hardware, performance, licensing, storage, network and application ownership. Cross-check inventory counts against CMDB/hypervisor records and quantify missing hosts/time periods. Discovery evidence informs the [[AWS/migration/README|migration strategy]]; it does not automatically approve a seven-R classification.
+
+## Collector capability and planning table
+
+| Source                         | Typical evidence                                                          | Limitation to verify                                  |
+| ------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Discovery Agent                | Supported host configuration/utilization and process/network dependencies | OS/version, collection permissions and agent coverage |
+| Agentless Collector            | Supported inventory/performance and collector modules                     | Not equivalent to agent process/network telemetry     |
+| Existing CMDB/import           | Declared inventory/ownership                                              | Freshness, missing hosts and supported import schema  |
+| Migration Evaluator Collector  | Business-case discovery/sizing evidence                                   | Separate product/workflow, not an ADS agent           |
+| Historical Discovery Connector | Archived connector context only                                           | Fully shut down; not current Agentless Collector      |
+
+```text
+authorized source → selected collector/agent → home-Region inventory
+                                             ├─ collection/status checks
+                                             ├─ documented exports
+                                             └─ portfolio/dependency assessment
+```
+
+Each row needs source count, observation interval and collection-quality evidence. Server name/CPU count alone cannot establish an application's network dependency or licensing requirement.
+
+## Data collected and dependency interpretation
+
+Record stable server/configuration IDs, hostname, IP/address changes, OS/architecture, hardware capacity, utilization windows and provenance. Where a supported agent records process/connections, correlate communicating endpoints/time windows and ask owners what the connection means.
+
+A dependency edge is observed evidence, not a guaranteed complete application topology. Scheduled jobs, DR links, DNS/service discovery and encrypted/proxied connections can complicate interpretation. Separate an absent observation from confirmed absence.
+
+## Supported read/export API walkthrough
+
+For an eligible existing-customer environment, inspect real configurations rather than fictional list-servers or SQL APIs:
 
 ```bash
-# Start an agentless collector scan
-aws discovery start-agentless-collector-scan \
-  --region us-east-1 \
-  --collectors ['arn:aws:discovery:us-east-1:123456789012:agentless-collector/collector-abcdef0']
-
-# Describe collectors
-aws discovery list-agents --region us-east-1
-
-# Get discovered servers
-aws discovery list-servers --region us-east-1
-
-# Get server details
-aws discovery describe-agents --agent-ids arn:aws:discovery:us-east-1:123456789012:agent/agent-abcdef0
+aws discovery describe-agents
+aws discovery list-configurations --configuration-type SERVER
+aws discovery describe-configurations --configuration-ids CONFIGURATION_ID
+aws discovery describe-export-tasks
 ```
 
-**What it collects:**
+Use returned IDs, filters/pagination and the actual home Region. Agent collection starts through start-data-collection-by-agent-ids for supported agent IDs; it is not the agentless collector scan command.
 
-- VM name, guest OS, version
-- vCPU, memory, disk sizes
-- Network configuration (IP addresses, MAC addresses)
-- Resource utilization (CPU, memory, disk over time)
-- VMware cluster and resource pool membership
-
-### Agent-Based Discovery
-
-Install the discovery agent on each server for deeper visibility:
+For a documented CSV export workflow:
 
 ```bash
-# Download and install the agent (Linux)
-wget https://s3.amazonaws.com/aws-discovery-agent/linux/latest/aws-discovery-agent.tar.gz
-tar -xzf aws-discovery-agent.tar.gz
-sudo ./install
-
-# Configure the agent
-sudo /opt/aws/discovery agent configure --region us-east-1
-
-# Check agent status
-sudo /opt/aws/discovery/bin/AWSDiscoveryAgent status
-
-# Check logs
-sudo tail -f /var/log/aws/discovery/discovery-agent.log
+aws discovery start-export-task --export-data-format CSV
 ```
 
-**What it collects (beyond agentless):**
+Record exportId, inspect describe-export-tasks and the returned destination/download artifact contract. Protect exports because names, addresses, processes and topology may reveal sensitive infrastructure. Query them through the supported analytics/data-source path; the Discovery API itself is not arbitrary SQL.
 
-- Running processes and services
-- Application names and versions
-- Network connections between servers (dependency mapping)
-- User accounts on the server
-- More detailed performance metrics
+## Deployment and monitoring runbook
 
-## Agent Deployment
+Agent/OVA download, installation arguments, supported platform sizing and uninstall paths come from the current owning guide. Validate downloaded artifacts/source, collection credentials, network/DNS egress and source-account read access; use the actual supported installer and service controls for that platform.
 
-### VMware Agentless Collector
+Confirm each intended host/configuration is represented and collection status is recent. Compare discovered counts with authoritative inventory and flag stale/missing sources. Use documented collection/export status rather than guessed HostAgentHeartbeat/DataSize metrics.
 
-```bash
-# 1. Download the collector OVA from ADS console
-# 2. Deploy in VMware (2 vCPU, 8GB RAM, 100GB disk)
-# 3. Configure with your AWS credentials (IAM role or access key)
-# 4. Configure vCenter credentials (read-only is sufficient)
-# 5. Let it run — it will continuously collect for 2-4 weeks
-```
+Before planning a wave, validate observed peaks, storage/network requirements, identity/license dependencies and owner acceptance. Stop/dispose only lab collection and revoke its credentials; preserve approved exports and delete sensitive artifacts according to policy.
 
-**Requirements:**
+References: [agent/collector guide](https://docs.aws.amazon.com/application-discovery/latest/userguide/what-is-appdiscovery.html), [CLI inventory](https://docs.aws.amazon.com/cli/latest/reference/discovery/list-configurations.html), [export contract](https://docs.aws.amazon.com/cli/latest/reference/discovery/start-export-task.html), [data collection](https://docs.aws.amazon.com/cli/latest/reference/discovery/start-data-collection-by-agent-ids.html).
 
-- Outbound HTTPS to AWS (port 443)
-- Access to vCenter API (read-only)
-- NTP configured (accurate timestamps are important)
+## References
 
-### Linux Agent
-
-```bash
-# Install on RHEL/CentOS/Amazon Linux
-sudo yum install ./aws-discovery-agent.rpm
-
-# Install on Ubuntu/Debian
-sudo dpkg -i ./aws-discovery-agent.deb
-
-# Configure after install
-sudo /opt/aws/discovery/bin/configure.py \
-  --region us-east-1 \
-  --agent-id my-agent-group-1
-```
-
-### Windows Agent
-
-1. Download the installer from ADS console
-2. Run the installer (MSI package)
-3. Open Services → AWSDiscoveryAgent → set to Automatic
-4. Edit config at `C:\Program Files\AWS\AWSDiscoveryAgent\config.ini` with your region
-
-## Data Collected
-
-### Server Information
-
-```json
-{
-  "serverId": "server-abc123",
-  "hostname": "web-prod-01",
-  "osVersion": "RHEL 8.5",
-  "osArchitecture": "x86_64",
-  "cpuCores": 8,
-  "memorySizeMB": 16384,
-  "diskSizeMB": 512000,
-  "ipAddresses": ["10.0.1.50", "192.168.1.100"],
-  "macAddresses": ["00:0C:29:AB:CD:EF"],
-  "vmwareConfig": {
-    "clusterName": "production",
-    "resourcePool": "web-tier",
-    "vCenterId": "vc-12345"
-  }
-}
-```
-
-### Network Dependencies
-
-```json
-{
-  "sourceServerId": "server-abc123",
-  "connections": [
-    {
-      "destinationIp": "10.0.1.100",
-      "destinationPort": 3306,
-      "protocol": "TCP",
-      "processName": "mysqld"
-    },
-    {
-      "destinationIp": "10.0.1.101",
-      "destinationPort": 6379,
-      "protocol": "TCP",
-      "processName": "redis-server"
-    }
-  ]
-}
-```
-
-This dependency map is critical for understanding what must be migrated together and what the blast radius is when cutting over.
-
-### Utilization Data
-
-```json
-{
-  "serverId": "server-abc123",
-  "utilizationSamples": [
-    {
-      "timestamp": "2024-06-15T00:00:00Z",
-      "cpuPercent": 35.2,
-      "memoryPercent": 72.1,
-      "diskReadBytesPerSec": 125000,
-      "diskWriteBytesPerSec": 85000,
-      "networkInBytesPerSec": 2500000,
-      "networkOutBytesPerSec": 3500000
-    }
-  ]
-}
-```
-
-This data feeds into Migration Evaluator for right-sizing recommendations.
-
-## Exporting Data
-
-```bash
-# Export all discovered data as CSV
-aws discovery get-discovered-resource-summary --region us-east-1
-
-# Export to S3
-aws discovery export-descriptions \
-  --output-format CSV \
-  --s3-destination '{
-    "Bucket": "my-discovery-data",
-    "Prefix": "export/2024-06/"
-  }'
-
-# List exports
-aws discovery list-export-configurations --region us-east-1
-```
-
-## Integration with Migration Hub
-
-Discovered servers can be imported into Migration Hub as applications:
-
-```bash
-# Register an application
-aws migrationhub create-application \
-  --name "order-service" \
-  --description "Order processing service"
-
-# Associate discovered servers with application
-aws discovery associate-discovered-resource \
-  --identifier '{"source": "AWSApplicationDiscoveryService", "id": "server-abc123"}' \
-  --destination-region us-east-1
-```
-
-This gives you a migration plan with all servers tracked in Migration Hub, ready for MGN or DMS migration.
-
-## Querying Discovery Data
-
-```bash
-# List all servers
-aws discovery list-servers
-
-# Filter by OS
-aws discovery query \
-  --expression "SELECT * FROM AWSDISCOVERY WHERE osType = 'RHEL'"
-
-# Get servers with high CPU utilization
-aws discovery query \
-  --expression "SELECT serverId, hostname, cpuCores FROM AWSDISCOVERY WHERE cpuCores > 4"
-
-# Get network dependencies for a specific server
-aws discovery list-server-neighbors \
-  --server-id server-abc123 \
-  --region us-east-1
-```
-
-**Important:** The query API uses SQL-like syntax against your discovery data stored in AWS (not a real SQL database — just a query interface).
-
-## Monitoring
-
-```bash
-# Check agent status
-aws discovery describe-agents --agent-ids agent-abc123
-
-# CloudWatch metrics for ADS
-# - HostAgentHeartbeat (is the agent communicating)
-# - DataSize (how much discovery data is being collected)
-```
-
-## Limitations
-
-- **Agentless:** VMware only (no Hyper-V, physical, other hypervisors)
-- **Agent:** Supports Windows Server and Linux (RHEL, CentOS, Ubuntu, SUSE, Debian)
-- **Data retention:** Discovery data retained for 90 days (can export before deletion)
-- **No migration execution:** ADS only discovers, doesn't migrate. Use MGN, DMS, DataSync for actual migration.
-- **AWS regions:** Discovery data can only be exported to the same region where it was collected
-
-## Use in Migration Planning
-
-```
-Phase 1: Discovery (ADS)
-  → Collect server inventory, utilization, dependencies
-
-Phase 2: Assessment (Migration Evaluator)
-  → Analyze discovery data, generate TCO report, right-sizing recommendations
-
-Phase 3: Planning (Migration Hub)
-  → Group servers into applications, assign migration strategy
-
-Phase 4: Execution (MGN, DMS, DataSync)
-  → Execute the migration per plan
-
-Phase 5: Validation
-  → Verify applications work post-migration
-```
-
-ADS is the starting point. Without knowing what you have, you can't plan the migration or build an accurate business case.
+- [Availability change](https://docs.aws.amazon.com/application-discovery/latest/userguide/application-discovery-service-availability-change.html)
+- [Feature retirement table](https://docs.aws.amazon.com/general/latest/gr/full_shutdown_services.html)
+- [Discovery CLI contracts](https://docs.aws.amazon.com/cli/latest/reference/discovery/)
+- [Discovery workflow](https://docs.aws.amazon.com/migrationhub/latest/ug/gs-new-user-discovery.html)

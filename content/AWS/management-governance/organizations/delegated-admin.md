@@ -1,64 +1,72 @@
 ---
-title: "Delegated Admin"
-tags: [aws, management-governance, organizations, delegated-admin]
-date: 2026-01-30
-description: "The Delegated Administrator feature in AWS allows you to assign specific administrative privileges to AWS accounts within your organization for managing specific services."
+title: "Delegated administration"
+description: "Delegated administration lets a supported AWS service manage organization-wide features from a member account."
+tags:
+  - aws/management-governance
+date: 2026-10-12
 ---
 
-# Delegated Admin
+# Delegated administration
 
-The **Delegated Administrator** feature in AWS allows you to assign specific administrative privileges to AWS accounts within your organization for managing specific services. This is a part of **AWS Organizations** and helps decentralize management of AWS resources by delegating specific administrative tasks to trusted accounts without granting full control over the entire organization.
+Delegated administration lets a supported AWS service manage organization-wide features from a member account. It does not turn that member into the management account or grant arbitrary access to every member resource.
 
-#### Key Features of Delegated Administrator:
+Prerequisites: [[AWS/management-governance/organizations/README|Organizations]], [[AWS/security/iam/README|IAM]] and the owning service's permission model.
 
-1. **Delegation of Service-Specific Administrative Tasks**: Instead of requiring the AWS management account (root account) to manage all resources and services, you can assign an account within the organization to be the "delegated administrator" for a specific service. This delegated account gets permissions to manage that service across other accounts within the organization.
-2. **Security and Least Privilege**: By using delegated administrators, you limit the number of accounts with full access to manage resources, improving security and adhering to the principle of least privilege. This helps in reducing the risk associated with centralizing too many permissions in a single management account.
-3. **Centralized Control via AWS Organizations**: The organization management account (the root account) retains overall control and can designate which member accounts will be delegated administrators for particular services.
-4. **Separation of Duties**: Delegated administrator roles help in creating clear boundaries between teams or departments within an organization, each responsible for managing different AWS services.
+## Distinguish four identities
 
----
+The Organizations root is a container; the management account is an account; its root user is a principal; a service's delegated administrator is a registered member account. Trusted service access and delegated registration are distinct setup steps. A delegated service operator still needs IAM permissions and applicable organization policy allowance.
 
-#### How It Works:
+The permitted number of delegated administrators and service principal depend on the operation. There is no exactly-one rule for all services. AWS Config supports up to three; organizational rules/conformance packs use config-multiaccountsetup.amazonaws.com, while aggregation uses config.amazonaws.com. Registering the wrong principal does not enable the desired workflow.
 
-- **Setting up a Delegated Administrator**:
-  1. The **management account** (root account) of an AWS Organization assigns a specific AWS member account as the **delegated administrator** for an AWS service.
-  2. Once assigned, the **delegated administrator** account can manage resources and configuration for that AWS service across other accounts in the organization.
-- **Example Use Case**:
-  - You might assign one account as the **delegated administrator** for **AWS IAM Access Analyzer** to handle security roles and policies across all accounts.
-  - Another account could be the **delegated administrator** for **AWS Security Hub**, tasked with overseeing security and compliance checks organization-wide.
-- **Supported AWS Services**: Not all AWS services support delegated administrators, but key services like **AWS Config**, **AWS GuardDuty**, **AWS Security Hub**, **AWS Firewall Manager**, and **AWS License Manager** do.
+## Setup and revocation workflow
 
----
+Check that the feature supports delegation, choose a dedicated eligible account, enable required trusted access and register it using the service's documented sequence. Configure its operator role with least privilege; record which Region/account owns configuration. Keep management-account-only actions explicit.
 
-#### Example Workflow:
+Before deregistration, inspect service-created roles, organization resources and dependent automation. Deregistering an account is not proof that all integrations/logging/resources were deleted, and disabling trusted access can disrupt production.
 
-Let's say you're managing an organization with multiple AWS accounts, and you want to delegate the management of **AWS Security Hub** to a security team within your organization.
+## Bounded verification exercise
 
-1. The organization’s **management account** assigns one of the accounts as the **delegated administrator** for **AWS Security Hub**.
-2. The **delegated administrator** account can then:
-   - Enable and configure **AWS Security Hub** across other accounts.
-   - View security findings and compliance data from those accounts.
-   - Manage security controls and settings without using the management account.
-3. The **management account** maintains the ability to revoke this delegated administrator role or manage the service directly if necessary.
+In an authorized sandbox, inspect existing registrations before adding anything:
 
----
+```bash
+aws organizations list-delegated-administrators
+aws organizations list-aws-service-access-for-organization
+```
 
-#### Benefits:
+These read-only CLI v2 calls require Organizations permissions and may reveal account information. Select one supported service feature, then verify the delegated account can perform that feature while a nondelegated test account cannot. Confirm an unrelated management-account-only action remains denied.
 
-- **Scalability**: It allows large organizations with multiple AWS accounts to scale administrative control by decentralizing the management of AWS services.
-- **Operational Efficiency**: Teams or departments can manage specific services relevant to their roles without the need for constant involvement from the central organization management account.
-- **Improved Security**: By limiting access to only certain accounts, you can reduce the security risks of having too many permissions in a single central account.
+Document actual registrations, effective IAM permission and service results—not merely a successful registration API response. Revoke only the test registration/configuration after checking dependencies and keep an audit record.
 
----
+## Service-specific authority matrix
 
-#### Important Notes:
+| Task                                        | Management account                       | Delegated service account                      |
+| ------------------------------------------- | ---------------------------------------- | ---------------------------------------------- |
+| Organization management/root policy changes | Owns supported organization operations   | Not granted by a generic service registration  |
+| Enable required trusted service access      | Supported privileged setup               | Depends on actual delegated service capability |
+| Operate a supported delegated feature       | May retain supported administration      | Only that feature plus required IAM authority  |
+| Access arbitrary workload resources         | Still requires authorization             | Not automatically inherited                    |
+| Deregister/disable integration              | Review documented authority/dependencies | Service-specific, not blanket cleanup          |
 
-- Only one member account can be assigned as the **delegated administrator** for a particular service.
-- The **management account** can assign or revoke the delegated administrator status at any time.
-- The **management account** retains overall control and can still perform tasks in the service, even if there is a delegated administrator in place.
+For AWS Config, aggregation and organizational rules/conformance packs use different service principals. The supported multi-administrator limit is service-specific; do not turn one service's example into a universal exactly-one constraint.
 
----
+## Registration workflow and verification
 
-#### Conclusion:
+A CLI registration shape is:
 
-The **Delegated Administrator** feature in AWS provides a way to distribute administrative responsibilities for specific services across accounts, improving security, flexibility, and operational efficiency within organizations using multiple AWS accounts.
+```bash
+aws organizations register-delegated-administrator \
+  --account-id 123456789012 \
+  --service-principal config-multiaccountsetup.amazonaws.com
+```
+
+This is a consequential administrative example, not executed here. It requires an eligible member account, supported feature, management-account authority and trusted access/prerequisites. Choose config.amazonaws.com for the corresponding aggregation workflow only when the owning guide calls for it; using one string everywhere does not enable all Config operations.
+
+After registration, establish the delegated account's actual role and configure a bounded organizational service feature. Verify resource coverage and unauthorized denial. Compare results from management, delegated and ordinary member identities so the authority boundary is visible.
+
+Before deregistration, inventory service-created organization configuration, schedules, roles and reports. Disabling trusted access can stop production integrations; removal of registration does not prove every resource/role was deleted. Keep an audit trail, approved rollback and an explicit owner for retained configuration.
+
+## References
+
+- [Organizations delegated administrator operations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_delegate_policies.html)
+- [RegisterDelegatedAdministrator contract](https://docs.aws.amazon.com/organizations/latest/APIReference/API_RegisterDelegatedAdministrator.html)
+- [Config integration/service principals](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-config.html)

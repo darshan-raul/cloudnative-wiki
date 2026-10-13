@@ -2,298 +2,130 @@
 title: CloudWatch Logs Insights
 description: CloudWatch Logs Insights — powerful log query language for CloudWatch Logs. Query syntax, saved queries, contribution insights, and integration with dashboards.
 tags:
-  - aws
-  - monitoring
-  - logs
-  - insights
-  - cloudwatch
-date: 2026-06-06
+  - aws/monitoring
+date: 2026-10-12
 ---
 
 # CloudWatch Logs Insights
 
-CloudWatch Logs Insights (CLI: `aws insights`) is a query language for analyzing CloudWatch Logs. It supports structured field extraction, aggregation, filtering, and visualization.
+Prerequisites: [[AWS/security/iam/README|scoped IAM access]] and [[AWS/monitoring/README|telemetry, SLI and retention design]].
 
-## Core Concepts
+Logs Insights queries CloudWatch Logs. Contributor Insights identifies heavy contributors using rules; these are different APIs, schemas and billing dimensions.
 
-### Query Syntax
+## Query language and fixture
 
-Logs Insights uses a SQL-like query language:
+These examples use Logs Insights QL, not SQL or PPL. First ingest the structured fixture in [[AWS/monitoring/cloudwatch-logs/README|the Logs lab]], including status and durationMs fields. `@timestamp` is event time; `@ingestionTime` is ingestion time.
 
-```sql
-fields @timestamp, @message, level
-| filter level = "ERROR"
-| sort @timestamp desc
-| limit 20
+```text
+fields @timestamp, @ingestionTime, service, status, durationMs
+| filter service = "demo"
+| stats count(*) as requests, pct(durationMs, 95) as p95 by bin(5m)
+| sort p95 desc
 ```
 
-### Query Structure
+Expected: a bucket containing the fixture and p95 near 120. To find top source IPs in a dataset that actually contains src_ip, use:
 
-```
-fields        → Extract specific fields
-| filter      → Filter log lines by condition
-| sort         → Order by field
-| limit        → Limit results
-| stats        → Aggregate (count, avg, sum, etc.)
-| display      → Rename fields for output
-```
-
-### Log Format Example (JSON)
-
-```json
-{
-  "timestamp": "2024-01-15T10:30:00Z",
-  "level": "ERROR",
-  "service": "checkout",
-  "message": "Database connection failed",
-  "error": "Connection refused",
-  "duration_ms": 5000
-}
-```
-
-Query:
-
-```sql
-fields @timestamp, service, message, duration_ms
-| filter level = "ERROR"
-| sort duration_ms desc
+```text
+stats count(*) as requests by src_ip
+| sort requests desc
 | limit 10
 ```
 
-## Field Reference
+Do not sort an undefined count or copy generic percentile()/distinct()/fill() functions into QL. A language switch requires that language's syntax.
 
-| Field            | Description                      |
-| ---------------- | -------------------------------- |
-| `@timestamp`     | When the log event was ingested  |
-| `@ingestionTime` | When CloudWatch received the log |
-| `@message`       | The raw log message (string)     |
-| `@log`           | Full log group/stream path       |
-| `@logStream`     | The log stream name              |
+## API workflow
 
-## Query Commands
+With logs StartQuery/GetQueryResults/StopQuery permissions scoped to the selected groups:
 
-### fields — Extract Fields
-
-```sql
-fields @timestamp, @message, level, service
+```bash
+aws logs start-query --log-group-name /wiki-lab/demo \
+  --start-time 1791763200 --end-time 1791849600 \
+  --query-string 'fields @timestamp, status | filter status = 500 | limit 10'
 ```
 
-### filter — Filter by Condition
+Replace epoch seconds with the actual fixture interval. Save the returned queryId; poll `aws logs get-query-results --query-id QUERY_ID` with bounded backoff. Handle Complete, Failed, Cancelled and Timeout explicitly; call stop-query on abandonment. The correct namespace is logs, not a fictional `aws insights`. Saved queries use put-query-definition.
 
-```sql
-fields @timestamp, @message
-| filter level = "ERROR"
-| filter service = "checkout"
+Contributor Insights uses CloudWatch put-insight-rule with a rule-definition schema; Logs QL cannot be pasted as a rule. Select a documented rule template, limit contributors/cardinality and test it with non-sensitive fixtures.
+
+## Cost, failure and cleanup
+
+Logs Insights charges for scanned data, not a fixed price per query. Restrict log groups/time ranges and understand class/index feature availability. Contributor Insights has rule/event costs. Treat absent fields as a dataset/schema issue; authorization or KMS failures require scoped policy diagnosis.
+
+Stop unfinished queries, remove temporary query definitions/rules if created, and delete only the disposable source log group after investigation. Production retention policy belongs to compliance owners.
+
+## Structured fixture and command catalogue
+
+Use records containing service, status, durationMs and requestId. Add synthetic src_ip/username/queryMs fields only for exercises needing them; absent fields are not silently meaningful zeros.
+
+| Command    | Role                               | Example boundary                                 |
+| ---------- | ---------------------------------- | ------------------------------------------------ |
+| fields     | Select/compute visible fields      | Does not filter all missing fields automatically |
+| filter     | Restrict matching events           | String/numeric types matter                      |
+| parse      | Extract from structured/plain text | Test the exact message format                    |
+| stats      | Aggregate by keys/time buckets     | Produces a new result schema                     |
+| sort/limit | Order/restrict result rows         | Use named post-stats columns                     |
+| display    | Select final columns               | Different from ingestion schema                  |
+
+## Operational QL recipes
+
+Error counts by five-minute window:
+
+```text
+filter status >= 500
+| stats count(*) as errors by bin(5m)
 ```
 
-Filter operators:
+For an error **rate**, aggregate total and errors over the same population; an error count alone is not a percentage. Retrieve the denominator over the same interval/groups with this second query, then divide matching bucket counts in the investigation worksheet:
 
-- `=` `!=` `>=` `<=` `>` `<`
-- `like` `not like` (regex)
-- `contains` `not contains`
-- `and` `or` `not`
-
-```sql
-fields @timestamp, @message
-| filter level = "ERROR" and (service = "checkout" or service = "payment")
+```text
+stats count(*) as requests by bin(5m)
 ```
 
-### stats — Aggregation
+Latency uses the numeric durationMs field:
 
-```sql
-fields @timestamp, service, latency_ms
-| filter service = "api"
-| stats avg(latency_ms) as avg_latency,
-       max(latency_ms) as max_latency,
-       count() as request_count
-       by service
-| sort avg_latency desc
+```text
+stats avg(durationMs) as mean, pct(durationMs, 50) as p50, pct(durationMs, 95) as p95, pct(durationMs, 99) as p99 by service
+| sort p99 desc
 ```
 
-Aggregation functions:
+For a log message with a known plaintext shape, parse explicitly:
 
-- `count()` — number of log lines
-- `avg()` `min()` `max()` `sum()`
-- `percentile()` `distinct()`
-- `sort asc/desc`
-
-### sort and limit
-
-```sql
-fields @timestamp, @message
-| filter level = "ERROR"
-| sort @timestamp desc
-| limit 50
-```
-
-## Common Query Patterns
-
-### Error Rate Over Time
-
-```sql
-fields @timestamp, level
-| filter level = "ERROR"
-| stats count() as error_count
-       by bin(5m)
-| sort bin(5m) asc
-```
-
-### HTTP Request Latency Percentiles
-
-```sql
+```text
 fields @message
-| filter @message like /GET|POST|PUT|DELETE/
-| parse @message "* [*] *" as method, path, status
-| stats avg(latency_ms) as p50,
-       percentile(latency_ms, 95) as p95,
-       percentile(latency_ms, 99) as p99
-       by service
-```
-
-### Database Query Analysis
-
-```sql
-fields @timestamp, query, duration_ms
-| filter type = "db.query"
-| stats avg(duration_ms) as avg_query_time,
-       max(duration_ms) as max_query_time,
-       count() as query_count
-       by query
-| sort avg_query_time desc
-| limit 20
-```
-
-### Failed Logins
-
-```sql
-fields @timestamp, src_ip, user, result
-| filter event = "login" and result = "FAILED"
-| stats count() as failed_attempts
-       by src_ip, user
-| sort failed_attempts desc
+| parse @message "login user=* outcome=*" as username, outcome
+| filter outcome = "denied"
+| stats count(*) as denied by username
+| sort denied desc
 | limit 10
 ```
 
-### Parse JSON Logs
+These are Logs Insights QL, not SQL/PPL. A query expecting JSON automatically discovered fields must be tested against actual log events/classes. Use documented functions such as pct(); validate every expression against the chosen language.
 
-```sql
-fields @message
-| filter @message like /\{.*\}/
-| parse @message '{"timestamp":"*","level":"*","service":"*","message":"*"}' as ts, level, service, message
-| filter level = "ERROR"
-| sort @timestamp desc
-```
-
-## Saved Queries
-
-Save frequently-used queries for reuse:
+## Saved queries and asynchronous execution
 
 ```bash
-aws insights save-query \
-  --name "errors-last-hour" \
-  --query-string "fields @timestamp, @message | filter level = \"ERROR\" | sort @timestamp desc | limit 50" \
-  --log-group-name /aws/lambda/my-function
+aws logs put-query-definition --name wiki-lab-errors \
+  --log-group-names /wiki-lab/demo \
+  --query-string 'fields @timestamp, status | filter status >= 500 | limit 20'
 ```
 
-Run a saved query:
+Record queryDefinitionId for scoped deletion. Start-query returns a query ID; get-query-results may return partial results before Complete. Use bounded polling/timeout and stop-query on abandonment. Empty results may reflect the wrong time window/group/schema rather than a healthy application.
 
-```bash
-aws insights start-query \
-  --log-group-name /aws/lambda/my-function \
-  --start-time 1705312800 \
-  --end-time 1705316400 \
-  --query-string "fields @timestamp, @message | filter level = \"ERROR\" | sort @timestamp desc"
-```
+Dashboard query widgets need the appropriate language/source selection and permissions. Query refresh rescans data; a frequently refreshed dashboard can cost more than one investigation query.
 
-## Contribution Insights
+## Contributor Insights and triage
 
-Contributor Insights identifies top contributors to a metric:
+Contributor Insights uses a rule-definition JSON schema under CloudWatch put-insight-rule, not a Logs QL string. Select a maintained rule template for the actual structured fields, define aggregate/count and matched events, then verify a known fixture contributor. Rules and matched-event charges differ from Logs scanned-byte pricing.
 
-```sql
-fields src_ip
-| filter status = 500
-| sort count() desc
-| limit 10
-```
+During an incident narrow time/group scope, examine @timestamp versus @ingestionTime, correlate request IDs and export only approved evidence. Cancel unfinished queries, delete lab query definitions/rules and restore dashboard refresh settings.
 
-### Creating a Contributor Insight Rule
-
-```bash
-aws insights put-insight-rules \
-  --insight-rules '[{
-    "Name": "top-500-errors",
-    "Schema": {
-      "Name": "CloudWatchLogInsightsRule",
-      "MatchLogic": "And",
-      "Constraints": [{
-        "Dimensions": ["src_ip", "uri"],
-        "Type": "string"
-      }]
-    },
-    "FilterPattern": "{\"status\": [500]}",
-    "ReleaseBehind": "LatestRelease"
-  }]'
-```
-
-## Integration with Dashboards
-
-Add Logs Insights queries to CloudWatch Dashboards:
-
-```json
-{
-  "type": "logInsights",
-  "x": 0,
-  "y": 0,
-  "width": 24,
-  "height": 9,
-  "properties": {
-    "title": "Error Rate",
-    "logGroupNames": ["/aws/lambda/checkout", "/aws/lambda/payment"],
-    "queries": [
-      {
-        "text": "fields @timestamp, level | filter level = \"ERROR\" | stats count() by bin(5m)",
-        "name": "Error Rate",
-        "visible": true
-      }
-    ]
-  }
-}
-```
-
-## Visualization
-
-Insights results can be displayed as:
-
-- **Table** — Default, rows and columns
-- **Line chart** — Time series (when using `bin()`)
-- **Bar chart** — Aggregation by category
-- **Pie chart** — Percentage breakdown
-
-## Limits
-
-| Resource                         | Limit                              |
-| -------------------------------- | ---------------------------------- |
-| Query runtime                    | 60 minutes (async)                 |
-| Results returned                 | 1,000 lines (sync), 10,000 (async) |
-| Queries per account (concurrent) | 10                                 |
-| Saved queries per account        | 500                                |
+References: [QL commands](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html), [stats](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax-Stats.html), [saved-query API](https://docs.aws.amazon.com/cli/latest/reference/logs/put-query-definition.html), [Contributor rule syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContributorInsights-RuleSyntax.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cloudwatch/
-- **Documentation:** https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/
-- **Pricing:** https://aws.amazon.com/cloudwatch/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A developer running 20 Logs Insights queries per day to debug production issues. 20 × 30 = 600 queries/month. Logs Insights: $0.005/query × 600 = $3/month. Without Logs Insights, debugging would require SSH into instances and running grep — 30 minutes/day × $50/hr = $1,500/month in engineering time.
-
-**Scenario 2:** A security team using Contributor Insights to identify top IPs hitting 500 errors. One Contributor Insight rule running continuously. $0.10/million events ingested. 10M log events/month × $0.10/million = $1/month. Identifies a DDoS attack that would have caused $10,000 in downtime costs.
-
-## Nuggets & Gotchas
-
-- **Logs Insights queries are not real-time — they query historical data:** A query on the last 5 minutes of logs has a latency of 10-30 seconds. For real-time log analysis, use CloudWatch Contributor Insights or a third-party tool.
-- **The `parse` command is powerful but slow on large log groups:** If your query times out, simplify the parse pattern or narrow the time range. Complex parse patterns with multiple regex groups are expensive.
-- **Queries with `*` in field names are treated as glob, not regex:** If you have a field named `host.name` and you use `fields host.*`, it returns all fields starting with `host.`. If you want regex, use `fields regex "host\\..*"`.
-- **The `bin()` function requires the time series to have at least one data point per bin:** If you bin by 5 minutes but your log group has no events in a 5-minute window, that bin is empty and doesn't appear in the chart. Use `stats` with `fill()` to handle gaps.
-- **Query results are limited to 1,000 rows in the console (10,000 via API):** For large-scale log analysis, use async query execution (`aws insights start-query`) which can return up to 10,000 rows and stores results for 30 minutes.
+- [QL stats functions](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax-Stats.html)
+- [Discovered fields](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_AnalyzeLogData-discoverable-fields.html)
+- [StartQuery](https://docs.aws.amazon.com/cli/latest/reference/logs/start-query.html)
+- [Saved queries](https://docs.aws.amazon.com/cli/latest/reference/logs/put-query-definition.html)
+- [Contributor rules](https://docs.aws.amazon.com/cli/latest/reference/cloudwatch/put-insight-rule.html)
+- [Pricing](https://aws.amazon.com/cloudwatch/pricing/)

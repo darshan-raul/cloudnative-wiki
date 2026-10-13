@@ -1,336 +1,106 @@
 ---
-title: AWS Batch
-description: AWS Batch — managed batch job processing. Job definitions, queues, compute environments (EC2/Fargate), scheduling, retry logic, and dependency management.
+title: "AWS Batch"
+description: "Model queues, compute environments, resource-compatible jobs and retry/timeout behavior without assuming simultaneous or strict ordered execution."
 tags:
-  - aws
-  - compute
-  - batch
-date: 2026-06-06
+  - cloud/aws/compute/batch
+date: 2026-10-12
 ---
 
 # AWS Batch
 
-AWS Batch manages batch job scheduling and execution on managed compute infrastructure. You define job definitions (what to run), job queues (where to run), and compute environments (how to run). AWS Batch handles provisioning, scaling, and cleanup of compute resources.
+Batch schedules container jobs onto supported compute environments. A job definition describes execution; a queue connects jobs to capacity. Start with [[AWS/compute/ecs/README|container resources/roles]] and [[AWS/compute/ecr|images]].
 
-## Core Concepts
+## Scheduling and execution
 
-### How AWS Batch Works
+Without a scheduling policy, a queue uses FIFO scheduling; fair-share policies and priority/resource/dependency constraints change placement. Submission order does not guarantee completion order. Array jobs create indexed children, not a promise that every child runs at once.
 
-```
-Job Definition (what to run)
-  │
-  ▼
-Job Queue (priority, compute environment)
-  │
-  ▼
-Compute Environment (EC2 or Fargate)
-  │
-  ▼
-Job Scheduler (runs jobs based on priority, dependencies)
-```
+Choose EC2, Fargate or another supported model based on resource shape and job needs. Multi-node parallel jobs have model-specific restrictions; do not copy EC2 vCPU fields into a Fargate definition or mix incompatible compute-environment types in a queue.
 
-### Key Terms
+Service, execution and application job roles are distinct. The container must be able to pull its image, emit logs and reach dependencies without broad permissions.
 
-| Term                | Description                                            |
-| ------------------- | ------------------------------------------------------ |
-| Job Definition      | Blueprint for a job (image, resources, retry strategy) |
-| Job                 | A running instance of a job definition                 |
-| Job Queue           | Queue with priority, maps to compute environment       |
-| Compute Environment | Managed EC2 or Fargate infra                           |
-| Job Scheduler       | AWS Batch scheduler (runs jobs in order)               |
+## Small Fargate job exercise
 
-## Job Definitions
+Prerequisites: a sandbox Fargate compute environment and compatible queue created through the documented console workflow, subnets/SGs with approved egress for the public image (or a private ECR mirror and its endpoints), reachable CloudWatch Logs, an execution role and existing log group. This is a paid-resource lab; record every identifier.
+
+Save as `batch-job.json` and replace the role/Region:
 
 ```json
 {
-  "jobDefinitionName": "my-batch-job",
+  "jobDefinitionName": "wiki-batch-lab",
   "type": "container",
+  "platformCapabilities": ["FARGATE"],
   "containerProperties": {
-    "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-batch:latest",
-    "vcpus": 2,
-    "memory": 4096,
-    "command": ["python", "process.py", "Ref::input_file"],
-    "environment": [{ "name": "BATCH_LOG_LEVEL", "value": "INFO" }],
-    "readonlyRootFilesystem": true,
-    "privileged": false
-  },
-  "retryStrategy": {
-    "attempts": 3,
-    "evaluateOnExit": [
-      { "action": "RETRY", "onStatusReason": "HostUsageError" },
-      { "action": "EXIT", "onStatusReason": "TaskFailed" }
-    ]
-  },
-  "timeout": {
-    "attemptDurationSeconds": 3600
-  }
-}
-```
-
-### Parameters (Job Template)
-
-```json
-{
-  "parameters": {
-    "input_file": "s3://my-bucket/data/input.csv"
-  }
-}
-```
-
-Override at submit time:
-
-```bash
-aws batch submit-job \
-  --job-name my-run \
-  --job-definition my-batch-job \
-  --job-queue my-queue \
-  --parameters input_file=s3://my-bucket/data/new-input.csv
-```
-
-## Compute Environments
-
-### Fargate (Serverless)
-
-```bash
-aws batch create-compute-environment \
-  --compute-environment-name my-fargate-env \
-  --type MANAGED \
-  --service-role arn:aws:iam::123456789012:role/AWSBatchServiceRole \
-  --compute-resources '{
-    "type": "FARGATE",
-    "maxvCpus": 256,
-    "subnets": ["subnet-xxxxx", "subnet-yyyyy"],
-    "securityGroupIds": ["sg-xxxxx"]
-  }' \
-  --state ENABLED
-```
-
-### EC2 (Managed)
-
-```bash
-aws batch create-compute-environment \
-  --compute-environment-name my-ec2-env \
-  --type MANAGED \
-  --service-role arn:aws:iam::123456789012:role/AWSBatchServiceRole \
-  --compute-resources '{
-    "type": "EC2",
-    "minvCpus": 0,
-    "desiredvCpus": 0,
-    "maxvCpus": 256,
-    "instanceTypes": ["m5", "m5d"],
-    "subnets": ["subnet-xxxxx", "subnet-yyyyy"],
-    "securityGroupIds": ["sg-xxxxx"],
-    "instanceRole": "arn:aws:iam::123456789012:instance-profile/batch-instance-role"
-  }' \
-  --state ENABLED
-```
-
-### Spot (Cheaper)
-
-```bash
-aws batch create-compute-environment \
-  --compute-environment-name my-spot-env \
-  --type MANAGED \
-  --service-role arn:aws:iam::123456789012:role/AWSBatchServiceRole \
-  --compute-resources '{
-    "type": "SPOT",
-    "allocationStrategy": "BEST_FIT_PROGRESSIVE",
-    "minvCpus": 0,
-    "maxvCpus": 256,
-    "instanceTypes": ["m5", "c5"],
-    "bidPercentage": 50,
-    "subnets": ["subnet-xxxxx"],
-    "securityGroupIds": ["sg-xxxxx"],
-    "instanceRole": "arn:aws:iam::123456789012:instance-profile/batch-instance-role"
-  }' \
-  --state ENABLED
-```
-
-## Job Queues
-
-```bash
-# Create queue
-aws batch create-job-queue \
-  --job-queue-name my-queue \
-  --priority 1 \
-  --compute-environment-order '[{"computeEnvironment": "my-fargate-env", "order": 1}]' \
-  --state ENABLED
-
-# Create with multiple compute environments (priority)
-aws batch create-job-queue \
-  --job-queue-name production-queue \
-  --priority 10 \
-  --compute-environment-order '[
-    {"computeEnvironment": "my-fargate-env", "order": 1},
-    {"computeEnvironment": "my-ec2-env", "order": 2}
-  ]' \
-  --state ENABLED
-```
-
-Job queues can have multiple compute environments with different priority. Jobs try the first environment, fall back to the next if insufficient resources.
-
-## Submitting Jobs
-
-### Simple Job
-
-```bash
-aws batch submit-job \
-  --job-name my-analysis \
-  --job-definition my-batch-job \
-  --job-queue my-queue
-```
-
-### Array Job (parallel processing)
-
-```bash
-aws batch submit-job \
-  --job-name my-array \
-  --job-definition my-batch-job \
-  --job-queue my-queue \
-  --array-properties size=100
-```
-
-100 jobs run in parallel. Each job can reference its array index:
-
-```python
-import os
-array_index = os.environ.get('AWS_BATCH_JOB_ARRAY_INDEX')
-```
-
-### Multi-node Parallel Job
-
-For MPI/HPC workloads:
-
-```bash
-aws batch submit-job \
-  --job-name my-mpi \
-  --job-definition my-mpi-job \
-  --job-queue my-queue \
-  --node-properties '{
-    "numNodes": 4,
-    "mainNode": 0,
-    "nodeRangeProperties": [{
-      "targetNodes": "0:3",
-      "container": {
-        "image": "my-mpi-image",
-        "vcpus": 8,
-        "memory": 16384
+    "image": "public.ecr.aws/docker/library/alpine:3",
+    "executionRoleArn": "arn:aws:iam::111122223333:role/REPLACE_WITH_EXECUTION_ROLE",
+    "resourceRequirements": [
+      { "type": "VCPU", "value": "0.25" },
+      { "type": "MEMORY", "value": "512" }
+    ],
+    "command": ["/bin/sh", "-c", "echo Batch-lab-ok"],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/aws/batch/wiki-lab",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "job"
       }
-    }]
-  }'
-```
-
-### Job Dependencies
-
-```bash
-# Job 2 depends on Job 1 completing successfully
-aws batch submit-job \
-  --job-name job2 \
-  --job-definition my-batch-job \
-  --job-queue my-queue \
-  --depends-on '[{"jobId": "xxxxx", "type": "N_TO_N"}]'
-```
-
-## Monitoring
-
-```bash
-# List jobs
-aws batch list-jobs --job-queue my-queue --job-status RUNNABLE
-
-# Describe job
-aws batch describe-jobs --jobs xxxxx
-
-# Get job logs
-aws batch describe-job-log-groups
-# Or: CloudWatch Logs (if configured in job definition)
-```
-
-### CloudWatch Events
-
-Monitor job state changes:
-
-```bash
-aws events put-rule \
-  --name batch-job-events \
-  --event-pattern '{
-    "source": ["aws.batch"],
-    "detail-type": ["AWS Batch Job State Change"]
-  }'
-```
-
-## Retry Strategy
-
-```json
-{
-  "retryStrategy": {
-    "attempts": 3,
-    "evaluateOnExit": [
-      { "action": "RETRY", "onReason": "HostUsageError" },
-      { "action": "RETRY", "onReason": "NonZeroExitCode" },
-      { "action": "EXIT", "onReason": "TaskFailed" }
-    ]
-  }
+    }
+  },
+  "retryStrategy": { "attempts": 1 },
+  "timeout": { "attemptDurationSeconds": 60 }
 }
 ```
 
-Common `onStatusReason` values:
-
-- `HostUsageError` — resource exhaustion, retry
-- `TaskFailed` — task failed, don't retry
-- `JobTimeout` — job timed out, retry
-
-## Pricing
-
-| Component       | Cost                              |
-| --------------- | --------------------------------- |
-| EC2 (on-demand) | $0.096/hr (m5.xlarge)             |
-| EC2 (Spot)      | 70-90% off                        |
-| Fargate         | $0.04048/vCPU-hr + $0.00444/GB-hr |
-| No charge       | Job scheduling, queues            |
-
-## Architecture: Batch Processing Pipeline
-
+```bash
+aws batch register-job-definition --cli-input-json file://batch-job.json
+aws batch submit-job \
+  --job-name wiki-batch-test --job-definition wiki-batch-lab \
+  --job-queue "$BATCH_LAB_QUEUE"
 ```
-S3 (input bucket)
-  │
-  ▼
-Lambda (trigger on new file)
-  │
-  ▼
-AWS Batch (submit job)
-  │
-  ├── Job 1 (EC2/Spot, 8 vCPU, 16GB)
-  ├── Job 2 (EC2/Spot, 8 vCPU, 16GB)
-  └── Job 100 (EC2/Spot, 8 vCPU, 16GB)
-         │
-         ▼
-       S3 (output bucket)
-         │
-         ▼
-       SNS (notify completion)
+
+Record the job ID. Follow describe-jobs through scheduling/start to SUCCEEDED; verify exit code and Batch-lab-ok in the recorded CloudWatch stream. Batch has no describe-job-log-groups command.
+
+## Retry and failure exercise
+
+Use a second lab definition that exits nonzero and a bounded retry strategy. Match documented onReason/onStatusReason/onExitCode patterns with an explicit EXIT fallback; invented status strings are not a reliable policy.
+
+Timeout termination is not retried. Batch has no universal maximum timeout value, but Fargate execution should not be expected beyond fourteen days. Save durable checkpoints for long or interruptible jobs.
+
+Investigate a stuck RUNNABLE job by examining capacity, compatible CPU/memory, permissions, image reachability and dependencies; “queue enabled” is not proof that it can launch.
+
+## Cost and cleanup
+
+Batch has no additional service charge for standard scheduling; underlying compute/storage/network/logging are billed. A compute environment can retain resources beyond one completed job.
+
+Cancel queued and terminate running lab jobs, disable/delete the dedicated queue after jobs drain, then disable/delete the dedicated compute environment when dependencies permit. Deregister the lab definition and remove dedicated logs/resources; verify no residual paid capacity.
+
+## Queue, retry and pipeline details
+
+```text
+S3 input event / schedule → submit-job → job queue
+                                         │
+                              compute environment
+                                         │
+                             job definition revision
+                                         │
+                           container → logs + output
 ```
+
+The job definition is the versioned blueprint; the queue determines where eligible jobs wait; the compute environment supplies compatible capacity. This distinction matters when `RUNNABLE` jobs remain queued: a valid image and definition are insufficient if resource requirements exceed available capacity or the queue points at an incompatible environment. A successful submit response gives a job ID, not a promise that it will start immediately.
+
+Use a simple job for one unit of work. Use an array job when items can run independently and read `AWS_BATCH_JOB_ARRAY_INDEX` to select a partition; reserve multi-node parallel jobs for tightly coupled work on a supported environment. A dependency can require a prior job to complete before a downstream job is eligible. For a data pipeline, put durable input/output in S3 or another approved store so a retry does not silently duplicate results.
+
+For retry testing, distinguish an application exit from capacity delay, image-pull failure and timeout. Record the attempt number and exit code; make the job idempotent or write outputs under attempt-specific temporary keys and publish once. Send terminal job state to an event rule or query `describe-jobs`; use the job's log stream to inspect application failure. A CloudWatch alarm on queued-job age or failed-job count helps detect a stuck pipeline, but it requires an explicit metric/threshold design.
+
+Compare cost as `sum of running compute duration × selected capacity price`, plus EBS/EFS, image storage, network and logs. Spot can lower compute cost only when interruptions and reruns are acceptable; a cheap attempt that regularly loses work can cost more overall.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/batch/
-- **Documentation:** https://docs.aws.amazon.com/batch/
-- **Pricing:** https://aws.amazon.com/batch/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A nightly data processing job (8 vCPU, 16GB) running 5 hours on 10 parallel nodes. Fargate: 10 × 8 vCPU × 5hr × $0.04048 = $16.19. Plus memory: 10 × 16GB × 5hr × $0.00444 = $3.55. Total: ~$19.74 per run. 30 runs/month = $592/month.
-
-**Scenario 2:** The same job on EC2 Spot (70% savings). EC2 m5.xlarge (4 vCPU, 16GB) Spot: $0.058/hr × 20 instances × 5hr = $5.80/job × 30 = $174/month. Fargate is 3.4x more expensive but requires no EC2 management.
-
-**Scenario 3:** An ML training job (64 vCPU, 256GB) running 10 hours once. EC2 Spot (c5.16xlarge = 64 vCPU): $1.38/hr × 10hr × 1 instance = $13.80/job. On-demand: $2.61/hr × 10 = $26.10. Spot saves $12.30 per run. 20 runs/month = $246 savings.
-
-## Nuggets & Gotchas
-
-- **AWS Batch doesn't have a built-in retry for Spot interruptions — configure `evaluateOnExit`:** When Spot interrupts a job, Batch marks it as `FAILED`. Use `"onStatusReason": "HostUsageError"` in retry strategy to automatically resubmit interrupted jobs.
-- **Array jobs share the same job definition — each array index gets its own job:** If you need different parameters per array index, use `AWS_BATCH_JOB_ARRAY_INDEX` in your code to determine which chunk of data to process.
-- **Fargate compute environments have a 16-vCPU limit per job — for larger jobs use EC2:** If you try to submit a job with 32 vCPU to a Fargate environment, it will fail. Use EC2 for high-vCPU workloads.
-- **Jobs timeout based on `attemptDurationSeconds` — if your job takes > 1 hour and you forget to set timeout, it will fail:** Default timeout is infinite (no timeout). Set `timeout.attemptDurationSeconds` to a value slightly above your expected runtime.
-- **The `jobQueue` parameter on submit-job is required — don't confuse it with `computeEnvironmentOrder`:** The queue is where you submit jobs. The compute environment is what the queue maps to. You can't submit directly to a compute environment.
+- [Scheduling policies](https://docs.aws.amazon.com/batch/latest/userguide/job_scheduling.html).
+- [Fargate job definitions](https://docs.aws.amazon.com/batch/latest/userguide/fargate-job-definitions.html).
+- [Retries](https://docs.aws.amazon.com/batch/latest/userguide/job_retries.html).
+- [Timeouts](https://docs.aws.amazon.com/batch/latest/userguide/job_timeouts.html).
+- [Getting started](https://docs.aws.amazon.com/batch/latest/userguide/GettingStarted.html).
 
 ## Across the wiki
 

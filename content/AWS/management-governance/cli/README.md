@@ -1,282 +1,115 @@
 ---
-title: AWS CLI
-description: AWS CLI (Command Line Interface) — unified tool for interacting with all AWS services. Installation, configuration, profiles, autocomplete, and common workflows.
+title: "AWS CLI"
+description: "The CLI exposes service APIs; a plausible-looking command is not evidence that an operation or field exists."
 tags:
-  - aws
-  - management
-  - cli
-date: 2026-06-06
+  - aws/management-governance
+date: 2026-10-12
 ---
 
 # AWS CLI
 
-The AWS CLI is a unified command-line tool for managing all AWS services. It provides direct access to AWS APIs and is the backbone of most AWS automation, CI/CD pipelines, and scripting.
+The CLI exposes service APIs; a plausible-looking command is not evidence that an operation or field exists. Start with [[AWS/security/iam/README|IAM]] and verify identity, Region and API contract before making changes.
 
-## Installation
+## Installation and shell completion
+
+Use the [official CLI v2 installation/update guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html), selecting the current supported OS/architecture and signature-verification steps. Linux has x86-64/ARM installers (or the supported installation script); macOS uses the signed PKG workflow, and Windows uses MSI. AWS's supported Snap option auto-refreshes and is unsuitable when a team must pin a minor version. Do not assume an arbitrary distribution package or `pip install awscli` installs current CLI v2.
+
+After installation, run `command -v aws` on Unix and `aws --version`; on Windows use `where.exe aws` plus `aws --version`. Resolve duplicate v1/v2 executables or PATH conflicts before configuring credentials. Installation is local setup, not evidence of AWS authorization.
+
+Follow the [shell-specific completion guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-completion.html). Find `aws_completer` with `command -v aws_completer`, then use its actual executable path. In Bash, for example:
 
 ```bash
-# Linux/macOS
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscli.zip"
-unzip awscli.zip
-sudo ./aws/install
+# Replace the example path with the discovered completer path.
+complete -C '/usr/local/bin/aws_completer' aws
+```
 
-# macOS (Homebrew)
-brew install awscli
+Zsh requires `bashcompinit`/`compinit` setup before the Bash-compatible `complete` registration; PowerShell has its own documented completion function/registration. Persist only the appropriate commands in the selected shell's profile after reviewing it. Start a new shell and type `aws s` followed by Tab: service choices should appear. Missing completion is a local shell/PATH issue, not an IAM denial. No installer or shell-profile change is run by this note.
 
-# Verify
+## Credentials and profiles
+
+Prefer IAM Identity Center/temporary credentials or workload roles over persistent access keys. The config file uses [profile dev], while the credentials file uses [dev]. They are different formats. Environment variables/explicit profiles and role credentials have precedence rules; confirm the effective caller instead of assuming the instance profile is used.
+
+```bash
 aws --version
+aws configure list --profile dev
+aws sts get-caller-identity --profile dev
 ```
 
-## Configuration
+These are read-only CLI v2 checks; output can include account/user details. Do not share tokens or credential files. Set the intended Region explicitly where appropriate and avoid credentials in shell history.
+
+## Output, pagination and contracts
+
+Use structured JSON plus JMESPath queries for reproducible inspection. --page-size changes per-service request size while the CLI can still retrieve all pages. --no-paginate retrieves only the first service page; it is not a way to get a complete unpaginated inventory. --no-cli-pager disables the display pager, not API pagination. --max-items and continuation tokens have a distinct client pagination purpose.
 
 ```bash
-aws configure
-# AWS Access Key ID: AKIAIOSFODNN7EXAMPLE
-# AWS Secret Access Key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-# Default region name: us-east-1
-# Default output format: json
+aws ec2 describe-instances --region us-east-1 --output json --no-cli-pager
+aws ec2 describe-instances --generate-cli-skeleton input
 ```
 
-This creates `~/.aws/credentials` and `~/.aws/config`:
+The first call requires EC2 Describe permission; the second produces a local shape example and is not deployment validation. Skeleton stability is not guaranteed across CLI versions; consult owning operation documentation and service constraints.
 
-```
-~/.aws/credentials:
-[default]
-aws_access_key_id = AKIA...
-aws_secret_access_key = ...
+JSON/YAML inputs must follow exact nesting/case/enums. Quoting and file inputs avoid ambiguous shell shorthand. For binary data, understand CLI v2 base64/fileb semantics; do not confuse JSON strings with API binary payloads.
 
+## Safe inspection exercise
+
+Use a least-privilege test profile. Compare a complete paginated inventory with --no-paginate on a service containing more than one page; record why the latter is incomplete. Validate a candidate input against its owning schema, then test an unauthorized read to observe AccessDenied.
+
+For writes, resolve exact identifiers, review effects/costs and use supported dry-run where available—not every API supports it. Capture returned IDs for asynchronous polling and handle terminal failures/timeouts. Cleanup must use those validated sandbox IDs rather than broad globs/account-wide deletions.
+
+## Profile file formats and credential precedence
+
+These examples show syntax only; never add real long-lived keys to shared notes.
+
+```ini
+# ~/.aws/config
 [profile dev]
-aws_access_key_id = AKIA...
-aws_secret_access_key = ...
-
-~/.aws/config:
-[default]
 region = us-east-1
 output = json
-
-[profile dev]
-region = us-west-2
-output = json
 ```
 
-## Named Profiles
+```ini
+# ~/.aws/credentials
+[dev]
+aws_access_key_id = EXAMPLE_NOT_A_REAL_KEY
+aws_secret_access_key = EXAMPLE_NOT_A_REAL_SECRET
+```
 
-Use profiles for multiple accounts/regions:
+Prefer temporary/federated credentials or workload roles. Verify aws configure list and GetCallerIdentity for the actual invocation environment; explicit profile/environment settings can change which credential source is selected. The account/role ARN is sensitive operational metadata even when it is not a password.
+
+## JMESPath and inventory walkthrough
 
 ```bash
-# Use a profile
-aws ec2 describe-instances --profile dev
-aws ec2 describe-instances --profile prod
-
-# Set default profile
-export AWS_PROFILE=dev
+aws ec2 describe-instances --profile dev --region us-east-1 \
+  --query 'Reservations[].Instances[].{Id:InstanceId,State:State.Name,Type:InstanceType}' \
+  --output json --no-cli-pager
 ```
 
-## Common Commands by Service
+This read-only query assumes authorization and intentionally returns a structured projection. It does not list every kind of compute or every Region. Empty results can mean wrong Region/filters, not absence of all account resources.
 
-### EC2
+| Flag           | What it changes                     | Common mistake                                   |
+| -------------- | ----------------------------------- | ------------------------------------------------ |
+| --page-size    | Size of individual service requests | Assuming it limits total inventory               |
+| --no-paginate  | Stops automatic page retrieval      | Treating first page as complete                  |
+| --max-items    | Client output limit/token behavior  | Ignoring continuation token                      |
+| --no-cli-pager | Terminal display paging             | Confusing it with API pagination                 |
+| --query        | JMESPath result projection          | Assuming a projection is an authorization filter |
 
-```bash
-aws ec2 describe-instances
-aws ec2 describe-vpcs
-aws ec2 describe-subnets
-aws ec2 run-instances --image-id ami-0abcdef1234567890 --instance-type t3.micro
-aws ec2 terminate-instances --instance-ids i-xxxxx
-aws ec2 describe-security-groups
-```
+For multi-account/Region inventory, enumerate intended scope with permissions and continuation handling, record failures separately and avoid hiding AccessDenied as an empty list.
 
-### S3
+## Inputs, binary data and asynchronous operations
 
-```bash
-aws s3 ls
-aws s3 cp myfile.txt s3://my-bucket/
-aws s3 sync ./local-dir s3://my-bucket/
-aws s3 rm s3://my-bucket/myfile.txt
-aws s3 ls s3://my-bucket/ --recursive
-```
+Use reviewed file:// JSON/YAML inputs for complex structures, preserving exact case/enums. Shell shorthand and quoting do not replace schema validation. Binary payloads need the selected CLI v2 base64/fileb behavior, not a string guessed from the console.
 
-### IAM
+Generate-cli-skeleton is a local shape aid whose output can change by CLI release; it is not a live dry-run. Supported --dry-run operations verify some authorization/constraints but do not establish application functionality. Many APIs have no dry-run.
 
-```bash
-aws iam list-users
-aws iam create-role --role-name MyRole --assume-role-policy-document file://trust-policy.json
-aws iam attach-role-policy --role-name MyRole --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
-aws iam get-policy --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess
-```
-
-### CloudFormation
-
-```bash
-aws cloudformation create-stack --stack-name my-vpc --template-body file://vpc.yaml
-aws cloudformation describe-stacks --stack-name my-vpc
-aws cloudformation update-stack --stack-name my-vpc --template-body file://vpc.yaml
-aws cloudformation delete-stack --stack-name my-vpc
-aws cloudformation list-stacks
-```
-
-### Lambda
-
-```bash
-aws lambda list-functions
-aws lambda invoke --function-name my-function --payload '{"key":"value"}' output.txt
-aws lambda get-function --function-name my-function
-aws lambda update-function-code --function-name my-function --zip-file fileb://function.zip
-```
-
-### STS (Security Token Service)
-
-```bash
-# Get caller identity (verify credentials work)
-aws sts get-caller-identity
-
-# Assume a role
-aws sts assume-role --role-arn arn:aws:iam::123456789012:role/MyRole --role-session-name MySession
-
-# Get a session token (for MFA)
-aws sts get-session-token --serial-number arn:aws:iam::123456789012:mfa/username
-```
-
-## Useful Flags
-
-```bash
---query         # Filter output with JMESPath
---output        # json, text, table
---region        # Override default region
---profile       # Use specific credentials
---dry-run       # Validate without executing
---debug         # Show API calls (for debugging)
---no-paginate   # Don't auto-paginate (for scripts)
---page-size     # Custom page size for list operations
-```
-
-### Query Examples
-
-```bash
-# Get only instance IDs and state
-aws ec2 describe-instances \
-  --query 'Reservations[].Instances[].[InstanceId, State.Name]'
-
-# List all S3 bucket names
-aws s3api list-buckets --query 'Buckets[].Name'
-
-# Get VPC CIDR from VPC ID
-aws ec2 describe-vpcs --vpc-ids vpc-xxxxx --query 'Vpcs[].CidrBlock'
-```
-
-## CLI Auto-Completion
-
-```bash
-# Bash
-complete -C '/usr/local/bin/aws_completer' aws
-
-# Zsh
-autoload -U compinit
-compinit
-eval "$(register-python-argcomplete aws)"
-```
-
-## Pagination
-
-The CLI auto-paginates large results. For scripts, use `--no-paginate`:
-
-```bash
-# Gets ALL instances (may take time, lots of API calls)
-aws ec2 describe-instances --no-paginate > all-instances.txt
-
-# Limit per page (faster, but may miss some)
-aws ec2 describe-instances --page-size 100
-```
-
-## JSON Output and Parsing
-
-```bash
-# Get instance IPs
-aws ec2 describe-instances --query 'Reservations[].Instances[].PrivateIpAddress' --output text
-
-# Get security group rules as JSON
-aws ec2 describe-security-groups --group-id sg-xxxxx --output json
-
-# jq for complex parsing
-aws ec2 describe-instances | jq '.Reservations[].Instances[] | select(.State.Name=="running") | .InstanceId'
-```
-
-## AWS CLI v2 vs v1
-
-AWS CLI v2 is the current version with improvements:
-
-- **Session manager** plugin for connecting to EC2 without SSH
-- **Automatic prompt** for missing parameters
-- **Built-in credential caching**
-- **SSO integration** with AWS IAM Identity Center
-
-```bash
-# Check version
-aws --version
-# aws-cli/2.15.0 Python/3.11.6
-```
-
-## Environment Variables
-
-```bash
-export AWS_ACCESS_KEY_ID=...
-export AWS_SECRET_ACCESS_KEY=...
-export AWS_DEFAULT_REGION=us-east-1
-export AWS_PROFILE=default
-export AWS_CONFIG_FILE=~/.aws/config
-export AWS_SHARED_CREDENTIALS_FILE=~/.aws/credentials
-```
-
-## Session Manager (SSM)
-
-```bash
-# Connect to EC2 without SSH (requires SSM Agent)
-aws ssm start-session --target i-xxxxx
-
-# With Session Manager plugin (no port 22 needed)
-session-manager-plugin
-
-# Copy files via Session Manager
-aws ssm start-session --target i-xxxxx --document-name AWS-StartPortForwardingSession --parameters '{"portNumber":["22"],"localPortNumber":5000}'
-```
-
-## Troubleshooting
-
-```bash
-# Test credentials
-aws sts get-caller-identity
-
-# Check configuration
-aws configure list
-
-# Debug API calls
-aws ec2 describe-instances --debug
-
-# Validate IAM permissions
-aws iam simulate-principal-policy \
-  --policy-source-arn arn:aws:iam::123456789012:user/myuser \
-  --action-names ec2:DescribeInstances \
-  --resource-arns "*"
-```
+Capture returned operation/job IDs, poll with a deadline/backoff, inspect terminal errors and page results. Never pipe unreviewed inventories into account-wide deletion. Cleanup should resolve exact sandbox targets and preserve unrelated user resources.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cli/
-- **Documentation:** https://docs.aws.amazon.com/cli/
-- **Pricing:** https://aws.amazon.com/cli/ (free)
-
-## Pricing Examples
-
-**Scenario 1:** A DevOps engineer running 50 AWS CLI commands per day as part of automated deployments. 50 × 365 = 18,250 CLI calls/month. The AWS CLI makes API calls — each API call costs money for some services (e.g., Lambda invoke costs $0.20/million after free tier). But for most services (EC2 describe, S3 list), CLI calls are covered by existing service charges. Total: $0/month for CLI itself.
-
-**Scenario 2:** A CI/CD pipeline running `aws codepipeline start-pipeline-execution` 100 times/day to deploy applications. Pipeline runs 100/day × 30 = 3,000/month. Total: $0/month for the CLI itself. The pipeline also runs CloudFormation create-change-set and describe-stacks-api calls — all within free tier for most organizations.
-
-## Nuggets & Gotchas
-
-- **CLI credentials override instance profile credentials:** If you run `aws configure` on an EC2 instance that also has an instance profile, the CLI credentials (stored in `~/.aws/credentials`) take precedence. This is a common source of "why is my code using the wrong account?" issues.
-- **`aws s3 sync` does not delete files by default:** `aws s3 sync ./local s3://bucket` only uploads new/changed files. To delete files in S3 that don't exist locally, add `--delete` flag. Without it, old files accumulate and cost money.
-- **`--output text` strips quotes from strings — don't use it for file paths:** If a bucket name has special characters, `--output text` may strip quotes and cause issues in scripts. Use `--output json` for programmatic use.
-- **CLI pagination can silently skip results if rate limited:** If the CLI hits a rate limit (e.g., 1000 calls/minute for some APIs), it retries but may not retry all pages correctly. For high-volume scripts, use `--max-items` and handle pagination manually with `--starting-token`.
-- **`aws configure sso` requires SSO to be set up first:** If you run `aws configure sso` without having SSO configured in IAM Identity Center, it fails with an unclear error. Set up SSO first via the AWS SSO console.
+- [CLI configuration file formats](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+- [Credential precedence](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+- [Pagination](https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-pagination.html)
+- [JMESPath output filtering](https://docs.aws.amazon.com/cli/latest/userguide/cli-usage-filter.html)
 
 ## Across the wiki
 

@@ -2,243 +2,137 @@
 title: CloudWatch Metrics
 description: CloudWatch Metrics — time-series numerical data for AWS services and custom applications. Namespaces, dimensions, metric math, GetMetricData API, and high-resolution metrics.
 tags:
-  - aws
-  - monitoring
-  - metrics
-  - cloudwatch
-date: 2026-06-06
+  - aws/monitoring
+date: 2026-10-12
 ---
 
 # CloudWatch Metrics
 
-CloudWatch Metrics is a time-series data store for numerical measurements. Every AWS service emits metrics by default (basic monitoring), and you can emit custom metrics from your applications.
+Prerequisites: [[AWS/security/iam/README|scoped IAM access]] and [[AWS/monitoring/README|telemetry, SLI and retention design]].
 
-## Core Concepts
+CloudWatch metrics are time series identified by namespace, metric name and dimensions. Publishing a new dimension combination creates a different metric; cardinality is a design and cost decision.
 
-### Metric Structure
+## Model and retention
 
-```
-Namespace: AWS/EC2
-MetricName: CPUUtilization
-Dimensions: [InstanceId=i-xxxxx]
-Value: 72.5
-Unit: Percent
-Timestamp: 2024-01-15T10:30:00Z
-Period: 60 seconds
-```
+Classic custom metrics use standard one-minute or high-resolution one-second storage resolution. Aggregation period and an AWS service's publishing interval are different settings. EC2 basic monitoring commonly publishes at five-minute intervals; detailed monitoring changes that interval, not every metric's retention.
 
-### AWS Service Namespaces
+Classic rollups retain sub-minute data for 3 hours, one-minute data for 15 days, five-minute data for 63 days and hourly data for 455 days. Query old data using an available period. OpenTelemetry metrics use a separately documented model.
 
-| Namespace    | Common Metrics                                        |
-| ------------ | ----------------------------------------------------- |
-| AWS/EC2      | CPUUtilization, NetworkIn, NetworkOut, DiskReadBytes  |
-| AWS/RDS      | CPUUtilization, DatabaseConnections, FreeStorageSpace |
-| AWS/Lambda   | Invocations, Duration, Errors, Throttles              |
-| AWS/ALB      | RequestCount, TargetResponseTime, UnHealthyHostCount  |
-| AWS/S3       | BucketSizeBytes, NumberOfObjects, AllRequests         |
-| AWS/DynamoDB | ConsumedReadCapacityUnits, ConsumedWriteCapacityUnits |
+Use the correct service namespace: Application Load Balancer metrics use `AWS/ApplicationELB`, not `AWS/ALB`. A dimension must match the metric's exact identity. Metric math references explicitly defined metric/query IDs; a graph expression is not a newly published metric.
 
-### Basic vs Detailed Monitoring
+## Reversible custom-metric lab
 
-|                | Basic (default)                | Detailed (costs extra) |
-| -------------- | ------------------------------ | ---------------------- |
-| Resolution     | 5 minutes                      | 1 minute               |
-| Cost           | Free                           | $0.30/metric/month     |
-| Data retention | 15 days                        | 15 days                |
-| Use            | Cost optimization, low-traffic | Production, real-time  |
-
-## Retrieving Metrics
-
-### GetMetricStatistics (single metric)
+Prerequisites: [[AWS/security/iam/README|a sandbox role]] with `cloudwatch:PutMetricData` constrained to namespace `WikiLab` and read permission for metric retrieval. Set your intended Region explicitly. Publishing is billable; this is not an automatic free-tier promise.
 
 ```bash
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/EC2 \
-  --metric-name CPUUtilization \
-  --start-time 2024-01-15T00:00:00Z \
-  --end-time 2024-01-15T12:00:00Z \
-  --period 300 \
-  --statistics Average,Maximum \
-  --dimensions Name=InstanceId,Value=i-xxxxx
+aws cloudwatch put-metric-data --namespace WikiLab \
+  --metric-data '[{"MetricName":"Latency","Dimensions":[{"Name":"Service","Value":"demo"}],"Value":120,"Unit":"Milliseconds","StorageResolution":60}]'
+aws cloudwatch get-metric-statistics --namespace WikiLab --metric-name Latency \
+  --dimensions Name=Service,Value=demo --statistics Average --period 60 \
+  --start-time 2026-10-12T00:00:00Z --end-time 2026-10-13T00:00:00Z
 ```
 
-### GetMetricData (multiple metrics, metric math)
+Replace the UTC interval with a window surrounding your publication. Expected: after ingestion, a datapoint near 120 ms. An empty result suggests the wrong Region, interval, dimension or ingestion delay; an AccessDenied error is an authorization problem, not a reason to widen the role to administrator.
 
-```bash
-aws cloudwatch get-metric-data \
-  --metric-data-queries '[
-    {
-      "Id": "cpu",
-      "MetricStat": {
-        "Metric": {
-          "Namespace": "AWS/EC2",
-          "MetricName": "CPUUtilization",
-          "Dimensions": [{"Name": "InstanceId", "Value": "i-xxxxx"}]
-        },
-        "Period": 300,
-        "Stat": "Average"
-      }
-    },
-    {
-      "Id": "mem",
-      "MetricStat": {
-        "Metric": {
-          "Namespace": "CWAgent",
-          "MetricName": "mem_used_percent",
-          "Dimensions": [{"Name": "InstanceId", "Value": "i-xxxxx"}]
-        },
-        "Period": 300,
-        "Stat": "Average"
-      }
-    }
-  ]' \
-  --start-time 2024-01-15T00:00:00Z \
-  --end-time 2024-01-15T12:00:00Z
-```
+Publish another value (80) in the same minute to observe aggregate statistics. A production Python publisher must import any timestamp helper and handle API errors/retries; this CLI fixture avoids undefined helpers.
 
-### Metric Math
+## Scale and cost
+
+PutMetricData accepts up to 1,000 metrics per request subject to its payload limit. Batch deliberately; unique dimensions, not emitted-point count alone, drive traditional custom metric-month charges. API requests and detailed monitoring are additional dimensions. Avoid customer IDs as dimensions; use logs/traces for per-request detail.
+
+You cannot delete an individual CloudWatch metric. Stop publishing after the exercise; unused metrics age out under retention. Delete associated alarms/dashboards separately.
+
+## Service namespaces and measurement choices
+
+| Source      | Namespace/model                        | Useful measurement                                              |
+| ----------- | -------------------------------------- | --------------------------------------------------------------- |
+| EC2         | AWS/EC2                                | CPU and supported instance metrics; guest memory needs an agent |
+| ALB         | AWS/ApplicationELB                     | Request count, target errors, response time and health          |
+| RDS         | AWS/RDS                                | Engine/instance metrics with documented dimensions              |
+| Lambda      | AWS/Lambda                             | Invocations/errors/duration/concurrency                         |
+| Application | Chosen custom namespace/EMF/OTel model | Business latency/outcomes with bounded cardinality              |
+
+ListMetrics discovers identities; it does not retrieve datapoints or prove an old series no longer exists. For GetMetricStatistics use an actual time interval, matching dimensions and valid available period. Missing results can mean identity/Region/rollup mismatch, not zero.
+
+## GetMetricData and math walkthrough
+
+Save this complete query array as metric-queries.json; it references the WikiLab fixture:
 
 ```json
 [
   {
-    "Id": "total_cost",
-    "Expression": "m1 * 0.10 + m2 * 0.05",
-    "Period": 300
+    "Id": "latency",
+    "MetricStat": {
+      "Metric": {
+        "Namespace": "WikiLab",
+        "MetricName": "Latency",
+        "Dimensions": [{ "Name": "Service", "Value": "demo" }]
+      },
+      "Period": 60,
+      "Stat": "Average"
+    },
+    "ReturnData": false
+  },
+  {
+    "Id": "seconds",
+    "Expression": "latency/1000",
+    "Label": "Latency seconds",
+    "ReturnData": true
   }
 ]
 ```
 
-Common expressions:
+```bash
+aws cloudwatch get-metric-data --metric-data-queries file://metric-queries.json \
+  --start-time 2026-10-12T00:00:00Z --end-time 2026-10-13T00:00:00Z
+```
 
-- `m1 + m2` — sum of two metrics
-- `SEARCH('{AWS/EC2}, Average)', 300)` — search for metrics matching a pattern
+Replace dates; expect about 0.12 seconds for the 120-ms fixture. Handle result status/messages and pagination when retrieving large intervals. An expression's IDs must exist in that request; math does not publish a new metric or change its unit identity.
 
-## Custom Metrics
-
-Emit custom metrics from your application using the AWS SDK:
+## Complete Python publisher
 
 ```python
+from datetime import datetime, timezone
 import boto3
 
-cloudwatch = boto3.client('cloudwatch')
-
-# Put a single data point
+cloudwatch = boto3.client("cloudwatch")
 cloudwatch.put_metric_data(
-    Namespace='MyApp',
+    Namespace="WikiLab",
     MetricData=[{
-        'MetricName': 'OrderCount',
-        'Value': 150,
-        'Unit': 'Count',
-        'Timestamp': datetime.utcnow(),
-        'Dimensions': [
-            {'Name': 'Service', 'Value': 'Checkout'},
-            {'Name': 'Region', 'Value': 'us-east-1'}
-        ]
-    }]
+        "MetricName": "Latency",
+        "Dimensions": [{"Name": "Service", "Value": "demo"}],
+        "Timestamp": datetime.now(timezone.utc),
+        "Value": 120,
+        "Unit": "Milliseconds",
+        "StorageResolution": 60,
+    }],
 )
 ```
 
-### StatsD Protocol (via CloudWatch Agent)
+Use the verified SDK profile/Region session, catch failures in a real application and retry only according to the SDK/service guidance. StatsD requires a configured running agent/collector and UDP reachability; sending bytes to port 8125 without one is not ingestion. EMF writes a structured log envelope from which metrics are extracted; raw JSON values are not automatically custom metrics.
 
-The CloudWatch Agent can receive StatsD metrics on UDP port 8125:
+High-resolution uses StorageResolution=1 and adds applicable alarm/API cost. It is not a request for arbitrary subsecond classic storage. Metric-widget image rendering accepts a documented widget JSON string and returns binary/base64 according to SDK/CLI representation; separate output decoding from shell/API JSON examples.
 
-```
-# Send a metric via netcat
-echo "app.orders:150|c" | nc -u -w0 127.0.0.1 8125
-```
+## Troubleshooting and worked cardinality
 
-```json
-{
-  "metrics": {
-    "namespace": "MyApp",
-    "metrics_collection_interval": 60,
-    "append_dimensions": {
-      "InstanceId": "${aws:InstanceId}"
-    },
-    "statsd": {
-      "service_address": ":8125",
-      "metrics": [
-        {
-          "metric_name": "orders",
-          "unit": "Count"
-        }
-      ]
-    }
-  }
-}
-```
+A metric with Environment×Service×Customer produces one identity per observed combination. If ten services each emit five bounded environments, budget up to fifty series; adding 100,000 customer IDs can explode that design. Price the actual unique series and API usage, not only points/sec.
 
-### High-Resolution Metrics
+Inspect role namespace conditions, future/stale timestamps, units, dimension spelling and ingestion delay. Stop agent/application publication and remove associated lab alarms/dashboards; there is no DeleteMetric command.
 
-Standard metrics: 1-minute resolution. High-resolution: 1-second resolution (costs 10x more).
+References: [GetMetricData](https://docs.aws.amazon.com/cli/latest/reference/cloudwatch/get-metric-data.html), [EMF](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format.html), [agent metric configuration](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html).
 
-```python
-cloudwatch.put_metric_data(
-    Namespace='MyApp',
-    MetricData=[{
-        'MetricName': 'Latency',
-        'Value': 45.2,
-        'Unit': 'Milliseconds',
-        'Timestamp': datetime.utcnow(),
-        'StorageResolution': 1  # 1-second resolution
-    }]
-)
-```
+## Cross-wiki comparisons
 
-## GetMetricWidgetImage
-
-Generate a PNG of a metric graph without using dashboards:
-
-```bash
-aws cloudwatch get-metric-widget-image \
-  --metric-widget '{"metrics": [["AWS/EC2","CPUUtilization","InstanceId","i-xxxxx"]]}' \
-  --output-format png
-```
-
-## Integration with Other Services
-
-| Service                         | How It Uses Metrics                         |
-| ------------------------------- | ------------------------------------------- |
-| CloudWatch Alarms               | Trigger alerts when thresholds are breached |
-| CloudWatch Dashboards           | Visualize metrics in real-time              |
-| CloudWatch Contributor Insights | Identify top contributors to a metric       |
-| Auto Scaling                    | Scale EC2/ECS based on metrics              |
-| EventBridge                     | Trigger rules based on metric math results  |
-
-## Limits
-
-| Resource                           | Limit                              |
-| ---------------------------------- | ---------------------------------- |
-| Metrics per call (PutMetricData)   | 20                                 |
-| Dimensions per metric              | 30                                 |
-| Metric name length                 | 255 characters                     |
-| Namespace name length              | 255 characters                     |
-| GetMetricData metrics per call     | 500                                |
-| GetMetricStatistics period minimum | 60 seconds (1 second for high-res) |
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cloudwatch/
-- **Documentation:** https://docs.aws.amazon.com/cloudwatch/
-- **Pricing:** https://aws.amazon.com/cloudwatch/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** An application with 50 custom metrics (order count, latency, error rate) emitted every minute. 50 metrics × 60 minutes × 24 hours × 30 days = 2.16M metric data points/month. At $0.30/million = $0.65/month. CloudWatch Logs ingestion for application logs (1GB/month) = $0.50/month. Total CloudWatch: ~$1.15/month.
-
-**Scenario 2:** A production system using detailed monitoring on 50 EC2 instances. 50 × $0.30/month = $15/month. Without detailed monitoring, you'd only see 5-minute averages — missing 1-minute spikes in CPU. At $0.02/vCPU-hour (spot instance), a 4-vCPU instance running at 100% during a 1-minute spike (missed by 5-min monitoring) costs $0.0013. Detailed monitoring costs $0.30/instance/month. The cost is justified by the visibility.
-
-## Nuggets & Gotchas
-
-- **PutMetricData has a 20-metric limit per call — use batching for high-volume:** If you emit 100 custom metrics per minute, batch them into 5 calls of 20 metrics each. For ultra-high-volume applications (10K+ metrics/minute), use the metric math API or the CloudWatch Agent's batch feature.
-- **Basic monitoring (5-min) is free but has a 15-day retention — you can't query older data:** If you need historical data beyond 15 days, you must either use detailed monitoring (1-min resolution, 15-day retention) or stream metrics to S3 via Kinesis for long-term storage.
-- **Metric math expressions are evaluated independently of source metrics' retention periods:** If you use SEARCH() to aggregate metrics, the resulting metric math metric inherits the minimum retention period of the source metrics. For 5-minute basic monitoring, the math result is also 5-minute.
-- **Dimensions are case-sensitive — "InstanceId" not "instanceid":** If you query a metric with dimensions and get no results, check the dimension name casing. The CloudWatch API treats `InstanceId` and `instanceId` as different dimensions.
-- **EC2 basic monitoring (5-min) is free but detailed monitoring (1-min) costs $0.30/instance/month:** Before enabling detailed monitoring on all instances, consider that for a 100-instance fleet, that's $30/month. For production, detailed monitoring is worth it. For dev/test, basic monitoring is sufficient.
+- [Metric concepts and retention](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html)
+- [PutMetricData contract](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html)
+- [Pricing dimensions](https://aws.amazon.com/cloudwatch/pricing/)
 
 ## Across the wiki
 
-- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
-- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
-- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
-- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]]

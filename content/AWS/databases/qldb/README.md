@@ -1,282 +1,75 @@
 ---
-title: Amazon QLDB
-description: Amazon QLDB — immutable, cryptographically verifiable ledger database. Perfect for financial transactions, audit trails, and compliance. Append-only journal, SHA-256 digest verification.
+title: Amazon QLDB (retired)
+description: Historical QLDB journal and document semantics, retirement status and requirements for selecting a supported audit-data architecture.
 tags:
-  - aws
-  - databases
-  - qldb
-  - ledger
-  - compliance
-date: 2026-06-06
+  - cloud/aws/databases
+  - cloud/aws/legacy
+date: 2026-10-12
 ---
 
-# Amazon QLDB (Quantum Ledger Database)
+# Amazon QLDB (retired)
 
-QLDB is an immutable, append-only ledger database. It's used when you need a complete, tamper-evident audit trail with cryptographic verification. Unlike a traditional database where you can UPDATE or DELETE, QLDB only allows INSERT — once written, data cannot be modified or deleted.
+Amazon QLDB reached end of support on **July 31, 2025**. Do not recommend creating a ledger or running legacy deployment commands. This note retains concepts for understanding old designs and migration requirements.
 
-## Core Concepts
+## Journal versus current documents
 
-### How QLDB Works
+QLDB supported PartiQL INSERT, UPDATE and DELETE on documents. The append-only journal recorded revisions; journal immutability did not make the current document view INSERT-only. Inserting a second document with the same application-level ID was not a substitute for updating the existing document.
 
-```
-Application
-  │
-  ▼
-QLDB Ledger (Journal)
-  │
-  ├── Block 1: { data: { user: "Alice", balance: 100 }, hash: SHA256(Block 0 + data) }
-  ├── Block 2: { data: { user: "Alice", balance: 90 }, hash: SHA256(Block 1 + data) }
-  └── Block 3: { data: { user: "Bob", balance: 10 }, hash: SHA256(Block 2 + data) }
-        │
-        ▼
-  Digest (cryptographic hash of entire history)
-  Stored in Amazon S3 (proof)
-```
+A cryptographic digest/proof checks journal history against a trusted digest. Verification must be performed; retaining a digest is not automatic validation of every query or a proof of business correctness. Auditability, authorization, retention and deletion requirements are distinct.
 
-The journal is the heart of QLDB — it's an immutable, sequenced log of all changes. Each block's hash includes the previous block's hash, creating a chain.
+## Choosing a replacement
 
-### Immutable vs Traditional DB
+Do not assume a general relational database automatically offers QLDB-equivalent verifiability. Document access patterns, transaction boundaries, historical reconstruction, retention/redaction requirements and independently retained verification evidence.
 
-|                  | Traditional DB       | QLDB                              |
-| ---------------- | -------------------- | --------------------------------- |
-| UPDATE           | Allowed              | Not allowed (append new revision) |
-| DELETE           | Allowed              | Not allowed (soft delete only)    |
-| History          | Overwritten          | Preserved (full audit trail)      |
-| Tamper detection | Application-level    | Built-in (SHA-256 chain)          |
-| Verification     | Manual (application) | Automatic (digest comparison)     |
+Possible designs combine [[AWS/databases/rds/README|RDS]] or [[AWS/databases/aurora/README|Aurora]] with application-managed audit events and immutable object retention in [[AWS/storage/s3/README|S3]]. Evaluate the actual guarantees and regulatory requirements; S3 Object Lock is not a transactional database journal.
 
-## Creating a Ledger
+Exercise: for a financial record with three updates and a reversal, specify current balance, retained history, authorization, event identifiers and evidence needed to detect tampering. Compare correction-by-new-event with destructive modification. No retired-service account is required.
 
-```bash
-aws qldb create-ledger \
-  --ledger-name my-financial-ledger \
-  --tags '[{"Key": "Environment", "Value": "production"}]' \
-  --permissions-mode ALLOW_ALL \
-  --deletion-protection
+## Historical architecture: mutable view, immutable journal
+
+The following describes QLDB's historical model, not a supported service to deploy now.
+
+```text
+Application PartiQL transaction
+  → current document revisions
+  → append-only journal history
+  → cryptographic digest/proof
+  → independent verification and separately retained evidence
 ```
 
-### Deletion Protection
+The materialized/current document view could be updated and deleted through supported PartiQL operations. The underlying journal retained revision history. These are different statements: an immutable journal does not imply “UPDATE and DELETE were unsupported.”
 
-QLDB has deletion protection by default — you cannot delete a ledger without first disabling it:
+| Historical QLDB concept | Meaning                                               | Migration implication                                                  |
+| ----------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------- |
+| Ledger                  | Administrative boundary for document/journal data     | Map ownership, access and retention, not just a table name.            |
+| Table/document revision | Current/queryable document state with prior revisions | Preserve IDs, version/history and application mutation semantics.      |
+| Journal                 | Ordered immutable history                             | A target SQL table alone does not reproduce this guarantee.            |
+| Digest/proof            | Cryptographic evidence for verification               | Export/retain trusted evidence and define a verifier before migration. |
+| Amazon Ion              | Typed structured representation                       | Preserve type/decimal/timestamp semantics during conversion.           |
+| PartiQL transactions    | Supported document querying/mutation                  | Translate supported statements and transaction behavior deliberately.  |
 
-```bash
-# Disable deletion protection
-aws qldb update-ledger \
-  --ledger-name my-financial-ledger \
-  --no-deletion-protection
+Historical PartiQL operations such as UPDATE Account SET balance = 90 WHERE id = 'ACC001' produced new journal revisions rather than destructively rewriting history. Query/mutation syntax and proof APIs were distinct contracts; migration should preserve required revision semantics instead of replacing an update with an unrelated insert.
 
-# Now delete
-aws qldb delete-ledger --ledger-name my-financial-ledger
-```
+## Verification and migration walkthrough
 
-## Using the Document API
+A stored digest is not itself proof that every application's data was automatically checked. Historical verification required the actual supported digest/block/revision proof contracts and cryptographic verification against trusted evidence. Do not label a simplified linear hash sketch as the complete implementation.
 
-QLDB uses a document model (PartiQL — SQL-like query language):
+1. Inventory ledgers, tables, document IDs, revision/history queries and authorization.
+2. Preserve available exports, evidence/digests and the application records needed for audit.
+3. Select a supported target such as a justified relational store, evaluating transactional and audit requirements independently.
+4. Translate Ion types and application queries; define how updates/deletes/history map to the new model.
+5. Implement target audit/retention/verification controls where required—these are not automatically inherited from Aurora PostgreSQL.
+6. Reconcile current state plus required historical evidence and test representative application transactions.
+7. Keep a retention/compliance-approved migration record and validate the recovery/cutover decision.
 
-### Insert
+## Historical use cases and limits of substitution
 
-```python
-from qldb import QldbDriver
+Financial history, inventory changes or regulated audit data can motivate tamper-evident records, but “ledger” is not a synonym for a decentralized blockchain or legal compliance. Independent backup, identity controls and verification workflows still matter.
 
-driver = QldbDriver(ledger_name='my-financial-ledger')
-
-def create_transaction(txn):
-    result = txn.execute_statement(
-        "INSERT INTO Transactions VALUE {'account_id': 'ACC001', 'amount': 100, 'type': 'credit', 'timestamp': '2024-01-15T10:00:00'}"
-    )
-    return result
-
-with driver.get_session() as session:
-    session.execute_lambda(create_transaction)
-```
-
-### Query
-
-```python
-def get_transactions(txn):
-    result = txn.execute_statement(
-        "SELECT * FROM Transactions WHERE account_id = 'ACC001' ORDER BY timestamp ASC"
-    )
-    return list(result)
-
-with driver.get_session() as session:
-    transactions = session.execute_lambda(get_transactions)
-```
-
-### Update (via INSERT with revision)
-
-In QLDB, "updates" are new documents with the same ID:
-
-```python
-def update_balance(txn):
-    # Insert new revision (previous balance is preserved)
-    result = txn.execute_statement(
-        "INSERT INTO Account VALUE {'id': 'ACC001', 'balance': 90, 'updated_at': '2024-01-15T11:00:00'}"
-    )
-    return result
-
-# Previous {'id': 'ACC001', 'balance': 100} is still in the journal
-```
-
-## Verifying Data Integrity
-
-### Generate Digest
-
-```bash
-# Get digest (hash of entire journal)
-aws qldb get-digest \
-  --ledger-name my-financial-ledger
-```
-
-Returns:
-
-```json
-{
-  "Digest": {
-    "ledgerName": "my-financial-ledger",
-    "digest": "BASE64_HASH_OF_ALL_HISTORY",
-    "blockAddress": {
-      "strandId": "xxxxx",
-      "sequenceNo": 12345
-    }
-  }
-}
-```
-
-### Verify a Document
-
-```bash
-# Verify the entire history of a document
-aws qldb get-revisions \
-  --ledger-name my-financial-ledger \
-  --table-name Transactions \
-  --document-id doc-xxxxx \
-  --revision-filter "ALL"
-```
-
-### Python Verification
-
-```python
-from qldb.verification import Verify
-
-# Verify document history hasn't been tampered
-verifier = Verify('my-financial-ledger')
-
-# Get document history
-history = verifier.get_document_history(
-    table_name='Transactions',
-    document_id='doc-xxxxx'
-)
-
-# Verify each revision is in the chain
-for block in history:
-    assert verifier.verify_block(block), "Tampering detected!"
-```
-
-## Journal Export to S3
-
-Export the entire journal to S3 for external verification or long-term storage:
-
-```bash
-# Create export job
-aws qldb create-journal-export \
-  --ledger-name my-financial-ledger \
-  --s3-export-configuration '{
-    "Bucket": "my-qldb-exports",
-    "Prefix": "exports/2024-01/",
-    "EncryptionConfiguration": {"KmsKeyArn": "arn:aws:kms:us-east-1:123456789012:key/xxxxx"}
-  }' \
-  --inclusive-start-time 2024-01-01T00:00:00Z \
-  --exclusive-end-time 2024-02-01T00:00:00Z
-```
-
-Journal exports are stored in S3 as JSON files with block-level data.
-
-## Ion Format
-
-QLDB uses Amazon Ion (binary JSON) for data storage. The driver handles conversion:
-
-```python
-from amazon.ion.simpleion import loads
-
-# Data is stored in Ion format
-# Query returns Ion objects
-result = txn.execute_statement("SELECT * FROM Transactions")
-
-# Convert to Python dict
-for row in result:
-    ion_obj = loads(row)  # Convert Ion to Python
-```
-
-##PartiQL (Query Language)
-
-QLDB usesPartiQL — a SQL-compatible language:
-
-```sql
--- Insert
-INSERT INTO Account VALUE {'id': 'ACC001', 'balance': 100}
-
--- Select
-SELECT * FROM Account WHERE id = 'ACC001'
-
--- Update (new revision)
-INSERT INTO Account VALUE {'id': 'ACC001', 'balance': 90}
-
--- History of a document
-SELECT * FROM Account WHERE id = 'ACC001' HISTORY
-
--- Get revision at specific time
-SELECT * FROM Account WHERE id = 'ACC001' AS OF '2024-01-15T10:00:00Z'
-```
-
-## Use Cases
-
-| Use Case               | Why QLDB                                  |
-| ---------------------- | ----------------------------------------- |
-| Financial transactions | Immutable, auditable, cryptographic proof |
-| Supply chain           | Full history of goods movement            |
-| Medical records        | HIPAA compliance, tamper-evident          |
-| Legal documents        | Immutable contract versions               |
-| HR/Payroll             | Audit trail of employee changes           |
-| Government records     | Regulatory compliance                     |
-
-## Pricing
-
-| Component       | Cost                  |
-| --------------- | --------------------- |
-| Journal storage | $0.50/GB/month        |
-| Indexed storage | $0.025/GB/month       |
-| Write I/O       | $0.13 per million I/O |
-| Read I/O        | $0.02 per million I/O |
-| Journal export  | $0.025/GB (S3)        |
-
-## Limits
-
-| Resource                    | Limit         |
-| --------------------------- | ------------- |
-| Max ledger storage          | 64 TB         |
-| Max document size           | 64 KB         |
-| Max fields per document     | 500           |
-| Max field name length       | 50 characters |
-| Max concurrent transactions | 15 per ledger |
-| Max query timeout           | 30 seconds    |
+A conventional database with an audit table may provide useful traceability but not identical immutability/cryptographic guarantees. Conversely, maintaining the exact old API surface is not necessary if business/evidence requirements can be met by a supported architecture. Treat migration as a requirements/test exercise, not a drop-in engine rename. Historical pricing/quotas are not current planning inputs because support ended July 31, 2025.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/qldb/
-- **Documentation:** https://docs.aws.amazon.com/qldb/
-- **Pricing:** https://aws.amazon.com/qldb/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A financial ledger with 1M transactions/month. Storage: 10GB journal × $0.50 = $5/month. Indexed storage: 10GB × $0.025 = $0.25/month. Write I/O: 1M × $0.13/1M = $0.13/month. Total: ~$5.40/month. Compare to a traditional database with manual audit logging: same storage cost + engineering time to build tamper-proof logging.
-
-**Scenario 2:** A supply chain ledger with heavy reads (100K reads/day). 100K × 30 days = 3M reads/month. Read I/O: 3M × $0.02/1M = $0.06/month. Storage: 50GB × $0.50 + 50GB × $0.025 = $26.25/month. Total: ~$26/month for full cryptographic audit trail.
-
-## Nuggets & Gotchas
-
-- **QLDB's "immutability" means you cannot UPDATE or DELETE documents — you insert new revisions:** The old revision stays in the journal. To "close" a record (e.g., a completed transaction), insert a new document with a `status: CLOSED` field. Don't expect traditional UPDATE semantics.
-- **QLDB's query language isPartiQL — it's similar to SQL but not identical:** JOINs between tables are limited. `INSERT INTO ... VALUE` syntax differs from SQL's `INSERT INTO ... VALUES`. Test queries in the console first.
-- **QLDB's Ion format is not JSON — you'll need the Ion reader/writer library:** When querying directly via API, you get Ion binary data. The Python/Java drivers handle this, but for raw API calls, use the Ion reader.
-- **QLDB's cryptographic verification requires storing the digest in a safe place:** The digest is your proof of integrity. If you lose the digest, you can still query history, but you can't cryptographically prove it hasn't been tampered. Export the digest to S3 (immutable via Object Lock).
-- **QLDB has a 15-concurrent-transaction limit per ledger — use client-side batching:** If you exceed 15 concurrent transactions, you'll get `TransactionLimitExceededException`. Use connection pooling or reduce concurrency.
+- [AWS services in full shutdown](https://docs.aws.amazon.com/general/latest/gr/full_shutdown_services.html).
+- [Retained QLDB authorization actions, including PartiQLUpdate and PartiQLDelete](https://docs.aws.amazon.com/service-authorization/latest/reference/list_qldb.html).
+- [Original AWS QLDB walkthrough](https://aws.amazon.com/blogs/aws/now-available-amazon-quantum-ledger-database-qldb/) — historical context, not current deployment instructions.

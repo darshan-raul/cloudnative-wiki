@@ -1,53 +1,44 @@
 ---
-title: "Magic ips/ 169.254"
-tags: [aws, magic-ips-169-254]
-date: 2026-01-30
-description: "The link-local 169.254.0.0/16 addresses AWS uses inside a VPC: instance metadata, the DNS resolver, time sync and ECS/EKS credential endpoints."
+title: "AWS link-local service addresses"
+description: "Identify metadata, time, DNS and credential endpoints while treating instance-local access as a security boundary, not a secret."
+tags:
+  - cloud/aws/networking
+date: 2026-10-12
 ---
 
-# Magic ips/ 169.254
+# AWS link-local service addresses
 
-Yes, AWS utilizes several **link-local IP addresses** within the `169.254.0.0/16` range to provide essential services to EC2 instances. These IPs are accessible only from within the instance and do not require external network connectivity.
+AWS uses link-local endpoints for selected local services. They do not need an internet/NAT path, but “local” does not mean every process should have access.
 
----
+| Address         | Common purpose               | Check                                              |
+| --------------- | ---------------------------- | -------------------------------------------------- |
+| 169.254.169.254 | EC2 instance metadata        | Require IMDSv2 and control exposure                |
+| 169.254.169.123 | Amazon Time Sync NTP         | Configure supported time client                    |
+| 169.254.169.253 | Amazon-provided DNS resolver | Check VPC DNS settings/Resolver behavior           |
+| 169.254.170.2   | ECS task credential endpoint | Use SDK credential provider; never log credentials |
 
-#### 🔗 What Are Link-Local Addresses?
+Supported IPv6/addressing and EKS credential paths differ; do not reuse one endpoint for every workload identity integration.
 
-**Link-local addresses** are IP addresses that are valid only within the local network segment (link) and are not routable beyond it. In IPv4, the `169.254.0.0/16` range is reserved for link-local addressing. These addresses are typically used for automatic IP address assignment when a DHCP server is unavailable, and for communication between nodes on the same link.
+## Why these addresses work
 
-In AWS, link-local addresses are employed to provide services such as instance metadata, time synchronization, and DNS resolution directly to instances without requiring internet access.
+IPv4 link-local addresses belong to `169.254.0.0/16`; they are intended for local-link communication and are not internet-routable destinations. AWS exposes selected instance or task services at addresses in that range. The exact service path is platform-specific: do not infer that every `169.254` request is handled by one universal hypervisor mechanism or that an address is reachable from every container network namespace.
 
----
+For IMDS, an instance can retrieve nonsecret metadata and, when a role is attached, temporary role credentials. Protect the endpoint as a credential path: require IMDSv2 where supported, use least-privilege instance roles, set an appropriate hop limit and consider SSRF/container exposure. The DNS resolver and time service solve different problems; a missing DNS answer or clock drift needs a separate diagnostic path from failed metadata access.
 
-#### 📜 Common AWS Link-Local IP Addresses
+## Metadata exercise
 
-Here are some of the primary link-local IP addresses used by AWS:
+On the sandbox instance in [[AWS/compute/ec2/README|the EC2 lab]], acquire an IMDSv2 token and retrieve only instance-id. Verify tokenless access fails when HttpTokens=required. Review hop-limit behavior for the intended container/network layout; do not disable protections merely to make an example work.
 
-| IP Address        | Purpose                          | Description                                                                                                                                                          |
-| ----------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `169.254.169.254` | Instance Metadata Service (IMDS) | Provides metadata about the instance, such as instance ID, AMI ID, security groups, and IAM role credentials. Accessible via HTTP requests from within the instance. |
-| `169.254.169.123` | Amazon Time Sync Service (NTP)   | Offers time synchronization for instances using the Network Time Protocol (NTP). This service is available without requiring internet access.                        |
-| `169.254.169.253` | Amazon DNS Resolver              | Serves as a DNS resolver for instances within a VPC. It allows instances to resolve domain names without needing to configure external DNS servers.                  |
+Never fetch/publish role credential documents in a tutorial output. An SSRF-capable application or compromised process may reach metadata even though the address is not publicly routed. Use least-privilege roles and application/network controls as well as IMDSv2.
 
----
+Inspect DNS and time synchronization with the supported client tools; an address alone does not prove the service is enabled or correctly configured.
 
-#### 🛠️ How AWS Implements These Services
+## References
 
-AWS provides these services through the underlying hypervisor or Nitro system on the host machine. When an instance makes a request to one of these link-local IP addresses, the request is intercepted and handled by the host, delivering the appropriate service response. This design ensures that instances can access critical services securely and efficiently without relying on external network configurations.
-
----
-
-#### 🔐 Security and Access Considerations
-
-- **Accessibility**: These link-local services are accessible only from within the instance. They are not exposed externally, enhancing security.
-- **No Internet Required**: Since these services are provided via link-local addresses, instances do not need internet access or NAT configurations to utilize them.
-- **Security Best Practices**:
-  - **IMDSv2**: AWS recommends using Instance Metadata Service Version 2 (IMDSv2), which requires session-based tokens, providing enhanced security against potential vulnerabilities.
-  - **Access Controls**: Ensure that applications and users within the instance have appropriate permissions and access controls when interacting with these services.
-
----
-
-By leveraging these link-local IP addresses, AWS enables instances to access essential services seamlessly and securely, simplifying network configurations and enhancing operational efficiency.
+- [IMDSv2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html).
+- [Amazon DNS](https://docs.aws.amazon.com/vpc/latest/userguide/AmazonDNS-concepts.html).
+- [Time synchronization](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/set-time.html).
+- [ECS task role credentials](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html).
 
 ## Across the wiki
 

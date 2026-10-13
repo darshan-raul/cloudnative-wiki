@@ -2,224 +2,171 @@
 title: Amazon SQS
 description: Amazon SQS — managed message queue. Standard and FIFO queues, dead-letter queues, visibility timeout, long/short polling, cost, and scaling patterns.
 tags:
-  - aws
-  - application-integration
-  - sqs
-  - queue
-  - messaging
-date: 2026-06-06
+  - aws/application-integration
+date: 2026-10-12
 ---
 
 # Amazon SQS
 
-SQS is a fully managed message queue. Producers send messages to a queue; consumers poll for messages and process them. Messages are stored redundantly across multiple AZs.
+Prerequisites: [[AWS/security/iam/README|scoped IAM roles]] and [[AWS/monitoring/README|delivery/processing observability]].
 
-## Standard vs FIFO
+SQS is a durable queue, not a broadcast bus. Consumers receive messages, complete work and delete them using a receipt handle; an unacknowledged message becomes visible again.
 
-| Feature    | Standard Queue                           | FIFO Queue                           |
-| ---------- | ---------------------------------------- | ------------------------------------ |
-| Throughput | Unlimited                                | 300 msg/s (batch: 3000/s)            |
-| Ordering   | At-least-once, no guarantee              | Exactly-once, strict order           |
-| Duplicates | May be delivered multiple times          | Deduplicated (5-min window)          |
-| Price      | $0.40/million requests                   | $0.50/million requests               |
-| Use case   | High throughput, can tolerate duplicates | Financial transactions, strict order |
+## Semantics and quotas
 
-## Core Concepts
+Standard queues provide at-least-once delivery and best-effort ordering. FIFO queues order messages within a MessageGroupId and deduplicate sends within the documented interval. Neither removes the need for transactional or idempotent business processing.
 
-```
-Producer                          Consumer
-    │                                  │
-    ├──► Message 1 ──────────────────►│ (Delete after processing)
-    ├──► Message 2 ──────────────────►│
-    ├──► Message 3 ──────────────────►│
-    │                                  │
-    └──► Dead Letter Queue (after maxReceiveCount)
-```
+Maximum message size is 1 MiB. SNS fan-out retains SNS's own smaller payload limit; larger payloads can be stored separately with an authorized object reference. FIFO throughput depends on mode, batching, Region, partitions and distribution across groups; 300/3,000 is not a universal account ceiling.
 
-## Creating a Queue
+Set visibility timeout longer than processing time, extend it for long work and acknowledge only after success. A DLQ redrive policy uses a queue ARN and maxReceiveCount; monitor poison messages and authorize controlled redrive. Retention and FIFO group blocking matter during failure recovery.
+
+## Complete queue lab
+
+With scoped CreateQueue/GetQueueAttributes/SendMessage/ReceiveMessage/DeleteMessage/DeleteQueue permissions, create a disposable queue:
 
 ```bash
-# Standard queue
-aws sqs create-queue \
-  --queue-name my-queue \
-  --attributes '{
-    "VisibilityTimeout": "30",
-    "MessageRetentionPeriod": "345600",
-    "MaximumMessageSize": "262144",
-    "ReceiveMessageWaitTimeSeconds": "0"
-  }'
-
-# FIFO queue
-aws sqs create-queue \
-  --queue-name my-queue.fifo \
-  --queue-name-attributes '{
-    "FifoQueue": "true",
-    "ContentBasedDeduplication": "true"
-  }'
+aws sqs create-queue --queue-name wiki-lab-work \
+  --attributes VisibilityTimeout=30,ReceiveMessageWaitTimeSeconds=20
 ```
 
-## Sending Messages
-
-```python
-import boto3
-import json
-
-sqs = boto3.client('sqs')
-queue_url = 'https://sqs.us-east-1.amazonaws.com/123456789012/my-queue'
-
-# Send single message
-response = sqs.send_message(
-    QueueUrl=queue_url,
-    MessageBody=json.dumps({'order_id': '12345', 'amount': 99.99}),
-    MessageAttributes={
-        'OrderType': {'StringValue': 'premium', 'DataType': 'String'}
-    }
-)
-print(f"MessageId: {response['MessageId']}")
-
-# Send batch (up to 10 messages)
-response = sqs.send_message_batch(
-    QueueUrl=queue_url,
-    Entries=[
-        {'Id': '1', 'MessageBody': json.dumps({'item': 'a'})},
-        {'Id': '2', 'MessageBody': json.dumps({'item': 'b'})}
-    ]
-)
-```
-
-## Receiving and Processing
-
-```python
-# Receive messages
-response = sqs.receive_message(
-    QueueUrl=queue_url,
-    MaxNumberOfMessages=10,
-    VisibilityTimeout=30,
-    WaitTimeSeconds=20  # Long polling
-)
-
-for msg in response.get('Messages', []):
-    receipt = msg['ReceiptHandle']
-    body = json.loads(msg['Body'])
-
-    # Process the message
-    print(f"Processing: {body}")
-
-    # Delete after successful processing
-    sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt)
-```
-
-## Dead Letter Queue (DLQ)
+Save the returned QueueUrl as QUEUE_URL; substitute it in these requests:
 
 ```bash
-# Create DLQ first
-DLQ_URL=$(aws sqs create-queue --queue-name my-dlq --query QueueUrl --output text)
-
-# Create main queue with DLQ
-aws sqs create-queue \
-  --queue-name my-queue \
-  --attributes '{
-    "RedrivePolicy": "{\"deadLetterTargetArn\": \"arn:aws:sqs:us-east-1:123456789012:my-dlq\",\"maxReceiveCount\": 3}"
-  }'
+aws sqs send-message --queue-url QUEUE_URL --message-body '{"eventId":"order-1","amount":10}'
+aws sqs receive-message --queue-url QUEUE_URL --max-number-of-messages 1 --wait-time-seconds 20
 ```
 
-## Visibility Timeout
+Expected: the JSON body and a ReceiptHandle. Do not delete the first receive; after visibility expiry receive it again and demonstrate why eventId must prevent a second charge. Finally acknowledge using the most recent handle:
 
-```
-Time ──────────────────────────────────────────────────────►
-
-t=0  Message delivered to Consumer A
-     Visibility timeout = 30 seconds
-     │
-     │  If Consumer A crashes at t=25s (before delete):
-     │  Message becomes visible again at t=30s
-     │  Another consumer can pick it up
-     │
-t=30 Message visible again (if not deleted)
-     Visibility timeout resets (30 more seconds)
-     │
-t=60 Message visible again (if not deleted)
-     ... up to maxReceiveCount, then DLQ
+```bash
+aws sqs delete-message --queue-url QUEUE_URL --receipt-handle RECEIPT_HANDLE
+aws sqs delete-queue --queue-url QUEUE_URL
 ```
 
-## Lambda Integration (Event Source Mapping)
+Deletion is irreversible; only delete your disposable queue after recording the test. If receiving returns nothing, check visibility, delay, Region and queue URL before treating the message as lost.
+
+## Lambda integration
+
+A [[AWS/serverless/lambda/README|Lambda]] event-source mapping polls the queue. Configure partial batch responses (ReportBatchItemFailures) and return failed message identifiers; throwing an exception fails the whole batch. FIFO consumers must preserve ordering when reporting failures.
+
+Mapping maximum concurrency uses `--scaling-config MaximumConcurrency=5` on the applicable mapping command, not a top-level --maximum-concurrency flag. It is distinct from function reserved concurrency; insufficient function capacity causes throttling/retries. Standard and FIFO batch/window contracts differ.
+
+## Costs
+
+Count sends, receives, deletes, empty polls, request-size billing and optional KMS/object-storage charges. Batching reduces API request count; it does not invent a special FIFO unit tariff.
+
+## Standard versus FIFO and the processing timeline
+
+| Concern             | Standard                           | FIFO                                                       |
+| ------------------- | ---------------------------------- | ---------------------------------------------------------- |
+| Ordering            | Best effort                        | Ordered within a message group                             |
+| Producer duplicates | At-least-once model                | Deduplication interval/ID rules                            |
+| Consumer retries    | Visibility timeout can redeliver   | Visibility timeout can also redeliver                      |
+| Parallelism         | Many consumers                     | Different groups run independently; a blocked group stalls |
+| Throughput sizing   | Applied quotas/downstream capacity | Mode, Region, partition/group distribution and batching    |
+
+```text
+send → queue → receive (invisible) → durable processing → delete
+                         └─ worker crashes/timeout → visible again
+retry budget exhausted → DLQ → inspect/fix → authorized redrive
+```
+
+## FIFO and batch API walkthrough
+
+Create a separate disposable FIFO queue; the .fifo suffix and FifoQueue attribute are both required.
+
+```bash
+aws sqs create-queue --queue-name wiki-lab-orders.fifo \
+  --attributes FifoQueue=true,ContentBasedDeduplication=false
+aws sqs send-message --queue-url FIFO_QUEUE_URL \
+  --message-body '{"eventId":"order-7","action":"reserve"}' \
+  --message-group-id customer-7 --message-deduplication-id order-7
+```
+
+Repeat the identical deduplication ID within its documented interval and compare enqueue behavior. Then receive without deleting and observe visibility expiry: consumer idempotency is still necessary. Distinct groups permit concurrency but cannot preserve one global order.
+
+SendMessageBatch/ReceiveMessage/DeleteMessageBatch have separate contracts. A successful batch transport can contain failed entries; handle each result. Always delete with the latest receipt handle. Long polling reduces empty requests; batching and message-size chunks change billed requests.
+
+## DLQ configuration walkthrough
+
+Create a standard DLQ for a standard main queue (FIFO for FIFO). Get its QueueArn. Save this complete attribute request with substituted URLs/ARNs:
+
+```json
+{
+  "QueueUrl": "MAIN_QUEUE_URL",
+  "Attributes": {
+    "RedrivePolicy": "{\"deadLetterTargetArn\":\"DLQ_ARN\",\"maxReceiveCount\":\"5\"}"
+  }
+}
+```
+
+```bash
+aws sqs set-queue-attributes --cli-input-json file://redrive.json
+aws sqs change-message-visibility --queue-url MAIN_QUEUE_URL \
+  --receipt-handle RECEIPT_HANDLE --visibility-timeout 60
+```
+
+A visibility extension is per receipt, not permanent queue configuration. For Standard DLQs, set retention sufficiently longer than source retention; source enqueue time matters for expiry. Restrict redrive permission/allow policy and use bounded replay, preserving the event ID.
+
+## Lambda handler walkthrough
+
+This standard-queue fixture validates messages and reports individual failures; it intentionally performs no external side effect.
 
 ```python
-# SQS trigger Lambda (event source mapping)
 import json
 
 def handler(event, context):
-    for record in event['Records']:
-        body = json.loads(record['body'])
-        print(f"Processing message: {body}")
-
-        # Lambda automatically deletes the message after successful execution
-        # If Lambda throws an error, the message becomes visible again
+    failures = []
+    for record in event["Records"]:
+        try:
+            body = json.loads(record["body"])
+            if not isinstance(body, dict) or not isinstance(body.get("eventId"), str):
+                raise ValueError("eventId required")
+        except (ValueError, TypeError):
+            failures.append({"itemIdentifier": record["messageId"]})
+    return {"batchItemFailures": failures}
 ```
 
-### Lambda Event Source Mapping (via CLI)
+Exercise the handler locally with a mixed batch; valid JSON is not necessarily an object. The malformed JSON and non-object JSON records must be reported individually, while the valid object must not be retried:
 
-```bash
-# Create event source mapping
-aws lambda create-event-source-mapping \
-  --function-name my-function \
-  --event-source-arn arn:aws:sqs:us-east-1:123456789012:my-queue \
-  --batch-size 10 \
-  --maximum-batching-window-in-seconds 10 \
-  --maximum-concurrency 5
+```python
+fixture = {"Records": [
+    {"messageId": "good", "body": '{"eventId":"evt-1"}'},
+    {"messageId": "bad-json", "body": '{'},
+    {"messageId": "list", "body": '[]'},
+    {"messageId": "null", "body": 'null'},
+    {"messageId": "number", "body": '42'},
+    {"messageId": "string", "body": '"evt-2"'},
+    {"messageId": "missing-id", "body": '{}'},
+    {"messageId": "wrong-id", "body": '{"eventId":42}'}
+]}
+expected_ids = ["bad-json", "list", "null", "number", "string", "missing-id", "wrong-id"]
+assert handler(fixture, None) == {
+    "batchItemFailures": [{"itemIdentifier": item_id} for item_id in expected_ids]
+}
 ```
 
-## Cost Optimization
+This fixture checks local validation only, not AWS polling, deployment or side effects. An exception escaping the handler fails the whole batch, even when partial responses are configured. Production processing must contain intended per-record failures and implement idempotency; do not silently acknowledge a failed external effect.
 
-| Strategy                                                | Savings                                |
-| ------------------------------------------------------- | -------------------------------------- |
-| Long polling (WaitTimeSeconds=20)                       | Reduces API calls, improves efficiency |
-| Batch operations (SendMessageBatch, DeleteMessageBatch) | 10x fewer API calls                    |
-| Reduce VisibilityTimeout                                | Match to your processing time          |
-| Short polling only when needed                          | Avoid empty receive_message calls      |
+Enable ReportBatchItemFailures on the mapping; otherwise the response does not enable partial failure behavior. For FIFO, stop after the first failed message and report unprocessed records to preserve ordering. Replace validation with a transactional idempotency/effect implementation before using this as a worker.
 
-## Pricing
+Monitor AWS/SQS ApproximateAgeOfOldestMessage, visible/not-visible counts and DLQ depth; approximate values are not an exact ledger. Rising age with stable arrivals suggests consumer capacity/errors; high in-flight counts suggest slow work/visibility settings. During cleanup remove the mapping, main queue and separately owned DLQ only after preserving required failures.
 
-| Component                    | Cost                               |
-| ---------------------------- | ---------------------------------- |
-| Standard queue               | $0.40/million requests             |
-| FIFO queue                   | $0.50/million requests             |
-| FIFO (batching)              | $0.017/million messages (after 1M) |
-| Data transfer (same region)  | Free                               |
-| Data transfer (cross-region) | $0.02-0.09/GB                      |
+References: [DLQs](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html), [batch APIs](https://docs.aws.amazon.com/cli/latest/reference/sqs/send-message-batch.html), [partial responses](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-errorhandling.html).
 
-## Limits
+## Cross-wiki comparisons
 
-| Resource                        | Limit                                           |
-| ------------------------------- | ----------------------------------------------- |
-| Message size                    | 256KB (max 2GB with S3 extended client library) |
-| Queue retention                 | 1 minute to 14 days                             |
-| In-flight messages              | 120,000 (standard), 20,000 (FIFO)               |
-| Max messages per ReceiveMessage | 10                                              |
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/sqs/
-- **Documentation:** https://docs.aws.amazon.com/AWSSimpleQueueService/
-- **Pricing:** https://aws.amazon.com/sqs/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** An e-commerce checkout processing 1M orders/month. Each order triggers 1 SQS message. 1M requests × $0.40/million = $0.40/month. Plus Lambda invocations (~$0.20/month). Total: ~$0.60/month for message queuing.
-
-**Scenario 2:** A high-throughput image processing pipeline with 50M messages/day. 50M/day × 30 = 1.5B/month. Using batch operations (10 messages/batch), that's 150M API calls. $0.40 × 150 = $60/month. Switching to FIFO with batching: $0.50 × 150 = $75/month.
-
-## Nuggets & Gotchas
-
-- **SQS does NOT delete messages after ReceiveMessage — you MUST call DeleteMessage yourself:** The message stays invisible for the VisibilityTimeout period, then reappears if not deleted. For Lambda, the SDK handles this automatically. For manual polling, you MUST call delete_message after successful processing.
-- **SQS long polling (WaitTimeSeconds > 0) can delay empty responses up to that wait time:** If you call receive_message with WaitTimeSeconds=20 and the queue is empty, the call blocks for up to 20 seconds. Design your consumer loops accordingly.
-- **SQS message size is 256KB hard limit — for larger payloads, store in S3 and send S3 reference:** Use the SQS extended client library which automatically stores large payloads in S3 and sends the reference in SQS.
-- **SQS FIFO ordering is per message group ID — messages with different group IDs can be delivered out of order:** If you need global ordering, use a single group ID. For partial ordering (per customer), use customer ID as group ID.
-- **SQS visibility timeout doesn't pause while your consumer is idle — it counts down from the moment the message is received:** If your VisibilityTimeout is 30s and you spend 25s on processing before calling delete, you only have 5s left. Set it to 2-3x your expected processing time.
+- [Message quotas](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/quotas-messages.html)
+- [Visibility timeout](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html)
+- [Lambda scaling](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-scaling.html)
+- [Pricing](https://aws.amazon.com/sqs/pricing/)
 
 ## Across the wiki
 
-- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
-- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
-- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
-- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]]
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]]

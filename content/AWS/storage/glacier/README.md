@@ -1,222 +1,86 @@
 ---
-title: Amazon S3 Glacier
-description: Amazon S3 Glacier — long-term archival storage. Vaults, archives, retrieval options (expedited/standard/bulk), vault locks, and DataSync for automated archiving.
+title: "S3 Glacier archival storage"
+description: "For current object-archive designs, use S3 Glacier Instant Retrieval, Flexible Retrieval or Deep Archive inside an S3 bucket."
 tags:
-  - aws
-  - storage
-  - glacier
-  - archive
-date: 2026-06-06
+  - aws/storage
+date: 2026-10-12
 ---
 
-# Amazon S3 Glacier
+# S3 Glacier archival storage
 
-Glacier is S3's archival storage class — designed for data that is rarely accessed but must be retained for years. Pricing is very low ($0.00099/GB/mo for Deep Archive) but retrieval costs and latency are high.
+For current object-archive designs, use S3 Glacier Instant Retrieval, Flexible Retrieval or Deep Archive inside an [[AWS/storage/s3/README|S3 bucket]]. They are storage classes, not vaults. Standalone Amazon Glacier uses a separate vault/archive API and closed access to new customers on December 15, 2025; existing vault customers remain supported. Do not substitute glacier CLI commands for S3 object operations.
 
-## Core Concepts
+## Retention versus restoration
 
-### Storage Architecture
+Instant Retrieval supports immediate access. Flexible Retrieval requires a restore and offers expedited, standard and bulk retrieval; Deep Archive has longer standard/bulk restore times. Available speeds, quotas and expedited capacity depend on the class and request. Flexible/Instant Retrieval have 90-day minimum billing duration; Deep Archive has 180 days. Early deletion can incur the remaining-duration charge.
 
-```
-S3 Glacier
-  └── Vault (container)
-       └── Archive (the actual data)
-            ├── Archive ID
-            ├── SHA-256 tree hash (integrity)
-            └── Description (optional)
-```
+A restore creates a temporarily accessible copy; it does not permanently change the archived object's class. Retrieval, requests and temporary restored storage can add costs. Design the retrieval tier and accessible-copy duration from the application's RTO, not only its storage rate.
 
-### Storage Classes
+## Compliance boundaries
 
-| Class                   | Retrieval Time                          | Cost (per GB/mo) | Use                   |
-| ----------------------- | --------------------------------------- | ---------------- | --------------------- |
-| S3 Glacier              | 1-5 min (expedited) / 3-5 hr (standard) | $0.004           | Rare (< 90 days)      |
-| S3 Glacier Deep Archive | 12 hr (standard) / 48 hr (bulk)         | $0.00099         | Very rare (180+ days) |
+S3 Object Lock requires versioning and applies retention/legal holds to object versions. Governance mode has a privileged bypass path; compliance mode is materially stricter. Legal holds and timed retention are distinct. Restrict retention permissions and rehearse policies on disposable data: irreversible retention can prevent cleanup and extend charges.
 
-### S3 Glacier vs S3 Standard-IA vs S3
+Standalone Glacier Vault Lock is a different historical workflow. InitiateVaultLock returns a lock ID; CompleteVaultLock must complete within 24 hours or the in-progress policy is removed. It does not auto-lock after seven days. A read-only Allow statement alone does not enforce retention against archive deletion.
 
-```
-S3 Standard        → Immediate access ($0.023/GB)
-S3 Standard-IA     → 30+ days infrequent ($0.0125/GB)
-S3 Glacier         → 90+ days archive ($0.004/GB)
-S3 Glacier Deep Archive → 180+ days archive ($0.00099/GB)
-```
+## Sandbox restore exercise
 
-## Creating a Vault
+Prerequisites: an authorized disposable bucket, IAM/KMS permissions, a small object in Flexible Retrieval or Deep Archive, and a budget for minimum-duration and retrieval charges. Do not impose long compliance retention on a learning bucket.
 
 ```bash
-aws glacier create-vault \
-  --vault-name my-archive-vault \
-  --account-id 123456789012
+aws s3api restore-object --bucket example-unique-bucket --key archive.txt \
+  --restore-request '{"Days":1,"GlacierJobParameters":{"Tier":"Standard"}}'
+aws s3api head-object --bucket example-unique-bucket --key archive.txt
 ```
 
-### Uploading Archives
+Wait for the Restore metadata to show completion before downloading. An immediate GET before completion should fail with the archive-access state, not prove the object is missing. Record actual elapsed restoration time, compare it to the target RTO and confirm the restored copy's expiry. Deleting sandbox data may still incur minimum-duration charges; retention-protected versions cannot be deleted until permitted.
 
-```bash
-# Single file (under 100MB)
-aws glacier upload-archive \
-  --vault-name my-archive-vault \
-  --body my-data.tar.gz \
-  --content-type application/octet-stream
+## Cost reasoning
 
-# Larger files: use multipart upload
-aws glacier multipart-upload \
-  --vault-name my-archive-vault \
-  --part-size 1048576 \
-  --archive-description "backup-2024-01"
+Using an illustrative rate of \$0.00099/decimal GB-month, 10 TB is 10,000 GB: \$9.90/month and \$831.60 for 84 months before requests/retrieval. This arithmetic is not a current regional quote. Include restore storage, data transfer, metadata overhead and minimum billing conditions before choosing an archival class.
+
+## Retrieval decision table and restore sequence
+
+| Storage choice                                | Access pattern                           | Recovery design                                                        |
+| --------------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------- |
+| Glacier Instant Retrieval                     | Rare access needing milliseconds         | Direct reads with applicable retrieval costs.                          |
+| Glacier Flexible Retrieval                    | Archive tolerates a restore              | Choose supported expedited/standard/bulk; plan restored-copy lifetime. |
+| Glacier Deep Archive                          | Very long retention with longer recovery | Restore using supported tier, allow time and budget temporary copy.    |
+| Standalone Glacier vault (existing customers) | Historical archive ID/vault API          | Distinct jobs/inventory/access policy; not an S3 bucket.               |
+
+```text
+Archived S3 object
+  → restore request accepted
+  → restore in progress
+  → temporary accessible copy
+  → copy expiration; archived object remains under its lifecycle/retention
 ```
 
-### Downloading Archives
+HeadObject restore metadata and actual GET success are stronger evidence than a submitted request. Track restore completion with a bounded observation workflow; a long archive restore is not an API timeout to fix by repeatedly creating jobs. Choose the accessible-copy duration long enough for readers and downstream processing.
 
-```bash
-# Initiate job (retrieval request)
-aws glacier initiate-job \
-  --vault-name my-archive-vault \
-  --job-parameters '{"Type": "archive-retrieval", "ArchiveId": "xxxxx", "Tier": "Standard"}'
+## Compliance lifecycle and immutable history
 
-# Standard: 3-5 hours
-# Expedited: 1-5 minutes (costs more)
-# Bulk: 5-12 hours (cheapest)
+Timed Object Lock retention applies to versions. A legal hold is independent and persists until an authorized removal. Governance bypass authority must be tightly controlled; compliance retention is intentionally hard to shorten/remove. Version deletion, lifecycle expiration and retention enforcement interact, so test on short-lived disposable data before production.
 
-# Check job status
-aws glacier describe-job \
-  --vault-name my-archive-vault \
-  --job-id xxxxx
+For historical standalone Vault Lock, initiation and completion are separate. The lock policy must actually restrict deletion/retention-sensitive actions; an Allow for reads does not do this. Losing the lock ID or missing the 24-hour completion window is not automatic finalization. Permanent lock/deletion constraints require legal/security review.
 
-# Download completed archive
-aws glacier get-job-output \
-  --vault-name my-archive-vault \
-  --job-id xxxxx \
-  output.json
+## Cost walkthrough
+
+Write quantities with units before pricing:
+
+```text
+retained GB × storage rate per GB-month × retained months
++ restore request count × request rate
++ bytes retrieved × retrieval rate
++ temporary restored GB × accessible-copy duration × applicable rate
++ applicable network and metadata/minimum charges
 ```
 
-## Vault Access Policies
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "AWS": "arn:aws:iam::123456789012:user/backup-admin" },
-      "Action": ["glacier:UploadArchive", "glacier:DeleteArchive"],
-      "Resource": "arn:aws:glacier:us-east-1:123456789012:vaults/my-archive-vault"
-    }
-  ]
-}
-```
-
-```bash
-aws glacier set-vault-access-policy \
-  --vault-name my-archive-vault \
-  --policy '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Deny",
-      "Principal": "*",
-      "Action": "glacier:DeleteArchive",
-      "Resource": "arn:aws:glacier:us-east-1:123456789012:vaults/my-archive-vault",
-      "Condition": {"NumericLessThan": {"glacier:VaultAccessTime": "2024-12-31T00:00:00Z"}}
-    }]
-  }'
-```
-
-## Vault Lock (WORM Compliance)
-
-Vault Lock enforces immutable retention policies:
-
-```bash
-# Initiate lock (7-day evaluation period)
-aws glacier initiate-vault-lock \
-  --vault-name my-compliance-vault \
-  --lock-duration-days 7 \
-  --policy '{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "glacier:GetVaultAccessPolicy",
-      "Resource": "arn:aws:glacier:us-east-1:123456789012:vaults/my-compliance-vault"
-    }]
-  }'
-```
-
-After the lock is applied (after evaluation period), no one — including the root account — can delete archives before the retention date.
-
-## S3 Lifecycle to Glacier
-
-Using S3 lifecycle rules to auto-archive:
-
-```bash
-aws s3api put-bucket-lifecycle-configuration \
-  --bucket my-data-lake \
-  --lifecycle-configuration '{
-    "Rules": [{
-      "ID": "archive-old-logs",
-      "Prefix": "logs/",
-      "Status": "Enabled",
-      "Transitions": [
-        {"Days": 30, "StorageClass": "STANDARD_IA"},
-        {"Days": 90, "StorageClass": "GLACIER"},
-        {"Days": 365, "StorageClass": "DEEP_ARCHIVE"}
-      ],
-      "Expiration": {"Days": 2555}
-    }]
-  }'
-```
-
-## Glacier DataSync
-
-DataSync can automatically sync on-premises file data to S3 Glacier:
-
-```bash
-aws datasync create-task \
-  --name "archive-to-glacier" \
-  --source-location-arn arn:aws:datasync:us-east-1:123456789012:location/loc-xxxxx \
-  --destination-location-arn arn:aws:datasync:us-east-1:123456789012:location/loc-yyyyy \
-  --schedule '{
-    "ScheduleExpression": "cron(0 3 * * ? *)"
-  }'
-```
-
-## Comparison: Glacier vs S3 + Lifecycle
-
-|                   | Direct Glacier          | S3 → Glacier (via lifecycle)    |
-| ----------------- | ----------------------- | ------------------------------- |
-| Access            | Via Glacier API         | Via S3 API (S3 Glacier objects) |
-| Retrieval options | Expedited/Standard/Bulk | Standard only                   |
-| Vault Lock        | Yes                     | No (use Object Lock)            |
-| Vault policies    | Yes                     | No                              |
-| Use               | Native Glacier (legacy) | S3 Glacier (modern)             |
-
-**Use S3 Glacier storage class** (via S3 API) for new workloads. Direct Glacier API is for legacy compatibility.
-
-## Limits
-
-| Resource                     | Limit                 |
-| ---------------------------- | --------------------- |
-| Vaults per region            | Unlimited             |
-| Archives per vault           | Unlimited             |
-| Archive size                 | 50 TB (single upload) |
-| Multipart upload parts       | 10,000                |
-| Vault lock policy evaluation | 7 days                |
+A seven-year retention term is 84 months; apply it once to a monthly storage subtotal. Compare retrieval frequency and RTO under at least two scenarios (normal audit and bulk disaster recovery). A very low storage tariff can be dominated by requests/restore/network during a large recovery event. Do not treat a successful archive job as evidence that legal retention or recovery correctness was tested.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/glacier/
-- **Documentation:** https://docs.aws.amazon.com/amazonglacier/
-- **Pricing:** https://aws.amazon.com/glacier/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A compliance requirement to retain 10TB of financial records for 7 years. 10TB × 84 months (7 years) × $0.00099/GB = $850/month. Total lifetime cost: $850 × 84 = $71,400. Compare to S3 Standard: $0.023/GB × 10TB = $230/month × 84 = $19,320. Glacier is 3.7x more expensive for this use case because the data is actively accessed (compliance audits). For rarely accessed data, Glacier wins.
-
-**Scenario 2:** A legal hold requiring 5TB of email archives for 10 years (litigation hold). 5TB × $0.00099/GB × 120 months = $600/month lifetime. With S3 Object Lock (governance mode), you can use S3 Standard-IA for $0.0125/GB = $62.50/month × 120 = $7,500 lifetime. S3 is 12.5x cheaper for long-term legal hold if retrieval isn't needed.
-
-## Nuggets & Gotchas
-
-- **Glacier retrieval has three tiers with very different costs — always check which you're using:** Expedited: $0.03/GB + $0.05 per 1,000 requests. Standard: $0.01/GB. Bulk: $0.0025/GB. A 10GB archive with Expedited retrieval costs $0.30 (data) + $0.05 (request) = $0.35. Standard costs $0.10. Bulk costs $0.025. For a one-time retrieval of 10TB, bulk saves $75.
-- **Vault Lock is irreversible — once locked, you cannot change or remove the policy:** This is a WORM compliance feature. Test your lock policy on a non-production vault first. A misconfigured lock can prevent legitimate access or deletion for years.
-- **Glacier archives are immutable once created — you can't append or modify:** You must delete and re-upload to "modify" an archive. If you need to update archived data, use S3 with versioning instead (allows overwrite via new version).
-- **Glacier Deep Archive has a minimum 90-day storage duration:** If you store data for 30 days and delete, you pay for 90 days. For data with uncertain retention, start with S3 Standard-IA (30-day minimum) and transition to Glacier later.
-- **Initiating a Glacier job doesn't mean immediate retrieval — Expedited takes 1-5 minutes:** Standard: 3-5 hours. Bulk: 5-12 hours. Plan retrieval ahead of time. For urgent compliance requests (e.g., legal discovery), use Expedited retrieval ($0.03/GB) or keep a hot copy in S3 Standard.
+- [S3 archive restoration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/restoring-objects.html)
+- [S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html)
+- [Standalone Glacier availability](https://docs.aws.amazon.com/amazonglacier/latest/dev/introduction.html)
+- [CompleteVaultLock contract](https://docs.aws.amazon.com/cli/latest/reference/glacier/complete-vault-lock.html)
+- [S3 pricing](https://aws.amazon.com/s3/pricing/)

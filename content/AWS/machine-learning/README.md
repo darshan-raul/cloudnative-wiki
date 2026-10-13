@@ -1,97 +1,75 @@
 ---
-title: AWS Machine Learning
-description: AWS machine learning services — AI services (pre-trained APIs), SageMaker (build your own), Bedrock (LLMs), Rekognition (vision), Comprehend (NLP), and SageMaker Canvas (no-code ML).
+title: "AWS Machine Learning"
+description: "Choose the smallest supported ML approach that solves the task, then evaluate quality, privacy, latency and lifecycle costs."
 tags:
-  - aws
-  - machine-learning
-  - ai
-date: 2026-06-06
+  - aws/machine-learning
+date: 2026-10-12
 ---
 
 # AWS Machine Learning
 
-AWS offers ML services across the spectrum — from pre-trained AI APIs ( Rekognition, Comprehend, Polly) that require zero ML expertise, to SageMaker for building custom models, to Bedrock for foundation models and LLM applications.
+Choose the smallest supported ML approach that solves the task, then evaluate quality, privacy, latency and lifecycle costs. Model access is not evidence that predictions are correct or compliant.
 
-## Service Map
+Prerequisites: [[AWS/security/iam/README|IAM]], [[AWS/storage/s3/README|S3]], [[AWS/analytics/README|data pipelines]] and a representative evaluation dataset.
 
-| Service                                       | Type              | Use Case                                      |
-| --------------------------------------------- | ----------------- | --------------------------------------------- |
-| [[ai-services/README\|AI Services]]           | Pre-trained APIs  | Vision, NLP, speech, document, contact center |
-| [[bedrock/README\|Bedrock]]                   | Foundation Models | LLMs, RAG, agents, image generation           |
-| [[sagemaker/README\|SageMaker]]               | ML Platform       | Build, train, deploy custom models            |
-| [[sagemaker-canvas/README\|SageMaker Canvas]] | No-Code ML        | Business analyst predictions                  |
-| [[rekognition/README\|Rekognition]]           | Vision AI         | Image/video analysis, face comparison         |
-| [[comprehend/README\|Comprehend]]             | NLP AI            | Text extraction, sentiment, entities, topics  |
+## Learning path
 
-## ML Stack
+| Lesson                                                   | Appropriate starting point                                                           |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [[AWS/machine-learning/ai-services/README\|AI services]] | Managed document, speech, translation, vision and language APIs for supported tasks. |
+| [[AWS/machine-learning/comprehend/README\|Comprehend]]   | Language/PII analysis and supported custom classifiers/entities.                     |
+| [[AWS/machine-learning/rekognition/README\|Rekognition]] | Supported image/video analysis and Custom Labels.                                    |
+| [[AWS/machine-learning/bedrock/README\|Bedrock]]         | Foundation-model inference, RAG, guarded applications and supported customization.   |
+| [[AWS/machine-learning/sagemaker/README\|SageMaker AI]]  | Custom training, deployment, feature management and MLOps.                           |
+| [[AWS/machine-learning/sagemaker-canvas/README\|Canvas]] | Supported visual/no-code workflows with explicit deployment/evaluation boundaries.   |
 
-```
-Pre-built AI APIs (AI Services)
-  │ rekognition, comprehend, polly, translate, transcribe, textract, lex, kendra
-  │ Zero ML expertise needed. Pay per use. Easy API access.
-  ▼
-Foundation Models (Bedrock)
-  │ Claude, Llama, Mistral, Stable Diffusion, Titan
-  │ Pre-trained on massive data. Fine-tune or RAG. API access.
-  ▼
-ML Platform (SageMaker)
-  │ Jupyter, training, inference, edge deployment
-  │ Full control. Data scientists. Bring your own model.
-  ▼
-ML Infrastructure
-  │ EC2 GPU instances, EFA networking, Trainium/Inferentia chips
-  │ Raw compute. When you need maximum control.
-```
+## Architectural choices
 
-## Choosing an ML Approach
+Managed task APIs reduce training/hosting work but impose operation, language, input and customization constraints. Bedrock exposes supported foundation models; RAG supplies retrieved context but does not automatically make answers true. SageMaker AI provides more training/hosting control and corresponding operational responsibility. Canvas simplifies parts of the workflow without eliminating execution-role, data-quality or endpoint costs.
 
-```
-Do you need to build a custom model?
-  │
-  ├── NO (use existing model)
-  │   ├── Pre-built API (AI Services) → Rekognition, Comprehend, Polly, etc.
-  │   └── Foundation Model (Bedrock) → Claude, Llama, Mistral, Stable Diffusion
-  │
-  └── YES (build custom)
-      ├── No-code (SageMaker Canvas) → Business analysts
-      └── Full platform (SageMaker) → Data scientists
+Separate data preparation, training/evaluation, model registration, deployment and monitoring. Avoid train/test leakage; retain reproducible versions of input, features, model and evaluation criteria. Distinguish statistical drift from application/business failure and require a fallback for unavailable or low-confidence output.
+
+## Safety and cost exercise
+
+Use synthetic/non-sensitive inputs and a labelled held-out dataset. Compare a managed API/model to a simple baseline; report false positives/negatives and subgroup behavior rather than only one accuracy score. Test an unauthorized identity and define what sensitive inputs/output logs may be retained.
+
+For PHI, service HIPAA eligibility alone is insufficient: the BAA, supported feature/Region, permissions and shared-responsibility configuration matter. Document model/account retention settings and customer-created inference logs separately.
+
+Measure requests/tokens, training/processing hours, notebook/session resources, endpoints, storage and network dimensions from current regional pricing. Endpoints can charge while idle. Delete sandbox apps, jobs/endpoints and reviewed artifacts; avoid retaining sensitive evaluation output in default logs.
+
+## The ML stack and choosing ownership
+
+```text
+Managed task APIs: input → supported task result
+Bedrock: prompt/context → supported foundation model → guarded/evaluated result
+SageMaker AI: data → train/evaluate → approved artifact → hosting/monitoring
+Canvas: visual preparation/build/evaluation → supported prediction/deployment
 ```
 
-## Security and Compliance
+These are ownership choices, not a quality ranking. A managed API can outperform a custom model with poorly curated labels; a foundation model may be unsuitable for a deterministic extraction task. Start from the task and held-out evaluation, then justify custom training where it adds value.
 
-| Consideration   | Implementation                                        |
-| --------------- | ----------------------------------------------------- |
-| Data residency  | SageMaker processing jobs run in your VPC             |
-| Model ownership | You own your models and data                          |
-| Encryption      | KMS for models at rest, TLS in transit                |
-| Access control  | IAM for API access, SageMaker for notebook access     |
-| Audit           | CloudTrail for API calls, SageMaker for training jobs |
-| Compliance      | HIPAA, GDPR, FedRAMP (varies by service)              |
+| Requirement               | Approach to investigate       | What you still own                                          |
+| ------------------------- | ----------------------------- | ----------------------------------------------------------- |
+| OCR/table extraction      | Textract                      | Document quality, response reconstruction and validation    |
+| Domain speech             | Transcribe customization      | Supported language/mode, vocabulary/model quality           |
+| Classification/PII        | Comprehend or justified model | False negatives, thresholds and privacy handling            |
+| Generative application    | Bedrock                       | Grounding, authorization, prompt/tool safety and evaluation |
+| Custom algorithm/features | SageMaker AI                  | Dataset/algorithm/runtime and MLOps lifecycle               |
+| Visual business workflow  | Canvas                        | Data/target/evaluation and eligible deployment              |
 
-## Cost Optimization
+## Evaluation and production handoff
 
-| Strategy              | How                                           |
-| --------------------- | --------------------------------------------- |
-| Spot instances        | Training jobs: 60-70% savings                 |
-| Managed spot          | SageMaker managed spot: `MaxRuntimeInSeconds` |
-| Inference endpoints   | Auto-scaling + GPU switching (P4 → T4)        |
-| Multi-model endpoints | Deploy 100s of models on one endpoint         |
-| Serverless inference  | SageMaker Serverless: pay per call            |
-| AI Services           | Pay per API call, no idle cost                |
+Define a baseline, dataset version, held-out split, success threshold and business cost of errors. For classification, compare precision/recall across classes; for forecasting, split chronologically; for generation, evaluate answer support and refusal on unanswerable questions. Training completion and one impressive sample are not quality gates.
+
+Separate notebook experimentation from repeatable jobs. Preserve code, dependencies, data/feature schema, artifact and evaluation evidence. Require explicit deployment approval and an endpoint rollback/fallback strategy. Monitor input drift, output quality where measurable, latency/errors and cost.
+
+Shared responsibility includes least-privilege data access, encryption, supported privacy/retention configuration and logging minimization. Human review and consent requirements do not disappear because a service is HIPAA-eligible or an output has high confidence.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/machine-learning/
-- **Documentation:** https://docs.aws.amazon.com/machine-learning/
-- **Pricing:** https://aws.amazon.com/machine-learning/pricing/
-
-## Nuggets & Gotchas
-
-- **AI Services (Rekognition, Comprehend, etc.) are NOT HIPAA-eligible by default — you need a Business Associate Addendum (BAA):** If you're processing PHI, use Bedrock (HIPAA eligible) or SageMaker with your own models. Always verify compliance requirements before using AI Services with health data.
-- **SageMaker training jobs run on managed infrastructure — your data IS processed by AWS:** Even though SageMaker runs in your VPC, the training compute is managed by AWS. For maximum data isolation, use VPC-only endpoints and SageMaker Direct.
-- **Bedrock's data processing varies by model provider — Anthropic, Meta, Mistral have different data policies:** Before using Bedrock for sensitive data, read the model provider's data policy. Some models train on input data (opt-out available).
-- **AI Services pricing is per API call — at scale, costs add up fast:** Rekognition at $0.0012/image × 10M images/month = $12,000/month. Budget carefully before deploying AI Services at production scale.
-- **SageMaker Canvas produces models but doesn't give you the model artifact — you're locked into Canvas predictions:** If you need to deploy the model elsewhere (edge, mobile), use SageMaker Pipelines to export the model or use the built-in model registry.
+- [SageMaker AI documentation](https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html)
+- [Bedrock documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html)
+- [HIPAA eligible services](https://aws.amazon.com/compliance/hipaa-eligible-services-reference/)
 
 ## Across the wiki
 

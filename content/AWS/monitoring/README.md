@@ -2,142 +2,74 @@
 title: AWS Monitoring
 description: AWS monitoring and observability — CloudWatch Metrics, Logs, Alarms, Dashboards, and Insights for unified monitoring across your AWS infrastructure and applications.
 tags:
-  - aws
-  - monitoring
-  - observability
-date: 2026-06-06
+  - aws/monitoring
+date: 2026-10-12
 ---
 
 # AWS Monitoring
 
-AWS monitoring is built around CloudWatch — a centralized service for metrics, logs, alarms, and dashboards. CloudWatch provides visibility into how your applications and infrastructure are performing.
+Observability answers whether users are receiving the service you promised, then helps explain failures. Metrics summarize behavior; logs preserve events; traces connect work across boundaries. Audit logs are a separate security requirement.
 
-## Service Map
+## Learning path
 
-| Service                                      | What It Does                                  | When to Use                                            |
-| -------------------------------------------- | --------------------------------------------- | ------------------------------------------------------ |
-| [[cloudwatch-metrics/README\|Metrics]]       | Time-series data for AWS and custom resources | Every service emits metrics — query with GetMetricData |
-| [[cloudwatch-logs/README\|Logs]]             | Centralized log storage and management        | Every application should stream logs here              |
-| [[cloudwatch-alarms/README\|Alarms]]         | Alerting based on metric thresholds           | Alert when latency spikes, error rate rises            |
-| [[cloudwatch-dashboards/README\|Dashboards]] | Custom metric visualization                   | Build custom views for business/SRE metrics            |
-| [[cloudwatch-events/README\|Events]]         | Event-driven automation via rules             | React to AWS API events, schedules                     |
-| [[cloudwatch-insights/README\|Insights]]     | Log query language for CloudWatch Logs        | Debug production issues, search logs                   |
+1. Define an SLI (for example successful requests / valid requests), an SLO and an error budget before choosing dashboards.
+2. Publish bounded-cardinality [[AWS/monitoring/cloudwatch-metrics/README|metrics]] and retain structured [[AWS/monitoring/cloudwatch-logs/README|logs]] according to data sensitivity.
+3. Use [[AWS/monitoring/cloudwatch-insights/README|Logs Insights]] to investigate and [[AWS/monitoring/cloudwatch-alarms/README|alarms]] to notify an owner with a runbook.
+4. Assemble [[AWS/monitoring/cloudwatch-dashboards/README|dashboards]], then correlate [[AWS/monitoring/tracing-and-observability|traces and cross-account telemetry]].
+5. Route operational events through [[AWS/application-integration/eventbridge/README|EventBridge]]. [[AWS/monitoring/cloudwatch-events/README|CloudWatch Events]] is the historical naming path, not another current event platform.
 
-## Three Pillars of Observability
+## Architecture and boundaries
 
-```
-Metrics (What happened?)
-  → CloudWatch Metrics (numerical time-series data)
-  → How many requests? What's p99 latency?
+An application should propagate a request/trace ID into structured logs and traces. Metrics use low-cardinality dimensions such as service and environment, not user IDs or unique request IDs. Use an agent, Embedded Metric Format, direct metric APIs or OpenTelemetry according to the data model and runtime; those are not interchangeable billing and storage models.
 
-Logs (Why did it happen?)
-  → CloudWatch Logs (application and infrastructure logs)
-  → What error occurred? What was the request trace?
+Classic high-resolution custom metrics support one-second resolution. Newer OpenTelemetry metric capabilities have their own resolution and retention model: do not apply the classic rollup table to every CloudWatch data type. Cross-account observability links telemetry for query; log centralization actually copies records and can duplicate ingestion/storage costs.
 
-Traces (How did it happen?)
-  → AWS X-Ray (distributed tracing, not in this section)
-  → Request flow through services
-```
+## Operational exercise
 
-## Core Concepts
+Pick a sandbox workload and record baseline request rate, failure rate and latency. Inject a controlled dependency failure, confirm logs and traces carry the same correlation ID, and verify the alarm notifies a subscribed responder. Record detection time, user impact and recovery time. Restore the dependency, confirm alarm recovery and remove temporary telemetry or set bounded retention. Keep security audit coverage enabled.
 
-### Namespaces
+## Cost and limits
 
-Metrics are organized by namespace — each AWS service has its own namespace:
+Estimate each dimension separately: unique metrics, API requests, logs ingested/stored/scanned, dashboard count, alarms, trace volume and optional insights features. Query narrow time windows and indexed fields where applicable. Check current account/Region quotas before load tests; a service quota is not reserved capacity.
 
-```
-AWS/EC2          → CPUUtilization, NetworkIn, DiskWriteBytes
-AWS/RDS          → DatabaseConnections, CPUUtilization, FreeStorageSpace
-AWS/Lambda       → Invocations, Duration, Errors
-MyApp/Production → Custom metrics you define
+## Unified telemetry architecture
+
+```text
+applications ── structured logs ── CloudWatch Logs ── Insights queries
+     ├──────── bounded metrics ── CloudWatch ── alarms ── SNS/runbook
+     └──────── trace context ──── ADOT/X-Ray ── correlated spans
+security/API activity ─────────── CloudTrail (separate audit coverage)
+selected state events ─────────── EventBridge → authorized targets
 ```
 
-### Dimensions
+| Telemetry   | Question                                             | Important boundary                                          |
+| ----------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| Metric      | Is the service failing or saturated?                 | Aggregation/cardinality/resolution                          |
+| Log         | What happened to a request/entity?                   | Sensitivity, retention, schema and scan cost                |
+| Trace       | Which instrumented dependency consumed time?         | Propagation, sampling and incomplete spans                  |
+| Audit event | Which principal changed/called a supported resource? | Event selectors and retention, not every application action |
 
-A dimension is a name/value pair that uniquely identifies a metric. Common dimensions:
+A namespace groups metric names; dimensions identify a time series. A period is the aggregation interval, not the publishing interval. A namespace is not an authorization or account-isolation boundary. Service metrics, custom metrics and new OTel metrics must be interpreted using their actual contracts.
 
-```
-InstanceId          → CPU for a specific EC2 instance
-InstanceType        → CPU across all instances of a type
-ServiceName         → Latency for a specific microservice
-AvailabilityZone    → NetworkIn per AZ
-```
+## Cross-account and cross-service operations
 
-### Resolution
+OAM source links/sinks provide supported monitoring-account visibility. Central log copying additionally creates storage/ingestion ownership, data residency and duplicate-cost questions. An organization-wide dashboard does not grant arbitrary query/remediation authority.
 
-| Resolution       | Retention |
-| ---------------- | --------- |
-| Basic (5 min)    | 15 days   |
-| High (1 min)     | 15 days   |
-| Detailed (1 sec) | 3 hours   |
+For an ALB→application→database path, monitor request/error/latency, application dependency errors, database capacity/lag and queue age together. Distinguish an AWS Health event from the workload's measured health. Include deployment revision and request IDs to correlate change and failure.
 
-## Architecture: Unified Monitoring Stack
+A handoff contains owners, SLO/error-budget decision, dashboard time/account/Region, alert subscription, runbook, telemetry retention and a tested recovery story. Deleting a dashboard does not stop telemetry production.
 
-```
-Application (EC2/ECS/Lambda)
-  │  (emit metrics via StatsD / CloudWatch Agent)
-  ↓
-CloudWatch Metrics (custom + basic monitoring)
-  │
-  ├→ CloudWatch Alarms → SNS → Email/PagerDuty
-  │
-  ├→ CloudWatch Dashboards → SRE / Business view
-  │
-  └→ CloudWatch Contributor Insights → Top contributors
+## Cross-wiki comparisons
 
-Application Logs
-  │  (via CloudWatch Agent / SDK)
-  ↓
-CloudWatch Logs
-  │
-  ├→ CloudWatch Logs Insights (query)
-  ├→ Subscription Filters → Lambda / Kinesis
-  └→ Cross-Account Logs → Logs bucket (S3)
-```
-
-## AWS Services Organized by Category
-
-**CloudWatch Core**
-
-- [[cloudwatch-metrics/README|Metrics]] — Time-series data, GetMetricData API, custom metrics
-- [[cloudwatch-logs/README|Logs]] — Log groups, streams, CloudWatch Agent, retention
-- [[cloudwatch-alarms/README|Alarms]] — Metric alarms, composite alarms, anomaly detection
-- [[cloudwatch-dashboards/README|Dashboards]] — Custom widgets, live charts, cross-service
-- [[cloudwatch-events/README|Events]] — CloudWatch Events rules (legacy EventBridge API)
-- [[cloudwatch-insights/README|Insights]] — Log query language, saved queries, dashboards
-
-## Cross-Account Observability
-
-CloudWatch Application Insights can automatically discover and monitor applications across accounts in AWS Organizations.
-
-```
-Management Account
-  └── CloudWatch Cross-Account Dashboards
-        → Aggregates metrics from member accounts
-        → Single pane of glass for all accounts
-
-Member Account
-  └── CloudWatch Metrics
-        └── Shared via CloudWatch Dashboard sharing
-```
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
+- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
+- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cloudwatch/
-- **Documentation:** https://docs.aws.amazon.com/cloudwatch/
-- **Pricing:** https://aws.amazon.com/cloudwatch/pricing/
-
-## Nuggets & Gotchas
-
-- **CloudWatch Metrics have a 1-second resolution limit — for sub-second metrics, use custom SDK:** AWS services emit metrics at 1-minute (basic) or 1-second (detailed) resolution. For sub-second granularity, you must use the PutMetricData API with higher resolution timestamps.
-- **CloudWatch Logs is priced per GB ingested + per GB stored — logging everything is expensive:** At $0.50/GB for ingestion and $0.03/GB/month for storage, a high-traffic application generating 1GB/day of logs costs $15/month + $0.90/month = $15.90/month. Use subscription filters to selectively route logs to S3 or Lambda for cheaper storage.
-- **Metric math with GetMetricData is cheaper than multiple GetMetricStatistics calls:** One GetMetricData call with math on 500 metrics costs the same as one GetMetricStatistics call. Batch your metric queries.
-- **CloudWatch Agent uses the StatsD protocol — you can emit custom metrics from any application:** The CloudWatch Agent listens on UDP port 8125 for StatsD messages. Any application can send `nginx.requests:100|c` and it appears in CloudWatch as a custom metric.
-- **Alarms have a 10-second evaluation period minimum — you cannot set sub-10-second alerting:** For real-time alerting with sub-10-second detection, use CloudWatch Contributor Insights or a third-party monitoring tool like Datadog or Grafana.
+- [CloudWatch concepts](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html)
+- [CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/)
 
 ## Across the wiki
 
-- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture, KQL, and Observability]] — cloud logging and monitoring (Azure)
-- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]] — cloud logging and monitoring (GCP)
-- [[Observability/logging|Logging]] — cloud logging and monitoring (Observability)
-- [[Linux/observability/README|Linux Observability]] — cloud logging and monitoring (Linux)
+- [[GCP/monitoring/cloud-logging/README|Cloud Logging Architecture, Log Router, and Log Analytics]]

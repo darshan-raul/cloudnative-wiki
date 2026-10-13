@@ -1,157 +1,88 @@
 ---
 title: Reserved Instances
-description: AWS Reserved Instances — Standard vs Convertible, regional vs zonal, payment options, instance size flexibility, and management
+description: Accurate billing models, decision workflows and scoped examples for reserved instances.
 tags:
-  - aws
-  - cost-management
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # Reserved Instances
 
-Reserved Instances (RI) let you reserve EC2, RDS, ElastiCache, Redshift, or other capacity for 1 or 3 years in exchange for a discount vs On-Demand pricing. They're the older sibling to Savings Plans — more restrictive in some ways, but with capacity reservation options that SPs don't offer.
+Price exercises in this note use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, unless explicitly identified as a dated published fee. They are assumptions, not current tariffs; exclusions remain material.
 
-## RI vs On-Demand
+A Reserved Instance (RI) is a billing benefit with service-specific rules. An EC2 RI is not a particular instance, and Auto Scaling replacements do not consume or destroy the purchase.
 
-| Factor     | On-Demand          | Reserved Instance              |
-| ---------- | ------------------ | ------------------------------ |
-| Price      | Full rate          | Up to 72% discount             |
-| Commitment | None               | 1 or 3 years                   |
-| Capacity   | Not reserved       | Reserved (zonal RI)            |
-| Billing    | Per second (Linux) | Per second (Linux, no upfront) |
+## EC2 scope and flexibility
 
-## RI Types
+| Scope or class | Billing behavior                                         | Capacity and change considerations                            |
+| -------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
+| Regional       | Can apply across AZs in the Region                       | No AZ capacity reservation                                    |
+| Zonal          | Matches the specified AZ and attributes                  | Provides capacity reservation for matching EC2 usage          |
+| Standard       | Generally more constrained configuration changes         | Eligible EC2 Standard RIs can be sold under Marketplace rules |
+| Convertible    | Can exchange within documented value/configuration rules | Cannot be sold on the RI Marketplace                          |
 
-### Standard RI
+Instance-size flexibility applies to eligible **regional Linux/UNIX, default-tenancy** RIs, not universally to zonal RIs or licensed operating systems. Normalization factors include large = 4, xlarge = 8 and 2xlarge = 16. Eight matching large units can be covered by two matching 2xlarge regional RIs, subject to eligibility. Family, platform and tenancy still matter.
 
-The original RI type. Reserved for a specific instance configuration:
+RDS, ElastiCache and other service reservations must be evaluated under their own billing rules. Do not infer EC2 capacity reservation or size-flexibility semantics. An RDS Multi-AZ standby is not free merely because the primary has a reservation: match the purchased offering to deployment and instance requirements.
 
-- Instance family (e.g., m6i, c6i)
-- Instance size (e.g., large, xlarge) — with size flexibility within the AZ
-- Region or specific AZ
-- Tenancy: Default or Dedicated
+## Effective-cost calculation
 
-**Zonal RI:** Reserves capacity in a specific AZ. Higher discount but the reservation is stranded if the AZ has issues. Use for predictable baseline workloads that need the capacity guarantee.
+Assume \$3,800 upfront plus \$120 per month for a one-year offering:
 
-**Regional RI:** No capacity reservation — just a pricing discount that applies anywhere in the region. Lower discount than zonal but no stranded capacity risk. Good when you want the discount but need availability across AZs.
+- Total: \$3,800 + 12 × \$120 = \$5,240.
+- Effective hourly cost, using 8,760 hours: \$5,240 ÷ 8,760 ≈ \$0.5982.
+- Compare against equivalent On-Demand usage and any unused hours.
 
-### Convertible RI
+For a three-year \$980 all-upfront example, \$980 ÷ (3 × 8,760) ≈ \$0.03729/hour. These are arithmetic exercises, not current offers.
 
-Can be exchanged for different instance types, families, or operating systems within the same instance family group. Lower discount ceiling (~60%) but maximum flexibility.
+## Marketplace caution
 
-Use Convertible when:
+Only eligible EC2 Standard RIs are sellable; Convertible and other services' reservations are not. Seller location, bank-account, ownership duration and remaining-term conditions apply. A listed RI may not sell. Treat resale proceeds and fees as uncertain, not guaranteed savings.
 
-- You might switch from Intel to AMD or Graviton
-- You might resize instances as needs change
-- You want RI-level discount but aren't certain of exact requirements
+## Normalized-unit worksheet
 
-## Payment Options
+For eligible regional Linux/UNIX default-tenancy usage, take ten large RIs in one matching family/Region: 10 × 4 = 40 normalized units/hour.
 
-| Option          | Upfront | Effective Discount |
-| --------------- | ------- | ------------------ |
-| No Upfront      | $0      | ~40-60%            |
-| Partial Upfront | ~50%    | ~60-70%            |
-| All Upfront     | 100%    | up to 72%          |
+| Running usage                       | Normalized units/hour | Outcome                               |
+| ----------------------------------- | --------------------- | ------------------------------------- |
+| Ten large                           | 40                    | Fully covered                         |
+| Five xlarge                         | 40                    | Fully covered                         |
+| Five large plus three xlarge        | 20 + 24 = 44          | Four units uncovered                  |
+| Eight large                         | 32                    | Eight purchased units unused          |
+| Matching size in a different family | Not matching          | No automatic cross-family flexibility |
 
-All Upfront with 3-year term gives the maximum discount. Partial/No Upfront with 1-year is the minimum commitment option.
+The four uncovered units are one large-equivalent hour, not an eleventh purchased RI. Zonal reservations and noneligible platforms require exact matching under their rules. Do not apply this table to RDS or dedicated tenancy.
 
-## Instance Size Flexibility
+## Payment and workload break-even
 
-**Zonal Standard RI:** Size flexibility within the same instance family, within the same AZ. Buy 10 x m6i.large in us-east-1a, and those RI units automatically apply to any m6i instance size in us-east-1a.
+Use the payment table in [[AWS/cost-management/pricing-models|pricing models]], then compare against realistic hours. For a hypothetical us-east-1 offer assessed on 2026-10-12, assume \$5,240 annual total and \$0.80/hour equivalent On-Demand:
 
-```
-1 RI unit = 1 x m6i.large (2 vCPU, 8GB)
-
-Consuming instance: m6i.xlarge (4 vCPU, 16GB)
-RI units consumed: 2 (each xlarge = 2 x large)
-
-If you have 10 RIs:
-- 10 x large = 10 consumed (all covered)
-- 5 x xlarge = 10 consumed (5 xlarge use all 10 RIs)
-- 15 x large = 10 consumed (5 uncovered, billed On-Demand)
+```text
+break-even running hours = $5,240 / $0.80 = 6,550
+fraction of 8,760-hour year = 74.77%
 ```
 
-**Regional RI:** No size flexibility — each RI unit covers exactly what you bought.
+At only 2,600 hours/year, On-Demand would be \$2,080, below the commitment's \$5,240. Lower hourly prices are not enough when utilization is poor. Sharing compatible benefit with other workloads changes the comparison; switching off one workload does not automatically recover the payment.
 
-**Convertible RI:** Size flexibility via instance family exchanges. Can exchange a large for an xlarge of a different family, as long as the OS and tenancy match.
+## Reservation decision checklist
 
-## Services Covered by RI
+- Identify service, Region, platform/license, tenancy and scope.
+- Distinguish an AZ capacity need from a billing-discount objective.
+- Match term to known business/architecture changes.
+- Compare actual payment options rather than assumed upfront percentages.
+- Assess utilization during nights, outages and planned migrations.
+- Include independently billed replicas/storage/networking.
+- Document modification/exchange/Marketplace conditions and uncertainty.
 
-RI pricing is available for:
-
-- EC2 (all instance families)
-- RDS (MySQL, PostgreSQL, MariaDB, Oracle, SQL Server)
-- ElastiCache (Redis, Memcached)
-- Redshift
-- OpenSearch (formerly Elasticsearch)
-- SageMaker (not via RI — use SageMaker SP instead)
-
-**Note:** Lambda, Fargate, and ECS do NOT support RI pricing — use Savings Plans for serverless.
-
-## RI Marketplace
-
-Unused RI capacity can be sold on the RI Marketplace. Requirements:
-
-- At least 30 days remaining on the term
-- No more than 3 years total remaining
-- Account must be in good standing
-
-This is useful when you migrate workloads mid-term and want to recover some of the upfront cost.
-
-## Coverage vs Utilization
-
-These two metrics measure different things:
-
-**Coverage:** What % of your instances are covered by RI/SP. Target: 80-90%+ for production baseline.
-
-```
-Coverage = (Instance hours covered by RI/SP) / (Total instance hours) × 100
-```
-
-**Utilization:** Are you fully using the instances you reserved?
-
-```
-Utilization = (Hours of RI capacity actually used) / (Hours of RI capacity purchased) × 100
-```
-
-An RI with 50% utilization means half the reserved capacity sat idle. You paid for it but didn't use it. This isn't necessarily bad — it's often better than running On-Demand and risking capacity unavailability — but it's a cost efficiency signal.
-
-## When to Use RIs
-
-- **Baseline always-on workloads** in RDS, ElastiCache, Redshift
-- **Predictable capacity needs** in a specific AZ (zonal RI)
-- **Migrated databases** where you know the exact instance size
-- **Multi-AZ with known read replica count** — buy the primary RI, let replicas be On-Demand or covered by regional RI
-
-## Common Mistakes
-
-1. **Buying on peak, not baseline.** If you buy 100 RIs for a workload that peaks at 100 but averages 40, you're paying for 60 unused RIs most of the time.
-
-2. **Ignoring regional vs zonal.** Zonal RIs give better discounts but strand if the AZ has issues. Always know which you're buying.
-
-3. **Buying RI for development workloads.** Dev/test environments that run 8-5 Monday-Friday are better served by Savings Plans + auto stoppage schedules, not RIs.
-
-4. **Buying 3-year for fast-changing workloads.** If you're mid-migration to Graviton or constantly resizing, a 3-year RI locks you into a decision that might not fit in 18 months.
+Low CPU is separate from reservation utilization: a matching instance can receive a benefit all day while wasting application capacity. Rightsize before renewal. A three-year reservation for an uncertain migration target is a financial risk even if its published discount is attractive.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/ec2/pricing/reserved-instances/
-- **Documentation:** https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-reserved-instances.html
-- **Pricing:** https://aws.amazon.com/ec2/pricing/reserved-instances/pricing/
+- [EC2 RI application and normalization](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/apply_ri.html)
+- [RI billing and sharing](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts-reserved-instances-application.html)
+- [Marketplace restrictions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ri-market-general.html)
 
-## Pricing Examples
-
-**Scenario 1:** A production RDS PostgreSQL instance (db.r6g.large, Multi-AZ) running 24/7. 3-year All Upfront RI: ~$1,350/year vs On-Demand ~$2,400/year. Savings: ~$1,050/year (44%). Add the secondary AZ (same RI covers it via regional RI): no additional cost.
-
-**Scenario 2:** A data processing cluster of 8 c6i.2xlarge instances running batch jobs 10 hours/day, 5 days/week. 1-year Partial Upfront RI: $3,800 upfront + $120/month vs On-Demand ~$650/month. Annual: $4,200 vs $7,800. Savings: ~$3,600/year.
-
-## Nuggets & Gotchas
-
-- **Zonal RIs can strand if the AZ fails:** You bought capacity in us-east-1a and us-east-1a has an outage. Your RI is stranded — you can't move it to another AZ. Use regional RIs if AZ resilience matters more than the discount differential.
-- **RI size flexibility only works within the same AZ:** A zonal m6i.large RI covers any m6i size in the same AZ (large=1 unit, xlarge=2 units, etc.) but not across AZs. Regional RIs have no size flexibility.
-- **Windows RIs have separate license billing:** RI pricing for Windows is the base compute rate. If you need SQL Server licensing through AWS, that's a separate charge on top of the RI price.
-- **RI coverage doesn't mean RI utilization:** You can have 100% coverage (all instances covered by RI) but only 60% utilization (your RIs are 40% idle because you over-bought). Coverage is about financial coverage, not efficiency.
-- **Selling on RI Marketplace requires 30 days minimum remaining:** If you migrate a workload 60 days into a 3-year RI, you can sell the remaining ~1,000 days on the RI Marketplace. But not if less than 30 days remain.
+See [[AWS/cost-management/ri-management|RI Management]].
 
 ## Across the wiki
 

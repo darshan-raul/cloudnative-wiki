@@ -1,167 +1,87 @@
 ---
 title: Lambda Cost Optimization
-description: Lambda cost optimization — memory vs duration, provisioned concurrency, VPC Lambda ENI costs, HTTP API vs REST API, cold starts
+description: Billing models, trade-offs, safe workflows and scoped examples for lambda cost optimization.
 tags:
-  - aws
-  - cost-management
-  - serverless
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # Lambda Cost Optimization
 
-Lambda pricing has two components: **invocations** (per request) and **duration** (GB-second). The product of memory allocated and execution time determines cost. Understanding this relationship unlocks significant optimization.
+Price exercises use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, not current tariffs, unless explicitly identified as a dated published fee.
 
-## Pricing Model
+Optimize Lambda against latency and correctness targets, not memory alone. Duration is billed in GB-seconds using allocated memory; requests are separately charged. Architecture, Region, pricing tier, additional storage and features affect rates.
 
-```
-Cost = (Invocations × $0.0000002) + (GB-seconds × $0.0000166667)
-```
+## Correct unit arithmetic
 
-1 million invocations at 512MB for 200ms:
+At illustrative rates of \$0.20/million requests and \$0.0000166667/GB-second, one million invocations with 512 MB and 200 ms use:
 
-```
-Requests: 1,000,000 × $0.0000002 = $0.20
-Duration: 1,000,000 × (0.512 GB × 0.2 sec) = 102,400 GB-seconds
-          102,400 × $0.0000166667 = $1.71
-Total: ~$1.91
+```text
+memory = 512 / 1024 = 0.5 GB
+compute = 1,000,000 × 0.5 × 0.2 = 100,000 GB-seconds
+cost = $1.66667 compute + $0.20 requests ≈ $1.87
 ```
 
-## Memory vs Duration Trade-off
+This excludes Free Tier, discounts, initialization differences and other services. Lambda compute is not billed as vCPU-seconds.
 
-Lambda allows you to set memory from 128MB to 10,240MB (10GB). The more memory you allocate, the more CPU you get proportionally — double the memory, double the CPU.
+At 128 MB for 500 ms, usage is 0.0625 GB-seconds per request. At 512 MB for 100 ms it is 0.05: a 20% compute reduction despite quadrupling memory. Benchmark representative payloads and tail latency; more CPU does not guarantee proportional speedup.
 
-**The trick:** Increasing memory often reduces duration enough to lower total cost. A function running at 128MB for 500ms might run at 512MB for 100ms. The duration reduction outweighs the memory increase.
+## VPC connectivity
 
-```
-128MB for 500ms:
-  GB-seconds = 0.128 × 0.5 = 0.064
-  Cost = 0.064 × $0.0000166667 = $0.00000107 per invocation
+Lambda Hyperplane ENIs have no separate Lambda ENI hourly charge. The earlier \$0.045/ENI-hour example incorrectly borrowed a NAT Gateway rate. Private Lambda-to-RDS traffic can follow VPC-local routes without NAT. RDS Proxy manages database connections; it is not a NAT-bypass requirement.
 
-512MB for 100ms:
-  GB-seconds = 0.512 × 0.1 = 0.051
-  Cost = 0.051 × $0.0000166667 = $0.00000085 per invocation
+Internet egress from a VPC-attached function may require NAT, whose hours and processed bytes are charged separately. S3/DynamoDB gateway endpoints can remove NAT from those supported paths. Interface endpoints have their own pricing. Avoid a single-AZ cost shortcut that violates availability requirements.
 
-32% cost reduction by doubling memory and reducing duration by 80%
-```
+## Provisioned concurrency
 
-**Optimization approach:** Test your function at different memory settings and measure actual cost. Lambda Power Tuning (AWS Solutions) automates this.
+Pay for configured concurrency × memory × configured time, including idle allocation, at the provisioned-concurrency rate. Also pay request charges and execution duration at the applicable provisioned-concurrency execution rate. Overflow can use On-Demand concurrency and pricing. Reserved concurrency is a concurrency limit, not paid pre-initialized capacity.
 
-## VPC Lambda Costs
+Schedule provisioned concurrency around measured demand and monitor utilization/spillover. It reduces initialization latency for prepared environments, but does not guarantee that every invocation avoids a cold start or meets an SLA. Scheduled warm-up invocations are not an equivalent guarantee.
 
-When a Lambda function accesses VPC resources (RDS, ElastiCache, internal APIs), it must attach to a VPC. This introduces a hidden cost: **ENI attachment**.
+## Surrounding costs
 
-Lambda creates an ENI in each subnet you configure. When the function runs:
+Compare API Gateway HTTP and REST APIs by required features and current regional pricing. HTTP APIs support private integrations; private API endpoints and caching have different product support. Count NAT, logs, traces, queues, proxy and transfer costs, not just function duration.
 
-1. Lambda allocates an ENI in your subnet (first invocation cold start)
-2. Lambda scales ENIs as concurrent executions increase
-3. ENIs persist even when functions aren't running
+## Memory benchmark worksheet
 
-**The hidden cost:** Each ENI in a private subnet consumes a private IP address. More importantly, if your function runs frequently and you're paying for NAT Gateway, every Lambda invocation that accesses VPC resources routes through NAT Gateway:
+| Candidate | Allocated memory | Measured duration | GB-seconds/request   |
+| --------- | ---------------- | ----------------- | -------------------- |
+| A         | 128 MB           | 500 ms            | 0.125 × 0.5 = 0.0625 |
+| B         | 512 MB           | 100 ms            | 0.5 × 0.1 = 0.05     |
+| C         | 1,024 MB         | 90 ms             | 1 × 0.09 = 0.09      |
 
-```
-VPC Lambda → NAT Gateway → Private subnet → RDS
-         ↓
-    NAT Gateway charges per GB + per hour
-```
+B minimizes compute in this synthetic workload, while C may or may not justify its extra cost through latency. Measure p95/p99, initialization, representative input sizes and throttling before selecting a setting. Requests remain a separate charge even if duration improves.
 
-**Mitigation:**
+For a webhook example, assume 15 million monthly requests. At 128 MB and 80 ms, usage is 15,000,000 × 0.125 × 0.08 = 150,000 GB-seconds. At 512 MB and 20 ms, it is also 150,000. At the illustrative rate \$0.0000166667/GB-second and \$0.20/million requests, either costs approximately \$2.50 compute + \$3 requests = \$5.50 before allowances/discounts and supporting services. It is not \$13 based on invented vCPU billing.
 
-- Use RDS Proxy — it has its own private IP, Lambda connects to it directly without routing through NAT
-- Place Lambda in the same AZ as the RDS instance to minimize cross-AZ charges
-- Use Amazon API Gateway private endpoints (PrivateLink) instead of routing through NAT
-- Use S3 Gateway Endpoints (free) for S3 access from VPC Lambda
+## Provisioned-concurrency ledger
 
-## Provisioned Concurrency
+Assume 100 configured concurrency, 512 MB, eight hours/day for 22 days, one million executions of 200 ms within that capacity. Use hypothetical us-east-1 study rates dated 2026-10-12:
 
-Provisioned Concurrency keeps Lambda functions initialized and ready to respond in milliseconds — no cold starts. Pricing: you pay for the allocated concurrency and duration, not per invocation.
-
-**When it makes sense:**
-
-- Predictable, latency-sensitive traffic (API calls, synchronous processing)
-- When cold start latency is unacceptable (e.g., < 100ms SLA)
-- When you can forecast concurrency needs
-
-**When it's not worth it:**
-
-- Sporadic, unpredictable traffic
-- Asynchronous workloads (S3 triggers, SQS consumers) — cold starts don't matter
-- Batch workloads where total duration matters more than individual invocation latency
-
-**Cost comparison:**
-
-```
-On-Demand: $0.20 per million invocations
-Provisioned: You pay for reserved concurrency × duration
-
-1,000 concurrent requests × 500ms each × 1M requests/month
-On-Demand: ~$0.20 per invocation
-Provisioned: Reserved 1,000 concurrency × $0.0000166667 per GB-second
-  = 1,000 × 0.5GB × 0.5sec × $0.0000166667 = $0.004 per invocation
+```text
+configured GB-seconds = 100 × 0.5 × 8 × 3,600 × 22 = 31,680,000
+execution GB-seconds  = 1,000,000 × 0.5 × 0.2 = 100,000
+assumed allocation rate = $0.000004/GB-second → $126.72
+assumed execution rate  = $0.000010/GB-second → $1.00
+requests                = $0.20
+illustrative subtotal   = $127.92
 ```
 
-At high concurrency, provisioned concurrency can actually be cheaper — you're paying for reserved capacity, not per-invocation overhead.
+These rates are deliberately assumptions, not current Lambda tariffs. Allocation is billed while configured even when idle, and configured periods are subject to AWS rounding rules. Overflow, logs, networking and other features are excluded. Compare this with measured On-Demand cost and business latency value, not “\$0.20 per invocation.”
 
-## API Gateway Cost Optimization
+## API and cold-start decisions
 
-**REST API vs HTTP API:**
+REST API capabilities such as caching/private API endpoints differ from HTTP API private integrations. Price an actual API feature set; caching is provisioned capacity, not a universal per-request fee. Edge optimization is not a guaranteed 2–5-ms overhead or an automatically avoidable separate CloudFront bill.
 
-- REST API: $3.50 per million requests + caching costs
-- HTTP API: $1.00 per million requests (70% cheaper), no caching option
+Reduce package/dependency size and initialize reusable clients outside the handler where appropriate. Current Hyperplane networking is not the old per-invocation ENI model. Initialization billing depends on mode/features; compare the current pricing contract. A five-minute warmer does not guarantee every concurrent environment is ready.
 
-HTTP API is the right choice for most new workloads unless you specifically need:
-
-- API caching
-- SOAP passthrough
-- Private integrations (use HTTP API with PrivateLink instead)
-
-**Caching:** API Gateway caching adds ~$0.02 per 1,000 requests. At high traffic, caching reduces backend Lambda invocations significantly. Calculate whether the caching cost is less than the Lambda cost reduction.
-
-**Regional vs Edge-optimized:** Edge-optimized endpoints route through CloudFront, adding ~2-5ms latency for most users. If your users are in a single region, use regional endpoints and save the CloudFront charges.
-
-## Cold Start Cost Impact
-
-Cold starts add duration to the first invocation after a period of inactivity. For VPC Lambda, cold starts are longer (20-30 seconds) due to ENI attachment.
-
-**Duration impact:** Cold starts run your function code, paying for the full cold start duration. A 1-second cold start at 512MB costs the same as 1 second of normal execution.
-
-**Mitigation:**
-
-- Keep functions warm with scheduled CloudWatch Events (every 5 minutes)
-- Use provisioned concurrency for latency-sensitive workloads
-- Provisioned concurrency eliminates cold starts entirely
-- Move dependencies outside the handler (global scope) so they're initialized once
-- Use lighter runtimes (Python/Node.js over Java/JVM which has longer cold starts)
-
-## Cost Optimization Checklist
-
-```
-□ Run Lambda Power Tuning to find optimal memory setting
-□ Move to HTTP API from REST API where caching isn't needed
-□ Check if VPC Lambda is causing unnecessary NAT Gateway charges
-□ Use S3 Gateway Endpoints for S3 access from Lambda in VPC
-□ Use RDS Proxy to avoid NAT for database access
-□ Replace scheduled Lambda warming with provisioned concurrency if cost-effective
-□ Set appropriate timeout (don't let a 100ms function run for 5 minutes on error)
-□ Monitor for functions that are constantly timing out (wasted duration)
-```
+The practical checklist is benchmark memory/architecture, set bounded timeout/retries, analyze initialization/spillover, right-size scheduled concurrency, inspect VPC routes/endpoints, and account for logs/API/database proxies.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/lambda/pricing/
-- **Documentation:** https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
-- **Pricing:** https://aws.amazon.com/lambda/pricing/
+- [Lambda pricing, including provisioned concurrency](https://aws.amazon.com/lambda/pricing/)
+- [VPC connectivity and Hyperplane ENIs](https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html)
+- [VPC internet access](https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc-internet.html)
+- [HTTP versus REST APIs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html)
 
-## Pricing Examples
-
-**Scenario 1:** A webhook processing Lambda: 128MB memory, avg 80ms duration, 500K invocations/day. Monthly cost: 500K × 30 = 15M invocations × $0.20/million = $3.00 + compute:15M × 0.08s × $0.000008333/vCPU-second (128MB = 0.125 vCPU) = $10.00. Total: ~$13/month. Increasing memory to 512MB (4x) but reducing duration to 20ms: compute = 15M × 0.02s × $0.0000333/vCPU-second = $10.00. Total: ~$13/month. Same cost, better performance.
-
-**Scenario 2:** A VPC Lambda function making 10M invocations/month. VPC Lambda creates an ENI in your subnet. ENI hourly cost (us-east-1): $0.045/hr per ENI. With 10M invocations and the Lambda hyperplane sharing ENIs, ~50 ENIs active:50 × $0.045 × 730hr = $1,642/month just for ENIs. Moving the Lambda out of the VPC saves $1,600/month. For Lambda that only needs AWS service access, VPC is rarely worth the cost.
-
-## Nuggets& Gotchas
-
-- **Lambda pricing rounds duration UP to the nearest millisecond:** A function that runs 1ms is billed as 1ms. A function that runs 1.1ms is billed as 2ms. Optimize your functions to run just under the millisecond boundary where possible.
-- **Provisioned Concurrency is billed whether you use it or not:** You pay for the configured concurrency instances at the On-Demand rate. If you set 100 provisioned concurrency and only use 10, you still pay for all 100. Only use it for baseline load that must not cold-start.
-- **Lambda ENI creation is the main cause of cold starts in VPC:** The hyperplane ENI sharing reduces this for high-concurrency functions, but new accounts or new subnets still see cold starts of 5-10 seconds. Minimize VPC Lambda where cold starts are unacceptable.
-- **Lambda cost is dominated by duration, not invocation count:** At 128MB, each GB-second costs $0.000008333. A 100ms function at 128MB costs 0.000008333 cents. But a 30-second function at 512MB costs 0.025 cents — 3,000x more. Optimize for duration first.
-- **Lambda layer extraction happens at every cold start:** If your layer is 50MB, it needs to be extracted from /opt before your function runs. Large layers extend cold start times. Keep layers small or bundle dependencies inline.
+Canonical service lesson: [[AWS/compute/lambda/README|AWS Lambda]].

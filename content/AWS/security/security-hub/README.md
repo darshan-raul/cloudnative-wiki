@@ -2,205 +2,123 @@
 title: AWS Security Hub
 description: AWS Security Hub — centralized security findings aggregation. Integrates with GuardDuty, Inspector, Macie, IAM Access Analyzer, and custom plugins. ASFF format, compliance standards, automated remediation.
 tags:
-  - aws
-  - security
-  - security-hub
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS Security Hub
 
-Security Hub provides a centralized view of security findings across all your AWS accounts and services. It aggregates findings from GuardDuty, Inspector, Macie, IAM Access Analyzer, and other security services using a standard format (ASFF).
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## Architecture
+Security Hub centralizes security evidence and operational workflows. Distinguish the unified Security Hub product from Security Hub CSPM's configuration checks, finding ingestion and automation rules.
 
+## Product and regional boundaries
+
+Unified Security Hub plans include separately defined capabilities such as essentials, threat analytics and Lambda code scanning. Do not apply an older CSPM check tariff to every plan. CSPM evaluates enabled standards/controls and consumes integrations; enabling it does not make underlying AWS Config recording/evaluations free.
+
+Choose a delegated administrator and documented Organizations central-configuration workflow. Home/linked Regions and aggregation determine where findings/configuration are managed; aggregation does not independently authorize arbitrary remediation in source accounts.
+
+Control findings, product findings and workflow state are different evidence. Marking a finding RESOLVED does not patch a workload or repair a policy. Track remediation evidence and re-evaluation independently.
+
+## Safe triage lab
+
+Prerequisites: an isolated account/Region, scoped Hub administration/read/workflow permissions and an explicit cost budget. Record existing standards/configuration before changing them.
+
+1. Use the console's currently offered CSPM/security-product workflow to enable only the intended sandbox coverage. Choose a documented standard/control, not a guessed control identifier.
+2. Inspect one existing/synthetic integration finding, its product ARN, account/Region/resource, severity, timestamps and workflow state. Follow its canonical [[AWS/security/guardduty/README|GuardDuty]], [[AWS/security/inspector/README|Inspector]] or [[AWS/security/config/README|Config]] evidence.
+3. Assign an owner and route the finding to a sandbox notification through EventBridge. Test a workflow update; verify that the underlying resource remains unchanged.
+4. If authorized, remediate the disposable resource with a narrow role and capture the next evaluation/scan. Confirm closure from evidence, not just a button click.
+5. Restore prior sandbox standards/configuration and delete only lab automation/integrations. Do not disable organization-managed security coverage.
+
+## Access and costs
+
+Keep ingestion/workflow roles separate from resource-modification roles. Automated remediations need approval and rollback for disruptive changes, particularly IAM/network restrictions.
+
+Estimate the selected unified plan or CSPM dimensions using the owning estimator and current Region's table. Include Config, partner/service scanners, EventBridge, Lambda and storage independently. A free trial is not permanent free checks.
+
+## Findings architecture and ASFF boundaries
+
+```text
+GuardDuty / Inspector / Macie / Config / approved partner/custom findings
+                                  ↓
+                     supported ingestion + ASFF/product model
+                                  ↓
+          aggregation → workflow/automation rules → assigned owner
+                                  ↓
+                  approved remediation → source re-evaluation
 ```
-┌──────────────────────────────────────────────────────────────┐
-│  Security Hub (Master Account)                               │
-│                                                               │
-│  Findings from:                                              │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐            │
-│  │ GuardDuty  │  │ Inspector  │  │   Macie    │            │
-│  └────────────┘  └────────────┘  └────────────┘            │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐            │
-│  │  Config    │  │ IAM Access │  │  Partner   │            │
-│  │            │  │  Analyzer  │  │  Products  │            │
-│  └────────────┘  └────────────┘  └────────────┘            │
-│                                                               │
-│  ASFF (AWS Security Finding Format)                         │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │ { "Findings": [ ... ] }                                 ││
-│  └─────────────────────────────────────────────────────────┘│
-│                                                               │
-│  → EventBridge → Automated Remediation                       │
-│  → Compliance Standards (CIS, PCI, AWS FSBP)               │
-└──────────────────────────────────────────────────────────────┘
-```
 
-## ASFF (AWS Security Finding Format)
+| Field/category             | Purpose                   | Review concern                                     |
+| -------------------------- | ------------------------- | -------------------------------------------------- |
+| Product/source identity    | Where evidence originated | Not every product event shares a schema/API        |
+| Resource/account/Region    | Affected boundary         | Cross-account remediation needs separate authority |
+| Severity/status/timestamps | Triage and lifecycle      | Repeated updates/stale findings                    |
+| Compliance                 | Control/evaluation result | Not a complete framework certification             |
+| Workflow state             | Investigator process      | RESOLVED does not repair the resource              |
+
+ASFF remains relevant to documented finding integration APIs. Current unified Hub versus CSPM product boundaries must be checked before applying old standards/pricing/API assumptions.
+
+## Complete synthetic ASFF teaching record
+
+For an authorized custom import experiment, replace account/Region/ARNs and use the current BatchImportFindings contract. This synthetic record is not evidence of a real vulnerability:
 
 ```json
 {
   "SchemaVersion": "2018-10-08",
-  "Id": "arn:aws:securityhub:us-east-1:123456789012:subscription/aws-foundational-security-best-practices/v/1.0.0/IAM.1/finding/xxxxx",
-  "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/guardduty",
-  "GeneratorId": "aws-foundational-security-best-practices/v/1.0.0/IAM.1",
-  "AwsAccountId": "123456789012",
-  "Types": ["Software and Configuration Checks/BC/AWS-1"],
-  "FirstObservedAt": "2024-01-15T10:00:00Z",
-  "LastObservedAt": "2024-01-15T10:30:00Z",
-  "CreatedAt": "2024-01-15T10:00:00Z",
-  "UpdatedAt": "2024-01-15T10:30:00Z",
-  "Severity": {
-    "Label": "HIGH",
-    "Original": "90"
-  },
-  "Title": "IAM users should not have IAM access keys older than 90 days",
-  "Description": "This AWS Foundational Security Best Practice rule checks whether IAM access keys are older than 90 days...",
+  "Id": "wiki-lab/finding-1",
+  "ProductArn": "arn:aws:securityhub:us-east-1:111122223333:product/111122223333/default",
+  "GeneratorId": "wiki-lab",
+  "AwsAccountId": "111122223333",
+  "Types": ["Software and Configuration Checks"],
+  "CreatedAt": "2026-10-12T00:00:00Z",
+  "UpdatedAt": "2026-10-12T00:00:00Z",
+  "Severity": { "Label": "INFORMATIONAL" },
+  "Title": "Synthetic workflow fixture",
+  "Description": "No live vulnerability; workflow test only",
   "Resources": [
     {
-      "Type": "AwsIamUser",
-      "Id": "arn:aws:iam::123456789012:user/alice",
+      "Type": "AwsS3Bucket",
+      "Id": "arn:aws:s3:::LAB_BUCKET",
       "Partition": "aws",
       "Region": "us-east-1"
     }
   ],
-  "Compliance": {
-    "Status": "FAILED",
-    "RelatedRequirements": ["AWS-1"]
-  }
+  "RecordState": "ACTIVE",
+  "Workflow": { "Status": "NEW" }
 }
 ```
 
-## Enabling Security Hub
+Wrap the record in the API's Findings array, confirm product/account import permissions and inspect failed findings individually. Do not assume arbitrary standards/control IDs or product ARN strings are deployable.
 
-```bash
-# Enable Security Hub (requires AWS Config to be enabled first)
-aws securityhub enable --region us-east-1
+## Standards, integrations and central configuration
 
-# Enable specific standards
-aws securityhub enable-standards \
-  --standards-subscription-arn "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/subscription/v/1.0.0"
+Choose supported standards/control versions in the actual CSPM/Region model and inspect enabled control coverage. Config recording/evaluations may be prerequisites and remain separately billable. Partner product enablement requires its documented product subscription; creating a detector in another service is not always integration setup.
 
-# Enable CIS standard
-aws securityhub enable-standards \
-  --standards-subscription-arn "arn:aws:securityhub:us-east-1::standards/cis-aws-foundations-benchmark/subscription/v/3.0.0"
+Central configuration has home/linked Region and organization/delegated-admin boundaries. Distinguish member enrollment, aggregation, standards policies and finding ingestion; a monitoring account is not automatically an administrator for every source resource.
 
-# Enable PCI DSS standard
-aws securityhub enable-standards \
-  --standards-subscription-arn "arn:aws:securityhub:us-east-1::standards/pci-dss/v/3.2.1"
-```
+## Workflow, automation and investigation
 
-## Cross-Account Setup
+Filter findings using actual API field/comparison shapes and pagination, then inspect original product evidence. A batch update can change workflow state; it does not patch an image, close a network port or change an IAM trust policy.
 
-```bash
-# Master account: enable administration
-aws securityhub enable-organization-admin-account \
-  --admin-account-id 123456789012
+For EventBridge remediation, use the documented emitted schema, test a synthetic event and authorize only a sandbox target. Prefer triage/approval first. Automation rules may enrich/prioritize finding data; actual Systems Manager/Lambda resource repair needs independently scoped roles, stale-state checks, idempotency and post-repair validation.
 
-# Member accounts: auto-enroll via Organizations
-aws securityhub update-organization-configuration \
-  --auto-enable
-```
+Measure unresolved age, repeated updates and exception expiry as workflow outcomes; retain source evidence separately from dashboard status. Restore sandbox standards/central policies, remove dedicated imported samples/automation routes as supported and preserve organization coverage.
 
-## Managing Findings
+References: [ASFF](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html), [BatchImportFindings](https://docs.aws.amazon.com/cli/latest/reference/securityhub/batch-import-findings.html), [central configuration](https://docs.aws.amazon.com/securityhub/latest/userguide/central-configuration-intro.html), [automation rules](https://docs.aws.amazon.com/securityhub/latest/userguide/automation-rules.html).
 
-```bash
-# List findings by severity
-aws securityhub get-findings \
-  --filters '{
-    "SeverityLabel": [{"Value": "HIGH", "Comparison": "EQUALS"}],
-    "RecordState": [{"Value": "ACTIVE", "Comparison": "EQUALS"}]
-  }' \
-  --sort-criteria '{"Field": "LastObservedAt", "SortOrder": "desc"}'
+## Cross-wiki comparisons
 
-# Batch update (mark as resolved)
-aws securityhub batch-update-findings \
-  --finding-identifiers '[{"Id": "xxxxx", "ProductArn": "arn:aws:securityhub:..."}]' \
-  --workflow '{"Status": "RESOLVED"}'
-
-# Archive finding
-aws securityhub batch-update-findings \
-  --finding-identifiers '[{"Id": "xxxxx", "ProductArn": "arn:aws:securityhub:..."}]' \
-  --workflow '{"Status": "ARCHIVED"}'
-```
-
-## Compliance Standards
-
-| Standard                                 | Description                                    |
-| ---------------------------------------- | ---------------------------------------------- |
-| AWS Foundational Security Best Practices | AWS's own security standard                    |
-| CIS AWS Foundations Benchmark            | Center for Internet Security benchmarks        |
-| PCI DSS                                  | Payment Card Industry Data Security Standard   |
-| NIST SP 800-53                           | National Institute of Standards and Technology |
-
-## Custom Plugins (Partner Products)
-
-```bash
-# List available integrations
-aws securityhub list-enabled-products-for-import
-
-# Enable a partner product
-aws securityhub enable-import-findings-for-product \
-  --product-arn "arn:aws:securityhub:us-east-1:123456789012:product/zscaler/zscaler-cloud-protection"
-```
-
-## Automated Remediation
-
-```bash
-# Create EventBridge rule for HIGH findings
-aws events put-rule \
-  --name security-hub-high \
-  --event-pattern '{
-    "source": ["aws.securityhub"],
-    "detail": {
-      "findings": {
-        "Severity": {"Label": ["HIGH"]}
-      }
-    }
-  }'
-
-# Target: Systems Manager Automation
-aws events put-targets \
-  --rule security-hub-high \
-  --targets '[{
-    "Id": "remediation",
-    "Arn": "arn:aws:ssm:us-east-1:123456789012:document/AWSResolvingDocument",
-    "RoleArn": "arn:aws:iam::123456789012:role/RemediationRole"
-  }]'
-```
-
-## Pricing
-
-| Component                  | Cost                                          |
-| -------------------------- | --------------------------------------------- |
-| Security Hub (per account) | $0.0010 per finding (first 10,000/month free) |
-| AWS Config rules evaluated | $0.001 per evaluation (first 50K/month free)  |
-| Custom actions             | Free                                          |
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/security-hub/
-- **Documentation:** https://docs.aws.amazon.com/securityhub/
-- **Pricing:** https://aws.amazon.com/security-hub/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A single account with 1000 findings/month. First 10K free = $0. Security Hub free for small accounts. Compare to running separate GuardDuty + Inspector + Macie: all have their own costs.
-
-**Scenario 2:** An enterprise with 50 accounts, 10K findings/account/month. 500K total × $0.001 = $500/month. Plus AWS Config evaluations. Total: ~$500/month for centralized security visibility.
-
-## Nuggets & Gotchas
-
-- **Security Hub aggregates findings but doesn't prevent threats — you need GuardDuty for detection and EventBridge + SSM for remediation:** Security Hub is a dashboard and correlation engine, not a prevention tool. Build the full pipeline: GuardDuty → Security Hub → EventBridge → Lambda/SSM Automation.
-- **Security Hub findings auto-expire after 90 days (same as GuardDuty) — export critical findings to S3 or SIEM:** If you need audit evidence beyond 90 days, create an automated export pipeline to S3.
-- **Security Hub's "BatchUpdateFindings" with "Workflow.Status = RESOLVED" doesn't actually fix the issue — it just marks it as resolved in the console:** The underlying misconfiguration still exists. You must run actual remediation (SSM Automation, Lambda) before or after marking as resolved.
-- **Not all Security Hub findings have remediations — some require manual review:** Finding "IAM.1: Access keys older than 90 days" requires human decision (rotate the key or mark as intentional). Automated remediation is only appropriate for clear-cut issues.
-- **Security Hub requires AWS Config to be enabled for compliance standards to work:** If you disable AWS Config, the compliance standards (CIS, PCI, FSBP) won't generate findings.
+- [Current cost estimator and product distinction](https://docs.aws.amazon.com/securityhub/latest/userguide/security-hub-cost-estimator.html)
+- [CSPM pricing](https://aws.amazon.com/security-hub/cspm/pricing/)
+- [Central configuration](https://docs.aws.amazon.com/securityhub/latest/userguide/central-configuration-intro.html)
+- [Finding workflow](https://docs.aws.amazon.com/securityhub/latest/userguide/findings-workflow-status.html)
 
 ## Across the wiki
 
-- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence, and SOAR]] — threat detection (Azure)
-- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]] — threat detection (GCP)
-- [[Security/siem/README|SIEM]] — threat detection (Security)
-- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]] — threat detection (Kubernetes)
+- [[GCP/security/scc|GCP Security Command Center (SCC) & Secret Manager]]
+- [[Security/siem/README|SIEM]]
+- [[Kubernetes/eks/security/guardduty|GuardDuty for EKS]]

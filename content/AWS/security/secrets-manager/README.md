@@ -2,257 +2,148 @@
 title: AWS Secrets Manager
 description: AWS Secrets Manager — secrets rotation and management. API keys, passwords, database credentials, Lambda rotation functions, multi-region secrets, and integration with RDS, Redshift, DocumentDB.
 tags:
-  - aws
-  - security
-  - secrets-manager
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS Secrets Manager
 
-Secrets Manager stores and rotates secrets (database credentials, API keys, OAuth tokens) securely. It integrates with RDS, Aurora, Redshift, DocumentDB, and generic secrets, with automatic rotation using Lambda functions.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## Core Concepts
+Secrets Manager stores versioned secrets with access policies, encryption and rotation workflows. Retrieving a secret is not a reason to print it in a log, shell history or documentation.
 
-```
-Application
-  │
-  │  API: GetSecretValue
-  ▼
-Secrets Manager
-  │
-  ├── Secret: "prod/db-credentials"
-  │     ├── Version 1 (old): username=admin, password=oldpass
-  │     ├── Version 2 (current): username=admin, password=newpass ★
-  │     └── Version 3 (pending): username=admin, password=pending
-  │
-  └── Rotation Lambda
-        (rotates credentials in DB)
-```
+## Access and version model
 
-## Creating a Secret
+Use scoped secret ARNs and [[AWS/security/kms/README|KMS]] permission where required. Cross-account retrieval needs both caller/resource authorization and a compatible customer-managed KMS policy. Cache secrets appropriately to reduce API calls while handling rotation and invalidation.
 
-```bash
-# Create a generic secret
-aws secretsmanager create-secret \
-  --name prod/db-credentials \
-  --secret-string '{"username": "admin", "password": "MySecretPassword123!"}' \
-  --tags '[{"Key": "Environment", "Value": "production"}]'
+Staging labels select versions: AWSCURRENT, AWSPENDING and AWSPREVIOUS are workflow markers. The twenty-label quota is across secret versions, not per version. Labeled versions are retained; unlabeled version cleanup above one hundred preserves very recent versions, so excessive updates can exhaust quotas.
 
-# Create with ARN reference
-aws secretsmanager create-secret \
-  --name prod/api-key \
-  --secret-string "sk-xxxxx-xxxxx-xxxxx"
-```
+Primary rotation propagates to regional replicas. A replica can be promoted to an independent secret, breaking replication and creating independent rotation/version responsibility.
 
-## Using Secrets in Applications
+## Rotation contract
 
-### Python (boto3)
+Use an AWS-maintained rotation template for the backend; this is a conceptual lifecycle, not an incomplete deployable Lambda handler.
 
-```python
-import boto3
-import json
+1. createSecret: use the supplied ClientRequestToken idempotently for the AWSPENDING version.
+2. setSecret: update the backend with pending credentials after verifying the intended resource/user and current/pending relationship.
+3. testSecret: authenticate using pending credentials and verify only the intended capabilities.
+4. finishSecret: transfer AWSCURRENT using update_secret_version_stage; retain the previous version under AWSPREVIOUS.
 
-def get_db_credentials():
-    client = boto3.client('secretsmanager')
-    response = client.get_secret_value(SecretId='prod/db-credentials')
+RotationToken is required in documented assumed-role/cross-account invocation cases. Never log tokens or values. Choose the backend's supported rotation strategy and test retries/concurrent rotation. With single-user rotation, setSecret changes the backend password before finishSecret moves AWSCURRENT; new connections using the old current value can fail during that interval or after a pending-test failure. Alternating-user rotation preserves a second user's credential path under its documented assumptions. Reconcile backend state, version labels and application caches on retry/rollback rather than promising the old value stays usable. Managed database rotation and customer Lambda rotation are distinct workflows.
 
-    # For JSON secrets, parse the string
-    if 'SecretString' in response:
-        return json.loads(response['SecretString'])
+## Sandbox exercise
 
-    # For binary secrets
-    return response['SecretBinary']
+Use a disposable non-production secret and a role scoped to that ARN. Create a synthetic value through a secure console/editor workflow, retrieve it in a test application without logging it, and inspect metadata through describe-secret. Test a caller lacking access (expected denial). Update the value, inspect version labels and verify cache refresh.
 
-# Usage
-creds = get_db_credentials()
-# {'username': 'admin', 'password': 'newpass'}
+For rotation, deploy the maintained backend-specific template with the documented IAM/network prerequisites and a disposable backend. Force a pending-test failure and inspect both backend authentication and version labels. Under single-user rotation, expect the possible old-AWSCURRENT authentication gap; under alternating-user rotation, test the documented alternate-credential behavior. Fix the cause and retry/reconcile idempotently, then verify application reconnect/cache recovery. Do not rotate a production database as a first exercise.
+
+Cleanup the secret/backend/rotation function and lab-only policy after evidence collection. Schedule deletion with recovery where possible; remove regional replicas before deleting a primary when required. Treat backend credentials as still active until the backend is decommissioned or changed.
+
+## Cost
+
+Budget each regional secret's storage and API calls at its actual Region's rate; there is no undocumented universal replica discount. Lambda rotation, database, KMS and network resources add charges.
+
+## Secret, version and rotation architecture
+
+```text
+application role → GetSecretValue → cache → backend connection
+                         ↑                   ↑
+                 AWSCURRENT version ← tested pending backend credentials
+                         ↓
+               encrypted secret/key policy → regional replicas
 ```
 
-### Java (AWS SDK)
+| Boundary          | Example                         | Required check                                       |
+| ----------------- | ------------------------------- | ---------------------------------------------------- |
+| Secret metadata   | ARN/tags/rotation/replication   | Correct Region/account and owner                     |
+| Version           | Encrypted value plus version ID | Current/pending/previous label relationship          |
+| Rotation backend  | Database/API credential update  | Test pending auth before current transfer            |
+| Application cache | Bounded reuse                   | Refresh on expiry/auth failure without logging value |
+| Replica           | Regional copy                   | Promotion breaks primary rotation ownership          |
 
-```java
-import com.amazonaws.secretsmanager.model.*;
-import com.amazonaws.*;
+## Complete SDK retrieval and safe failure handling
 
-SecretsManagerClient client = SecretsManagerClient.builder().build();
-
-GetSecretValueRequest request = GetSecretValueRequest.builder()
-    .secretId("prod/db-credentials")
-    .build();
-
-GetSecretValueResponse response = client.getSecretValue(request);
-String secret = response.secretString(); // or response.secretBinary()
-```
-
-### AWS CLI
-
-```bash
-# Get secret value
-aws secretsmanager get-secret-value --secret-id prod/db-credentials
-
-# List secrets
-aws secretsmanager list-secrets
-```
-
-## Automatic Rotation
-
-### Enable Rotation for RDS/Aurora
-
-```bash
-# Enable rotation (Secrets Manager creates the Lambda automatically for RDS)
-aws secretsmanager rotate-secret \
-  --secret-id prod/db-credentials \
-  --rotation-lambda-arn arn:aws:lambda:us-east-1:123456789012:function:rotation-function \
-  --rotation-rules '{"AutomaticallyAfterDays": 30}'
-```
-
-### Rotation for Generic Secrets (Custom Lambda)
-
-```bash
-# Create rotation Lambda
-aws lambda create-function \
-  --function-name my-rotation-function \
-  --runtime python3.11 \
-  --handler rotation-function.handler \
-  --role arn:aws:iam::123456789012:role/rotation-role \
-  --zip-file fileb://rotation-function.zip
-
-# Enable rotation with custom Lambda
-aws secretsmanager rotate-secret \
-  --secret-id prod/api-key \
-  --rotation-lambda-arn arn:aws:lambda:us-east-1:123456789012:function:my-rotation-function \
-  --rotation-rules '{"AutomaticallyAfterDays": 90}'
-```
-
-### Rotation Lambda Template
+This example retrieves a pre-existing synthetic JSON secret through the verified SDK session and returns parsed data to its caller; it does not print credentials.
 
 ```python
 import json
-import boto3
-import base64
 import os
+import boto3
 
-def handler(event, context):
-    """Rotation Lambda for generic secrets."""
+client = boto3.client("secretsmanager")
 
-    secret_arn = event['SecretId']
-    step = event['Step']  # createSecret, setSecret, testSecret, finishSecret
+def read_secret(secret_id):
+    response = client.get_secret_value(
+        SecretId=secret_id,
+        VersionStage="AWSCURRENT",
+    )
+    if "SecretString" not in response:
+        raise ValueError("this application expects a JSON string secret")
+    value = json.loads(response["SecretString"])
+    if not isinstance(value, dict) or not isinstance(value.get("username"), str):
+        raise ValueError("unexpected secret schema")
+    return value
 
-    client = boto3.client('secretsmanager')
-
-    if step == 'createSecret':
-        # Generate new secret
-        new_password = generate_password()
-        client.put_secret_value(
-            SecretId=secret_arn,
-            SecretString=json.dumps({'password': new_password}),
-            VersionStages=['AWSPENDING']
-        )
-
-    elif step == 'setSecret':
-        # Apply new secret to the service (e.g., rotate API key)
-        pass  # Custom logic here
-
-    elif step == 'testSecret':
-        # Verify the new secret works
-        pass  # Custom logic here
-
-    elif step == 'finishSecret':
-        # Mark the new secret as current
-        metadata = client.describe_secret(SecretId=secret_arn)
-        for version in metadata.get('VersionIdsToStages', {}):
-            if 'AWSPENDING' in metadata['VersionIdsToStages'][version]:
-                client.update-secret-version-stage(
-                    SecretId=secret_arn,
-                    VersionStage='AWSCURRENT',
-                    MoveToVersionId=version
-                )
-                break
-
-def generate_password(length=32):
-    import secrets
-    import string
-    alphabet = string.ascii_letters + string.digits + '!@#$%^&*'
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
+secret = read_secret(os.environ["SECRETS_LAB_ARN"])
+assert secret["username"] == "synthetic-user"
 ```
 
-## Multi-Region Secrets
+SecretBinary has a separate SDK binary representation; do not blindly JSON-decode it. Propagate/handle AccessDenied, key denial, not-found, throttling and malformed schema without including response values in logs. Use a maintained cache/library for production, not a permanent process-global credential copied once at startup.
+
+## Version/stage and rotation walkthrough
 
 ```bash
-# Replicate a secret to another region
-aws secretsmanager replicate-secret-to-regions \
-  --secret-id prod/db-credentials \
-  --add-replica-regions '[{"Region": "us-west-2"}]'
-
-# List replica regions
-aws secretsmanager describe-secret --secret-id prod/db-credentials
+aws secretsmanager describe-secret --secret-id SECRETS_LAB_ARN
+aws secretsmanager list-secret-version-ids --secret-id SECRETS_LAB_ARN
 ```
 
-## Resource Policy
+Inspect labels/rotation/replica state before mutation. Each rotation invocation contains Step, SecretId and ClientRequestToken (plus RotationToken in applicable flows). The function checks whether the version is already current/pending and handles retries idempotently.
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "AWS": "arn:aws:iam::123456789012:root" },
-      "Action": "secretsmanager:GetSecretValue",
-      "Resource": "*"
-    },
-    {
-      "Effect": "Deny",
-      "Principal": { "AWS": "arn:aws:iam::123456789012:user/bob" },
-      "Action": "secretsmanager:GetSecretValue",
-      "Resource": "arn:aws:secretsmanager:us-east-1:123456789012:secret:prod/db-credentials"
-    }
-  ]
-}
+| Step         | Backend/secret action                | Failure safeguard                                                                                                           |
+| ------------ | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| createSecret | Create pending token/version         | Do not generate a second secret on retry                                                                                    |
+| setSecret    | Update intended backend/user         | Verify resource/current/pending relationship                                                                                |
+| testSecret   | Authenticate with pending value      | On failure reconcile backend/password and labels; old current credentials are not guaranteed usable in single-user rotation |
+| finishSecret | Move current stage to tested version | Preserve previous/recovery and reconcile partial failure                                                                    |
+
+A generic placeholder lambda that only creates a random string is not rotation. Deploy the maintained backend template, define VPC/SG/key permissions, schedule/window and recovery; database-managed rotation has a separate supported workflow.
+
+## Cross-account resource policy and replication
+
+A policy granting GetSecretValue to an external role is only one side of authorization. The caller identity and customer-managed KMS key policy must also allow the operation. Validate resource policies with the documented safeguards; do not include a broad account wildcard as a debugging shortcut.
+
+```bash
+aws secretsmanager replicate-secret-to-regions --secret-id SECRETS_LAB_ARN \
+  --add-replica-regions '[{"Region":"us-west-2","KmsKeyId":"DESTINATION_KEY_ARN"}]'
 ```
 
-## Pricing
+Verify supported Region/partition/key setup and propagation status. Primary rotation propagates; promotion requires the supported stop-replication-to-replica workflow and independent ownership. Regional secrets/API/KMS/network charges apply.
 
-| Component                | Cost                       |
-| ------------------------ | -------------------------- |
-| Secret storage           | $0.40/month per secret     |
-| API calls                | $0.05 per 10,000 API calls |
-| Cross-region replication | $0.15/month per replica    |
-| Rotation Lambda          | Standard Lambda pricing    |
+## Application monitoring and cleanup
 
-## Limits
+Log only request/result metadata, schema/version/stage and safe error class—not passwords, tokens or full secret responses. Correlate denied reads/rotation failures with CloudTrail and Lambda/backend evidence. Frequent writes can exhaust version quotas even with automatic cleanup.
 
-| Resource           | Limit        |
-| ------------------ | ------------ |
-| Secrets per region | 100,000      |
-| Secret size        | 65,536 bytes |
-| Version history    | 100 versions |
-| Labels per version | 20           |
-| API rate           | 1000/second  |
+Remove replica dependencies and lab rotation schedules/functions/backend credentials as required, then schedule lab secret deletion with recovery where possible. A deleted secret does not revoke a still-valid backend password or remove cached credentials; rotate/decommission the backend explicitly.
+
+References: [GetSecretValue](https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html), [cache](https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_cache-python.html), [cross-account access](https://docs.aws.amazon.com/secretsmanager/latest/userguide/auth-and-access_examples_cross.html), [rotation templates](https://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_available-rotation-templates.html).
+
+Rotation strategy reference: [single-user versus alternating-user rotation](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotation-strategy.html).
+
+## Cross-wiki comparisons
+
+- [[Azure/compute/aks/security-key-vault-csi|AKS Secrets Management — Azure Key Vault Provider for Secrets Store CSI Driver]] — secrets management (Azure)
+- [[DevOps/devsecops/stage4-runtime/16-secret-management|M16: Runtime Secret Management]] — secrets management (DevOps)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/secrets-manager/
-- **Documentation:** https://docs.aws.amazon.com/secretsmanager/
-- **Pricing:** https://aws.amazon.com/secrets-manager/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** An application with 10 secrets (DB credentials, API keys, OAuth tokens). 10 × $0.40 = $4/month. API calls: 100K/month × $0.05/10K = $0.50/month. Total: $4.50/month.
-
-**Scenario 2:** A microservice architecture with 100 services, each with 2 secrets (DB + API key). 200 secrets × $0.40 = $80/month. Multi-region replication to 2 additional regions: 200 × 2 × $0.15 = $60/month. Total: $140/month.
-
-## Nuggets & Gotchas
-
-- **Secrets Manager pricing is per SECRET, not per version — 1 secret with 10 versions costs $0.40/month, not $4:** Version history doesn't multiply cost. But each rotation creates a new version. After 100 versions, old versions are deleted automatically.
-- **Rotation Lambda must follow the 4-step pattern (createSecret → setSecret → testSecret → finishSecret):** The Lambda is called 4 times per rotation. If you skip the test step, bad credentials go live without verification.
-- **Secrets Manager doesn't encrypt secrets at the application level — the secret IS the plaintext:** When you call `GetSecretValue`, Secrets Manager decrypts and returns the plaintext. Your application is responsible for protecting that plaintext (don't log it, don't hardcode it).
-- **Cross-region replication is one-way (primary → replica) — you can't promote a replica to primary:** If you need multi-region active-active secrets, you need separate secrets in each region and a custom sync mechanism.
-- **Rotation Lambda needs `secretsmanager:PutSecretValue` and `secretsmanager:DescribeSecret` permissions:** If your rotation Lambda fails with access denied, check both the execution role AND the secret resource policy (if one exists, it may deny the Lambda).
+- [Four-stage rotation and safeguards](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_lambda-functions.html)
+- [Invocation contract](https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_lambda.html)
+- [Version model](https://docs.aws.amazon.com/secretsmanager/latest/userguide/whats-in-a-secret.html)
+- [Replication/promotion](https://docs.aws.amazon.com/secretsmanager/latest/userguide/replicate-secrets.html)
+- [Quotas](https://docs.aws.amazon.com/secretsmanager/latest/userguide/reference_limits.html)
+- [Pricing](https://aws.amazon.com/secrets-manager/pricing/)
 
 ## Across the wiki
 
-- [[Kubernetes/eks/security/secrets-management/README|Secrets Management on EKS]] — secrets management (Kubernetes)
-- [[Azure/compute/aks/security-key-vault-csi|AKS Secrets Management — Azure Key Vault Provider for Secrets Store CSI Driver]] — secrets management (Azure)
-- [[Security/kubernetes-security/secrets/README|Kubernetes Secrets Management]] — secrets management (Security)
-- [[DevOps/devsecops/stage4-runtime/16-secret-management|M16: Runtime Secret Management]] — secrets management (DevOps)
+- [[Kubernetes/eks/security/secrets-management/README|Secrets Management on EKS]]
+- [[Security/kubernetes-security/secrets/README|Kubernetes Secrets Management]]

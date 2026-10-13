@@ -1,253 +1,104 @@
 ---
-title: Amazon Comprehend
-description: Amazon Comprehend — natural language processing. Sentiment analysis, entity recognition, PII detection, topic modeling, language detection, and Comprehend Medical for PHI.
+title: "Amazon Comprehend"
+description: "Comprehend analyzes supported language text using managed entity, sentiment, key-phrase, language and PII operations, plus supported custom models."
 tags:
-  - aws
-  - machine-learning
-  - comprehend
-  - nlp
-  - ai-services
-date: 2026-06-06
+  - aws/machine-learning
+date: 2026-10-12
 ---
 
 # Amazon Comprehend
 
-Comprehend provides NLP APIs for text analysis — sentiment, entities, key phrases, topics, language detection, and toxic content. For medical text, use Comprehend Medical (HIPAA-eligible).
+Comprehend analyzes supported language text using managed entity, sentiment, key-phrase, language and PII operations, plus supported custom models. Prerequisites: [[AWS/machine-learning/README|evaluation/privacy]], [[AWS/security/iam/README|IAM]] and [[AWS/storage/s3/README|S3]] for asynchronous/custom workflows.
 
-## Language Support
+## Operation and result contracts
 
-| Language             | Sentiment | Entities | Key Phrases | Syntax |
-| -------------------- | --------- | -------- | ----------- | ------ |
-| English              | Yes       | Yes      | Yes         | Yes    |
-| Spanish              | Yes       | Yes      | Yes         | Yes    |
-| German               | Yes       | Yes      | Yes         | No     |
-| French               | Yes       | Yes      | Yes         | No     |
-| Italian              | Yes       | Yes      | Yes         | No     |
-| Portuguese           | Yes       | Yes      | Yes         | No     |
-| Chinese (Simplified) | Yes       | Yes      | Yes         | No     |
-| Japanese             | Yes       | Yes      | Yes         | No     |
-| Korean               | Yes       | Yes      | Yes         | No     |
-
-## Core Operations
-
-### Detect Sentiment
+Select an operation whose language/input limits fit your task; synchronous, batch and asynchronous calls have different schemas/quotas. PII entities contain offsets rather than a Text field. Reconstruct a span from the original input while respecting the documented offset semantics; never log detected sensitive values casually.
 
 ```python
 import boto3
 
-comprehend = boto3.client('comprehend')
+comprehend = boto3.client("comprehend")
 
-response = comprehend.detect_sentiment(
-    Text="I absolutely love this product! Best purchase I've ever made.",
-    LanguageCode='en'
-)
+# 1. Synchronous sentiment analysis
+sentiment_text = "The migration finished ahead of schedule and under budget."
+sentiment_res = comprehend.detect_sentiment(Text=sentiment_text, LanguageCode="en")
+# Returns Sentiment ('POSITIVE', 'NEGATIVE', 'NEUTRAL', 'MIXED') and SentimentScore
+assert sentiment_res["Sentiment"] in {"POSITIVE", "NEGATIVE", "NEUTRAL", "MIXED"}
+print("Sentiment:", sentiment_res["Sentiment"])
 
-print(f"Sentiment: {response['Sentiment']}")  # POSITIVE
-print(f"Scores: {response['SentimentScore']}")
-# {'Positive': 0.9997, 'Negative': 0.0001, 'Neutral': 0.0001, 'Mixed': 0.0001}
+# 2. Synchronous named entity detection
+entity_text = "Amazon Web Services launched new EC2 instances in Seattle."
+entity_res = comprehend.detect_entities(Text=entity_text, LanguageCode="en")
+# Returns Entities with Type (ORGANIZATION, LOCATION, etc.), BeginOffset, EndOffset, Score
+for entity in entity_res["Entities"]:
+    span = entity_text[entity["BeginOffset"]:entity["EndOffset"]]
+    print(f"Entity: {span} | Type: {entity['Type']} | Score: {entity['Score']:.2f}")
+
+# 3. PII entity detection
+pii_text = "Contact Alex at alex@example.com."
+pii_res = comprehend.detect_pii_entities(Text=pii_text, LanguageCode="en")
+for entity in pii_res["Entities"]:
+    print(f"PII Type: {entity['Type']} | Span: [{entity['BeginOffset']}:{entity['EndOffset']}]")
 ```
 
-### Detect Entities
+These synchronous SDK calls use synthetic inputs, configured credentials/Region and billable operation units (minimum 300 characters billed per call). They display structured classifications, offsets, and scores rather than logging sensitive substrings directly.
 
-```python
-response = comprehend.detect_entities(
-    Text="Amazon opened its new headquarters in Seattle, Washington. CEO Andy Jassi announced the expansion.",
-    LanguageCode='en'
-)
+## Custom classification and endpoints
 
-for entity in response['Entities']:
-    print(f"{entity['Type']}: '{entity['Text']}' (Score: {entity['Score']:.2f})")
-# ORGANIZATION: 'Amazon' (Score: 0.99)
-# LOCATION: 'Seattle, Washington' (Score: 0.95)
-# PERSON: 'Andy Jassi' (Score: 0.87)
+Custom classifiers require at least two classes, not five. Multi-class and multi-label tasks have distinct maximums/training-document quotas. Prepare representative labelled data, validate labels and split held-out examples without leakage.
+
+Real-time custom classification requires a deployed endpoint with the supported model/role/capacity. Poll training and endpoint provisioning with exponential backoff, deadlines and explicit terminal-failure handling; infinite while loops are not a deployment runbook. Batch jobs and endpoint requests have different setup/cost.
+
+Comprehend Medical adds medically specialized analysis; general Comprehend is also HIPAA-eligible. A BAA, eligible feature/Region, access controls, retention and shared-responsibility configuration remain necessary.
+
+## Analysis exercise
+
+Use synthetic text with known PII spans and sentiment ambiguity. Record true/false positives and offsets, test an unauthorized identity and verify failed/unsupported input handling. For a custom classifier, compare with a simple baseline and report class-specific precision/recall, not merely training completion.
+
+Delete sandbox custom endpoints immediately after evaluation if no longer needed; hosted capacity can cost money while idle. Remove jobs/artifacts/input-output data according to privacy/retention policy. Do not deploy endpoints merely to confirm a note's syntax.
+
+## Cost arithmetic
+
+Standard operation pricing uses 100-character units and a 300-character request minimum, with operation/Region/tier qualifications. At an illustrative \$0.0001/unit, a single 50,000-character request is 500 units × \$0.0001 = \$0.05, not \$5. Minimums apply per request, so splitting the input can change billed units. Custom model training/hosting is separate.
+
+## Language-analysis operations and result handling
+
+| Operation family               | Useful output               | Validation                                           |
+| ------------------------------ | --------------------------- | ---------------------------------------------------- |
+| Dominant language              | Supported language scores   | Ambiguous/short/mixed-language input                 |
+| Entities/key phrases           | Types, spans and confidence | Domain vocabulary and false positives                |
+| Sentiment                      | Supported classes/scores    | Sarcasm, negation and subgroup behavior              |
+| PII detection                  | Entity offsets/types/scores | False negatives and redaction policy                 |
+| Custom classification/entities | Task-specific labels/spans  | Training coverage, endpoints and held-out evaluation |
+
+A score is model evidence, not a calibrated legal/compliance assurance. Input-language/size limits vary by operation. Offset-based responses should be mapped to the original text; transformations before slicing can shift spans. Do not emit sensitive spans in ordinary debugging logs.
+
+## Custom classifier and endpoint lifecycle
+
+```text
+labelled representative data
+  → supported training configuration
+  → training status/artifact
+  → held-out quality gate
+  → batch job or eligible real-time endpoint
+  → request evaluation
+  → stop/delete hosted capacity and retained artifacts deliberately
 ```
 
-### Detect PII (Personally Identifiable Information)
+Choose multi-class or multi-label from task semantics. At least two classes are required, while maximum classes/documents and model types have specific quotas. Validate that rare categories appear in train/evaluation splits and establish a baseline that does not exploit leakage.
 
-```python
-response = comprehend.detect_pii_entities(
-    Text="Customer John Smith, SSN 123-45-6789, email john@example.com, phone 555-123-4567",
-    LanguageCode='en'
-)
+A real-time custom request needs a provisioned endpoint ARN and supported model/input. Capture created identifiers, poll with exponential backoff/deadline and stop on terminal failure rather than sleep forever. IAM role/data access and active hosting charges are part of the workflow.
 
-for pii in response['Entities']:
-    print(f"{pii['Type']}: '{pii['Text']}' (Score: {pii['Score']:.2f})")
-# NAME: 'John Smith' (Score: 0.99)
-# SSN: '123-45-6789' (Score: 0.99)
-# EMAIL: 'john@example.com' (Score: 0.99)
-# PHONE: '555-123-4567' (Score: 0.99)
-```
+## Pricing comparison and privacy operations
 
-### Detect Key Phrases
+Per-request minimum billing changes a split-input scenario. At an illustrative \$0.0001 per 100-character unit with 300-character minimum, one 200-character request bills three units. Ten such requests bill thirty units; combining them into one eligible 2,000-character request bills twenty units for that operation. This is arithmetic, not a current Region quote or a recommendation to ignore operation-size limits.
 
-```python
-response = comprehend.detect_key_phrases(
-    Text="Amazon Web Services provides cloud computing solutions to businesses worldwide.",
-    LanguageCode='en'
-)
-
-for phrase in response['KeyPhrases']:
-    print(f"'{phrase['Text']}' (Score: {phrase['Score']:.2f})")
-# 'Amazon Web Services' (Score: 0.99)
-# 'cloud computing solutions' (Score: 0.98)
-# 'businesses' (Score: 0.95)
-```
-
-### Detect Language
-
-```python
-response = comprehend.detect_dominant_language(Text="Bonjour, comment allez-vous?")
-
-for lang in response['Languages']:
-    print(f"{lang['LanguageCode']}: {lang['Score']:.2f}")
-# fr: 0.99
-```
-
-### Detect Syntax (Parts of Speech)
-
-```python
-response = comprehend.detect_syntax(
-    Text="AWS provides reliable cloud services.",
-    LanguageCode='en'
-)
-
-for token in response['SyntaxTokens']:
-    print(f"{token['Word']} ({token['PartOfSpeech']['Tag']}, {token['PartOfSpeech']['Score']:.2f})")
-# AWS (PROPN, 0.99) — proper noun
-# provides (VERB, 0.97)
-# reliable (ADJ, 0.95)
-# cloud (NOUN, 0.99)
-# services (NOUN, 0.98)
-# . (PUNCT, 0.99)
-```
-
-## Topic Modeling
-
-Discover topics in a collection of documents:
-
-```python
-# Start topic detection job (processes documents in S3)
-response = comprehend.start_topics_detection_job(
-    InputDataConfig={
-        'S3Uri': 's3://my-bucket/documents/',
-        'InputFormat': 'ONE_DOC_PER_LINE'
-    },
-    OutputDataConfig={'S3Uri': 's3://my-bucket/topics-output/'},
-    DataAccessRoleArn='arn:aws:iam::123456789012:role/comprehend-role',
-    NumberOfTopics=10
-)
-
-job_id = response['JobId']
-```
-
-### Get Topic Results
-
-```python
-# Get results
-result = comprehend.describe_topics_detection_job(JobId=job_id)
-
-# Topics output contains:
-# - topic-words.json: Words associated with each topic
-# - doc-topics.json: Documents and their topic weights
-```
-
-## Custom Classification
-
-Train a custom classifier for domain-specific categories:
-
-```python
-# Create classifier
-response = comprehend.create_document_classifier(
-    InputDataConfig={'S3Uri': 's3://my-bucket/training-data/'},
-    DataAccessRoleArn='arn:aws:iam::123456789012:role/comprehend-role',
-    LanguageCode='en',
-    ClassifierName='support-ticket-classifier',
-    VersionName='v1',
-    Tags=[{'Key': 'Environment', 'Value': 'production'}]
-)
-
-classifier_arn = response['DocumentClassifierArn']
-
-# Wait for training
-import time
-while True:
-    status = comprehend.describe_document_classifier(ClassifierArn=classifier_arn)
-    if status['DocumentClassifierProperties']['Status'] == 'TRAINED':
-        break
-    time.sleep(60)
-
-# Use classifier
-response = comprehend.classify_document(
-    Text="My order hasn't arrived and I need help!",
-    DocumentClassifierArn=classifier_arn
-)
-print(response['Classes'])  # [{'Name': 'Shipping Issues', 'Score': 0.92}]
-```
-
-## Comprehend Medical (HIPAA Eligible)
-
-```python
-medical = boto3.client('comprehendmedical')
-
-# Detect medical entities
-response = medical.detect_entities_v2(
-    Text="Patient presents with Type 2 diabetes. Takes Metformin 500mg twice daily. No known allergies."
-)
-
-for entity in response['Entities']:
-    print(f"{entity['Category']}:{entity['Type']} - '{entity['Text']}'")
-# MEDICATION:TREATMENT - 'Metformin 500mg'
-# DIAGNOSIS:DX - 'Type 2 diabetes'
-# FRACTION:AMOUNT - 'twice daily'
-```
-
-### ICD-10 and RxNorm Mapping
-
-```python
-response = medical.infer_icd10_cm(
-    Text="Patient has pneumonia with cough and fever."
-)
-
-for diagnosis in response['Diagnosis']:
-    print(f"{diagnosis['Description']} (Code: {diagnosis['ICD10CMCode']})")
-# 'Pneumonia, unspecified' (Code: J18.9)
-```
-
-### RxNorm (Medication Codes)
-
-```python
-response = medical.infer_rx_norm(
-    Text="Take Metformin 500mg twice daily with food."
-)
-
-for medication in response['Medications']:
-    print(f"{medication['Text']} (RxNorm: {medication['RxNormCode']})")
-```
-
-## Pricing
-
-| Operation                          | Cost                          |
-| ---------------------------------- | ----------------------------- |
-| DetectSentiment                    | $0.0001/character             |
-| DetectEntities                     | $0.0001/character             |
-| DetectPiiEntities                  | $0.0001/character             |
-| DetectKeyPhrases                   | $0.0001/character             |
-| DetectSyntax                       | $0.00005/character            |
-| DetectDominantLanguage             | $0.0001/100 characters        |
-| TopicDetection                     | $0.50/job + $0.0001/character |
-| CustomClassification               | $0.0005/character             |
-| ComprehendMedical (DetectEntities) | $0.00035/character            |
+Record operation, character count, rounding/minimum, tier and elapsed custom-hosting/training usage. Medical-specific features have distinct pricing/input/schema. General Comprehend's HIPAA eligibility still requires the BAA and appropriate configuration; PII detection alone does not prove a dataset is deidentified. Keep input/output retention, encryption and access control explicit.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/comprehend/
-- **Documentation:** https://docs.aws.amazon.com/comprehend/
-- **Pricing:** https://aws.amazon.com/comprehend/pricing/
-
-## Nuggets & Gotchas
-
-- **Comprehend Medical is a SEPARATE service from Comprehend — different API, different pricing, different compliance:** Comprehend Medical is HIPAA-eligible and uses medical-specific models. Comprehend (general) is NOT HIPAA-eligible. If you process PHI, use `comprehendmedical` endpoint.
-- **Comprehend's entity detection uses predefined categories — it won't recognize your domain-specific entities:** For custom entities (product names, SKUs, internal terminology), use Comprehend Custom Entity Recognition.
-- **Comprehend pricing is per CHARACTER — watch out for large documents:** A 10-page PDF (50K characters) × $0.0001 = $5/call. If you're processing millions of documents, costs add up fast. Consider summarizing before sending to Comprehend.
-- **Comprehend's topic modeling works on DOCUMENT CORPUS, not individual documents:** You need to provide a collection of documents (S3 prefix) to discover topics. It won't tell you the topic of a single document.
-- **Comprehend Custom Classification has a 5-class minimum — you can't train with fewer than 5 classes:** If you need binary classification (spam/not-spam), use one class as "other" or consider a different approach.
+- [PII response contract](https://docs.aws.amazon.com/boto3/latest/reference/services/comprehend/client/detect_pii_entities.html)
+- [Custom model and endpoint limits](https://docs.aws.amazon.com/comprehend/latest/dg/guidelines-and-limits.html)
+- [Real-time endpoints](https://docs.aws.amazon.com/comprehend/latest/dg/manage-endpoints.html)
+- [HIPAA eligible services](https://aws.amazon.com/compliance/hipaa-eligible-services-reference/)
+- [Comprehend pricing](https://aws.amazon.com/comprehend/pricing/)

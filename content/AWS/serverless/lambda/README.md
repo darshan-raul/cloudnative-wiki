@@ -1,279 +1,146 @@
 ---
-title: AWS Lambda
-description: AWS Lambda — serverless functions. Runtime support, event handlers, layers, versions, aliases, environment variables, VPC networking, cold starts, and cost.
+title: Lambda in serverless architectures
+description: Connect the canonical Lambda lesson to API, queue and workflow architectures without duplicating runtime, pricing or quota catalogs.
 tags:
-  - aws
-  - serverless
-  - lambda
-  - functions
-date: 2026-06-06
+  - cloud/aws/serverless
+date: 2026-10-12
 ---
 
-# AWS Lambda
+# Lambda in serverless architectures
 
-Lambda is a serverless compute service. Upload your code (or bring a container) and Lambda runs it in response to events — no servers to manage, auto-scales to zero, pay per millisecond.
+Start with [[AWS/compute/lambda/README|the canonical Lambda lesson]] for a complete small lab, invocation models, supported-runtime discovery, concurrency, VPC access and checked cost arithmetic.
 
-## Runtimes
+## Choose the boundary
 
-| Runtime        | Version               |
-| -------------- | --------------------- |
-| Node.js        | 18.x, 20.x, 22.x      |
-| Python         | 3.9, 3.10, 3.11, 3.12 |
-| Java           | 11, 17, 21            |
-| .NET           | 6, 8                  |
-| Ruby           | 3.2                   |
-| Go             | 1.x                   |
-| Custom Runtime | Bring your own        |
+Use [[AWS/serverless/api-gateway/README|API Gateway]] when clients need an API contract, authentication and access logs. API keys are not authentication. Use [[AWS/application-integration/sqs/README|SQS]] when work can be buffered; define visibility timeout, retries, poison-message handling and idempotency. Use [[AWS/application-integration/step-functions/README|Step Functions]] for explicit multi-step orchestration and compensating actions.
 
-## Creating a Function
+Avoid assuming that Lambda has exactly-once invocation, that provisioned concurrency makes execution free, or that a public VPC subnet fixes internet access. All runtime, quota and tariff details belong to the canonical lesson.
 
-```bash
-# Create function
-aws lambda create-function \
-  --function-name my-function \
-  --runtime python3.12 \
-  --role arn:aws:iam::123456789012:role/lambda-role \
-  --handler app.handler \
-  --zip-file fileb://function.zip \
-  --timeout 30 \
-  --memory-size 256
+## Architecture exercise
 
-# Upload new code
-aws lambda update-function-code \
-  --function-name my-function \
-  --zip-file fileb://function.zip
-```
+For an image-upload pipeline, identify where the object lives, who authorizes the upload, what event creates the job, how duplicate events are handled, and where failed jobs are retained. Distinguish accepted, processing and completed states in the client-facing API. Define how operators replay failures without repeating successful effects.
 
-## Writing Functions
+Measure end-to-end latency rather than only function duration. Include queue age, retries, dependency timeouts and log/transfer/storage charges.
 
-### Python
+## Runtime, packaging and handler architecture
 
-```python
-import json
-import boto3
+Use the canonical [[AWS/compute/lambda/README|compute Lambda lab]] for creation, current supported-runtime discovery and cost. This architecture view adds event adapters, rollout and operational configuration rather than duplicating a stale version catalog.
 
-def handler(event, context):
-    # event contains the trigger data
-    print(f"Received event: {json.dumps(event)}")
+| Package                  | Ownership                                               | Upgrade constraint                                                   |
+| ------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------- |
+| Zip with managed runtime | Application/dependencies plus supported runtime updates | Track deprecation/create/update rules and dependency compatibility   |
+| OS-only/custom runtime   | Runtime bootstrap and application                       | You own language/runtime patching                                    |
+| Container image          | Runtime/image/application dependencies                  | Rebuild/scan/redeploy immutable reviewed image                       |
+| Layer version            | Shared supported archive dependencies                   | Immutable version; functions do not automatically adopt new versions |
 
-    # context has runtime info
-    print(f"Function: {context.function_name}")
-    print(f"Memory: {context.memory_limit_in_mb}")
-    print(f"Request ID: {context.aws_request_id")
-
-    # Your logic here
-    result = process(event)
-
-    return {
-        'statusCode': 200,
-        'body': json.dumps(result)
-    }
-
-def process(event):
-    # Business logic
-    return {'message': 'success', 'data': event.get('data')}
-```
-
-### Node.js
+For a JavaScript direct-invoke synthetic fixture, this is a complete handler with no undefined helper or full-event logging:
 
 ```javascript
-exports.handler = async (event, context) => {
-  console.log(`Received event: ${JSON.stringify(event)}`);
-
-  const result = await processEvent(event);
-
+exports.handler = async (event) => {
+  const name = event.name ?? "learner";
+  if (typeof name !== "string") {
+    throw new Error("name must be a string");
+  }
   return {
     statusCode: 200,
-    body: JSON.stringify(result),
+    body: JSON.stringify({ message: `Hello, ${name}` }),
   };
 };
-
-async function processEvent(event) {
-  // Business logic
-  return { message: "success", data: event.data };
-}
 ```
 
-## Event Sources
+Direct event objects, API Gateway payloads and queue/stream/S3 envelopes are different contracts. A response with statusCode has meaning only to a compatible caller/integration; it does not acknowledge every queue record automatically.
 
-### S3 Trigger
+## Source-specific event walkthroughs
+
+```text
+API request → synchronous invoke → caller sees result/error
+S3 event → asynchronous invoke → retry/destination/recursive-event risk
+DynamoDB/Kinesis → polled stream batch → checkpoint/retry/order constraints
+SQS → polled queue batch → visibility/redrive + partial failures
+```
+
+This complete S3 metadata adapter decodes URL-encoded keys and performs no object access or confidential payload logging:
 
 ```python
+from urllib.parse import unquote_plus
+
 def handler(event, context):
-    for record in event['Records']:
-        bucket = record['s3']['bucket']['name']
-        key = record['s3']['object']['key']
-        print(f"New file: {bucket}/{key}")
-        process_file(bucket, key)
+    objects = []
+    for record in event.get("Records", []):
+        if record.get("eventSource") != "aws:s3":
+            raise ValueError("expected S3 event")
+        objects.append({
+            "bucket": record["s3"]["bucket"]["name"],
+            "key": unquote_plus(record["s3"]["object"]["key"]),
+        })
+    return {"objects": objects}
 ```
 
-### DynamoDB Stream
+The exercise's object names are nonsensitive. Production processing requires scoped S3/KMS access, idempotency using the applicable event/object version identity and no source→output-prefix notification loop.
 
-```python
-def handler(event, context):
-    for record in event['Records']:
-        if record['eventName'] == 'INSERT':
-            item = record['dynamodb']['NewImage']
-            print(f"New item: {item}")
-        elif record['eventName'] == 'MODIFY':
-            old = record['dynamodb']['OldImage']
-            new = record['dynamodb']['NewImage']
-            print(f"Updated: {old} -> {new}")
-        elif record['eventName'] == 'REMOVE':
-            old = record['dynamodb']['OldImage']
-            print(f"Deleted: {old}")
+For DynamoDB streams, select the desired stream view and handle INSERT/MODIFY/REMOVE; OldImage/NewImage presence depends on that view. AttributeValue structures are not plain application JSON and numeric/binary conversion needs explicit serialization choices. Test deletes and retries, not only inserts.
+
+For SQS use [[AWS/application-integration/sqs/README|the complete partial-batch handler]], enable ReportBatchItemFailures and preserve FIFO order. A returned processed count does not enable partial failures.
+
+## Versions, aliases and canary workflow
+
+```text
+$LATEST = mutable unpublished draft
+publish → version 1 (immutable snapshot)
+publish changed draft → version 2 (immutable snapshot)
+lab alias → version 1; reviewed canary → weighted version 2
 ```
 
-### SQS Trigger
-
-```python
-def handler(event, context):
-    for record in event['Records']:
-        body = json.loads(record['body'])
-        print(f"Processing: {body}")
-        process_message(body)
-
-    return {'processed': len(event['Records'])}
-```
-
-## Versions and Aliases
+Prerequisites: the sandbox function, verified profile/Region, two distinct tested published versions and narrow version/alias permissions.
 
 ```bash
-# Publish version (immutable)
-aws lambda publish-version --function-name my-function
-# Returns: Version: 3
-
-# Create alias
-aws lambda create-alias \
-  --function-name my-function \
-  --name production \
-  --function-version 3 \
-  --description "Production alias"
-
-# Update alias to point to new version
-aws lambda update-alias \
-  --function-name my-function \
-  --name production \
-  --function-version 4
+aws lambda publish-version --function-name wiki-lambda-lab
+aws lambda create-alias --function-name wiki-lambda-lab \
+  --name lab --function-version VERSION_1
+aws lambda invoke --function-name wiki-lambda-lab --qualifier lab \
+  --cli-binary-format raw-in-base64-out --payload '{"name":"alias-test"}' alias-response.json
+aws lambda update-alias --function-name wiki-lambda-lab --name lab \
+  --function-version VERSION_2
 ```
 
-```
-production alias ──► Version 3 ──► $LATEST
-                                      │
-              Version 2 ◄────────────┘
-              Version 1
-```
+Substitute returned numeric versions. PublishVersion requires applicable code/configuration changes; repeatedly publishing unchanged code is not a reliable way to create a new revision. Updating an alias does not modify version 1 or create a link back to $LATEST.
 
-## Layers
+For weighted rollout, use the documented AdditionalVersionWeights form and supported same-role/configuration requirements. Measure per-executed-version errors/latency and business outcomes; random sampling is not exactly ten percent for a tiny fixture. Roll back the alias/weights after a failed acceptance signal, then inspect in-flight/queued effects separately.
+
+## Layers, environment and networking operations
+
+Build a Python layer ZIP with its required python/ directory and compatible runtime/architecture packages. Publish using --zip-file, not an arbitrary binary --content value:
 
 ```bash
-# Create layer
-aws lambda publish-layer-version \
-  --layer-name my-layer \
-  --description "Common utilities" \
-  --license-info "MIT" \
-  --content fileb://layer.zip \
-  --compatible-runtimes python3.12
-
-# Add to function
-aws lambda update-function-configuration \
-  --function-name my-function \
-  --layers "arn:aws:lambda:us-east-1:123456789012:layer:my-layer:1"
+aws lambda publish-layer-version --layer-name wiki-lab-layer \
+  --zip-file fileb://layer.zip --compatible-runtimes SUPPORTED_PYTHON_RUNTIME
+aws lambda update-function-configuration --function-name wiki-lambda-lab \
+  --layers LAYER_VERSION_ARN
 ```
 
-## Environment Variables
+The layers list replaces the function's configuration; preserve intended existing layers. Images do not consume Lambda layers through this same workflow. Library/native architecture compatibility needs a real import test.
 
-```bash
-# Set environment variables
-aws lambda update-function-configuration \
-  --function-name my-function \
-  --environment 'Variables={ENV=production,DATABASE_URL=my-db.example.com}'
+Environment Variables is a complete map update, not an automatic merge. Keep secrets in supported secret retrieval workflows and do not put credentials in a public JSON example. Key configuration adds authorization/ownership constraints; encryption at rest does not make every runtime process unable to read its environment.
 
-# Encryption at rest (AWS managed key)
-aws lambda update-function-configuration \
-  --function-name my-function \
-  --kms-key-arn arn:aws:kms:us-east-1:123456789012:key/xxxxx
-```
+VPC configuration uses actual subnet/SG arrays and Hyperplane networking. A public subnet supplies no public function IP; private database traffic does not universally traverse NAT. Test DNS/routes/SGs/endpoints and egress requirements before applying a latency workaround.
 
-## VPC Networking
+## Concurrency, telemetry and teardown
 
-```python
-# Lambda in VPC (for RDS, ElastiCache access)
-# VPC config via CLI:
-aws lambda update-function-configuration \
-  --function-name my-function \
-  --vpc-config '{
-    "SubnetIds": ["subnet-xxxxx", "subnet-yyyyy"],
-    "SecurityGroupIds": ["sg-xxxxx"]
-  }'
-```
+Reserved concurrency caps/isolates function capacity; setting it to zero stops invocation capacity and can create retry/backlog. Provisioned concurrency applies to a supported published qualifier, has configuration/provisioning state and independent idle-capacity charges. Neither gives unlimited downstream database capacity.
 
-**Note:** Lambda in VPC adds 10-30 second cold start (ENI attachment).
+Monitor errors/throttles/duration/init, concurrent executions and source-specific iterator age/queue age/destination failures. On a deployment incident correlate executed version, request ID and dependency error; avoid logging whole events with secrets/customer data.
 
-## Concurrency Control
+Remove lab mappings/source notifications, provisioned-concurrency configs and aliases before deleting dedicated versions/layers/functions where dependencies require. Preserve durable idempotency/failure evidence, delete only dedicated logs/roles and confirm recurring publication/resources stop.
 
-```bash
-# Reserved concurrency (guarantee capacity)
-aws lambda put-function-concurrency \
-  --function-name my-function \
-  --reserved-concurrent-executions 100
-
-# Provisioned concurrency (pre-warmed)
-aws lambda put-provisioned-concurrency-config \
-  --function-name my-function \
-  --qualifier alias-or-version \
-  --provisioned-concurrent-executions 10
-```
-
-## Cost
-
-| Component                | Cost                    |
-| ------------------------ | ----------------------- |
-| Requests                 | $0.20/million           |
-| Duration (GB-second)     | $0.0000166667/GB-second |
-| Provisioned concurrency  | $0.000015/GB-second     |
-| Duration (ARM Graviton2) | 20% cheaper             |
-
-**Free tier:** 400K GB-seconds and 1M requests/month.
-
-## Pricing Example
-
-```
-Lambda with 512MB memory, 1 second execution:
-
-Duration: 512MB × 1s = 0.5 GB-second
-Price: 0.5 GB-second × $0.0000166667 = $0.0000083 per call
-
-1M requests/month = 1,000,000 × $0.20/million = $0.20 (requests)
-                   1,000,000 × 0.5 GB-second × $0.0000166667 = $8.33 (duration)
-Total: $8.53/month
-```
-
-## Limits
-
-| Resource              | Limit                               |
-| --------------------- | ----------------------------------- |
-| Memory                | 128MB to 10GB                       |
-| Timeout               | Up to 15 minutes                    |
-| Deployment package    | 50MB (zipped), 250MB (uncompressed) |
-| Concurrent executions | 1000 (default, adjustable)          |
-| Event size            | 6MB (sync), 256KB (async)           |
-
-## References
-
-- **Homepage:** https://aws.amazon.com/lambda/
-- **Documentation:** https://docs.aws.amazon.com/lambda/
-- **Pricing:** https://aws.amazon.com/lambda/pricing/
-
-## Nuggets & Gotchas
-
-- **Lambda has a 15-minute maximum execution time — it WILL timeout if your function runs longer:** If you need 20+ minute execution, break into Step Functions steps or use ECS/Fargate. Lambda is designed for short-running tasks.
-- **Lambda cold starts in a VPC are 10-30 seconds — your users will notice:** VPC networking requires ENI attachment, which is slow on cold start. For latency-sensitive VPC workloads, use provisioned concurrency or move to a public subnet.
-- **Lambda ARM/Graviton2 is 20% cheaper and often faster — prefer `nodejs20.x` or Python 3.12 on ARM:** Graviton2 functions cost less and have better performance for most workloads. Only use x86 if you have native dependencies that don't support ARM.
-- **Lambda's concurrent execution limit is shared across ALL functions in an account — one function hogging resources affects others:** Set reserved concurrency per function to guarantee capacity. Without it, one runaway function can throttle all others.
-- **Lambda layers are NOT automatically updated — if you update a layer, you must re-deploy functions to pick up changes:** Layers are immutable once published. Updating the layer version doesn't update existing functions. You must `update-function-configuration` on each function.
+References: [event-source mappings](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html), [S3 events](https://docs.aws.amazon.com/lambda/latest/dg/with-s3.html), [versions](https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html), [weighted aliases](https://docs.aws.amazon.com/lambda/latest/dg/configuring-alias-routing.html), [layers](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html), [environment updates](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html).
 
 ## Across the wiki
 
 - [[GCP/compute/cloud-functions/README|GCP Cloud Functions (2nd Gen) & Eventarc]] — functions (GCP)
 - [[Architecture/solution-architecture-concepts/api-design/stateful-vs-stateless|Stateful vs Stateless]] — functions (Architecture)
+
+## References
+
+- [Lambda invocation](https://docs.aws.amazon.com/lambda/latest/dg/lambda-invocation.html).
+- [SQS failure handling](https://docs.aws.amazon.com/lambda/latest/dg/services-sqs-errorhandling.html).
+- [Lambda pricing](https://aws.amazon.com/lambda/pricing/).

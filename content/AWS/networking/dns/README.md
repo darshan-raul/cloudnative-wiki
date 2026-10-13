@@ -1,222 +1,109 @@
 ---
-title: Amazon Route 53
-description: Amazon Route 53 — managed DNS service with hosted zones, DNS record types, routing policies (simple, weighted, latency, geolocation, failover), and health checks.
+title: "Amazon Route 53 and DNS"
+description: "Separate public/private naming, alias behavior, routing policy and cached failover, with a controlled DNS test."
 tags:
-  - aws
-  - networking
-  - dns
-  - route53
-date: 2026-06-06
+  - cloud/aws/networking/dns
+date: 2026-10-12
 ---
 
-# Amazon Route 53
+# Amazon Route 53 and DNS
 
-Route 53 is AWS's managed DNS service. It handles three functions:
+Route 53 provides hosted DNS and related routing/health capabilities. DNS selects names/answers; it is not an application proxy or an instantaneous failover controller.
 
-1. **Domain registration** — Buy and manage domain names
-2. **DNS routing** — Resolve DNS queries with routing policies
-3. **Health checking** — Monitor endpoint health and route around failures
+## Name and routing boundaries
 
-## Hosted Zones
+Public hosted zones require correct registrar/parent delegation. Private hosted zones require supported VPC associations and resolver paths; they are not automatically visible across every peering/hybrid connection.
 
-A hosted zone is a container for DNS records for a domain. Two types:
+Simple, weighted, latency, failover and other routing policies solve different requirements. Health-check configuration and EvaluateTargetHealth have target-specific behavior; a configured record alone does not prove the target is healthy.
 
-**Public hosted zone** — DNS records visible on the internet. The authoritative DNS for your domain on the internet.
+Alias records inherit relevant target/aliased-record TTL behavior; they do not all use a fixed 300-second TTL. Cached answers, client connection reuse and health evaluation affect switching time. Domain registration and hosted-zone billing are separate.
 
-**Private hosted zone** — DNS records visible only within your VPCs (or VPCs you specify). For internal domain names like `corp.internal`.
+## Controlled record exercise
 
-```
-Public: example.com → public internet
-Private: corp.internal → VPC-A, VPC-B (resolved via VPC DNS)
-```
+Prerequisites: a sandbox hosted zone/domain you control, one disposable record, scoped DNS permissions and working authoritative delegation.
 
-## DNS Record Types
+1. Add a low-TTL test record for a nonsensitive endpoint and record its value.
+2. Query the authoritative server and a recursive resolver; compare answer/TTL.
+3. Change the record to another sandbox endpoint, then observe cached versus authoritative answers.
+4. If testing failover, induce a sandbox health failure and record detection plus resolver/client convergence.
+5. Restore/delete only the test records. Do not delete shared zone delegation or production records.
 
-| Type  | Purpose                                       | Example                                              |
-| ----- | --------------------------------------------- | ---------------------------------------------------- |
-| A     | IPv4 address                                  | `api.example.com` → `54.123.45.67`                   |
-| AAAA  | IPv6 address                                  | `api.example.com` → `2001:db8::1`                    |
-| CNAME | Canonical name (alias for another name)       | `www.example.com` → `api.example.com`                |
-| Alias | AWS-specific: points to AWS resource          | `www.example.com` → ALB DNS name                     |
-| MX    | Mail server                                   | `example.com` → `10 mail.example.com`                |
-| TXT   | Text records (SPF, DKIM, verification)        | `example.com` → `"v=spf1 include:_spf.example.com"`  |
-| NS    | Name server (delegation)                      | `example.com` → `ns-123.awsdns-45.com`               |
-| SOA   | Start of authority                            | Included automatically                               |
-| PTR   | Reverse DNS (IP → hostname)                   | `67.45.123.54.in-addr.arpa` → `api.example.com`      |
-| SPF   | Sender Policy Framework (deprecated, use TXT) |                                                      |
-| SRV   | Service locator                               | `_http._tcp.example.com` → `10 5 80 api.example.com` |
-| CAA   | Certification Authority Authorization         | `example.com` → `0 issue "letsencrypt.org"`          |
+Expected: a documented interval during which clients can still use the old answer. Explain why “DNS rollback is instant” is false.
 
-## Alias Records vs CNAMEs
+## Hybrid DNS and security
 
-**CNAME:** Maps a name to another name. Can't be used at the zone apex (example.com — must be www.example.com).
+Use [[AWS/networking/private-access-and-hybrid-dns|Resolver inbound/outbound rules]] for approved hybrid namespaces. Avoid loops and unintentionally shadowing public zones.
 
-**Alias:** AWS-specific. Maps a name to an AWS resource (ALB, CloudFront, S3 website hosting, Elastic Beanstalk, etc.). At no cost for queries and can be used at the zone apex.
+DNSSEC signing/validation have different zone/resolver roles; DNSSEC does not encrypt DNS traffic. Follow the owning setup, delegation and rollover procedures rather than enabling one switch and claiming complete protection.
 
-```
-example.com (zone apex) → ALB DNS name (alias record)
-www.example.com       → api.example.com (CNAME)
-```
+## Pricing and capacity
 
-## Routing Policies
+Count billable queries by routing type, hosted zones, health-check options, resolver endpoints/queries and registration. Record count does not equal query volume.
 
-### Simple Routing
+At an illustrative \$0.40 per million standard queries, 100 million queries cost \$40 before allowances/other charges. Latency-routing queries have their own tariff. Do not multiply a health-check price by arbitrary checker locations or call the result a Region fee.
 
-One or more values (IP addresses) returned in random order. No health checks. Use for single-server deployments.
+Check account/zone limits and current target TTL rules at the source; apply effective quotas rather than copied universal tables.
 
-```
-api.example.com → [54.123.45.67, 54.123.45.68]
-```
+## Record and policy comparison
 
-### Weighted Routing
+### Record types beyond addresses
 
-Distributes traffic by ratio. Useful for:
+Records describe data; routing policies choose which matching record answers. Do not treat weighted/failover as additional DNS record types.
 
-- A/B testing (send10% of traffic to new version)
-- Blue/green deployments (gradually shift traffic)
-- Multi-region routing (weight by region)
+| Type | Purpose                                     | Example / boundary                                                                                                   |
+| ---- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| MX   | Mail routing with preference                | `10 mail.example.com.`; smaller preference is preferred                                                              |
+| TXT  | Verification and application-defined text   | SPF and DKIM use TXT; do not create the obsolete SPF type for new mail configuration                                 |
+| NS   | Authoritative delegation                    | Delegate `lab.example.com` at its parent to the child zone's returned name servers                                   |
+| SOA  | Zone authority and timing metadata          | Route 53 supplies it with the zone; not an application endpoint record                                               |
+| PTR  | Reverse lookup                              | An address's reverse namespace must be controlled/delegated; a forward-zone PTR does not create internet reverse DNS |
+| SRV  | Service location, priority, weight and port | `_demo._tcp.lab.example.com. 10 5 8080 host.lab.example.com.`                                                        |
+| CAA  | Which certificate authorities may issue     | `0 issue "amazon.com"`; coordinate with certificate issuance requirements                                            |
 
-```
-api.example.com → 80% → us-east-1 (10.0.1.1)
-                → 20% → eu-west-1 (10.1.1.1)
-```
+These complement A/AAAA, CNAME and supported alias targets below. For example, a child-zone NS delegation is different from adding a CNAME to the child name. TXT ownership verification does not authorize arbitrary certificate issuers. See [Route 53 record types](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/ResourceRecordTypes.html).
 
-### Latency-Based Routing
+| Choice         | Common use                                | Check before deployment                             |
+| -------------- | ----------------------------------------- | --------------------------------------------------- |
+| A / AAAA       | IPv4 / IPv6 address                       | Address stability and TTL                           |
+| CNAME          | Alias another name where DNS rules permit | Cannot be used at the zone apex                     |
+| Route 53 alias | Supported AWS target or record            | Target support and health evaluation                |
+| Weighted       | Controlled distribution or gradual shift  | Weights and independent target health               |
+| Latency        | Route toward measured AWS Region          | Client resolver location may differ from user       |
+| Failover       | Primary/secondary answers                 | Health checks, resolver cache and application retry |
+| Geolocation    | Location-based answer selection           | Default record and unknown locations                |
+| Multivalue     | Return a limited set of healthy answers   | Not a load balancer or application health proxy     |
 
-Route 53 measures latency from the resolver to your regions and returns the lowest-latency record. Useful for multi-region active-active architectures.
-
-```
-api.example.com → us-east-1 (latency-routing, weight: 1)
-                → eu-west-1 (latency-routing, weight: 1)
-                → ap-southeast-1 (latency-routing, weight: 1)
+```text
+registrar/parent delegation → authoritative hosted zone
+                                 ├─ public records → internet resolvers
+                                 └─ private records → associated VPC resolvers
 ```
 
-### Geolocation Routing
+For a failover drill, prepare two endpoints with independent health checks and inspect their record policies. Query an authoritative name server and at least one recursive resolver before and after failure. Preserve each answer's TTL and record the actual client reconnection time. Route 53 can change the authoritative answer while a resolver or application still uses a cached result. A private zone also needs VPC DNS support/hostnames and an explicit association; VPC peering by itself does not expose the zone.
 
-Routes based on the DNS resolver's geographic location. Use for:
+### Select a health-check type
 
-- Content localization (serve region-specific content)
-- Legal compliance (block or allow specific regions)
-- Disaster recovery (redirect traffic away from a region)
+| Type             | Input                                                        | Useful test                                                                      |
+| ---------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Endpoint         | Publicly reachable HTTP/HTTPS/TCP endpoint                   | Fail the synthetic `/health` response while leaving DNS unchanged                |
+| Calculated       | Child check results and a healthy-child threshold            | With three checks and threshold two, fail one, then two; compare aggregate state |
+| CloudWatch alarm | Supported alarm's metric data stream and evaluation criteria | Publish sandbox metric values that cross the configured threshold                |
 
-```
-api.example.com → North America → us-east-1 IPs
-                → Europe → eu-west-1 IPs
-                → Default → us-east-1 IPs
-```
+Endpoint checkers run outside your VPC and cannot directly probe private IPs. For private application health, publish a suitable metric from an internal observer and use a supported alarm-based check. This check evaluates the alarm's underlying data, not simply its displayed ALARM state; manually setting alarm state is not an adequate end-to-end test. Missing-data treatment is an explicit choice. [Health-check type contract](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/health-checks-types.html).
 
-### Failover Routing
+For endpoint checks, consecutive successes/failures apply at each checker, then Route 53 aggregates checker observations; this is not a universal "three out of three checkers" rule. Choose protocol/path, interval, failure threshold and allowed checker network access from [the configuration guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/health-checks-creating-values.html). Record check state separately from DNS/client convergence and remove only dedicated lab checks after removing their record references.
 
-Routes to a primary target until health checks fail, then routes to a secondary (failover) target. Use for active-passive DR.
+### Blue/green example
 
-```
-api.example.com → Primary (us-east-1) → Evaluate health check
- → Secondary (eu-west-1) → Evaluate health check
-
-Health check: GET http://54.123.45.67/health
-Threshold: 3 failures = unhealthy
-```
-
-### Multi-Value Answer
-
-Like simple routing but with health checks per record. Route 53 returns only healthy records. Not a replacement for load balancing, but useful for simple DNS-based redundancy.
-
-```
-api.example.com → [54.123.45.67,54.123.45.68]
- (each with associated health check)
-```
-
-## Health Checks
-
-Route 53 health checks are performed from multiple global locations. A resource is healthy when the majority of health checkers (default: 3/3) report healthy.
-
-### Health Check Types
-
-- **Endpoint:** HTTP/HTTPS/TCP health checks against an IP or hostname
-- **CloudWatch Alarm:** Route53 monitors a CloudWatch alarm (e.g., from an ASG)
-- **Calculated:** Combines multiple health checks with AND/OR logic
-
-### Health Check Configuration
-
-```
-Protocol: HTTPS
-Domain: api.example.com
-Path: /health
-Interval: 30 seconds (10 seconds for faster detection, costs more)
-Failure threshold: 3 (3 consecutive failures = unhealthy)
-Latency threshold: 10 seconds (slow response = unhealthy)
-```
-
-### Latency Check vs TCP Check
-
-- **HTTP/HTTPS check:** Sends a GET request, validates the response. Requires the endpoint to respond to HTTP requests.
-- **TCP check:** Opens a TCP connection. Use when the service doesn't expose HTTP (e.g., SMTP, database).
-- **Latency check:** Measures time to first byte. Useful for detecting slow responses before they time out.
-
-## Private Hosted Zones
-
-A private hosted zone resolves names within your VPCs:
-
-```
-corp.internal (private hosted zone)
-├── api.corp.internal →10.0.1.10 (EC2 instance in VPC-A)
-├── db.corp.internal  → 10.0.21.15 (RDS in VPC-A)
-└── monitoring.corp.internal → 10.0.5.20 (managed service in VPC-B)
-```
-
-**VPC DNS must be enabled** for private hosted zones to resolve. Route 53 Resolver automatically handles private hosted zone resolution when associated with the VPC.
-
-## Common Architectures
-
-### Web Application with Failover
-
-```
-users → Route53 (failover routing)
- ├── Primary: api.example.com → ALB (us-east-1) [health check]
-           └── Secondary: api.example.com → ALB (eu-west-1) [health check]
-
-When us-east-1 health check fails → Route 53 returns eu-west-1 IPs
-```
-
-### Blue/Green Deployment
-
-```
-api.example.com → 90% → Blue ALB (us-east-1)
-                → 10% → Green ALB (us-east-1, new version)
-
-Gradually increase green weight as confidence grows
-```
-
-## Limits
-
-| Resource                  | Limit                     |
-| ------------------------- | ------------------------- |
-| Hosted zones per account  | 500                       |
-| Records per hosted zone   | 10,000                    |
-| Health checks per account | 50 (can request increase) |
-| Domains per account       | 50                        |
-| TTL for alias records     | 300 seconds (fixed)       |
-| TTL for other records     | 60-172800 seconds         |
+Suppose two healthy application endpoints are behind weighted records. Begin with a small new-version weight, confirm the answer distribution over many independent DNS queries, then raise the weight only after application health and error budgets are acceptable. Cached DNS answers, resolver behavior and persistent connections mean request distribution need not exactly equal record weights over a short window. For a rollback, set the old endpoint's weight back and observe clients through at least the effective TTL and connection lifetime; do not report success from one `dig` response alone. A health-checked failover record is a separate routing choice with different behavior from a weighted canary.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/route53/
-- **Documentation:** https://docs.aws.amazon.com/route53/
-- **Pricing:** https://aws.amazon.com/route53/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A production application with 1 domain, 20 DNS records, 2 health checks (primary + secondary API endpoints). Monthly: $0.50/month hosted zone + $0.40/month for 20 standard queries/day + $7.50/month for 2 health checks × $0.50 = $0.75/month health checks. Total: ~$1.65/month. Plus domain registration: $13/year = $1.08/month. Total: ~$2.73/month.
-
-**Scenario 2:** A global application with latency-based routing across 3 regions (us-east-1, eu-west-1, ap-southeast-1).100M queries/month. At $0.40/million after first 1B queries:100M × $0.40/million = $0.04/month. Health checks: 3 endpoints × $0.50/month × 3 regions × 3 checker locations = $13.50/month. Total: ~$13.54/month plus hosted zone fees.
-
-## Nuggets & Gotchas
-
-- **Alias records are free — CNAMEs are not:** Route 53 charges per query for all record types except Alias records pointing to AWS resources. Use Alias records for ALB, CloudFront, S3, etc. to avoid per-query charges.
-- **Zone apex (example.com) can't use CNAME records:** DNS RFC prevents CNAME at the zone apex. Use an Alias record instead. Alias records are AWS-specific and resolve to the AWS resource's DNS name.
-- **Health checks are performed from multiple global locations — not from your VPC:** A health check that passes from Route 53's checkers might still fail from inside your VPC due to network policies. Use CloudWatch alarm health checks for accurate internal monitoring.
-- **Health check interval of 10 seconds detects failures faster but costs 3x:** 30-second interval = $0.50/health check/month. 10-second interval = $1.50/health check/month. For critical production endpoints, 10-second detection is worth the cost.
-- **Private hosted zones don't automatically resolve across VPCs:** You must associate the private hosted zone with each VPC that needs to resolve it. If a new VPC is created and doesn't resolve internal names, check that it's associated with the private hosted zone.
+- [Route 53 concepts](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html).
+- [Alias values and TTL](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-alias.html).
+- [DNS failover](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover.html).
+- [DNSSEC](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-configure-dnssec.html).
+- [Pricing](https://aws.amazon.com/route53/pricing/).
 
 ## Across the wiki
 

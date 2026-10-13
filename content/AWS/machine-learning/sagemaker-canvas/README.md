@@ -1,210 +1,123 @@
 ---
-title: SageMaker Canvas
-description: SageMaker Canvas — no-code ML for business analysts. Build classification, regression, and time-series forecasting models via drag-and-drop UI. Generate predictions without writing code.
+title: "Amazon SageMaker Canvas"
+description: "Canvas provides supported visual ML/data workflows, with custom/ready-to-use model capabilities that vary by model and task."
 tags:
-  - aws
-  - machine-learning
-  - sagemaker
-  - sagemaker-canvas
-  - no-code
-date: 2026-06-06
+  - aws/machine-learning
+date: 2026-10-12
 ---
 
 # Amazon SageMaker Canvas
 
-SageMaker Canvas provides a drag-and-drop interface for building ML models. Business analysts can build classification, regression, and time-series forecasting models without writing code or understanding ML algorithms.
+Canvas provides supported visual ML/data workflows, with custom/ready-to-use model capabilities that vary by model and task. It does not remove the need for [[AWS/machine-learning/README|evaluation]], secure input data or [[AWS/security/iam/README|execution-role permissions]].
 
-## What Canvas Does
+## Workflow and deployment
 
+Provision the supported SageMaker environment/Canvas application, authorize input/output data, import a representative dataset and choose the supported target/task. Data preparation, quick versus standard build, forecasting and prediction options have distinct requirements. A quick-build sample is not an import ceiling.
+
+There is no documented boto3.client("sagemaker-canvas") service with the fabricated create-model/start-build/get-metrics operations. Use the supported Canvas UI/workflows and real [[AWS/machine-learning/sagemaker/README|SageMaker AI]] APIs where documented; do not rebrand UI steps as executable SDK methods.
+
+Eligible Canvas custom/JumpStart model versions can deploy to SageMaker AI real-time hosting endpoints. “No production deployment” is false, while universal export/deployment support for every ready-to-use model is also unsafe. Verify execution-role, feature/model and endpoint requirements before deploying.
+
+## Quality and limits
+
+Tabular support includes up to 1,000 columns; import/build/model-type limits differ. There is no universal hundred-column or hundred-thousand-row ceiling. Consult the owning task/data limit table for the chosen operation.
+
+Accuracy alone can hide rare-class failure or leakage. Use held-out data, precision/recall and business cost of false positives/negatives; forecasting requires chronological splits and suitable horizon/granularity. Compare a simple baseline and review missing-value/category handling before trusting a visual leaderboard.
+
+## Worked visual classification lab: synthetic churn dataset
+
+This lab provides a concrete synthetic dataset and step-by-step Canvas procedure. Canvas UI steps are retained as operating guidance, while nonexistent `sagemaker-canvas` SDK methods remain excluded.
+
+### Synthetic dataset fixture
+
+Save this complete six-row labelled fixture as `canvas-churn-lab.csv`:
+
+```csv
+customer_id,monthly_spend,tenure_months,support_tickets,churned
+c101,85.50,14,1,0
+c102,120.00,3,4,1
+c103,45.00,24,0,0
+c104,110.00,5,3,1
+c105,60.00,18,1,0
+c106,95.00,2,5,1
 ```
-Business Analyst
-  │
-  ├── Upload CSV/Connect to S3/Redshift/Snowflake
-  ├── Select target column (what to predict)
-  ├── Canvas builds model automatically
-  │     ├── Automatic data preparation
-  │     ├── Algorithm selection
-  │     ├── Hyperparameter tuning
-  │     └── Model validation
-  └── Generate predictions (batch or real-time)
-```
 
-## Model Types
-
-| Type                            | Use Case            | Example                          |
-| ------------------------------- | ------------------- | -------------------------------- |
-| Binary Classification           | Yes/No prediction   | Will customer churn?             |
-| Multi-class Classification      | Category prediction | What product category?           |
-| Numeric Prediction (Regression) | Number prediction   | How much will they spend?        |
-| Time Series Forecasting         | Future values       | Forecast demand for next 30 days |
-| ML Models (Tabular)             | Any tabular data    | AutoML on your data              |
-
-## Getting Started
-
-### 1. Open Canvas
+Upload to a private bucket prefix:
 
 ```bash
-# Create SageMaker Canvas app
-aws sagemaker create-app \
-  --domain-id domain-xxxxx \
-  --user-profile-name analyst-01 \
-  --app-name canvas \
-  --app-type JupyterLab
+aws s3 cp canvas-churn-lab.csv "s3://${CANVAS_LAB_BUCKET:?}/canvas-lab/input/canvas-churn-lab.csv"
 ```
 
-Then open Canvas from SageMaker Studio.
+### Canvas UI walkthrough
 
-### 2. Connect Data
+1. **Import data**: In SageMaker Studio -> Canvas -> Datasets -> Import Data -> S3 -> select `canvas-churn-lab.csv`. Confirm detected schema: `customer_id` (Text/ID), `monthly_spend` (Numeric), `tenure_months` (Numeric), `support_tickets` (Numeric), `churned` (Binary/Categorical).
+2. **Select model & target**: In Models -> New Model, name `wiki-canvas-churn-lab`. Select the imported dataset. Choose target column `churned`. Canvas detects 2-class classification.
+3. **Build selection**:
+   - **Quick build**: Runs in 2–15 minutes using a sampled subset for fast validation.
+   - **Standard build**: Performs full AutoML search across model families (XGBoost, neural networks, linear models) and requires 1–4 hours.
+   - Select Quick build for this lab exercise.
+4. **Evaluate held-out metrics**:
+   - Inspect accuracy, F1 score, confusion matrix, and feature impact.
+   - Observe that `support_tickets` (high = churn) and `tenure_months` (low = churn) are top predictive features.
+5. **Generate predictions**:
+   - In the **Predict** tab, test Single prediction:
+     - Input: `customer_id=c901, monthly_spend=115.00, tenure_months=2, support_tickets=4` -> expected prediction `churned = 1` (probability > 80%).
+     - Input: `customer_id=c902, monthly_spend=40.00, tenure_months=24, support_tickets=0` -> expected prediction `churned = 0` (probability > 85%).
+   - Batch prediction: upload a test CSV without the target column; export scored predictions to S3.
+6. **Deployment & API boundary**:
+   - Canvas does **not** expose a programmatic `boto3.client('sagemaker-canvas')` client.
+   - To serve predictions programmatically, deploy an eligible model build to a SageMaker real-time endpoint via the Canvas UI ("Deploy model"). That creates a standard SageMaker endpoint, which is invoked via `boto3.client('sagemaker-runtime').invoke_endpoint(...)`.
+7. **Cleanup and cost management**:
+   - Canvas charges an hourly session rate while the workspace app is running, plus training/build charges and hosted endpoint hourly rates.
+   - Deleting the model inside Canvas does **not** terminate the Studio Canvas workspace app.
+   - In SageMaker Console -> Domains -> Applications -> delete the running Canvas user application to stop ongoing session billing.
+   - If an endpoint was deployed, delete it via `aws sagemaker delete-endpoint --endpoint-name ...` and remove the endpoint configuration and model.
+   - Delete the test CSV and exported prediction artifacts from S3.
 
-Canvas supports:
+## Visual workflow from dataset to predictions
 
-- **Upload**: CSV, XLSX files directly
-- **S3**: Browse and select S3 buckets
-- **Redshift**: Query warehouse data
-- **Snowflake**: Query Snowflake data
-- **Databricks**: Query Databricks data
-
-### 3. Build Model
-
-```python
-# Or via SageMaker Canvas API
-import boto3
-
-canvas = boto3.client('sagemaker-canvas', region_name='us-east-1')
-
-# Create model
-canvas.create_model(
-    modelId='canvas-auto',
-    modelName='customer-churn-predictor',
-    dataset='s3://my-bucket/dataset.csv'
-)
-
-# Start build
-canvas.start_model_training(
-    modelName='customer-churn-predictor',
-    objective='classification',
-    targetAttribute='churned'
-)
+```text
+Authorized sources
+  → import + schema/type review
+  → preparation/target selection
+  → quick or standard build
+  → validation/feature review
+  → batch predictions or eligible endpoint deployment
 ```
 
-## Canvas Build Options
+| Task family                 | What to verify                                                    |
+| --------------------------- | ----------------------------------------------------------------- |
+| Tabular classification      | Label definitions, minority classes, leakage and missing values   |
+| Regression                  | Target units, error distribution and useful baseline              |
+| Time-series forecasting     | Timestamp/entity keys, frequency, horizon and chronological split |
+| Ready-to-use models         | Supported input/task and operation-specific permissions/limits    |
+| JumpStart/custom deployment | Eligible model/version, hosting permissions and endpoint charges  |
 
-### Quick Build
+A quick build is useful for iteration, not proof that all input rows were used or production quality was achieved. A standard build can require more time/compute; document the exact version and task rather than assume every model shares one fixed duration.
 
-- Builds in 20-30 minutes
-- Uses smaller dataset sample
-- Less accurate but faster
-- Good for: exploration, POC
+## Build/evaluation walkthrough
 
-### Standard Build
+1. Authorize/import only the required non-sensitive dataset.
+2. Inspect row/column types and reject target leakage; define missing/category handling.
+3. Choose the supported task and prediction target, then create the selected build.
+4. Inspect build status and errors with a bounded wait; no fictional Canvas Boto3 loop is implied.
+5. Review held-out metrics and feature influence cautiously—correlation is not causation.
+6. Test known cases, outliers and missing/unseen categories.
+7. Generate supported batch results or deploy an eligible model/version.
+8. Compare actual prediction/output schema, latency and current cost before promotion.
 
-- Builds in 2-4 hours
-- Uses full dataset
-- More accurate
-- Good for: production models
+For classification, compare precision/recall at the relevant threshold. For forecasting, avoid random splits that use future information; score at the actual horizon and aggregate business level. For regression, inspect residuals and segments rather than only one overall error.
 
-## Evaluating Models
+## Deployment and cleanup boundaries
 
-Canvas provides:
+Eligible custom/JumpStart versions can deploy to real-time endpoints through the supported workflow; ready-to-use model capabilities differ. Endpoint instances, role/data/KMS access and monitoring are genuine production responsibilities even when the model was built visually.
 
-- **Accuracy score**
-- **F1 score** (classification)
-- **RMSE** (regression)
-- **Feature importance** (which columns matter most)
-- **Confusion matrix** (classification)
-- **Predictions vs actuals** (regression)
-
-```python
-# Get model metrics
-metrics = canvas.get_model_metrics(modelName='customer-churn-predictor')
-print(metrics['binary_classification_metrics'])
-# {'accuracy': 0.92, 'f1_score': 0.89, 'precision': 0.91, 'recall': 0.87}
-```
-
-## Generating Predictions
-
-### Batch Predictions
-
-```python
-# Generate batch predictions
-canvas.batch_transform(
-    modelName='customer-churn-predictor',
-    dataset='s3://my-bucket/new-customers.csv',
-    outputUri='s3://my-bucket/predictions/'
-)
-```
-
-### Real-time Predictions
-
-```python
-# Register for real-time
-canvas.deploy(
-    modelName='customer-churn-predictor',
-    inferenceContainers=['default']
-)
-
-# Invoke endpoint
-runtime = boto3.client('sagemaker-runtime')
-response = runtime.invoke_endpoint(
-    EndpointName='canvas-customer-churn-predictor',
-    ContentType='text/csv',
-    Body='age=35,income=75000,tenure=24,...'
-)
-```
-
-## Time Series Forecasting
-
-Canvas auto-generates forecasts:
-
-```python
-# Build time series model
-canvas.start_model_training(
-    modelName='demand-forecast',
-    objective='forecasting',
-    targetAttribute='sales',
-    timeSeriesConfiguration={
-        'timeColumn': 'date',
-        'forecastFrequency': 'D',  # Daily
-        'forecastHorizon': 30     # Forecast 30 days
-    }
-)
-```
-
-Forecast outputs:
-
-- Point predictions
-- Confidence intervals (80%, 95%)
-- Trend, seasonality, holiday effects
-
-## Pricing
-
-| Component                     | Cost                                 |
-| ----------------------------- | ------------------------------------ |
-| Canvas app (SageMaker Studio) | Included in SageMaker Studio cost    |
-| Quick build                   | $0.40/hour                           |
-| Standard build                | $1.20/hour                           |
-| Batch predictions             | Free (uses inference)                |
-| Real-time predictions         | Standard SageMaker inference pricing |
-
-## Limits
-
-| Resource         | Limit                  |
-| ---------------- | ---------------------- |
-| Dataset size     | 100K rows, 100 columns |
-| Training time    | 48 hours               |
-| Forecast horizon | 730 periods            |
-| Model storage    | 100 models             |
+Preserve approved model/version/evaluation evidence before deleting disposable builds. Stop/delete app/session resources and deployed endpoints intentionally, inspect retained S3 data/artifacts and do not confuse closed browser state with stopped billing. Canvas UI steps are retained as operating guidance, while nonexistent sagemaker-canvas SDK methods remain excluded.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/sagemaker/canvas/
-- **Documentation:** https://docs.aws.amazon.com/sagemaker-canvas/
-- **Pricing:** https://aws.amazon.com/sagemaker/canvas/pricing/
-
-## Nuggets & Gotchas
-
-- **Canvas models are NOT exportable — you must use Canvas to predict:** Canvas produces a proprietary model artifact. You can't download the model and deploy elsewhere. For portable models, use SageMaker Autopilot or train with Python.
-- **Canvas has a 100K row / 100 column limit — for larger datasets, sample before importing:** If your dataset is larger, sample down before importing into Canvas. Or use Athena to pre-aggregate.
-- **Canvas doesn't support all data types — dates must be in a recognized format:** If your date column isn't recognized, format it as ISO 8601 (YYYY-MM-DD) before importing.
-- **Canvas time series forecasting requires a UNIQUE time series identifier — if you have multiple products/stores, configure group columns:** A single forecast model handles multiple series (e.g., forecast each product separately in one model). Configure group columns in Canvas UI.
-- **Canvas Quick Build is NOT for production — use Standard Build for any decision-making:** Quick build uses a sample of data and faster hyperparameters. The accuracy is significantly lower than Standard Build.
+- [Canvas documentation and supported workflows](https://docs.aws.amazon.com/sagemaker/latest/dg/canvas.html)
+- [Data requirements](https://docs.aws.amazon.com/sagemaker/latest/dg/canvas-data.html)
+- [Canvas endpoint deployment](https://docs.aws.amazon.com/sagemaker/latest/dg/canvas-deploy-model.html)
+- [Boto3 service catalog](https://docs.aws.amazon.com/boto3/latest/reference/services/)
+- [Canvas pricing](https://aws.amazon.com/sagemaker/canvas/pricing/)

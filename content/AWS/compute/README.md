@@ -1,130 +1,64 @@
 ---
-title: AWS Compute
-description: AWS compute services — EC2 for virtual servers, Lambda for serverless functions, ECS/EKS for containers, Batch for batch jobs, and Lightsail for simple workloads.
+title: "AWS compute"
+description: "Follow compute lessons by required control, execution model and operational ownership rather than a fixed service ranking."
 tags:
-  - aws
-  - compute
-date: 2026-06-06
+  - cloud/aws/compute
+date: 2026-10-12
 ---
 
-# AWS Compute
+# AWS compute
 
-AWS compute covers the full spectrum from bare-metal servers to fully managed serverless functions. Choosing the right compute model depends on workload characteristics: long-running (EC2), event-driven (Lambda), containerized (ECS/EKS), or batch (Batch).
+Choose a compute model from workload duration, event/retry semantics, resource requirements, isolation, network access and operating responsibility. “Managed” is not the same as no security or application ownership.
 
-## Service Map
+## Learning route
 
-| Service                         | Compute Model                          | Control               | Use Case                            |
-| ------------------------------- | -------------------------------------- | --------------------- | ----------------------------------- |
-| [[ec2/README\|EC2]]             | Virtual machine (bare metal available) | Full control          | Long-running, predictable workloads |
-| [[lambda/README\|Lambda]]       | Serverless functions                   | None (managed)        | Event-driven, spiky, short-duration |
-| [[ecs/README\|ECS]]             | Docker containers on EC2 or Fargate    | Shared responsibility | Containerized microservices         |
-| [[eks/README\|EKS]]             | Kubernetes on EC2 or Fargate           | Full K8s API          | Complex container orchestration     |
-| [[batch/README\|Batch]]         | Batch jobs on managed infra            | Job definitions       | Scheduled/queued batch processing   |
-| [[lightsail/README\|Lightsail]] | Simple VPS                             | Simplified            | Simple websites, dev/test           |
+| Requirement                    | Lesson                                      | Operating boundary                                 |
+| ------------------------------ | ------------------------------------------- | -------------------------------------------------- |
+| Guest OS/device control        | [[AWS/compute/ec2/README\|EC2]]             | Patch OS/software and manage storage               |
+| Event-driven function          | [[AWS/compute/lambda/README\|Lambda]]       | Invocation/retry/runtime/dependency ownership      |
+| Native container orchestration | [[AWS/compute/ecs/README\|ECS/Fargate]]     | Tasks, services, roles and capacity model          |
+| Kubernetes API                 | [[AWS/compute/eks/README\|EKS]]             | Cluster/workload lifecycle and access              |
+| Queued batch                   | [[AWS/compute/batch/README\|Batch]]         | Compatible job resources, retries and dependencies |
+| Simplified selected plans      | [[AWS/compute/lightsail/README\|Lightsail]] | Product-specific constraints and VM operations     |
 
-## Compute Decision Tree
+Then study [[AWS/compute/auto-scaling|fleet lifecycle]], [[AWS/compute/ecr|image publishing]] and [[AWS/developer-tools/README|delivery pipelines]].
 
-```
-How long does your workload run?
-  │
-  ├── Short (< 15 minutes) + event-driven?
-  │     YES → Lambda (serverless, pay-per-invocation)
-  │     NO ↓
-  │
-  ├── Containerized?
-  │     YES → Do you need full Kubernetes API?
-  │           YES → EKS (managed Kubernetes)
-  │           NO → ECS (simpler container orchestrator)
-  │     NO ↓
-  │
-  ├── Batch/scheduled jobs?
-  │     YES → Batch (managed job scheduler)
-  │     NO ↓
-  │
-  ├── Predictable, long-running?
-  │     YES → EC2 (full control, reserved pricing)
-  │     NO ↓
-  │
-  └── Simple website/dev environment?
-        YES → Lightsail (simplified, cheap)
-        NO → EC2 with auto-scaling
+A short job can run on Batch; long-lived containers may run on ECS. Standard Lambda limits are not a universal duration rule for every advanced Lambda mode. Predictable demand does not automatically justify a commitment before measuring eligible usage.
+
+## Selection exercise
+
+For an API, an overnight data job and a device-driver workload, identify the required resources/control, failure model and operations owner. Compare two candidates at equal workload/availability and include storage, network, logs and idle capacity.
+
+Build one sandbox checkpoint through the selected lesson, test an intentional failure and perform its cleanup. Do not treat a product matrix as proof of performance.
+
+## Compute decision tree and common patterns
+
+```text
+Need guest OS, driver or device control? ── yes → EC2
+                 │ no
+Need Kubernetes APIs/ecosystem? ──────── yes → EKS
+                 │ no
+Is work a queue/scheduled batch? ─────── yes → Batch or an ECS job
+                 │ no
+Is it an event-driven bounded function? yes → Lambda
+                 │ no
+Need a continuously serving container?  yes → ECS/Fargate
 ```
 
-## Instance Family Overview
+This is a starting route, not an eligibility contract. A workload can require several services: a web API may use an ALB, ECS service, SQS queue, Batch workers and S3. Decide based on latency, state, task duration, GPU/CPU/memory shape, identity and network requirements. A simple VM website may fit Lightsail when its plan and operational boundaries are enough.
 
-| Family  | Specialty         | Use Case                         |
-| ------- | ----------------- | -------------------------------- |
-| A/T/M   | General purpose   | Web servers, small databases     |
-| C       | Compute optimized | Media processing, CI/CD runners  |
-| R/X     | Memory optimized  | Databases, in-memory caches      |
-| G/P/INF | GPU               | ML training, inference, graphics |
-| I/D     | Storage optimized | HDFS, data warehousing,日志处理  |
-| Hpc     | High performance  | Scientific computing, CFD        |
+| Pattern              | Control/data path                                     | Failure question                                         |
+| -------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| Auto-scaled web tier | DNS → load balancer → EC2 Auto Scaling or ECS service | How is an unhealthy member replaced and traffic drained? |
+| Event processing     | Queue/event → Lambda or worker → durable store        | How are duplicates, poison messages and retries handled? |
+| Batch pipeline       | Schedule/input → queue → Batch job → durable output   | Can work checkpoint after interruption?                  |
+| Container platform   | Registry → revision → ECS task or EKS pod             | Who patches hosts and updates the running revision?      |
 
-## Architecture Patterns
-
-### Auto-Scaling Compute
-
-```
-ALB → Auto Scaling Group → EC2 fleet (multi-AZ)
-                        → Spot instances (cheap, interruptible)
-                        → On-demand (baseline)
-```
-
-### Serverless Event-Driven
-
-```
-Event (S3, SNS, SQS, CloudWatch, API GW)
-  → Lambda function
-      → RDS (synchronous)
-      → SQS (async processing)
-      → SNS (fan-out)
-```
-
-### Container Cluster
-
-```
-ECS/EKS Cluster
-  ├── Service A (3 tasks/pods, multi-AZ)
-  ├── Service B (5 tasks/pods)
-  └── Service C (1 task, batch job)
-
-  Fargate (serverless containers) or EC2 (self-managed)
-```
-
-## AWS Services Organized by Category
-
-**Bare Metal / Virtual Machines**
-
-- [[ec2/README|EC2]] — Virtual servers (instances)
-
-**Serverless**
-
-- [[lambda/README|Lambda]] — Event-driven functions
-
-**Containers**
-
-- [[ecs/README|ECS]] — Docker container orchestrator (Elastic Container Service)
-- [[eks/README|EKS]] — Managed Kubernetes (Elastic Kubernetes Service)
-
-**Batch / Scheduled**
-
-- [[batch/README|Batch]] — Managed batch processing
-
-**Simple**
-
-- [[lightsail/README|Lightsail]] — Simple VPS for basic workloads
+For instance selection, compare burstable, general-purpose, compute-, memory-, storage- and accelerator-optimized families against measured use. The family label alone does not establish price or availability in a Region. For cost, count compute plus persistent disks, snapshots, egress, public addresses, load balancers and telemetry; include idle capacity and failure-domain requirements.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/products/compute/
-- **Documentation:** https://docs.aws.amazon.com/compute/
-- **Pricing:** https://aws.amazon.com/pricing/compute/
-
-## Nuggets & Gotchas
-
-- **Lambda has a 15-minute max execution time — long-running tasks need EC2 or ECS:** If your workload takes > 15 minutes, use EC2 (with Auto Scaling) or ECS Tasks. Lambda is designed for short, event-driven processing.
-- **EC2 Spot instances are 70-90% cheaper but can be interrupted with 2-minute notice:** Use Spot for fault-tolerant workloads (batch jobs, stateless services). Don't use Spot for databases or stateful services without checkpointing.
-- **ECS and EKS both use the same underlying Docker infrastructure — EKS adds Kubernetes API:** If you know Kubernetes, use EKS. If you want simpler AWS-native container management, use ECS. Both can run on EC2 or Fargate.
-- **Batch and Lambda solve different problems — Batch for jobs > 15 min, Lambda for < 15 min:** Batch jobs run on EC2 (or Fargate) with job queuing and scheduling. Lambda is for sub-15-minute event-driven tasks.
-- **Lightsail is limited compared to EC2 — no Auto Scaling, limited instance types, no VPC peering:** Lightsail is for simple use cases (WordPress, small databases). For production, use EC2 with Auto Scaling and proper networking.
+- [Compute services](https://aws.amazon.com/products/compute/).
+- [EC2 operating responsibilities](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html).
+- [ECS architecture and operating choices](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html).
+- [Pricing calculator](https://calculator.aws/).

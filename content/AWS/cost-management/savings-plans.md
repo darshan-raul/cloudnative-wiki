@@ -1,158 +1,78 @@
 ---
 title: Savings Plans
-description: AWS Savings Plans — Compute SP vs EC2 Instance SP vs SageMaker SP, commitment management, flexibility, and SP vs RI trade-offs
+description: Accurate billing models, decision workflows and scoped examples for savings plans.
 tags:
-  - aws
-  - cost-management
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # Savings Plans
 
-Savings Plans (SP) are AWS's flexible commitment pricing model. You commit to a consistent hourly spend for a 1 or 3 year term and get discounts up to 72% vs On-Demand rates. They replaced Reserved Instances as the primary commitment mechanism for most workloads.
+Price exercises in this note use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, unless explicitly identified as a dated published fee. They are assumptions, not current tariffs; exclusions remain material.
 
-## Types of Savings Plans
+Savings Plans exchange a term commitment, measured in dollars per hour at Savings Plans rates, for discounts on eligible usage. They do not reserve capacity.
 
-### Compute Savings Plans
+## Plan selection
 
-The most flexible SP. Applies to:
+The current family includes Compute, EC2 Instance, SageMaker AI and Database Savings Plans. Compute plans cover eligible EC2, Fargate and Lambda usage with broad flexibility. EC2 Instance plans constrain the instance family and Region. SageMaker AI and Database plans have their own eligible usage and term rules; Database Savings Plans use a one-year term. Check the official eligibility list before assuming a database product is covered.
 
-- EC2 (any instance family, any AZ, any OS)
-- Lambda (any runtime)
-- Fargate (any configuration)
+## Hourly commitment accounting
 
-Coverage example: A Compute SP commitment of $50/hour covers any combination of:
+Assume eligible usage would cost \$10/hour On-Demand, but costs \$7/hour at the selected plan's rates. A \$7/hour commitment covers that discounted usage, not merely 70% of an arbitrary monthly bill.
 
-- 10 x t3.medium EC2 in us-east-1
-- 5 x c6i.large in eu-west-2
-- 1,000 Lambda invocations/hour at 128MB
-- 20 Fargate tasks at 1 vCPU
+- At 730 hours, the commitment is \$7 × 730 = \$5,110.
+- If eligible discounted usage is only \$4 in an hour, the remaining \$3 is unused and does not roll forward.
+- Additional eligible usage is charged according to plan application and remaining coverage; uncovered usage pays its applicable price.
+- Reserved Instance benefits apply before Savings Plans. The same usage does not receive both discounts; Spot is not covered by Savings Plans.
 
-Discount: Up to 66% off On-Demand.
+A previously quoted \$2,520/hour commitment would cost \$1,839,600 over 730 hours, not \$1,840. Always label hourly versus monthly amounts.
 
-### EC2 Instance Savings Plans
+## Purchase workflow
 
-More restrictive — applies to a specific instance family in a specific region. Within that family, you get flexibility on:
+1. Right-size and remove idle resources first.
+2. Review hourly eligible spend and upcoming architectural changes, not just monthly totals.
+3. Model low-demand and outage periods and existing reservations.
+4. Buy conservatively, then monitor utilization and coverage separately.
+5. Track expiration and reassess before renewal.
 
-- Instance size (t3.large vs t3.medium)
-- OS (Linux vs Windows — but Windows is a different charge code)
-- AZ (regional scope)
+A daytime-only development fleet is a poor standalone commitment target because nights still incur the commitment. It can make sense only when other eligible organizational usage consumes those hours. Benefits can be shared from member-account purchases, subject to management-account sharing preferences.
 
-Discount: Up to 72% off On-Demand.
+## Flexibility comparison
 
-### SageMaker Savings Plans
+| Plan         | What may change within eligible usage                        | What still constrains coverage                           |
+| ------------ | ------------------------------------------------------------ | -------------------------------------------------------- |
+| Compute      | EC2 family/size/Region/OS and eligible Fargate/Lambda mix    | Hourly dollars, eligible usage and rate schedule         |
+| EC2 Instance | Size, AZ, OS and tenancy within purchased family/Region      | Family and Region                                        |
+| SageMaker AI | Eligible instance families, sizes, Regions and components    | Product-specific eligibility; not all AI service charges |
+| Database     | Eligible database service/generation/serverless combinations | One-year term and published eligibility                  |
 
-Apply to SageMaker training, notebook, and processing usage. Up to 64% savings.
+An EC2 Instance plan is not purchased as “one m6i.large.” It buys hourly dollars for the selected family/Region. Switching to a larger instance is eligible but can exhaust commitment sooner. Compute plans are not a guarantee that every surrounding Lambda charge is discounted.
 
-## How the Commitment Works
+## Three-hour commitment ledger
 
-You commit to a **$/hour spend amount**, not a specific instance count.
+Assume hypothetical us-east-1 eligible compute rates for a study exercise dated 2026-10-12. The same workload's Savings Plans rate is 70% of its On-Demand rate. Purchase \$7/hour:
 
-**Under-commitment:**
+| Hour     | On-Demand-equivalent usage | Discounted-rate usage | Commitment used | Additional On-Demand charge |
+| -------- | -------------------------- | --------------------- | --------------- | --------------------------- |
+| Quiet    | \$5                        | \$3.50                | \$3.50 of \$7   | \$0                         |
+| Baseline | \$10                       | \$7                   | \$7 of \$7      | \$0                         |
+| Peak     | \$20                       | \$14                  | \$7 of \$7      | \$10                        |
 
-```
-You commit $50/hour. Your actual usage averages $40/hour.
-You still pay $50/hour.
-The extra $10 is "wasted" — you bought commitment you didn't use.
-```
+Total commitment is \$21; additional charge is \$10; total \$31 versus \$35 On-Demand. Utilization is (\$3.50 + \$7 + \$7) ÷ \$21 = 83.33%. The quiet hour's \$3.50 unused commitment cannot cover the peak. Real application uses each usage item's eligible rates and benefit ordering, not one universal multiplier.
 
-**Over-commitment:**
+## Buying and reporting lab
 
-```
-You commit $50/hour. Your actual usage peaks at $80/hour.
-$50 is covered by SP. The $30 above the commitment is billed at On-Demand.
-You don't get SP rates on the excess — SP only covers up to the commitment.
-```
+Export or inspect authorized hourly eligible usage. Remove existing RI-covered usage from the candidate baseline, classify expected migrations and model nights/weekends. Compare one- and three-year alternatives where offered; do not apply three years to Database plans. A fixed 70–80% purchase target is not universally appropriate.
 
-**Right-sizing your commitment:**
-
-- Look at your 30-day average hourly spend
-- Commit 70-80% of your baseline (not peak)
-- Let the remaining 20-30% be covered by On-Demand
-- RIs/SPs are not meant to cover spikes — that's what On-Demand and Spot are for
-
-## Instance Size Flexibility
-
-EC2 Instance Savings Plans give you size flexibility within the same family:
-
-```
-You buy an m6i.large (2 vCPU, 8GB) EC2 Instance SP.
-Your actual usage is m6i.xlarge (4 vCPU, 16GB).
-
-The SP covers the xlarge because it falls within the same m6i family.
-SP applies to m6i.large, m6i.xlarge, m6i.2xlarge, etc.
-```
-
-Compute Savings Plans extend this across families — m6i to c6i to r6i all covered by a single Compute SP.
-
-## SP vs Reserved Instances
-
-| Factor               | Savings Plans                           | Reserved Instances                 |
-| -------------------- | --------------------------------------- | ---------------------------------- |
-| Discount             | Up to 66% (Compute SP)                  | Up to 72% (All Upfront)            |
-| Flexibility          | Can change instance family (Compute SP) | Must specify family (Standard RI)  |
-| Capacity reservation | No                                      | AZ-specific reservation (zonal RI) |
-| Scope                | Regional                                | Zonal or Regional                  |
-| Covered services     | EC2, Lambda, Fargate                    | EC2, RDS, ElastiCache, Redshift    |
-| Windows pricing      | Included in SP rate                     | RI rate + Windows license separate |
-
-**When to choose SP over RI:**
-
-- You run mixed workloads across instance families
-- You use Lambda or Fargate
-- You want the flexibility to shift architecture without losing coverage
-- You prioritize discount ceiling over capacity reservation
-
-**When to choose RI over SP:**
-
-- You need capacity reservation in a specific AZ (zonal RI)
-- You run stable, single-family workloads
-- You want the maximum possible discount
-- You're running RDS, ElastiCache, or Redshift (RIs cover these, SPs don't)
-
-## Buying Strategy
-
-1. **Analyze first.** Use Cost Explorer to understand your 30/90-day average spend by service. Compute SPs cover EC2, Lambda, Fargate. If you have RDS or ElastiCache, RIs still make sense for those.
-
-2. **Buy Compute SP for baseline.** If 60% of your spend is compute and it's reasonably predictable, buy Compute SP covering 70% of that.
-
-3. **Use 3-year for stable workloads.** The discount difference between 1-year and 3-year is significant. If the workload is stable, commit 3-year.
-
-4. **Blend SP + Spot.** A common pattern: SP covers your baseline (70-80% of average), Spot covers bursty workloads at 90% off, On-Demand covers the spikes.
-
-5. **Don't over-buy.** A common mistake is buying SP based on peak usage. SPs that go unused still get charged.
-
-## Checking Coverage
-
-In Cost Explorer, the **Coverage** tab shows:
-
-- What % of your EC2/Lambda/Fargate spend is covered by SP/RI
-- How much is still On-Demand (uncovered spend)
-- Recommendations for additional SP purchases
-
-Coverage = (SP-covered spend + RI-covered spend) / Total spend × 100
-
-Target: 80-90% coverage for stable production workloads. Lower for dev/test. Higher for always-on baseline.
+Record coverage, utilization, owner and expiration separately. Compare actual cash charges with amortized reporting, and track whether benefit sharing was enabled. Use a recommendation as an input, not permission to purchase. The exercise stops at a written recommendation; no paid plan is bought.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/savingsplans/
-- **Documentation:** https://docs.aws.amazon.com/savingsplans/latest/userguide/
-- **Pricing:** https://aws.amazon.com/savingsplans/pricing/
+- [Plan types and eligible usage](https://docs.aws.amazon.com/savingsplans/latest/userguide/plan-types.html)
+- [Savings Plans application](https://docs.aws.amazon.com/savingsplans/latest/userguide/sp-applying.html)
+- [Organizations sharing preferences](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ri-turn-off.html)
 
-## Pricing Examples
-
-**Scenario 1:** A production workload running 30 EC2 instances (mixed m6i and c6i families) + 500 Lambda functions. Monthly On-Demand spend: $4,200. Buying a 1-year Compute SP at 60% coverage ($2,520/hr commitment × 730hr = $1,840/month): saves $900/month vs pure On-Demand.
-
-**Scenario 2:** A SaaS application with 15 Lambda functions (avg 50GB-s/month total) and 8 Fargate tasks (2 vCPU, 4GB each). On-Demand: Lambda ~$65/month + Fargate ~$380/month = $445/month. A 1-year Compute SP at $300/month commitment covers 90% of spend: saves ~$120/month.
-
-## Nuggets & Gotchas
-
-- **SP commitment is a floor, not a ceiling:** You pay for the committed amount regardless of actual usage. If you commit $50/hour but only use $30/hour, you still pay $50.
-- **Over-commitment doesn't get SP rates:** Usage above your SP commitment is billed at On-Demand rates. A $50/hour SP with $80/hour actual usage means $50 at SP rate + $30 at On-Demand.
-- **Compute SP does not cover RDS, ElastiCache, or Redshift:** Only EC2, Lambda, and Fargate. For databases you still need RIs.
-- **EC2 Instance SP doesn't cover other instance families:** If you buy an m6i Instance SP, it won't cover your c6i or r6i instances — they'll be On-Demand.
-- **SP commitment is per account:** A SP bought in account A doesn't cover usage in account B, even within the same AWS Organization (use consolidated billing for RI/SP sharing instead).
+See [[AWS/cost-management/ri-management|Commitment management]].
 
 ## Across the wiki
 

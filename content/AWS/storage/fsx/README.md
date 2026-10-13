@@ -1,213 +1,186 @@
 ---
-title: Amazon FSx
-description: Amazon FSx — managed Windows file servers (SMB) and Lustre parallel file systems. Integration with AD, high performance, and S3 data linking.
+title: "Amazon FSx"
+description: "FSx is a family of four managed filesystem products, not a single filesystem with interchangeable settings."
 tags:
-  - aws
-  - storage
-  - fsx
-  - windows
-  - lustre
-date: 2026-06-06
+  - aws/storage
+date: 2026-10-12
 ---
 
 # Amazon FSx
 
-FSx provides fully managed file storage for two specialized workloads: **Windows File Server** (SMB, Active Directory) and **Lustre** (high-performance parallel file system for HPC and ML).
+FSx is a family of four managed filesystem products, not a single filesystem with interchangeable settings. Learn [[AWS/storage/README|storage selection]], [[AWS/networking/README|VPC networking]] and [[AWS/security/iam/README|IAM]] first.
 
-## FSx for Windows File Server
+## Product selection
 
-### Use Case
+| Product             | Workload and integration                                                             |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| Windows File Server | SMB and Active Directory; Windows applications requiring NTFS-style access controls. |
+| Lustre              | Parallel HPC/analytics filesystem, with supported S3 data-repository integrations.   |
+| NetApp ONTAP        | NFS/SMB/iSCSI, enterprise storage features and compatible migration workflows.       |
+| OpenZFS             | NFS with ZFS snapshots/clones and application-appropriate deployment choices.        |
 
-Enterprise Windows applications requiring SMB file shares:
+Deployment type, availability, protocol, backup, scaling and encryption differ by product. A generic FSx create command cannot configure all four. Windows throughput is provisioned in MB/s and has its own price dimension; it is not a GB storage rate. Lustre storage can grow for eligible persistent and scratch-2 deployments, subject to restrictions/cooldowns; it is not universally fixed at creation.
 
-- Microsoft SQL Server (native file access)
-- Microsoft SharePoint
-- Custom .NET applications with file-based storage
-- SAP with Windows back-end
+## Architecture and security
 
-### Features
+For Windows, establish AD prerequisites, DNS and service-account/network requirements before creation; choose single/Multi-AZ from availability needs. For Lustre, choose scratch versus persistent, client compatibility and repository import/export semantics. S3 integration does not mean every filesystem write is instantaneously a durable S3 backup.
 
-- **SMB 3.x** support (up to SMB 3.1.1)
-- **Active Directory** integration (Kerberos, NTLM, ACLs)
-- **Multi-AZ** deployment for HA
-- **On-premises access** via VPN or Direct Connect
-- **Shadow copies** (backup/restore from previous versions)
+For ONTAP, plan storage virtual machines, volumes and multiprotocol identity mappings. For OpenZFS, distinguish filesystem/volume deployment characteristics, snapshots and backup. Across products, validate routing/security groups, encryption keys, identity permissions and recovery paths. Follow the selected filesystem's protocol ports; do not expose them publicly.
 
-### Creating a FSx for Windows File System
+## Selection and restore exercise
 
-```bash
-aws fsx create-file-system \
-  --file-system-type WINDOWS \
-  --storage-capacity 1000 \
-  --subnet-ids subnet-xxxxx \
-  --windows-configuration '{
-    "ActiveDirectoryId": "d-xxxxx",
-    "ThroughputCapacity": 256,
-    "WeeklyMaintenanceStartTime": "1:00:00",
-    "DailyAutomaticBackupStartTime": "03:00:00",
-    "AutomaticBackupRetentionDays": 7,
-    "CopyTagsToBackups": true
-  }'
+Prerequisites: supported clients, isolated networking, an authorized role and a budget. Choose one product and write down why the others do not meet the protocol/application requirements. Deploy the smallest suitable sandbox through the product's owning guide, mount it with the correct client and write a checksum-labelled dataset.
+
+Expected observations: authorized clients can read/write; an unauthorized security-group path or principal cannot. Create a backup/snapshot supported by that product, restore separately and verify data plus permissions. Test a documented scaling action only if the selected deployment supports it; record the wait/cooldown rather than claiming instant scaling.
+
+Unmount clients and remove sandbox filesystems, backups, repository associations and any directory infrastructure you created. Retained backups continue to cost money.
+
+## Comparable cost model
+
+Use storage GB-months, provisioned throughput units, IOPS where applicable, backups and transfer/request costs. For a three-days-per-week schedule, monthly runtime is approximately 3 × (weeks in month) × 24 hours, not three days total. Compare the same 2-TB dataset and recovery design against EBS/EFS; do not replace it with a 200-GB baseline.
+
+## Product-specific architecture and workflows
+
+| Product             | Protocol/application fit          | Integration to plan                                                                             |
+| ------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Windows File Server | SMB/Windows application semantics | Active Directory, DNS, security groups and Windows permissions.                                 |
+| Lustre              | Parallel filesystem clients/HPC   | Compatible Lustre client, networking, scratch/persistent choice and S3 repository associations. |
+| OpenZFS             | Supported NFS/ZFS workloads       | Export permissions, snapshots/clones and deployment topology.                                   |
+| ONTAP               | Supported NFS/SMB/iSCSI workloads | Storage virtual machines, volumes, identity mapping and tiering.                                |
+
+```text
+Windows client → SMB → FSx Windows + AD identity
+HPC clients → Lustre → FSx Lustre ↔ supported S3 repository association
+NFS clients → OpenZFS / ONTAP → managed filesystem volumes
 ```
 
-### Connecting from Windows EC2
+FSx for Lustre import/export is a configured workflow, not proof that every write instantly exists as an independently recoverable S3 object. Scratch and persistent deployments have different durability/recovery characteristics; storage growth depends on supported deployment type and documented limits/cooldowns.
+
+## Windows and Lustre walkthrough comparison
+
+For Windows, validate domain service accounts, DNS/ports and subnet/HA requirements first. After creation, retrieve the actual DNS/share path and mount using an authorized identity. Verify both Windows filesystem permissions and share-level access. A successful SMB connection does not establish correct application permissions.
+
+For Lustre, select supported capacity/performance/deployment, install the compatible client and use the filesystem's real DNS/mount name from DescribeFileSystems. Load a small S3-linked dataset if a repository association is in scope, verify import/export status and checksum the filesystem and object views. Do not install an obsolete hard-coded client package merely because an old note showed it.
+
+## Performance and recovery measurements
+
+Separate storage capacity, provisioned throughput, IOPS where applicable and client/network limits. Measure concurrent readers/writers, small-file metadata operations and sequential transfer independently. Do not promise one throughput ratio across all products.
+
+Create the selected product's supported backup/snapshot and restore to an isolated target. Review whether application state/ACLs and externally configured AD/repository dependencies are included. Filesystem backup success does not restore every directory service or cross-account permission.
+
+Compute cost from identical data size and elapsed time: storage capacity and provisioned throughput have different units. If using three days per week, multiply by the number of weeks—not three total days for the month. Remove test filesystems/associations and approved recovery copies, but do not delete shared AD resources.
+
+## Worked Windows SMB and backup lab
+
+This recipe chooses **FSx for Windows, SINGLE_AZ_2, 32-GiB SSD, 8-MB/s throughput**, not an HA recommendation. Obtain budget approval for the filesystem, backup/restore copy, Windows client and any directory resources. Before running it:
+
+- Have an existing authorized AWS Managed Microsoft AD directory in the same VPC, an available private subnet, DNS/AD connectivity and a domain-joined Windows test client. Complete the [Windows getting-started prerequisites](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/getting-started.html); do not create or delete a shared directory as implicit cleanup.
+- Create a dedicated filesystem security group with SMB TCP 445 from the authorized client security group and the [required directory-service connectivity](https://docs.aws.amazon.com/fsx/latest/WindowsGuide/limit-access-security-groups.html). A second test client has no permitted SMB path. Do not use a public client allowlist.
+- Configure Python/Boto3, temporary operator credentials and the intended Region. Authorize the FSx create/describe/backup/restore/delete actions and required service-linked-role/KMS setup. Set FSX_LAB_SUBNET_ID, FSX_LAB_SECURITY_GROUP_ID and FSX_LAB_DIRECTORY_ID to the verified existing identifiers. Confirm the selected deployment/throughput is supported in that Region before creation.
+
+Run these Python cells in the same session, preserving returned identifiers:
+
+```python
+import os
+import time
+import uuid
+import boto3
+
+fsx = boto3.client("fsx")
+subnet = os.environ["FSX_LAB_SUBNET_ID"]
+security_group = os.environ["FSX_LAB_SECURITY_GROUP_ID"]
+directory = os.environ["FSX_LAB_DIRECTORY_ID"]
+windows = {"ActiveDirectoryId": directory, "DeploymentType": "SINGLE_AZ_2",
+           "ThroughputCapacity": 8, "AutomaticBackupRetentionDays": 0}
+
+def wait_filesystem(identifier):
+    deadline = time.monotonic() + 1800
+    while time.monotonic() < deadline:
+        filesystem = fsx.describe_file_systems(FileSystemIds=[identifier])["FileSystems"][0]
+        if filesystem["Lifecycle"] == "AVAILABLE":
+            return filesystem
+        if filesystem["Lifecycle"] == "FAILED":
+            raise RuntimeError(filesystem.get("FailureDetails", filesystem))
+        time.sleep(15)
+    raise TimeoutError(f"Inspect {identifier}; do not create another filesystem blindly")
+
+created = fsx.create_file_system(
+    ClientRequestToken=str(uuid.uuid4()), FileSystemType="WINDOWS",
+    StorageType="SSD", StorageCapacity=32, SubnetIds=[subnet],
+    SecurityGroupIds=[security_group], WindowsConfiguration=windows,
+    Tags=[{"Key": "Purpose", "Value": "cloudnative-wiki-fsx-lab"}],
+)["FileSystem"]
+source_id = created["FileSystemId"]
+source = wait_filesystem(source_id)
+print(source_id, source["DNSName"])
+```
+
+Record the creation token before submission if implementing automatic retries; reuse it with identical parameters, not a fresh token on an uncertain failure. The example makes a single submission. A timeout leaves a billable resource to inspect.
+
+On the authorized Windows client, replace the DNS value with the returned source DNS. Use a permitted domain identity via the credential prompt; do not paste a password into a mount command:
 
 ```powershell
-# Map network drive
-net use Z: \\fs-xxxxx.example.com\share /persistent:yes
-
-# From Linux
-sudo mount -t cifs //fs-xxxxx.example.com/share /mnt/fsx \
-  -o user=admin,password=secret,vers=3.0
+$FsxLabDns = "REPLACE_WITH_RETURNED_SOURCE_DNS"
+$FsxLabCredential = Get-Credential
+New-PSDrive -Name FsxLab -PSProvider FileSystem -Root "\\$FsxLabDns\share" -Credential $FsxLabCredential
+New-Item -ItemType Directory -Path "FsxLab:\cloudnative-wiki-fsx-lab" -Force
+Set-Content -Path "FsxLab:\cloudnative-wiki-fsx-lab\orders.csv" -Encoding ASCII -Value "order_id,total`nlab-001,25`nlab-002,40"
+$FsxLabExpectedHash = (Get-FileHash "FsxLab:\cloudnative-wiki-fsx-lab\orders.csv" -Algorithm SHA256).Hash
+$FsxLabExpectedHash
 ```
 
-### Performance
+Expect two order rows totaling 65 and record the hash outside the filesystem. Test the denied client with `Test-NetConnection $FsxLabDns -Port 445`; the excluded network path should fail. Distinguish this network denial from a reachable client's NTFS/share authorization denial; inspect ACLs with `Get-Acl` and test any ACL change only inside this lab directory.
 
-| Deployment | Throughput | IOPS          | Use           |
-| ---------- | ---------- | ------------- | ------------- |
-| Single-AZ  | 2-350 MB/s | Up to 350,000 | Dev/test      |
-| Multi-AZ   | 2-350 MB/s | Up to 350,000 | Production HA |
+Close writers before backup. In the same Python session:
 
-## FSx for Lustre
+```python
+backup_id = fsx.create_backup(
+    FileSystemId=source_id, ClientRequestToken=str(uuid.uuid4()),
+    Tags=[{"Key": "Purpose", "Value": "cloudnative-wiki-fsx-lab"}],
+)["Backup"]["BackupId"]
+deadline = time.monotonic() + 1800
+while time.monotonic() < deadline:
+    backup = fsx.describe_backups(BackupIds=[backup_id])["Backups"][0]
+    if backup["Lifecycle"] == "AVAILABLE":
+        break
+    if backup["Lifecycle"] == "FAILED":
+        raise RuntimeError(backup.get("FailureDetails", backup))
+    time.sleep(15)
+else:
+    raise TimeoutError(f"Inspect backup {backup_id}")
 
-### Use Case
-
-High-performance computing and ML workloads:
-
-- ML training (TensorFlow, PyTorch data loading)
-- Scientific computing (genomics, climate modeling)
-- Financial simulations
-- Media rendering (video processing)
-
-### How Lustre Works
-
-```
-Compute Cluster (EC2 instances)
-       │
-       ▼
-  Lustre File System
-  (Metadata Server + Object Storage)
-       │
-       ▼
-  S3 Bucket (linked, optional)
-  (data lives in S3, cached in Lustre)
+restored_id = fsx.create_file_system_from_backup(
+    BackupId=backup_id, ClientRequestToken=str(uuid.uuid4()),
+    SubnetIds=[subnet], SecurityGroupIds=[security_group],
+    WindowsConfiguration=windows,
+    Tags=[{"Key": "Purpose", "Value": "cloudnative-wiki-fsx-lab-restore"}],
+)["FileSystem"]["FileSystemId"]
+restored = wait_filesystem(restored_id)
+print(restored_id, restored["DNSName"])
 ```
 
-Lustre is a parallel file system — multiple storage servers (OSS) serve data in parallel to multiple clients. It scales to petabytes and hundreds of GB/s throughput.
+Map the restored DNS as another drive, not over the original. Verify its bytes and ACLs:
 
-### S3 Data Repository
-
-Link FSx Lustre to an S3 bucket for S3-backed file systems:
-
-```bash
-aws fsx create-file-system \
-  --file-system-type LUSTRE \
-  --storage-capacity 1200 \
-  --subnet-ids subnet-xxxxx \
-  --lustre-configuration '{
-    "ImportPath": "s3://my-training-data/",
-    "ImportedFileChunkSizeMiB": 32,
-    "DataCompressionType": "LZ4",
-    "WeeklyMaintenanceStartTime": "1:00:00"
-  }'
+```powershell
+$FsxLabRestoreDns = "REPLACE_WITH_RETURNED_RESTORE_DNS"
+New-PSDrive -Name FsxRestore -PSProvider FileSystem -Root "\\$FsxLabRestoreDns\share" -Credential $FsxLabCredential
+$FsxLabActualHash = (Get-FileHash "FsxRestore:\cloudnative-wiki-fsx-lab\orders.csv" -Algorithm SHA256).Hash
+if ($FsxLabActualHash -ne $FsxLabExpectedHash) { throw "Restored content differs" }
+Import-Csv "FsxRestore:\cloudnative-wiki-fsx-lab\orders.csv"
+Get-Acl "FsxRestore:\cloudnative-wiki-fsx-lab\orders.csv"
+Remove-PSDrive FsxRestore
+Remove-PSDrive FsxLab
 ```
 
-Files in S3 appear in FSx (import). Writes to FSx can be exported back to S3 (export).
+Expected rows remain lab-001/25 and lab-002/40; verify the intended domain user's access separately. Backup does not recreate the external AD environment. After recording evidence, review both IDs and invoke `fsx.delete_file_system(FileSystemId=restored_id, WindowsConfiguration={"SkipFinalBackup": True})` and the equivalent for source_id only for these disposable filesystems. Inspect deletion completion and delete backup_id with `fsx.delete_backup(BackupId=backup_id)` after retention approval; remove only the dedicated security group/client if unused. Do not delete the shared directory. A failed create/restore can still leave resources requiring inspection.
 
-### Data Compression
-
-Lustre supports transparent compression (LZ4):
-
-```bash
-aws fsx create-file-system \
-  --file-system-type LUSTRE \
-  --storage-capacity 1200 \
-  --subnet-ids subnet-xxxxx \
-  --lustre-configuration '{
-    "ImportPath": "s3://my-data/",
-    "DataCompressionType": "LZ4"
-  }'
-```
-
-Compression is transparent to applications. LZ4: 2-3x compression ratio typical on text/binary data.
-
-### Mounting Lustre
-
-```bash
-# Install Lustre client
-sudo yum install lustre-client  # Amazon Linux
-sudo apt install lustre-client   # Ubuntu
-
-# Mount
-sudo mount -t lustre fs-xxxxx@tcpfs.fs-xxxxx.fsx.us-east-1.amazonaws.com@tcp:/fsx /mnt/lustre
-```
-
-### Performance Tiers
-
-| Tier       | Storage                    | Use                               |
-| ---------- | -------------------------- | --------------------------------- |
-| Scratch    | Temporary (no replication) | Short-term, bursty workloads      |
-| Persistent | Replicated in single AZ    | Long-term, consistent performance |
-
-## FSx for OpenZFS
-
-Managed OpenZFS file system (file storage, not block). Simpler than Windows or Lustre, for general-purpose Linux workloads.
-
-## FSx for NetApp ONTAP
-
-Fully managed ONTAP file system with advanced features:
-
-- SnapMirror (replication)
-- FlexCache (caching)
-- Data tiering to S3
-- Cloning (instant, zero-copy)
-
-## Performance Comparison
-
-| FSx Type            | Max Throughput | Max IOPS   | Latency |
-| ------------------- | -------------- | ---------- | ------- |
-| Windows             | 350 MB/s       | 350,000    | 0.5-1ms |
-| Lustre (Scratch)    | 2,000 MB/s     | 1,000,000+ | 0.1ms   |
-| Lustre (Persistent) | 2,500 MB/s     | 1,000,000+ | 0.1ms   |
-| ONTAP               | 2,200 MB/s     | 400,000    | 0.5-1ms |
-
-## Costs
-
-| Type              | Cost                                           |
-| ----------------- | ---------------------------------------------- |
-| Windows           | $0.138/GB/mo (storage) + $0.013/GB/mo (backup) |
-| Lustre Scratch    | $0.136/GB/mo                                   |
-| Lustre Persistent | $0.22/GB/mo                                    |
-| ONTAP             | $0.23/GB/mo                                    |
-
-## Limits
-
-| Resource                | Limit               |
-| ----------------------- | ------------------- |
-| Max storage (Windows)   | 65,536 GB (64 TB)   |
-| Max storage (Lustre)    | 1,000,000 GB (1 PB) |
-| Max throughput (Lustre) | 2,500 MB/s          |
-| Max file size (Lustre)  | 16 TiB              |
+For a parallel Linux/HPC exercise, use the separate [FSx for Lustre getting-started tutorial](https://docs.aws.amazon.com/fsx/latest/LustreGuide/getting-started.html), including its release-compatible client and real mount name. Windows SMB commands are not a Lustre client recipe. [Create filesystem contract](https://docs.aws.amazon.com/cli/latest/reference/fsx/create-file-system.html), [backup creation](https://docs.aws.amazon.com/cli/latest/reference/fsx/create-backup.html), [restore configuration](https://docs.aws.amazon.com/cli/latest/reference/fsx/create-file-system-from-backup.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/fsx/
-- **Documentation:** https://docs.aws.amazon.com/fsx/
-- **Pricing:** https://aws.amazon.com/fsx/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A Windows file server for 50 users with 2TB of shared files. FSx for Windows: 2,000GB × $0.138 = $276/month. Plus throughput (256 MB/s = $0.013/GB/mo × 256 GB = $3.33/month). Total: ~$280/month. Compare to an EC2 instance with 2TB EBS (200GB × $0.08 = $16/month) + EC2 cost (m5.xlarge = $140/month) = $156/month. FSx is 80% more expensive but fully managed with AD integration — no EC2 maintenance.
-
-**Scenario 2:** An ML training job processing 50TB of data from S3 using FSx Lustre. 50TB × $0.136/GB = $6,800/month. A better approach: link FSx Lustre to S3 (import on mount), process, then delete the FSx. 50TB Lustre for 3 days/week = 150TB-days/month × (50TB × $0.136/30) = ~$340/month. Total: $340/month vs $6,800/month.
-
-## Nuggets & Gotchas
-
-- **FSx for Windows is single-AZ by default — enable Multi-AZ for production:** Multi-AZ adds 2x cost but provides failover. For databases (SQL Server) and critical file shares, always use Multi-AZ.
-- **FSx Lustre Scratch has no replication — if a storage server fails, data is lost:** Scratch is for temporary workloads (ML training, video rendering). For persistent data, use Persistent Lustre (replicated within single AZ).
-- **Lustre imports from S3 are lazy (on-demand) — first access is slow:** When you first read a file from S3 via Lustre, it fetches from S3 and caches. This first-read latency can be 10-30 seconds for large files. For ML training, use `hdf5` or preload data before training starts.
-- **FSx for Windows charges for throughput capacity (MB/s) even when idle:** A 256 MB/s file system costs ~$3.33/month even if unused. Right-size throughput capacity — a small team doesn't need 256 MB/s.
-- **Lustre file system size is fixed at creation — you can't expand without creating a new one:** Plan capacity ahead. For ML workloads with growing datasets, create the file system with enough headroom or plan migration to a larger one.
+- [FSx product documentation](https://docs.aws.amazon.com/fsx/)
+- [Lustre storage scaling](https://docs.aws.amazon.com/fsx/latest/LustreGuide/managing-storage-capacity.html)
+- [FSx pricing dimensions](https://aws.amazon.com/fsx/pricing/)
 
 ## Across the wiki
 

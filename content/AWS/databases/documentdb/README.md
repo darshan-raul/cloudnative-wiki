@@ -1,299 +1,92 @@
 ---
-title: Amazon DocumentDB
-description: Amazon DocumentDB — MongoDB compatible document database. Collections, aggregation pipelines, transactions, change streams, and cluster scaling.
+title: "Amazon DocumentDB"
+description: "DocumentDB is a managed document database with MongoDB-compatible APIs, not a promise of complete MongoDB feature equivalence."
 tags:
-  - aws
-  - databases
-  - documentdb
-  - mongodb
-date: 2026-06-06
+  - aws/databases
+date: 2026-10-12
 ---
 
-# Amazon DocumentDB (with MongoDB compatibility)
+# Amazon DocumentDB
 
-DocumentDB is a managed document database compatible with MongoDB 4.0/5.0/7.0 APIs. It stores JSON-like documents, supports flexible schemas, and provides fully managed HA with 6-node replica set (3 primary + 3 storage replicas across 3 AZs).
+DocumentDB is a managed document database with MongoDB-compatible APIs, not a promise of complete MongoDB feature equivalence. Check engine/version-specific operator, driver and administrative support before migration. Prerequisites: [[AWS/databases/README|database selection]], [[AWS/networking/README|networking]] and [[AWS/reliability/backup-and-recovery|recovery]].
 
-## Core Concepts
+## Architecture and compatibility
 
-### Document Model
+Instance-based clusters have one primary plus optional replicas, backed by six storage copies across three AZs. They do not have three writable primaries. Elastic Clusters are a distinct sharded deployment model; a classic cluster cannot be sharded by inventing an enableSharding parameter.
+
+Use the cluster endpoint for supported primary access and configure driver replica-set/read preference behavior according to the guide. Validate indexes, transactions, aggregation behavior, connection pooling and failover against your selected engine, not just a successful connection. $lookup is supported with documented constraints; categorical unsupported claims are incorrect. Unsupported operators need application redesign, not an assumed alternative operator.
+
+## Provisioning and operations
+
+CreateDBCluster provisions cluster metadata/storage, while CreateDBInstance creates compute separately. replication-group-id and num-cache-verticies are not DocumentDB cluster flags. Use private network paths, restrictive security groups, TLS and secure credential retrieval; avoid passwords embedded in URIs committed to notes or source code.
+
+Stop/start is supported for eligible clusters but retains storage/other charges and has restrictions/automatic restart behavior. Snapshot/PITR recovery is distinct from replicas. Monitor database load, memory, connections, I/O and replication lag with the documented metrics for the chosen model.
+
+## Migration/restore exercise
+
+Prerequisites: an isolated, budgeted test cluster, compatible client, IAM/TLS/network prerequisites and a representative dataset without sensitive production content. Restore or import a few documents and indexes; test each application query/operator and compare output with the source database.
+
+Demonstrate a denied unauthorized connection and a controlled primary failover; record driver reconnect behavior and lag rather than claiming uninterrupted writes. Restore a snapshot to a separate sandbox target and verify counts, representative values and index definitions—counts alone are insufficient migration evidence. Remove disposable instances, clusters and reviewed snapshots.
+
+## Cost and limits
+
+Estimate compute, storage, I/O or I/O-optimized mode where applicable, backups and network costs. Elastic and instance-based models have different dimensions/quotas. Discover supported engine versions and account/Region limits from current owning pages instead of maintaining a guessed numeric table. Compare total application compatibility/remediation cost, not only database instance price.
+
+## Document schema and aggregation
 
 ```json
 {
-  "_id": "ObjectId('...')",
   "user_id": "user123",
-  "name": {
-    "first": "Alice",
-    "last": "Smith"
-  },
-  "email": "alice@example.com",
+  "name": { "first": "Alice", "last": "Smith" },
   "orders": [
     { "order_id": "order-001", "total": 99.99 },
     { "order_id": "order-002", "total": 149.99 }
-  ],
-  "created_at": "2024-01-15T10:30:00Z"
+  ]
 }
 ```
 
-Collections group documents (like SQL tables, but schemaless).
+Collections group documents; absence of a mandatory relational schema does not remove validation/versioning requirements. Embedding bounded related data versus referencing separate collections changes read patterns, update atomicity and document growth.
 
-## Creating a Cluster
-
-```bash
-aws docdb create-db-cluster \
-  --db-cluster-identifier my-docdb \
-  --engine docdb \
-  --engine-version 5.0.0 \
-  --master-username admin \
-  --master-user-password SecretPassword \
-  --replication-group-id my-docdb-rg \
-  --num-cache-verticies 3 \
-  --vpc-security-group-ids sg-xxxxx \
-  --db-subnet-group-name my-subnet-group \
-  --backup-retention-period 3 \
-  --preferred-backup-window 03:00-04:00
-```
-
-### Add Instance
-
-```bash
-aws docdb create-db-instance \
-  --db-instance-identifier my-docdb-instance \
-  --db-cluster-identifier my-docdb \
-  --db-instance-class db.r6g.large \
-  --engine docdb
-```
-
-## Connecting
-
-```bash
-# Get cluster endpoint
-aws docdb describe-db-clusters \
-  --db-cluster-identifier my-docdb \
-  --query 'DBClusters[0].Endpoint'
-
-# Connect with mongosh
-mongosh --host my-docdb.xxxxx.us-east-1.docdb.amazonaws.com:27017 \
-  --username admin --password SecretPassword \
-  --ssl --sslCAFile rds-combined-ca-bundle.pem
-
-# Or via Python (pymongo)
-pip install pymongo
-```
-
-```python
-from pymongo import MongoClient
-
-client = MongoClient(
-    "mongodb://admin:password@my-docdb.xxxxx.docdb.amazonaws.com:27017/?ssl=true&ssl_ca_certs=rds-combined-ca-bundle.pem"
-)
-db = client['mydb']
-collection = db['users']
-
-# Insert
-collection.insert_one({"name": "Alice", "email": "alice@example.com"})
-
-# Find
-user = collection.find_one({"name": "Alice"})
-```
-
-## Aggregation Pipeline
+The following Mongo-style shell examples assume an authorized supported engine and disposable collections. Verify actual feature/operator support by engine/version before migration.
 
 ```javascript
-// Find top customers by total order amount
+db.users.insertOne({ user_id: "sandbox-123", name: "Alice" });
+db.users.findOne({ user_id: "sandbox-123" });
+db.users.createIndex({ user_id: 1 }, { unique: true });
+db.orders.createIndex({ customer_id: 1, created_at: -1 });
 db.orders.aggregate([
   { $unwind: "$items" },
-  {
-    $group: {
-      _id: "$customer_id",
-      total_spent: { $sum: "$items.price" },
-    },
-  },
+  { $group: { _id: "$customer_id", total_spent: { $sum: "$items.price" } } },
   { $sort: { total_spent: -1 } },
   { $limit: 10 },
 ]);
 ```
 
-## Indexes
+This aggregation sums the specified item price field; if quantities/discounts exist, include them in the business definition. An identical row count is not proof of financial reconciliation.
 
-```javascript
-// Create index on email field
-db.users.createIndex({ email: 1 }, { unique: true });
+## Connection, transactions and change streams
 
-// Create compound index
-db.orders.createIndex({ customer_id: 1, created_at: -1 });
+Retrieve the real cluster endpoint and follow the current DocumentDB TLS/client guide with a trusted CA and hostname verification. Avoid passwords in connection strings/shell history; current client parameters replace deprecated ssl_ca_certs examples. Configure supported replica-set/read preference behavior, connection pooling and retry semantics deliberately.
 
-// Create text index for search
-db.products.createIndex({ description: "text" });
+Transactions depend on the engine/model's supported behavior and limits; test rollback and retry errors with your actual driver. Do not copy a multi-database application transaction without checking support. Change streams require supported configuration and retention, plus resumable consumers that tolerate retries and expired progress. A listener callback logging full documents can expose sensitive content.
 
-// List indexes
-db.users.getIndexes();
-```
+## Instance-based versus Elastic Clusters
 
-## Change Streams
+Instance-based creation separates cluster from compute, with one writer and replicas. Elastic Clusters provide a distinct shard-based model and compatibility/administration constraints; classic enableSharding is not an RDS parameter. Keep separate tests for $lookup, index/aggregation behavior, transactions, change streams and operators used by the application.
 
-Track real-time changes (like DynamoDB Streams):
+## Recovery and monitoring
 
-```javascript
-// Open change stream
-const change_stream = db.users.watch([], { fullDocument: "updateLookup" });
+Create a snapshot/PITR restore into an isolated target, reconnect through verified TLS and compare documents, indexes and representative queries. Stop/start is eligible-model-specific and retains costs; deleting/recreating is not the only workaround for idle usage.
 
-change_stream.on("change", (change) => {
-  console.log(change);
-});
-```
-
-Use cases:
-
-- Triggers (update related data on change)
-- CDC (change data capture to Kinesis)
-- Real-time notifications
-
-## Transactions
-
-DocumentDB supports multi-document ACID transactions (MongoDB 4.0+ compatible):
-
-```javascript
-// Start session and transaction
-const session = client.startSession();
-
-session.startTransaction({
-  readConcern: { level: "snapshot" },
-  writeConcern: { w: "majority" },
-});
-
-try {
-  const db1 = client.db("app");
-  const db2 = client.db("audit");
-
-  await db1
-    .collection("accounts")
-    .updateOne({ _id: 1 }, { $inc: { balance: -100 } }, { session });
-
-  await db2
-    .collection("transactions")
-    .insertOne({ from: 1, to: 2, amount: 100 }, { session });
-
-  await session.commitTransaction();
-} catch (e) {
-  await session.abortTransaction();
-} finally {
-  session.endSession();
-}
-```
-
-## Sharding
-
-DocumentDB uses shard key for horizontal scaling:
-
-```bash
-# Enable sharding (cluster parameter group)
-aws docdb modify-db-cluster-parameter-group \
-  --db-cluster-parameter-group-name my-param-group \
-  --parameters '[{
-    "ParameterName": "enableSharding",
-    "ParameterValue": "true",
-    "ApplyMethod": "pending-reboot"
-  }]'
-```
-
-```javascript
-// Shard collection by user_id
-sh.shardCollection("app.orders", { user_id: "hashed" });
-```
-
-## Backup and Restore
-
-### Point-in-Time Recovery
-
-Enabled by default (1-35 days retention):
-
-```bash
-# Restore to point in time
-aws docdb restore-db-cluster-to-point-in-time \
-  --source-db-cluster-identifier my-docdb \
-  --restored-db-cluster-identifier my-docdb-restored \
-  --restore-to-time 2024-01-15T10:00:00Z
-```
-
-### Snapshot
-
-```bash
-# Create snapshot
-aws docdb create-db-cluster-snapshot \
-  --db-cluster-identifier my-docdb \
-  --db-cluster-snapshot-identifier my-snapshot
-
-# Restore from snapshot
-aws docdb restore-db-cluster-from-snapshot \
-  --db-cluster-identifier my-docdb-restored \
-  --snapshot-identifier my-snapshot \
-  --engine docdb
-```
-
-## Monitoring
-
-```bash
-# Key metrics
-# DatabaseClusterReplicaLag, DatabaseConnections, CPUUtilization
-
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/DocDB \
-  --metric-name DatabaseConnections \
-  --dimensions Name=DBClusterIdentifier,Value=my-docdb
-```
-
-## Pricing
-
-| Component     | Cost                       |
-| ------------- | -------------------------- |
-| db.r6g.large  | $0.096/hr (~$69/month)     |
-| db.r6g.xlarge | $0.192/hr (~$138/month)    |
-| Storage       | $0.10/GB/month             |
-| I/O           | $0.20 per million requests |
-| Backup        | $0.02/GB/month             |
-
-## Limits
-
-| Resource                     | Limit                   |
-| ---------------------------- | ----------------------- |
-| Max storage                  | 64 TB                   |
-| Max instances per cluster    | 1 primary + 14 replicas |
-| Max databases                | 640                     |
-| Max collections per database | Unlimited               |
-| Max document size            | 16 MB                   |
-
-## MongoDB vs DocumentDB Compatibility
-
-| Feature                     | MongoDB | DocumentDB                              |
-| --------------------------- | ------- | --------------------------------------- |
-| API                         | Native  | MongoDB 4.0/5.0/7.0                     |
-| Change streams              | Yes     | Yes                                     |
-| Multi-document transactions | Yes     | Yes                                     |
-| Sharding                    | Yes     | Yes (via cluster parameters)            |
-| $lookup (joins)             | Yes     | No (use $graphLookup for limited cases) |
-| Geospatial indexes          | Yes     | Limited                                 |
-| Text search                 | Yes     | Yes (basic)                             |
-| Atlas-specific features     | No      | No                                      |
+Watch CPU/memory, connections, I/O and replica lag; workload query plans/index effectiveness matter as much as instance size. Separate compute, storage, I/O mode, backups and transfer when pricing. Protect backups and test KMS/network/credentials during restore rather than only recording snapshot status.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/documentdb/
-- **Documentation:** https://docs.aws.amazon.com/documentdb/
-- **Pricing:** https://aws.amazon.com/documentdb/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A production DocumentDB cluster (1 primary + 1 replica, db.r6g.xlarge). On-Demand: 2 × $0.192/hr × 24 × 30 = $276.48/month. Storage 500GB × $0.10 = $50/month. Total: ~$326/month. Compare to self-managed MongoDB on EC2 (2 × m5.xlarge = $138/month + EBS 500GB = $40/month) = $178/month. DocumentDB is 83% more expensive but fully managed with HA and no ops burden.
-
-**Scenario 2:** A dev DocumentDB cluster (db.r6g.large, single instance). On-Demand: $0.096/hr × 24 × 30 = $69/month. With db.t3.medium (not available in DocumentDB), you'd need at least r6g.large. Stop/start not supported — use `delete-cluster` for dev environments or use DocumentDB Serverless (preview).
-
-## Nuggets & Gotchas
-
-- **DocumentDB doesn't support `$lookup` for cross-collection joins in the same database:** You can use `$graphLookup` for recursive graph queries, but for complex joins, denormalize your data or use application-level joins.
-- **DocumentDB change streams require a replica set cluster (not single instance):** If you have a single-instance DocumentDB, change streams won't work. Add at least one replica.
-- **DocumentDB's $regex doesn't support case-insensitive regex (i) on indexed fields:** Use text indexes instead. For large collections, consider Elasticsearch or OpenSearch for complex text search.
-- **DocumentDB doesn't support MongoDB Atlas-specific features (Charts, Realm, Atlas Search):** If you rely on Atlas Search (Lucene-based full-text), you'll need a different approach in DocumentDB — use `$text` search or external search service.
-- **DocumentDB's `instance-hour` billing includes partial hours — a 30-minute use = 1 hour:** Unlike some services that bill per second, DocumentDB rounds up to the nearest hour for instance billing.
+- [DocumentDB architecture](https://docs.aws.amazon.com/documentdb/latest/developerguide/how-it-works.html)
+- [Supported APIs and operators](https://docs.aws.amazon.com/documentdb/latest/developerguide/mongo-apis.html)
+- [Cluster creation CLI contract](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html)
+- [Stopping and starting clusters](https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-start-stop.html)
+- [DocumentDB pricing](https://aws.amazon.com/documentdb/pricing/)
 
 ## Across the wiki
 

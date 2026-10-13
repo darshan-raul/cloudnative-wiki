@@ -1,122 +1,71 @@
 ---
-title: Amazon VPC Lattice
-tags: [aws, networking, vpc-lattice, service-mesh, security, architecture]
-date: 2026-09-06
-description: "Amazon VPC Lattice architecture: application-layer service networking across VPCs and accounts without sidecars, IAM auth policies, target groups, and Gateway API integration."
+title: "Amazon VPC Lattice"
+description: "Configure service-network boundaries, target routing and caller authorization with a complete staged workflow."
+tags:
+  - cloud/aws/networking
+date: 2026-10-12
 ---
 
-# Amazon VPC Lattice 🌐
+# Amazon VPC Lattice
 
-Amazon VPC Lattice is a fully managed application networking service that connects, secures, and monitors service-to-service communication across VPCs, AWS accounts, and compute types (EC2, ECS, EKS, Lambda) without requiring sidecar proxies or complex VPC peering networks.
+VPC Lattice provides supported managed service networking and resource-access capabilities. It does not replace every VPC route, firewall or application authorization requirement. Start with [[AWS/networking/vpc/README|VPC]] and [[AWS/security/iam/policy-evaluation|IAM evaluation]].
 
----
+## Service workflow
 
-## 1. Architectural Mental Model
+A service network groups services/access boundaries. Associate the intended consumer VPCs. A service needs a supported target group, registered targets, a listener and routing rules/default action. Creating only the network/service association does not create a working endpoint.
 
-```mermaid
-flowchart TD
-    subgraph VPC_A["VPC A (Account 1 - Consumer)"]
-        ConsumerEC2["EC2 Instance / EKS Pod"]
-        VPC_Assoc["VPC Association"]
-        ConsumerEC2 -->|DNS Request| VPC_Assoc
-    end
+For AWS_IAM authentication, configure appropriate network/service auth policies and caller permissions, then use supported SigV4 signing. An auth-type setting without permitted identities does not provide successful access. Test unauthorized callers explicitly.
 
-    subgraph LatticeNetwork["Amazon VPC Lattice Service Network"]
-        ServiceNetwork["Service Network (Logical Boundary)"]
-        AuthPolicy["IAM Auth Policy (Zero Trust)"]
-        AccessLogs["Access Logging (CloudWatch / S3 / Kinesis)"]
-        ServiceNetwork --- AuthPolicy
-        ServiceNetwork --- AccessLogs
-    end
+Supported HTTP/HTTPS/TLS and resource configurations have separate constraints; do not infer that a generic L7 path/header rule applies to every TCP/resource path. RAM sharing and network association do not grant arbitrary application permissions.
 
-    subgraph ServiceDefinition["VPC Lattice Service"]
-        Listeners["Listeners (HTTP / HTTPS / TLS)"]
-        Rules["Routing Rules (Path / Header / Method)"]
-        TargetGroup["Target Group"]
-        Listeners --> Rules --> TargetGroup
-    end
+## Complete sandbox setup sequence
 
-    subgraph ComputeTargets["Target Compute Types"]
-        TG_ALB["Application Load Balancer"]
-        TG_Lambda["AWS Lambda Functions"]
-        TG_IP["IP Addresses / Pods"]
-        TG_Instance["EC2 Instances"]
-    end
+Prerequisites: two approved sandbox VPCs, a healthy disposable backend, scoped Lattice/RAM/IAM permissions and a cost budget.
 
-    VPC_Assoc --> ServiceNetwork
-    ServiceNetwork --> ServiceDefinition
-    TargetGroup --> ComputeTargets
+1. Create the dedicated service network and intended VPC association with reviewed SGs.
+2. Create a compatible target group; register the actual backend targets and inspect health.
+3. Create a service, listener and a default forward action to that target group.
+4. Associate the service with the network, configure auth policies and enable an approved access-log destination.
+5. From the allowed consumer, resolve the returned DNS name and invoke with the required signing.
+6. Repeat from an excluded identity/network; expect denial.
+7. Temporarily make the sandbox target unhealthy; distinguish target-health failure from authentication failure.
+8. Restore health, then remove associations, listener/rules, target registrations/group, service/network and dedicated logs in dependency order.
+
+Use the owning CLI/API contracts with the **returned identifiers**, not fabricated sn-/svc- placeholders described as production commands. Do not report the exercise as tested until these checkpoints are executed in an approved account.
+
+## Kubernetes and migration
+
+Reuse [[Kubernetes/eks/networking/vpc-lattice/README|the canonical Gateway API controller lesson]]. Controller permissions/resources and supported route kinds must match the installed version. [[AWS/concepts/app-mesh-vs-vpc-lattice|App Mesh migration]] requires capability mapping and failure tests.
+
+## Building-block map and diagnosis
+
+```text
+consumer VPC ─ associate → service network ─ associate → service
+       │                      │                           ├─ auth policy
+       │                 network auth policy              └─ listener/rule
+       │                                                     │
+       └── DNS + signed request ─────────────────────────→ target group
+                                                          └─ registered backend
 ```
 
----
+The service network groups associations and network-level policy. The service owns its listener, routing and service-level policy. A target group owns target type and health. These objects can exist independently; an associated network with no listener/healthy target will not serve the request. In a multi-account setup, resource sharing and consumer association are also distinct from IAM caller permission.
 
-## 2. Core Building Blocks
+| Symptom                                 | Inspect first                                                   |
+| --------------------------------------- | --------------------------------------------------------------- |
+| Name does not resolve                   | Consumer VPC association and DNS path                           |
+| Request denied                          | Auth type, SigV4 signing, caller IAM and network/service policy |
+| Authorized request gets backend failure | Listener action, target registration, health and backend SG     |
+| One path works, another fails           | Protocol and routing support for that target/resource type      |
 
-| Component           | Responsibility                                                                                            |
-| :------------------ | :-------------------------------------------------------------------------------------------------------- |
-| **Service Network** | Logical namespace that groups services together. Associated with VPCs to grant network access.            |
-| **Service**         | Independently deployable software component. Contains listeners, routing rules, and target groups.        |
-| **Target Group**    | Collection of compute targets (EC2, IP addresses, Lambda, ALB) serving the workload.                      |
-| **Auth Policy**     | Fine-grained IAM policy applied to the Service Network or Service to authorize requests (`sigv4`).        |
-| **VPC Association** | Connects a VPC to a Service Network, automatically creating link-local routing without IP overlap issues. |
+For a rollout, publish a small sandbox service, collect access logs and test allowed and denied callers before adding production traffic. Compare the returned service DNS name and real target health with the expected configuration. Record all identifiers for dependency-order cleanup.
 
----
+## References
 
-## 3. Key Advantages Over Traditional Mesh & Transit Gateway
-
-1. **No Sidecars Required:** Unlike Istio, Linkerd, or AWS App Mesh (deprecated), Lattice is completely sidecarless, running directly on AWS Hyperplane data plane infrastructure.
-2. **Handles Overlapping CIDRs:** Because routing occurs at Layer 7 using domain names rather than packet IP routing, consumer and provider VPCs can share identical CIDR blocks (e.g., `10.0.0.0/16`).
-3. **Multi-Account & Cross-Organization Sharing:** Service Networks can be shared seamlessly across AWS Organizations using AWS Resource Access Manager (RAM).
-4. **Native AWS SigV4 Authentication:** Enforces caller identity verification at the network edge using standard AWS IAM signatures on HTTP requests.
-
----
-
-## 4. Production CLI Setup & Workflow
-
-```bash
-# 1. Create Service Network
-aws vpc-lattice create-service-network \
-  --name production-mesh \
-  --auth-type AWS_IAM
-
-# 2. Associate Consumer VPC with Service Network
-aws vpc-lattice create-service-network-vpc-association \
-  --service-network-identifier sn-0123456789abcdef0 \
-  --vpc-identifier vpc-0a1b2c3d4e5f6g7h8
-
-# 3. Create a Target Group (IP-based for container pods)
-aws vpc-lattice create-target-group \
-  --name order-service-tg \
-  --type IP \
-  --config '{"port": 8080, "protocol": "HTTP", "vpcIdentifier": "vpc-0a1b2c3d4e5f6g7h8"}'
-
-# 4. Create Service and bind to Service Network
-aws vpc-lattice create-service \
-  --name order-service \
-  --auth-type AWS_IAM
-
-aws vpc-lattice create-service-network-service-association \
-  --service-network-identifier sn-0123456789abcdef0 \
-  --service-identifier svc-0123456789abcdef0
-```
-
----
-
-## 5. Kubernetes Integration: AWS Gateway API Controller
-
-Kubernetes workloads consume VPC Lattice via the official **AWS Gateway API Controller**:
-
-- `Gateway` resource creates the Lattice Service Network.
-- `HTTPRoute` resources create Lattice Services, routing rules, and target groups mapping directly to Kubernetes Services and Pod IPs.
-
----
-
-## Related Notes in Wiki
-
-- [[Kubernetes/eks/networking/vpc-lattice/README|EKS VPC Lattice Gateway API Controller]]
-- [[AWS/concepts/app-mesh-vs-vpc-lattice|App Mesh vs Amazon VPC Lattice]]
-- [[AWS/networking/vpc/README|AWS VPC Fundamentals]]
-- [[AWS/security/iam/README|AWS IAM Policies & SigV4]]
+- [Lattice concepts](https://docs.aws.amazon.com/vpc-lattice/latest/ug/what-is-vpc-lattice.html).
+- [Target groups](https://docs.aws.amazon.com/vpc-lattice/latest/ug/target-groups.html).
+- [Authentication](https://docs.aws.amazon.com/vpc-lattice/latest/ug/auth-policies.html).
+- [CLI contract index](https://docs.aws.amazon.com/cli/latest/reference/vpc-lattice/).
+- [Pricing](https://aws.amazon.com/vpc/lattice/pricing/).
 
 ## Across the wiki
 

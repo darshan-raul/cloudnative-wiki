@@ -1,183 +1,85 @@
 ---
-title: AWS Control Tower
-description: AWS Control Tower — pre-configured landing zone with preventive and detective guardrails, OU structure, and automated compliance monitoring for multi-account AWS environments.
+title: "AWS Control Tower"
+description: "Control Tower establishes and governs a landing zone using Organizations and supporting services."
 tags:
-  - aws
-  - management
-  - control-tower
-date: 2026-06-06
+  - aws/management-governance
+date: 2026-10-12
 ---
 
 # AWS Control Tower
 
-Control Tower automates the creation of a secure, multi-account AWS environment using a pre-configured landing zone. It sets up AWS Organizations with OUs, enables guardrails (preventive and detective), and provides a dashboard for compliance monitoring.
+Control Tower establishes and governs a landing zone using [[AWS/management-governance/organizations/README|Organizations]] and supporting services. It is not a replacement for IAM, workload security or recovery design.
 
-## What Control Tower Sets Up
+## Landing zone and control types
 
-When you run Control Tower, it creates:
+A landing zone provides account/OU structure, shared audit/logging foundations and account provisioning/enrollment. Preventive controls restrict actions, detective controls identify noncompliance and proactive controls check supported provisioning before deployment. Each control's scope, Region/resource support and underlying enforcement matter.
 
-```
-Landing Zone
-├── Organization Structure
-│   ├── Core OUs:
-│   │   ├── Security (Log Archive, Audit accounts)
-│   │   ├── Sandbox (playground for experimentation)
-│   │   └── Custom OUs (you define)
-│   └── Management Account (payer)
-│
-├── Shared Accounts:
-│   ├── Audit Account — Security team access, never used for workloads
-│   └── Log Archive Account — Centralized CloudTrail and AWS Config logs
-│
-├── Pre-configured Guardrails:
-│   ├── Preventive (SCPs) — Stop bad things from happening
-│   └── Detective (AWS Config rules) — Detect when bad things happen
-│
-└── Shared Infrastructure:
-    ├── VPC in each region with subnets
-    ├── IAM Identity Center (SSO)
-    └── CloudTrail and AWS Config in all accounts
-```
+Account enrollment and registered OUs have specific prerequisites; existing accounts are not automatically governed merely because they are in an organization. Current landing-zone capacity is up to 10,000 accounts, subject to related quotas—not twenty. A supported third-party identity provider can remain integrated; setup does not universally replace corporate identity.
 
-## Guardrails
+## Account Factory and infrastructure boundaries
 
-Control Tower ships with pre-built guardrails organized by category. Each guardrail is either preventive or detective.
+Account Factory provisioning uses the documented Service Catalog/account workflow, not a fictional accept-responsibility-for-portfolio-access operation. AcceptPortfolioShare concerns an actual portfolio share and does not itself provision an account.
 
-### Preventive Guardrails (SCPs)
+Do not manually edit Control Tower-managed resources without understanding drift/repair behavior. Separate landing-zone baselines from workload [[AWS/management-governance/cloudformation/README|CloudFormation]]/CDK stacks. Governance does not automatically enable every service's data logging, protect every data plane or eliminate regional failure risk.
 
-Preventive guardrails use Service Control Policies to stop non-compliant actions before they happen:
+## Governance exercise
 
-- **Disallow region:** Prevent resources in specific regions
-- **Disallow public access to S3 buckets:** Enforce private buckets
-- **Disallow broad IAM access keys:** Require temporary credentials
-- **Disallow classic resources:** Prevent EC2-Classic, RDS-Classic
+Use authorized sandbox OUs/accounts and budget for logging/Config/supporting resources. Identify one supported control of each type and explain whether it blocks an action, reports state or checks provisioning. Enable only an approved sandbox control, then test an allowed action and a deliberate bounded noncompliant action.
 
-### Detective Guardrails (AWS Config Rules)
+Expected observations differ: a preventive denial, a detective finding after evaluation, or a proactive provisioning failure. An enrolled-account status alone is not evidence all workloads are compliant. Inspect drift/status and document a safe repair/rollback sequence.
 
-Detective guardrails use AWS Config rules to detect non-compliant resources after they are created:
+Remove only test controls/resources after dependency review; account closure, landing-zone deletion or disabling audit trails are not routine learning cleanup. Retained logs continue to incur charges.
 
-- **VPC has flow logs enabled:** Detect VPCs without Flow Logs
-- **EBS volumes encrypted:** Detect unencrypted volumes
-- **Security groups allow open SSH:** Detect overly permissive SGs
-- **CloudTrail enabled:** Detect accounts without CloudTrail
+## Costs and prerequisites
 
-### Guardrail States
+Control Tower's supporting services can cost money: logging, Config recording/rules, S3/KMS and provisioned infrastructure should be budgeted. Verify home/governed Regions, identity integration, existing organization prerequisites and quotas in the current setup guide.
 
-Each guardrail can be in one of three states:
+## Landing-zone architecture and control comparison
 
-- **Enforced:** Non-compliant actions are blocked (preventive) or resources are remediated (detective)
-- **Not enabled:** Guardrail is not active
-- ** detective only (clear):** Guardrail is in detection mode only (non-compliant but not blocked)
-
-## Organization Units Created by Control Tower
-
-```
-Root
-├── Security
-│   ├── Audit (security team access)
-│   └── Log Archive (centralized logging)
-├── Sandbox (experimental, no production resources)
-└── Custom (user-defined OUs you create)
-    └── Production (your production workloads)
+```text
+Organizations
+  → Control Tower landing zone
+       ├─ audit/security access
+       ├─ log archive
+       ├─ registered OUs + enrolled accounts
+       └─ Account Factory provisioning
+            → supported preventive/detective/proactive controls
 ```
 
-## Control Tower vs Manual Setup
+| Control type | When evidence appears                          | Test                                                           |
+| ------------ | ---------------------------------------------- | -------------------------------------------------------------- |
+| Preventive   | At the action's authorization/enforcement path | Deliberately attempt bounded denied action                     |
+| Detective    | After supported resource evaluation            | Create/revert a sandbox noncompliant state and inspect finding |
+| Proactive    | During supported provisioning validation       | Submit a supported noncompliant resource proposal              |
 
-| Task                 | Control Tower                    | Manual                               |
-| -------------------- | -------------------------------- | ------------------------------------ |
-| Set up Organizations | Automated                        | Manual                               |
-| Create OUs           | Pre-configured template          | Manual                               |
-| Enable CloudTrail    | Auto-enabled in all accounts     | Manual per account                   |
-| Guardrails           | 50+ pre-built                    | Write SCPs/Config rules from scratch |
-| SSO integration      | Built-in AWS IAM Identity Center | Manual                               |
-| Time to deploy       | Hours                            | Days to weeks                        |
-| Customization        | Limited (guardrail set is fixed) | Full control                         |
+Mechanisms/support differ by control. A control enabled in an OU is not proof that every resource type/Region/deployment path is covered. Choose the relevant supported Regions and identity integration deliberately.
 
-## Extending Control Tower
+## Account Factory and enrollment walkthrough
 
-### Custom Guardrails
+1. Verify organization/landing-zone prerequisites and home Region.
+2. Decide target OU, account identity/contact and federation setup.
+3. Provision through the supported Account Factory/Service Catalog workflow or enroll an eligible existing account.
+4. Wait for terminal provisioning/enrollment state and inspect failures.
+5. Verify baseline/control coverage from the actual account.
+6. Deploy workload infrastructure using separate approved roles/templates.
+7. Capture audit/budget/logging evidence and test access/failure recovery.
 
-You can create custom preventive guardrails (SCPs) and attach them to your custom OUs alongside Control Tower's built-in guardrails.
+Accepting a portfolio share is not account provisioning; use the supported Account Factory workflow for account creation/enrollment. Manually creating similar-looking resources does not establish managed baseline enrollment.
 
-### Preventive Guardrail via SCP
+## Drift, identity and operating responsibilities
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Deny",
-      "Action": ["s3:PutBucketPublicAccessBlock"],
-      "Resource": "*",
-      "Condition": {
-        "StringNotEquals": {
-          "aws:PrincipalOrgID": "o-xxxxxxxxxx"
-        }
-      }
-    }
-  ]
-}
-```
+A supported external IdP can remain part of the identity architecture; Control Tower does not universally replace it. Separate federation/session/permission sets from organization control ceilings.
 
-### Adding Accounts via Account Factory
+Avoid manual edits to managed resources without a documented repair plan. Inspect drift, baseline/control status and service failures; an account's available status can coexist with an operationally unhealthy workload. Supporting Config, logging, S3 and KMS can charge even when Control Tower itself has no separate blanket account fee.
 
-Control Tower's Account Factory (via AWS Service Catalog) allows you to provision new accounts programmatically:
-
-```bash
-# Using AWS Service Catalog to provision a new account
-aws servicecatalog accept-responsibility-for-portfolio-access \
-  --portfolio-id port-xxxxx
-
-# Then via Service Catalog console, launch "AWS Control Tower Account Factory"
-```
-
-### Guardrail Compliance Dashboard
-
-The Control Tower dashboard shows:
-
-- Number of compliant vs non-compliant accounts
-- Guardrails by category (security, operations, cost optimization)
-- Non-compliant resources with remediation steps
-
-## Drift Detection
-
-Control Tower detects when your landing zone configuration changes (drift). For example, if someone manually modifies the Security OU SCPs, Control Tower will flag this as drift and offer to remediate.
-
-```
-Drift detected:
-  - OU "Production" has unexpected SCP attached
-  - CloudTrail disabled in account 111122223333
-  - Security group in account 444455556666 allows SSH from 0.0.0.0/0
-```
-
-## Limits
-
-| Resource                                   | Limit                       |
-| ------------------------------------------ | --------------------------- |
-| Landing zones per organization             | 1                           |
-| Custom OUs                                 | 5 (in addition to Core OUs) |
-| AWS Regions where Control Tower is enabled | 3 (default)                 |
-| Accounts per landing zone                  | 20                          |
+Test changes first on approved sandbox OUs, and retain emergency access/rollback. Landing-zone removal, disabling security logging and closing accounts require controlled administrative decisions rather than tutorial cleanup.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/controltower/
-- **Documentation:** https://docs.aws.amazon.com/controltower/
-- **Pricing:** https://aws.amazon.com/controltower/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A new company setting up their first multi-account AWS environment. Manual setup takes 2 weeks (Organizations, SCPs, CloudTrail, Config, IAM Identity Center, VPCs). Control Tower deploys the same architecture in 4 hours at no extra cost beyond the AWS resources it creates (CloudTrail logs, Config rules, etc.). Monthly cost for the additional resources: ~$15/month for CloudTrail logs and Config rules across 3 accounts.
-
-**Scenario 2:** An enterprise with existing AWS environment that wants to standardize on Control Tower. They must "landing zone v3" migration which involves creating a new landing zone and migrating accounts. This is a significant undertaking. Cost: $0 for Control Tower. Additional AWS Config rules and CloudTrail logs across 50 accounts: ~$250/month (Config rules at $0.001/rule/month × 100 rules × 50 accounts = $5/month, CloudTrail S3 logs at $0.03/GB × 50GB/month = $1.50/month — very small compared to the compliance benefit).
-
-## Nuggets & Gotchas
-
-- **Control Tower can only be enabled once per organization:** You cannot create multiple Control Tower landing zones in the same organization. The first Control Tower setup becomes the authoritative landing zone.
-- **Control Tower creates its own Organization structure — do not modify manually:** If you manually add SCPs or modify the OUs created by Control Tower, you cause drift. Use Control Tower's APIs or console to make changes, not the raw Organizations API.
-- **Detective guardrails detect but do not auto-remediate non-compliant resources:** A detective guardrail will flag an unencrypted EBS volume as non-compliant, but it won't automatically encrypt it. You must remediate manually or via AWS Config remediation actions.
-- **Control Tower requires AWS IAM Identity Center (formerly AWS SSO):** If you already use a third-party SAML-based SSO, Control Tower will replace it with IAM Identity Center. This is a significant integration change that affects all users.
-- **Control Tower Guardrails apply to all accounts in an OU:** When you enable a preventive guardrail on the Sandbox OU, it applies to every account in the Sandbox OU. If you want different guardrails per account, you need to put each account in its own OU, which doesn't scale.
+- [Control Tower getting started](https://docs.aws.amazon.com/controltower/latest/userguide/getting-started-with-control-tower.html)
+- [Controls reference](https://docs.aws.amazon.com/controltower/latest/controlreference/controls.html)
+- [Control Tower quotas](https://docs.aws.amazon.com/controltower/latest/userguide/limits.html)
+- [Account Factory provisioning](https://docs.aws.amazon.com/controltower/latest/userguide/provision-as-end-user.html)
 
 ## Across the wiki
 

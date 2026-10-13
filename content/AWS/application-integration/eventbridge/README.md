@@ -2,276 +2,158 @@
 title: Amazon EventBridge
 description: Amazon EventBridge — serverless event bus. Default/custom/event buses, rules, schema registry, SaaS ingestion, replay, event replay, and cross-account event delivery.
 tags:
-  - aws
-  - application-integration
-  - eventbridge
-  - event-driven
-date: 2026-06-06
+  - aws/application-integration
+date: 2026-10-12
 ---
 
 # EventBridge
 
-EventBridge is a serverless event bus that routes events from AWS services, SaaS applications, and custom applications to targets. Unlike SNS (pub/sub), EventBridge uses rules for content-based filtering and supports schema registry for event discovery.
+Prerequisites: [[AWS/security/iam/README|scoped IAM roles]] and [[AWS/monitoring/README|delivery/processing observability]].
 
-## Three Types of Event Buses
+EventBridge routes events by matching patterns on a bus. Scheduler triggers work at configured times; Pipes connect a source to a target with optional filtering/enrichment. They are related products, not one interchangeable API.
 
-```
-AWS Services Event Bus (default)
-  │ All AWS service events (CloudTrail, Config, etc.)
-  ▼
-Custom Event Bus
-  │ Your applications publish here
-  ▼
-SaaS Event Bus (Partner Event Bus)
-  │ Third-party SaaS (Datadog, Shopify, etc.)
-  ▼
-```
+## Routing and reliability
 
-## Event Bus Operations
+The default bus accepts AWS service and custom events; a custom bus gives application-specific ownership. Every matching rule can deliver to its targets—there is no first-match-only priority. Target IAM/resource policies, retry policies and dead-letter queues determine delivery behavior.
 
-```bash
-# Create custom event bus
-aws events create-event-bus \
-  --name my-event-bus \
-  --description "My custom event bus"
+Consumers need idempotency for retry and replay. Archives have configurable retention, with indefinite retention by default; a replay resource's ninety-day lifetime is not an archive-retention ceiling. Replay can duplicate side effects, so establish authorization and dry-run strategy.
 
-# Create partner event bus (for SaaS)
-aws events create-partner-event-bus \
-  --name datadog-events \
-  --event-source-name aws.partner/datadog.com
+## Pattern fixture
 
-# List event buses
-aws events list-event-buses
-
-# Put permission for cross-account delivery
-aws events put-permission \
-  --event-bus-name my-event-bus \
-  --action events:PutEvents \
-  --principal 123456789012
-```
-
-## Event Structure
+Save pattern.json:
 
 ```json
 {
-  "id": "def258f0-1234-5678-abcd-example",
-  "version": "1",
+  "source": ["wiki.demo"],
+  "detail-type": ["OrderCreated"],
+  "detail": { "status": ["paid"] }
+}
+```
+
+Save event.json (this is the matching envelope, not the PutEvents entries array):
+
+```json
+{
+  "version": "0",
+  "id": "fixture-1",
+  "detail-type": "OrderCreated",
+  "source": "wiki.demo",
   "account": "123456789012",
-  "time": "2024-01-15T10:30:00Z",
+  "time": "2026-10-12T00:00:00Z",
   "region": "us-east-1",
-  "detail-type": "OrderShipped",
-  "source": "com.mycompany.orders",
-  "resources": ["arn:aws:ec2:us-east-1:123456789012:instance/i-xxxxx"],
-  "detail": {
-    "order_id": "ORD-12345",
-    "customer_id": "CUST-67890",
-    "total": 99.99,
-    "status": "shipped"
-  }
+  "resources": [],
+  "detail": { "status": "paid", "orderId": "1" }
 }
 ```
-
-## Publishing Events
-
-```python
-import boto3
-import json
-
-events = boto3.client('events')
-
-# Publish to default event bus
-response = events.put_events(
-    Entries=[
-        {
-            'Source': 'com.mycompany.orders',
-            'DetailType': 'OrderShipped',
-            'Detail': json.dumps({'order_id': '12345', 'status': 'shipped'}),
-            'Resources': ['arn:aws:ec2:us-east-1:123456789012:instance/i-xxxxx']
-        }
-    ]
-)
-print(f"Failed: {response['FailedEntryCount']}")
-
-# Publish to custom event bus
-response = events.put_events(
-    Entries=[
-        {
-            'EventBusName': 'my-event-bus',
-            'Source': 'com.mycompany.orders',
-            'DetailType': 'OrderShipped',
-            'Detail': json.dumps({'order_id': '12345'})
-        }
-    ]
-)
-```
-
-## Rules
-
-### Create Rule with Pattern
-
-```python
-# Rule to match specific events
-events.put_rule(
-    Name='order-shipped-rule',
-    EventBusName='my-event-bus',
-    EventPattern=json.dumps({
-        'source': ['com.mycompany.orders'],
-        'detail-type': ['OrderShipped'],
-        'detail': {
-            'status': ['shipped']
-        }
-    }),
-    State='ENABLED',
-    Targets=[
-        {'Id': 'lambda-target', 'Arn': 'arn:aws:lambda:us-east-1:123456789012:function:order-processor'},
-        {'Id': 'sqs-target', 'Arn': 'arn:aws:sqs:us-east-1:123456789012:order-queue'}
-    ]
-)
-```
-
-### Schedule Rules (Cron)
-
-```python
-# Run Lambda every day at 9 AM UTC
-events.put_rule(
-    Name='daily-report-rule',
-    ScheduleExpression='cron(0 9 * * ? *)',
-    State='ENABLED',
-    Targets=[
-        {'Id': 'lambda-target', 'Arn': 'arn:aws:lambda:us-east-1:123456789012:function:daily-report'}
-    ]
-)
-```
-
-### Content Filtering Patterns
-
-```json
-// Match orders over $1000
-{
-  "detail": {
-    "total": [{"numeric": [">", 1000]}]
-  }
-}
-
-// Match specific status transitions
-{
-  "detail": {
-    "status": [{"anything-but": "pending"}],
-    "previous_status": ["pending"]
-  }
-}
-
-// Match with OR
-{
-  "detail-type": ["OrderShipped", "OrderDelivered"]
-}
-```
-
-## Schema Registry
-
-```python
-# Discover schema from an event
-events.discover_schema(
-    Event='{"source":"com.mycompany.orders","detail-type":"Order","detail":{"order_id":"123"}}'
-)
-
-# Bind a schema
-events.create_schema(
-    Name='order-schema',
-    RegistryName='my-registry',
-    Content=json.dumps({
-        "type": "object",
-        "properties": {
-            "order_id": {"type": "string"},
-            "total": {"type": "number"}
-        }
-    }),
-    Type='JSONSchemaDraft4'
-)
-
-# Use schema in CodePipeline, Lambda (auto-generate typed objects)
-```
-
-## Event Replay
 
 ```bash
-# Replay events from archive to target
-aws events put-replay \
-  --replay-name my-replay \
-  --event-bus-arn arn:aws:events:us-east-1:123456789012:event-bus/my-event-bus \
-  --source-arn arn:aws:events:us-east-1:123456789012:archive/my-archive \
-  --destination '{
-    "Arn": "arn:aws:events:us-east-1:123456789012:event-bus/my-event-bus",
-    "StartingPosition": "EARLIEST"
-  }'
+aws events test-event-pattern --event-pattern file://pattern.json --event file://event.json
 ```
 
-## Cross-Account Patterns
+Expected Result=true. Change status to unpaid and expect false; this read-only match test creates no infrastructure.
 
-```
-Account A (Producer)
-  │
-  └── Event Bus A ──► Rule ──► Event Bus B (Account B)
+## End-to-end sandbox
 
-Account B (Consumer)
-  │
-  └── Event Bus B (receives from Account A)
-      │
-      └── Rules for its own targets
+Create a custom bus and a rule with the fixture pattern using create-event-bus and put-rule. Create a disposable [[AWS/application-integration/sqs/README|SQS queue]], get its ARN and grant events.amazonaws.com sqs:SendMessage on that queue, constrained by aws:SourceArn to this rule's ARN. Attach the queue with put-targets (Id, Arn); configure a separate standard-queue DLQ and its delivery policy if testing exhausted retries.
+
+Publish using a complete request:
+
+```bash
+aws events put-events --entries '[{"EventBusName":"wiki-lab","Source":"wiki.demo","DetailType":"OrderCreated","Detail":"{\"status\":\"paid\",\"orderId\":\"1\"}"}]'
 ```
 
-```python
-# Account A: add permission
-events.put_permission(
-    EventBusName='default',
-    Action='events:PutEvents',
-    Principal='123456789012'  # Account B's ID
-)
+Inspect FailedEntryCount and every entry's error; API transport success is insufficient. Receive from SQS and verify the detail. Deliberately remove target permission in the sandbox, observe delivery failures and restore it. With several matching rules, expect multiple target deliveries.
 
-# Account B: add event pattern to default bus
-events.put_rule(
-    Name='cross-account-rule',
-    EventPattern=json.dumps({'account': ['123456789012']}),
-    Targets=[{'Id': 'my-target', 'Arn': '...'}]
-)
+Cleanup order: remove-targets, delete-rule, delete-event-bus, delete disposable queue/DLQ. Disable replay before teardown. Role permissions must cover only these resources.
+
+## Costs and preflight
+
+Bus events, Scheduler, Pipes, archives/replay, API destinations and schema features have separate pricing dimensions. AWS service-originated and custom events do not have identical tariffs. Check target quotas and adjustability in the actual Region instead of copying a static table.
+
+## Bus, Scheduler and Pipes comparison
+
+| Capability         | Model                          | Configuration boundary                                 |
+| ------------------ | ------------------------------ | ------------------------------------------------------ |
+| Default/custom bus | Many rules match an event      | Bus policy, rule pattern, target authorization         |
+| Partner bus        | Eligible SaaS event source     | Partner source activation and ownership                |
+| Scheduler          | Time-based target invocation   | Schedule group, timezone/window, target execution role |
+| Pipes              | One supported source to target | Source polling, filter, enrichment, target role        |
+
+These are parallel product choices, not a default→custom→partner processing pipeline. Schedules do not publish business events automatically unless configured to do so.
+
+## Rules and complete target attachment
+
+The existing pattern lab supplies pattern.json. With an existing sandbox queue and the documented queue resource policy:
+
+```bash
+aws events create-event-bus --name wiki-lab
+aws events put-rule --name paid-orders --event-bus-name wiki-lab \
+  --event-pattern file://pattern.json --state ENABLED
+aws events put-targets --event-bus-name wiki-lab --rule paid-orders \
+  --targets '[{"Id":"work-queue","Arn":"QUEUE_ARN"}]'
 ```
 
-## Pricing
+Replace QUEUE_ARN, then inspect FailedEntryCount/FailedEntries. PutRule does **not** accept Targets; PutTargets is separate. A target requiring an execution role needs its exact RoleArn/trust/action resources; SQS/Lambda targets need the applicable resource policy. Configure retry age/attempts and an authorized standard-queue DLQ when testing delivery failure.
 
-| Component                     | Cost                  |
-| ----------------------------- | --------------------- |
-| Custom events published       | $1.00/million         |
-| Schema discovery (per schema) | $0.10/hour            |
-| Event replay                  | $0.10/GB              |
-| Cross-account events          | Same as custom events |
+## Content patterns
 
-## Limits
+Save each pattern as its own valid JSON document, not commented/concatenated JSON:
 
-| Resource               | Limit                    |
-| ---------------------- | ------------------------ |
-| Rules per event bus    | 100                      |
-| Event buses per region | 100                      |
-| Targets per rule       | 5 (can request increase) |
-| Event size             | 256KB                    |
-| Archive retention      | Up to 90 days            |
+```json
+{
+  "source": ["wiki.demo"],
+  "detail": {
+    "amount": [{ "numeric": [">", 1000] }],
+    "status": [{ "anything-but": "pending" }]
+  }
+}
+```
+
+Arrays express alternatives for that field; fields combine according to the pattern contract. Test missing fields, strings versus numbers and boundary values with test-event-pattern. Pattern matching is not business schema validation.
+
+## Archive/replay and schema workflow
+
+Archive creation selects an event source bus and optional pattern/retention. Replay uses start-replay, with source archive ARN, start/end times and destination bus; there is no put-replay/StartingPosition recipe.
+
+```bash
+aws events start-replay --replay-name wiki-lab-replay \
+  --event-source-arn ARCHIVE_ARN \
+  --event-start-time 2026-10-12T00:00:00Z --event-end-time 2026-10-12T01:00:00Z \
+  --destination '{"Arn":"EVENT_BUS_ARN"}'
+```
+
+Substitute a real retained interval and bus. Replay only after approval/idempotency tests; inspect describe-replay and handle terminal failure/cancel. These commands add delivery work and charges, not a free inspection.
+
+Schema registry uses the separate schemas API, not events.discover_schema/create_schema. Discovery/code bindings help clients understand shapes but do not authorize access or guarantee all publishers conform. Review discovered sensitive fields and generated-code/version ownership.
+
+## Cross-account delivery and troubleshooting
+
+```text
+Producer account → forwarding rule + role → destination bus policy
+                                             ↓
+                                   destination rules → targets
+```
+
+Authorize the destination bus to accept events from the intended source; authorize the sending role's PutEvents action on that bus. Restrict source/account conditions where appropriate, and distinguish direct PutEvents from forwarding. A receiving rule then routes to its own authorized targets.
+
+Inspect producer entry errors, rule matched events, target invocations/failures and DLQ evidence. An unmatched pattern, expired retry window and KMS/policy denial require different fixes. Remove targets before deleting rules/bus; cancel lab replay and remove owned archives/discoverers separately.
+
+References: [PutTargets](https://docs.aws.amazon.com/cli/latest/reference/events/put-targets.html), [StartReplay](https://docs.aws.amazon.com/cli/latest/reference/events/start-replay.html), [cross-account events](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-cross-account.html), [schemas](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-schema.html).
+
+## Cross-wiki comparisons
+
+- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
+- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/eventbridge/
-- **Documentation:** https://docs.aws.amazon.com/eventbridge/
-- **Pricing:** https://aws.amazon.com/eventbridge/pricing/
-
-## Nuggets & Gotchas
-
-- **EventBridge rules are evaluated in order — and only the FIRST matching rule's targets receive the event:** Unlike SNS (where ALL subscribers get the message), EventBridge stops after the first matching rule. If you need multiple targets for the same event, use different `detail-type` values or put all targets in a single rule.
-- **EventBridge schema registry is OPTIONAL — events work without it, but schemas enable code generation:** Without schema registry, you parse JSON manually. With it, EventBridge can generate strongly-typed classes for Lambda/CodePipeline.
-- **EventBridge's `detail-type` is just a string — there's no enforcement of format:** You can put anything in `detail-type`. Use a naming convention like `com.mycompany.orders.OrderShipped` to avoid conflicts.
-- **EventBridge replay replays ALL events from the archive that match the filter — not just failed events:** If you archive 100K events and only want to replay the failed ones, you need to filter by event content when replaying or pre-archive selectively.
-- **EventBridge cross-account delivery costs $1/million events — it's not free:** Each event delivered across accounts counts as a custom event. For high-volume cross-account scenarios, consider using EventBridge in the producer account with rules that fan out to SQS queues in each consumer account.
+- [Rules](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-rules.html)
+- [Archives](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-archive.html)
+- [SQS target policies](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html)
+- [PutEvents contract](https://docs.aws.amazon.com/cli/latest/reference/events/put-events.html)
+- [Pricing](https://aws.amazon.com/eventbridge/pricing/)
 
 ## Across the wiki
 
-- [[Azure/messaging/service-bus/README|Azure Service Bus Architecture, Queues, Topics, and Enterprise Messaging]] — messaging and streaming (Azure)
-- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]] — messaging and streaming (GCP)
-- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]] — messaging and streaming (Architecture)
-- [[Azure/messaging/event-hubs/README|Azure Event Hubs Architecture, Kafka Compatibility, and Streaming Ingestion]] — messaging and streaming (Azure)
+- [[GCP/analytics/pubsub/README|Cloud Pub/Sub Architecture & Streaming Mechanics]]
+- [[Architecture/solution-architecture-concepts/event-driven-architecture/kafka/README|Apache Kafka]]

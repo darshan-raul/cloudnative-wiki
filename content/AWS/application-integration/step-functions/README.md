@@ -2,315 +2,161 @@
 title: AWS Step Functions
 description: AWS Step Functions — state machine orchestration. Standard vs Express workflows, tasks, choices, parallel, map, wait, nested workflows, and activity workers.
 tags:
-  - aws
-  - application-integration
-  - step-functions
-  - orchestration
-date: 2026-06-06
+  - aws/application-integration
+date: 2026-10-12
 ---
 
 # AWS Step Functions
 
-Step Functions orchestrate multi-step workflows as state machines. Each step in your workflow is a state — you define the flow (sequence, parallel, choice, map) and Step Functions handles execution, retries, and error handling.
+Prerequisites: [[AWS/security/iam/README|scoped IAM roles]] and [[AWS/monitoring/README|delivery/processing observability]].
 
-## Standard vs Express
+Step Functions executes state machines defined in Amazon States Language (ASL). It coordinates work but does not make arbitrary external effects transactional.
 
-| Feature           | Standard Workflow                   | Express Workflow                                      |
-| ----------------- | ----------------------------------- | ----------------------------------------------------- |
-| Duration          | Up to 1 year                        | Up to 5 minutes                                       |
-| Execution rate    | 1,200/min (default)                 | 100,000/min                                           |
-| State types       | All                                 | All (except Activity)                                 |
-| Execution history | Full history in CloudWatch          | Limited (async only)                                  |
-| Price             | $0.025/1K state transitions         | $1.00/million executions + $0.000016/execution-minute |
-| Use case          | Long-running, human approval, audit | High-volume, event-driven, Lambda                     |
+## Workflow choice
 
-## State Machine Definition
+Standard workflows support durable executions up to one year and charge for state transitions. Express workflows support up to five minutes and charge for executions plus memory-duration. Asynchronous Express is at-least-once; synchronous Express is at-most-once. Standard execution semantics do not prevent explicitly retried tasks or duplicate external business requests.
+
+Standard has execution history APIs with bounded retention. Express investigation depends on configured CloudWatch logging; logs are not an unbounded durable history guarantee. Express does not support .sync job-run or .waitForTaskToken callback integration patterns.
+
+## Complete non-destructive ASL fixture
+
+Save definition.json. This complete machine validates a boolean and has no external side effects:
 
 ```json
 {
-  "Comment": "Order processing workflow",
-  "StartAt": "ValidateOrder",
+  "Comment": "Disposable validation lab",
+  "StartAt": "Validate",
+  "TimeoutSeconds": 30,
   "States": {
-    "ValidateOrder": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:validate-order",
-      "Next": "CheckInventory",
-      "ResultPath": "$.order"
-    },
-    "CheckInventory": {
+    "Validate": {
       "Type": "Choice",
       "Choices": [
-        {
-          "Variable": "$.order.available",
-          "BooleanEquals": true,
-          "Next": "ProcessPayment"
-        }
+        { "Variable": "$.approved", "BooleanEquals": true, "Next": "Approved" }
       ],
-      "Default": "RejectOrder"
+      "Default": "Rejected"
     },
-    "ProcessPayment": {
+    "Approved": { "Type": "Pass", "Result": { "accepted": true }, "End": true },
+    "Rejected": {
+      "Type": "Fail",
+      "Error": "ApprovalRequired",
+      "Cause": "approved must be true"
+    }
+  }
+}
+```
+
+Create a sandbox execution role whose trust principal is states.amazonaws.com. This no-task machine needs no permission to invoke another service; scope the caller's iam:PassRole to this role and states CreateStateMachine/StartExecution/DescribeExecution/DeleteStateMachine to the lab.
+
+```bash
+aws stepfunctions create-state-machine --name wiki-lab-validation \
+  --definition file://definition.json --role-arn EXECUTION_ROLE_ARN --type STANDARD
+aws stepfunctions start-execution --state-machine-arn STATE_MACHINE_ARN \
+  --name approved-fixture --input '{"approved":true}'
+```
+
+Save the returned executionArn, poll describe-execution with bounded backoff, and expect SUCCEEDED with accepted=true. Run a separate name/input approved=false and expect FAILED with ApprovalRequired. Inspect history to explain the chosen route.
+
+Delete the disposable state machine after executions terminate, then remove the lab role. Do not delete production workflows to change their immutable type.
+
+## Production additions
+
+Task states need explicit timeouts and narrow IAM actions/resource ARNs. Retry transient failures with bounded attempts/backoff; Catch routes failures to a compensating action or human-review state. Use idempotency keys for payment/provisioning side effects and protect callback tokens as credentials. Observe payload/history/concurrency quotas and handle large payloads through authorized object references rather than unbounded state data.
+
+Retries and transitions can increase cost. Logging may expose sensitive inputs/outputs and incurs separate CloudWatch charges.
+
+## State types and integration patterns
+
+| State        | Responsibility           | Common failure                                                       |
+| ------------ | ------------------------ | -------------------------------------------------------------------- |
+| Task         | Invoke supported work    | Missing execution-role permission, timeout or repeated side effect   |
+| Choice       | Select a branch          | Missing/type-mismatched input; no appropriate Default                |
+| Parallel     | Run independent branches | One branch fails; effects in others already happened                 |
+| Map          | Process a collection     | Unbounded concurrency/large history/payload                          |
+| Wait         | Delay by duration/time   | Stale data or unsuitable workflow maximum                            |
+| Pass         | Transform/provide data   | Wrong path/JSONata-versus-JSONPath assumptions                       |
+| Succeed/Fail | Terminate explicitly     | Confusing a finished orchestration with a committed business outcome |
+
+Request-response, .sync and callback-token patterns have different supported services/workflow types. Express does not support the latter two. Activity workers poll a Standard activity and return a token-based result/heartbeat; a callback token is sensitive authority, not an event ID.
+
+## Complete Task, Retry and Catch example
+
+This second definition uses JSONPath mode and a disposable Lambda function. Replace its ARN, provide an execution role authorized for that exact function and log only non-sensitive fixtures.
+
+```json
+{
+  "StartAt": "Invoke",
+  "TimeoutSeconds": 60,
+  "States": {
+    "Invoke": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:process-payment",
-      "Next": "ShipOrder",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "LAMBDA_FUNCTION_ARN",
+        "Payload.$": "$"
+      },
+      "ResultSelector": { "result.$": "$.Payload" },
+      "ResultPath": "$.worker",
+      "TimeoutSeconds": 20,
       "Retry": [
         {
-          "ErrorEquals": ["PaymentFailedException"],
-          "IntervalSeconds": 3,
-          "MaxAttempts": 3,
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 2,
           "BackoffRate": 2
         }
       ],
       "Catch": [
         {
           "ErrorEquals": ["States.ALL"],
-          "Next": "NotifyFailure"
+          "ResultPath": "$.failure",
+          "Next": "Review"
         }
-      ]
+      ],
+      "Next": "Finished"
     },
-    "ShipOrder": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:us-east-1:123456789012:function:ship-order",
-      "Next": "NotifySuccess"
-    },
-    "RejectOrder": {
-      "Type": "Fail",
-      "Error": "OrderUnavailable",
-      "Cause": "Order is not available"
-    },
-    "NotifySuccess": {
-      "Type": "Pass",
-      "End": true
-    },
-    "NotifyFailure": {
-      "Type": "Pass",
-      "End": true
-    }
+    "Review": { "Type": "Pass", "Result": { "accepted": false }, "End": true },
+    "Finished": { "Type": "Succeed" }
   }
 }
 ```
 
-## Creating and Running
+Start with an object input. Observe a successful result under worker; an application exception routes to Review without being treated as a service-transient retry. Some terminal error classes have special catchability rules: consult the owning error table rather than assuming States.ALL covers literally everything. Review ends successfully as an orchestration, so inspect its accepted=false business outcome too.
 
-```bash
-# Create state machine (Standard)
-aws stepfunctions create-state-machine \
-  --name order-processor \
-  --definition file://order-workflow.json \
-  --role-arn arn:aws:iam::123456789012:role/step-functions-role \
-  --type STANDARD
+## Input/output, nested work and workers
 
-# Create Express workflow
-aws stepfunctions create-state-machine \
-  --name order-processor-express \
-  --definition file://order-workflow.json \
-  --role-arn arn:aws:iam::123456789012:role/step-functions-role \
-  --type EXPRESS
+InputPath/Parameters/ResultSelector/ResultPath/OutputPath transform different boundaries in JSONPath workflows. JSONata states use different expression/data-flow fields; do not combine the modes blindly. Keep payloads bounded; store large data behind authorized object references.
 
-# Start execution
-aws stepfunctions start-execution \
-  --state-machine-arn arn:aws:states:us-east-1:123456789012:stateMachine:order-processor \
-  --input '{"order_id": "12345"}'
+Nested state machines need permission to start the child and, for supported synchronous behavior, the required execution-observation permissions. Parent success is not automatic proof of each child business effect. Map concurrency must match downstream capacity; Distributed Map has separate resource/child limits and charges.
 
-# List executions
-aws stepfunctions list-executions \
-  --state-machine-arn arn:aws:states:us-east-1:123456789012:stateMachine:order-processor
-```
+Worker loop design includes bounded polling, task-token handling, heartbeats, timeout and shutdown. On a worker crash, determine whether the external effect committed before reporting/retrying. Never embed raw callback tokens in a public URL or log.
 
-## Python SDK
+## Operational walkthrough and cost
 
-```python
-import boto3
+For Standard, describe-execution/get-execution-history distinguish RUNNING/SUCCEEDED/FAILED/TIMED_OUT/ABORTED and state-level errors. Express investigation uses configured logs with sensitive-data controls; logs are not a replacement for an external business ledger.
 
-sfn = boto3.client('stepfunctions')
+Price transitions for Standard, including retries/loops. For example, 10,000 executions following five transitions each produce 50,000 transitions before retries; multiply by a rate in matching units and applicable allowance. Express requires execution count plus actual billed memory-duration; minutes alone do not establish cost.
 
-# Start execution
-response = sfn.start_execution(
-    stateMachineArn='arn:aws:states:us-east-1:123456789012:stateMachine:order-processor',
-    name='my-execution-001',
-    input=json.dumps({'order_id': '12345'})
-)
-execution_arn = response['executionArn']
+Stop remaining lab executions, delete only dedicated state machines/activities and role/log resources after the workflow has no dependents. Keep an idempotency record through the replay/retention window.
 
-# Describe execution
-result = sfn.describe_execution(executionArn=execution_arn)
-print(f"Status: {result['status']}")
+References: [state types](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-state-machine-structure.html), [input/output](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-input-output-filtering.html), [Lambda integration](https://docs.aws.amazon.com/step-functions/latest/dg/connect-lambda.html), [activities](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-activities.html).
 
-# Stop execution
-sfn.stop_execution(executionArn=execution_arn, error='ErrorReason')
-```
+## Cross-wiki comparisons
 
-## State Types
-
-### Task (Lambda, ECS, etc.)
-
-```json
-"ProcessOrder": {
-  "Type": "Task",
-  "Resource": "arn:aws:lambda:us-east-1:123456789012:function:process",
-  "Next": "Notify",
-  "TimeoutSeconds": 300
-}
-```
-
-### Choice (Branching)
-
-```json
-"CheckStatus": {
-  "Type": "Choice",
-  "Choices": [
-    {"Variable": "$.status", "StringEquals": "pending", "Next": "Process"},
-    {"Variable": "$.status", "StringEquals": "cancelled", "Next": "Cancel"}
-  ],
-  "Default": "Unknown"
-}
-```
-
-### Parallel
-
-```json
-"ProcessOrder": {
-  "Type": "Parallel",
-  "End": true,
-  "Branches": [
-    {
-      "StartAt": "ChargeCard",
-      "States": {
-        "ChargeCard": {"Type": "Task", "Resource": "arn:aws:lambda:...", "End": true}
-      }
-    },
-    {
-      "StartAt": "UpdateInventory",
-      "States": {
-        "UpdateInventory": {"Type": "Task", "Resource": "arn:aws:lambda:...", "End": true}
-      }
-    }
-  ]
-}
-```
-
-### Map (Iterate)
-
-```json
-"ProcessItems": {
-  "Type": "Map",
-  "ItemProcessor": {
-    "StartAt": "ProcessOne",
-    "States": {
-      "ProcessOne": {
-        "Type": "Task",
-        "Resource": "arn:aws:lambda:...",
-        "End": true
-      }
-    }
-  },
-  "End": true
-}
-```
-
-### Wait
-
-```json
-"WaitForApproval": {
-  "Type": "Wait",
-  "Seconds": 86400,
-  "Next": "Process"
-}
-```
-
-## Nested Workflows
-
-```python
-# Parent workflow calls child workflow
-child_workflow = {
-    "Type": "Task",
-    "Resource": "arn:aws:states:us-east-1:123456789012:stateMachine:child-workflow",
-    "Parameters": {
-        "input.$": "$.childInput"
-    },
-    "Next": "ContinueAfterChild"
-}
-```
-
-## Error Handling
-
-```json
-"ProcessWithRetry": {
-  "Type": "Task",
-  "Resource": "arn:aws:lambda:...",
-  "Retry": [
-    {
-      "ErrorEquals": ["ThrottlingException"],
-      "IntervalSeconds": 1,
-      "MaxAttempts": 3,
-      "BackoffRate": 2
-    },
-    {
-      "ErrorEquals": ["States.Timeout"],
-      "IntervalSeconds": 5,
-      "MaxAttempts": 2,
-      "BackoffRate": 2
-    }
-  ],
-  "Catch": [
-    {
-      "ErrorEquals": ["States.ALL"],
-      "ResultPath": "$.error",
-      "Next": "HandleError"
-    }
-  ]
-}
-```
-
-## Activity Workers
-
-```python
-# Activity worker (poll for tasks)
-activities = boto3.client('stepfunctions')
-
-while True:
-    task = activities.get_activity_task(
-        activityArn='arn:aws:states:us-east-1:123456789012:activity:my-activity',
-        workerName='worker-1'
-    )
-
-    if task:
-        # Process task
-        result = process(task['Input'])
-
-        # Send heartbeat (if long-running)
-        activities.send_task_heartbeat(taskToken=task['taskToken'])
-
-        # Complete
-        activities.send_task_success(
-            taskToken=task['taskToken'],
-            output=json.dumps(result)
-        )
-```
-
-## Pricing
-
-| Type                         | Cost                               |
-| ---------------------------- | ---------------------------------- |
-| Standard (state transitions) | $0.025/1K transitions              |
-| Express (executions)         | $1.00/million + $0.000016/exec-min |
-| Express (synchronous)        | $0.50/million + $0.000016/exec-min |
+- [[Linux/boot-init/cron-anacron|Cron and Anacron]] — scheduled work (Linux)
+- [[Linux/boot-init/systemd-timers|systemd Timers]] — scheduled work (Linux)
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/step-functions/
-- **Documentation:** https://docs.aws.amazon.com/step-functions/
-- **Pricing:** https://aws.amazon.com/step-functions/pricing/
-
-## Nuggets & Gotchas
-
-- **Step Functions has a 256KB payload limit — you can't pass large data between states:** If you need to pass large files, store in S3 and pass the S3 URI between states. Don't try to embed a 10MB file in the state output.
-- **Standard workflow executions are charged per STATE TRANSITION — every step counts:** A workflow with 10 states that runs 1000 times = 10,000 transitions. $0.025/1K = $0.25. But if a step is retried 3 times, that's 3 extra transitions per retry.
-- **Express workflows DON'T have full execution history in CloudWatch — only async Express:** If you need detailed step-by-step logging (for debugging), use Standard workflows. Express synchronous workflows don't log history at all.
-- **Map state runs items IN PARALLEL by default — if you need sequential processing, set "Mode": "Inline" and "MaxConcurrency": 1:** The default is parallel. If your items must be processed in order, set `MaxConcurrency: 1`.
-- **Nested workflow results are NOT automatically merged — you must explicitly extract and combine outputs:** When a child workflow completes, its output is in `$.<task-name>`. You need to use `ResultPath` or `OutputPath` to merge it into the parent state.
+- [Workflow types and execution guarantees](https://docs.aws.amazon.com/step-functions/latest/dg/choosing-workflow-type.html)
+- [ASL specification](https://states-language.net/spec.html)
+- [Error handling](https://docs.aws.amazon.com/step-functions/latest/dg/concepts-error-handling.html)
+- [CLI create-state-machine](https://docs.aws.amazon.com/cli/latest/reference/stepfunctions/create-state-machine.html)
+- [Pricing](https://aws.amazon.com/step-functions/pricing/)
 
 ## Across the wiki
 
-- [[Linux/boot-init/cron-anacron|Cron and Anacron]] — scheduled work (Linux)
-- [[Kubernetes/concepts/L03-workloads/07-cronjob|CronJobs — Time-Scheduled Workloads]] — scheduled work (Kubernetes)
-- [[Linux/boot-init/systemd-timers|systemd Timers]] — scheduled work (Linux)
+- [[Kubernetes/concepts/L03-workloads/07-cronjob|CronJobs — Time-Scheduled Workloads]]

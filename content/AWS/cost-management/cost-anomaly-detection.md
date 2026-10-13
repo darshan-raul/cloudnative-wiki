@@ -1,141 +1,75 @@
 ---
 title: Cost Anomaly Detection
-description: AWS Cost Anomaly Detection — ML-based spend monitoring, alert subscriptions, root cause investigation, and integration with ChatOps
+description: Accurate billing models, decision workflows and scoped examples for cost anomaly detection.
 tags:
-  - aws
-  - cost-management
-date: 2026-06-06
+  - aws/cost-management
+date: 2026-10-12
 ---
 
 # Cost Anomaly Detection
 
-Cost Anomaly Detection uses machine learning to detect unusual spend patterns in your AWS account. Unlike budgets (which alert you when you hit a threshold you've set), anomaly detection alerts you when something unexpected happens — a cost spike that wasn't planned for.
+Price exercises use hypothetical us-east-1 (US East, N. Virginia) rates for study on 2026-10-12, not current tariffs, unless explicitly identified as a dated published fee.
 
-It's a free service available in Cost Explorer for Business and Enterprise support customers.
+AWS Cost Anomaly Detection learns spending patterns and identifies unexpected changes. It is available to eligible Cost Explorer users without an additional feature charge; it is not restricted to Business or Enterprise Support. Notification and investigation services may have their own charges.
 
-## How It Works
+## Timing and alert semantics
 
-AWS trains ML models on your historical spend patterns across:
+The service evaluates billing data approximately three times per day. Underlying data can lag up to 24 hours, so it cannot guarantee an immediate response to a runaway resource. A newly subscribed service needs at least 10 days of history for detection.
 
-- Service-level spend (EC2, S3, RDS, etc.)
-- Linked account spend
-- Region-level spend
-- Time-of-day and day-of-week patterns
+An anomaly's cost impact is the difference between actual and expected spend over the anomaly duration, not a projected full month's charge. Alert subscriptions use documented absolute and/or percentage impact thresholds. There is no generic sensitivity slider or invented 1–10 severity configuration.
 
-The model learns what "normal" looks like for your account. When spend deviates significantly from the predicted pattern, it generates an anomaly alert.
+## Monitor strategy
 
-**Key concept:** The model understands seasonality, growth trends, and known recurring events (monthly billing cycles, product launches). A spike that follows a normal pattern doesn't generate an alert. A spike that's unexpected for your account's pattern does.
+Create monitors around meaningful spending dimensions such as service, linked account, tags or Cost Categories, subject to supported monitor types and limits. Avoid overlapping monitors that repeatedly alert the same responders. Thresholds should reflect financial significance and investigation capacity.
 
-## Anomaly Alerts
+For a small team, a \$50 impact might warrant attention; for a large central platform, combine amount and percentage to avoid alert fatigue. Those are illustrative policy values, not AWS defaults.
 
-When an anomaly is detected, you receive:
+## Investigation runbook
 
-- **Anomaly alert:** Which service/account/region has unusual spend
-- **Root cause estimate:** AWS's ML estimate of what drove the spike
-- **Cost impact:** How much the anomaly added above normal
+1. Read the anomaly's affected account, service, usage type, time range and actual/expected costs.
+2. Compare Cost Explorer or export records and recent deployments.
+3. Identify an owner; verify whether the change was planned.
+4. Inspect resource activity using appropriate operational logs.
+5. Obtain approval before stopping capacity or modifying retention.
+6. Document the cause and adjust ownership/routing or thresholds if needed.
 
-**Alert example:**
+Do not assume a generic EventBridge JSON shape is the CAD notification contract. Validate the actual subscription/SNS payload, delivery permissions and retry behavior before building automation. CAD and Budgets are complementary; neither is a guaranteed hard cap.
 
-```
-Anomaly Detected: Amazon EC2
-Estimated monthly impact: $2,400 above normal
-Detected at: 2024-06-15 14:00 UTC
-Root cause estimate: New EC2 instances launched in us-east-1
-Account(s) affected: 123456789012 (production)
-```
+## Detection versus fixed objectives
 
-## Alert Subscriptions
+| Requirement                             | Anomaly Detection                          | Budgets                                          |
+| --------------------------------------- | ------------------------------------------ | ------------------------------------------------ |
+| Unexpected change from learned behavior | Primary purpose                            | May alert only if a configured target is crossed |
+| Fixed monthly cost/usage objective      | Not a replacement for a target             | Primary purpose                                  |
+| Planned seasonal growth                 | Can affect learned expectations            | Still compared with selected threshold           |
+| Guaranteed instant cutoff               | Not provided                               | Not provided                                     |
+| Response                                | Investigate an anomaly and route ownership | Notify or apply supported approved actions       |
 
-Subscribe to anomaly alerts via:
+A root-cause contribution is a lead, not proof that a specific engineer or deployment caused spending. Correlate billing dimensions with change records and resource telemetry. Sudden growth can be legitimate; a forecast can be wrong; neither justifies deleting data.
 
-- **Email:** Simple alert to a specific address
-- **SNS:** Integrates with Slack, Teams, PagerDuty
+## Impact worksheet
 
-**Slack integration (via SNS → Lambda):**
+For hypothetical us-east-1 billing observations reviewed on 2026-10-12:
 
-```python
-# Lambda triggered by SNS anomaly alert
-# Formats the alert into a Slack message with:
-# - Service and estimated impact
-# - Account(s) affected
-# - Root cause estimate
-# - Link to Cost Explorer for investigation
+```text
+expected cost over anomaly duration = $8,000
+actual cost over anomaly duration   = $12,000
+impact                             = $4,000
+percentage impact                  = $4,000 / $8,000 × 100 = 50%
 ```
 
-**ChatOps setup:**
+This is an observed-period comparison, not \$12,000 of impact and not a \$48,000 monthly projection. The alert subscription's amount/percentage conditions determine notification routing; no undocumented sensitivity score is needed.
 
-```
-Cost Anomaly Detection → SNS Topic → Lambda → Slack #cost-alerts channel
-```
+## Notification integration lab
 
-## Investigation Workflow
+Create a design for CAD subscription → SNS → authorized notification consumer → incident channel. Specify the SNS topic policy, subscriber permissions, optional KMS access, message format validation and duplicate-delivery handling. Capture a sanitized real/test payload before implementing its parser; fields must follow that documented notification contract.
 
-When an anomaly alert fires:
+A message should contain monitor/anomaly identifiers, time range, affected billing dimensions, actual/expected impact, owner and investigation link. Avoid secrets or broad account metadata in public channels. Use least privilege and treat Slack/Teams integrations as separate authorization.
 
-1. **Check the alert details** — which service, which account, estimated impact
-2. **Check recent changes** — new deployments, new accounts, infrastructure changes
-3. **Look at Cost Explorer** — drill into the specific service and account
-4. **Check CloudTrail** — API calls that might indicate new resource creation
-5. **Identify the root cause** — was it planned (product launch) or unplanned (misconfigured automation)?
-
-**Common causes:**
-
-- New environment spun up and left running
-- Auto Scaling scaling up unexpectedly
-- Lambda function hitting a cold start storm
-- EBS volume snapshot accumulation
-- Data transfer spike from cross-region replication
-- Reserved Instance not covering new workload
-
-## Anomaly Detection vs Budgets
-
-|                 | Cost Anomaly Detection | Cost Budgets                |
-| --------------- | ---------------------- | --------------------------- |
-| Trigger         | Unexpected spend spike | Planned threshold           |
-| Latency         | Near real-time         | 24-48 hours                 |
-| What it detects | Unexpected changes     | Over-budget situations      |
-| Action          | Alert only             | Alert + optional automation |
-
-**Use both:** Anomaly detection catches surprises. Budgets catch gradual over-consumption that might not trigger an anomaly.
-
-## Coverage and Responsiveness
-
-Anomaly detection monitors:
-
-- All services across all linked accounts
-- Spend by account, region, and service
-- Anomalies down to the linked account level
-
-**What it doesn't detect:**
-
-- Gradual cost growth (e.g., storage growing 5% per month as data accumulates)
-- Small anomalies below the sensitivity threshold
-- Anomalies in very new accounts (not enough history for ML model)
-
-**Sensitivity settings:** You can adjust sensitivity (low/medium/high) to control how quickly alerts fire. Higher sensitivity means more alerts but also more false positives.
-
-## Cost Impact Estimation
-
-The ML model estimates the monthly cost impact of the anomaly at the time of detection. This is an estimate — the actual impact might be higher or lower depending on whether the anomaly continues.
-
-**Why it matters:** A $500 anomaly alert might actually be a $5,000/month problem if you don't catch it. Set up response procedures so that anomaly alerts get investigated same-day.
+For an unexpected storage increase, verify stored bytes, versions and retention; do not infer a \$3,200 saving merely from observing 50 GB/day of logs. For a compute spike, distinguish scaling, discounted coverage changes and price/licensing changes. Close the incident only after source usage and subsequent billing support the resolution.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cost-management/aws-cost-anomaly-detection/
-- **Documentation:** https://docs.aws.amazon.com/cost-management/latest/userguide/getting-started_cost_anomaly_detection.html
-- **Pricing:** https://aws.amazon.com/cost-management/aws-cost-anomaly-detection/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A devops team sets up Cost Anomaly Detection with a weekly alert to their #cost-alerts Slack channel. In week 2, an alert fires for a $3,200 unexpected charge on an S3 bucket. Investigation reveals a new Lambda function was writing 50GB/day of debug logs to S3. Fixing the Lambda logging reduces the bill by $3,200/month.
-
-**Scenario 2:** A company with multi-account setup enables Cost Anomaly Detection at the payer level with alert subscriptions to finance@company.com. The system detects a $12K anomaly in account-123 that is $4K above expected spend. The root cause: an engineer ran a Glue job that scanned a 50TB DynamoDB table. They implement S3 prefix isolation and query-level cost controls, preventing a $48K monthly recurrence.
-
-## Nuggets & Gotchas
-
-- **Cost Anomaly Detection uses ML and needs history:** The model requires 14 days of baseline data before it can detect anomalies. New accounts or accounts with rapidly changing spend patterns may see delayed or inaccurate anomaly detection.
-- **Alert subscriptions are per-detection threshold, not per-dollar-amount:** You set a sensitivity level (1-10) and a threshold dollar amount. Alerts fire when both conditions are met — not just when spend exceeds the dollar amount.
-- **Anomaly detection is free for the first 30 days:** After that, AWS charges per anomaly detection per account per month. At large scale (hundreds of linked accounts), this adds up — evaluate whether the value justifies the cost.
-- **The cost impact estimate is forward-looking but bounded:** The model estimates the monthly cost if the anomaly continues at the current rate. If the anomaly stops after 3 days (e.g., a one-time large data transfer), the actual impact is much lower than the estimate.
-- **Cost Anomaly Detection doesn't block actions:** It only alerts. You need CloudWatch + Lambda automation or manual investigation to remediate. An alert without a response procedure is just noise.
+- [Detection behavior and limitations](https://docs.aws.amazon.com/cost-management/latest/userguide/manage-ad.html)
+- [Monitor and subscription setup](https://docs.aws.amazon.com/cost-management/latest/userguide/getting-started-ad.html)
+- [Availability and pricing FAQ](https://aws.amazon.com/aws-cost-management/aws-cost-anomaly-detection/faqs/)

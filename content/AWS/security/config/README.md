@@ -2,258 +2,109 @@
 title: AWS Config
 description: AWS Config — resource inventory, change tracking, and compliance. Config rules, conformance packs, timeline of resource changes, and multi-account aggregation.
 tags:
-  - aws
-  - security
-  - config
-date: 2026-06-06
+  - aws/security
+date: 2026-10-12
 ---
 
 # AWS Config
 
-Config provides a detailed inventory of all AWS resources and tracks every configuration change over time. It's the foundation for compliance monitoring, security analysis, and change auditing.
+Prerequisites: [[AWS/security/iam/README|IAM roles and least privilege]] and the [[AWS/security/README|security evidence/response model]].
 
-## Core Concepts
+AWS Config records supported resource configuration and evaluates configured rules. Recording, evaluation, aggregation and remediation are separate capabilities with separate authorization and cost.
 
+## Scope and dependencies
+
+Choose supported resource types and continuous/daily recording deliberately; Config does not universally observe every resource and every change. Global IAM types have Region-generation restrictions; record/evaluate global resources once where feasible to avoid duplicated charges.
+
+A customer-managed recorder needs its service role and a delivery channel with the documented S3/SNS permissions. One delivery channel is supported per account/Region. Do not infer a universal same-Region S3 restriction from a KMS Region condition.
+
+Rules can be configuration-change, periodic or combined, according to the rule contract. An aggregator is read-only: it collects source evidence but cannot deploy rules or repair source resources. Remediation needs an independently authorized Automation workflow and role.
+
+## Controlled compliance lab
+
+Prerequisites: sandbox configuration recorder/channel permissions, a documented Config service role, and a logging bucket with Config delivery access. Configuration-item and evaluation charges apply.
+
+1. In the console create the recorder/delivery channel using only supported resource types needed for the experiment; do not accidentally enable an all-resource recorder in a production account.
+2. Start recording and create the managed rule S3_BUCKET_PUBLIC_READ_PROHIBITED.
+3. Select a private disposable S3 bucket and wait for its configuration/evaluation. Expected: COMPLIANT. Keep S3 Block Public Access enabled.
+4. To learn failure handling without exposing data, use a documented test fixture/isolated policy simulation or review a pre-existing noncompliant sandbox record. Do not make a real bucket public just to generate a finding.
+5. Inspect evaluation annotation, resource ID, capture time and rule trigger. A missing record can mean unsupported selection, stopped recorder or delivery/IAM failure rather than compliance.
+6. For authorized remediation, use the owning SSM Automation document, narrow assume-role permissions and test parameters on an isolated resource. Re-evaluate after repair; a successful automation invocation alone does not prove compliance.
+
+## Cleanup and cost
+
+Delete the lab rule/remediation and stop/delete only the recorder/channel created for this lab; restore prior configuration if one existed. Remove lab records/bucket objects only under the retention policy.
+
+Budget recorded configuration items, Config rule evaluations and conformance-pack evaluations separately. Fewer than fifty rules does not make them free; Security Hub integration does not include these costs automatically.
+
+## Recorder, delivery, rule and aggregator architecture
+
+```text
+supported resources → scoped recorder → configuration history → delivery channel
+                                           ↓
+                                  managed/custom rules → compliance
+                                           ↓
+                                   authorized remediation
+source accounts/Regions → read-only aggregator → investigation
 ```
-Config records:
-  │
-  ├── Resource inventory (all resources in account)
-  │     ├── EC2 instances (type, AMI, SG, VPC)
-  │     ├── S3 buckets (policy, versioning, encryption)
-  │     ├── IAM policies (versions, attachments)
-  │     └── RDS databases (engine, storage, backup)
-  │
-  ├── Configuration timeline
-  │     └── Every change with who/when/what/old/new
-  │
-  └── Compliance evaluation
-        └── Config rules evaluate resources against desired state
-```
 
-## Enabling Config
+| Component        | Owns                                   | Does not do                                   |
+| ---------------- | -------------------------------------- | --------------------------------------------- |
+| Recorder         | Supported resource selection/frequency | Every possible application change             |
+| Delivery channel | Documented S3/SNS delivery             | Grant all investigator/remediator permissions |
+| Rule             | Trigger/evaluation logic               | Automatically repair all failures             |
+| Conformance pack | Rule/remediation package               | Bypass source roles/recording coverage        |
+| Aggregator       | Read-only combined evidence            | Deploy rules or modify source resources       |
+
+## Inventory and timeline walkthrough
+
+With an already enabled sandbox recorder and read permissions:
 
 ```bash
-# Enable Config (recorder)
-aws configservice start-configuration-recorder \
-  --configuration-recorder '{
-    "name": "default",
-    "roleARN": "arn:aws:iam::123456789012:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig"
-  }'
-
-# Enable delivery channel (S3)
-aws configservice put-delivery-channel \
-  --delivery-channel '{
-    "name": "default",
-    "s3BucketName": "my-config-bucket",
-    "s3KeyPrefix": "config/",
-    "configFileDeliveryFrequency": "One_Hour"
-  }'
-
-# Enable global services (IAM, etc.)
-aws configservice put-configuration-recorder \
-  --configuration-recorder '{
-    "name": "default",
-    "roleARN": "arn:aws:iam::123456789012:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig",
-    "recordingGroup": {
-      "allSupported": true,
-      "includeGlobalResourceTypes": true
-    }
-  }'
-```
-
-### S3 Bucket Policy for Config
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": { "Service": "config.amazonaws.com" },
-      "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::my-config-bucket/AWSLogs/123456789012/Config/*"
-    },
-    {
-      "Effect": "Allow",
-      "Principal": { "Service": "config.amazonaws.com" },
-      "Action": "s3:GetBucketAcl",
-      "Resource": "arn:aws:s3:::my-config-bucket"
-    }
-  ]
-}
-```
-
-## Querying Resource Inventory
-
-```bash
-# List all EC2 instances
-aws configservice select-resource-config \
-  --expression "SELECT * WHERE resourceType = 'AWS::EC2::Instance'"
-
-# List all S3 buckets without versioning
-aws configservice select-resource-config \
-  --expression "SELECT * WHERE resourceType = 'AWS::S3::Bucket' AND configuration.versioningConfiguration.status != 'Enabled'"
-
-# List all security groups with port 22 open to 0.0.0.0/0
-aws configservice select-resource-config \
-  --expression "SELECT * WHERE resourceType = 'AWS::EC2::SecurityGroup' AND configuration.ipPermissions[?toPort==22].cidrIp CONTAINS '0.0.0.0/0'"
-```
-
-## Config Rules
-
-### Managed Rules
-
-```bash
-# Enable managed Config rules
-aws configservice put-config-rule \
-  --config-rule '{
-    "ConfigRuleName": "s3-bucket-versioning-enabled",
-    "Source": {
-      "Owner": "AWS",
-      "SourceIdentifier": "S3_BUCKET_VERSIONING_ENABLED"
-    },
-    "Scope": {
-      "ComplianceResourceTypes": ["AWS::S3::Bucket"]
-    }
-  }'
-
-# Enable encryption rule
-aws configservice put-config-rule \
-  --config-rule '{
-    "ConfigRuleName": "s3-bucket-server-side-encryption-enabled",
-    "Source": {
-      "Owner": "AWS",
-      "SourceIdentifier": "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED"
-    },
-    "Scope": {
-      "ComplianceResourceTypes": ["AWS::S3::Bucket"]
-    }
-  }'
-```
-
-### Custom Lambda Rules
-
-```python
-def lambda_handler(event, context):
-    # Invoked by Config rules
-    invoking_event = json.loads(event['invokingEvent'])
-    configuration_item = invoking_event['configurationItem']
-
-    resource_id = configuration_item['resourceId']
-    resource_type = configuration_item['resourceType']
-    config = configuration_item['configuration']
-
-    # Evaluate: check if EC2 instance is encrypted
-    if resource_type == 'AWS::EC2::Volume':
-        encrypted = config.get('encrypted', False)
-        return {
-            'compliance_type': 'COMPLIANT' if encrypted else 'NON_COMPLIANT',
-            'annotation': 'Volume is encrypted' if encrypted else 'Volume is NOT encrypted'
-        }
-```
-
-## Conformance Packs
-
-Deploy a collection of Config rules as a single unit:
-
-```yaml
-# conformance-pack.yaml
-Resources:
-  - ConfigRule:
-      ConfigRuleName: iam-password-policy
-      Source:
-        Owner: AWS
-        SourceIdentifier: IAM_PASSWORD_POLICY
-      InputParameters:
-        RequireUppercaseCharacters: true
-        RequireLowercaseCharacters: true
-        RequireSymbols: true
-        RequireNumbers: true
-        MinimumPasswordLength: 14
-
-  - ConfigRule:
-      ConfigRuleName: ec2-instance-managed-by-systems-manager
-      Source:
-        Owner: AWS
-        SourceIdentifier: EC2_INSTANCE_MANAGED_BY_SSM
-```
-
-```bash
-# Deploy conformance pack from S3
-aws configservice put-conformance-pack \
-  --conformance-pack-name operational-best-practices \
-  --template-s3-uri s3://my-config-bucket/conformance-packs/operational-best-practices.yaml
-```
-
-## Change Timeline
-
-```bash
-# Get configuration history for a resource
+aws configservice list-discovered-resources --resource-type AWS::EC2::Instance
 aws configservice get-resource-config-history \
-  --resource-type AWS::EC2::Instance \
-  --resource-id i-xxxxx
-
-# Get specific time range
-aws configservice get-resource-config-history \
-  --resource-type AWS::S3::Bucket \
-  --resource-id my-bucket \
-  --start-time 2024-01-01T00:00:00Z \
-  --end-time 2024-01-15T00:00:00Z
+  --resource-type AWS::EC2::Instance --resource-id INSTANCE_ID \
+  --chronological-order Forward
+aws configservice select-resource-config \
+  --expression "SELECT resourceId, resourceType WHERE resourceType = 'AWS::EC2::Instance'"
 ```
 
-## Multi-Account Aggregation
+Distinguish current recorded configuration from the live resource and historical capture time. Advanced-query syntax supports a bounded subset, not arbitrary SQL joins and every missing/deleted record. Query explicit configuration fields only after inspecting their actual shape.
+
+## Managed/custom rules and conformance packs
+
+A managed rule requires its SourceIdentifier and supported input/trigger settings. Change-trigger and periodic rules differ; increasing recorder coverage does not force every periodic evaluation immediately.
+
+A custom Lambda rule needs the AWS Config invocation permission, execution role, event parsing, evaluation results and failure handling. Use the owning maintained example rather than an undefined evaluation helper. A conformance-pack template must contain supported Config rule/remediation resources, not a free-form YAML policy list.
 
 ```bash
-# aggregator account: authorize
-aws configservice put-aggregation-authorization \
-  --authorized-account-id 123456789012
-
-# aggregator account: create aggregator
-aws configservice put-config-rule \
-  --config-rule '{
-    "ConfigRuleName": "multi-account-aggregator",
-    "Source": {
-      "Owner": "CUSTOM_LAMBDA",
-      "SourceIdentifier": "arn:aws:lambda:us-east-1:123456789012:function:aggregator"
-    }
-  }'
+aws configservice describe-config-rules
+aws configservice describe-compliance-by-config-rule --config-rule-names LAB_RULE_NAME
+aws configservice get-compliance-details-by-config-rule \
+  --config-rule-name LAB_RULE_NAME --compliance-types NON_COMPLIANT
 ```
 
-## Pricing
+Inspect annotation/resource/capture/evaluation times. A noncompliant event can become stale before automation runs; verify current state and input before remediation. Grant Automation only the intended resource changes, test rollback and re-evaluate.
 
-| Component                               | Cost                           |
-| --------------------------------------- | ------------------------------ |
-| Config rules (first 50 rules evaluated) | Free                           |
-| Config rules (additional rules)         | $0.001/rule evaluation         |
-| Conformance packs                       | Included                       |
-| Configuration history                   | Free (S3 storage at $0.023/GB) |
+## Multi-account and troubleshooting runbook
 
-## Limits
+Use Organizations/service-trust/delegated-administration or account-specific aggregation authorization according to the owning model. The aggregator is read-only; it does not imply source recording, rule deployment or remediation permission.
 
-| Resource                       | Limit          |
-| ------------------------------ | -------------- |
-| Config rules per region        | 150            |
-| Conformance packs per account  | 75             |
-| Configuration items per region | 100,000        |
-| Aggregators                    | 50 per account |
+Check supported resource selection/global-IAM Region rules, recorder state/role, delivery bucket/key/SNS policy, rule trigger and aggregator freshness separately. Missing inventory is not compliance. Restore prior recorder/channel/rule settings; remove only dedicated lab aggregators/rules/packs and preserve source records under retention.
+
+References: [advanced query](https://docs.aws.amazon.com/config/latest/developerguide/querying-AWS-resources.html), [history API](https://docs.aws.amazon.com/cli/latest/reference/configservice/get-resource-config-history.html), [custom rules](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html), [conformance packs](https://docs.aws.amazon.com/config/latest/developerguide/conformance-packs.html).
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/config/
-- **Documentation:** https://docs.aws.amazon.com/config/
-- **Pricing:** https://aws.amazon.com/config/pricing/
-
-## Nuggets & Gotchas
-
-- **Config records configuration state, not API calls — it's not a replacement for CloudTrail:** Config shows WHAT changed on a resource (security group modified, bucket policy changed). CloudTrail shows WHO made the API call. Use both together.
-- **Config's S3 bucket must be in the SAME region as Config recording — cross-region requires aggregator:** If you have Config in us-west-2 writing to an S3 bucket in us-east-1, you need to set up an aggregator and cross-region configuration.
-- **Config rule evaluation is triggered by configuration changes — NOT on a schedule by default:** If a resource is already non-compliant and you don't change it, Config won't re-evaluate. Use the `MaximumExecutionFrequency` to evaluate periodically (e.g., daily).
-- **Config's `select-resource-config` SQL is limited — no JOINs, no subqueries:** You can query individual resource types but can't correlate across resources (e.g., "find all EC2 instances with SGs that allow port 22"). For that, use Athena with CloudTrail logs.
-- **Config recording of global resource types (IAM) requires `includeGlobalResourceTypes: true`:** IAM resources are global. If you don't enable this, IAM changes won't appear in Config.
+- [Recording selection and global scope](https://docs.aws.amazon.com/config/latest/developerguide/select-resources.html)
+- [Delivery channel](https://docs.aws.amazon.com/config/latest/developerguide/manage-delivery-channel.html)
+- [Read-only aggregation](https://docs.aws.amazon.com/config/latest/developerguide/aggregate-data.html)
+- [Remediation](https://docs.aws.amazon.com/config/latest/developerguide/remediation.html)
+- [Pricing](https://aws.amazon.com/config/pricing/)
 
 ## Across the wiki
 
-- [[Security/cloud-security/README|Cloud Security Hub]] — cloud security posture (Security)
-- [[GCP/compute/gke/security|GKE Security & Hardening — Workload Identity & Binary Authorization]] — cloud security posture (GCP)
-- [[Security/cloud-security/aws/README|AWS Security]] — cloud security posture (Security)
-- [[Security/cloud-security/azure/README|Azure Security]] — cloud security posture (Security)
+- [[Security/cloud-security/README|Cloud Security Hub]]
+- [[GCP/compute/gke/security|GKE Security & Hardening — Workload Identity & Binary Authorization]]
+- [[Security/cloud-security/aws/README|AWS Security]]
+- [[Security/cloud-security/azure/README|Azure Security]]

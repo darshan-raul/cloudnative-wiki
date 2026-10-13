@@ -1,99 +1,64 @@
 ---
-title: VPC Peering
-description: VPC Peering — private IP connectivity between two VPCs. Peering configuration, route tables, security group rules, and limitations compared to Transit Gateway.
+title: "VPC peering"
+description: "Configure bidirectional private routes, understand non-transitivity/DNS limits and compare transfer-aware costs."
 tags:
-  - aws
-  - networking
-  - vpc-peering
-date: 2026-06-06
+  - cloud/aws/networking
+date: 2026-10-12
 ---
 
-# VPC Peering
+# VPC peering
 
-VPC Peering creates a private connection between two VPCs so instances in either VPC can communicate using private IP addresses. No gateways, no NAT, no Transit Gateway needed.
+Peering connects two compatible VPCs through private routing. It can span supported accounts/Regions, but overlapping CIDRs and non-transitive routing constrain the design. Start with [[AWS/networking/vpc/README|VPC routes]].
 
-## How It Works
+## What peering does not do
 
+A→B and B→C connections do not let A reach C through B. Peering does not grant application permission, share every DNS namespace or make B's NAT/IGW a universal egress path for A.
+
+Acceptance and bidirectional routes are separate steps. Add the destination CIDR in each relevant subnet route table and review SG/NACL rules. Supported same-Region SG references have conditions; inter-Region behavior differs.
+
+Peering DNS resolution options affect supported public hostnames resolving to private addresses; they do not automatically associate all private hosted zones or forward arbitrary on-premises names. Use [[AWS/networking/private-access-and-hybrid-dns|Resolver/zone design]] when that is the requirement.
+
+## Two-VPC sandbox exercise
+
+Prerequisites: two non-overlapping sandbox VPCs, one private test client/server and management access that does not depend on the new peering path.
+
+1. Request/accept a dedicated connection and record its ID.
+2. Add each remote CIDR to the relevant route table with the peering ID.
+3. Permit only the intended application port/client source.
+4. Test the remote private IP, then the intended DNS name; diagnose routing and naming separately.
+5. Remove one return route in the sandbox and observe failure; restore it and prove recovery.
+6. Delete dedicated routes before removing the connection. Restore groups and remove disposable client/server resources.
+
+Expected evidence: both effective route tables, accepted connection, allowed/denied flow test and documented DNS behavior.
+
+## Cost and scale
+
+There is no peering attachment-hour fee, but **same-Region is not universally free transfer**: AZ placement and direction matter. Inter-Region transfer has its own tariff. Compare the actual path/GB with [[AWS/networking/vpc/transit-gateway|TGW]] processing/attachment dimensions.
+
+A mesh grows connections and route-management effort quickly; “three VPCs use peering, ten use TGW” is a heuristic, not a hard threshold. Inspect current active/pending connection and route quotas before scaling.
+
+## Peering versus hub routing
+
+| Requirement                          | Peering                                    | Transit Gateway                                        |
+| ------------------------------------ | ------------------------------------------ | ------------------------------------------------------ |
+| Direct private path between two VPCs | Good starting point                        | Works with additional hub controls/cost                |
+| A→B→C transit                        | Unsupported through peering                | Supported when route tables/attachments permit         |
+| Many accounts and route domains      | Pairwise connection/route management grows | Central tables and sharing, with additional operations |
+| Billing                              | No attachment-hour; transfer still applies | Attachment-hours and eligible processing/transfer      |
+
+```text
+VPC A subnet → route(B CIDR, pcx) → peering → VPC B subnet
+VPC B subnet → route(A CIDR, pcx) → peering → VPC A subnet
 ```
-VPC-A (10.0.0.0/16) ←→ VPC Peering ←→ VPC-B (10.1.0.0/16)
-```
 
-Traffic flows directly between VPCs over the AWS backbone, not the public internet. Latency is lower than internet-based communication.
-
-## Key Constraints
-
-- **No transitive peering:** VPC-A can talk to VPC-B, and VPC-B can talk to VPC-C. But VPC-A cannot talk to VPC-C through VPC-B. Each pair needs a direct peering connection.
-- **No overlapping CIDRs:** The CIDR blocks of the two VPCs must not overlap. This is the most common reason peering requests fail.
-- **Region-bound by default:** Peering connections are between VPCs in the same region. Cross-region peering is supported but adds latency and cost.
-- **Account-bound by default:** Peering between VPCs in different AWS accounts requires acceptance from both accounts.
-
-## Setup Steps
-
-1. **Requester creates peering connection** — From VPC-A, create a peering connection request to VPC-B
-2. **Accepter accepts** — VPC-B (or the other account) accepts the request
-3. **Update route tables** — Add a route in VPC-A's route table pointing to the peering connection for VPC-B's CIDR, and vice versa
-4. **Update security groups** — Security groups in VPC-A need rules allowing traffic from VPC-B's CIDR (or the peering SG)
-
-## Route Table Configuration
-
-```
-VPC-A Route Table:
-Destination: 10.0.0.0/16    → Target: local
-Destination: 10.1.0.0/16    → Target: pcx-xxxxx (peering connection)
-
-VPC-B Route Table:
-Destination: 10.1.0.0/16    → Target: local
-Destination: 10.0.0.0/16    → Target: pcx-xxxxx (peering connection)
-```
-
-## DNS Resolution Between VPCs
-
-If you want instances in VPC-B to resolve DNS names in VPC-A, enable **DNS resolution for the peering connection** in the peering connection settings. By default, DNS resolution is disabled for new peering connections.
-
-## Use Cases
-
-- **Two-tier architecture:** VPC-A for application, VPC-B for database — direct private communication without Transit Gateway
-- **Shared services VPC:** A central services VPC (logging, monitoring) peered with all application VPCs
-- **Migration:** Peering a new VPC with an old VPC during migration to allow direct communication without re-IPing
-
-## Limits
-
-| Resource                            | Limit                     |
-| ----------------------------------- | ------------------------- |
-| Active peering connections per VPC  | 50 (can request increase) |
-| Pending peering connections per VPC | 50                        |
-| VPCs per region (default)           | 5                         |
-
-## Comparison: Peering vs Transit Gateway
-
-|                       | VPC Peering               | Transit Gateway                 |
-| --------------------- | ------------------------- | ------------------------------- |
-| Transitive routing    | No                        | Yes                             |
-| Scales to100s of VPCs | No (mesh complexity)      | Yes (hub-and-spoke)             |
-| Cross-account         | Yes                       | Yes (with AWS Organizations)    |
-| Route management      | Per-VPC route tables      | Centralized route tables        |
-| Cost                  | Free (same region)        | Per-hour + per-GB data transfer |
-| Use when              | 2-3 VPCs, simple topology | 10+ VPCs, hub-and-spoke         |
+The connection must be active and both sides need routes. Use non-overlapping ranges, then test a private IP before debugging DNS. A Route 53 private hosted zone needs its own association/Resolver design; the peering DNS option is narrower. For an access denial, inspect source SG or CIDR support, target SG, both NACL directions and guest firewall rather than adding a third peering connection.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/vpc/
-- **Documentation:** https://docs.aws.amazon.com/vpc/latest/peering/
-- **Pricing:** https://aws.amazon.com/vpc/pricing/ (same-region peering is free)
-
-## Pricing Examples
-
-**Scenario 1:** Same-region VPC Peering between two VPCs (10.0.0.0/16 and 10.1.0.0/16) — free. Traffic between them traverses the AWS backbone at no cost. A1GB/month data transfer between VPCs costs $0.
-
-**Scenario 2:** Cross-region VPC Peering between us-east-1 and eu-west-1. Data transfer: $0.02/GB from us-east-1 to eu-west-1. If you transfer 500GB/month, that's $10/month. Compare to Transit Gateway cross-region: $0.02/GB + $0.007/Transit Gateway hour. For this volume, Transit Gateway adds ~$0.50/hr ×720hr = $360/month minimum, making peering36x cheaper for this use case.
-
-## Nuggets & Gotchas
-
-- **Peering connections don't inherit from the default security group:** When you peer two VPCs, instances in VPC-A can only reach instances in VPC-B if the security group in VPC-B explicitly allows traffic from VPC-A's CIDR. This catches many people off guard.
-- ==**VPC CIDR overlap is a hard constraint==:** If your VPCs use 10.0.0.0/8 and 10.0.0.0/16, they overlap and peering fails. This is common in organizations that used the same CIDR in multiple environments. Use non-overlapping RFC 1918 ranges.
-- **Peering doesn't support IPv6 by default:** IPv6 traffic requires the VPC to have an IPv6 CIDR block and the peering connection to be configured for IPv6. Not all use cases need this, but it's a gotcha for IPv6 workloads.
-- **Security groups referencing peer VPC SGs require the SG to exist in both accounts:** If Account A has sg-123 and it references sg-456 in Account B's VPC, sg-456 must exist and be assigned to instances in Account B's VPC. This cross-account SG reference is valid only when the peering connection is active.
-- **DNS resolution for peering must be explicitly enabled:** By default, instances in VPC-B cannot resolve DNS names in VPC-A (or vice versa). ==You must enable "DNS resolution" on the peering connection.== This is a common cause of mysterious "can't resolve hostname" issues after setting up peering.
+- [Peering guide](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html).
+- [Unsupported peering configurations](https://docs.aws.amazon.com/vpc/latest/peering/invalid-peering-configurations.html).
+- [Peering DNS](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-dns.html).
+- [VPC pricing](https://aws.amazon.com/vpc/pricing/).
 
 ## Across the wiki
 

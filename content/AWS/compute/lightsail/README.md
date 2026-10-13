@@ -1,236 +1,72 @@
 ---
-title: Amazon Lightsail
-description: Amazon Lightsail — simple virtual private servers for basic workloads. Pre-configured blueprints, fixed pricing, simple networking, and limited vs EC2 comparison.
+title: "Amazon Lightsail"
+description: "Select a Lightsail instance, database or container plan with current bundle discovery, custom-domain TLS and realistic availability trade-offs."
 tags:
-  - aws
-  - compute
-  - lightsail
-date: 2026-06-06
+  - cloud/aws/compute
+date: 2026-10-12
 ---
 
 # Amazon Lightsail
 
-Lightsail is a simplified VPS (Virtual Private Server) service for basic workloads — websites, small databases, dev/test environments. It provides pre-configured instances with fixed pricing, simple networking, and a minimal management console. Unlike EC2, Lightsail doesn't require deep AWS knowledge.
+Lightsail simplifies selected instance, database, container and networking workflows. A bundle is not an unlimited all-inclusive bill or a universal replacement for [[AWS/compute/ec2/README|EC2]], [[AWS/compute/ecs/README|ECS]] or [[AWS/databases/rds/README|RDS]].
 
-## Core Concepts
+## Product distinctions
 
-### How Lightsail Works
+Instances are VMs with customer-managed OS/application patching. Managed databases support selected MySQL/PostgreSQL offerings, not managed MongoDB. Installing MongoDB on a VM makes it your operational responsibility.
 
-```
-Lightsail Instance
-  ├── Pre-configured blueprint (Ubuntu, Amazon Linux, Debian, etc.)
-  ├── Fixed specs (1 vCPU, 2GB RAM, 80GB SSD)
-  ├── Built-in networking (static IP, DNS, firewall)
-  └── Simple pricing ($5-$160/month, all-inclusive)
+High-availability database plans provide a synchronous standby in another AZ. Suitability depends on availability, compatibility, backup and operational requirements; do not categorically call all Lightsail databases non-production.
 
-No Auto Scaling, no complex VPC, no security groups (simplified firewall)
-```
+Container services support a defined multi-container deployment model, not the Kubernetes API or an EKS-equivalent service mesh. Inspect actual scaling, networking and port constraints.
 
-### Instance Plans
-
-| Plan    | vCPU | RAM    | SSD    | Cost/mo |
-| ------- | ---- | ------ | ------ | ------- |
-| Nano    | 1    | 512 MB | 20 GB  | $3.50   |
-| Small   | 1    | 1 GB   | 40 GB  | $5.00   |
-| Medium  | 1    | 2 GB   | 80 GB  | $10.00  |
-| Large   | 2    | 4 GB   | 160 GB | $20.00  |
-| XLarge  | 2    | 8 GB   | 320 GB | $40.00  |
-| 2XLarge | 4    | 16 GB  | 640 GB | $80.00  |
-
-Plus database plans (MySQL, PostgreSQL, MongoDB) and load balancers.
-
-## Creating an Instance
-
-### Via Console
-
-Lightsail → Create instance → Choose blueprint → Choose plan → Name → Create
-
-### Via CLI
+## Discover instead of copying obsolete plans
 
 ```bash
-aws lightsail create-instances \
-  --instance-names my-server \
-  --blueprint-id ubuntu_22_04_lts \
-  --bundle-id nano_2_0 \
-  --zone us-east-1a
+aws lightsail get-blueprints --region us-east-1
+aws lightsail get-bundles --region us-east-1
+aws lightsail get-relational-database-bundles --region us-east-1
 ```
 
-## SSH Access
+Select active, compatible blueprint/bundle IDs for the desired Region and IPv4/IPv6 offering. Current examples include a \$15 standard database and \$18 load balancer, but these are not a universal price for every plan/Region. Add overage, snapshots, attached storage, distributions and other selected features from the current tariff.
 
-```bash
-# Download default key pair
-aws lightsail download-default-key-pair --output-file ~/lightsail-key.pem
+## Sandbox website exercise
 
-# SSH
-chmod 600 ~/lightsail-key.pem
-ssh -i ~/lightsail-key.pem ubuntu@public-ip
+Prerequisites: sandbox access, budget, a chosen blueprint/bundle/AZ and a domain only if testing TLS.
 
-# Or: Browser-based SSH (Console)
+1. Create one small instance using the console's selected blueprint/plan. Record its name, AZ, IPs and billing dimensions.
+2. Restrict administration sources; allow only intended web ports. Check both Lightsail public firewall and guest firewall.
+3. Publish a nonsensitive test page, inspect service logs and test from an allowed client.
+4. Create a snapshot, restore a separate disposable instance and verify the page/data. A snapshot success response alone is not a restore test.
+5. If testing a load balancer, attach instances by their documented names, configure health, request a certificate for your **custom domain**, validate DNS and test HTTPS.
+
+Lightsail load balancers support validated certificates for custom domains. They are not limited to a Lightsail-owned domain. Review domain validation and renewal, and ensure application redirects do not expose an unintended backend.
+
+Failure exercise: change only the sandbox guest service/port and distinguish failed health checks from DNS/firewall/TLS failures. Record the corrective action.
+
+## Cleanup and decisions
+
+Delete only the lab load balancer, restored/source instances, snapshots, dedicated static IP and domain records after confirming data is disposable. Keep externally required certificates/domains; inspect unattached addresses/storage for charges.
+
+Choose EC2/VPC or ECS/EKS when requirements exceed Lightsail's documented network, orchestration, placement or instance-selection capabilities. Compare equal resource/availability requirements rather than dissimilar VM sizes.
+
+## Component map and practical choices
+
+```text
+custom DNS → optional distribution/load balancer → instance or container service
+                                                └→ managed database, if selected
+static IP → one instance address
+snapshot → separately restorable point-in-time copy
 ```
 
-## Static IP
+For a single VM, inspect the selected blueprint, bundle resources, IPv4/IPv6 behavior, transfer allowance and attached disks. The guest OS and application remain yours to patch. A static IP prevents normal instance address changes from forcing DNS edits, but an unattached address may have different billing. If you add a load balancer, check supported instance attachments, health path, custom-domain certificate validation and whether the workload requires more than one failure domain.
 
-```bash
-# Create static IP
-aws lightsail allocate-static-ip --static-ip-name my-static-ip
+A managed database is its own resource and backup plan; a VM snapshot does not protect it. A container service deploys images and exposes the configured service port but does not provide Kubernetes objects, scheduling APIs or an arbitrary VPC feature set. For a migration, inventory hostname, certificate, persistent data and backup restoration before deleting the old plan.
 
-# Attach to instance
-aws lightsail attach-static-ip --static-ip-name my-static-ip --instance-name my-server
-```
-
-## Networking
-
-### Firewall Rules
-
-```bash
-# Allow HTTP/HTTPS
-aws lightsail put-instance-public-ports \
-  --instance-name my-server \
-  --portInfos '[{"protocol": "tcp", "fromPort": 80, "toPort": 80}, {"protocol": "tcp", "fromPort": 443, "toPort": 443}]'
-```
-
-### DNS Zone
-
-```bash
-# Create DNS zone
-aws lightsail create-domain --domain-name mydomain.com
-
-# Create DNS record
-aws lightsail create-domain-entry \
-  --domain-name mydomain.com \
-  --entry '{
-    "type": "A",
-    "name": "www",
-    "value": "203.0.113.10"
-  }'
-```
-
-## Load Balancer
-
-```bash
-# Create load balancer
-aws lightsail create-load-balancer \
-  --load-balancer-name my-lb \
-  --instance-port 80 \
-  --zone us-east-1a
-
-# Attach instance
-aws lightsail attach-instances-to-load-balancer \
-  --load-balancer-name my-lb \
-  --instance-ids my-server
-```
-
-## Database (Managed MySQL/PostgreSQL)
-
-```bash
-# Create MySQL database
-aws lightsail create-relational-database \
-  --relational-database-name my-db \
-  --blueprint-id mysql_8_0 \
-  --bundle-id micro_2_0 \
-  --zone us-east-1a
-```
-
-### Database Features
-
-- Automatic backups (daily, 7-day retention)
-- Point-in-time recovery
-- Master username/password
-- Firewall (whitelist IPs)
-- Monitoring (CloudWatch metrics)
-
-## Snapshots
-
-```bash
-# Create snapshot
-aws lightsail create-instance-snapshot \
-  --instance-name my-server \
-  --instance-snapshot-name my-server-backup
-
-# Create instance from snapshot
-aws lightsail create-instances-from-snapshot \
-  --instance-names restored-server \
-  --instance-snapshot-name my-server-backup \
-  --bundle-id nano_2_0
-```
-
-## Container Service (Managed Kubernetes-lite)
-
-Lightsail also offers a simple container service:
-
-```bash
-# Create container service
-aws lightsail create-container-service \
-  --container-service-name my-app \
-  --power nano \
-  --scale 1
-```
-
-Deploy containers without managing Kubernetes. Limited compared to EKS but simpler.
-
-## Limitations vs EC2
-
-| Feature            | Lightsail              | EC2                             |
-| ------------------ | ---------------------- | ------------------------------- |
-| Instance types     | Fixed plans only       | All families (T, M, C, R, etc.) |
-| Auto Scaling       | No                     | Yes (ASG)                       |
-| VPC                | Single VPC, simplified | Full VPC control                |
-| Security Groups    | Simplified firewall    | Full SG control                 |
-| Load Balancer      | Simple LB, limited     | ALB/NLB/CLB                     |
-| EBS                | Fixed sizes            | All types (gp3, io2, etc.)      |
-| Spot Instances     | No                     | Yes                             |
-| Reserved Instances | No                     | Yes                             |
-| Placement Groups   | No                     | Yes                             |
-| Nitro instances    | No                     | Yes                             |
-| Max instances      | 20                     | 20 (default, can increase)      |
-
-## Use Cases
-
-### Good For Lightsail
-
-- Simple WordPress/blog sites
-- Small databases (< 1GB RAM)
-- Dev/test environments
-- Legacy applications (single server)
-- Small team prototypes
-
-### Bad For Lightsail (use EC2 instead)
-
-- High-traffic production websites (needs Auto Scaling)
-- Large databases (needs more than 16GB RAM)
-- HPC/ML workloads (needs GPU, Spot)
-- Microservices requiring container orchestration
-- Multi-tier architectures with complex networking
-
-## Pricing
-
-Lightsail pricing is all-inclusive (compute + storage + networking):
-
-```
-Nano:   $3.50/month  (512MB, 20GB SSD)
-Small:  $5.00/month  (1GB, 40GB SSD)
-Medium: $10.00/month (2GB, 80GB SSD)
-Large:  $20.00/month (4GB, 160GB SSD)
-```
-
-Data transfer: included bandwidth (for nano-small: 1TB/month; for medium+: 2-3TB/month).
+Price a concrete design by listing each bundle and duration, outbound transfer above included allowance, extra disks/snapshots, database, load balancer and distribution. Compare EC2 or ECS only after matching CPU/memory, availability, storage durability, network requirements and operating effort. Confirm current regional bundles through the commands above rather than extrapolating an old fixed monthly total.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/lightsail/
-- **Documentation:** https://docs.aws.amazon.com/lightsail/
-- **Pricing:** https://aws.amazon.com/lightsail/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A personal blog with 1 nano instance. $3.50/month. Includes 1TB transfer. MySQL database (nano): $5/month. Total: $8.50/month. Comparable to shared hosting but with dedicated resources and AWS infrastructure.
-
-**Scenario 2:** A small e-commerce site (3 instances: web, DB, cache). Medium instances: 3 × $10 = $30/month. Plus load balancer: $10/month. Plus managed MySQL: $15/month. Total: $55/month. Compare to EC2 (3 × m5.large = $138/month + ELB $22/month + RDS small $50/month = $210/month). Lightsail is 74% cheaper but limited to simple architectures.
-
-## Nuggets & Gotchas
-
-- **Lightsail instances don't support custom security groups — only simplified firewall rules:** If you need complex network segmentation (e.g., private backend, public frontend, VPN access), use EC2 with proper VPC networking. Lightsail's firewall is all-or-nothing on the ports you open.
-- **Lightsail load balancers don't support SSL certificates directly — you must use the Lightsail TLS certificate feature:** This is a managed certificate that auto-renews, but it's limited to the Lightsail domain. For custom domains, use the Lightsail distribution (CDN) or terminate SSL on the instance.
-- **Lightsail containers are limited compared to ECS/EKS — no sidecars, no service mesh, limited networking:** If you need advanced container features (service discovery, auto-scaling, blue-green deployments), use ECS or EKS. Lightsail containers are for simple web apps only.
-- **Lightsail databases are not production-grade — no Multi-AZ, limited backup options:** A managed MySQL on Lightsail has 7-day backup retention and no Multi-AZ. For production databases, use RDS. Lightsail is for dev/test or small production apps with low availability requirements.
-- **Lightsail static IPs are tied to a region — you can't migrate them to another region:** If you need multi-region, use EC2 with proper VPC architecture. Lightsail is designed for single-region simplicity.
+- [Database engines](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-choosing-a-database.html).
+- [HA databases](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-high-availability-databases.html).
+- [Custom-domain TLS](https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-tls-ssl-certificates-in-lightsail-https.html).
+- [Container services](https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-container-services.html).
+- [Current pricing](https://aws.amazon.com/lightsail/pricing/).

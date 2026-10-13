@@ -1,72 +1,64 @@
 ---
 title: AWS Solutions Architect Professional (SAP-C02)
-tags: [aws, certifications, sap-c02, solutions-architect, architecture]
-date: 2026-09-06
-description: "Structured study guide and curriculum for the AWS Certified Solutions Architect - Professional (SAP-C02) certification."
+tags:
+  - aws/certification/sap-c02
+date: 2026-10-12
+description: Sourced task-by-task SAP-C02 revision path with prerequisites, design scenarios and practical study drills.
 aliases:
   - AWS/solutions-architect-professional
 ---
 
 # AWS Certified Solutions Architect - Professional (SAP-C02)
 
-This documentation provides a structured study guide for the **AWS Certified Solutions Architect - Professional (SAP-C02)** exam. It is divided into four main content domains, covering the tasks and underlying technologies necessary to achieve a high score.
+This study path maps 20 task lessons to the current official exam guide. It teaches design decisions through prerequisites, original scenarios, rationale, rejected alternatives and proposed drills. It is a revision companion, not an exhaustive syllabus or a guarantee of a passing score.
 
-## Domains
+## Official exam structure
 
-### [Domain 1: Design Solutions for Organizational Complexity (26%)](./domain-1/index.md)
+The guide describes 65 scored and 10 unscored questions, with a minimum passing scaled score of 750. Scaled score is not a raw percentage. Emerging-topic questions described by the current guide are unscored; consult the guide rather than assuming every newly announced service is a scored objective.
 
-Focuses on multi-account strategies, complex networking, and security controls.
+| Domain                        | Scored-content weight | Study path                                                        |
+| ----------------------------- | --------------------- | ----------------------------------------------------------------- |
+| Organizational complexity     | 26%                   | [[AWS/solutions-architect-professional/domain-1/index\|Domain 1]] |
+| New solutions                 | 29%                   | [[AWS/solutions-architect-professional/domain-2/index\|Domain 2]] |
+| Existing-solution improvement | 25%                   | [[AWS/solutions-architect-professional/domain-3/index\|Domain 3]] |
+| Migration and modernization   | 20%                   | [[AWS/solutions-architect-professional/domain-4/index\|Domain 4]] |
 
-- Architect Network Connectivity Strategies
-- Prescribe Security Controls
-- Design Reliable and Resilient Architectures
-- Design a Multi-Account AWS Environment
-- Cost Optimization & Visibility
+## Prerequisites and workflow
 
-### [Domain 2: Design for New Solutions (29%)](./domain-2/index.md)
+Start with [[AWS/networking/README|networking]], [[AWS/security/README|security]], [[AWS/compute/README|compute]], [[AWS/storage/README|storage]], [[AWS/databases/README|databases]] and [[AWS/cost-management/README|cost management]]. The official target candidate has substantial hands-on architectural experience; reading service names alone is insufficient preparation.
 
-Focuses on designing architectures from scratch to meet specific business requirements.
+For each task, identify the business constraint, select the simplest compliant design, explain why alternatives fail and define evidence that would validate the choice. Track weak topics and revisit the linked service lessons. Check the current guide's service references and lifecycle notices before undertaking labs; historical exam mentions do not guarantee present service availability.
 
-- Deployment Strategy
-- Business Continuity
-- Security Controls (New Solutions)
-- Reliability Requirements
-- Performance Objectives
-- Cost Optimization Strategy (New Solutions)
+## Service study map
 
-### [Domain 3: Continuous Improvement for Existing Solutions (25%)](./domain-3/index.md)
+| Area               | Representative lessons and questions                                                                                             |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Compute/containers | [[AWS/compute/README\|EC2, Lambda, ECS/EKS, Fargate and Batch]]: control, execution model and scaling                            |
+| Storage            | [[AWS/storage/README\|S3, EBS, EFS, FSx and Storage Gateway]]: protocol, access, performance and recovery                        |
+| Databases          | [[AWS/databases/README\|RDS/Aurora, DynamoDB, ElastiCache and analytics stores]]: compatibility, consistency and topology        |
+| Networking         | [[AWS/networking/README\|VPC, DNS, hybrid connectivity, delivery and load balancing]]: permitted paths and failure domains       |
+| Governance         | [[AWS/management-governance/README\|Organizations, Control Tower, IaC and Systems Manager]]: ownership and controlled operations |
+| Security           | [[AWS/security/README\|IAM, KMS, detection and posture tools]]: identity, data and evidence boundaries                           |
+| Integration        | [[AWS/serverless/README\|APIs, events, queues and workflows]]: decoupling, retries and idempotency                               |
+| Economics          | [[AWS/cost-management/README\|Pricing, allocation and optimization]]: eligible units and avoidable cost                          |
 
-Focuses on optimizing architectures that are already running.
+This service study map is representative, not the exhaustive official in-scope list. Check the current guide's service references. A service may appear historically on an objective while its current availability is restricted; labs must use supported offerings.
 
-- Operational Excellence
-- Security Improvement
-- Performance Improvement
-- Reliability Improvement
-- Cost Optimization Opportunities
+### Review record
 
-### [Domain 4: Accelerate Workload Migration and Modernization (20%)](./domain-4/index.md)
+For each task, record the requirement, chosen option, rejected option, decisive constraint, calculation and proposed validation. Revisit a lesson when you can name services but cannot explain a failure, permission denial or bill. Reading completion is not an exam score or hands-on experience.
 
-Focuses on moving workloads to AWS and modernizing them.
+## Capstone scenario
 
-- Migration Assessment
-- Migration Approach
-- New Architecture for Migrated Workloads
-- Modernization and Enhancements
+A regulated business is acquiring a company while launching a new customer portal and exiting a data center. Combine account/network isolation, a staged deployment, recovery objectives, migration waves and cost ownership into one decision record. Reject a single “best service” answer: different components have different compatibility, risk and time constraints.
 
-## Key In-Scope Services
+## Practical capstone drill
 
-- **Compute:** EC2, Lambda, Fargate, Batch.
-- **Containers:** ECS, EKS, ECR.
-- **Storage:** S3 (all classes), EBS, EFS, FSx, Storage Gateway.
-- **Database:** RDS, Aurora, DynamoDB, ElastiCache, Redshift.
-- **Networking:** VPC, Route 53, Direct Connect, Transit Gateway, Global Accelerator, Elastic Load Balancing.
-- **Management:** Organizations, Control Tower, Systems Manager, CloudFormation, Auto Scaling.
-- **Security:** IAM, KMS, WAF, Shield, Security Hub, GuardDuty.
-- **Integration:** SQS, SNS, EventBridge, Step Functions, API Gateway.
+Produce a dependency/account diagram, requirements matrix, three option comparisons, a cost model with units, a cutover/recovery runbook and a prioritized improvement backlog. Include at least one rejected alternative per domain and identify assumptions requiring measurement. Use supplied data or an authorized sandbox only; this collection does not claim the drills were executed or services deployed.
 
-## Sections
+## References
 
-- [[AWS/solutions-architect-professional/domain-1/index|Domain 1: Design Solutions for Organizational Complexity]] — This domain constitutes 26% of the exam and focuses on multi-account strategies and complex networking.
-- [[AWS/solutions-architect-professional/domain-2/index|Domain 2: Design for New Solutions]] — This domain constitutes 29% of the exam and focuses on designing architectures from scratch to meet specific business…
-- [[AWS/solutions-architect-professional/domain-3/index|Domain 3: Continuous Improvement for Existing Solutions]] — This domain constitutes 25% of the exam and focuses on optimizing architectures that are already running.
-- [[AWS/solutions-architect-professional/domain-4/index|Domain 4: Accelerate Workload Migration and Modernization]] — This domain constitutes 20% of the exam and focuses on moving workloads to AWS and modernizing them.
+- [Current SAP-C02 exam guide, structure and emerging topics](https://docs.aws.amazon.com/aws-certification/latest/solutions-architect-professional-02/solutions-architect-professional-02.html)
+- [Official certification overview](https://aws.amazon.com/certification/certified-solutions-architect-professional/)
+- [Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html)
+- [AWS service lifecycle notices](https://docs.aws.amazon.com/general/latest/gr/full_shutdown_services.html)

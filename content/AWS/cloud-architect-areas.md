@@ -1,7 +1,7 @@
 ---
 title: "Cloud Architect Areas"
-tags: [aws, cloud-architect-areas]
-date: 2026-01-30
+tags: [cloud/aws/architecture]
+date: 2026-10-12
 description: "As a cloud architect, dividing cloud infrastructure management and architecting into categories is essential for clarity, responsibility assignment, and effective governance."
 ---
 
@@ -11,7 +11,7 @@ As a cloud architect, dividing cloud infrastructure management and architecting 
 
 #### **High-Level Perspective: The 3 Foundational Layers of Cloud Management**
 
-These are the overarching categories that every cloud function falls into.
+These are useful editorial lenses, not an AWS-mandated exhaustive taxonomy.
 
 1. **Strategic & Business Layer:** The "Why." Focuses on business outcomes, financial management, and governance.
 2. **Architectural & Technical Layer:** The "What & How." Focuses on designing, building, and optimizing the cloud environment.
@@ -100,3 +100,12 @@ You don't divide infrastructure _once_. You use these categories as **lenses**:
 - **Governance Lens:** When setting policies, you apply controls specific to each category (e.g., a network policy vs. a data encryption policy).
 
 Start with the foundational layers and the seven functional categories. As your organization grows, these will naturally evolve into specialized teams and domains of expertise.
+
+## Apply these lenses
+
+Use [[AWS/architecture/well-architected|the six-pillar review]] for workload decisions, [[AWS/developer-tools/README|delivery evidence]], [[AWS/reliability/README|recovery ownership]] and [[AWS/operations/README|incident operations]]. Define a responsible owner and a measured outcome for each area instead of adding services to satisfy a fixed template.
+
+## References
+
+- [AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html).
+- [AWS Cloud Adoption Framework](https://aws.amazon.com/cloud-adoption-framework/).

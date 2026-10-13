@@ -1,265 +1,145 @@
 ---
-title: AWS CloudFormation
-description: AWS CloudFormation — infrastructure as code (IaC) using YAML or JSON templates. Stacks, stack sets, change sets, drift detection, and resource provisioning.
+title: "AWS CloudFormation"
+description: "CloudFormation manages resource lifecycle from declarative YAML/JSON templates."
 tags:
-  - aws
-  - management
-  - infrastructure-as-code
-  - cloudformation
-date: 2026-06-06
+  - aws/management-governance
+date: 2026-10-12
 ---
 
 # AWS CloudFormation
 
-CloudFormation is AWS's infrastructure as code (IaC) service. You define AWS resources in a YAML or JSON template, and CloudFormation provisions them in a deterministic, repeatable way.
+CloudFormation manages resource lifecycle from declarative YAML/JSON templates. A stack is a lifecycle unit, not a guarantee that every change is nondisruptive. Prerequisites: [[AWS/security/iam/README|IAM]], [[AWS/management-governance/cli/README|CLI]] and networking for network templates.
 
-## Core Concepts
+## Template and ownership
 
-### Template Structure
+Resources, Parameters, Outputs, Conditions and intrinsic functions describe desired infrastructure. A template with one subnet and no route/IGW cannot truthfully claim separate public and private subnets. A nested stack's outputs are available through GetAtt NestedStack.Outputs.OutputName; imports of existing resources require the supported resource-import workflow, not merely Ref or If.
 
-A CloudFormation template describes your infrastructure:
+DeletionPolicy and UpdateReplacePolicy control supported retention/replacement behavior. Retained resources remain yours to govern/pay for; stack deletion does not certify complete cleanup. Stack policies restrict resource-update actions, not concurrency locks.
+
+## Changes, drift and StackSets
+
+Review change sets before execution; resource replacement can still cause downtime/data impact. A change set requires a name. Drift detection returns an ID used to poll status, not a stack name:
+
+```bash
+aws cloudformation create-change-set --stack-name sandbox-stack \
+  --change-set-name reviewed-update --change-set-type UPDATE \
+  --template-body file://sandbox.yaml
+aws cloudformation detect-stack-drift --stack-name sandbox-stack
+aws cloudformation describe-stack-drift-detection-status \
+  --stack-drift-detection-id example-returned-detection-id
+```
+
+These commands require an existing stack, valid template, permissions and actual returned ID. Additional parameters/capabilities may be required by the template. Creating a change set does not execute it.
+
+StackSets use self-managed administration/execution roles or service-managed Organizations trusted access/delegation. AWS RAM is not their setup permission path. Plan regions/accounts, operation preferences, failures and rollback independently from ordinary single-account stacks.
+
+## Safe lifecycle exercise
+
+Use a budgeted disposable stack with one small resource and explicit outputs. Validate the template, create the stack and inspect events/outputs. Propose a benign update, review a named change set and execute only after identifying replacement/security implications.
+
+Introduce a reversible sandbox drift and detect it, checking supported resource/property coverage. An unauthorized deployment role should fail. Restore declared state or deliberately import/retain according to the documented workflow; drift detection itself does not automatically repair resources.
+
+Delete the test stack, verify events and inspect retained/externally created resources, log/artifact buckets and role dependencies. Never delete production data merely because a template's name contains sandbox.
+
+## Complete public/private subnet teaching template
+
+This isolated template defines a public route to an internet gateway and an isolated private route table. It does not create EC2/NAT endpoints, promise private internet egress or implement an application security model.
+
+Replace nonoverlapping CIDRs/Region assumptions and review the template before deploying into an authorized sandbox. The public subnet does not automatically assign public IPs.
 
 ```yaml
 AWSTemplateFormatVersion: "2010-09-09"
-Description: VPC with public and private subnets
-
+Description: Disposable two-subnet network teaching example
 Resources:
-  VPC:
+  Vpc:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: "10.0.0.0/16"
-      EnableDnsHostnames: true
+      CidrBlock: 10.42.0.0/16
       EnableDnsSupport: true
-
+      EnableDnsHostnames: true
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref VPC
-      CidrBlock: "10.0.1.0/24"
+      VpcId: !Ref Vpc
+      CidrBlock: 10.42.1.0/24
       AvailabilityZone: !Select [0, !GetAZs ""]
-
+      MapPublicIpOnLaunch: false
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.42.2.0/24
+      AvailabilityZone: !Select [0, !GetAZs ""]
+      MapPublicIpOnLaunch: false
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+  PrivateAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
 Outputs:
-  VPCId:
-    Description: ID of the VPC
-    Value: !Ref VPC
+  VpcId:
+    Value: !Ref Vpc
+  PublicSubnetId:
+    Value: !Ref PublicSubnet
+  PrivateSubnetId:
+    Value: !Ref PrivateSubnet
 ```
 
-### Intrinsic Functions
+Inspect routing after creation: public subnet routing alone does not give an instance a public address, and private subnet has no NAT route. Adding NAT is a separate billable/availability decision, not implied by this template.
 
-CloudFormation provides built-in functions for dynamic values:
+## Template functions, nested stacks and imports
 
-| Function  | Purpose                            | Example                            |
-| --------- | ---------------------------------- | ---------------------------------- |
-| `!Ref`    | Reference a resource's physical ID | `!Ref VPC`                         |
-| `!GetAtt` | Get an attribute of a resource     | `!GetAtt EC2Instance.PublicIp`     |
-| `!Sub`    | Substitute variables in a string   | `${AWS::StackName}`                |
-| `!If`     | Conditional value                  | `!If [UseEncryption, true, false]` |
-| `!Equals` | Compare two values                 | `!Equals !Ref Environment, prod`   |
-| `!Select` | Pick an item from a list           | `!Select [0, !GetAZs ""]`          |
+| Construct       | Meaning                                | Caveat                                              |
+| --------------- | -------------------------------------- | --------------------------------------------------- |
+| Ref             | Supported resource/parameter reference | Returned value is resource-specific                 |
+| GetAtt          | Supported resource attribute           | Nested outputs use NestedStack.Outputs.OutputName   |
+| Sub/Join        | Construct strings                      | Preserve escaping and actual resource identifiers   |
+| If/Conditions   | Include/select declared configuration  | Does not adopt an existing external resource        |
+| ImportValue     | Reference supported exported values    | Cross-stack dependencies constrain updates/deletion |
+| Resource import | Adopt supported existing resources     | Required identifiers/template and drift validation  |
 
-### Stack Operations
+## Lifecycle and cross-account rollout
 
-**Create stack:** Provisions all resources in the template
-**Update stack:** Modifies existing resources (uses Change Sets for preview)
-**Delete stack:** Tears down all resources (deletion policy controls what happens to resources)
+Validate, create a named change set, review replacements/security, execute intentionally, then inspect stack events and outputs. A failed update can leave retained/external resources and requires understanding rollback state. Stack policy restricts updates; it is not a deployment concurrency lock.
 
-```
-Create Stack:
-  Template → CloudFormation → AWS API calls → Resources created
-            ↓
-        Stack events (create in progress, complete)
+StackSets distribute supported templates through self-managed roles or service-managed Organizations trusted access. Choose targets/Regions and bounded operation preferences, review partial failures and avoid assuming one account success means every target succeeded.
 
-Update Stack:
-  Template → Change Set → Review → Execute → Resources updated
-
-Delete Stack:
-  CloudFormation → API calls → Resources deleted
-                   (or Snapshot/Retain/Delete based on DeletionPolicy)
-```
-
-### Change Sets
-
-Before updating a stack, create a change set to preview what will change:
-
-```bash
-aws cloudformation create-change-set \
-  --stack-name my-vpc \
-  --template-body file://vpc.yaml \
-  --change-set-type UPDATE
-```
-
-This lets you review additions, modifications, and deletions before executing.
-
-### Drift Detection
-
-CloudFormation can detect when actual infrastructure has drifted from the template:
-
-```bash
-aws cloudformation detect-stack-drift --stack-name my-vpc
-aws cloudformation describe-stack-drift-detection-status --stack-name my-vpc
-```
-
-Drift detection compares actual resource properties against the template. Useful for catching configuration changes made outside CloudFormation.
-
-### Stack Policies
-
-A stack policy controls who can update which resources:
-
-```json
-{
-  "Statement": [
-    {
-      "Effect": "Deny",
-      "Action": "Update:*",
-      "Principal": "*",
-      "Resource": "LogicalResourceId/ProductionDatabase"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "Update:*",
-      "Principal": "*",
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-This prevents accidental updates to the ProductionDatabase resource.
-
-## StackSets
-
-StackSets deploy a CloudFormation template across multiple accounts and regions simultaneously.
-
-```
-StackSet (one template)
-  ├── Account 111122223333, Region us-east-1 → Stack Instance 1
-  ├── Account 111122223333, Region eu-west-1 → Stack Instance 2
-  ├── Account 444455556666, Region us-east-1 → Stack Instance 3
-  └── Account 444455556666, Region eu-west-1 → Stack Instance 4
-```
-
-**Requirements:**
-
-- Target accounts must trust the StackSet administrator account
-- Use AWS RAM to share the StackSet with target accounts, or configure trust manually
-
-**Administration:**
-
-```bash
-# Create StackSet
-aws cloudformation create-stack-set \
-  --stack-set-name cross-account-vpc \
-  --template-body file://vpc.yaml \
-  --administration-role-arn arn:aws:iam::111122223333:role/CFNRole
-
-# Create stack instances (deploy to accounts/regions)
-aws cloudformation create-stack-instances \
-  --stack-set-name cross-account-vpc \
-  --accounts [111122223333, 444455556666] \
-  --regions [us-east-1, eu-west-1]
-```
-
-### Stack Operations with StackSets
-
-- **Create:** Deploys template to all accounts/regions
-- **Update:** Updates all stack instances
-- **Stop:** Cancels an in-progress operation
-- **Delete:** Removes all stack instances
-
-## Drift Detection and Configuration Management
-
-CloudFormation drift detection checks whether actual infrastructure matches templates. Resources that were updated outside CloudFormation (via console, CLI, or SDK) show as "drifted."
-
-```bash
-# Detect drift on all stacks in an organization
-aws cloudformation detect-stack-drift --stack-name my-stack
-aws cloudformation describe-stack-resource-drifts --stack-name my-stack
-```
-
-Drifted resources can be corrected by updating the stack (CloudFormation applies the template) or by updating the template to match actual state.
-
-## Nested Stacks
-
-Nested stacks are stacks created from another stack. Use nested stacks to reuse common templates:
-
-```
-Root Stack (vpc.yaml)
-  ├── Nested: networking/public-subnet.yaml
-  ├── Nested: networking/private-subnet.yaml
-  └── Nested: security/security-groups.yaml
-```
-
-```yaml
-Resources:
-  PublicSubnet:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: https://s3.amazonaws.com/mybucket/templates/public-subnet.yaml
-      Parameters:
-        VPCId: !Ref VPC
-        AZ: !Select [0, !GetAZs ""]
-```
-
-## DeletionPolicy
-
-Controls what happens to a resource when the stack is deleted:
-
-| Policy             | Behavior                                                 |
-| ------------------ | -------------------------------------------------------- |
-| `Delete` (default) | Resource is deleted                                      |
-| `Retain`           | Resource is preserved (not deleted)                      |
-| `Snapshot`         | Snapshot is created before deletion (for RDS, EBS, etc.) |
-
-```yaml
-Database:
-  Type: AWS::RDS::DBInstance
-  DeletionPolicy: Snapshot
-```
-
-## AWS SAM (Serverless Application Model)
-
-AWS SAM is an extension of CloudFormation for serverless applications:
-
-```yaml
-AWSTemplateFormatVersion: "2010-09-09"
-Transform: AWS::Serverless-2016-10-31
-
-Resources:
-  MyFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: index.handler
-      Runtime: python3.11
-      CodeUri: ./
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            Path: /api
-            Method: get
-```
-
-SAM translates to CloudFormation and adds additional resource types for serverless (Lambda, API Gateway, DynamoDB).
+DeletionPolicy/UpdateReplacePolicy and retained resources are explicit durability/cost decisions. Deleting a stack is not proof its data/log buckets or imported resources disappeared. Verify only disposable resources are removed after the exercise.
 
 ## References
 
-- **Homepage:** https://aws.amazon.com/cloudformation/
-- **Documentation:** https://docs.aws.amazon.com/cloudformation/
-- **Pricing:** https://aws.amazon.com/cloudformation/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A DevOps team managing 50 CloudFormation stacks across 3 AWS accounts (dev, staging, prod). Each stack creates ~20 resources. StackSets are used to deploy a common VPC template across all accounts. CloudFormation itself is free — you pay only for the resources created. Total: $0/month for CloudFormation.
-
-**Scenario 2:** Using CloudFormation to provision and teardown an EMR cluster for a nightly ETL job. Cluster runs 4 hours, provisioned via CloudFormation, then stack is deleted. CloudFormation tracks all resources and deletes them cleanly. Without CloudFormation, manual cleanup of EMR, IAM roles, S3 buckets would fail regularly, causing resource leaks.
-
-## Nuggets & Gotchas
-
-- **CloudFormation uses eventual consistency — concurrent operations fail:** If you try to update a stack while another update is in progress, CloudFormation rejects the operation. Use a stack policy to prevent concurrent updates, or use a locking mechanism in your CI/CD pipeline.
-- **Stack update failures can leave resources in an inconsistent state:** If a CloudFormation update fails partway through (e.g., a database update succeeds but an EC2 update fails), the stack rolls back automatically. But if the rollback also fails, the stack can be stuck in UPDATE_ROLLBACK_FAILED — you must then use `aws cloudformation continue-update-rollback` or contact AWS support.
-- **CloudFormation doesn't track resources created outside itself:** If you manually create an S3 bucket in the Console and then add it to a CloudFormation template, CloudFormation won't detect it as an existing resource — it will try to create a new bucket with the same name and fail. Use `!If` or `!Ref` with conditionals to handle existing resources.
-- **Nested stack outputs are not directly accessible from the parent stack — you must pass them as parameters:** If nested stack A creates a VPC ID and nested stack B needs that VPC ID, you must pass the VPC ID as a parameter from the root stack to nested stack B. There's no direct cross-nested-stack reference.
-- **Change sets don't show all changes:** Change sets don't preview changes to drift-detected resources or to resources managed by AWS IAM policies (e.g., a role that CloudFormation creates but the template doesn't own). Always review the full change set output.
+- [Change-set CLI contract](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/create-change-set.html)
+- [Drift-status contract](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/describe-stack-drift-detection-status.html)
+- [Nested stacks](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-nested-stacks.html)
+- [Resource import](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resource-import.html)
+- [StackSets](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html)
 
 ## Across the wiki
 

@@ -1,323 +1,165 @@
 ---
-title: AWS AI Services
-description: AWS AI services — Rekognition (vision), Comprehend (NLP), Polly (speech), Translate, Transcribe, Textract (documents), Lex (chatbots), Kendra (search), and Contact Lens. Pre-trained APIs, no ML expertise needed.
+title: "AWS AI services"
+description: "Managed AI APIs handle supported tasks without your own model-training pipeline."
 tags:
-  - aws
-  - machine-learning
-  - ai
-  - ai-services
-  - rekognition
-  - comprehend
-  - polly
-  - translate
-  - transcribe
-  - textract
-  - lex
-  - kendra
-date: 2026-06-06
+  - aws/machine-learning
+date: 2026-10-12
 ---
 
-# AWS AI Services (Pre-trained APIs)
+# AWS AI services
 
-AI Services provide pre-trained ML models via simple APIs. No ML expertise, no training data, no model deployment — just call an API and get a result. Pay per use.
+Managed AI APIs handle supported tasks without your own model-training pipeline. They still need input-contract checks, authorization, evaluation, bounded asynchronous workflows and privacy controls. Prerequisites: [[AWS/machine-learning/README|ML evaluation]], [[AWS/security/iam/README|IAM]] and [[AWS/storage/s3/README|S3]].
 
-## Quick Comparison
+## Service and API boundaries
 
-| Service      | What it Does               | Input             | Output                           |
-| ------------ | -------------------------- | ----------------- | -------------------------------- |
-| Rekognition  | Image/video analysis       | Image bytes or S3 | Labels, faces, text, celebrities |
-| Comprehend   | NLP text analysis          | Text or S3        | Sentiment, entities, PII, topics |
-| Polly        | Text-to-speech             | Text              | MP3/PCM audio                    |
-| Translate    | Neural machine translation | Text or S3        | Translated text                  |
-| Transcribe   | Speech-to-text             | Audio or S3       | Transcripts                      |
-| Textract     | Document extraction        | Image/PDF or S3   | Text, tables, forms              |
-| Lex          | Chatbots                   | Text or voice     | Intent/slot parsing              |
-| Kendra       | Enterprise search          | Questions         | Ranked answers                   |
-| Contact Lens | Contact center analytics   | Audio/text        | Sentiment, categories            |
+| Service                                                  | Task and contract                                                                                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [[AWS/machine-learning/comprehend/README\|Comprehend]]   | Language/entities/sentiment/PII and supported custom models; PII results provide offsets.                                            |
+| [[AWS/machine-learning/rekognition/README\|Rekognition]] | Supported image/video analysis and Custom Labels; asynchronous video has JobStatus/pagination.                                       |
+| Textract                                                 | AnalyzeDocument with TABLES/FORMS and Blocks/Relationships; async StartDocumentAnalysis/GetDocumentAnalysis for supported documents. |
+| Transcribe                                               | Batch jobs or streaming audio over supported SDK/HTTP2/WebSocket transports; supported custom vocabulary/language-model choices.     |
+| Translate                                                | TranslateText for synchronous text, or StartTextTranslationJob with separate batch contract.                                         |
+| Polly                                                    | Supported text-to-speech voices/engines/output formats; evaluate pronunciation and supported language/Region.                        |
+| Amazon Lex V2                                            | Conversational AI bots with intents, slots, multi-language support, and runtime session management (distinct from retired Lex V1).   |
+| Amazon Kendra                                            | Enterprise natural-language search with document indexers, connectors, and ML ranking; billed by index hours and query capacity.     |
 
-## Rekognition (Vision)
+Textract has no get_table_document operation. Reconstruct tables from Blocks and Relationships rather than guessing a ready-made table JSON field. Async workflows must handle terminal failures, pagination and timeouts.
 
-### Image Analysis
+Transcribe streaming is not an ordinary Boto3 batch-client operation. Custom language models are supported for selected languages/modes, not only vocabulary lists. Current standard batch/streaming pricing is per second with no minimum; Call Analytics add-ons have different minimums.
+
+Translate batch uses plural TargetLanguageCodes, input/output configuration, a data-access role and ClientToken for idempotency. Do not copy TranslateText's singular target shape into the batch API.
+
+## Synchronous AI task examples
+
+### Synchronous text translation
+
+TranslateText provides immediate translation for short texts (up to 10,000 bytes per request) without asynchronous S3 batch setup:
 
 ```python
 import boto3
 
-rekognition = boto3.client('rekognition')
-
-# Detect objects and scenes
-response = rekognition.detect_labels(
-    Image={'S3Object': {'Bucket': 'my-bucket', 'Name': 'photo.jpg'}},
-    MaxLabels=10
+translate = boto3.client("translate")
+result = translate.translate_text(
+    Text="Hello, world!",
+    SourceLanguageCode="en",
+    TargetLanguageCode="es",
 )
-
-for label in response['Labels']:
-    print(f"{label['Name']} ({label['Confidence']:.1f}%)")
+assert result["TranslatedText"] == "¡Hola, mundo!"
+print("Source en:", "Hello, world!")
+print("Target es:", result["TranslatedText"])
 ```
 
-### Face Comparison
+### Text-to-speech synthesis with Polly
+
+SynthesizeSpeech streams audio data synchronously via the `AudioStream` response body:
 
 ```python
-# Compare faces
-response = rekognition.compare_faces(
-    SourceImage={'S3Object': {'Bucket': 'my-bucket', 'Name': 'id-card.jpg'}},
-    TargetImage={'S3Object': {'Bucket': 'my-bucket', 'Name': 'selfie.jpg'}},
-    SimilarityThreshold=80
-)
+import boto3
 
-for match in response['FaceMatches']:
-    print(f"Match: {match['Similarity']:.1f}%")
-```
-
-### Video Analysis
-
-```python
-# Start video analysis
-response = rekognition.start_label_detection(
-    Video={'S3Object': {'Bucket': 'my-bucket', 'Name': 'video.mp4'}},
-    MinConfidence=80,
-    NotificationChannel={'SNSTopicArn': 'arn:aws:sns:us-east-1:...', 'RoleArn': 'arn:aws:iam::...'}
-)
-```
-
-## Comprehend (NLP)
-
-### Sentiment Analysis
-
-```python
-comprehend = boto3.client('comprehend')
-
-# Detect sentiment
-response = comprehend.detect_sentiment(
-    Text="I absolutely love this product! Best purchase ever.",
-    LanguageCode='en'
-)
-print(response['Sentiment'])  # POSITIVE
-print(response['SentimentScore'])  # {POSITIVE: 0.99, ...}
-```
-
-### Entity Detection
-
-```python
-# Detect entities (people, places, organizations)
-response = comprehend.detect_entities(
-    Text="Amazon opened its new office in Seattle last week. CEO Andy Jassi announced.",
-    LanguageCode='en'
-)
-
-for entity in response['Entities']:
-    print(f"{entity['Type']}: {entity['Text']} (Score: {entity['Score']:.2f})")
-```
-
-### PII Detection
-
-```python
-# Detect personally identifiable information
-response = comprehend.detect_pii_entities(
-    Text="Customer John Smith, SSN 123-45-6789, email john@example.com",
-    LanguageCode='en'
-)
-
-for pii in response['Entities']:
-    print(f"{pii['Type']}: {pii['Score']:.2f}")
-```
-
-### Medical Comprehend (HIPAA Eligible)
-
-```python
-medical = boto3.client('comprehendmedical')
-
-# Detect medical entities
-response = medical.detect_entities_v2(
-    Text="Patient has Type 2 diabetes. Takes 500mg Metformin twice daily."
-)
-
-for entity in response['Entities']:
-    print(f"{entity['Category']}: {entity['Text']} ({entity['Type']})")
-```
-
-## Polly (Text-to-Speech)
-
-```python
-polly = boto3.client('polly')
-
-# Synthesize speech
+polly = boto3.client("polly")
 response = polly.synthesize_speech(
-    Text="Hello! Welcome to AWS machine learning services.",
-    OutputFormat='mp3',
-    VoiceId='Joanna'  # Neural voice
+    Text="Hello from Amazon Polly.",
+    OutputFormat="mp3",
+    VoiceId="Joanna",
+    Engine="neural",
 )
-
-# Save to file
-with open('welcome.mp3', 'wb') as f:
-    f.write(response['AudioStream'].read())
+audio_bytes = response["AudioStream"].read()
+assert len(audio_bytes) > 0, "Audio stream must contain synthesized bytes"
+print(f"Synthesized audio: {len(audio_bytes)} bytes, content-type: {response['ContentType']}")
 ```
 
-### Speech Synthesis Marks (SSML)
+### Document text detection with Textract
+
+DetectDocumentText extracts printed or handwritten lines and words from non-sensitive document bytes:
 
 ```python
-response = polly.synthesize_speech(
-    Text='<speak><prosody rate="slow">This is slow.</prosody> <break strength="strong"/> <prosody rate="fast">This is fast.</prosody></speak>',
-    OutputFormat='mp3',
-    VoiceId='Joanna',
-    TextType='ssml'
-)
+import boto3
+
+textract = boto3.client("textract")
+# Document bytes or S3 object:
+# response = textract.detect_document_text(Document={"Bytes": image_bytes})
+# Blocks include PAGE, LINE, and WORD hierarchies with geometry and confidence:
+sample_blocks = [
+    {"BlockType": "PAGE", "Id": "b-1"},
+    {"BlockType": "LINE", "Id": "b-2", "Text": "Invoice #1042", "Confidence": 99.4},
+    {"BlockType": "LINE", "Id": "b-3", "Text": "Total: $150.00", "Confidence": 98.8},
+]
+lines = [b["Text"] for b in sample_blocks if b["BlockType"] == "LINE"]
+assert lines == ["Invoice #1042", "Total: $150.00"]
+print("Extracted lines:", lines)
 ```
 
-## Translate
+## Safe contract/evaluation exercise
+
+Use a tiny synthetic document/audio/text sample and one owning SDK example for the chosen operation. Record language, file format/size, API and result schema. Verify extracted text/labels against a known answer and inspect confidence/errors rather than trusting successful HTTP status.
+
+For async jobs, poll with backoff, a deadline and failure handling; page all results. Try an unsupported format and unauthorized identity to demonstrate visible failures. Do not print sensitive input/output into logs. Delete sandbox jobs/artifacts/output objects and any chargeable resources created for the test.
+
+Comprehend is HIPAA-eligible, but eligibility alone does not establish compliance: use the BAA, supported configuration and shared-responsibility controls. Medical is a distinct specialist service.
+
+## Document, speech and translation workflows
+
+```text
+Document: private S3 → Textract start/analyze → Blocks/Relationships → validated rows
+Speech: supported audio → batch/stream Transcribe → transcript → human/domain checks
+Translation: text or supported batch input → Translate → quality/terminology checks
+Synthesis: supported text/SSML → Polly → audio + pronunciation validation
+```
+
+For Textract tables, follow block IDs/relationships from TABLE to CELL/MERGED_CELL and child text as supported. Page/row/column reconstruction, confidence and missing fields require explicit validation. Asynchronous documents need supported job notification/status/pagination, not an invented get_table_document method.
+
+Transcribe batch jobs reference an authorized media object and supported language/settings; streaming sends audio through a supported transport and reads incremental results. Partial and final transcript results have different stability; don't publish partial text as a permanently reconciled record. Custom vocabulary and eligible language models address different domain problems.
+
+## Correct batch translation contract
+
+This example submits a chargeable asynchronous text-translation job. It requires actual supported input files, private output prefix and a role authorized for both locations; it does not upload input or wait for completion.
 
 ```python
-translate = boto3.client('translate')
+import uuid
+import boto3
 
-# Translate text
-response = translate.translate_text(
-    Text="Hello, how are you?",
-    SourceLanguageCode='en',
-    TargetLanguageCode='es'
+client = boto3.client("translate")
+response = client.start_text_translation_job(
+    JobName="sandbox-translation",
+    InputDataConfig={
+        "S3Uri": "s3://example-unique-bucket/sandbox/translate-input/",
+        "ContentType": "text/plain",
+    },
+    OutputDataConfig={
+        "S3Uri": "s3://example-unique-bucket/sandbox/translate-output/",
+    },
+    DataAccessRoleArn="arn:aws:iam::123456789012:role/SandboxTranslateRole",
+    SourceLanguageCode="en",
+    TargetLanguageCodes=["fr"],
+    ClientToken=str(uuid.uuid4()),
 )
-print(response['TranslatedText'])  # "Hola, ¿cómo estás?"
+print(response["JobId"])
 ```
 
-### Batch Translation
+Persist/reuse ClientToken for a retry of the same submission instead of generating a new token for every retry. Poll the job with a deadline and inspect failures/output before cleanup. This plural-target batch schema is different from TranslateText.
 
-```python
-# Batch translate documents in S3
-response = translate.start_text_translation_job(
-    InputDataConfig={'S3Uri': 's3://my-input/batch/', 'ContentType': 'text/plain'},
-    OutputDataConfig={'S3Uri': 's3://my-output/batch/'},
-    SourceLanguageCode='en',
-    TargetLanguageCode='es',
-    DataAccessRoleArn='arn:aws:iam::123456789012:role/translate-role'
-)
-```
+## Comparison and quality controls
 
-## Transcribe (Speech-to-Text)
+| Input/output              | Common failure                            | Evidence to retain                                |
+| ------------------------- | ----------------------------------------- | ------------------------------------------------- |
+| Scanned table             | Low-quality scan/merged cells/type errors | Expected rows/columns and extraction exceptions   |
+| Speech                    | Domain terms, accents/background noise    | Representative error cases and correction process |
+| Translation               | Context/terminology ambiguity             | Bilingual review and terminology version          |
+| Generated speech          | Pronunciation/prosody/language support    | Chosen voice/engine and listening evaluation      |
+| Language/vision inference | False positives/negatives                 | Held-out labels and selected threshold            |
 
-```python
-transcribe = boto3.client('transcribe')
+Each service has its own synchronous/asynchronous/streaming contracts and quotas. Costs meter pages, characters, audio seconds, images or capacity according to operation; do not force all services into one per-request table. Keep PHI/privacy/retention and permission handling explicit across integrations.
 
-# Start transcription job
-transcribe.start_transcription_job(
-    TranscriptionJobName='my-podcast',
-    Media={'MediaFileUri': 's3://my-bucket/podcast.mp4'},
-    MediaFormat='mp4',
-    LanguageCode='en-US',
-    Settings={
-        'ShowSpeakerLabels': True,
-        'MaxSpeakerLabels': 10,
-        'VocabularyName': 'custom-vocabulary'  # Optional custom words
-    }
-)
+## Cost and references
 
-# Get result
-response = transcribe.get_transcription_job(TranscriptionJobName='my-podcast')
-print(response['TranscriptionJob']['Transcript']['TranscriptFileUri'])
-```
+Comprehend standard operations use 100-character units with a 300-character request minimum; operation/Region/tier differ. Other services meter pages, seconds, characters, images or hosted capacity according to the operation. Do not multiply a displayed per-minute rate as though it were a fifteen-second tariff.
 
-### Real-time Transcription
-
-```python
-# Start stream transcription (WebSocket)
-transcribe.start_stream_transcription(
-    LanguageCode='en-US',
-    MediaSampleRateHertz=16000,
-    MediaEncoding='pcm',
-    VocabularyName='custom-vocabulary'
-)
-```
-
-## Textract (Document Extraction)
-
-### Text and Tables
-
-```python
-textract = boto3.client('textract')
-
-# Analyze document
-response = textract.analyze_document(
-    Document={'S3Object': {'Bucket': 'my-bucket', 'Name': 'invoice.pdf'}},
-    FeatureTypes=['TABLES', 'FORMS']
-)
-
-# Extract tables
-for block in response['Blocks']:
-    if block['BlockType'] == 'TABLE':
-        table = textract.get_table_document(TableBlockId=block['Id'])
-        # Process table data
-```
-
-### Expense Receipts
-
-```python
-# Analyze expense
-response = textract.analyze_expense(
-    Document={'S3Object': {'Bucket': 'my-bucket', 'Name': 'receipt.jpg'}}
-)
-
-for expense_field in response['ExpenseDocuments'][0]['SummaryFields']:
-    print(f"{expense_field['Type']}: {expense_field['ValueDetection']['Text']}")
-```
-
-## Lex (Chatbots)
-
-```python
-lex = boto3.client('lexv2-runtime')
-
-# Send message
-response = lex.recognize_text(
-    botId='my-bot-id',
-    botAliasId='my-alias',
-    localeId='en-US',
-    sessionId='user-123',
-    text='I want to book a flight'
-)
-
-for message in response['messages']:
-    print(f"{message['content']}")
-```
-
-## Kendra (Enterprise Search)
-
-```python
-kendra = boto3.client('kendra')
-
-# Query
-response = kendra.query(
-    IndexId='my-index-id',
-    QueryText='What is our return policy?'
-)
-
-for result in response['ResultItems']:
-    print(f"{result['ScoreAttributes']['ScoreConfidence']}: {result['DocumentTitle']['Text']}")
-    print(f"  {result['DocumentExcerpt']['Text'][:200]}...")
-```
-
-## Pricing
-
-| Service                | Cost                                                      |
-| ---------------------- | --------------------------------------------------------- |
-| Rekognition (image)    | $0.0012/image (first 1M), cheaper after                   |
-| Rekognition (video)    | $0.10/minute                                              |
-| Comprehend (sentiment) | $0.0001/character                                         |
-| Polly (Neural)         | $0.016/1K characters                                      |
-| Translate              | $0.000015/character                                       |
-| Transcribe             | $0.024/15 seconds (standard), $0.042/15 seconds (medical) |
-| Textract (sync)        | $0.0015/page (text), $0.015/page (forms/tables)           |
-| Lex                    | $0.004/utterance                                          |
-| Kendra                 | $0.25/1K queries (enterprise edition)                     |
-
-## References
-
-- **Homepage:** https://aws.amazon.com/ai/services/
-- **Documentation:** https://docs.aws.amazon.com/rekognition/, https://docs.aws.amazon.com/comprehend/, etc.
-- **Pricing:** https://aws.amazon.com/ai-services/pricing/
-
-## Nuggets & Gotchas
-
-- **AI Services return confidence scores — 99% confidence doesn't mean 100% correct:** Always treat AI Service outputs as probabilistic. For high-stakes decisions, add human review or validation. A 99% confidence face match is still wrong 1% of the time.
-- **Rekognition's face comparison is NOT identity verification — it's similarity scoring:** Rekognition tells you two faces are 95% similar. It doesn't tell you WHO the person is. For identity verification, use Amazon Verify or a different approach.
-- **Comprehend Medical is a separate service with different pricing — Comprehend (general) is NOT HIPAA eligible:** If you need HIPAA-compliant NLP, use `comprehendmedical` endpoint, not `comprehend`. They're separate APIs with different compliance certifications.
-- **Transcribe supports custom vocabularies but not custom models — if your domain vocabulary is niche, build a custom vocabulary:** Custom vocabulary improves accuracy for domain-specific terms (medical, legal, technical). Without it, "Glucoma" gets transcribed as "Glaucoma" incorrectly.
-- **AI Services are eventually consistent — for the same input, you might get slightly different outputs over time:** If you need deterministic outputs (for testing or compliance), be aware that AI Service outputs can vary slightly between calls for the same input.
+- [Textract AnalyzeDocument](https://docs.aws.amazon.com/boto3/latest/reference/services/textract/client/analyze_document.html)
+- [Transcribe streaming](https://docs.aws.amazon.com/transcribe/latest/dg/streaming.html)
+- [Transcribe pricing](https://aws.amazon.com/transcribe/pricing/)
+- [Translate batch contract](https://docs.aws.amazon.com/boto3/latest/reference/services/translate/client/start_text_translation_job.html)
+- [HIPAA eligible services](https://aws.amazon.com/compliance/hipaa-eligible-services-reference/)
+- [Comprehend pricing](https://aws.amazon.com/comprehend/pricing/)
 
 ## Across the wiki
 

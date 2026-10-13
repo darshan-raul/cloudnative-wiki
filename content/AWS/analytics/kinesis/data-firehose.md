@@ -1,189 +1,121 @@
 ---
-title: Kinesis Data Firehose
-description: Kinesis Data Firehose — near-real-time data delivery to S3, Redshift, Elasticsearch, Splunk, HTTP endpoints. Buffering, transforms, compression, and use cases
+title: "Amazon Data Firehose"
+description: "Amazon Data Firehose is the current name of Kinesis Data Firehose; the firehose API namespace remains unchanged."
 tags:
-  - aws
-  - analytics
-  - kinesis
-date: 2026-06-06
+  - aws/analytics
+date: 2026-10-12
+aliases:
+  - Kinesis Data Firehose
 ---
 
-# Kinesis Data Firehose
+# Amazon Data Firehose
 
-Kinesis Data Firehose is a managed near-real-time delivery service. Unlike Kinesis Data Streams (which you consume from), Firehose automatically delivers data to destinations — S3, Redshift, Elasticsearch, Splunk, or any HTTP endpoint. You configure it, and data flows.
+Amazon Data Firehose is the current name of Kinesis Data Firehose; the firehose API namespace remains unchanged. It delivers buffered records to supported destinations rather than exposing a durable replay/checkpoint interface like [[AWS/analytics/kinesis/data-streams|Data Streams]].
 
-## How It Works
+Prerequisites: [[AWS/analytics/kinesis/README|streaming fundamentals]], [[AWS/storage/s3/README|S3]] and [[AWS/security/iam/README|IAM]].
 
-```
-Producer → Firehose Stream → Buffer (configurable) → Transform (optional) → Destination
-```
+## Delivery and transformation
 
-**Buffering:** Firehose buffers incoming records and delivers them in batches. The buffer size and interval are configurable:
+Configure source, destination, role, encryption, buffering and error/backup settings explicitly. Supported destinations include S3, Redshift, OpenSearch and appropriate HTTP/integration targets, with distinct behavior and permissions. Native format conversion is JSON to Parquet/ORC using configured schema; arbitrary CSV conversion requires a separate transformation. Compression is not format conversion.
 
-- **Buffer size:** 1MB-128MB (depending on destination)
-- **Buffer interval:** 60-900 seconds
-
-Delivery triggers when **either** the buffer size **or** the buffer interval is reached, whichever comes first.
-
-**Example:** Buffer of 5MB or 60 seconds. If you send 1MB at t=0 and then nothing, delivery happens at t=60. If you send 10MB in one burst, delivery happens immediately when 5MB threshold is hit.
-
-## Destinations
-
-### S3
-
-The most common destination. Firehose writes data to S3 as compressed objects.
-
-```json
-{
-  "Destination": "S3",
-  "S3Configuration": {
-    "BucketARN": "arn:aws:s3:::my-bucket",
-    "Prefix": "firehose/raw/", // Optional prefix per delivery
-    "ErrorOutputPrefix": "errors/", // Where to write failed records
-    "BufferingHints": {
-      "SizeInMBs": 10,
-      "IntervalInSeconds": 300
-    },
-    "CompressionFormat": "GZIP", // GZIP, ZIP, Snappy, Parquet, NotCompressed
-    "EncryptionConfiguration": {
-      "NoEncryptionConfig": "EncryptionDisabled"
-    }
-  }
-}
-```
-
-**Formats:** Firehose can convert records to JSON, CSV, Parquet, or ORC before writing to S3. Parquet is most efficient for analytical queries.
-
-### Amazon Redshift
-
-Firehose unloads data to S3 first (as an intermediate step), then executes a COPY command into Redshift.
-
-```
-Firehose → S3 (staging) → COPY into Redshift
-```
-
-The COPY command is triggered automatically when Firehose delivers to the staging S3 bucket. This means:
-
-- A separate Redshift cluster must be accessible from the Firehose VPC endpoint
-- Staging bucket must be in the same region as Redshift
-- COPY adds latency — data isn't in Redshift until after the COPY completes (usually within a few minutes of Firehose delivery)
-
-### Elasticsearch / OpenSearch
-
-Direct delivery to Elasticsearch domain. Firehose writes to a specified index with configurable document ID generation.
-
-### Splunk
-
-Delivers to Splunk HEC (HTTP Event Collector). Firehose handles token authentication and can retry on failure.
-
-### HTTP Endpoint
-
-Custom destination for any HTTP endpoint. Firehose sends batches via POST request with JSON payload. Useful for third-party integrations, data platforms that support HTTP ingestion.
-
-## Data Transformation
-
-Firehose can transform records using Lambda before delivery:
+Lambda transformation input/output data is base64. Each result must preserve recordId and supply result plus base64 text. This syntactically complete pass-through transform follows that contract but does not deploy a delivery stream:
 
 ```python
+import base64
+
+def lambda_handler(event, context):
+    results = []
+    for record in event["records"]:
+        payload = base64.b64decode(record["data"])
+        results.append({
+            "recordId": record["recordId"],
+            "result": "Ok",
+            "data": base64.b64encode(payload).decode("ascii"),
+        })
+    return {"records": results}
+```
+
+Add schema validation, explicit ProcessingFailed/Dropped handling and size/time controls before adapting it for real transformation. Never log sensitive records.
+
+## Buffering and failure behavior
+
+Buffering is destination-specific. Current S3 hints allow 0–900 seconds, with multipart PUT cost implications below sixty seconds. S3 backup and dynamic partitioning do not support zero buffering. Size and interval are hints, not a universal exact end-to-end latency guarantee.
+
+Direct PUT records are retained up to 24 hours while destination delivery retries. A failing S3 target does not universally switch to a separate backup bucket, nor does absence of such a bucket imply instant loss. Read destination-specific error and retry behavior; retain a replayable upstream source where recovery objectives require it.
+
+## Delivery exercise
+
+Create a small budgeted sandbox stream targeting a private disposable S3 prefix, with a role scoped to its data/KMS operations. Send labelled event IDs, inspect delivered bytes, and compare producer totals with output. Inject an invalid record into a tested transform and verify the configured error path.
+
+Temporarily deny only the sandbox destination role and observe delivery-failure metrics/retry behavior; restore permission before the retention window is exhausted. Test duplicate effects and chosen buffering latency. Delete delivery resources, transforms and disposable S3 outputs separately.
+
+## Destination anatomy and trade-offs
+
+```text
+Direct PUT or supported source
+  → destination-specific buffer
+  → optional Lambda transform / supported format conversion
+  → destination delivery
+  → configured failed-record/backup path where supported
+```
+
+| Destination      | What to verify                                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| S3               | Private bucket role, prefix, encryption, buffering and failed-record output settings.                           |
+| Redshift         | S3 staging plus COPY permissions/connectivity/schema; staged objects alone are not warehouse ingestion success. |
+| OpenSearch       | Supported domain/collection destination, index configuration and rejected-document handling.                    |
+| Splunk           | Supported HEC endpoint/token, acknowledgement/retry behavior and backup configuration.                          |
+| HTTP destination | Supported endpoint protocol and response contract; arbitrary POST acceptance is insufficient.                   |
+
+Native serialization conversion is separate from compression. Parquet/ORC conversion needs a compatible JSON/schema configuration; Parquet is not a compression enum. Configure your destination using the actual ExtendedS3DestinationConfiguration or relevant supported API structure rather than a generic Destination/S3Configuration pseudo-request.
+
+## Correct JSON enrichment transform
+
+This complete handler demonstrates adding an ingest timestamp to a JSON object. It preserves recordId, handles invalid/nonobject JSON explicitly and returns base64 text. It is an example to test against your size/latency requirements, not a deployed production transform.
+
+```python
+import base64
+import datetime
 import json
 
 def lambda_handler(event, context):
     output = []
-    for record in event['records']:
-        # Parse the incoming record
-        data = json.loads(record['data'])
-
-        # Transform: add timestamp, normalize fields
-        transformed = {
-            'event_time': data['timestamp'],
-            'user_id': data['userId'],
-            'action': data['event'],
-            'properties': data.get('properties', {}),
-            'processed_at': datetime.utcnow().isoformat()
-        }
-
-        output.append({
-            'record_id': record['recordId'],
-            'data': json.dumps(transformed).encode('utf-8'),
-            'result': 'Ok'  # or 'Dropped' or 'ProcessingFailed'
-        })
-
-    return {'records': output}
+    for record in event["records"]:
+        try:
+            value = json.loads(base64.b64decode(record["data"], validate=True))
+            if not isinstance(value, dict):
+                raise ValueError("Expected a JSON object")
+            value["ingested_at"] = datetime.datetime.now(
+                datetime.timezone.utc
+            ).isoformat()
+            encoded = base64.b64encode(
+                (json.dumps(value) + "\n").encode("utf-8")
+            ).decode("ascii")
+            output.append({
+                "recordId": record["recordId"],
+                "result": "Ok",
+                "data": encoded,
+            })
+        except (ValueError, TypeError, UnicodeDecodeError):
+            output.append({
+                "recordId": record["recordId"],
+                "result": "ProcessingFailed",
+                "data": record["data"],
+            })
+    return {"records": output}
 ```
 
-**Transformation flow:**
+Test good, malformed and oversized input before enabling the transform; account for response-size and retry constraints. ProcessingFailed is not an automatic assurance that a separate bucket receives every error.
 
-1. Records accumulate in Firehose buffer
-2. Firehose invokes your Lambda with a batch of records
-3. Lambda transforms each record and returns the result
-4. Firehose delivers transformed records to the destination
+Buffer thresholds are hints, with delivery time also depending on transformation, destination response and retries. Dynamic partitioning creates per-partition buffering/limits and can produce small-object/request overhead. Monitor incoming records/bytes, transform failures, destination success/freshness and errors. If freshness approaches source retention, treat it as a recovery incident rather than waiting indefinitely.
 
-**Error handling:** If Lambda returns `ProcessingFailed`, Firehose retries the Lambda invocation. After 3 failures, it writes the original record to the S3 error prefix you specified.
+## Cost and references
 
-## Buffering and Delivery Tuning
+Model ingested rounded units plus optional format conversion, dynamic partitioning, VPC/destination/Lambda and S3 request/storage charges. Direct PUT/Kinesis ingestion rounds records to 5 KB; MSK/vended-log sources differ. There is no documented universal \$0.04/million control-plane API tariff.
 
-### S3 Destination Buffering
-
-| Buffer Size | Buffer Interval | Use When                                               |
-| ----------- | --------------- | ------------------------------------------------------ |
-| 1MB         | 60s             | Low-latency requirements, small payloads               |
-| 5MB         | 300s            | Balanced latency/cost for most analytics workloads     |
-| 128MB       | 900s            | Large payloads, cost-optimized for infrequent delivery |
-
-### Redshift Buffering
-
-Redshift COPY performs best with larger batches. Recommended:
-
-- Buffer size: 64MB or higher
-- Buffer interval: 300-600 seconds
-- This reduces the number of COPY commands and improves Redshift query performance
-
-### Compression
-
-GZIP is the default and most compatible. Snappy provides better performance with Athena (columnar formats like Parquet benefit from Snappy). If you're delivering to S3 for Athena queries, use Parquet with Snappy compression — fastest query performance.
-
-## Delivery Failures and Retries
-
-Firehose retries delivery for up to a configurable timeout period (default: 3,600 seconds). After timeout:
-
-1. Data is written to the S3 error prefix you configured
-2. CloudWatch metric `Firehose.DeliveryToS3.DataFreshness` shows how old data in the buffer is
-
-**Common failure causes:**
-
-- Lambda transformation failures (invalid JSON output)
-- Redshift cluster unavailable
-- Elasticsearch domain throttling
-- S3 bucket permissions changed
-
-## vs Kinesis Data Streams
-
-|                | Data Streams                      | Data Firehose                           |
-| -------------- | --------------------------------- | --------------------------------------- |
-| Consumer model | You build consumer apps           | Fully managed delivery                  |
-| Scaling        | Manual shard management           | Automatic (auto-scales)                 |
-| Latency        | Sub-second (real-time)            | Near-real-time (buffered, 1-5 min)      |
-| Replay         | Yes (configurable start position) | No (no replay capability)               |
-| Use when       | You need real-time consumers      | You just need data delivered to storage |
-
-**Typical architecture:** Data Streams for real-time processing → Firehose for durable delivery to storage. Or use Firehose alone if you just need data delivered to S3/S3+Redshift without real-time processing.
-
-## References
-
-- **Homepage:** https://aws.amazon.com/kinesis/data-firehose/
-- **Documentation:** https://docs.aws.amazon.com/firehose/latest/dev/
-- **Pricing:** https://aws.amazon.com/kinesis/data-firehose/pricing/
-
-## Pricing Examples
-
-**Scenario 1:** A log aggregation pipeline: 10GB/day of application logs → Firehose → S3. Firehose charges: $0.029/GB for data ingested (first 10TB/month).10GB/day × 30 = 300GB/month. Cost: 300GB × $0.029 = $8.70/month. S3 storage (300GB Standard):300GB × $0.023 = $6.90/month. Total: ~$15.60/month. Compare to CloudWatch Logs at $0.50/GB ingestion + $0.03/GB storage = $159/month.
-
-**Scenario 2:** A security pipeline: 50GB/day of VPC flow logs → Firehose → S3 → Athena. Firehose: 50GB × 30 = 1,500GB × $0.029 = $43.50/month. S3: 1,500GB × $0.023 = $34.50/month. Athena:1,500GB scanned × $5/TB = $7.50/query if queried monthly. Total: ~$78/month plus Athena query costs.
-
-## Nuggets & Gotchas
-
-- **Firehose buffers data and delivers at batch boundaries:** Buffer size (default 5MB) and buffer interval (default 5 minutes) determine delivery latency. A low-traffic stream might deliver only once every 5 minutes, not sub-second.
-- **S3 compression is per-buffer, not per-object:** If you set GZIP compression, each buffer flush creates one compressed object in S3. If you have small, frequent buffers, you'll have many small S3 objects — which is expensive to list and expensive to query in Athena.
-- **No replay in Firehose:** Unlike Kinesis Data Streams, Firehose doesn't support replay. If you need to reprocess data, you need to replay it from the source (e.g., re-send from your application or use a separate Streams → Firehose architecture).
-- **S3 destination failed delivery goes to S3 backup bucket:** When Firehose can't deliver to S3 (e.g., bucket doesn't exist), it writes to a backup bucket you configure. If you don't configure one, data is lost. Always configure a backup bucket.
-- **Firehose API calls are separate from data ingestion billing:** API calls for DescribeDeliveryStream, ListDeliveryStreams, etc. are charged separately at $0.04/million. At high API call rates (e.g., from misconfigured SDK retries), this can add up.
+- [Rename notice](https://aws.amazon.com/about-aws/whats-new/2024/02/amazon-data-firehose-formerly-kinesis-data-firehose/)
+- [Transformation response contract](https://docs.aws.amazon.com/firehose/latest/dev/data-transformation-status-model.html)
+- [Format conversion](https://docs.aws.amazon.com/firehose/latest/dev/record-format-conversion.html)
+- [Buffer ranges and exceptions](https://docs.aws.amazon.com/firehose/latest/dev/create-configure-backup.html)
+- [Delivery behavior](https://docs.aws.amazon.com/firehose/latest/dev/basic-deliver.html)
+- [Firehose pricing](https://aws.amazon.com/firehose/pricing/)
