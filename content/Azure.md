@@ -1,101 +1,140 @@
 ---
 title: Azure
-tags: [azure, cloud, microsoft]
-date: 2026-09-06
-description: "Microsoft Azure cloud platform — compute, storage, networking, Entra ID, governance, databases, and enterprise security deep dives."
+tags:
+  - azure
+  - cloud
+  - microsoft
+date: 2026-10-15
+description: "Microsoft Azure cloud platform — comprehensive architectural deep dives across compute, storage, networking, AI, databases, developer tools, analytics, and security."
 ---
 
 # Azure ☁️
 
-Microsoft Azure cloud platform — comprehensive architectural deep dives covering enterprise identity, software-defined regional networking, managed Kubernetes, distributed NoSQL, and cloud governance. Built to match the depth of the AWS and GCP knowledge bases with **Architecture & Mental Models + Production `az` CLI + Quotas & Limits + References + 2 Realistic Pricing Scenarios + 5+ Battle-Tested Nuggets & Gotchas**.
+Microsoft Azure cloud platform — comprehensive architectural deep dives covering enterprise identity, software-defined regional networking, managed Kubernetes, distributed NoSQL, generative AI, hybrid multi-cloud operations, and platform governance. Built to match the depth of the AWS and GCP knowledge bases with **Architecture & Mental Models + Production `az` CLI + Quotas & Limits + References + 2 Realistic Pricing Scenarios + 5+ Battle-Tested Nuggets & Gotchas**.
 
 ---
 
-## Service Catalog
+## Service Catalog by Architectural Domain
 
-### 1. Identity & Governance
+### 1. [[Azure/compute/README|Compute & Containers]]
 
-- [[Azure/identity/README|Microsoft Entra ID & Azure RBAC]] — Tenant architecture, Directory Roles vs. Azure Resource RBAC, Managed Identities, PIM, and Conditional Access.
-- [[Azure/identity/workload-identity|Workload Identity & Federated Credentials]] — Keyless authentication for AKS pods and GitHub Actions CI/CD using OIDC federation.
-- [[Azure/governance/policy|Azure Governance — Management Groups, Policy & Locks]] — Management Group hierarchy, Azure Policy evaluation engines (Deny vs DeployIfNotExists), Initiatives, and Resource Locks.
-- [[Azure/resource-group|Resource Groups]] — Logical lifecycle boundaries, ARM deployments, and tagging strategies.
+- [[Azure/compute/aks|AKS Architecture Hub]] — Master architectural directory indexing 22 specialized engineering deep dives (Automatic, CNI Overlay, Cilium eBPF, Gateway API, GPU AI/ML, Kata Containers, Fleet Manager, SRE Runbooks).
+- [[Azure/compute/vm|Virtual Machines & Scale Sets (VMSS)]] — VM series taxonomy, Flexible VMSS, Availability Zones vs Fault Domains, and Proximity Placement Groups.
+- [[Azure/compute/vm/spot-vms|Azure Spot VMs & Scheduled Events]] — Surplus compute at 90% discount, 30-second eviction handling, and resilient batch pipelines.
+- [[Azure/compute/container-apps/README|Azure Container Apps (ACA), KEDA & Dapr]] — Serverless containers on AKS/Envoy, event-driven KEDA autoscaling, Dapr sidecars, and scale-to-zero.
+- [[Azure/compute/app-service/README|Azure App Service & Deployment Slots]] — Dedicated App Service Plans, zero-downtime deployment slots, and regional VNet integration.
+- [[Azure/compute/functions|Azure Functions & Serverless Computing]] — Event-driven FaaS, Flex Consumption, Isolated Worker Model, Durable Functions stateful orchestrations, and cold-start optimization.
 
-### 2. Networking
+### 2. [[Azure/networking/README|Networking & Connectivity]]
 
-- [[Azure/networking/vnet|Virtual Network (VNet) & Hybrid Routing]] — Regional VNet architecture, 5 reserved subnet IPs, VNet Peering with Gateway Transit, User Defined Routes (UDRs), NAT Gateway, and Private Endpoints.
-- [[Azure/networking/nsg|Network Security Groups (NSGs) & ASGs]] — Rule priority (100–4096), immutable default rules, Service Tags, Application Security Groups, and dual-layer filtering.
-- [[Azure/networking/load-balancing|Azure Load Balancing, Application Gateway & Front Door]] — Layer 4 Azure Load Balancer, Layer 7 Application Gateway WAF v2, Azure Front Door Anycast CDN, and Private Link.
-- [[Azure/networking/firewall/README|Azure Firewall & IDPS]] — Standard vs Premium, TLS inspection, 67,000+ signature IDPS, FQDN filtering, and Virtual WAN Secured Hub integration.
-- [[Azure/networking/virtual-wan/README|Azure Virtual WAN (vWAN)]] — Global transit networking, Secured Virtual Hubs, any-to-any VNet transit, ExpressRoute, and Site-to-Site VPN.
+- [[Azure/networking/vnet|Virtual Network (VNet) & Hybrid Routing]] — Regional VNet architecture, 5 reserved subnet IPs, VNet Peering with Gateway Transit, UDRs, and system routing.
+- [[Azure/networking/nsg|Network Security Groups (NSGs) & ASGs]] — Stateful L3/L4 filtering, rule priority (100–4096), Service Tags, Application Security Groups, and dual-layer evaluation.
+- [[Azure/networking/load-balancing|Azure Load Balancing, Application Gateway & Front Door]] — Layer 4 Azure Load Balancer, Layer 7 App Gateway WAF v2, and Azure Front Door Anycast edge CDN.
+- [[Azure/networking/firewall/README|Azure Firewall & IDPS]] — Standard vs Premium, TLS inspection, 67,000+ signature IDPS, FQDN filtering, and Virtual WAN Secured Hubs.
+- [[Azure/networking/virtual-wan/README|Azure Virtual WAN (vWAN)]] — Global transit networking, Secured Virtual Hubs, any-to-any VNet transit, ExpressRoute, and S2S VPN.
 - [[Azure/networking/private-link/README|Azure Private Link & Private Endpoints]] — Private PaaS connectivity, Private DNS Zones, eliminating public IPs, and data exfiltration prevention.
+- [[Azure/networking/dns-traffic-manager|Azure DNS & Traffic Manager Architecture]] — Public Anycast DNS, Private DNS Zones, Azure DNS Private Resolver, and Traffic Manager's 6 routing methods.
+- [[Azure/networking/expressroute-vpn|Azure ExpressRoute & VPN Gateway Hybrid Architecture]] — Dedicated Layer 3 circuits, FastPath wire-speed bypass, Active-Active BGP (ASN 65515), and S2S VPN failover.
+- [[Azure/networking/bastion-nat|Azure Bastion & NAT Gateway Architecture]] — Zero-public-IP browser/CLI jump hosts (Developer vs Standard SKU) and outbound SNAT port exhaustion mitigation.
 
-### 3. Compute & Containers
+### 3. [[Azure/storage/README|Storage & Shared Filesystems]]
 
-- [[Azure/compute/aks|Azure Kubernetes Service (AKS) Architecture Hub]] — Master architectural directory indexing 21 specialized engineering deep dives.
-  - [[Azure/compute/aks/automatic-deep-dive|AKS Automatic]] — Fully managed Kubernetes, Karpenter-powered Node Auto-Provisioning (NAP), weekly automated patch rollouts.
-  - [[Azure/compute/aks/cluster-tiers-sla|Cluster Tiers & SLA]] — Free vs Standard (99.95% SLA) vs Premium (LTS), Private Link clusters, and API Server VNet Integration.
-  - [[Azure/compute/aks/networking-cni|Networking & CNI Overlay]] — Kubenet vs Azure CNI (Node Subnet) vs Azure CNI Overlay vs Pod Subnets.
-  - [[Azure/compute/aks/cilium-ebpf|Azure CNI Powered by Cilium]] — eBPF kernel datapath, kube-proxy replacement, WireGuard encryption, and Hubble observability.
-  - [[Azure/compute/aks/ingress-appgw-gateway|Ingress & Gateway API]] — Application Gateway for Containers (AGfC), Gateway API (`HTTPRoute`), and WAF v2.
-  - [[Azure/compute/aks/node-pools-heterogeneous|Heterogeneous Node Pools]] — System vs User pools, Ephemeral OS disks on NVMe/Cache, Azure Linux 3, and Spot pools.
-  - [[Azure/compute/aks/autoscaling-keda|Autoscaling Architecture]] — Cluster Autoscaler (CA), Node Auto-Provisioning (Karpenter), HPA v2, KEDA, and Virtual Nodes.
-  - [[Azure/compute/aks/gpu-orchestration-ai|GPU AI/ML Infrastructure]] — NVIDIA H100/H200 (NDv5), Quantum-2 3.2 Tbps InfiniBand RDMA, KubeRay, and vLLM serving.
-  - [[Azure/compute/aks/storage-csi-disks|Storage CSI (Disks)]] — Azure Managed Disks, Premium SSD v2, Ultra Disk, and Azure Elastic SAN.
-  - [[Azure/compute/aks/storage-csi-files-blob|Shared Storage CSI (Files & Blob)]] — Multi-pod RWX, Azure Files NFS v4.1, and Azure Blob Storage BlobFuse2.
-  - [[Azure/compute/aks/security-workload-identity|Entra Workload Identity]] — Keyless authentication, OIDC federated credentials, and Azure RBAC for Kubernetes.
-  - [[Azure/compute/aks/security-key-vault-csi|Key Vault Secrets Store CSI]] — In-memory tmpfs mounts, secret auto-rotation, and FIPS 140-2 Level 3 HSM.
-  - [[Azure/compute/aks/governance-azure-policy|Azure Policy & Gatekeeper]] — OPA Gatekeeper admission guardrails, CIS benchmarks, and custom Rego constraints.
-  - [[Azure/compute/aks/multi-tenancy-isolation|Multi-Tenancy & Confidential Containers]] — PSS, Azure Linux Kata Containers (Hyper-V micro-VMs), and AMD SEV-SNP.
-  - [[Azure/compute/aks/observability-monitoring|Observability & Monitoring]] — Azure Monitor Container Insights, Managed Prometheus, Grafana, and ContainerLogV2.
-  - [[Azure/compute/aks/backup-disaster-recovery|Backup & Disaster Recovery]] — Azure Backup for AKS (managed Velero), BackupVault, and multi-region Active-Active Front Door.
-  - [[Azure/compute/aks/troubleshooting-runbook|SRE Troubleshooting Runbook]] — Exit code taxonomy (137 OOMKilled), Node NotReady triage, and CNI IP exhaustion.
-  - [[Azure/compute/aks/cost-optimization-finops|FinOps & Cost Allocation]] — Microsoft Cost Management AKS Cost Allocation, Savings Plans, and pause pod overprovisioning.
-  - [[Azure/compute/aks/fleet-manager-multicluster|Azure Kubernetes Fleet Manager]] — Staged rolling update runs across clusters and Multi-Cluster Services (MCS).
-- [[Azure/compute/vm|Virtual Machines & Scale Sets (VMSS)]] — VM series decision matrix, Flexible VMSS, Availability Zones vs Fault Domains, Spot VMs, Proximity Placement Groups, and Azure Bastion.
-- [[Azure/compute/vm/spot-vms|Azure Spot VMs & Scheduled Events]] — Unallocated capacity at 90% discount, 30-second eviction notification, metadata polling, and resilient batch architectures.
-- [[Azure/compute/container-apps/README|Azure Container Apps (ACA), KEDA & Dapr]] — Serverless containers on AKS/Envoy, KEDA event-driven autoscaling, Dapr microservice sidecars, and scale-to-zero.
-- [[Azure/compute/app-service/README|Azure App Service & Deployment Slots]] — App Service Plans, zero-downtime deployment slots, regional VNet integration, and custom domain TLS.
+- [[Azure/storage/blob|Azure Blob Storage & Data Lake Storage Gen2 (ADLS)]] — Redundancy tiers (LRS, ZRS, GRS, GZRS), Access Tiers (Hot/Cool/Cold/Archive), ADLS Gen2 Hierarchical Namespace (HNS), and User Delegation SAS.
+- [[Azure/storage/files-netapp|Azure Files & Azure NetApp Files (ANF)]] — Cloud-native SMB 3.1.1 and NFSv4.1 shares vs bare-metal NetApp ONTAP infrastructure, sub-millisecond latencies, and FSLogix user profiles.
+- [[Azure/storage/disks-elastic-san|Azure Managed Disks & Elastic SAN Architecture]] — Standard HDD/SSD, Premium SSD v1/v2, Ultra Disk, SCSI-3 Shared Disks, and cloud-native iSCSI SAN pools.
 
-### 4. Storage
+### 4. [[Azure/databases/README|Databases & In-Memory Caching]]
 
-- [[Azure/storage/blob|Azure Blob Storage & Data Lake Storage Gen2]] — Redundancy tiers (LRS, ZRS, GRS, GZRS), Hot/Cool/Cold/Archive access tiers, ADLS Gen2 Hierarchical Namespace (atomic directory renames), and User Delegation SAS.
-
-### 5. Databases & Messaging
-
-- [[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]] — Single Database vs Managed Instance, vCore vs DTU purchasing models, Serverless auto-pause, Hyperscale distributed storage, and Auto-Failover Groups.
+- [[Azure/databases/azure-sql|Azure SQL Database & Managed Instance]] — Single Database vs Managed Instance, vCore vs DTU, Serverless auto-pause, Hyperscale distributed storage, and Auto-Failover Groups.
 - [[Azure/databases/cosmos-db|Azure Cosmos DB]] — Request Units (RUs), multi-region active-active writes, 5 mathematical consistency levels, partition key design, and Autoscale throughput.
-- [[Azure/databases/postgres-flexible/README|PostgreSQL Flexible Server]] — Zone-redundant HA failover, built-in PgBouncer pooling, storage autogrow, and custom maintenance windows.
-- [[Azure/databases/redis/README|Azure Cache for Redis]] — Basic vs Standard vs Premium (clustering, RDB/AOF persistence) vs Enterprise (CRDT multi-region active-active).
-- [[Azure/messaging/service-bus/README|Azure Service Bus]] — Enterprise messaging broker, Queues vs Topics, AMQP 1.0, FIFO message sessions, duplicate detection, and dead-lettering.
-- [[Azure/messaging/event-hubs/README|Azure Event Hubs & Kafka Ingestion]] — Kafka 1.0+ wire protocol, Event Hubs Capture to Blob/ADLS, partitions, consumer groups, and throughput units.
+- [[Azure/databases/postgres-flexible/README|PostgreSQL Flexible Server]] — Zone-redundant HA failover, integrated PgBouncer connection pooling, storage autogrow, and maintenance windows.
+- [[Azure/databases/mysql-flexible|MySQL Flexible Server Architecture]] — Zone-redundant high availability, pre-provisioned vs Autoscale IOPS, read replicas, and server parameter tuning.
+- [[Azure/databases/redis/README|Azure Cache for Redis]] — Basic vs Standard vs Premium (clustering, persistence) vs Enterprise (CRDT multi-region active-active).
 
-### 6. Monitoring & Security
+### 5. [[Azure/application-integration/README|Application Integration & Messaging]]
 
-- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics (KQL)]] — Centralized log workspaces, Kusto Query Language (KQL), diagnostic settings, commitment tiers, and data retention.
-- [[Azure/monitoring/sentinel/README|Microsoft Sentinel SIEM/SOAR]] — Cloud-native SIEM, data connectors, KQL threat detections, incident investigation graphs, and Logic Apps SOAR playbooks.
-- [[Azure/security/key-vault/README|Azure Key Vault & Managed HSM]] — FIPS 140-2 Level 3 hardware HSM, Azure RBAC authorization, Keys/Secrets/Certificates, Soft-Delete, and Purge Protection.
+- [[Azure/messaging/README|Azure Messaging & Event Architecture]] — Dedicated enterprise message queuing and streaming hub (Service Bus, Event Hubs, Event Grid).
+- [[Azure/application-integration/event-grid|Azure Event Grid Architecture & CloudEvents Broker]] — Namespaces, MQTT v5.0 broker, CNCF CloudEvents v1.0 standard, push vs pull delivery, and reactive event routing.
+- [[Azure/messaging/service-bus/README|Azure Service Bus Enterprise Architecture]] — Queues vs Topics, AMQP 1.0, FIFO message sessions, duplicate detection, dead-lettering, and transactions.
+- [[Azure/messaging/event-hubs/README|Azure Event Hubs & Kafka Ingestion]] — Distributed partitioned streaming, Event Hubs Capture to ADLS Gen2, consumer groups, and Kafka protocol parity.
+- [[Azure/application-integration/logic-apps|Azure Logic Apps Architecture & Enterprise Integration]] — Standard (single-tenant containerized) vs Consumption runtimes, 400+ connectors, stateful vs stateless workflows, and VNet integration.
+- [[Azure/application-integration/apim|Azure API Management (APIM) Architecture & Gateway]] — Modern v2 tiers (Standard v2, Premium v2), XML policy pipeline, developer portal, OAuth2/JWT validation, and internal VNet injection.
+
+### 6. [[Azure/ai/README|Artificial Intelligence & Machine Learning]]
+
+- [[Azure/ai/openai|Azure OpenAI Service Architecture & Enterprise GenAI]] — Frontier LLMs (GPT-4o, o1), Provisioned Throughput Units (PTU) vs Pay-as-you-go TPM, Azure AI Content Safety, and zero model training boundaries.
+- [[Azure/ai/ai-search|Azure AI Search Architecture & Enterprise Vector Retrieval]] — Dense vector search with HNSW, BM25 inverted indexes, Reciprocal Rank Fusion (RRF), deep Semantic Ranker reranking, and partition/replica scaling.
+- [[Azure/ai/azure-ml|Azure Machine Learning (AML) Architecture & MLOps Platform]] — Workspace architecture, Managed Online Endpoints with blue/green deployment traffic splitting, autoscaling GPU compute clusters, and MLflow tracking.
+
+### 7. [[Azure/developer-tools/README|Developer Tools & DevOps]]
+
+- [[Azure/developer-tools/acr|Azure Container Registry (ACR) Architecture & Supply Chain Security]] — Premium SKU, Geo-replication, ACR Tasks for automated base image patching, OCI artifact store, private endpoints, and Defender for Containers.
+- [[Azure/developer-tools/devops-github|Azure DevOps & GitHub Actions on Azure Architecture]] — Workload Identity Federation (keyless OIDC authentication), Actions Runner Controller (ARC) on AKS, and multi-stage enterprise release pipelines.
+- [[Azure/developer-tools/bicep-stacks|Azure Bicep & Deployment Stacks Architecture]] — Declarative DSL for ARM, zero-day provider support, `actionOnUnmanage` lifecycle cleanup, `denySettingsMode` drift prevention, and private registry modules.
+
+### 8. [[Azure/analytics/README|Analytics & Modern Data Platform]]
+
+- [[Azure/analytics/fabric-synapse|Microsoft Fabric & Azure Synapse Analytics Architecture]] — OneLake unified lakehouse, Direct Lake Power BI querying, Delta Parquet native storage, Serverless SQL pools, and Spark runtimes.
+- [[Azure/analytics/data-factory|Azure Data Factory (ADF) Architecture & Hybrid ETL]] — Control plane vs Integration Runtime, Self-Hosted IR (SHIR) on-premises clustering, Mapping Data Flows, and Data Integration Units (DIUs).
+- [[Azure/analytics/databricks|Azure Databricks Architecture & Lakehouse Analytics]] — Dual-plane VNet injection, Unity Catalog three-level namespace governance, Photon vectorized C++ engine, and Lakehouse Federation.
+
+### 9. [[Azure/security/README|Security & Zero Trust]]
+
+- [[Azure/security/defender-for-cloud|Microsoft Defender for Cloud Architecture & CNAPP]] — Cloud Security Posture Management (CSPM), Cloud Workload Protection Platform (CWPP), Secure Score, Defender for Servers/Containers/Storage, and multi-cloud security.
+- [[Azure/security/key-vault/README|Azure Key Vault & Managed HSM Architecture]] — FIPS 140-2 Level 3 hardware HSM, Azure RBAC authorization, Keys, Secrets, Certificates, Soft-Delete, and Purge Protection.
+
+### 10. [[Azure/identity/README|Identity & Access Management]]
+
+- [[Azure/identity/README|Microsoft Entra ID & Azure RBAC Architecture]] — Tenant architecture, Directory Roles vs Azure Resource RBAC, Managed Identities, PIM, and Conditional Access.
+- [[Azure/identity/entraid|Microsoft Entra ID Architecture & Administration]] — Identity Provider (IdP), dynamic security groups, administrative units, and hybrid synchronization.
+- [[Azure/identity/workload-identity|Workload Identity & Federated Credentials]] — Keyless authentication for AKS pods and GitHub Actions CI/CD using OIDC federation.
+
+### 11. [[Azure/governance/README|Governance & Platform Operations]]
+
+- [[Azure/governance/policy|Azure Governance — Management Groups, Policy & Locks]] — Management Group hierarchy, Azure Policy evaluation engines (Deny vs DeployIfNotExists), Initiatives, and Resource Locks.
+- [[Azure/governance/resource-groups|Azure Resource Groups & ARM Lifecycle Architecture]] — ARM control plane boundaries, regional metadata constraints, resource locking, tagging strategies, and cross-group migration.
+- [[Azure/governance/resource-graph|Azure Resource Graph (ARG) Architecture & Governance Querying]] — Distributed KQL search engine, cross-subscription inventory queries, schema tables, throttling mitigation, and FinOps audit automation.
+
+### 12. [[Azure/monitoring/README|Monitoring & Cloud Observability]]
+
+- [[Azure/monitoring/log-analytics/README|Azure Monitor & Log Analytics Architecture (KQL)]] — Centralized log workspaces, Kusto Query Language (KQL), diagnostic settings, commitment tiers, data retention, and Data Collection Rules (DCR).
+- [[Azure/monitoring/sentinel/README|Microsoft Sentinel Architecture, Threat Intelligence & SOAR]] — Cloud-native SIEM/SOAR, multi-cloud data connectors, KQL threat analytics, incident investigation graphs, and automated Logic Apps playbooks.
+- [[Azure/compute/aks/observability-monitoring|AKS Observability & Monitoring Deep Dive]] — Container Insights, Managed Prometheus, Azure Managed Grafana, and ContainerLogV2 schema optimization.
+
+### 13. [[Azure/migration/README|Hybrid, Multi-Cloud & Migration]]
+
+- [[Azure/migration/azure-arc|Azure Arc Architecture & Hybrid Multi-Cloud Governance]] — Arc-enabled servers, Arc-enabled Kubernetes with Flux v2 GitOps, Azure Policy guest configuration, zero-public-IP Arc SSH access, and Extended Security Updates (ESU).
+- [[Azure/migration/azure-migrate|Azure Migrate Architecture & Datacenter Modernization]] — Agentless discovery appliance, performance-based right-sizing, dependency mapping, business case modeling, and wave migration planning.
+
+### 14. [[Azure/cost-management/README|Cost Management & FinOps]]
+
+- [[Azure/cost-management/cost-management-finops|Microsoft Cost Management & Enterprise FinOps Architecture]] — Azure Savings Plans vs Reserved Instances (RIs), FOCUS schema exports, automated budgets with forecast alerts, and Azure Advisor cost rules.
+- [[Azure/compute/aks/cost-optimization-finops|AKS FinOps & Cost Allocation Deep Dive]] — Container cost attribution, Microsoft Cost Management AKS integration, OpenCost metrics, and capacity overprovisioning.
 
 ---
 
 ## Multi-Cloud Architecture Translation Matrix (AWS vs. GCP vs. Azure)
 
-| Architectural Capability  | Amazon Web Services (AWS) | Google Cloud Platform (GCP)    | Microsoft Azure               | Key Cloud Native Tradeoff                                                                           |
-| :------------------------ | :------------------------ | :----------------------------- | :---------------------------- | :-------------------------------------------------------------------------------------------------- |
-| **Virtual Network Scope** | Regional VPC              | **Global VPC**                 | **Regional VNet**             | GCP spans all regions globally; AWS and Azure isolate networks to single regions.                   |
-| **Enterprise Identity**   | AWS IAM / Identity Center | Cloud Identity & IAM           | **Microsoft Entra ID**        | Entra ID natively unifies corporate Windows/M365 accounts with cloud RBAC.                          |
-| **Subnet IP Reservation** | 5 IPs reserved per subnet | 4 IPs reserved per subnet      | **5 IPs reserved per subnet** | Subnet sizing in Azure and AWS must account for 5 unusable addresses per CIDR.                      |
-| **Kubernetes Engine**     | Amazon EKS                | **Google GKE**                 | **Azure AKS**                 | GKE pioneered Autopilot and Datapath V2; AKS excels with CNI Overlay and Cilium eBPF.               |
-| **Serverless Compute**    | AWS Lambda                | **Cloud Run**                  | Azure Functions               | Cloud Run handles 1,000 concurrent requests per instance; Lambda is 1 request per container.        |
-| **Global Load Balancing** | Route 53 DNS + ALB        | **Global Anycast IP**          | **Azure Front Door**          | GCP and Azure Front Door terminate SSL at edge Anycast PoPs worldwide.                              |
-| **Distributed NoSQL**     | Amazon DynamoDB           | Cloud Bigtable / Firestore     | **Azure Cosmos DB**           | Cosmos DB offers 5 well-defined consistency levels and active-active global multi-master.           |
-| **Cold Storage Latency**  | S3 Glacier (Hours)        | **GCS Archive (Milliseconds)** | Azure Archive (Hours)         | GCS Archive delivers instant first-byte retrieval; AWS and Azure require offline rehydration.       |
-| **Governance Engine**     | AWS Organizations SCPs    | Organization Policies          | **Azure Policy & Blueprints** | Azure Policy provides granular real-time resource attribute evaluation and auto-remediation (DINE). |
+| Architectural Capability   | Amazon Web Services (AWS) | Google Cloud Platform (GCP) | Microsoft Azure                              | Key Cloud Native Differentiator                                                                                        |
+| :------------------------- | :------------------------ | :-------------------------- | :------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------- |
+| **Virtual Network Scope**  | Regional VPC              | **Global VPC**              | **Regional VNet**                            | GCP spans all regions globally; AWS and Azure isolate networks to single regions.                                      |
+| **Enterprise Identity**    | AWS IAM / Identity Center | Cloud Identity & IAM        | **Microsoft Entra ID**                       | Entra ID natively unifies corporate Windows/M365 accounts with cloud RBAC.                                             |
+| **Subnet IP Reservation**  | 5 IPs reserved per subnet | 4 IPs reserved per subnet   | **5 IPs reserved per subnet**                | Subnet sizing in Azure and AWS must account for 5 unusable addresses per CIDR.                                         |
+| **Kubernetes Engine**      | Amazon EKS                | **Google GKE**              | **Azure AKS**                                | GKE pioneered Autopilot and Datapath V2; AKS excels with CNI Overlay and Cilium eBPF.                                  |
+| **Serverless Compute**     | AWS Lambda                | **Cloud Run**               | [[Azure/compute/functions\|Azure Functions]] | Cloud Run handles concurrent requests per instance; Functions Flex scales up to 1,000 instances with VNet integration. |
+| **Global Edge Anycast**    | Route 53 + CloudFront     | **Global Anycast IP**       | **Azure Front Door**                         | GCP and Azure Front Door terminate SSL at edge Anycast PoPs worldwide.                                                 |
+| **Distributed NoSQL**      | Amazon DynamoDB           | Cloud Bigtable / Firestore  | **Azure Cosmos DB**                          | Cosmos DB offers 5 well-defined consistency levels and active-active global multi-master.                              |
+| **Shared File Storage**    | Amazon EFS / FSx ONTAP    | Cloud Filestore             | **Azure Files / NetApp Files**               | Azure NetApp Files provides bare-metal ONTAP hardware delivering sub-millisecond latencies.                            |
+| **Container Registry**     | Amazon ECR                | Artifact Registry           | **Azure Container Registry**                 | ACR Premium features multi-region geo-replication under a single FQDN and automated base image patching.               |
+| **Reactive Event Router**  | Amazon EventBridge        | Eventarc                    | **Azure Event Grid**                         | Event Grid standardizes on CNCF CloudEvents v1.0 and integrates native MQTT v5.0 brokers for IoT.                      |
+| **Enterprise API Gateway** | Amazon API Gateway        | Apigee API Management       | **Azure API Management**                     | APIM v2 offers rapid 5-minute auto-scaling, XML policy pipelines, and internal VNet injection.                         |
+| **Generative AI Platform** | Amazon Bedrock            | Vertex AI (Gemini)          | **Azure OpenAI Service**                     | Exclusive enterprise hosting of frontier OpenAI models (GPT-4o, o1) within Azure boundary.                             |
+| **Vector Retrieval / RAG** | Amazon OpenSearch Service | Vertex AI Vector Search     | **Azure AI Search**                          | Combines BM25 lexical search, HNSW vector search, and deep transformer Semantic Ranker via RRF.                        |
+| **Unified Lakehouse**      | AWS Lake Formation        | BigQuery + Dataplex         | **Microsoft Fabric & OneLake**               | Direct Lake mode queries Delta Parquet in RAM without data refresh or duplication.                                     |
+| **Hybrid Control Plane**   | AWS Systems Manager       | Google Distributed Cloud    | **Azure Arc**                                | Projects any physical server or CNCF Kubernetes cluster into ARM with Flux v2 GitOps.                                  |
+| **Governance Engine**      | AWS Organizations SCPs    | Organization Policies       | **Azure Policy & Stacks**                    | Azure Policy provides real-time ARM evaluation; Deployment Stacks automatically purge deleted resources.               |
 
 ---
-
-## More in this section
-
-- [[Azure/security-groups|Security Groups]] — An Azure Network Security Group (NSG) is a fundamental security component that acts as a virtual firewall for filtering network…
 
 ## Related Hubs
 

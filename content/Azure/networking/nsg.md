@@ -9,6 +9,9 @@ tags:
   - security
   - firewall
 date: 2026-09-06
+aliases:
+  - "/Azure/security-groups"
+  - "Azure/security-groups"
 ---
 
 # Azure Network Security Groups (NSGs) & ASGs 🛡️🧱
