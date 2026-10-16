@@ -53,7 +53,104 @@ A path is more than a template. For "a new HTTP service in production" it would 
 | **Documentation**        | A tutorial that works on the first try, and an explanation of _why_ each choice was made                                               |
 | **Support**              | A channel, an owner and a published support level                                                                                      |
 
-The test of completeness: a new engineer, alone, can go from nothing to a service running in production with monitoring in **under an hour**, without asking anyone.
+The test of completeness: an engineer can take a new service from concept to verified production deployment, wired to monitoring, identity, and runbooks, entirely via self-service without filing tickets or awaiting manual approvals. Completeness is evaluated by comparing delivery velocity, error rates, and support ticket volume against the organization's prior baseline (e.g., transforming weeks of manual ops handoffs into an automated self-service pipeline), validated through developer sentiment surveys and frictionless onboarding.
+
+## A Worked Golden Path: The End-to-End Developer Journey
+
+To see how the platform planes connect in practice, follow a single real-world request: an engineer on the payments team shipping `payment-api`, a Go service requiring an encrypted PostgreSQL database, automated CI/CD, and production observability.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant Portal as Backstage (Portal)
+    participant Git as GitHub (Repo & Actions)
+    participant GitOps as Argo CD (GitOps)
+    participant ControlPlane as Crossplane (Control Plane)
+    participant Cloud as AWS (RDS & KMS)
+    participant K8s as Kubernetes Runtime
+    participant Obs as OTel & Grafana
+
+    Dev->>Portal: 1. Fills "Go Microservice" Template
+    Portal->>Git: 2. Scaffolds repo, Dockerfile, catalog-info, CI & XR
+    Git->>Git: 3. Runs CI: Test, Trivy scan, Cosign sign, push image
+    Git->>GitOps: 4. Emits GitOps manifests (Deployment + Database XR)
+    GitOps->>ControlPlane: 5. Applies Database XR to payments namespace
+    ControlPlane->>Cloud: 6. Provisions RDS, KMS Key, Security Group
+    ControlPlane->>K8s: 7. Injects DB connection Secret to namespace
+    GitOps->>K8s: 8. Deploys payment-api with PodDisruptionBudget & probes
+    K8s->>Obs: 9. Emits OTel traces, logs & Prometheus metrics
+    Portal-->>Dev: 10. Catalog displays health, docs, dashboards & SLOs
+```
+
+### Phase 1: Self-Service Scaffolding (Developer Interface Plane)
+
+1. The developer navigates to [[DevOps/platform-engineering/backstage|Backstage]] and selects the **Go Web Service** template.
+2. The form asks for essential intent:
+   - Service Name: `payment-api`
+   - Owning Group: `group:payments`
+   - Database: `PostgreSQL` (Tier: `production`, Size: `small`)
+3. The Backstage Scaffolder executes its pipeline:
+   - Generates a new GitHub repository (`github.com/example/payment-api`).
+   - Injects standard skeleton code with an embedded health check endpoint (`/healthz`).
+   - Adds a multi-stage, non-root [[Containers/dockerfile-best-practices|Dockerfile]].
+   - Configures a `.github/workflows/ci.yaml` referencing the platform's reusable CI workflow.
+   - Adds a `catalog-info.yaml` registering ownership, TechDocs, and API specifications.
+   - Emits a declarative `Database` composite resource claim and Kubernetes `Deployment` into the team's GitOps repository.
+
+### Phase 2: Infrastructure on Demand (Resource Orchestration Plane)
+
+The generated GitOps repository contains the declarative database request:
+
+```yaml
+# gitops/apps/payments/payment-api-db.yaml
+apiVersion: platform.example.com/v1alpha1
+kind: Database
+metadata:
+  name: payment-db
+  namespace: payments
+spec:
+  size: small
+  tier: production
+  engineVersion: "16"
+```
+
+1. [[Kubernetes/guides/delivery/gitops/argo-cd/README|Argo CD]] detects the manifest in Git and synchronizes it to the platform cluster.
+2. [[DevOps/platform-engineering/crossplane|Crossplane]] reconciles the `Database` resource through its composition pipeline:
+   - Creates a dedicated customer-managed AWS KMS encryption key.
+   - Allocates private DB subnets and creates an ingress security group restricted to the `payments` namespace.
+   - Provisions an AWS RDS PostgreSQL 16 Multi-AZ instance with automated backups and deletion protection.
+   - Automatically writes the database endpoint, port, and auto-generated master password into a Kubernetes Secret named `payment-db-conn` inside the `payments` namespace.
+
+### Phase 3: Automated Pipeline & Build (Integration & Delivery Plane)
+
+The developer pushes application logic to their feature branch:
+
+1. GitHub Actions triggers the shared pipeline from [[DevOps/ci-cd/pipeline-design|pipeline design]]:
+   - Runs unit tests and static analysis with SonarQube/golangci-lint.
+   - Runs container security scanning via Trivy for CVEs ([[DevOps/devsecops/stage2-build/09-container-image-scanning|container image scanning]]).
+   - Generates an SPDX SBOM ([[DevOps/devsecops/stage1-code/08-sbom-generation|SBOM generation]]).
+   - Builds the container image and signs it using Cosign with keyless GitHub Actions OIDC identity ([[DevOps/devsecops/stage3-deploy/13-artifact-signing|artifact signing]]).
+2. On merge to `main`, the pipeline tags the immutable image (e.g., `v1.0.4-sha-7a1b4c`) and submits a pull request updating the image tag in the GitOps deployment repository.
+
+### Phase 4: Runtime & Progressive Deployment (Runtime Plane)
+
+1. Argo CD picks up the updated image tag in the GitOps repository.
+2. The platform's golden manifest deploys the service onto Kubernetes:
+   - References `payment-db-conn` to inject database credentials as environment variables without exposing plain-text secrets in Git.
+   - Attaches AWS IAM Pod Identity / IRSA for least-privilege cloud access without static credentials.
+   - Enforces runtime guardrails: `securityContext.runAsNonRoot: true`, `readinessProbe`, `livenessProbe`, a `PodDisruptionBudget` (minimum 1 available replica), and a `HorizontalPodAutoscaler`.
+3. If configured for progressive delivery, [[DevOps/ci-cd/deployment-strategies|Argo Rollouts]] routes 10% of production traffic to the canary replica, verifies HTTP error rates and latency, and automatically promotes to 100%.
+
+### Phase 5: Observability, Governance & Support (Day-Two Plane)
+
+1. **Automatic Telemetry:** The application's pre-configured OpenTelemetry SDK exports structured JSON logs and distributed traces to the platform OpenTelemetry Collector, mapping latency directly to database query traces.
+2. **Unified Portal View:** The Backstage catalog card for `payment-api` automatically updates with:
+   - Direct links to Grafana starter dashboards for HTTP 5xx rates and P99 latency.
+   - Current deployment health and active sync status from Argo CD.
+   - PagerDuty on-call rotation for `group:payments`.
+   - Security scorecard status verifying zero critical CVEs and active secret rotation.
+3. **Seamless Upgrades:** When the platform engineering team tightens PostgreSQL security standards (e.g., mandating TLS 1.3), they update the central Crossplane Composition. Every database instance, including `payment-db`, reconciles to the new standard without application developers changing a single line of YAML.
 
 ## Design principles
 

@@ -41,10 +41,15 @@ A comprehensive 20-module end-to-end security pipeline curriculum:
 
 - **[[DevOps/platform-engineering/README|Platform Engineering & Internal Developer Platforms (IDP)]]** — Developer portals, Golden Paths, Backstage, and Crossplane control planes
 - **[[DevOps/platform-engineering/internal-developer-platforms|Internal Developer Platforms]]** — Capabilities, platform as a product, the thinnest viable platform, metrics
-- **[[DevOps/platform-engineering/golden-paths|Golden Paths]]** — Paved roads, guardrails over gates, keeping services current
-- **[[DevOps/platform-engineering/backstage|Backstage]]** — Catalog, templates, TechDocs and the real cost of running a portal
-- **[[DevOps/platform-engineering/crossplane|Crossplane for Platform APIs]]** — Designing self-service infrastructure APIs
-- **[[DevOps/platform-engineering/platform-vs-devops-vs-sre|Platform Engineering vs DevOps vs SRE]]** — How the three relate
+- **[[DevOps/platform-engineering/platform-vs-devops-vs-sre|Platform Engineering vs DevOps vs SRE]]** — Team Topologies interaction modes, RACI matrix, team evolution
+- **[[DevOps/platform-engineering/golden-paths|Golden Paths]]** — Paved roads, guardrails over gates, worked end-to-end developer journey
+- **[[DevOps/platform-engineering/devex-and-inner-loop|Developer Experience (DevEx) & Inner Loop]]** — Fast feedback, Telepresence, mirrord, SPACE and DevEx metrics
+- **[[DevOps/platform-engineering/backstage|Backstage]]** — Catalog, templates, TechDocs, plugins, and template failure handling
+- **[[DevOps/platform-engineering/workload-specifications|Workload Specifications & Score]]** — Separating intent from environment via `score.yaml` and OAM
+- **[[DevOps/platform-engineering/platform-orchestrators|Platform Orchestrators & Dynamic Configuration]]** — Kratix Promises, Humanitec, and context-aware resource resolution
+- **[[DevOps/platform-engineering/crossplane|Crossplane for Platform APIs]]** — Crossplane v2 namespaced control planes, renderable manifests
+- **[[DevOps/platform-engineering/ephemeral-environments|Ephemeral Environments & EaaS]]** — On-demand PR preview environments, vCluster, database branching
+- **[[DevOps/platform-engineering/finops-and-cost-allocation|FinOps & Cost Allocation for Platforms]]** — OpenCost, automated label inheritance, showback vs chargeback
 
 ---
 

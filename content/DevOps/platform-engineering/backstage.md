@@ -118,6 +118,21 @@ spec:
 
 Actions can create repositories, open pull requests, trigger pipelines, call cloud APIs or create Kubernetes resources. Keep templates thin: have them create a repository that **references** shared pipelines, charts and modules rather than copying them in, so services do not freeze at the moment of creation.
 
+### Handling partial failures and cleanup in software templates
+
+Software templates run a sequence of mutations across external systems (e.g. GitHub API, Kubernetes cluster, cloud IAM, internal catalog). When a middle or late step fails — such as `catalog:register` failing due to schema validation after `publish:github` already created the repository — the system is left in an inconsistent state.
+
+Following [Backstage's template design guidance](https://backstage.io/docs/features/software-templates/writing-templates/), platform teams must design templates defensively:
+
+1. **Idempotency & Re-entrancy:** Design actions so re-running a template with identical parameters is safe. For example, `publish:github` should support checking if the repository exists and adopting it rather than failing with an unrecoverable HTTP 409 Conflict.
+2. **Pre-flight Validation:** Validate all input parameters, repository naming uniqueness, and user authorization in the frontend and during initial dry-run validation steps _before_ invoking external mutating APIs.
+3. **Compensating Rollbacks:** When an unrecoverable failure occurs midway, execute cleanup actions:
+   - Delete empty, un-scaffolded GitHub repositories created during the failed run.
+   - Revoke ephemeral credentials or tokens created for the task.
+   - Log the failure with structured context to Sentry or OpenTelemetry so platform engineers can debug without asking the user for logs.
+4. **Ephemeral Task Isolation:** Backstage executes template steps within isolated temporary workspaces on disk (`/tmp/...`). Ensure the backend process cleans up these directories on completion or failure to prevent disk exhaustion and credential leakage.
+5. **Human-Readable Error Messages:** Transform opaque upstream API errors (e.g., GitHub GraphQL 500 or Kubernetes webhook timeouts) into clear instructions in the Scaffolder UI (e.g., "Repository creation failed: group:payments does not have write access to github.com/example").
+
 ## TechDocs
 
 Documentation is written in Markdown in the service's repository, built with MkDocs, and published to object storage for the portal to serve. Docs live beside the code, change in the same pull request, and are found through the same search as everything else. In production, build them in CI and publish to a bucket rather than generating on demand.
@@ -160,7 +175,15 @@ Many organisations have underestimated this, stood up a portal, and then found t
 | **Commercial portals** (Port, Cortex, OpsLevel)                       | Faster to value; configuration over code; a subscription and their data model |
 | **No portal**                                                         | Git, a CLI and good documentation — often right for small organisations       |
 
-Below a few dozen engineers, a portal is rarely worth it. A spreadsheet of services and owners plus a template repository gets most of the benefit.
+Evaluate whether to adopt a dedicated portal using decision criteria grounded in the [CNCF Platform Engineering Maturity Model](https://tag-app-delivery.cncf.io/whitepapers/platform-eng-maturity-model/):
+
+- **Adopt a portal when observed friction is high:**
+  - Engineers report high cognitive load finding API contracts, ownership metadata, or runbooks across fragmented repositories.
+  - Incident response is repeatedly delayed because on-call rotas or upstream dependencies are untracked.
+  - Central teams spend >20% of their sprint capacity servicing manual onboarding or access requests that could be delegated to self-service templates.
+- **Defer a portal when carrying costs exceed value:**
+  - Operating a self-hosted Backstage instance requires a permanent investment of 1–2+ dedicated TypeScript/frontend engineers and frequent upstream maintenance.
+  - If service ownership is easily managed via markdown files in Git and communication is direct, a full portal adds maintenance overhead without proportional return. Consider managed alternatives (Roadie, Port) or postpone until organizational scale demands it.
 
 ## An adoption path
 

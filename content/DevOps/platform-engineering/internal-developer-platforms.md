@@ -60,6 +60,8 @@ A portal in front of nothing is a wiki with a nicer skin. Build the capabilities
 
 The most important design element is the **API in the middle**: the small set of things a developer specifies. A good platform API asks for intent — "a web service, this image, two replicas, a Postgres database, small" — and derives the dozens of resources behind it. On Kubernetes that API is usually a custom resource, implemented with [[DevOps/platform-engineering/crossplane|Crossplane]], [[Kubernetes/eks/automation/control-planes/kro|kro]], or a Helm chart with a narrow values schema.
 
+A concrete, end-to-end implementation tracing a single microservice request across all five planes is detailed in [[DevOps/platform-engineering/golden-paths#a-worked-golden-path-the-end-to-end-developer-journey|A Worked Golden Path: The End-to-End Developer Journey]].
+
 ## Platform as a product
 
 Platforms fail far more often for product reasons than technical ones. Treat the platform exactly as you would an external product.
@@ -121,6 +123,71 @@ The platform team's interaction mode should be **X-as-a-service**: teams consume
 
 The platform is production infrastructure for everyone. It needs its own on-call, incident process and error budgets.
 
+## Platform operations and failure recovery procedures
+
+Platform engineering teams operate critical path systems. When the platform degrades, developer velocity stalls or production deployments freeze. Concrete procedures are required for common failure modes:
+
+### 1. Broken Provisioning Requests
+
+When a developer submits a request (e.g., an intent-based `Database` or `Queue` resource) that fails to provision:
+
+- **Symptom:** The composite resource remains in `Ready: False` or `Synced: False` indefinitely.
+- **Root Causes:** Upstream cloud quota limits (e.g., maximum RDS instances reached in `eu-west-1`), CIDR exhaustion in private subnets, invalid IAM policy syntax, or database parameter validation errors.
+- **Triage Procedure:**
+  1. Inspect the composite resource trace to pinpoint the failing child object:
+     ```bash
+     crossplane beta trace database payment-db -n payments
+     ```
+  2. Inspect the raw error emitted by the cloud provider on the managed resource:
+     ```bash
+     kubectl describe instance.rds.aws.m.upbound.io payment-db-instance -n payments
+     ```
+  3. Check cloud audit logs (AWS CloudTrail / GCP Cloud Audit) for `AccessDenied` or `ResourceLimitExceeded`.
+- **Safe Recovery without Data Loss:**
+  - Update the platform Composition or the developer's spec in place. The control plane reconciler will resume without deleting existing resources.
+  - **Never force-delete finalizers** on stateful resources containing active customer data. Ensure all stateful managed resources specify `spec.deletionPolicy: Orphan` before removing stuck platform controllers, preventing accidental destruction of live cloud databases.
+
+### 2. Failed Template Executions & Scaffolder Rollbacks
+
+When a developer runs a software template in the portal and execution crashes halfway through (e.g., GitHub repository created, but catalog registration or CI secret generation timed out):
+
+- **Symptom:** The developer sees a failed run in the portal; orphaned repositories or partially configured secrets linger in the organization.
+- **Compensation & Cleanup Runbook:**
+  - Backstage and IDP orchestrators should define automated **compensating steps** (see [[DevOps/platform-engineering/backstage#handling-partial-failures-and-cleanup-in-software-templates|Backstage template failure handling]]).
+  - Ensure template steps are strictly **idempotent**: running the template a second time with the same name should adopt or verify existing resources rather than throwing HTTP 409 Conflict errors.
+  - Execute template operations in isolated ephemeral worker containers or temporary workspaces that are purged automatically upon step failure.
+  - Surface actionable, human-readable failure causes in the portal UI (e.g., "Branch protection failed: GitHub token lacks admin scope") rather than raw stack traces.
+
+### 3. Control Plane Outage & Safe Recovery
+
+When the platform control plane (Kubernetes API server, Crossplane pods, or Argo CD controllers) crashes or undergoes planned maintenance:
+
+- **Decoupling Guarantee:** A control plane outage **does not halt running application workloads**. Pods running in Kubernetes continue serving traffic, and cloud resources (RDS, S3, VPCs) operate independently in AWS/GCP. Only _mutations_ (new deployments, scaling changes, infrastructure requests) are queued or delayed.
+- **Recovery Sequence:**
+  1. Restore control plane etcd / API server health first.
+  2. Validate mutating and validating admission webhooks:
+     ```bash
+     kubectl get validatingwebhookconfigurations,mutatingwebhookconfigurations
+     ```
+     Ensure non-critical webhooks are configured with `failurePolicy: Ignore` during maintenance to avoid blocking emergency hotfixes.
+  3. Restart reconcilers with tuned rate-limiting and exponential backoff to prevent thundering herd API throttling against cloud provider endpoints upon reconnection.
+
+### 4. Platform SLOs, Error Budgets, and Incident Classification
+
+The platform team maintains explicit [[DevOps/sre/slos-and-error-budgets|SLOs]] with automated alerting to the platform on-call rotation:
+
+| Service / Plane            | SLI Metric                                                    | Target SLO (30-day rolling)             | Failure Impact              |
+| :------------------------- | :------------------------------------------------------------ | :-------------------------------------- | :-------------------------- |
+| **Pipeline & Delivery**    | % of CI/CD pipeline executions completing without infra error | `>= 99.5%`                              | Blocks product releases     |
+| **Resource Control Plane** | P95 latency from XR creation to cloud resource `Ready: True`  | `< 10 min` (DB)<br/>`< 2 min` (Compute) | Stalls developer onboarding |
+| **GitOps Reconciler**      | P95 sync latency from Git merge to cluster state sync         | `< 45 sec`                              | Delays deployment feedback  |
+| **Developer Portal**       | Availability of portal web UI and search API                  | `>= 99.9%`                              | Degrades discovery and docs |
+
+- **Severity Classification:**
+  - **Sev-1 (Critical Platform Incident):** Delivery pipeline down or GitOps reconciliation blocked across all teams. All product releases halted. Platform on-call paged immediately; incident response initiated.
+  - **Sev-2 (Degraded Capability):** Self-service database provisioning fails, but compute deployment and existing services operate normally. Workaround available (e.g., manual fallback or non-production affected).
+  - **Sev-3 (Minor / Informational):** Documentation portal or search index stale. Self-service and deployment engines fully operational. Handled during normal business hours.
+
 ## How platforms fail
 
 | Failure                                 | Cause                                                                  |
@@ -142,7 +209,11 @@ The platform is production infrastructure for everyone. It needs its own on-call
 | Commercial IDP products    | Humanitec, Port, Cortex, managed Backstage                    | Less to build; fits their model, not always yours |
 | Assembled from open source | Kubernetes, Argo CD, Crossplane, Backstage                    | Fits exactly; you operate and integrate it all    |
 
-For a small organisation, a managed PaaS **is** the platform, and building your own is a distraction. The case for assembling grows with the number of teams and the specificity of requirements.
+According to the [CNCF Platform Engineering Maturity Model](https://tag-app-delivery.cncf.io/whitepapers/platform-eng-maturity-model/), evaluate buy versus build by matching platform investment to observed needs and organizational carrying capacity:
+
+- **Provisional Stage:** Managed PaaS (e.g., Cloud Run, ECS, Heroku-style services) provides immediate leverage with zero infrastructure carrying cost. Custom platform engineering is typically premature.
+- **Operational Stage:** Off-the-shelf commercial IDP tooling (Port, Humanitec, managed Backstage) or standardized GitOps pipelines solve multi-team delivery bottlenecks without requiring internal frontend/control-plane engineers.
+- **Scalable to Optimizing Stage:** Custom assembled platforms (Kubernetes, Crossplane, custom Backstage plugins, Kratix) become cost-effective when proprietary governance, multi-cloud topologies, or domain-specific compliance requirements justify a dedicated, permanent platform product team.
 
 ## Related
 

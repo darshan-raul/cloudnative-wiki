@@ -78,23 +78,40 @@ Crossplane extends the Kubernetes API to manage external cloud resources (RDS da
 
 ## 4. The "Thinnest Viable Platform" (TVP) Approach
 
-Avoid building a monolithic internal platform before understanding team needs:
+Avoid building a monolithic internal platform before understanding team needs. The [CNCF Platform Engineering Maturity Model](https://tag-app-delivery.cncf.io/whitepapers/platform-eng-maturity-model/) frames platform evolution around observable pain and developer feedback:
 
-1. Start with **Golden Paths** implemented as simple GitHub Actions templates and cookiecutters.
-2. Introduce a central service catalog when microservice count exceeds ~20.
-3. Decouple infrastructure through self-service control planes (Crossplane/GitOps) only when operations bottlenecks arise.
+1. **Provisional Stage (Paved Roads):** Start with **Golden Paths** implemented as simple, versioned GitHub Actions templates and cookiecutters that solve immediate onboarding and build friction.
+2. **Operational Stage (Service Discovery & Ownership):** Introduce a central software catalog when discovery pain, unclear service ownership, or untracked cross-service dependencies measurably slow down incident triage and security audits.
+3. **Scalable Stage (Declarative Self-Service Control Planes):** Decouple infrastructure provisioning through self-service control planes (Crossplane, GitOps, Kubernetes CRDs) when manual operations tickets and configuration drift become quantifiable delivery bottlenecks.
+4. **Optimizing Stage (Continuous Product Feedback):** Continuously evaluate platform capabilities using developer satisfaction surveys (DevEx), adoption telemetry, and DORA metrics, deprecating unused tooling and refining golden paths.
 
 ---
 
 ## Notes in this section
 
+### Foundations & Strategy
+
 - [[DevOps/platform-engineering/internal-developer-platforms|Internal Developer Platforms]] — Capabilities, portal versus platform, platform as a product, metrics and failure modes
-- [[DevOps/platform-engineering/golden-paths|Golden Paths]] — Designing paved roads, guardrails over gates, the day-two problem
-- [[DevOps/platform-engineering/backstage|Backstage]] — Software catalog, templates, TechDocs, plugins and operating cost
-- [[DevOps/platform-engineering/crossplane|Crossplane for Platform APIs]] — Designing and evolving self-service infrastructure APIs
-- [[DevOps/platform-engineering/platform-vs-devops-vs-sre|Platform Engineering vs DevOps vs SRE]] — Principles and how the disciplines differ
-- [[DevOps/infrastructure-as-code/README|Infrastructure as Code]] — The building blocks underneath
-- [[DevOps/sre/README|Site Reliability Engineering]] — Running the platform itself
+- [[DevOps/platform-engineering/platform-vs-devops-vs-sre|Platform Engineering vs DevOps vs SRE]] — Team Topologies operating models, RACI matrix, evolution paths
+- [[DevOps/platform-engineering/golden-paths|Golden Paths]] — Paved roads, guardrails over gates, and a complete worked end-to-end developer journey
+- [[DevOps/platform-engineering/devex-and-inner-loop|Developer Experience (DevEx) & Inner Loop]] — Bridging local IDE to remote clusters (mirrord/Telepresence), SPACE & DevEx metrics
+
+### Developer Interfaces & Abstractions
+
+- [[DevOps/platform-engineering/backstage|Backstage Developer Portal]] — Software catalog entity model, Scaffolder templates, partial failure handling
+- [[DevOps/platform-engineering/workload-specifications|Workload Specifications & Score]] — Separating application intent from environmental context (`score.yaml`, OAM)
+
+### Orchestration, Control Planes & Environments
+
+- [[DevOps/platform-engineering/platform-orchestrators|Platform Orchestrators & Dynamic Configuration]] — Resolving intent into infrastructure with Kratix Promises and Humanitec
+- [[DevOps/platform-engineering/crossplane|Crossplane for Platform APIs]] — Declarative namespaced control planes, compositions, and renderable manifests
+- [[DevOps/platform-engineering/ephemeral-environments|Ephemeral Environments & EaaS]] — On-demand PR preview environments, vCluster architecture, database branching
+
+### Operations & Governance
+
+- [[DevOps/platform-engineering/finops-and-cost-allocation|FinOps & Cost Allocation for Platforms]] — OpenCost, automated label inheritance, showback vs chargeback, and hygiene
+- [[DevOps/infrastructure-as-code/README|Infrastructure as Code]] — The foundational building blocks underneath
+- [[DevOps/sre/README|Site Reliability Engineering]] — Running the platform control plane as a production service
 
 ---
 

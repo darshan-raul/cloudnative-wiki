@@ -48,17 +48,28 @@ Guidelines:
 - **Keep it cloud-neutral only if you will really run on several clouds.** Otherwise the abstraction costs more than it returns.
 - **Fewer fields is better.** Every field is a promise you must keep across versions.
 
-## A worked example
+## A worked example: Crossplane v2 Namespaced Control Plane
+
+In Crossplane v2, platform APIs can be defined with namespaced scope (`scope: Namespaced`), allowing product teams to create composite resources directly inside their team namespaces without requiring cluster-wide privileges. Upbound Provider AWS v2 provides matching namespaced managed resources under the `*.aws.m.upbound.io` API groups.
+
+### 1. The CompositeResourceDefinition (XRD)
+
+The platform team defines the contract in the cluster:
 
 ```yaml
-apiVersion: apiextensions.crossplane.io/v2
+apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
   name: databases.platform.example.com
 spec:
-  scope: Namespaced
   group: platform.example.com
-  names: { kind: Database, plural: databases }
+  names:
+    kind: Database
+    plural: databases
+  scope: Namespaced
+  claimNames:
+    kind: DatabaseClaim
+    plural: databaseclaims
   versions:
     - name: v1alpha1
       served: true
@@ -71,35 +82,51 @@ spec:
               type: object
               required: [size]
               properties:
-                size: { type: string, enum: [small, medium, large] }
+                size:
+                  type: string
+                  enum: [small, medium, large]
                 engineVersion:
-                  { type: string, enum: ["15", "16", "17"], default: "16" }
+                  type: string
+                  enum: ["15", "16", "17"]
+                  default: "16"
                 tier:
-                  {
-                    type: string,
-                    enum: [development, production],
-                    default: development,
-                  }
+                  type: string
+                  enum: [development, production]
+                  default: development
             status:
               type: object
               properties:
-                endpoint: { type: string }
-                secretName: { type: string }
+                endpoint:
+                  type: string
+                port:
+                  type: integer
+                secretName:
+                  type: string
+                ready:
+                  type: boolean
 ```
+
+### 2. The Composition with Complete Supporting Resources
+
+The platform team writes a Composition that synthesizes the entire infrastructure graph shown in the architecture diagram: KMS encryption key, Security Group, Subnet Group, Parameter Group, RDS Instance, and exported credentials secret.
 
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: database-aws
+  name: database-aws-postgresql
+  labels:
+    provider: aws
+    engine: postgresql
 spec:
   compositeTypeRef:
     apiVersion: platform.example.com/v1alpha1
     kind: Database
   mode: Pipeline
   pipeline:
-    - step: render
-      functionRef: { name: function-go-templating }
+    - step: render-resources
+      functionRef:
+        name: function-go-templating
       input:
         apiVersion: gotemplating.fn.crossplane.io/v1beta1
         kind: GoTemplate
@@ -107,13 +134,89 @@ spec:
         inline:
           template: |
             {{ $xr := .observed.composite.resource }}
-            {{ $sizes := dict "small" "db.t4g.medium" "medium" "db.r7g.large" "large" "db.r7g.2xlarge" }}
+            {{ $name := $xr.metadata.name }}
+            {{ $ns := $xr.metadata.namespace }}
             {{ $prod := eq $xr.spec.tier "production" }}
-            apiVersion: rds.aws.upbound.io/v1beta1
+            {{ $sizes := dict "small" "db.t4g.medium" "medium" "db.r7g.large" "large" "db.r7g.2xlarge" }}
+
+            ---
+            # 1. KMS Encryption Key (Namespaced v2 API)
+            apiVersion: kms.aws.m.upbound.io/v1beta1
+            kind: Key
+            metadata:
+              name: {{ $name }}-key
+              namespace: {{ $ns }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: kms-key
+            spec:
+              forProvider:
+                description: "KMS storage encryption key for {{ $name }}"
+                deletionWindowInDays: {{ if $prod }}30{{ else }}7{{ end }}
+                enableKeyRotation: true
+                tags:
+                  Environment: {{ $xr.spec.tier }}
+                  ManagedBy: crossplane
+
+            ---
+            # 2. Database Security Group (Namespaced v2 API)
+            apiVersion: ec2.aws.m.upbound.io/v1beta1
+            kind: SecurityGroup
+            metadata:
+              name: {{ $name }}-sg
+              namespace: {{ $ns }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: db-sg
+            spec:
+              forProvider:
+                description: "Ingress security group for PostgreSQL {{ $name }}"
+                vpcIdSelector:
+                  matchLabels:
+                    role: platform-vpc
+
+            ---
+            # 3. DB Subnet Group (Namespaced v2 API)
+            apiVersion: rds.aws.m.upbound.io/v1beta1
+            kind: SubnetGroup
+            metadata:
+              name: {{ $name }}-subnet-group
+              namespace: {{ $ns }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: db-subnet-group
+            spec:
+              forProvider:
+                description: "Subnets allocated for {{ $name }}"
+                subnetIdSelectors:
+                  - matchLabels:
+                      tier: private-database
+
+            ---
+            # 4. PostgreSQL Parameter Group (Namespaced v2 API)
+            apiVersion: rds.aws.m.upbound.io/v1beta1
+            kind: ParameterGroup
+            metadata:
+              name: {{ $name }}-pg
+              namespace: {{ $ns }}
+              annotations:
+                gotemplating.fn.crossplane.io/composition-resource-name: db-parameter-group
+            spec:
+              forProvider:
+                family: "postgres{{ $xr.spec.engineVersion }}"
+                description: "Optimized PostgreSQL {{ $xr.spec.engineVersion }} parameters"
+                parameter:
+                  - name: "log_connections"
+                    value: "1"
+                  - name: "rds.force_ssl"
+                    value: "1"
+
+            ---
+            # 5. RDS Instance (Namespaced v2 API)
+            apiVersion: rds.aws.m.upbound.io/v1beta1
             kind: Instance
             metadata:
+              name: {{ $name }}-instance
+              namespace: {{ $ns }}
               annotations:
-                gotemplating.fn.crossplane.io/composition-resource-name: instance
+                gotemplating.fn.crossplane.io/composition-resource-name: db-instance
             spec:
               forProvider:
                 region: eu-west-1
@@ -121,18 +224,37 @@ spec:
                 engineVersion: {{ $xr.spec.engineVersion | quote }}
                 instanceClass: {{ index $sizes $xr.spec.size }}
                 allocatedStorage: {{ if $prod }}100{{ else }}20{{ end }}
+                maxAllocatedStorage: {{ if $prod }}1000{{ else }}100{{ end }}
                 multiAz: {{ $prod }}
                 backupRetentionPeriod: {{ if $prod }}14{{ else }}1{{ end }}
                 storageEncrypted: true
+                kmsKeyIdSelector:
+                  matchControllerRef: true
+                dbSubnetGroupNameSelector:
+                  matchControllerRef: true
+                vpcSecurityGroupIdSelectors:
+                  - matchControllerRef: true
+                parameterGroupNameSelector:
+                  matchControllerRef: true
                 deletionProtection: {{ $prod }}
-                manageMasterUserPassword: true
-    - step: ready
-      functionRef: { name: function-auto-ready }
+                skipFinalSnapshot: {{ not $prod }}
+                autoMinorVersionUpgrade: true
+                publiclyAccessible: false
+              writeConnectionSecretToRef:
+                name: {{ $name }}-db-conn
+                namespace: {{ $ns }}
+
+    - step: automatically-detect-readiness
+      functionRef:
+        name: function-auto-ready
 ```
 
-A developer's entire request:
+### 3. The Developer's Self-Service Request
+
+Developers submit an intent-driven resource in their assigned namespace:
 
 ```yaml
+# xr.yaml
 apiVersion: platform.example.com/v1alpha1
 kind: Database
 metadata:
@@ -141,9 +263,39 @@ metadata:
 spec:
   size: small
   tier: production
+  engineVersion: "16"
 ```
 
-`tier: production` silently brings multi-AZ, fourteen days of backups, more storage and deletion protection. Those are platform decisions, made once.
+Specifying `tier: production` silently provisions a Multi-AZ cluster, 14 days of encrypted point-in-time recovery, dedicated KMS key rotation, deletion protection, and parameter-enforced SSL. The developer never configures IAM roles, VPC subnet IDs, or cloud passwords.
+
+### 4. Offline Verification with `crossplane render`
+
+Compositions can be verified offline in CI before deploying to a control plane. Create a `functions.yaml` declaration:
+
+```yaml
+# functions.yaml
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: function-go-templating
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/function-go-templating:v0.4.1
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: Function
+metadata:
+  name: function-auto-ready
+spec:
+  package: xpkg.upbound.io/crossplane-contrib/function-auto-ready:v0.2.1
+```
+
+Run the offline render command:
+
+```bash
+crossplane render xr.yaml composition.yaml functions.yaml
+```
+
+The CLI evaluates the templating pipeline locally, validates schema constraints, and prints the 5 generated AWS managed resources (`Key`, `SecurityGroup`, `SubnetGroup`, `ParameterGroup`, `Instance`) with the targeted credentials secret.
 
 ## Composition functions
 
