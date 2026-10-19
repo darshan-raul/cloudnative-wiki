@@ -18,8 +18,8 @@ Software architecture, system design, and engineering concepts.
 
 ### Software Concepts
 
-- [[Architecture/solution-architecture-concepts/software-engineering-concepts/README|Software Engineering]]
-- [[Architecture/programming-concepts/README|Programming Concepts]]
+- [[Architecture/solution-architecture-concepts/software-engineering-concepts/README|Software Engineering]] — Proxies, DNS, multi-tenancy, and testing
+- [[Architecture/programming-concepts/README|Programming Concepts]] — 4-stage progressive roadmap covering execution, memory (stack/heap), types, closures, paradigms, async, and serialization
 
 ### Protocols
 
@@ -27,8 +27,8 @@ Software architecture, system design, and engineering concepts.
 
 ### Languages
 
-- [[Architecture/languages/golang/README|Go]]
-- [[Architecture/languages/python/README|Python]]
+- [[Architecture/languages/golang/index|Golang]] — 4-stage progressive roadmap covering syntax, data structures, interfaces, concurrency, systems programming, and production microservices
+- [[Architecture/languages/python/index|Python]] — 4-stage progressive roadmap covering core syntax, OOP, modern typing, asyncio, Pydantic v2, FastAPI, and production engineering
 
 ### Authentication
 

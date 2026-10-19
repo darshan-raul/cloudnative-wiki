@@ -11,5 +11,5 @@ Language-specific notes. The emphasis is on the parts of each language that matt
 
 ## Notes in this section
 
-- [[Architecture/languages/golang/README|Go (Golang) Systems Architecture & Concurrency]] — Complete index and architectural guide to Go for cloud-native engineering — concurrency primitives, context propagation,…
-- [[Architecture/languages/python/README|Python Architecture, Tooling & Production Engineering]] — Complete index and guide to Python for backend systems and AI engineering — decorators, structured logging, virtual environments,…
+- [[Architecture/languages/golang/index|Golang]] — Complete 4-stage learning roadmap and guide to Go for cloud-native engineering — modules, slices, structs, interfaces, generics, concurrency, and production HTTP
+- [[Architecture/languages/python/index|Python]] — Complete 4-stage learning roadmap and guide to Python for cloud-native engineering — core syntax, OOP, typing, asyncio, Pydantic v2, FastAPI, and production ops
