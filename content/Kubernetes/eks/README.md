@@ -64,6 +64,14 @@ Use this matrix to translate core upstream Kubernetes primitives (taught in Leve
 
 ---
 
+## Amazon EKS Operator Handbook
+
+For on-call engineers and platform operators running EKS in production:
+
+- **[[Kubernetes/eks/operator-runbook/index|Amazon EKS Operator Handbook]]**: symptom-first runbooks (IP exhaustion, node NotReady, Karpenter, DNS, load balancer 5xx, storage, access), planned-change procedures with rollback (upgrades, node rotation, zonal shift, restore), and reference notes for limits, logs and triage commands.
+
+---
+
 ## EKS Architecture Categories
 
 ### [[Kubernetes/eks/getting-started/README|1. Getting Started]]
