@@ -12,6 +12,8 @@ description: The alphabet before the language — symmetric/asymmetric crypto, e
 
 **Prerequisites:** basic Linux CLI, comfortable reading JSON, no auth experience required.
 
+**Extended hands-on path:** [[Architecture/solution-architecture-concepts/cryptography/pki-operator-runbook|PKI Operator Runbook]] — Work from bytes, hashes, and signatures through a root/intermediate CA, TLS, JWT/JWKS, OIDC, and GPG, with Kubernetes and AWS identity connections.
+
 ## Why this stage exists
 
 The most common reason engineers ship broken auth isn't malice or stupidity — it's a missing mental model for **what a signature actually is**, **what "Base64URL" really does**, or **why a cookie with `SameSite=Lax` behaves differently from `Strict`**. Stage 0 closes those gaps with the minimum viable depth.

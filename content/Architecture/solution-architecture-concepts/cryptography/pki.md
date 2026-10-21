@@ -7,6 +7,8 @@ description: "A hands-on PKI tutorial with OpenSSL: create a root CA, build a ce
 
 # PKI
 
+For the full learning path from cryptographic primitives to root/intermediate CAs, hostname-verified TLS, JWT/JWKS, OIDC, and GPG, use the [[Architecture/solution-architecture-concepts/cryptography/pki-operator-runbook|PKI Operator Runbook]].
+
 Here's a comprehensive tutorial using OpenSSL to create a Root CA, generate a certificate chain, sign a request, and verify the signature from the client side:
 
 **Prerequisites:**

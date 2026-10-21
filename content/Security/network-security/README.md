@@ -20,6 +20,8 @@ Network security — TLS/mTLS, zero trust architecture, VPN, firewall, and netwo
 
 ### TLS/mTLS
 
+For the complete hands-on foundation, follow the [[Architecture/solution-architecture-concepts/cryptography/pki-operator-runbook|PKI Operator Runbook]] — keys, CSRs, root/intermediate/leaf certificates, chain and hostname verification, and TLS.
+
 ```bash
 # Generate self-signed cert for testing
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes

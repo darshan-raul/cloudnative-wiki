@@ -13,6 +13,7 @@ Practical cryptography for solution architects — **not** deep math, but the pa
 
 ## What's Here
 
+- [[Architecture/solution-architecture-concepts/cryptography/pki-operator-runbook|PKI Operator Runbook]] — Start with bytes and hashes, then build keys, a root/intermediate CA, TLS, JWT/JWKS, OIDC, and GPG through 101 numbered parts
 - [[pki]] — Public Key Infrastructure, certificate authorities, certificate chains
 - [[keystore]] — Managing keys and certificates ( keystore, truststore, HSM)
 - [[signing-and-verifying]] — Digital signatures, message integrity, code signing
