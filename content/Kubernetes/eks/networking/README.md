@@ -33,6 +33,7 @@ On [[Kubernetes/eks/compute/eks-auto-mode/README|Auto Mode]] these are built int
 The plugin itself: architecture, ENI and IP allocation, and its configuration.
 
 - [[Kubernetes/eks/networking/vpc-cni/prefix-delegation|Prefix Delegation]] — assign /28 prefixes for far more pods per node and faster pod start-up.
+- [[Kubernetes/eks/networking/vpc-cni/trunk-and-branch-eni|Trunk and Branch ENIs]] — underlying EC2 ENI trunking and VLAN multiplexing architecture for pod network isolation.
 - [[Kubernetes/eks/networking/vpc-cni/custom-networking|Custom Networking]] — put pods in different subnets from their nodes, typically a secondary CIDR, to escape IP exhaustion.
 - [[Kubernetes/eks/networking/vpc-cni/security-groups-for-pods|Security Groups for Pods]] — give selected pods their own security groups for access to VPC resources.
 - [[Kubernetes/eks/networking/vpc-cni/network-policies|Network Policies]] — pod-to-pod segmentation enforced natively.

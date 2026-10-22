@@ -15,13 +15,16 @@ VPC CNI manages Elastic Network Interfaces (ENIs) and IP addresses to provide ea
 
 Each EC2 instance type has limits:
 
-| Property    | Description                                         |
-| ----------- | --------------------------------------------------- |
-| Max ENIs    | Maximum network interfaces per instance             |
-| IPs per ENI | Secondary IPs per interface (primary + secondaries) |
-| Max Pods    | Calculated: `(ENIs × (IPs_per_ENI - 1)) + 2`        |
+| Property                     | Description                                                                |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| Max ENIs                     | Maximum network interfaces per instance                                    |
+| IPs per ENI                  | Secondary IPs per interface (primary + secondaries)                        |
+| Max Pods (Secondary IP Mode) | Calculated: `(ENIs × (IPs_per_ENI - 1)) + 2`                               |
+| Max Pods (Prefix Mode)       | Calculated: `(ENIs × IPs_per_ENI × 16) + 2` (capped by Kubelet `max-pods`) |
 
-### Max Pods Formula
+### Max Pods Formulas
+
+#### 1. Standard Secondary IP Mode
 
 ```
 Max Pods = (Max ENIs × (IPs per ENI - 1)) + 2
@@ -33,6 +36,28 @@ Example for m5.xlarge:
 ```
 
 The `-1` accounts for the primary IP (used by the node itself). The `+2` provides a small buffer for the node's kubelet and kube-proxy.
+
+#### 2. Prefix Delegation Mode
+
+In [[Kubernetes/eks/networking/vpc-cni/prefix-delegation|Prefix Delegation]], each slot on an ENI holds a `/28` prefix (16 IPs):
+
+```
+Max Pods = (Max ENIs × IPs per ENI × 16) + 2
+
+Example for m5.xlarge:
+  Max ENIs = 4
+  Prefixes per ENI = 15
+  Theoretical Pod IP Capacity = (4 × 15 × 16) + 2 = 962 IPs
+  (Kubelet standard ceiling defaults to 110 or 250 pods)
+```
+
+#### 3. Impact of Trunk ENI (Security Groups for Pods)
+
+When [[Kubernetes/eks/networking/vpc-cni/trunk-and-branch-eni|Trunk and Branch ENIs]] are enabled (`ENABLE_POD_ENI=true`), the VPC Resource Controller attaches a **Trunk ENI** (`aws-k8s-trunk-eni`) to each Nitro node. This trunk ENI **occupies one of the instance's maximum physical ENI slots**:
+
+- An `m5.large` has 3 maximum ENIs: 1 primary (`eth0`), 1 trunk (`eth1`), leaving only 1 ENI (`eth2`) for standard pods.
+- Branch ENIs attached to the trunk ENI do not consume standard ENI slots, but allocate single `/32` IPs.
+- For Karpenter capacity planning with SGP, reserve 1 ENI (`aws.reservedENIs: 1`) to prevent ENI exhaustion before the trunk can attach.
 
 ## Default Warm Pool Behavior
 

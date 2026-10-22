@@ -44,8 +44,10 @@ The IP Address Management (IPAMD) daemon is responsible for:
 
 A separate controller (`vpc-resource-controller`) running on the EKS control plane handles:
 
-- Branch network interface attachment for Security Groups for Pods
-- Advertising branch ENIs as extended resources (`vpc.amazonaws.com/pod-enis`)
+- Provisioning and attaching the **Trunk ENI** (`aws-k8s-trunk-eni`) to Nitro nodes
+- Provisioning and associating **Branch ENIs** (`aws-k8s-branch-eni`) for [[Kubernetes/eks/networking/vpc-cni/security-groups-for-pods|Security Groups for Pods]]
+- Advertising branch interface capacity as an extended resource (`vpc.amazonaws.com/pod-eni`)
+- For architecture details, see [[Kubernetes/eks/networking/vpc-cni/trunk-and-branch-eni|Trunk and Branch ENIs]]
 
 ## Pod Networking Flow
 
@@ -112,6 +114,7 @@ kubectl get nodes -o custom-columns=NAME:.metadata.name,MAX_PODS:.status.capacit
 - [[Kubernetes/eks/networking/vpc-cni/architecture|Architecture Deep-Dive]] - Internal components, CNI plugin flow
 - [[Kubernetes/eks/networking/vpc-cni/eni-allocation|ENI/IP Allocation]] - Warm pools, WARM\_\* targets
 - [[Kubernetes/eks/networking/vpc-cni/prefix-delegation|Prefix Delegation]] - Increase pod density with /28 prefixes
+- [[Kubernetes/eks/networking/vpc-cni/trunk-and-branch-eni|Trunk and Branch ENIs]] - Hardware trunking and VLAN multiplexing architecture
 - [[Kubernetes/eks/networking/vpc-cni/security-groups-for-pods|Security Groups for Pods]] - Per-pod security groups
 - [[Kubernetes/eks/networking/vpc-cni/network-policies|Network Policies]] - Pod traffic control
 - [[Kubernetes/eks/networking/vpc-cni/custom-networking|Custom Networking]] - Alternate subnets for pods

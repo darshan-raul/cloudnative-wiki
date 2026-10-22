@@ -141,11 +141,13 @@ ipamd runs continuous reconciliation:
 
 ## VPC Resource Controller
 
-Running on EKS control plane (not on nodes), this controller manages:
+Running on the EKS managed control plane (not on worker nodes), this controller manages hardware-assisted pod network isolation:
 
-- **Trunk ENI attachment** - Attaches trunk ENIs to instances for SGP
-- **Branch ENI provisioning** - Creates branch ENIs for pods with security groups
-- **Extended resources** - Advertises `vpc.amazonaws.com/pod-enis` capacity
+- **Trunk ENI attachment** — Attaches a trunk ENI (`aws-k8s-trunk-eni`) to compatible Nitro worker nodes
+- **Branch ENI provisioning** — Provisions branch ENIs (`aws-k8s-branch-eni`) and associates them with the node's trunk interface using `AssociateTrunkInterface` with unique VLAN IDs
+- **Extended resources** — Advertises `vpc.amazonaws.com/pod-eni` capacity on nodes so the kube-scheduler places pods appropriately
+
+For the deep dive into IEEE 802.1Q tagging, hardware offload, and datapath flows, see [[Kubernetes/eks/networking/vpc-cni/trunk-and-branch-eni|Trunk and Branch ENIs]].
 
 ## Network Packet Flow
 
